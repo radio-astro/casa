@@ -35,6 +35,7 @@ class PySynthesisImager:
         # Imaging/Deconvolution parameters. Same for serial and parallel runs
         self.alldecpars = params.getDecPars()
         self.allimpars = params.getImagePars()
+        self.allgridpars = params.getGridPars()
         self.weightpars = params.getWeightPars()
         # Iteration parameters
         self.iterpars = params.getIterPars() ## Or just params.iterpars
@@ -65,14 +66,15 @@ class PySynthesisImager:
         
         ## Send in selection parameters for all MSs in the list.
         for mss in sorted( (self.allselpars).keys() ):
-            self.SItool.selectdata( **(self.allselpars[mss]) )
+            self.SItool.selectdata( self.allselpars[mss] )
+#            self.SItool.selectdata( **(self.allselpars[mss]) )
 
         ## For each image-field, define imaging parameters
-        nimpars = copy.deepcopy(self.allimpars)
+#        nimpars = copy.deepcopy(self.allimpars)
+#        for fld in range(0,self.NF):
+#            self.SItool.defineimage( **( nimpars[str(fld)]  ) )
         for fld in range(0,self.NF):
-            self.SItool.defineimage( **( nimpars[str(fld)]  ) )
-        #for fld in range(0,self.NF):
-        #    self.SItool.defineimage( **( self.allimpars[str(fld)]  ) )
+            self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
 
         ## Set weighting parameters, and all pars common to all fields.
         self.SItool.setweighting( **(self.weightpars) )
@@ -301,14 +303,17 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
             ## Send in Selection parameters for all MSs in the list
             for mss in sorted( (self.allselpars[str(node)]).keys() ):
-                joblist.append( self.PH.runcmd("toolsi.selectdata( **"+str(self.allselpars[str(node)][mss])+")", node) )
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node)][mss])+")", node) )
+#                joblist.append( self.PH.runcmd("toolsi.selectdata( **"+str(self.allselpars[str(node)][mss])+")", node) )
 
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
                     nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
-                joblist.append( self.PH.runcmd("toolsi.defineimage( **" + str( nimpars[str(fld)] ) + ")", node ) )
+                joblist.append( self.PH.runcmd("toolsi.defineimage( " + str( nimpars[str(fld)] ) + "," + str( ngridpars[str(fld)] )   + ")", node ) )
+#                joblist.append( self.PH.runcmd("toolsi.defineimage( " + str( nimpars[str(fld)] ) + ")", node ) )
+##                joblist.append( self.PH.runcmd("toolsi.defineimage( **" + str( nimpars[str(fld)] ) + ")", node ) )
             
             joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
 
@@ -369,6 +374,7 @@ class PyParallelCubeSynthesisImager():
 
         allselpars = params.getSelPars()
         allimagepars = params.getImagePars()
+        self.allgridpars = params.getGridPars()
         self.weightpars = params.getWeightPars()
         self.decpars = params.getDecPars()
         self.iterpars = params.getIterPars()
@@ -392,6 +398,7 @@ class PyParallelCubeSynthesisImager():
             joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
             joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
             joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars[str(node)])+")", node) )
             joblist.append( self.PH.runcmd("paramList.setWeightPars("+str(self.weightpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setDecPars("+str(self.decpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setIterPars("+str(self.iterpars)+")", node) )
@@ -692,13 +699,14 @@ class ImagerParameters():
         ## The outlier '1', '2', ....  parameters come from the outlier file
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
-        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter, 
-                                 'freqstart':freqstart, 'freqstep':freqstep, 'ftmachine':ftmachine, 'startmodel':startmodel,
-                                 'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 'cfcache': cfcache,
-                                 'dopointing':dopointing, 'dopbcorr':dopbcorr, 'conjbeams':conjbeams, 'computepastep':computepastep,
-                                 'rotatepastep':rotatepastep
-                                 } 
-                           }
+        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
+                                 'cellsize':cellsize, 'phasecenter':phasecenter, 
+                                 'freqstart':freqstart, 'freqstep':freqstep   }      }
+        self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
+                                 'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
+                                 'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
+                                 'conjbeams':conjbeams, 'computepastep':computepastep,
+                                 'rotatepastep':rotatepastep      }     }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
 
@@ -707,7 +715,8 @@ class ImagerParameters():
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
-        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','ftmachine','startmodel','freqstart','freqstep']
+        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel','freqstart','freqstep']
+        self.outgridparlist = ['ftmachine']
         self.outweightparlist=[]
         self.outdecparlist=['algo','startmodel']
 
@@ -716,6 +725,8 @@ class ImagerParameters():
         return self.allselpars
     def getImagePars(self):
         return self.allimpars
+    def getGridPars(self):
+        return self.allgridpars
     def getWeightPars(self):
         return self.weightpars
     def getDecPars(self):
@@ -727,6 +738,8 @@ class ImagerParameters():
         self.allselpars = selpars
     def setImagePars(self,impars):
         self.allimpars = impars
+    def setGridPars(self,gridpars):
+        self.allgridpars = gridpars
     def setWeightPars(self,weightpars):
         self.weightpars = weightpars
     def setDecPars(self,decpars):
@@ -743,7 +756,7 @@ class ImagerParameters():
         errs = "" 
         errs += self.checkAndFixSelectionPars()
         errs += self.makeImagingParamLists()
-        errs += self.checkAndFixImagingPars()
+        #errs += self.checkAndFixImagingPars()
         errs += self.checkAndFixIterationPars()
 
         ## If there are errors, print a message and exit.
@@ -753,30 +766,6 @@ class ImagerParameters():
         return True
 
     ###### Start : Parameter-checking functions ##################
-    def OldcheckAndFixSelectionPars(self):
-        errs=""
-        # msname, field, spw, etc must all be equal-length lists of strings.
-        if not self.allselpars.has_key('msname'):
-            errs = errs + 'MS name(s) not specified'
-        else:
-            if type(self.allselpars['msname'])==str:
-                self.allselpars['msname']=[self.allselpars['msname']]
-            nmsname = len(self.allselpars['msname'])
-            selkeys = ['field','spw']
-            for par in selkeys:
-                if self.allselpars.has_key(par):
-                    if self.allselpars[par]=='':
-                        self.allselpars[par] = []
-                        for it in range(0,nvis):
-                            self.allselpars[par].append('')
-                    if type(self.allselpars[par])==str:
-                        self.allselpars[par]=[self.allselpars[par]]
-                    if len(self.allselpars[par]) != nvis:
-                        errs = errs + "Selection for " + par + " must be a list of " + str(nvis) + " selection strings\n"
-                else:
-                    errs = errs + "Selection for " + par + " is unspecified\n"
-
-        return errs
 
     def checkAndFixSelectionPars(self):
         errs=""
@@ -846,83 +835,21 @@ class ImagerParameters():
             modelid = str(immod+1)
             self.allimpars[ modelid ] = copy.deepcopy(self.allimpars[ '0' ])
             self.allimpars[ modelid ].update(outlierpars[immod]['impars'])
-#            self.weightpars[ modelid ] = copy.deepcopy(self.weightpars[ '0' ])
-#            self.weightpars[ modelid ].update(outlierpars[immod]['weightpars'])
+            self.allgridpars[ modelid ] = copy.deepcopy(self.allgridpars[ '0' ])
+            self.allgridpars[ modelid ].update(outlierpars[immod]['gridpars'])
             self.alldecpars[ modelid ] = copy.deepcopy(self.alldecpars[ '0' ])
             self.alldecpars[ modelid ].update(outlierpars[immod]['decpars'])
             self.alldecpars[ modelid ][ 'id' ] = immod+1  ## Try to eliminate.
 
-        return errs
 
-    def checkAndFixImagingPars(self ):
-        errs=""
+        for immod in self.allimpars.keys() :
+            synu = casac.synthesisutils()
+            self.allimpars[immod] = synu.checkimageparams( self.allimpars[immod] )
+            synu.done()
 
-        ## Check all Image Definition Parameters
-        for imkeys in self.allimpars.keys():
-            eachimdef = self.allimpars[ imkeys ]
-
-            ## Check/fix nchan : Must be a single integer.
-            if eachimdef.has_key('nchan'):
-                if type( eachimdef['nchan'] ) != int:
-                    try:
-                        eachimdef['nchan'] = eval( eachimdef['nchan'] )
-                    except:
-                        errs = errs + 'nchan must be an integer for field ' + eachimdef['imagename'] + '\n'
-            else:
-                errs = errs + 'nchan is not specified for field ' + eachimdef['imagename'] + '\n'
-
-            ## Check/fix imsize : Must be an array with 2 integers
-            if eachimdef.has_key('imsize'):
-                tmpimsize = eachimdef['imsize']
-                if type(tmpimsize) == str:
-                    try:
-                        tmpimsize = eval( eachimdef['imsize'] )
-                    except:
-                        errs = errs + 'imsize must be a single integer, or a list of 2 integers'
-
-                if type(tmpimsize) == list:
-                    if len(tmpimsize) == 2:
-                        eachimdef['imsize'] = tmpimsize;  # not checking that elements are ints...
-                    else:
-                        errs = errs + 'imsize must be a single integer, or a list of 2 integers'
-                elif type(tmpimsize) == int:
-                    eachimdef['imsize'] = [tmpimsize, tmpimsize] 
-                else:
-                    errs = errs + 'imsize must be a single integer, or a list of 2 integers'
-            else:
-                errs = errs + 'imsize is not specified for field ' + eachimdef['imagename'] + '\n'
-
-            ## Replace imsize by nx, ny
-            eachimdef['nx']=eachimdef['imsize'][0]
-            eachimdef['ny']=eachimdef['imsize'][1]
-            eachimdef.pop( 'imsize' );
-
-            ## Check/fix cellsize : Must be an array with 2 integers or strings
-            if eachimdef.has_key('cellsize'):
-                tmpcellsize = eachimdef['cellsize']
-                if type(tmpcellsize) != str and type(tmpcellsize) != list:
-                    errs = errs + 'cellsize must be a single string, or a list of 2 strings'
-
-                if type(tmpcellsize) == list:
-                    if len(tmpcellsize) == 2:
-                        eachimdef['cellsize'] = tmpcellsize;  # not checking that elements are strings
-                    else:
-                        errs = errs + 'cellsize must be a single string, or a list of 2 strings'
-                elif type(tmpcellsize) == str:
-                    eachimdef['cellsize'] = [tmpcellsize, tmpcellsize] 
-                else:
-                    errs = errs + 'cellsize must be a single integer, or a list of 2 integers'
-            else:
-                errs = errs + 'cellsize is not specified for field ' + eachimdef['imagename'] + '\n'
-            
-            ## Replace imsize by nx, ny
-            eachimdef['cellx']=eachimdef['cellsize'][0]
-            eachimdef['celly']=eachimdef['cellsize'][1]
-            eachimdef.pop( 'cellsize' );
-
-#        print 'AFTER : ', self.allimpars
 
         return errs
+
 
     def checkAndFixIterationPars(self ):
         errs=""
@@ -949,6 +876,7 @@ class ImagerParameters():
         fp = open( outlierfilename, 'r' )
         thelines = fp.readlines()
         tempimpar={}
+        tempgridpar={}
         tempweightpar={}
         tempdecpar={}
         for oneline in thelines:
@@ -961,13 +889,17 @@ class ImagerParameters():
                 if len(parpair) != 2:
                     errs += 'Error in line containing : ' + oneline + '\n'
                 if parpair[0] == 'imagename' and tempimpar != {}:
-                    returnlist.append({'impars':tempimpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
+                    returnlist.append({'impars':tempimpar, 'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
                     tempimpar={}
+                    tempgridpar={}
                     tempweightpar={}
                     tempdecpar={}
                 usepar=False
                 if parpair[0] in self.outimparlist:
                     tempimpar[ parpair[0] ] = parpair[1]
+                    usepar=True
+                if parpair[0] in self.outgridparlist:
+                    tempgridpar[ parpair[0] ] = parpair[1]
                     usepar=True
                 if parpair[0] in self.outweightparlist:
                     tempweightpar[ parpair[0] ] = parpair[1]
@@ -979,7 +911,7 @@ class ImagerParameters():
                     print 'Ignoring unknown parameter pair : ' + oneline
 
         if len(errs)==0:
-            returnlist.append( {'impars':tempimpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
+            returnlist.append( {'impars':tempimpar,'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
 
         ## Extra parsing for a few parameters.
         ## imsize
@@ -1019,6 +951,7 @@ class ImagerParameters():
     def printParameters(self):
         casalog.post('SelPars : ' + str(self.allselpars), 'INFO')
         casalog.post('ImagePars : ' + str(self.allimpars), 'INFO')
+        casalog.post('GridPars : ' + str(self.allgridpars), 'INFO')
         casalog.post('Weightpars : ' + str(self.weightpars), 'INFO')
         casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
         casalog.post('IterPars : ' + str(self.iterpars), 'INFO')

@@ -128,6 +128,66 @@ This is used to construct {\tt synthesisutils} tool.
 <returns type="record"/>
 </method>
 
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="checkimageparams">
+   <shortdescription>Check and Fix Imaging Parameters for one field</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="impars">
+     <description>All imaging parameters for one image-field</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="checkgridparams">
+   <shortdescription>Check and Fix Gridding/FTM Parameters for one field</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="gridpars">
+     <description>All gridding/ftm parameters for one image-field</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="makeimage">
+   <shortdescription>Make an empty image</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="impars">
+     <description>All image parameters for one image-field</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="string" name="msname">
+     <description>Name of MS from which to get observatory information (optional) </description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
 <!-- ===================================== -->
 <!-- ===================================== -->
 

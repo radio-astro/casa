@@ -56,6 +56,8 @@
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
@@ -92,20 +94,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       mss_p(0),vi_p(0), writeAccess_p(True), mss4vi_p(0)
   {
 
-
      facetsStore_p=-1;
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
      useScratch_p=False;
      wvi_p=0;
      rvi_p=0;
-
-     ftmParams_p.define("ftmachine","GridFT");
-     ftmParams_p.define("wprojplanes", Int(1));
-     ftmParams_p.define("padding", Float(1.0));
-     ftmParams_p.define("useautocorr", False);
-     ftmParams_p.define("usedoubleprec", True);
-     ftmParams_p.define("gridfunc", String("SF"));
 
   }
   
@@ -142,72 +136,102 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& taql,
 				   const Bool usescratch, 
 				   const Bool readonly, 
-				   const Bool incrModel){
+				   const Bool incrModel)
+  {
+    SynthesisParamsSelect pars;
+    pars.msname=msname;
+    pars.spw=spw;
+    pars.freqbeg=freqBeg;
+    pars.freqend=freqEnd;
+    pars.freqframe=freqframe;
+    pars.field=field;
+    pars.antenna=antenna;
+    pars.timestr=timestr;
+    pars.scan=scan;
+    pars.obs=obs;
+    pars.state=state;
+    pars.uvdist=uvdist;
+    pars.taql=taql;
+    pars.usescratch=usescratch;
+    pars.readonly=readonly;
+    pars.incrmodel=incrModel;
+
+    String err = pars.verify();
+
+    if( err.length()>0 ) throw(AipsError("Invalid Selection parameters : " + err));
+
+    selectData( pars );
+
+    return True;
+  }
+  
+  Bool SynthesisImager::selectData(const SynthesisParamsSelect& selpars)
+  {
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
 
     try
       {
 
     //Respect the readonly flag...necessary for multi-process access
-    MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking),
-				readonly ? Table::Old : Table::Update);
+    MeasurementSet thisms(selpars.msname, TableLock(TableLock::AutoNoReadLocking),
+				selpars.readonly ? Table::Old : Table::Update);
     thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
-    useScratch_p=usescratch;
+    useScratch_p=selpars.usescratch;
     //if you want to use scratch col...make sure they are there
-    if(usescratch && !readonly){
+    if(selpars.usescratch && !selpars.readonly){
       VisSetUtil::addScrCols(thisms, True, False, True, False);
       VisModelData::clearModel(thisms);
     }
-    if(!incrModel && !usescratch && !readonly)
-    	VisModelData::clearModel(thisms, field, spw);
+    if(!selpars.incrmodel && !selpars.usescratch && !selpars.readonly)
+    	VisModelData::clearModel(thisms, selpars.field, selpars.spw);
 
-    os << "MS : " << msname << " | ";
+    os << "MS : " << selpars.msname << " | ";
 
     //Some MSSelection 
     //If everything is empty (which is valid) it will throw an exception..below
     //So make sure the main defaults are not empy i.e field and spw
     MSSelection thisSelection;
-    if(field != ""){
-      thisSelection.setFieldExpr(field);
-      os << "Selecting on fields : " << field << " | " ;//LogIO::POST;
+    if(selpars.field != ""){
+      thisSelection.setFieldExpr(selpars.field);
+      os << "Selecting on fields : " << selpars.field << " | " ;//LogIO::POST;
     }else
       thisSelection.setFieldExpr("*");
-    if(spw != ""){
-	thisSelection.setSpwExpr(spw);
-	os << "Selecting on spectral windows expression :"<< spw  << " | " ;//LogIO::POST;
+    if(selpars.spw != ""){
+	thisSelection.setSpwExpr(selpars.spw);
+	os << "Selecting on spectral windows expression :"<< selpars.spw  << " | " ;//LogIO::POST;
     }else
       thisSelection.setSpwExpr("*");
     
-    if(antenna != ""){
-      Vector<String> antNames(1, antenna);
+    if(selpars.antenna != ""){
+      Vector<String> antNames(1, selpars.antenna);
       // thisSelection.setAntennaExpr(MSSelection::nameExprStr( antNames));
-      thisSelection.setAntennaExpr(antenna);
-      os << "Selecting on antenna names : " << antenna << " | " ;//LogIO::POST;
+      thisSelection.setAntennaExpr(selpars.antenna);
+      os << "Selecting on antenna names : " << selpars.antenna << " | " ;//LogIO::POST;
 	
     }            
-    if(timestr != ""){
-	thisSelection.setTimeExpr(timestr);
-	os << "Selecting on time range : " << timestr << " | " ;//LogIO::POST;	
+    if(selpars.timestr != ""){
+	thisSelection.setTimeExpr(selpars.timestr);
+	os << "Selecting on time range : " << selpars.timestr << " | " ;//LogIO::POST;	
       }
-    if(uvdist != ""){
-      thisSelection.setUvDistExpr(uvdist);
-      os << "Selecting on uvdist : " << uvdist << " | " ;//LogIO::POST;	
+    if(selpars.uvdist != ""){
+      thisSelection.setUvDistExpr(selpars.uvdist);
+      os << "Selecting on uvdist : " << selpars.uvdist << " | " ;//LogIO::POST;	
     }
-    if(scan != ""){
-      thisSelection.setScanExpr(scan);
-      os << "Selecting on scan : " << scan << " | " ;//LogIO::POST;	
+    if(selpars.scan != ""){
+      thisSelection.setScanExpr(selpars.scan);
+      os << "Selecting on scan : " << selpars.scan << " | " ;//LogIO::POST;	
     }
-    if(obs != ""){
-      thisSelection.setObservationExpr(obs);
-      os << "Selecting on Observation Expr : " << obs << " | " ;//LogIO::POST;	
+    if(selpars.obs != ""){
+      thisSelection.setObservationExpr(selpars.obs);
+      os << "Selecting on Observation Expr : " << selpars.obs << " | " ;//LogIO::POST;	
     }
-    if(state != ""){
-      thisSelection.setStateExpr(state);
-      os << "Selecting on Scan Intent/State : " << state << " | " ;//LogIO::POST;	
+    if(selpars.state != ""){
+      thisSelection.setStateExpr(selpars.state);
+      os << "Selecting on Scan Intent/State : " << selpars.state << " | " ;//LogIO::POST;	
     }
-    if(taql != ""){
-	thisSelection.setTaQLExpr(taql);
-	os << "Selecting via TaQL : " << taql << " | " ;//LogIO::POST;	
+    if(selpars.taql != ""){
+	thisSelection.setTaQLExpr(selpars.taql);
+	os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
     }
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull())){
@@ -217,7 +241,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mss4vi_p[mss_p.nelements()-1]=MeasurementSet(thisms(exprNode));
     }
     else{
-      throw(AipsError("Selection for given MS "+msname+" is invalid"));
+      throw(AipsError("Selection for given MS "+selpars.msname+" is invalid"));
     }
     //We should do the select channel here for  the VI construction later
     //Need a cross check between channel selection and ms
@@ -243,7 +267,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       blockSpw_p[msin].resize(nSelections);
       ///////////////////////
 
-      if(freqBeg==""){
+      if(selpars.freqbeg==""){
     	  vi::FrequencySelectionUsingChannels channelSelector;
     	  //////////This is not implemented
     	  //channelSelector.add(thisSelection);
@@ -270,11 +294,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  fselections_p.add(channelSelector);
       }
       else{
-    	  vi::FrequencySelectionUsingFrame channelSelector(freqframe);
+    	  vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
     	  Quantity freq;
-    	  Quantity::read(freq, freqBeg);
+    	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
-    	  Quantity::read(freq, freqEnd);
+    	  Quantity::read(freq, selpars.freqend);
     	  Double topfreq=freq.getValue("Hz");
     	  for(uInt k=0; k < nSelections; ++k)
     		  channelSelector.add(chanlist(k,0), lowfreq, topfreq);
@@ -284,7 +308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  Vector<Vector<Int> >elspw, elstart, elnchan;
     	  Vector<Int>fields=thisSelection.getFieldList(mss_p[mss_p.nelements()-1]);
     	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
-    	  im.adviseChanSelex(lowfreq, topfreq, 1.0, freqframe, elspw, elstart, elnchan, msname, fieldid, False);
+    	  im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
     	  blockNChan_p[msin].resize(elspw[0].nelements());
     	  blockStart_p[msin].resize(elspw[0].nelements());
     	  blockStep_p[msin].resize(elspw[0].nelements());
@@ -298,7 +322,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     }
-    writeAccess_p=writeAccess_p && !readonly;
+    writeAccess_p=writeAccess_p && !selpars.readonly;
     createVisSet(writeAccess_p);
 
 
@@ -326,20 +350,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Vector<Quantity>& restFreq,
 				    const Int facets,
 				    const String ftmachine, 
-				    const Int /*nTaylorTerms*/,
-				    const Quantity& /*refFreq*/,
+				    const Int nTaylorTerms,
+				    const Quantity& refFreq,
 				    const Projection& projection,
 				    const Quantity& distance,
 				    const MFrequency::Types& freqFrame,
-				    const Bool /*trackSource*/, 
-				    const MDirection& /*trackDir*/, 
+				    const Bool trackSource, 
+				    const MDirection& trackDir, 
 				    const Bool overwrite,
 				    const Float padding, 
 				    const Bool useAutocorr, 
 				    const Bool useDoublePrec, 
 				    const Int wprojplanes, 
 				    const String convFunc, 
-				    const String /*startmodel*/,
+				    const String startmodel,
 				    // The extra params for WB-AWP
 				    const Bool aTermOn,//    = True,
 				    const Bool psTermOn,//   = True,
@@ -353,20 +377,94 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Float rotatePAStep          //=5.0
 				    )
 {
+  String err("");
+
+  SynthesisParamsImage impars;
+  impars.imageName=imagename;
+  Vector<Int> ims(2);ims[0]=nx; ims[1]=ny;
+  impars.imsize=ims;
+  Vector<Quantity> cells(2); cells[0]=cellx, cells[1]=celly;
+  impars.cellsize=cells;
+  impars.stokes=stokes;
+  impars.phaseCenter=phaseCenter;
+  impars.nchan=nchan;
+  impars.freqStart=freqStart;
+  impars.freqStep=freqStep;
+  impars.restFreq=restFreq;
+  impars.facets=facets;
+  impars.nTaylorTerms=nTaylorTerms;
+  impars.refFreq=refFreq;
+  impars.projection=projection;
+  impars.freqFrame=freqFrame;
+  impars.overwrite=overwrite;
+  impars.startModel=startmodel;
+
+  err += impars.verify();
+
+  SynthesisParamsGrid gridpars;
+  gridpars.ftmachine=ftmachine;
+  gridpars.distance=distance;
+  gridpars.trackSource=trackSource;
+  gridpars.trackDir=trackDir;
+  gridpars.padding=padding;
+  gridpars.useAutoCorr=useAutocorr;
+  gridpars.useDoublePrec=useDoublePrec;
+  gridpars.wprojplanes=wprojplanes;
+  gridpars.convFunc=convFunc;
+  gridpars.aTermOn=aTermOn;
+  gridpars.psTermOn=psTermOn;
+  gridpars.mTermOn=mTermOn;
+  gridpars.wbAWP=wbAWP;
+  gridpars.cfCache=cfCache;
+  gridpars.doPointing=doPointing;
+  gridpars.doPBCorr=doPBCorr;
+  gridpars.conjBeams=conjBeams;
+  gridpars.computePAStep=computePAStep;
+  gridpars.rotatePAStep=rotatePAStep;
+
+  err += gridpars.verify();
+
+  if( err.length()>0 ) throw(AipsError("Invalid Image/Gridding parameters : " + err));
+
+  defineImage( impars, gridpars );
+
+  return True;
+}
+
+  Bool SynthesisImager::defineImage(const SynthesisParamsImage& impars, 
+			   const SynthesisParamsGrid& gridpars)
+  {
+
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     if(mss_p.nelements() ==0)
       os << "SelectData has to be run before defineImage" << LogIO::EXCEPTION;
 
-    CoordinateSystem csys;
-
     try
       {
-	os << "Adding " << imagename << " (nchan : " << nchan << ", freqstart:" << freqStart.getValue() << freqStart.getUnit() 
-	   <<  ", nx:" << nx << ",ny:" << ny << ", cellx:" << cellx.getValue() << cellx.getUnit() 
-	   << ", celly:" << celly.getValue() << celly.getUnit() << " ) to imager list " 
+	os << "Adding " << impars.imageName << " (nchan : " << impars.nchan 
+	   << ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
+	   <<  ", imsize:" << impars.imsize 
+	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
+	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
+	   << "] ) to imager list " 
 	   << LogIO::POST;
 
-	csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,freqStart, freqStep, restFreq, freqFrame);
+	//	csys=buildCoordSys(impars.phaseCenter, impars.cellsize[0], impars.cellsize[1], impars.imsize[0], impars.imsize[1], impars.stokes, impars.projection, impars.nchan,impars.freqStart, impars.freqStep, impars.restFreq, impars.freqFrame);
+
+	SynthesisUtilMethods su;
+	itsCurrentCoordSys = su.buildCoordinateSystem( impars, *mss_p[0] );
+
+	itsCurrentShape=IPosition( 4, impars.imsize[0], impars.imsize[1], 
+				   ((itsCurrentCoordSys.stokesCoordinate()).stokes()).nelements(), 
+				   impars.nchan );
+
+	if( (itsMappers.nMappers()==0) || 
+	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
+	  {
+	    itsMaxShape=itsCurrentShape;
+	    itsMaxCoordSys=itsCurrentCoordSys;
+	  }
+
       }
     catch(AipsError &x)
       {
@@ -377,27 +475,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
-	/// Accumulate FTM parameters, to get used in createFTMachine..... 
-	ftmParams_p.define("ftmachine",ftmachine);
-	ftmParams_p.define("wprojplanes", wprojplanes);
-	ftmParams_p.define("padding", padding );
-	ftmParams_p.define("useautocorr", useAutocorr);
-	ftmParams_p.define("usedoubleprec", useDoublePrec);
-	ftmParams_p.define("gridfunc", convFunc);
+	// Create FTMachine ? 
 
-	// ftmParams_p.define("atermon",
-	// 				    const Bool aTermOn    = True,
-	// 				    const Bool psTermOn   = True,
-	// 				    const Bool mTermOn    = False,
-	// 				    const Bool wbAWP      = True,
-	// 				    const String cfCache  = "",
-	// 				    const Bool doPointing = False,
-	// 				    const Bool doPBCorr   = True,
-	// 				    const Bool conjBeams  = True,
-	// 				    const Quantity computePAStep=Quantity(360.0,"deg")
-	// NOTE to Kumar : If possible, can 'createFTMachine()' be called directly from here, 
-	//                      with a full list of parameters, instead of passing them through appendToMapperList ? 
-	// The other defineimage() already does this...... and can be augmented with the full FTM parameter list too.
       }
     catch(AipsError &x)
       {
@@ -406,24 +485,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	Int facets_l=facets;
+	Int facets_l=impars.facets;
 	if(facets_l <1) facets_l=1; // When & why is facets<1?  Going by
 				// the existance of this line of code,
 				// facets<1 does not seem to server
 				// any purpose (SB, 26Jan2014)
 
 	CountedPtr<FTMachine> ftm, iftm;
-	// Int wprojplane=ftmParams_p.asInt("wprojplanes");
-	// Float padding=ftmParams_p.asFloat("padding");
-	// Bool useAutocorr=ftmParams_p.asBool("useautocorr");
-	// Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
-	// String convFunc=ftmParams_p.asString("gridfunc");
-	createFTMachine(ftm, iftm, ftmachine, facets_l, wprojplanes,padding,useAutocorr,useDoublePrec,convFunc,
-			aTermOn,psTermOn, mTermOn,wbAWP,cfCache,doPointing,doPBCorr,conjBeams,computePAStep,rotatePAStep);
+	createFTMachine(ftm, iftm, gridpars.ftmachine, facets_l, gridpars.wprojplanes,
+			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
+			gridpars.convFunc,
+			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
+			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
+			gridpars.doPBCorr,gridpars.conjBeams,
+			gridpars.computePAStep,gridpars.rotatePAStep);
 
-	appendToMapperList(imagename,  csys,  
-			   ftmParams_p.asString("ftmachine"), ftm, iftm,
-			   distance, facets_l, overwrite);
+	appendToMapperList(impars.imageName,  itsCurrentCoordSys,  
+			   gridpars.ftmachine, ftm, iftm,
+			   gridpars.distance, facets_l, impars.overwrite);
 	imageDefined_p=True;
       }
     catch(AipsError &x)
@@ -871,6 +950,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////
   ////////////////////////
+  /*
   CoordinateSystem SynthesisImager::buildCoordSys(const MDirection& phasecenter, const Quantity& cellx,
 		  const Quantity& celly, const Int nx, const Int ny,
 		  const String& stokes, const Projection& projection, const Int nchan,
@@ -1000,6 +1080,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     return whichStokes;
   }
+  */
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1032,14 +1113,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
 
-    ////////////these has to be defined by setupImaging it seems and passed here
-
-    // Int wprojplane=ftmParams_p.asInt("wprojplanes");
-    // Float padding=ftmParams_p.asFloat("padding");
-    // Bool useAutocorr=ftmParams_p.asBool("useautocorr");
-    // Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
-    // String gridFunction=ftmParams_p.asString("gridfunc");
-           //////////////////////////////////////////////
     if(ftname=="GridFT"){
       if(facets >1){
     	  theFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
