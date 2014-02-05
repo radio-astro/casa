@@ -57,7 +57,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           casalog.post("Test 4 image-fields, one cube, one mfs --- Real Imaging.");
           casalog.post("==================================");
           
-          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
+          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -78,7 +78,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           casalog.post("Test 3 image-fields, mfs --- Real Imaging.");
           casalog.post("==================================");
           
-          write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
+          write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -120,7 +120,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
-                                       imsize=[100,100],\
+                                       imsize=[110,110],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
@@ -432,10 +432,32 @@ def checkPars():
      selpars = paramList.getSelPars()
      impars = paramList.getImagePars()
 
-     print selpars
+     synu = casac.synthesisutils()
+
+#     print selpars['ms0']
+#     fixrec = synu.checkselectionparams( selpars['ms0'] )
+#     print fixrec
+#     print synu.checkselectionparams( fixrec )
+
+
+     print impars['0']
+     fixrec = synu.checkimageparams( impars['0'] )
+     print "---------------------------------------------"
+     print fixrec
+     print "---------------------------------------------"
+     print synu.checkimageparams( fixrec )
+
+     synu.done()
+
+
+def testmakeimage():
+     params = getparams( testnum=1 )
+     paramList = params[0]
+     impars = (paramList.getImagePars())['0']
+
+     os.system('rm -rf ' + impars['imagename'])
 
      synu = casac.synthesisutils()
-     fixrec = synu.checkselectionparams( selpars )
-     print fixrec
-     print synu.checkselectionparams( fixrec )
+     synu.makeimage( impars ) #, 'DataTest/twopoints_twochan.ms')
      synu.done()
+

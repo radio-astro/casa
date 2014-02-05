@@ -38,7 +38,7 @@ synthesisimager::~synthesisimager()
 }
 
 
-// This function should read in a variant, and convert it to a list of MSs and selpars for itsImager
+/*
 bool
 synthesisimager::selectdata(const std::string& msname, 
 			    const std::string& spw,
@@ -56,29 +56,29 @@ synthesisimager::selectdata(const std::string& msname,
 			    const bool usescratch,
 			    const bool readonly,
 			    const bool incrmodel)
+*/
+bool 
+synthesisimager::selectdata(const casac::record& selpars)
 {
   Bool rstat(False);
-
+  
   try 
     {
 
       if( ! itsImager ) itsImager = new SynthesisImager();
 
-      //      casa::MFrequency::Types freqframetype;
-      //      if( !casa::MFrequency::getType(freqframetype, freqframe) )
-      //	throw(AipsError("Invalid Frequency Frame " + freqframe));
-
+      casa::Record recpars = *toRecord( selpars );
       SynthesisParamsSelect pars;
-      pars.setValues(msname,spw,freqbeg,freqend, freqframe,
-		     field, antenna, timestr, scan, obs, state, uvdist, taql,
-		     usescratch, readonly, incrmodel);
-      
+      pars.fromRecord( recpars );
 
-      itsImager->selectData( pars.msname, pars.spw, 
-			     pars.freqbeg, pars.freqend, pars.freqframe,
-			     pars.field, pars.antenna, pars.timestr, pars.scan, 
-			     pars.obs, pars.state, pars.uvdist, pars.taql,
-			     pars.usescratch, pars.readonly, pars.incrmodel );
+      itsImager->selectData( pars );
+
+      //      itsImager->selectData( pars.msname, pars.spw, 
+      //		     pars.freqbeg, pars.freqend, pars.freqframe,
+      //		     pars.field, pars.antenna, pars.timestr, pars.scan, 
+      //		     pars.obs, pars.state, pars.uvdist, pars.taql,
+      //		     pars.usescratch, pars.readonly, pars.incrmodel );
+
     } 
   catch  (AipsError x) 
     {
@@ -88,6 +88,47 @@ synthesisimager::selectdata(const std::string& msname,
   return rstat;
 }
 
+
+bool synthesisimager::defineimage(const casac::record& impars, const casac::record& gridpars)
+{
+  Bool rstat(False);
+
+  try 
+    {
+    
+    if( ! itsImager ) itsImager = new SynthesisImager();
+    
+    casa::Record irecpars = *toRecord( impars );
+    SynthesisParamsImage ipars;
+    ipars.fromRecord( irecpars );
+
+    casa::Record grecpars = *toRecord( gridpars );
+    SynthesisParamsGrid gpars;
+    gpars.fromRecord( grecpars );
+
+    itsImager->defineImage( ipars, gpars );
+ 
+    /*
+    itsImager->defineImage( ipars.imageName, ipars.imsize[0], ipars.imsize[1], 
+			    ipars.cellsize[0], ipars.cellsize[1], ipars.stokes, ipars.phaseCenter,
+			    ipars.nchan, ipars.freqStart, ipars.freqStep, ipars.restFreq, ipars.facets, 
+			    gpars.ftmachine, ipars.nTaylorTerms, ipars.refFreq, 
+			    ipars.projection, gpars.distance, ipars.freqFrame, 
+			    gpars.trackSource, gpars.trackDir, ipars.overwrite,
+			    gpars.padding, gpars.useAutoCorr, gpars.useDoublePrec, gpars.wprojplanes, 
+			    gpars.convFunc, ipars.startModel, gpars.aTermOn,
+			    gpars.psTermOn, gpars.mTermOn, gpars.wbAWP, gpars.cfCache,
+			    gpars.doPointing,gpars.doPBCorr,gpars.conjBeams,
+			    gpars.computePAStep,gpars.rotatePAStep);
+    */
+
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+/*
 bool
 synthesisimager::defineimage(const std::string& imagename,
 			     const int nx, 
@@ -233,6 +274,8 @@ synthesisimager::defineimage(const std::string& imagename,
   
   return rstat;
 }
+
+*/
 
 bool synthesisimager::setweighting(const std::string& type,
 				   const std::string& rmode,

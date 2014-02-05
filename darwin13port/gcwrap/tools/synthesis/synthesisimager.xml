@@ -47,7 +47,48 @@ This is used to construct {\tt synthesisimager} tool.
 </method>
 
 <!-- ===================================== -->
- 
+
+   <method type="function" name="selectdata">
+   <shortdescription>Select data from one MS</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="selpars">
+     <description>All parameters that control selection within one MS</description>
+     <value type="record"></value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="defineimage">
+   <shortdescription>Define image coordinate systems FTMs</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="impars">
+     <description>All parameters that control image coordinate system definition</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="record" name="gridpars">
+     <description>All parameters that control ftmachines and gridding parameters</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+
+<!-- ===================================== -->
+<!-- 
    <method type="function" name="selectdata">
    <shortdescription>Select data from one MS</shortdescription>
 
@@ -142,8 +183,9 @@ multiple MSs.
 <returns type="bool"/>
 </method>
 
-<!-- ===================================== -->
+-->
 
+<!--
    <method type="function" name="defineimage">
    <shortdescription>Define the image coordinate systems and types</shortdescription>
 
@@ -360,6 +402,7 @@ Define the image coordinate systems and shapes.
 <returns type="bool"/>
 </method>
 
+-->
 <!-- ===================================== -->
 
 
