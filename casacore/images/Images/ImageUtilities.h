@@ -168,7 +168,7 @@ public:
 // in the coordinate system.
    static Bool pixToWorld (
 		   Vector<String>& sWorld,
-		   CoordinateSystem& cSys,
+		   const CoordinateSystem& cSys,
 		   const Int& pixelAxis,
 		   const Vector<Int>& cursorAxes,
 		   const IPosition& blc,
