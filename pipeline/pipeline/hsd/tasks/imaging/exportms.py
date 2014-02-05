@@ -61,6 +61,8 @@ class ExportMS(common.SingleDishTaskTemplate):
             data = context.observing_run[index]
             # create job
             infile = data.baselined_name
+            if not os.path.exists(infile):
+                infile = data.name
             self._modify_molecules(infile)
             asdm_name = common.asdm_name(data)
             antenna_name = data.antenna.name

@@ -46,6 +46,8 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
             wvr_spws = [spw for (spw, desc) in data.spectral_window.items()
                         if desc.type == 'WVR']
             filename = data.baselined_name
+            if not os.path.exists(filename):
+                filename = data.name
             srctype = data.calibration_strategy['srctype']
             self._apply_apriori_flags(filename, wvr_spws, srctype)
 
@@ -67,7 +69,11 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
                 namer.asdm(common.asdm_name(data))
                 namer.antenna_name(data.antenna.name)
                 bltable_name = namer.get_filename()
-                filename = data.name
+                if not os.path.exists(bltable_name):
+                    continue
+                filename = data.baselined_name
+                if not os.path.exists(filename):
+                    filename = data.name
                 srctype = data.calibration_strategy['srctype']
                 #self._apply_baseline_flags(filename, bltable_name)
                 self._apply_baseline_flags2(filename, index, spwid, srctype)
