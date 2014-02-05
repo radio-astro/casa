@@ -449,15 +449,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   << "] ) to imager list " 
 	   << LogIO::POST;
 
-	//	csys=buildCoordSys(impars.phaseCenter, impars.cellsize[0], impars.cellsize[1], impars.imsize[0], impars.imsize[1], impars.stokes, impars.projection, impars.nchan,impars.freqStart, impars.freqStep, impars.restFreq, impars.freqFrame);
-
-	SynthesisUtilMethods su;
 	MeasurementSet tms(*mss_p[0]);
-	itsCurrentCoordSys = su.buildCoordinateSystem( impars, tms );
-
-	itsCurrentShape=IPosition( 4, impars.imsize[0], impars.imsize[1], 
-				   ((itsCurrentCoordSys.stokesCoordinate()).stokes()).nelements(), 
-				   impars.nchan );
+	itsCurrentCoordSys = impars.buildCoordinateSystem( tms );
+	itsCurrentShape = impars.shp();
 
 	if( (itsMappers.nMappers()==0) || 
 	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
@@ -950,143 +944,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   /////////////////////////
-  ////////////////////////
-  /*
-  CoordinateSystem SynthesisImager::buildCoordSys(const MDirection& phasecenter, const Quantity& cellx,
-		  const Quantity& celly, const Int nx, const Int ny,
-		  const String& stokes, const Projection& projection, const Int nchan,
-		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame)
-  {
-    LogIO os( LogOrigin("SynthesisImager","build",WHERE) );
-
-    // At this stage one ms at least should have been assigned
-    ROMSColumns msc(*mss_p[0]);
-    phaseCenter_p=phasecenter;
-    MVDirection mvPhaseCenter(phasecenter.getAngle());
-    // Normalize correctly
-    MVAngle ra=mvPhaseCenter.get()(0);
-    ra(0.0);
-    itsCurrentShape=IPosition(4, nx, ny, 0, nchan);
-
-    MVAngle dec=mvPhaseCenter.get()(1);
-    Vector<Double> refCoord(2);
-    refCoord(0)=ra.get().getValue();    
-    refCoord(1)=dec;
-    Vector<Double> refPixel(2); 
-    refPixel(0) = Double(nx / 2);
-    refPixel(1) = Double(ny/ 2);
-    //defining observatory...needed for position on earth
-    String telescop = msc.observation().telescopeName()(0);
-    MEpoch obsEpoch = msc.timeMeas()(0);
-    MPosition obsPosition;
-    Bool freqFrameValid=False;
-    if(!(MeasTable::Observatory(obsPosition, telescop))){
-      os << LogIO::WARN << "Did not get the position of " << telescop 
-	 << " from data repository" << LogIO::POST;
-      os << LogIO::WARN 
-	 << "Please contact CASA to add it to the repository."
-	 << LogIO::POST;
-      os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-
-    }
-    else{
-    	mLocation_p=obsPosition;
-    	freqFrameValid = True;
-    }
-     //Make sure frame conversion is switched off for REST frame data.
-    freqFrameValid=freqFrameValid && (freqFrame != MFrequency::REST);
-    Vector<Double> deltas(2);
-    deltas(0)=-cellx.get("rad").getValue();
-    deltas(1)=celly.get("rad").getValue();
-    Matrix<Double> xform(2,2);
-    xform=0.0;xform.diagonal()=1.0;
-    DirectionCoordinate
-      myRaDec(MDirection::Types(phasecenter.getRefPtr()->getType()),
-	      projection,
-	      refCoord(0), refCoord(1),
-	      deltas(0), deltas(1),
-	      xform,
-	      refPixel(0), refPixel(1));
-
-    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, 
-				  freqStart, freqStep, 0, 
-				  restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
-    for (uInt k=1 ; k < restFreq.nelements(); ++k)
-      mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
-    
-    Vector<Int> whichStokes = decideNPolPlanes(stokes);
-    if(whichStokes.nelements()==0)
-      throw(AipsError("Stokes selection of " +stokes+ " is invalid"));
-    Int nstokes=whichStokes.nelements();
-    itsCurrentShape(2)=nstokes;
-    StokesCoordinate myStokes(whichStokes);
-    //Set Observatory info
-    ObsInfo myobsinfo;
-    myobsinfo.setTelescope(telescop);
-    myobsinfo.setPointingCenter(mvPhaseCenter);
-    myobsinfo.setObsDate(obsEpoch);
-    myobsinfo.setObserver(msc.observation().observer()(0));
-
-    CoordinateSystem csys;
-    csys.addCoordinate(myRaDec);
-    csys.addCoordinate(myStokes);
-    csys.addCoordinate(mySpectral);
-    csys.setObsInfo(myobsinfo);
-    itsCurrentCoordSys=csys;
-    if( (itsMappers.nMappers()==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
-    {
-    	itsMaxShape=itsCurrentShape;
-    	itsMaxCoordSys=itsCurrentCoordSys;
-    }
-
-    return csys;
-  }
-
-  //////////////////////
-  ////////////////////Function to get the pol string to stokes vector
-  Vector<Int> SynthesisImager::decideNPolPlanes(const String& stokes){
-    Vector<Int> whichStokes(0);
-    if(stokes=="I" || stokes=="Q" || stokes=="U" || stokes=="V" || 
-       stokes=="RR" ||stokes=="LL" || 
-       stokes=="XX" || stokes=="YY" ) {
-      whichStokes.resize(1);
-      whichStokes(0)=Stokes::type(stokes);
-    }
-    else if(stokes=="IV" || stokes=="IQ" || 
-	    stokes=="RRLL" || stokes=="XXYY" ||
-	    stokes=="QU" || stokes=="UV"){
-      whichStokes.resize(2);
-      
-      if(stokes=="IV"){ whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::V;}
-      else if(stokes=="IQ"){whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q;}
-      else if(stokes=="RRLL"){whichStokes[0]=Stokes::RR; whichStokes[1]=Stokes::LL;}
-      else if(stokes=="XXYY"){whichStokes[0]=Stokes::XX; whichStokes[1]=Stokes::YY; }
-      else if(stokes=="QU"){whichStokes[0]=Stokes::Q; whichStokes[1]=Stokes::U; }
-      else if(stokes=="UV"){ whichStokes[0]=Stokes::U; whichStokes[1]=Stokes::V; }
-	
-    }
   
-    else if(stokes=="IQU" || stokes=="IUV") {
-      whichStokes.resize(3);
-      if(stokes=="IUV")
-	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::U; whichStokes[2]=Stokes::V;}
-      else
-	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q; whichStokes[2]=Stokes::U;}
-    }
-    else if(stokes=="IQUV"){
-      whichStokes.resize(4);
-      whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::Q;
-      whichStokes(2)=Stokes::U; whichStokes(3)=Stokes::V;
-    }
-      
-    return whichStokes;
-  }
-  */
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
   // Make the FT-Machine and related objects (cfcache, etc.)
   void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
 					const Int facets,            //=1
