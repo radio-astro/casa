@@ -33,107 +33,173 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/QuantumHolder.h>
 #include <measures/Measures/MDirection.h>
+#include <casa/Quanta/MVAngle.h>
 #include <measures/Measures/MFrequency.h>
+#include <casa/Utilities/DataType.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
+#include <coordinates/Coordinates/Projection.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class SynthesisUtilMethods
-{
- public:
-  // Default constructor
-
-  SynthesisUtilMethods();
-  ~SynthesisUtilMethods();
-
-  // All functions here are stand-alone, self-contained methods.
-
-
-  // Partitioning syntax for Selection parameters
-  //
-  // Input Record (example) :
-  //  { 'ms0' : { 'msname':xxx1, 'spw':yyy } ,
-  //     'ms1' : { 'msname':xxx2, 'spw':yyy } }
-  //
-  //  Output Record (example for partitioning on spw) : 
-  //  { '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,
-  //              'ms1' : { 'msname':xxx2, 'spw':yyy1 }    }
-  //    '1' : { 'ms0' : { 'msname':xxx1, 'spw':yyy2 } ,
-  //               'ms1' : { 'msname':xxx2, 'spw':yyy2 }   }   }
-
-  // Data partitioning rules for CONTINUUM imaging
-  Record continuumDataPartition(Record &selpars, const Int npart);
-
-  // Data partitioning rules for CUBE imaging
-  Record cubeDataPartition(Record &selpars, Int npart);
-
-  // Image cube partitioning rules for CUBE imaging
-  Record cubeImagePartition(Record &impars, Int npart);
-
-  /////////////////////// Parameter verification - start
-
-  // Make/Check Selection Parameter Lists
-  Record verifySelectionParams(Record &selpars);
-
-
-  /*
-
-  // Make/Check Imaging Parameter Lists
-  Record verifyImageParams(Record &impars, String outlierfile="");
-  // Default Imaging Parameters
-  Record getDefaultImageParams();
-  // Parse outlier-field specification file
-  Record parseOutlierFile(String outlierfile);
-
-
-  // Make/Check Iteration Parameters
-  Record verifyIterationParams(Record &iterpars);
+  class SynthesisParams;
+  class SynthesisParamsImage;
+  class SynthesisParamsSelect;
   
-  // Make/Check Deconvolution Parameters
-  Record verifyDeconvolutionParams(Record &decpars);
+  class SynthesisUtilMethods
+  {
+  public:
+    // Default constructor
 
-  // Check Gather/Normalization parameters.
-  Record verifyNormalizationParameters(Record &impars, const Int npart);
-  */
-  /////////////////////// Parameter verification - end
+    SynthesisUtilMethods();
+    ~SynthesisUtilMethods();
+    
+    // All functions here are stand-alone, self-contained methods.
+    
+    
+    // Partitioning syntax for Selection parameters
+    //
+    // Input Record (example) :
+    //  { 'ms0' : { 'msname':xxx1, 'spw':yyy } ,
+    //     'ms1' : { 'msname':xxx2, 'spw':yyy } }
+    //
+    //  Output Record (example for partitioning on spw) : 
+    //  { '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,
+    //              'ms1' : { 'msname':xxx2, 'spw':yyy1 }    }
+    //    '1' : { 'ms0' : { 'msname':xxx1, 'spw':yyy2 } ,
+    //               'ms1' : { 'msname':xxx2, 'spw':yyy2 }   }   }
+    
+    // Data partitioning rules for CONTINUUM imaging
+    Record continuumDataPartition(Record &selpars, const Int npart);
+    
+    // Data partitioning rules for CUBE imaging
+    Record cubeDataPartition(Record &selpars, Int npart);
+    
+    // Image cube partitioning rules for CUBE imaging
+    Record cubeImagePartition(Record &impars, Int npart);
+    
+    // Generate Coordinate System 
+    CoordinateSystem buildCoordinateSystem(const SynthesisParamsImage& impars,
+					   MeasurementSet& msobj=MeasurementSet());
+    
+  protected:
 
+    Vector<Int> decideNPolPlanes(const String& stokes);
 
-  // Generate Coordinate System ( spectral definition, especially )
-  //  Input : all specs.  Output : LSRK freqs.
+    
+  };
 
-
-
+class SynthesisParams
+{
+public:
+  SynthesisParams(){};
+  virtual ~SynthesisParams(){};
+  virtual void fromRecord(Record &inrec)=0;
+  virtual void setDefaults()=0;
+  virtual String verify()=0;
+  virtual Record toRecord()=0;
 protected:
-
-
-
+  // All return strings are error messages. Null if valid.
+  String readVal(Record &rec, String id, String& val);
+  String readVal(Record &rec, String id, Int& val);
+  String readVal(Record &rec, String id, Float& val);
+  String readVal(Record &rec, String id, Bool& val);
+  String readVal(Record &rec, String id, Vector<Int>& val);
+  String readVal(Record &rec, String id, Vector<Float>& val);
+  String readVal(Record &rec, String id, Vector<String>& val);
+  String stringToQuantity(String instr, Quantity& qa);
+  String stringToMDirection(String instr, MDirection& md);
+  String readVal(Record &rec, String id, Quantity& val);
+  String readVal(Record &rec, String id, MDirection& val);
+  // Others..
+  String MDirectionToString(MDirection val);
+  String QuantityToString(Quantity val);
 };
 
-
-
-class SynthesisParamsSelect
+  class SynthesisParamsSelect : public SynthesisParams
 {
 public:
 
   SynthesisParamsSelect();
   ~SynthesisParamsSelect();
 
-  void setValues(const String inmsname, const String inspw="", 
-			const String infreqbeg="", const String infreqend="", const String infreqframe="", 
-			const String infield="", const String inantenna="", const String intimestr="", 
-			const String inscan="", const String inobs="", const String instate="", 
-			const String inuvdist="", const String intaql="", const Bool inusescratch=True, 
-			const Bool inreadonly=False, const Bool inincrmodel=False);
-
-  void setValues(Record &inrec);
+  void fromRecord(Record &inrec);
   void setDefaults();
-
+  String verify();
   Record toRecord();
 
   String msname, spw, freqbeg, freqend;
   MFrequency::Types freqframe;
   String field, antenna, timestr, scan, obs, state, uvdist,taql;
   Bool usescratch,readonly,incrmodel;
+
+};
+
+
+ 
+  class SynthesisParamsImage: public SynthesisParams
+{
+public:
+
+  SynthesisParamsImage();
+  ~SynthesisParamsImage();
+
+  void fromRecord(Record &inrec);
+  void setDefaults();
+  String verify();
+  Record toRecord();
+
+  // Sky coordinates
+  String imageName, stokes, startModel;
+  Vector<Int> imsize;
+  Vector<Quantity> cellsize;
+  Projection projection;
+  MDirection phaseCenter;
+  Int facets;
+
+  // Spectral coordinates ( TT : Add other params here  )
+  Int nchan, nTaylorTerms;
+  Quantity freqStart, freqStep, refFreq;
+  MFrequency::Types freqFrame;
+  Vector<Quantity> restFreq;
+
+  Bool overwrite;
+
+};
+
+
+  class SynthesisParamsGrid: public SynthesisParams
+{
+public:
+
+  SynthesisParamsGrid();
+  ~SynthesisParamsGrid();
+
+  void fromRecord(Record &inrec);
+  void setDefaults();
+  String verify();
+  Record toRecord();
+
+  // FTMachine setup
+  String ftmachine, convFunc;
+  Int wprojplanes;
+  Bool useDoublePrec, useAutoCorr; 
+  Float padding;
+
+  // Moving phase center ? 
+  Quantity distance;
+  MDirection trackDir;
+  Bool trackSource; 
+  
+  // For wb-aprojection ftm.
+  Bool aTermOn, psTermOn,mTermOn,wbAWP,doPointing, doPBCorr, conjBeams;
+  String cfCache;
+  Float computePAStep, rotatePAStep;
+  
 
 };
 

@@ -38,6 +38,7 @@
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include<synthesis/ImagerObjects/SIMapperCollection.h>
+#include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <synthesis/TransformMachines/ATerm.h>
 
@@ -65,6 +66,8 @@ class SynthesisImager
   //Imager(const Imager&);
   //Imager& operator=(const Imager&);
 
+  virtual Bool selectData(const SynthesisParamsSelect& selpars);
+
   // make all pure-inputs const
   virtual Bool selectData(const String& msname, 
 			  const String& spw="*", 
@@ -82,6 +85,8 @@ class SynthesisImager
 			  const Bool usescratch=False, 
 			  const Bool readonly=False, 
 			  const Bool incrementModel=False);
+
+  virtual Bool defineImage(const SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
 
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way
@@ -159,6 +164,7 @@ protected:
  
   /////////////// Internal Functions
 
+  /*
   CoordinateSystem buildCoordSys(const MDirection& phasecenter, 
 				 const Quantity& cellx, 
 				 const Quantity& celly,
@@ -172,6 +178,7 @@ protected:
 				 const Vector<Quantity>& restFreq, 
 				 const MFrequency::Types freqFrame);
   Vector<Int> decideNPolPlanes(const String& stokes);
+  */
 
   void createFTMachine(CountedPtr<FTMachine>& theFT, 
 		       CountedPtr<FTMachine>& theIFT,  
