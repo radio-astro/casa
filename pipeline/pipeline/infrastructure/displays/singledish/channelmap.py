@@ -18,13 +18,14 @@ from . import tpimage
 LOG = infrastructure.get_logger(__name__)
 
 class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
-    def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap, nh, nv):
+    def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap, nh, nv, brightnessunit):
         super(ChannelMapAxesManager,self).__init__(xformatter, yformatter,
                                                    xlocator, ylocator,
                                                    xrotation, yrotation,
                                                    ticksize, colormap)
         self.nh = nh
         self.nv = nv
+        self.brightnessunit = brightnessunit
         self.nchmap = nh * nv
         self.left = 2.15 / 3.0
         self.width = 1.0 / 3.0 * 0.8
@@ -72,7 +73,7 @@ class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
             pl.xlabel('Frequency (GHz)', size=self.ticksize)
-            pl.ylabel('Intensity (%s)'%(self.inputs.brightnessunit), size=self.ticksize)
+            pl.ylabel('Intensity (%s)'%(self.brightnessunit), size=self.ticksize)
             pl.title('Integrated Spectrum', size=self.ticksize)
 
             self._axes_integsp_full = axes
@@ -87,7 +88,7 @@ class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
             pl.xlabel('Relative Velocity w.r.t. Window Center (km/s)', size=self.ticksize)
-            pl.ylabel('Intensity (%s)'%(self.inputs.brightnessunit), size=self.ticksize)
+            pl.ylabel('Intensity (%s)'%(self.brightnessunit), size=self.ticksize)
             pl.title('Integrated Spectrum (zoom)', size=self.ticksize)
 
             self._axes_integsp_zoom = axes
@@ -218,7 +219,8 @@ class SDChannelMapDisplay(SDImageDisplay):
                                              RAlocator, DEClocator,
                                              RArotation, DECrotation,
                                              TickSize, colormap,
-                                             self.NhPanel, self.NvPanel)
+                                             self.NhPanel, self.NvPanel,
+                                             self.inputs.brightnessunit)
         axes_integmap = axes_manager.axes_integmap
         integmap_colorbar = None
         beam_circle = None
@@ -296,6 +298,9 @@ class SDChannelMapDisplay(SDImageDisplay):
                 t0 = time.time()
 
                 # Draw Total Intensity Map
+                #LOG.debug('masked_data=%s'%(masked_data.tolist()))
+                #LOG.debug('masked_data.shape=%s'%(list(masked_data.shape)))
+                #LOG.debug('ChanVelWidth=%s'%(ChanVelWidth))
                 Total = masked_data.sum(axis=2) * ChanVelWidth
                 Total = numpy.flipud(Total.transpose())
 
