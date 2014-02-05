@@ -191,7 +191,7 @@ template <class T> Bool ImageTask<T>::_openLogfile() {
 }
 
 template <class T> void ImageTask<T>::_closeLogfile() const {
-	if (! _logfile.get()) {
+	if (_logfile) {
 		_logfile->closeFile();
 	}
 }
