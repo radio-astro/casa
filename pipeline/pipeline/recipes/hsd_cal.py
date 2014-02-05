@@ -48,7 +48,7 @@ def hsd_cal (vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         # Load the data
         hsd_importdata (infiles=vislist, pipelinemode=pipelinemode)
         if importonly:
-           raise Exception(IMPORT_ONLY)
+            raise Exception(IMPORT_ONLY)
     
         # Inspect data
         hsd_inspectdata (pipelinemode=pipelinemode)
@@ -57,7 +57,11 @@ def hsd_cal (vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         hsd_caltsys (pipelinemode=pipelinemode)
 
         # Compute the sky calibration
-        hsd_calsky (pipelinemode=pipelinemode)
+        if pipelinemode == 'automatic':
+            pipelinemode_local = 'interactive'
+        else:
+            pipelinemode_local = pipelinemode
+        hsd_calsky (pipelinemode=pipelinemode_local, calmode='otfraster')
         
         # Apply the calibrations
         hsd_applycal (pipelinemode=pipelinemode)
