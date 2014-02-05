@@ -80,7 +80,6 @@
 #include <images/Images/ImageConcat.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExprParse.h>
-#include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Regions/WCEllipsoid.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
@@ -1439,114 +1438,6 @@ Bool ImageAnalysis::remove(Bool verbose)
   }
 
   return rstat;
-}
-
-Bool ImageAnalysis::fft(
-	const String& realOut, const String& imagOut,
-	const String& ampOut, const String& phaseOut, const Vector<Int>& axes,
-	Record& Region, const String& mask, const Bool stretch
-) {
-	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
-
-	// Validate outfiles
-	if (realOut.empty() && imagOut.empty() && ampOut.empty()
-			&& phaseOut.empty()) {
-		*_log << LogIO::WARN << "You did not request any output images"
-				<< LogIO::POST;
-		return False;
-	}
-	//
-	String errmsg;
-	if (!realOut.empty()) {
-		NewFile validFileReal;
-		if (!validFileReal.valueOK(realOut, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	//
-	if (!imagOut.empty()) {
-		NewFile validFileImag;
-		if (!validFileImag.valueOK(imagOut, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	//
-	if (!ampOut.empty()) {
-		NewFile validFileAmp;
-		if (!validFileAmp.valueOK(ampOut, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	//
-	if (!phaseOut.empty()) {
-		NewFile validFilePhase;
-		if (!validFilePhase.valueOK(phaseOut, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
-		Region,
-		mask, _log.get(), False, AxesSpecifier(), stretch
-	);
-
-	// Do the FFT
-	ImageFFT fft;
-	if (axes.size() == 0) {
-		*_log << LogIO::NORMAL << "FFT the sky" << LogIO::POST;
-		fft.fftsky(subImage);
-	} else {
-		// Set vector of bools specifying axes
-		Vector<Int> intAxes(axes);
-		Vector<Bool> which(subImage.ndim(), False);
-		for (uInt i = 0; i < intAxes.nelements(); i++)
-			which(intAxes(i)) = True;
-		//
-		*_log << LogIO::NORMAL << "FFT axes " << intAxes + 1 << LogIO::POST;
-		fft.fft(subImage, which);
-	}
-
-	// Write output files
-	String maskName("");
-	if (!realOut.empty()) {
-		*_log << LogIO::NORMAL << "Creating image '" << realOut << "'"
-				<< LogIO::POST;
-		PagedImage<Float> realOutIm(subImage.shape(), subImage.coordinates(),
-				realOut);
-		if (subImage.isMasked())
-			ImageMaskAttacher::makeMask(realOutIm, maskName, False, True, *_log, True);
-		fft.getReal(realOutIm);
-	}
-	if (!imagOut.empty()) {
-		*_log << LogIO::NORMAL << "Creating image '" << imagOut << "'"
-				<< LogIO::POST;
-		PagedImage<Float> imagOutIm(subImage.shape(), subImage.coordinates(),
-				imagOut);
-		if (subImage.isMasked())
-			ImageMaskAttacher::makeMask(imagOutIm, maskName, False, True, *_log, True);
-		fft.getImaginary(imagOutIm);
-	}
-	if (!ampOut.empty()) {
-		*_log << LogIO::NORMAL << "Creating image '" << ampOut << "'"
-				<< LogIO::POST;
-		PagedImage<Float> ampOutIm(subImage.shape(), subImage.coordinates(),
-				ampOut);
-		if (subImage.isMasked())
-			ImageMaskAttacher::makeMask(ampOutIm, maskName, False, True, *_log, True);
-		fft.getAmplitude(ampOutIm);
-	}
-	if (!phaseOut.empty()) {
-		*_log << LogIO::NORMAL << "Creating image '" << phaseOut << "'"
-				<< LogIO::POST;
-		PagedImage<Float> phaseOutIm(subImage.shape(), subImage.coordinates(),
-				phaseOut);
-		if (subImage.isMasked())
-			ImageMaskAttacher::makeMask(phaseOutIm, maskName, False, True, *_log, True);
-		fft.getPhase(phaseOutIm);
-	}
-	return True;
 }
 
 Record ImageAnalysis::findsources(const int nMax, const double cutoff,

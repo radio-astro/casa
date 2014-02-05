@@ -30,6 +30,7 @@
 
 #include <casa/aips.h>
 #include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageTypedefs.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -129,22 +130,21 @@ template<class T> class Vector;
 class ImageFFT 
 {
 public:
+	ImageFFT ();
 
-// Default constructor
-   ImageFFT ();
+	ImageFFT(const ImageFFT& other);
 
-// Copy constructor (reference semantics)
-   ImageFFT(const ImageFFT& other);
+	// Assignment (reference semantics)
+	ImageFFT& operator=(const ImageFFT& other);
 
-// Assignment (reference semantics)
-   ImageFFT& operator=(const ImageFFT& other);
+	~ImageFFT();
 
-// Destructor
-   ~ImageFFT();
+	// Do the FFT of the sky plane to the uv plane
+	// Masked pixels are set to zero before the FT
+	void fftsky (const ImageInterface<Float>& in);
 
-// Do the FFT of the sky plane to the uv plane
-// Masked pixels are set to zero before the FT
-   void fftsky (const ImageInterface<Float>& in);
+	void fftsky (const ImageInterface<Complex>& in);
+
 
 // Do the FFT of the specified pixel axes (True to FT).  
 // The rest are iterated over.
@@ -175,10 +175,10 @@ public:
 
 private:
 
-   ImageInterface<Complex>* itsTempImagePtr;
-   ImageInterface<Float>* itsInImagePtrFloat;
-   ImageInterface<Complex>* itsInImagePtrComplex;
-   Bool itsDone;
+   SPIIC _tempImagePtr;
+   SPIIF _floatImage;
+   SPIIC _complexImage;
+   Bool _done;
 
 // Check axes for multi-dim FFT
    void checkAxes(const CoordinateSystem& cSys, uInt ndim, 
@@ -202,11 +202,17 @@ private:
    void copyMiscellaneous (ImageInterface<Complex>& out) const;
 // </group>
 
-// FFT the sky
-   void fftsky2 (ImageInterface<Complex>& out,
-                 const ImageInterface<Float>& in,
-                 const Vector<Int>& pixelAxes);
+   void _fftsky2 (
+		   ImageInterface<Complex>& out,
+		   const ImageInterface<Float>& in,
+		   const Vector<Int>& pixelAxes
+   );
 
+   void _fftsky2 (
+		   ImageInterface<Complex>& out,
+   		   const ImageInterface<Complex>& in,
+   		   const Vector<Int>& pixelAxes
+   );
 // FFT (Float) given axes
    void fft2(ImageInterface<Complex>& out,
              const ImageInterface<Float>& in,
@@ -218,21 +224,26 @@ private:
              const Vector<Bool>& axes);
 
 // Find the sky axes in this CoordinateSystem
-   Bool findSky(LogIO& os, Int& dC, Vector<Int>& pixelAxes,
-                Vector<Int>& worldAxes, const CoordinateSystem& cSys,
-                Bool throwIt);
+   Bool _findSky(
+		   Int& dC, Vector<Int>& pixelAxes,
+		   Vector<Int>& worldAxes, const CoordinateSystem& cSys,
+		   Bool throwIt
+   );
 
 // Overwrite the coordinate system with Fourier coordinates for sky axes only
-   void setSkyCoordinates (LogIO& os, ImageInterface<Complex>& out,
-                           const ImageInterface<Float>& in,
-                           uInt dC);
+   void _setSkyCoordinates (
+		   ImageInterface<Complex>& out,
+		   const CoordinateSystem& csys, const IPosition& shape,
+		   uInt dC
+   );
 
 // Overwrite the coordinate system with Fourier coordinates for all desginated axes
-   void setCoordinates (LogIO& os,
-                        ImageInterface<Complex>& out,
-                        const CoordinateSystem& cSys,
-                        const Vector<Bool>& axes,
-                        const IPosition& shape);
+   void _setCoordinates (
+		  ImageInterface<Complex>& out,
+		  const CoordinateSystem& cSys,
+		  const Vector<Bool>& axes,
+		  const IPosition& shape
+);
 };
 
 } //# NAMESPACE CASA - END
