@@ -82,15 +82,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Image cube partitioning rules for CUBE imaging
     Record cubeImagePartition(Record &impars, Int npart);
     
-    // Generate Coordinate System 
-    CoordinateSystem buildCoordinateSystem(const SynthesisParamsImage& impars,
-					   MeasurementSet msobj=MeasurementSet());
     
   protected:
 
-    Vector<Int> decideNPolPlanes(const String& stokes);
-
-    
   };
 
 class SynthesisParams
@@ -152,6 +146,11 @@ public:
   void setDefaults();
   String verify();
   Record toRecord();
+
+  // Generate Coordinate System 
+  CoordinateSystem buildCoordinateSystem(MeasurementSet& msobj) const;
+  Vector<Int> decideNPolPlanes(const String& stokes) const;
+  IPosition shp() const;
 
   // Sky coordinates
   String imageName, stokes, startModel;
