@@ -78,7 +78,7 @@ class ia_fft_test(unittest.TestCase):
         pass
     
     def tearDown(self):
-        pass
+        self.assertTrue(len(tb.showcache()) == 0)
     
     def test_stretch(self):
         """ ia.fft(): Test stretch parameter"""
@@ -100,6 +100,26 @@ class ia_fft_test(unittest.TestCase):
         )
         self.assertTrue(type(zz) == type(false))
         yy.done()
+        
+    def test_delta(self):
+        """Test fft of delta function"""
+        myia = iatool()
+        myia.fromshape("", [100, 100])
+        bb = myia.getchunk()
+        bb[50, 50] = 1
+        myia.putchunk(bb)
+        real = "real.im"
+        imag = "imag.im"
+        amp = "amp.im"
+        phase = "phase.im"
+        myia.fft(real=real, imag=imag, amp=amp, phase=phase)
+        for im in [real, imag, amp, phase]:
+            expec = 1
+            if im == imag or im == phase:
+                expec = 0
+            myia.open(im)
+            self.assertTrue((myia.getchunk() == expec).all())
+        myia.done()
         
 def suite():
     return [ia_fft_test]
