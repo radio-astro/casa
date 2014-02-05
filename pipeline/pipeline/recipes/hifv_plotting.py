@@ -499,7 +499,7 @@ def targetflag_plots():
 
 def testBPdcals_plots():
 
-    context = h_resume()
+    context = pipeline.Pipeline(context='last').context
     
     m = context.observing_run.measurement_sets[0]
     numAntenna = context.evla['msinfo'][m.name].numAntenna
