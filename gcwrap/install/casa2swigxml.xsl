@@ -109,7 +109,7 @@
 <xsl:apply-templates select="aps:inout"/>
 <xsl:apply-templates select="aps:input"/>
 <xsl:apply-templates select="aps:returns"/>
-<xsl:apply-templates select="aps:description"/>
+<!-- <xsl:apply-templates select="aps:description"/> -->
 <xsl:apply-templates select="aps:example"/>
 </xsl:element>
 <xsl:text>
