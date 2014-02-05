@@ -171,7 +171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   CoordinateSystem 
   SynthesisUtilMethods::buildCoordinateSystem(const SynthesisParamsImage& impars,
-					      MeasurementSet& msobj)
+					      MeasurementSet msobj)
   {
     LogIO os( LogOrigin("SynthesisUtilMethods","buildCoordinateSystem",WHERE) );
 

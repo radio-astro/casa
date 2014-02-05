@@ -452,7 +452,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	csys=buildCoordSys(impars.phaseCenter, impars.cellsize[0], impars.cellsize[1], impars.imsize[0], impars.imsize[1], impars.stokes, impars.projection, impars.nchan,impars.freqStart, impars.freqStep, impars.restFreq, impars.freqFrame);
 
 	SynthesisUtilMethods su;
-	itsCurrentCoordSys = su.buildCoordinateSystem( impars, *mss_p[0] );
+	MeasurementSet tms(*mss_p[0]);
+	itsCurrentCoordSys = su.buildCoordinateSystem( impars, tms );
 
 	itsCurrentShape=IPosition( 4, impars.imsize[0], impars.imsize[1], 
 				   ((itsCurrentCoordSys.stokesCoordinate()).stokes()).nelements(), 
