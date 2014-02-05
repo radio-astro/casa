@@ -239,7 +239,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 	else {
 		ImageUtilities::copyMiscellaneous(tmpIm, subImage, True);
 	}
-	SPIIT outImage = _prepareOutputImage(tmpIm);
+	SPIIT outImage = this->_prepareOutputImage(tmpIm);
 	if (wantReturn) {
 		return outImage;
 	}
