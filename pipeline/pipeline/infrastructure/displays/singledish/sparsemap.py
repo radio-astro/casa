@@ -19,10 +19,11 @@ NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
 
 class SparseMapAxesManager(object):
-    def __init__(self, nh, nv, ticksize):
+    def __init__(self, nh, nv, brightnessunit, ticksize):
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
+        self.brightnessunit = brightnessunit
         self.numeric_formatter = pl.FormatStrFormatter('%.2f')
         
         self._axes_integsp = None
@@ -34,7 +35,7 @@ class SparseMapAxesManager(object):
             axes = pl.subplot((self.nv+3)/2+3, 1, 1)
             axes.xaxis.set_major_formatter(self.numeric_formatter)
             pl.xlabel('Frequency(GHz)', size=(self.ticksize+1))
-            pl.ylabel('Intensity(K)', size=(self.ticksize+1))
+            pl.ylabel('Intensity(%s)'%(self.brightnessunit), size=(self.ticksize+1))
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
             pl.title('Spatially Integrated Spectrum', size=(self.ticksize + 1))
@@ -141,7 +142,7 @@ class SDSparseMapDisplay(SDImageDisplay):
         #LOG.debug('LabelDEC=%s'%(LabelDEC))
         #LOG.debug('LabelRA=%s'%(LabelRA))
 
-        axes_manager = SparseMapAxesManager(NH, NV, TickSize)
+        axes_manager = SparseMapAxesManager(NH, NV, self.inputs.brightnessunit, TickSize)
         axes_manager.setup_labels(LabelRA, LabelDEC)
         axes_integsp = axes_manager.axes_integsp
         axes_spmap = axes_manager.axes_spmap

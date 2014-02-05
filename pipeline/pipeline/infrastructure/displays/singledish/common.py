@@ -56,6 +56,7 @@ class SpectralImage(object):
             self.ra_max = ra_max
             self.dec_min = bottom[key(self.id_direction[1])]
             self.dec_max = top[key(self.id_direction[1])]
+            self._brightnessunit = ia.brightnessunit()
         
     @property
     def nx(self):
@@ -72,6 +73,13 @@ class SpectralImage(object):
     @property
     def npol(self):
         return self.image_shape[self.id_stokes]
+    
+    @property
+    def brightnessunit(self):
+        if self._brightnessunit.find('Jy') != -1:
+            return 'Jy'
+        else:
+            return 'K'
 
     def to_velocity(self, frequency, freq_unit='GHz'):
         qa = casatools.quanta
@@ -146,6 +154,10 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
     @property
     def npol(self):
         return self.image.npol
+    
+    @property
+    def brightnessunit(self):
+        return self.image.brightnessunit
 
     @property
     def num_valid_spectrum(self):

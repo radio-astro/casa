@@ -17,9 +17,10 @@ from .common import DPIDetail, SDImageDisplay, ShowPlot
 LOG = infrastructure.get_logger(__name__)
 
 class SpectralMapAxesManager(object):
-    def __init__(self, nh, nv, formatter, locator, ticksize):
+    def __init__(self, nh, nv, brightnessunit, formatter, locator, ticksize):
         self.nh = nh
         self.nv = nv
+        self.brightnessunit = brightnessunit
         self.formatter = formatter
         self.locator = locator
         self.ticksize = ticksize
@@ -51,7 +52,7 @@ class SpectralMapAxesManager(object):
             a.yaxis.set_label_coords(-0.22,0.5)
             a.title.set_y(0.95)
             a.title.set_size(self.ticksize)
-            pl.ylabel('Intensity (K)', size=self.ticksize)
+            pl.ylabel('Intensity (%s)'%(self.brightnessunit), size=self.ticksize)
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
 
@@ -168,7 +169,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
         plot_list = []
 
-        axes_manager = SpectralMapAxesManager(NhPanel, NvPanel,
+        axes_manager = SpectralMapAxesManager(NhPanel, NvPanel, self.inputs.brightnessunit,
                                               Format, FreqLocator,
                                               TickSize)
         axes_list = axes_manager.axes_list

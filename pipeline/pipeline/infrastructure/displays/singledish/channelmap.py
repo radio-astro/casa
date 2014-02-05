@@ -72,7 +72,7 @@ class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
             pl.xlabel('Frequency (GHz)', size=self.ticksize)
-            pl.ylabel('Intensity (K)', size=self.ticksize)
+            pl.ylabel('Intensity (%s)'%(self.inputs.brightnessunit), size=self.ticksize)
             pl.title('Integrated Spectrum', size=self.ticksize)
 
             self._axes_integsp_full = axes
@@ -87,7 +87,7 @@ class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
             pl.xlabel('Relative Velocity w.r.t. Window Center (km/s)', size=self.ticksize)
-            pl.ylabel('Intensity (K)', size=self.ticksize)
+            pl.ylabel('Intensity (%s)'%(self.inputs.brightnessunit), size=self.ticksize)
             pl.title('Integrated Spectrum (zoom)', size=self.ticksize)
 
             self._axes_integsp_zoom = axes
@@ -316,7 +316,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                             for t in integmap_colorbar.ax.get_yticklabels():
                                 newfontsize = t.get_fontsize()*0.5
                                 t.set_fontsize(newfontsize)
-                            integmap_colorbar.ax.set_title('[K km/s]')
+                            integmap_colorbar.ax.set_title('[%s km/s]'%(self.inputs.brightnessunit))
                             lab = integmap_colorbar.ax.title
                             lab.set_fontsize(newfontsize)
                         else:
@@ -398,7 +398,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                                 for t in cb.ax.get_yticklabels():
                                     newfontsize = t.get_fontsize()*0.5
                                     t.set_fontsize(newfontsize)
-                                cb.ax.set_title('[K km/s]')
+                                cb.ax.set_title('[%s km/s]'%(self.inputs.brightnessunit))
                                 lab=cb.ax.title
                                 lab.set_fontsize(newfontsize)
                                 chmap_colorbar[y] = cb

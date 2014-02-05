@@ -117,7 +117,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
                             newfontsize = t.get_fontsize()*0.5
                             t.set_fontsize(newfontsize)
                         #tpmap_colorbar.ax.set_title('[K km/s]')
-                        tpmap_colorbar.ax.set_title('[K]')
+                        tpmap_colorbar.ax.set_title('[%s]'%(self.inputs.brightnessunit))
                         lab = tpmap_colorbar.ax.title
                         lab.set_fontsize(newfontsize)
                     else:
