@@ -1,0 +1,89 @@
+<%!
+rsc_path = "../"
+import os
+
+import itertools
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.displays as displays
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</%block>
+
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
+<script>
+$(document).ready(function() {
+    // return a function that sets the SPW text field to the given spw
+    var createSpwSetter = function(spw) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-spw").select2("val", [spw]).trigger("change");
+        };
+    };
+
+    // create a callback function for each overview plot that will select the
+    // appropriate spw once the page has loaded
+    $(".thumbnail a").each(function (i, v) {
+        var o = $(v);
+        var spw = o.data("spw");
+        o.data("callback", createSpwSetter(spw));
+    });
+
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        }
+    });
+});
+</script>
+
+This task generates a Tsys calibration table.
+
+% for ms in summary.keys():
+    <h4><a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, subpage[ms][0]), pcontext.report_dir)}">${ms}</a>
+    </h4>
+    
+    <ul class="thumbnails">
+        % for _summary, _subpage, _x in zip(summary[ms], subpage[ms], ['Frequency', 'Time']):
+            % if os.path.exists(_summary.thumbnail):
+            <li class="span3">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(_summary.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="thumbs">
+                        <img src="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}"
+                             title="Tsys vs ${_x}"
+                             data-thumbnail="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}">
+                        </img>
+                    </a>
+
+                    <div class="caption">
+                        <h4>
+                            <a href="${os.path.relpath(os.path.join(dirname, _subpage), pcontext.report_dir)}"
+                               class="replace">
+                               Tsys vs ${_x}
+                            </a>
+                        </h4>
+                    </div>
+                </div>
+            </li>
+            % endif
+        % endfor
+    </ul>
+%endfor
+

@@ -1,0 +1,205 @@
+<ProcessingProcedure>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_flagdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_fluxcalflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_refant</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsyscal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsysflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsysflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">metric</Keyword>
+                <Value xmlns="">derivative</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_maxabs</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fmax_limit</Keyword>
+                <Value xmlns="">2</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_nmedian</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsysflagchans</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intentgroups</Keyword>
+                <Value xmlns="">['ATMOSPHERE','BANDPASS','AMPLITUDE']</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsysflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">metric</Keyword>
+                <Value xmlns="">fieldshape</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">refintent</Keyword>
+                <Value xmlns="">BANDPASS</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_maxabs</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fmax_limit</Keyword>
+                <Value xmlns="">5</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_tmf1</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">tmf1_axis</Keyword>
+                <Value xmlns="">Antenna1 </Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">tmf1_limit</Keyword>
+                <Value xmlns="">0.666</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_nmedian</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsysflagchans</Command>
+            <ParameterSet>
+              <Parameter>
+                  <Keyword xmlns="">metric</Keyword>
+                  <Value xmlns="">antenna_diff</Value>
+              </Parameter>
+              <Parameter>
+                  <Keyword xmlns="">flag_edges</Keyword>
+                  <Value xmlns="">False</Value>
+              </Parameter>
+              <Parameter>
+                  <Keyword xmlns="">flag_sharps2</Keyword>
+                  <Value xmlns="">True</Value>
+              </Parameter>
+              <Parameter>
+                  <Keyword xmlns="">sharps2_limit</Keyword>
+                  <Value xmlns="">0.1</Value>
+              </Parameter>
+           </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_wvrgcalflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_lowgainflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_setjy</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_bandpass</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_bpflagchans</Command>
+        <ParameterSet>
+          <Parameter>
+              <Keyword xmlns="">diffmad_nchan_limit</Keyword>
+              <Value xmlns="">10000</Value>
+          </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_gfluxscale</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_timegaincal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_applycal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makecleanlist</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intent</Keyword>
+                <Value xmlns="">PHASE,BANDPASS</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_cleanlist</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_exportdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+</ProcessingProcedure>

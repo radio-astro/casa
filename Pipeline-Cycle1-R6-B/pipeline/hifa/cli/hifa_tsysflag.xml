@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_tsysflag" category="pipeline">
+<shortdescription>Flag deviant system temperature measurements</shortdescription>
+<description>
+Flag deviant system temperature measurements.
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets (Not used) </description>
+        <value></value>
+    </param>
+
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of input caltables</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="metric">
+        <description>Method used to judge the quality of a Tsys measurement</description>
+        <value>median</value>
+        <allowed kind="enum">
+            <value>median</value>
+            <value>shape</value>
+            <value>fieldshape</value>
+            <value>derivative</value>
+        </allowed>
+    </param>
+
+    <param type="string" name="intentgroups">
+        <description>List of groups of intents whose Tsys are to be compared with the reference</description>
+        <value>"ATMOSPHERE"</value>
+    </param>
+
+    <param type="string" name="refintent">
+        <description>Data intent that provides the reference shape for \'fieldshape\' metric</description>
+        <value>BANDPASS</value>
+    </param>
+
+    <param type="bool" name="flag_hi">
+        <description>True to flag high figure of merit outliers</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fhi_limit" subparam="true">
+        <description>Flag figure of merit values higher than fhi_limit * MAD</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="int" name="fhi_minsample" subparam="true">
+        <description>Minimum number of samples for valid MAD estimate</description>
+        <value>5</value>
+    </param>
+
+    <param type="bool" name="flag_maxabs">
+        <description>True to flag pixels with absolute value higher than fmax_limit</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fmax_limit" subparam="true">
+        <description>Flag pixels whose absolute value is higher than this limit</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="bool" name="flag_minabs">
+        <description>True to flag pixels with absolute value lower than fmin_limit</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fmin_limit" subparam="true">
+        <description>Flag pixels whose absolute value is lower than this limit</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="bool" name="flag_nmedian">
+        <description>True to flag figure of merit values higher than fnm_limit * median</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fnm_limit" subparam="true">
+        <description>Flag figure of merit values higher than fnm_limit * median</description>
+        <value>2.0</value>
+    </param>
+
+    <param type="bool" name="flag_tmf1">
+        <description>True to flag data with too many flagged samples</description>
+        <value>False</value>
+    </param>
+
+    <param type="string" name="tmf1_axis" subparam="true">
+        <description>Name of flagging samples axis</description>
+        <value type='string'>Time</value>
+    </param>
+
+    <param type="double" name="tmf1_limit" subparam="true">
+        <description>Proportion of samples flagged that triggers too many flags rule</description>
+        <value>0.5</value>
+    </param>
+
+    <param type="int" name="niter">
+        <description>Number of view calculation/flag iterations</description>
+        <value>1</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+
+        <when param="flag_hi">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fhi_limit"><value>5.0</value></default>
+                <default param="fhi_minsample"><value>5</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_maxabs">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fmax_limit"><value>5.0</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_minabs">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fmin_limit"><value>5.0</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_nmedian">
+            <equals type="bool" value="True">
+                <default param="fnm_limit"><value>2.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_tmf1">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="tmf1_axis"><value>'Time'</value></default>
+                <default param="tmf1_limit"><value>0.5</value></default>
+            </equals>
+        </when>
+
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+hif_tsyscal flags deviant system temperature measurements in the system
+temperature calibration table. 
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+flag_nmedian -- True to flag figures of merit greater than fnm_limit * median.
+    default True
+
+fnm_limit -- Points greater than fnm_limit * median of samples are flagged.
+    default 2
+
+flag_hi -- True to flag high figure of merit outliers.
+    default: False
+
+fhi_limit -- Sample points beyond fhi_limit * median absolute deviation (MAD)
+    of the figure of merit are flagged.
+    default: 5.0
+
+fhi_minsample -- If there are too few points in the sample the statistics
+    are assumed to be unreliable and no flagging is done.
+    default: 5
+
+flag_maxabs -- True to flag figures of merit with absolute value above fmax_limit.
+    default: False
+
+fmax_limit -- Figures of merit with absolute value above fmax_limit are flagged.
+    default: 5.0
+
+flag_minabs -- True to flag figures of merit with absolute value below fmin_limit.
+    default: False
+
+fmin_limit -- Figures of merit with absolute value below fmin_limit are flagged.
+    default: 5.0
+ 
+flag_tmf1 -- True to flag antennas that have too many flagged points as a
+    function of time.
+    default: False
+
+tmf1_axis -- Name of axis being flagged (Cannot be changed at present).
+   default: Time
+
+tmf1_limit -- Fraction of flagged antennas points that triggers flagging
+   the entire antenna.
+   default: 0.5
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+caltable -- List of input Tsys calibration tables
+    default: [] - Use the table currently stored in the pipeline context. 
+    example: caltable=['X132.ms.tsys.s2.tbl']
+
+metric -- Method to use as a measure of the Tsys quality. Possible values are:
+    'median' -     Each pixel in each flagging image is the median value of
+                   the unflagged channels in the associated Tsys spectrum.
+
+    'shape'  -     Each pixel in each flagging image is a measure of the
+                   difference in shape of the unflagged part of the 
+                   associated normalised Tsys spectrum from the median of
+                   the normalised Tsys spectra contributing to the image. 
+                   The shape metric is computed as:
+
+                   shape = 100 * mean(abs(normalized Tsys - median normalized Tsys))
+
+                   where a normalized array is:
+
+                   normalized = array / median (array)
+
+    'fieldshape' - Each pixel in each flagging image is a measure of the
+                   difference in shape of the unflagged part of the 
+                   associated normalised Tsys spectrum from the median of
+                   the normalised Tsys spectra for that antenna 
+                   for refintent. The shape metric is computed as:
+
+                   shape = 100 * mean(abs(normalized Tsys - reference normalized Tsys))
+
+                   where a normalized array is:
+
+                   normalized = array / median (array)
+
+    'derivative' - Each pixel in each flagging image is 100 * the MAD
+                   (median absolute deviation) of the channel by channel
+                   derivative of the associated normalised Tsys spectrum.
+
+    default: 'median'
+
+intentgroups -- How the data from various intents are to be combined in
+    the flagging views. Internally the intentgroups are stored in a 
+    list of strings but, because of interface limitations, this list 
+    must be input as a single string.
+    default: "['ATMOSPHERE']"
+             For each spw/pol the default creates a separate 2d
+             (ANTENNA v TIME) array of the Tsys metric for all data with
+             ATMOSPHERE intent.
+    example: "['AMPLITUDE + BANDPASS + PHASE + TARGET']"
+             For each spw/pol this would create a 2d array of the Tsys metric
+             using data for all the listed intents combined - useful if you
+             are looking for changes that depend on intent.
+
+refintent -- When metric='fieldshape' this specifies the data intent whose
+             Tsys provide the 'reference' shape for comparison.
+    default: 'BANDPASS'  
+    example: "['AMPLITUDE + BANDPASS + PHASE + TARGET']"
+             The median of data with all these intents will be used as the
+             'reference'. 
+
+-- Pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+Deviant Tsys measurements are detected by analysis of a compressed view of
+the Tsys results. This view is a list of 2D  images with axes 'Time' and
+'Antenna' and value determined by the metric parameter. There is one image
+for each spectral window and polarization and intent group in the set:
+['ATMOSPHERE'] (this default grouping of intents can be overridden using the
+parameter 'intentgroups').
+
+If metric = 'median' then each pixel in each image is the median of the
+Tsys spectrum obtained at that point.
+
+If metric = 'shape' then each pixel in each image is a measure of the
+difference in the shape of the Tsys spectrum there from the shape of the
+median of all the Tsys spectra contributing to the image. The shape metric 
+is computed as:
+
+     shape = 100 * mean(abs(normalized Tsys - median normalized Tsys))
+
+and a normalized array is:
+
+     normalized = array / median (array)
+
+If metric = 'derivative' then each pixel in each image is 100 * the MAD
+(median absolute deviation) of the channel by channel derivative
+of the Tsys spectrum.
+
+If metric = 'fieldshape' then each pixel in each image is a measure of the
+difference in the shape of the Tsys spectrum there from the shape of the
+median of all Tsys spectra for that antenna with refintent.
+The shape metric is computed as:
+
+     shape = 100 * mean(abs(normalized Tsys - reference normalized Tsys))
+
+and a normalized array is:
+
+     normalized = array / median (array)
+
+
+Flags are generated by running the following rules on each image:
+
+If flag_nmedian = True then pixels greater than fnm_limit * median
+of all the pixels in the image are flagged.
+
+If flag_hi = True then pixels are flagged if they are greater
+than median + fhi_limit * MAD where median and MAD are computed for all
+the pixels in the image. No flags are set if there are fewer than
+fhi_minsample pixels in the sample.
+
+If flag_maxabs = True then pixels are flagged if they have an absolute
+value greater than fmax_limit. 
+
+If flag_minabs = True then pixels are flagged if they have an absolute
+value less than fmin_limit. 
+
+If flag_tmf1 = True then antennas with too many flagged points as defined
+by tmf1_limit are flagged entirely.
+
+
+Examples:
+
+1. Flag Tsys measurements where the Tsys median is greater than 
+   2 * the median of this metric over the flagging image.
+   This is currently the default.
+
+   hif_tsysflag()
+
+2. Flag Tsys measurements whose 'shape' metric lies more than
+   5 * MAD above the median of this metric over the flagging image.
+ 
+   hif_tsysflag(metric='shape', flag_hi=True, fhi_limit=5, flag_nmedian=False)
+
+3. Flag Tsys measurements whose 'derivative' metric is greater
+   than 2.
+
+   hif_tsysflag(metric='derivative', flag_maxabs=True, fmax_limit=2,
+     flag_nmedian=False)
+
+</example> 
+
+</task>
+</casaxml>
+

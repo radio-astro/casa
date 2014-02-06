@@ -1,0 +1,190 @@
+<%!
+import os
+import string
+import types
+
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.logging as logging
+
+agent_description = {
+	'before'   : 'Before',
+	'applycal' : 'After',
+}
+
+total_keys = {
+	'TOTAL'        : 'All Data',
+	'SCIENCE SPWS' : 'Science Spectral Windows',
+	'BANDPASS'     : 'Bandpass',
+	'AMPLITUDE'    : 'Flux',
+	'PHASE'        : 'Phase',
+	'TARGET'       : 'Target'
+}
+
+def template_agent_header1(agent):
+	span = 'col' if agent in ('online','template') else 'row'
+	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
+
+def template_agent_header2(agent):
+	if agent in ('online', 'template'):
+		return '<th>File</th><th>Number of Statements</th>'
+	else:
+		return ''		
+
+def get_template_agents(agents):
+	return [a for a in agents if a in ('online', 'template')]
+
+
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<script>
+$(document).ready(function(){
+	$(".fancybox").fancybox();
+	$('.caltable_popover').popover({
+		  template: '<div class="popover gaintable_popover"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
+	});
+});
+</script>
+
+<%
+# these functions are defined in template scope so we have access to the flags 
+# and agents context objects
+
+def total_for_mses(mses, row):
+	flagged = 0
+	total = 0
+	for ms in mses:
+		total += flags[ms]['before'][row].total
+		for agent in flags[ms].keys():
+			fs = flags[ms][agent][row]
+			flagged += fs.flagged
+	if total is 0:
+		return 'N/A'
+	else:
+		return '%0.1f%%' % (100.0 * flagged / total)
+
+def total_for_agent(agent, row, mses=flags.keys()):
+	flagged = 0
+	total = 0
+	for ms in mses:
+		if agent in flags[ms]:
+			fs = flags[ms][agent][row]
+			flagged += fs.flagged
+			total += fs.total
+		else:
+			# agent was not activated for this MS. 
+			total += flags[ms]['before'][row].total
+	if total is 0:
+		return 'N/A'
+	else:
+		return '%0.1f%%' % (100.0 * flagged / total)
+
+def space_comma(s):
+	return ', '.join(string.split(s, ','))
+
+%>
+
+<%block name="title">Apply calibration tables</%block>
+
+<p>This task applies all calibrations registered with the pipeline to their target measurement sets.<p>
+
+<h2>Applied calibrations</h2>
+<table class="table table-bordered table-striped table-condensed"
+	   summary="Applied Calibrations">
+	<caption>Applied Calibrations</caption>
+	<thead>
+		<tr>
+			<th rowspan="2">Measurement Set</th>
+			<th colspan="4">Target</th>
+			<th colspan="6">Calibration</th>
+		</tr>
+		<tr>
+			<th>Intent</th>
+			<th>Field</th>
+			<th>Spw</th>
+			<th>Antenna</th>
+			<th>Type</th>
+			<th>spwmap</th>
+			<th>gainfield</th>
+			<th>interp</th>
+			<th>calwt</th>
+			<th>table</th>
+		</tr>
+	</thead>
+	<tbody>
+% for vis in calapps:
+	% for calapp in calapps[vis]:
+		<% ca_rowspan = len(calapp.calfrom) %>
+		<tr>
+			<td rowspan="${ca_rowspan}">${vis}</td>
+			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.intent)}</td>
+			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.field)}</td>
+			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.spw)}</td>
+			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.antenna)}</td>
+		% for calfrom in calapp.calfrom:
+			<td>${caltypes[calfrom.gaintable]}</td>
+			<td>${', '.join([str(i) for i in calfrom.spwmap])}</td>
+			<td>${space_comma(calfrom.gainfield)}</td>
+			<td>${space_comma(calfrom.interp)}</td>
+			<td>${calfrom.calwt}</td>
+			<td><a href="#" class="btn btn-small caltable_popover" data-toggle="popover" data-placement="top" data-content="${os.path.basename(calfrom.gaintable)}" title="" data-original-title="">View...</a></td>
+		</tr>
+		% endfor
+	% endfor
+% endfor		
+	</tbody>
+</table>
+
+
+
+<h2>Flagged data after calibration application</h2>
+<table class="table table-bordered table-striped "
+	   summary="Flagged Data">
+	<caption>Summary of measurement set flagging status after application
+	of (potentially flagged) calibration tables. Each cell gives the
+	amount of data flagged as a fraction of the specified data selection.
+	</caption>
+	<thead>
+		<tr>
+			<th rowspan="2">Data Selection</th>
+			<!-- flags before task is always first agent -->
+			<th colspan="${len(agents)+1}">% Flagged Data</th>
+			<th colspan="${len(flags)}">Measurement Set</th>
+		</tr>
+		<tr>
+%for agent in agents:
+			<th>${agent_description[agent]}</th>
+%endfor
+			<th>Total</th>
+%for ms in flags.keys():
+			<th>${ms}</th>
+%endfor
+		</tr>
+	</thead>
+	<tbody>
+%for k in ['TOTAL', 'SCIENCE SPWS', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']: 
+		<tr>
+			<th>${total_keys[k]}</th>		
+	% for agent in agents:
+			<td>${total_for_agent(agent, k)}</td>
+	% endfor
+			<td>${total_for_mses(flags.keys(), k)}</td>
+	% for ms in flags.keys():
+			<td>${total_for_mses([ms], k)}</td>
+	% endfor		
+		</tr>
+%endfor
+%for ms in flags.keys():
+		<tr>
+			<th>${ms}</th>
+	% for agent in agents:
+			<td>${total_for_agent(agent, 'TOTAL', [ms])}</td>
+	% endfor
+			<td>${total_for_mses([ms], 'TOTAL')}</td>
+	% for ms in flags.keys():
+			<td></td>
+	% endfor
+		</tr>
+%endfor
+	</tbody>
+</table>

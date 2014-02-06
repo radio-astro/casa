@@ -1,0 +1,99 @@
+<%!
+rsc_path = ""
+import decimal
+import os
+import pipeline.domain.measures as measures
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="title">Phased-up fluxscale</%block>
+
+<h2>Results</h2>
+
+<h4>Antennas Used for Flux Scaling</h4>
+
+<p>The following antennas were used for flux scaling, entries for unresolved flux calibrators are blank</p>
+
+<table class="table table-bordered table-striped" summary="Flux Scaling Antennas">
+	<caption>Antennas for Flux Calibration</caption>
+        <thead>
+	    <tr>
+	        <th scope="col">Measurement Set</th>
+	        <th scope="col">Antennas</th>
+	    </tr>
+	</thead>
+	<tbody>
+%for single_result in result:
+      <tr>
+          <td>${os.path.basename(single_result.vis)}</td>
+          <td>${single_result.resantenna.replace(',', ', ').replace('&', '')}</td>
+      </tr>
+%endfor
+	</tbody>
+</table>
+
+<h4>Computed Flux Densities</h4>
+
+<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
+
+<table class="table table-bordered table-striped" summary="Flux density results">
+	<caption>Phased-up Fluxscale Results</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Measurement Set</th>
+	        <th scope="col" rowspan="2">Field</th>
+	        <th scope="col" rowspan="2">SpW</th>
+	        <th scope="col" colspan="4">Flux Density</th>
+		</tr>
+		<tr>
+	        <th scope="col">I</th>
+	        <th scope="col">Q</th>
+	        <th scope="col">U</th>
+	        <th scope="col">V</th>
+	    </tr>
+	</thead>
+	<tbody>
+% for single_result in result:
+		<tr>
+			<td rowspan="${reduce(lambda x, y: x + len(y), single_result.measurements.values(), 0)}">${os.path.basename(single_result.vis)}</td>
+	% for field in single_result.measurements:
+		<%
+			ms = pcontext.observing_run.get_ms(single_result.vis)
+			f = ms.get_fields(field)[0]
+			field_name = f.name
+			field_id = f.id
+		%>
+			<td rowspan="${len(single_result.measurements[field])}">${'%s (#%s)'%(field_name, field_id)}</td>
+		% for flux in sorted(single_result.measurements[field], key=lambda m: int(m.spw_id)):
+<% 
+try:
+	u = {}
+	for stokes in ['I', 'Q', 'U', 'V']:
+		flux_jy = getattr(flux, stokes).to_units(measures.FluxDensityUnits.JANSKY)
+		unc = getattr(flux.uncertainty, stokes)
+		unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
+
+		if flux_jy != 0 and unc_jy != 0:
+			u[stokes] = ' &#177; %s (%0.1f%%)' % (str(unc), decimal.Decimal('100')*(unc_jy/flux_jy))	
+		else:
+			u[stokes] = ''
+except:
+	raise
+	u = {}
+	u['I'] = ''
+	u['Q'] = ''
+	u['U'] = ''
+	u['V'] = ''	
+%>
+			<td>${flux.spw_id}</td>
+			<td>${str(flux.I) + u['I']}</td>
+			<td>${str(flux.Q) + u['Q']}</td>
+			<td>${str(flux.U) + u['U']}</td>
+			<td>${str(flux.V) + u['V']}</td>
+		</tr>
+		%endfor
+	%endfor
+%endfor
+	</tbody>
+</table>

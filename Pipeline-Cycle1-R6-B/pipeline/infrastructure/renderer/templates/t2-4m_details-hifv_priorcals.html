@@ -1,0 +1,47 @@
+<%!
+rsc_path = ""
+import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="title">Prior calibrations</%block>
+
+<p>Gain curves, opacities, antenna position corrections, and requantizer gains
+using the CASA task <b>gencal</b>.</p>
+
+<div class="row-fluid">
+	<h2>Gain Curves</h2>
+	Gain curve tables written to:
+	
+	%for single_result in result:
+	    <p><b>${single_result.gc_result[0].inputs['caltable']}</b></p>
+        %endfor
+</div>
+
+<div class="row-fluid">
+	<h2>Opacities</h2>
+	Opacities written to:
+	
+	%for single_result in result:
+	    <p><b>${single_result.oc_result[0].inputs['caltable']}</b></p>
+        %endfor
+</div>
+
+<div class="row-fluid">
+	<h2>Antenna positions</h2>
+	Antenna position corrections written to:
+	
+	%for single_result in result:
+	    <p><b>${single_result.antpos_result[0].inputs['caltable']}</b></p>
+        %endfor
+</div>
+
+<div class="row-fluid">
+	<h2>Requantizer gains</h2>
+	Requantizer gains written to:
+	
+	%for single_result in result:
+	    <p><b>${single_result.rq_result[0].inputs['caltable']}</b></p>
+        %endfor
+</div>

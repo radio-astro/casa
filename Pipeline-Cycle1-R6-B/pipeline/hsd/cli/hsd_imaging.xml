@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hsd_imaging" category="pipeline">
+<shortdescription>Apply calibration tables to the data for science target</shortdescription>
+<description>
+</description>
+<input>
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="stringArray" name="infiles" subparam="true">
+        <description>List of input files to be calibrated (default all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="field" subparam="true">
+        <description>Field to be calibrated (default all)</description>
+        <value></value>
+    </param>
+
+    <param type="intArray" name="scanlist" subparam="true">
+        <description>List of scans to be calibrated (defalt all)</description>
+        <value></value>
+    </param>
+
+    <param type="intArray" name="iflist" subparam="true">
+        <description>List of spws to be calibrated (defalt all except wvr)</description>
+        <value></value>
+    </param>
+
+    <param type="intArray" name="pollist" subparam="true">
+        <description>List of polarizations to be calibrated (defalt all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="reffile" subparam="true">
+        <description>Path to file with Jy/K conversion factors</description>
+        <value></value>
+    </param>
+    
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display task command (True)</description>
+	<value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
+    </param>
+
+    <constraints>
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="interactive">
+                <default param="infiles"><value type="stringArray"></value></default>
+                <default param="field"><value type="string"></value></default>
+                <default param="scanlist"><value type="intArray"></value></default>
+                <default param="iflist"><value type="intArray"></value></default>
+                <default param="pollist"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+                <default param="infiles"><value type="stringArray"></value></default>
+                <default param="field"><value type="string"></value></default>
+                <default param="scanlist"><value type="intArray"></value></default>
+                <default param="iflist"><value type="intArray"></value></default>
+                <default param="pollist"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
+	    </equals>
+	</when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+The hsd_imaging task generates single dish images per antenna as well as 
+combined image over whole antennas for each field and spectral window. 
+Image configuration (grid size, number of pixels, etc.) is automatically 
+determined based on meta data such as antenna diameter, map extent, etc.
+
+Note that generated images are always in LSRK frame.
+  
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
+   pipeline determines the values of all context defined pipeline inputs
+   automatically.  In 'interactive' mode the user can set the pipeline
+   context defined parameters manually.  In 'getinputs' mode the user
+   can check the settings of all pipeline parameters without running
+   the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode'
+
+infiles -- List of data files. These must be a name of Scantables that 
+   are registered to context via hsd_importdata task.
+   default: []
+   example: vis=['X227.PM01.asap', 'X227.PM02.asap']
+
+field -- Data selection by field name.
+   default: '' (all fields)
+   
+scanlist -- Data selection by scan number.
+   default: [] (all scans)
+   example: [22,23] (use scan 22 and 23 for calibration)
+   
+iflist -- Data selection by spw.
+   default: [] (all spws)
+   example: [3,4] (generate caltable for spw 3 and 4)
+   
+pollist -- Data selection by pol.
+   default: [] (all polarizations)
+   example: [0] (generate caltable for pol 0)
+
+reffile -- Path to a file containing Jy/K factors for science data, which 
+    must be provided by associating calibrator reduction or the observatory 
+    measurements. Jy/K factor must take into account all efficiencies, i.e.,
+    it must be a direct conversion factor from Ta* to Jy. The file must be 
+    in CSV format with five fields: MS name, antenna name, spectral window 
+    id, polarization string, and Jy/K conversion factor. Example for the 
+    file is as follows:
+    
+        MS,Antenna,Spwid,Polarization,Factor
+        uid___A002_X316307_X6f.ms,CM03,5,XX,10.0
+        uid___A002_X316307_X6f.ms,CM03,5,YY,12.0
+        uid___A002_X316307_X6f.ms,PM04,5,XX,2.0
+        uid___A002_X316307_X6f.ms,PM04,5,YY,5.0
+        
+    The first line in the above example is a header which may or may not 
+    exist. By default all Jy/K factors are set to 1.0. 
+    default: ''
+    example: '', 'working/jyperk.csv'
+
+--- pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+   the results object for the pipeline task is returned.
+
+
+Examples
+
+
+</example>
+</task>
+</casaxml>

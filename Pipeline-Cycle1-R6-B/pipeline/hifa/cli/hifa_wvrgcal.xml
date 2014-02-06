@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="hifa_wvrgcal" category="pipeline">
+
+<shortdescription></shortdescription>
+<description>
+Generate a gain table based on Water Vapour Radiometer data, and calculate 
+a QA2 score based on its effect on the interferometric data.
+</description>
+    
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input visibility files</description>
+        <value></value>
+    </param>
+      
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of output gain calibration tables</description>
+	<value></value>
+    </param>
+      
+    <param type="string" name="hm_toffset">
+        <description>Toffset computation heuristic method</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>manual</value>
+            <value>automatic</value>
+        </allowed>
+    </param>
+
+    <param type="double" name="toffset" subparam="true">
+        <description>Time offset (sec) between IF and WVR data</description>
+	<value>0</value>
+    </param>
+      
+    <param type="bool" name="segsource">
+        <description>Compute new coefficient calculation for each source</description>
+	<value>True</value>
+    </param>
+      
+    <param type="stringArray" name="sourceflag" subparam="true">
+	<description>Flag the WVR data for these source(s)</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="hm_tie" subparam="true">
+     <description>Tie computation heuristics method</description>
+     <value>automatic</value>
+       <allowed kind="enum">
+         <value>manual</value>
+         <value>automatic</value>
+       </allowed>
+   </param>
+
+    <param type="stringArray" name="tie" subparam="true">
+        <description>Sources for which to use the same atmospheric phase correction coefficients</description>
+        <value></value>
+    </param>
+      
+    <param type="int" name="nsol" subparam="true">
+        <description>Number of solutions for phase correction coefficients</description>
+	<value>1</value>
+    </param>
+            
+    <param type="bool" name="disperse">
+	<description>Apply correction for dispersion</description>
+	<value>False</value>
+    </param>
+            
+    <param type="stringArray" name="wvrflag" subparam="true">
+	<description>Flag the WVR data for these antenna(s) replace with interpolated values</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="hm_smooth">
+        <description>Smoothing computation heuristics method</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>manual</value>
+            <value>automatic</value>
+        </allowed>
+    </param>
+      
+    <param type="string" name="smooth" subparam="true">
+	<description>Smooth WVR data on the given timescale before calculating the correction</description>
+	<value>1s</value>
+    </param>
+      
+    <param type="double" name="scale" subparam="true">
+	<description>Scale the entire phase correction by this factor</description>
+	<value>1.</value>
+    </param>
+
+      <param type="double" name="maxdistm">
+        <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
+        <value>500.</value>
+      </param>
+
+      <param type="int" name="minnumants">
+        <description>Minimum number of near antennas (up to 3) required for interpolation</description>
+        <value>2</value>
+        <allowed kind="enum">
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+        </allowed>
+      </param>
+
+      <param type="double" name="mingoodfrac">
+        <description>Minimum fraction of good data per antenna</description>
+        <value>0.8</value>
+      </param>
+
+    <param type="string" name="qa2_intent">
+        <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="qa2_bandpass_intent">
+        <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
+        <value></value>
+    </param>
+
+    <param type="double" name="accept_threshold">
+        <description>Improvement ratio (phase-rms without wvr / phase-rms with wvr) above which wvrg calibration file will be accepted</description>
+        <value>1.0</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operating mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or display the command(True)</description>
+        <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+       <description>Add the results to the pipeline context</description>
+       <value>True</value>
+    </param>
+
+    
+    <constraints>
+
+        <when param="pipelinemode">
+            <equals type="string" value="automatic"/>
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="wvrflag"><value type="stringArray"></value></default>
+                <default param="scale"><value type="double">1.0</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="wvrflag"><value type="stringArray"></value></default>
+                <default param="scale"><value type="double">1.0</value></default>
+            </equals>
+        </when>
+
+        <when param="hm_smooth">
+<!-- put the default clause first - in this case hm_smooth=='automatic' - as
+     currently r22208 the first clause always comes up at the interface.
+-->
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="manual">
+	        <default param="smooth"><value type="string">1s</value></default>
+	    </equals>
+        </when>
+
+        <when param="hm_tie">
+            <equals type="string" value="automatic">
+            </equals>
+            <equals type="string" value="manual">
+                <default param="sourceflag"><value type="stringArray"></value></default>
+                <default param="tie"><value type="stringArray"></value></default>
+                <default param="segsource"><value type="bool">False</value></default>
+                <default param="nsol"><value type="int">1</value></default>
+            </equals>
+        </when>
+
+        <when param="hm_toffset">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="manual">
+	        <default param="toffset"><value type="double">0</value></default>
+	    </equals>
+        </when>
+
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+<example>
+
+Generate a gain table based on the Water Vapour Radiometer data in each vis
+file. By applying the wvr calibration to the data specified by 'qa2_intent',
+calculate a QA2 score to indicate its effect on interferometric data;
+a score &gt; 1 implies that the phase noise is improved, a score &lt; 1 implies
+that it is made worse. If the score is less than 'accept_threshold' then the 
+wvr gain table is not accepted into the context for subsequent use.
+  
+vis -- List of input visibility files
+    default: none, in which case the vis files to be used will be read
+             from the context. 
+    example: vis=['ngc5921.ms']
+
+caltable -- List of output gain calibration tables
+    default: none, in which case the names of the caltables will be 
+             generated automatically.
+    example: caltable='ngc5921.wvr'
+
+hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
+          If 'automatic', set the 'toffset' parameter according to the 
+          date of the measurement set; toffset=-1 if before 2013-01-21T00:00:00
+          toffset=0 otherwise.
+    default: 'automatic'
+
+toffset -- Time offset (sec) between interferometric and WVR data
+    default: 0
+
+segsource -- If True calculate new atmospheric phase correction 
+             coefficients for each source, subject to the constraints of 
+             the 'tie' parameter. 'segsource' is forced to be True if 
+             the 'tie' parameter is set to a non-empty value by the 
+             user or by the automatic heuristic.
+    default: True
+
+hm_tie -- If 'manual', set the 'tie' parameter to the user-specified value.
+          If 'automatic', set the 'tie' parameter to include with the
+          target all calibrators that are within 15 degrees of it: 
+          if no calibrators are that close then 'tie' is left empty.
+    default: 'automatic'
+
+tie -- Use the same atmospheric phase correction coefficients when 
+       calculating the wvr correction for all sources in the 'tie'. If 'tie' 
+       is not empty then 'segsource' is forced to be True. Ignored unless
+       hm_tie='manual'.
+    default: []
+    example: ['3C273,NGC253', 'IC433,3C279']
+
+sourceflag -- Flag the WVR data for these source(s) as bad and do not produce
+    corrections for it. Requires segsource=True.
+    default: []
+    example: ['3C273']
+
+nsol -- Number of solutions for phase correction coefficients during this
+    observation, evenly distributed in time throughout the observation. It
+    is used only if segsource=False because if segsource=True then the
+    coefficients are recomputed whenever the telescope moves to a new source
+    (within the limits imposed by 'tie').
+    default: 1
+
+disperse -- Apply correction for dispersion
+    default: False
+
+wvrflag -- Flag the WVR data for the listed antennas as bad and replace 
+    their data with values interpolated from the 3 nearest antennas with
+    unflagged data.
+    default: []
+    example: ['DV03','DA05','PM02']           
+
+hm_smooth -- If 'manual' set the 'smooth' parameter to the user-specified value.
+    If 'automatic', run the wvrgcal task with the range of 'smooth' parameters
+    required to match the integration time of the wvr data to that of the
+    interferometric data in each spectral window.
+
+smooth -- Smooth WVR data on this timescale before calculating the correction.
+    Ignored unless hm_smooth='manual'.
+    default: '1s'
+
+scale -- Scale the entire phase correction by this factor.
+    default: 1
+
+maxdistm -- Maximum distance in meters of an antenna used for interpolation
+    from a flagged antenna.
+    default: 500
+    example: 550
+
+minnumants -- Minimum number of nearby antennas (up to 3) used for
+    interpolation from a flagged antenna.
+    default: 2
+    example: 3
+
+qa2_intent -- The list of data intents on which the wvr correction is to be 
+    tried as a means of estimating its effectiveness.
+
+    A QA2 'view' will be calculated for each specified intent, in each spectral
+    window in each vis file.
+
+    Each QA2 'view' will consist of a pair of 2-d images with dimensions
+    ['ANTENNA', 'TIME'], one showing the data phase-noise before the 
+    wvr application, the second showing the phase noise after (both 'before'
+    and 'after' images have a bandpass calibration applied as well).
+
+    An overall QA2 score is calculated for each vis file, by dividing the
+    'before' images by the 'after' and taking the median of the result. An
+    overall score of 1 would correspond to no change in the phase noise,
+    a score &gt; 1 implies an improvement.
+
+    If the overall score for a vis file is less than the value in          
+    'accept_threshold' then the wvr calibration file is not made available 
+    for merging into the context for use in the subsequent reduction.
+
+    If you do not want any QA2 calculations then set qa2_intent=''.
+
+    default: ''
+    example: 'PHASE'
+
+qa2_bandpass_intent -- The data intent to use for the bandpass calibration
+    in the qa2 calculation. The default is blank to allow the 
+    underlying bandpass task to select a sensible intent if the dataset
+    lacks BANDPASS data.
+
+    default: ''
+
+accept_threshold -- The phase-rms improvement ratio
+    (rms without wvr / rms with wvr) above which the wrvg file will be
+    accepted into the context for subsequent application.
+
+    default: 1.0
+
+
+Example
+
+1. Compute the WVR calibration for all the measurement sets.
+
+    hifa_wvrgcal (hm_tie='automatic')
+
+</example>
+
+</task>
+</casaxml>

@@ -1,0 +1,40 @@
+<%!
+rsc_path = "../"
+import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} QA2 Details</%block>
+
+<h1>QA2 analysis for WVR calibration</h1>
+
+<h2>Overall QA2 Scores</h2>
+<table class="minimalist" summary="QA2 Scores">
+	<caption>Overall QA2 Scores</caption>
+    <thead>
+        <tr>
+            <th>Measurement Set</th>
+            <th>Score</th>
+        </tr>
+    </thead>
+	<tbody>
+% for r in result:
+		<tr>
+			<td>${getattr(r.qa2, 'vis', 'N/A')}</td>
+			<td>${getattr(r.qa2, 'overall_score', 'N/A')}</td>
+		</tr>
+% endfor
+	</tbody>
+</table>
+
+% if plot_groups:
+<h2>Plots</h2>
+<ul>
+% for plot_group in plot_groups: 
+	<li><a class="replace" href="stage${r.stage_number}/${plot_group.filename}">${plot_group.title}</a></li>
+% endfor
+</ul>
+% endif

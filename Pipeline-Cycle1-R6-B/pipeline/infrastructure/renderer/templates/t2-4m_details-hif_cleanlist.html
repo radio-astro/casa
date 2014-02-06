@@ -1,0 +1,238 @@
+<%!
+import os.path
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.utils as utils
+
+columns = {'cleanmask' : 'Clean Mask',
+		   'flux' : 'Flux',
+		   'image' : 'Image',
+		   'residual' : 'Residual',
+		   'model' : 'Final Model',
+		   'psf' : 'PSF'}
+
+colorder = ['image', 'residual', 'cleanmask']
+
+def get_plot(plots, field, spw, i, colname):
+	try:
+		return plots[field][spw][i][colname]
+	except KeyError:
+		return None
+
+def is_active(idx):
+	if idx != 0:
+		return ''
+	return 'class="active"'
+
+def is_pane_active(idx):
+	if idx != 0:
+		return ''
+	return ' active"'
+%>
+<%inherit file="t2-4m_details-base.html"/>
+<%block name="header" />
+
+<%block name="title">Clean/CleanList</%block>
+
+<h2>Plots</h2>
+
+<div class="tabbable"> <!-- Only required for left/right tabs -->
+	<!-- Add a tab for each field we reduced. We use a separate tab as the
+	     number of iterations could be different for each field, and laying out
+	     the divs and columns with javascript could be complicated. -->	
+	<ul class="nav nav-tabs">
+		% for field_idx, field in enumerate(plots_dict.keys()):
+		<li ${is_active(field_idx)}>
+			<a href="#field${field_idx}" data-toggle="tab">${field}</a>
+		</li>
+		% endfor
+  	</ul>
+	<div class="tab-content">
+		% for field_idx, field in enumerate(plots_dict.keys()):
+		<div class="tab-pane${is_pane_active(field_idx)}" id="field${field_idx}">
+
+			<h4>Spectral Window:</h4>
+			<ul class="nav nav-pills">
+				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
+				<li ${is_active(spw_idx)}>
+					<a href="#field${field_idx}-spw${spw_idx}" data-toggle="tab">${spw}</a>
+				</li>
+				% endfor
+			</ul>
+			<div class="tab-content">
+				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
+				<div class="tab-pane${is_pane_active(spw_idx)}" id="field${field_idx}-spw${spw_idx}">
+
+					<!-- column headings -->
+					<div class="row-fluid">
+						<!-- iteration column heading -->
+						<div class="span2">
+							<h4 class="text-center">Iteration</h4>
+						</div>
+						<!-- headings for columns containing plots -->
+						<div class="span10">
+							% for colname in colorder:
+							<div class="span4">
+								<h4 class="text-center">${columns[colname]}</h4>
+							</div>
+							% endfor
+						</div>
+					</div><!-- /div row-fluid -->
+	
+					<!-- reverse iterations so final images are shown without scrolling -->
+					% for i in sorted(plots_dict[field][spw].keys())[::-1]:
+					<div class="row-fluid">
+						<!-- iteration row heading -->
+						<div class="span2">
+							<h4 class="text-center">${i}</h4>
+						</div>
+						<!-- plots for this iteration, in column order -->
+						<div class="span10">
+							% for colname in colorder:
+							<div class="span4">
+							<!-- add plots for all spectral windows, relying on javascript
+								 to hide those not selected by the radio button -->
+								<% plot = get_plot(plots_dict, field, spw, i, colname) %>
+								<!-- use bootstrap markup for thumbnails -->
+								<ul class="thumbnails">
+									<!-- span 12 because the parent div has shrunk this
+									     container already -->					  
+									<li class="span12">
+										% if plot is not None:	
+										<div class="thumbnail">
+										    <a class="fancybox"
+										       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+										       title="Iteration ${i}: ${columns[colname]}"
+										       data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+											   data-field="${field}"
+										       data-spw="${spw}"
+										       data-colname="${colname}">
+												<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+													 title="Iteration ${i}: ${columns[colname]}"
+												     alt="Iteration ${i}: ${columns[colname]}">
+												</img>
+										    </a>
+										</div>
+										% endif
+									</li>
+								</ul>
+							</div>					
+							% endfor <!-- /colname loop-->
+						</div>
+					</div><!-- /div row-fluid -->			
+					% endfor <!-- /iteration loop -->
+	
+					<div class="row-fluid">
+						<div class="span10 offset2">
+							% for colname in ['flux', 'psf', 'model']:
+							<div class="span4">
+								<!-- flux and PSF plots are associated with iteration 0 -->
+								% if colname == 'model':
+                                                                <% 
+                                                                lastiter = sorted(plots_dict[field][spw].keys())[-1]
+								plot = get_plot(plots_dict, field, spw, lastiter, colname)
+                                                                %>
+                                                                % else:
+								<% plot = get_plot(plots_dict, field, spw, 0, colname) %>
+                                                                % endif
+								<ul class="thumbnails">
+									<li class="span12">
+										% if plot is not None:
+										<div class="thumbnail">
+											<a class="fancybox"
+											   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+											   title="${columns[colname]}"
+											   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+										       data-spw="${spw}"
+										       data-colname="${colname}">									   
+												<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+													 title="${columns[colname]}"
+													   alt="${columns[colname]}">
+												</img>
+											</a>
+											<p class="text-center">${columns[colname]}</p>
+										</div>
+										% endif
+									</li>
+								</ul>
+							</div><!-- /div span3 -->
+							% endfor <!-- /colname loop -->
+						</div>
+					</div>
+
+				</div>
+				% endfor <!-- end spw loop -->
+			
+			</div>
+	    </div>
+	    % endfor
+	</div>
+</div>
+
+
+<script>
+$(document).ready(function() {
+
+	$("ul.thumbnails li div a").click(function(evt) {
+		evt.preventDefault();
+		var target = this.href;
+		
+		var field = $(this).data("field");
+		var spw = $(this).data("spw");
+		var colname = $(this).data("colname");
+		matchFn = function(anchor) {
+		    return (colname === $(anchor).data("colname")
+			    && spw === $(anchor).data("spw")
+			    && field === $(anchor).data("field"));
+		};
+		
+		launchFancyboxInParent(target, matchFn);
+		return false;
+	});
+	
+	function launchFancyboxInParent(target, matchFn){
+		var fullsize = [];
+		var thumbnail;
+		var thumbnailImg;
+		var fullsizeToThumbs = {};
+		var index = 0;
+		
+		$("ul.thumbnails li:visible div a").each(function() {
+			if (matchFn(this) === true) {
+			    var mainImage = this.href; // Find Image href
+			    var title = this.title; // Find Image title
+			    if (mainImage == target) {
+			    	index = fullsize.length;
+			    }
+			    fullsize.push({
+			    	href  : mainImage,
+			    	title : title                     
+			    });
+			    thumbnailImg = $(this).children("img:first")[0].src;
+			    fullsizeToThumbs[mainImage] = thumbnailImg;
+			}
+		});
+
+		$.fancybox(fullsize, {
+		    type    : 'image',
+		    index   : index,
+		    prevEffect : 'none',
+		    nextEffect : 'none',
+		    loop : false,
+		    helpers	: {
+				title	: {
+				    type: 'outside'
+				},
+				thumbs	: {
+				    width	: 50,
+				    height	: 50,
+				    source  : function(current) {
+						var href = current.href;
+						return fullsizeToThumbs[href];
+		            }
+				}
+		    }
+		});
+	}
+
+});
+</script>

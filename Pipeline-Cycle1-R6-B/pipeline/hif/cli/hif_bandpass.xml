@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_bandpass" category="pipeline">
+<shortdescription>Compute bandpass calibration solutions</shortdescription>
+<description>
+Compute  amplitude and phase as a function of frequency for each spectral
+window in each measurement set.  
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input measurment sets</description>
+    <value></value>
+  </param>
+
+  <param type="stringArray" name="caltable" subparam="true">
+    <description>List of output caltables</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="field" subparam="true">
+    <description>Set of data selection field names or ids</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="intent" subparam="true">
+    <description>Set of data selection intents</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="spw" subparam="true">
+    <description>Set of data selection spectral window/channels</description>
+    <value></value>
+  </param>
+
+   <param type="string" name="antenna" subparam="true">
+	<description>Set of data selection antenna IDs</description>
+	<value></value>
+   </param>
+
+  <param type="bool" name="phaseup">
+     <description>Phaseup before computing the bandpass</description>
+     <value>True</value>
+  </param>
+
+  <param type="any" name="phaseupsolint" subparam="true">
+    <description>Phaseup correction solution interval</description>
+    <any type="variant"/>
+    <value type="string">int</value>
+  </param>
+
+  <param type="string" name="phaseupbw" subparam="true">
+    <description>Bandwidth to use for phaseup</description>
+    <value>500MHz</value>
+  </param>
+
+  <param type="string" name="hm_bandtype">
+     <description>Bandpass solution type</description>
+     <value>channel</value>
+       <allowed kind="enum">
+         <value>channel</value>
+         <value>polynomial</value>
+       </allowed>
+  </param>
+
+  <param type="any" name="solint">
+    <description>Solution intervals</description>
+    <any type="variant"/>
+    <value type="string">inf</value>
+  </param>
+
+  <param type="int" name="maxchannels" subparam="true">
+    <description>The smoothing factor in channels</description>
+    <value>240</value>
+  </param>
+
+  <param type="string" name="combine">
+    <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+    <value>scan</value>
+  </param>
+
+  <param type="string" name="refant" subparam="true">
+    <description>Reference antenna names</description>
+    <value></value>
+  </param>
+
+  <param type="bool" name="solnorm">
+    <description>Normalise the bandpass solution</description>
+    <value type="bool">True</value>
+  </param>
+
+  <param type="int" name="minblperant" subparam="true">
+    <description>Minimum baselines per antenna required for solve</description>
+    <value>4</value>
+  </param>
+
+  <param type="double" name="minsnr" subparam="true">
+    <description>Reject solutions below this SNR</description>
+    <value>3.0</value>
+  </param>
+
+  <param type="variant" name="degamp" subparam="true">
+    <description>Degree for polynomial amplitude solution</description>
+    <value type="string"></value>
+  </param>
+
+  <param type="variant" name="degphase" subparam="true">
+    <description>Degree for polynomial phase solution</description>
+    <value type="string"></value>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="phaseup">
+      <equals type="bool" value="True">
+        <default param="phaseupsolint"><value type="string">int</value></default>
+        <default param="phaseupbw"><value type="string">500MHz</value></default>
+      </equals>
+      <equals type="bool" value="False">
+      </equals>
+    </when>
+
+    <when param="hm_bandtype">
+      <equals type="string" value="channel">
+        <default param="minblperant"><value type="int">4</value></default>
+        <default param="minsnr"><value type="double">3.0</value></default>
+      </equals>
+      <equals type="string" value="polynomial">
+        <default param="degamp"><value type="string"></value></default>
+        <default param="degphase"><value type="string"></value></default>
+      </equals>
+    </when>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic"/>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="caltable"><value type="stringArray"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="spw"><value type="string"></value></default>
+		<default param="antenna"><value type="string"></value></default>
+        <default param="refant"><value type="string"></value></default>
+        <default param="solnorm"><value type="bool">True</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="caltable"><value type="stringArray"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="spw"><value type="string"></value></default>
+		<default param="antenna"><value type="string"></value></default>
+        <default param="refant"><value type="string"></value></default>
+        <default param="solnorm"><value type="bool">True</value></default>
+      </equals>
+    </when>
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Compute  amplitude and phase as a function of frequency for each spectral
+window in each measurement set.  
+
+Previous calibration can be applied on the fly.
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+phaseup -- Do a phaseup on the data before computing the bandpass solution
+    default: True
+
+phaseupsolint -- The phase correction solution interval in CASA syntax. 
+    Used when phaseup is True.
+    default: 'int'
+    example: 300
+
+phaseupbw -- Bandwidth to be used for phaseup. Defaults to 500MHz.
+    Used when phaseup is True.
+    default: '500MHz'
+    example: '' default to entire bandpass
+
+hm_bandtype -- The type of bandpass. The options are 'channel' and
+    'polynomial' for CASA bandpass types = 'B' and 'BPOLY' respectively.
+
+solint --  Time and channel solution intervals in CASA syntax.
+    default: 'inf,7.8125MHz'
+    example: 'inf,10ch', 'inf'
+
+maxchannels --  The bandpass solution smoothing factor in channels. The
+    solution interval is bandwidth / 240. Set to 0 for no smoothing.
+    default: 240
+    example: 0
+
+
+combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
+    or any comma-separated combination.
+    default; 'scan'
+    example: combine='scan,field' 
+
+minblperant -- Minimum number of baselines required per antenna for each solve
+    Antennas with fewer baselines are excluded from solutions. Used for
+    hm_bandtype='channel' only.
+    default: 4
+
+minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
+    'channel' only
+    default: 3.0 
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurment
+    sets specified in the pipeline context.
+    default: ''
+    example: ['M51.ms']
+
+caltable -- The list of output calibration tables. Defaults to the standard
+    pipeline naming convention.
+    default: ''
+    example: ['M51.bcal']
+
+field -- The list of field names or field ids for which bandpasses are
+    computed. Defaults to all fields.
+    default: '' 
+    example: '3C279', '3C279, M82'
+
+intent -- A string containing a comma delimited list of intents against
+    which the the selected fields are matched.  Defaults to all data
+    with bandpass intent.
+    default: '' 
+    example: '*PHASE*'
+
+spw -- The list of spectral windows and channels for which bandpasses are
+    computed. Defaults to all science spectral windows.
+    default: '' 
+    example: '11,13,15,17'
+
+refant -- Reference antenna names. Defaults to the value(s) stored in the
+    pipeline context. If undefined in the pipeline context defaults to
+    the CASA reference antenna naming scheme.
+    default: ''
+    example: refant='DV01', refant='DV06,DV07'
+
+solnorm -- Normalise the bandpass solutions
+    default: False
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+hif_bandpass computes a bandpass solution for every specified science
+spectral window. By default a 'phaseup' pre-calibration is performed
+and applied on the fly to to the data, before the bandpass is computed.
+
+The hif_refant task may be used to precompute a prioritized list of
+reference antennas.
+
+Issues
+
+There is currently some discussion about whether or not to do an 'ampup'
+operations at the same time as the 'phaseup'. This is not required for the
+bandpass computation but the amplitude information may provide a useful quality
+assessment measure.
+
+The specified minsnr parameter is currently applied to the bandpass
+solution computation but not the 'phaseup' computation. Some noisy
+solutions in the phaseup may not be properly rejected.
+
+Examples
+
+1. Compute a channel bandpass for all visibility files in the pipeline
+context using the CASA reference antenna determination scheme.
+
+    hif_bandpass()
+
+2. Same as the above but precompute a prioritized reference antenna list
+
+    hif_refant()
+    hif_bandpass()
+
+</example>
+
+</task>
+</casaxml>
+

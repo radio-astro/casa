@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_lowgainflag" category="pipeline">
+<shortdescription>Flag antennas with low gain</shortdescription>
+<description>
+Flag antennas with low gain.
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="intent" subparam="true">
+        <description>Data intent whose gains are to checked</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw" subparam="true">
+        <description>Spectral window ids whose gains are to be checked</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+        <description>Reference antenna names</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="flag_nmedian" subparam="true">
+        <description>True to flag values higher (limit&gt;1) or lower (limit&lt;1) than fnm_limit * median</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fnm_limit" subparam="true">
+        <description>Flag values higher (limit&gt;1) or lower (limit&lt;1) than fnm_limit * median</description>
+        <value>0.5</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="intent"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="refant"><value type="string"></value></default>
+                <default param="flag_nmedian"><value type="bool">True</value></default>
+                <default param="fnm_limit"><value type="float">0.5</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="intent"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="refant"><value type="string"></value></default>
+                <default param="flag_nmedian"><value type="bool">True</value></default>
+                <default param="fnm_limit"><value type="float">0.5</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_nmedian">
+            <equals type="bool" value="True">
+                <default param="fnm_limit"><value>0.5</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+hif_lowgainflag flags data for antennas with unusually low gains.
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+intent -- The data intent to be checked for antennas with low gain. The
+          default is blank, which causes the task to select the first
+          intent in the list ['BANDPASS', 'PHASE', 'AMPLITUDE'] for which
+          data are found.
+    default ''
+
+flag_nmedian -- True to flag figures of merit greater than fnm_limit * median
+                if fnm_limit &gt; 1 or lower than fnm_limit * median if
+                fnm_limit &lt; 1.
+    default True
+
+fnm_limit -- Points greater (fnm_limit &gt; 1) or lower (fnm_limit &lt; 1)
+             than fnm_limit * median are flagged.
+    default 0.5
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+-- Pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+Deviant antennas are detected by analysis of a view showing their calibration 
+gains. This view is a list of 2D images with axes 'Time' and
+'Antenna'; there is one image for each spectral window and intent.
+A flagcmd to flag all data for an antenna will be generated by any gain that 
+differs from the median by more than 'fnm_limit'.
+
+</example> 
+
+</task>
+</casaxml>
+

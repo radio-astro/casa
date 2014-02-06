@@ -1,0 +1,200 @@
+<%!
+import pipeline.domain.measures as measures
+import pipeline.extern.asizeof as asizeof
+import pipeline.infrastructure.logging as logging
+
+def get_logrecords(result, loglevel):
+    """
+    Get the logrecords for the result, removing any duplicates
+
+    :param result: a result containing logrecords
+    :param loglevel: the loglevel to match
+    :return:
+    """
+    lst = [l for l in result.logrecords if l.levelno is loglevel]
+
+    dset = set()
+    # relies on the fact that dset.add() always returns None.
+    return [l for l in lst if
+            l.msg not in dset and not dset.add(l.msg)]
+
+
+def get_qascores(pool, lo, hi):
+	with_score = [s for s in pool if s.score not in ('', 'N/A', None)]
+	return [s for s in with_score if s.score > lo and s.score <= hi]
+
+%>
+
+<div class="page-header">
+	<h1><%block name="title">Untitled Task</%block><%block name="backbutton"><button class="btn btn-large pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
+</div>
+
+<ul class="unstyled">
+%if result.qa.pool:
+	% for qascore in get_qascores(result.qa.pool, -0.1, 0.1):
+	<li class="alert alert-error">
+		<i class="icon-remove-sign"></i> <strong>QA</strong> ${qascore.longmsg}
+	</li>
+	% endfor
+	% for qascore in get_qascores(result.qa.pool, 0.1, 0.5):
+	<li class="alert">
+		<i class="icon-question-sign"></i> <strong>QA</strong> ${qascore.longmsg}
+	</li>
+	% endfor
+%endif
+% for r in result:
+	% for logrecord in get_logrecords(r, logging.ERROR):
+	<li class="alert alert-error">
+		<strong>Error!</strong> ${logrecord.msg}
+	</li>
+	% endfor
+	% for logrecord in get_logrecords(r, logging.WARNING):
+	<li class="alert">
+		<strong>Warning!</strong> ${logrecord.msg}
+	</li>
+	% endfor
+	% if alerts_info is not UNDEFINED:
+	% for msg in alerts_info:
+	<li class="alert alert-info">
+		${msg}
+	</li>
+	% endfor
+	% endif
+	% if alerts_success is not UNDEFINED:
+	% for msg in alerts_success:
+	<li class="alert alert-success">
+		${msg}
+	</li>
+	% endfor
+	% endif
+%endfor	
+</ul>
+
+${next.body()}
+
+<div class="accordion" id="details-accordion">
+
+<%doc>
+Help disabled until the task descriptions from John's presentation are added
+
+%if taskhelp:
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseOne">
+	        	Task Help
+	      	</a>
+	    </div>
+	    <div id="collapseOne" class="accordion-body collapse">
+			<div class="accordion-inner">
+				${taskhelp}
+			</div>
+		</div>
+	</div>
+%endif
+</%doc>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseTwo">
+	        	CASA Logs
+	      	</a>
+	    </div>
+	    <div id="collapseTwo" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<pre>${stagelog}</pre>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-group">
+		<div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseQA">
+	        	Pipeline QA
+	      	</a>
+		</div>
+		<div id="collapseQA" class="accordion-body collapse">
+			<div class="accordion-inner">
+				% if result.qa.pool:
+				<table class="table table-bordered" summary="Pipeline QA summary">
+					<caption>Pipeline QA summary for this task.</caption>
+				    <thead>
+				        <tr>
+				            <th>Score</th>
+				            <th>Reason</th>
+				        </tr>
+				    </thead>
+					<tbody>
+					% for qascore in get_qascores(result.qa.pool, -0.1, 0.1):
+					<tr class="error">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+					% for qascore in get_qascores(result.qa.pool, 0.1, 0.5):
+					<tr class="warning">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+					% for qascore in get_qascores(result.qa.pool, 0.5, 0.9):
+					<tr class="info">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+					% for qascore in get_qascores(result.qa.pool, 0.9, 1.0):
+					<tr class="success">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+				</table>
+				% else:
+					No pipeline QA for this task.
+				% endif
+			</div>		
+		</div>
+	</div>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseThree">
+	        	Input Parameters
+	      	</a>
+	    </div>
+	    <div id="collapseThree" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<dl class="dl-horizontal">
+				% for k, v in result.inputs.iteritems():
+					<dt>${str(k)}</dt>
+					<dd>${str(v) if str(v) != '' else '&nbsp;'}</dd>
+				% endfor
+				</dl>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseFour">
+				Task Execution Times
+	      	</a>
+	    </div>
+	    <div id="collapseFour" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<dl class="dl-horizontal">
+					<dt>Start time</dt>
+					<dd>${result.timestamps.start}</dd>
+					<dt>End</dt>
+					<dd>${result.timestamps.end}</dd>
+					<dt>Duration</dt>
+					<dd>${str(result.timestamps.end - result.timestamps.start)}</dd>
+					<dt>Context size</dt>
+					<dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
+				</dl>
+			</div>
+		</div>
+	</div>
+
+</div>

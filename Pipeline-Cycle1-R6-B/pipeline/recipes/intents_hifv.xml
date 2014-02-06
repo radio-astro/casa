@@ -1,0 +1,6 @@
+<ProcessingIntents>
+    <Intents>
+        <Keyword xmlns="">VLA_INTERFEROMETRY_STANDARD_OBSERVING_MODE</Keyword>
+        <Value xmlns="">Undefined</Value>
+    </Intents>
+</ProcessingIntents>
