@@ -191,11 +191,11 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test001(self):
-        """Test 001: Empty varnames"""
+        """Test 001: Empty varlist"""
         ex='V0+V1'
         v={}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -204,11 +204,11 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test002(self):
-        """Test 002: Lack of some variables in varnames"""
+        """Test 002: Lack of some variables in varlist"""
         ex='V0+V1'
         v={'V0': self.rawfile}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -224,7 +224,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=False)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -239,7 +239,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': factor,
            'V1': self.rawfile}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -255,7 +255,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': factor,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -270,7 +270,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -286,7 +286,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': infile2}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -303,7 +303,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': datafile}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -351,7 +351,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -363,7 +363,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -375,7 +375,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -387,7 +387,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -399,7 +399,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -411,7 +411,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -423,7 +423,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -435,7 +435,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -447,7 +447,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -459,7 +459,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -471,7 +471,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -483,7 +483,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -495,7 +495,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -507,7 +507,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -519,7 +519,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]] 
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -531,7 +531,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -577,7 +577,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -588,7 +588,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -599,7 +599,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -610,7 +610,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -664,7 +664,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -675,7 +675,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -686,7 +686,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -697,7 +697,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -892,7 +892,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -925,7 +925,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -959,7 +959,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -992,7 +992,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -1026,7 +1026,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -1059,7 +1059,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -1092,7 +1092,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
@@ -1123,7 +1123,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\

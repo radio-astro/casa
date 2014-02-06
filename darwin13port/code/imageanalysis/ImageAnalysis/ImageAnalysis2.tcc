@@ -31,8 +31,10 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 
 #include <casa/Logging/LogFilter.h>
+#include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageSummary.h>

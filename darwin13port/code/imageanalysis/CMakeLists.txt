@@ -122,6 +122,8 @@ install (FILES
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFFT.h
+	ImageAnalysis/ImageFFTer.h
+	ImageAnalysis/ImageFFTer.tcc
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc

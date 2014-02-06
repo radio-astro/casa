@@ -155,21 +155,17 @@ synthesisutils::~synthesisutils()
 
   try 
     {
+      // Construct parameter object, and verify params.
       casa::Record recpars = *toRecord( impars );
       SynthesisParamsImage pars;
-      pars.fromRecord( recpars );
+      pars.fromRecord( recpars );  // will throw exception if parameters are invalid
 
-      SynthesisUtilMethods su;
+      // Construct Coordinate system and make image. 
       MeasurementSet ms;
-      if( msname.length() > 0 && (Directory(msname)).exists() ){ ms = MeasurementSet(msname); }
-      CoordinateSystem imcsys = su.buildCoordinateSystem( pars, ms );
+      if( msname.length() > 0 && (Directory(msname)).exists() ) { ms = MeasurementSet(msname); }
 
-      IPosition imshape(4, pars.imsize[0], pars.imsize[1], 
-			((imcsys.stokesCoordinate()).stokes()).nelements(), 
-			pars.nchan);
-
-      cout << "Making image : " << pars.imageName << " of shape : " << imshape << endl;
-      PagedImage<Float> diskimage( imshape, imcsys, pars.imageName );
+      cout << "Making image : " << pars.imageName << " of shape : " << pars.shp() << endl;
+      PagedImage<Float> diskimage( pars.shp(), pars.buildCoordinateSystem(ms), pars.imageName );
 
     } 
   catch  (AipsError x) 

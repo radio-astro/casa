@@ -51,124 +51,123 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 
-
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
 ImageFFT::ImageFFT()
-: itsTempImagePtr(0),
-  itsInImagePtrFloat(0),
-  itsInImagePtrComplex(0),
-  itsDone(False)
-{
-}
+	: _tempImagePtr(),
+	  _floatImage(),
+	  _complexImage(),
+	  _done(False) {}
 
-
-ImageFFT::~ImageFFT()
-{
-   delete itsTempImagePtr;
-   itsTempImagePtr = 0;
-//
-   delete itsInImagePtrFloat;
-   itsInImagePtrFloat = 0;
-//
-   delete itsInImagePtrComplex;
-   itsInImagePtrComplex = 0;
-}
+ImageFFT::~ImageFFT() {}
 
 ImageFFT::ImageFFT(const ImageFFT& other)
-: itsTempImagePtr(0),
-  itsInImagePtrFloat(0),
-  itsInImagePtrComplex(0),
-  itsDone(False)
-{
-  if (this != &other) {
-     if (other.itsTempImagePtr!=0) {
-        itsTempImagePtr = other.itsTempImagePtr->cloneII();
-     }
-//
-     if (other.itsInImagePtrFloat!=0) {
-        itsInImagePtrFloat = other.itsInImagePtrFloat->cloneII();
-     }
-//
-     if (other.itsInImagePtrComplex!=0) {
-        itsInImagePtrComplex = other.itsInImagePtrComplex->cloneII();
-     }
-//
-     itsDone = other.itsDone;
-   }
+	: _tempImagePtr(), _floatImage(),
+	  _complexImage(), _done(False) {
+	if (this != &other) {
+		if (other._tempImagePtr) {
+			_tempImagePtr.reset(other._tempImagePtr->cloneII());
+		}
+		if (other._floatImage) {
+			_floatImage.reset(other._floatImage->cloneII());
+		}
+		if (other._complexImage) {
+			_complexImage.reset(other._complexImage->cloneII());
+		}
+		_done = other._done;
+	}
 }
 
-ImageFFT& ImageFFT::operator=(const ImageFFT& other)
-{
-  if (this != &other) {
-     delete itsTempImagePtr;
-     itsTempImagePtr = 0;
-     if (other.itsTempImagePtr!=0) {
-        itsTempImagePtr = other.itsTempImagePtr->cloneII();
-     }
-//
-     delete itsInImagePtrFloat;
-     itsInImagePtrFloat = 0;
-     if (other.itsInImagePtrFloat!=0) {
-        itsInImagePtrFloat = other.itsInImagePtrFloat->cloneII();
-     }
-//
-     delete itsInImagePtrComplex;
-     itsInImagePtrComplex = 0;
-     if (other.itsInImagePtrComplex!=0) {
-        itsInImagePtrComplex = other.itsInImagePtrComplex->cloneII();
-     }
-//
-     itsDone = other.itsDone;
+ImageFFT& ImageFFT::operator=(const ImageFFT& other) {
+	if (this != &other) {
+		_tempImagePtr = other._tempImagePtr
+			? SPIIC(other._tempImagePtr->cloneII())
+			: SPIIC();
+		_floatImage = other._floatImage
+					? SPIIF(other._floatImage->cloneII())
+					: SPIIF();
+		_complexImage = other._complexImage
+					? SPIIC(other._complexImage->cloneII())
+					: SPIIC();
+		_done = other._done;
    }
    return *this;
 }
 
+void ImageFFT::fftsky(const ImageInterface<Float>& in) {
+	LogIO os(LogOrigin("ImageFFT", __FUNCTION__, WHERE));
 
+	// Try and find the sky first.   Exception if not there
 
-void ImageFFT::fftsky(const ImageInterface<Float>& in) 
-{
-   LogIO os(LogOrigin("ImageFFT", "fftsky()", WHERE));
+	Int dC;
+	Vector<Int> pixelAxes, worldAxes;
+	_findSky(dC, pixelAxes, worldAxes, in.coordinates(), True);
 
-// Try and find the sky first.   Exception if not there
+	// Set pointer for the input image
 
-   Int dC;
-   Vector<Int> pixelAxes, worldAxes;
-   findSky(os, dC, pixelAxes, worldAxes, in.coordinates(), True);
+	_complexImage.reset();
+	_floatImage.reset(in.cloneII());
 
-// Set pointer for the input image
+	// Create TempImage
 
-   delete itsInImagePtrFloat;
-   delete itsInImagePtrComplex;
-   itsInImagePtrFloat = 0;
-   itsInImagePtrComplex = 0;
-//
-   itsInImagePtrFloat = in.cloneII();
+	_tempImagePtr.reset(
+		new TempImage<Complex>(in.shape(), in.coordinates())
+	);
 
-// Create TempImage
+	// Set new coordinate system in TempImage
 
-   delete itsTempImagePtr;
-   itsTempImagePtr = 0;
-   itsTempImagePtr = new TempImage<Complex>(in.shape(), in.coordinates());   
+	uInt dC2 = dC;
+	_setSkyCoordinates (
+		*_tempImagePtr, _floatImage->coordinates(),
+		_floatImage->shape(), dC2
+	);
 
-// Set new coordinate system in TempImage
-
-   uInt dC2 = dC;
-   setSkyCoordinates (os, *itsTempImagePtr, *itsInImagePtrFloat, dC2);
-
-// Do complex FFT
+	// Do complex FFT
   
-   fftsky2(*itsTempImagePtr, *itsInImagePtrFloat, pixelAxes);
-//
-   itsDone = True;
+	_fftsky2(*_tempImagePtr, *_floatImage, pixelAxes);
+	_done = True;
+}
+
+
+void ImageFFT::fftsky(const ImageInterface<Complex>& in) {
+	LogIO os(LogOrigin("ImageFFT", __FUNCTION__, WHERE));
+
+	// Try and find the sky first.   Exception if not there
+
+	Int dC;
+	Vector<Int> pixelAxes, worldAxes;
+	_findSky(dC, pixelAxes, worldAxes, in.coordinates(), True);
+
+	// Set pointer for the input image
+
+	_complexImage.reset(in.cloneII());
+	_floatImage.reset();
+
+	// Create TempImage
+
+	_tempImagePtr.reset(
+		new TempImage<Complex>(in.shape(), in.coordinates())
+	);
+
+	// Set new coordinate system in TempImage
+
+	uInt dC2 = dC;
+	_setSkyCoordinates(
+		*_tempImagePtr, _complexImage->coordinates(),
+		_complexImage->shape(), dC2
+	);
+
+	// Do complex FFT
+
+	_fftsky2(*_tempImagePtr, *_complexImage, pixelAxes);
+	_done = True;
 }
 
 
 void ImageFFT::fft(const ImageInterface<Float>& in,
                    const Vector<Bool>& axes)
 {
-   LogIO os(LogOrigin("ImageFFT", "fft(,,)", WHERE));
+   LogIO os(LogOrigin("ImageFFT", __FUNCTION__, WHERE));
 
 // Check axes are ok 
 
@@ -176,31 +175,28 @@ void ImageFFT::fft(const ImageInterface<Float>& in,
 
 // Set pointer for the input image
 
-   delete itsInImagePtrFloat;
-   delete itsInImagePtrComplex;
-   itsInImagePtrFloat = 0;
-   itsInImagePtrComplex = 0;
-   itsInImagePtrFloat = in.cloneII();
+   _complexImage.reset();
+   _floatImage.reset(in.cloneII());
 
 // Create TempImage
 
-   delete itsTempImagePtr;
-   itsTempImagePtr = 0;
-   itsTempImagePtr = new TempImage<Complex>(in.shape(), in.coordinates());   
+   	_tempImagePtr.reset(
+		   new TempImage<Complex>(in.shape(), in.coordinates())
+    	);
 
 // Set new coordinate system in TempImage
 
-   setCoordinates (os, *itsTempImagePtr, itsInImagePtrFloat->coordinates(), 
-                   axes, in.shape());
+   _setCoordinates (
+		   *_tempImagePtr, _floatImage->coordinates(),
+		   axes, in.shape()
+			);
 
 // Do complex FFT
   
-   fft2(*itsTempImagePtr, *itsInImagePtrFloat, axes);
+   fft2(*_tempImagePtr, *_floatImage, axes);
 // 
-   itsDone = True;
+   _done = True;
 }
-
-
 
 void ImageFFT::fft(const ImageInterface<Complex>& in,
                    const Vector<Bool>& axes)
@@ -213,28 +209,27 @@ void ImageFFT::fft(const ImageInterface<Complex>& in,
 
 // Set pointer for the input image
 
-   delete itsInImagePtrFloat;
-   delete itsInImagePtrComplex;
-   itsInImagePtrFloat = 0;
-   itsInImagePtrComplex = 0;
-   itsInImagePtrComplex = in.cloneII();
+   _floatImage.reset();
+   _complexImage.reset(in.cloneII());
 
 // Create TempImage
 
-   delete itsTempImagePtr;
-   itsTempImagePtr = 0;
-   itsTempImagePtr = new TempImage<Complex>(in.shape(), in.coordinates());   
+   _tempImagePtr.reset(
+		 new TempImage<Complex>(in.shape(), in.coordinates())
+		 );
 
 // Set new coordinate system in TempImage
 
-   setCoordinates (os, *itsTempImagePtr, itsInImagePtrComplex->coordinates(), 
-                   axes, in.shape());
+   _setCoordinates (
+		   *_tempImagePtr, _complexImage->coordinates(),
+		   axes, in.shape()
+);
 
 // Do complex FFT
   
-   fft3(*itsTempImagePtr, *itsInImagePtrComplex, axes);
+   fft3(*_tempImagePtr, *_complexImage, axes);
 // 
-   itsDone = True;
+   _done = True;
 }
 
 
@@ -242,56 +237,53 @@ void ImageFFT::fft(const ImageInterface<Complex>& in,
 void ImageFFT::getComplex(ImageInterface<Complex>& out)  const
 {
    LogIO os(LogOrigin("ImageFFT", __FUNCTION__, WHERE));
-   if (!itsDone) {
+   if (!_done) {
       os << "You must call function fft first" << LogIO::EXCEPTION;
    }
-   if (!out.shape().isEqual(itsTempImagePtr->shape())) {
+   if (!out.shape().isEqual(_tempImagePtr->shape())) {
       os << "Input and output images have inconsistent shapes" << LogIO::EXCEPTION;
    }
-   out.copyData(*itsTempImagePtr);
+   out.copyData(*_tempImagePtr);
    copyMask(out);
-   if (!out.setCoordinateInfo(itsTempImagePtr->coordinates())) {
+   if (!out.setCoordinateInfo(_tempImagePtr->coordinates())) {
       os << "Could not replace CoordinateSystem in output real image" << LogIO::EXCEPTION;
    }
    copyMiscellaneous(out);
 }
 
 
-void ImageFFT::getReal(ImageInterface<Float>& out)  const
-{
-   LogIO os(LogOrigin("ImageFFT", "getReal()", WHERE));
-   if (!itsDone) {
-      os << "You must call function fft first" << LogIO::EXCEPTION;
-   }
-   if (!out.shape().isEqual(itsTempImagePtr->shape())) {
-      os << "Input and output images have inconsistent shapes" << LogIO::EXCEPTION;
-   }
-//
-   out.copyData(LatticeExpr<Float>(real(*itsTempImagePtr)));
-   copyMask(out);
-//
-   if (!out.setCoordinateInfo(itsTempImagePtr->coordinates())) {
-      os << "Could not replace CoordinateSystem in output real image" << LogIO::EXCEPTION;
-   }
-//
-   copyMiscellaneous(out);
+void ImageFFT::getReal(ImageInterface<Float>& out)  const {
+	ThrowIf(
+		! _done,
+		"You must call function fft first"
+	);
+	ThrowIf(
+		! out.shape().isEqual(_tempImagePtr->shape()),
+		"Input and output images have inconsistent shapes"
+	);
+	out.copyData(LatticeExpr<Float>(real(*_tempImagePtr)));
+	copyMask(out);
+	ThrowIf(
+		! out.setCoordinateInfo(_tempImagePtr->coordinates()),
+		"Could not replace CoordinateSystem in output real image"
+	);
+	copyMiscellaneous(out);
 }
-
 
 void ImageFFT::getImaginary(ImageInterface<Float>& out) const
 {
-   LogIO os(LogOrigin("ImageFFT", "getImaginary(,,)", WHERE));
-   if (!itsDone) {
+   LogIO os(LogOrigin("ImageFFT", __FUNCTION__, WHERE));
+   if (!_done) {
       os << "You must call function fft first" << LogIO::EXCEPTION;
    }
-   if (!out.shape().isEqual(itsTempImagePtr->shape())) {
+   if (!out.shape().isEqual(_tempImagePtr->shape())) {
       os << "Input and output images have inconsistent shapes" << LogIO::EXCEPTION;
    }
 //
-   out.copyData(LatticeExpr<Float>(imag(*itsTempImagePtr)));
+   out.copyData(LatticeExpr<Float>(imag(*_tempImagePtr)));
    copyMask(out);
 //
-   if (!out.setCoordinateInfo(itsTempImagePtr->coordinates())) {
+   if (!out.setCoordinateInfo(_tempImagePtr->coordinates())) {
       os << "Could not replace CoordinateSystem in output imaginary image" << LogIO::EXCEPTION;
    }
 //
@@ -302,47 +294,42 @@ void ImageFFT::getImaginary(ImageInterface<Float>& out) const
 void ImageFFT::getAmplitude(ImageInterface<Float>& out) const
 {
    LogIO os(LogOrigin("ImageFFT", "getAmplitude(,,)", WHERE));
-   if (!itsDone) {
+   if (!_done) {
       os << "You must call function fft first" << LogIO::EXCEPTION;
    }
-   if (!out.shape().isEqual(itsTempImagePtr->shape())) {
+   if (!out.shape().isEqual(_tempImagePtr->shape())) {
       os << "Input and output images have inconsistent shapes" << LogIO::EXCEPTION;
    }
 //
-   out.copyData(LatticeExpr<Float>(abs(*itsTempImagePtr)));
+   out.copyData(LatticeExpr<Float>(abs(*_tempImagePtr)));
    copyMask(out);
 //
-   if (!out.setCoordinateInfo(itsTempImagePtr->coordinates())) {
+   if (!out.setCoordinateInfo(_tempImagePtr->coordinates())) {
       os << "Could not replace CoordinateSystem in output amplitude image" << LogIO::EXCEPTION;
    }
 //
    copyMiscellaneous(out);
 }
 
+void ImageFFT::getPhase(ImageInterface<Float>& out) const {
+	ThrowIf(
+		! _done,
+		"You must call function fft first"
+	);
+	ThrowIf(
+		! out.shape().isEqual(_tempImagePtr->shape()),
+		"Input and output images have inconsistent shapes"
+	);
 
-void ImageFFT::getPhase(ImageInterface<Float>& out) const
-{
-   LogIO os(LogOrigin("ImageFFT", "getPhase(,,)", WHERE));
-   if (!itsDone) {
-      os << "You must call function fft first" << LogIO::EXCEPTION;
-   }
-   if (!out.shape().isEqual(itsTempImagePtr->shape())) {
-      os << "Input and output images have inconsistent shapes" << LogIO::EXCEPTION;
-   }
-//
-   out.copyData(LatticeExpr<Float>(arg(*itsTempImagePtr)));
-   copyMask(out, *itsInImagePtrFloat);
-//
-   if (!out.setCoordinateInfo(itsTempImagePtr->coordinates())) {
-      os << "Could not replace CoordinateSystem in output phase image" << LogIO::EXCEPTION;
-   }
-//
-   copyMiscellaneous(out);
-   out.setUnits(Unit("deg"));
+  	out.copyData(LatticeExpr<Float>(arg(*_tempImagePtr)));
+  	copyMask(out);
+  	ThrowIf(
+  		! out.setCoordinateInfo(_tempImagePtr->coordinates()),
+  		"Could not replace CoordinateSystem in output phase image"
+  	);
+  	copyMiscellaneous(out);
+  	out.setUnits(Unit("deg"));
 }
-
-
-// Private functions
 
 void ImageFFT::checkAxes(const CoordinateSystem& cSys, uInt ndim, const Vector<Bool>& axes)
 {
@@ -357,7 +344,7 @@ void ImageFFT::checkAxes(const CoordinateSystem& cSys, uInt ndim, const Vector<B
 
    Int dC;
    Vector<Int> pixelAxes, worldAxes;
-   Bool haveSky = findSky(os, dC, pixelAxes, worldAxes, cSys, False);
+   Bool haveSky = _findSky(dC, pixelAxes, worldAxes, cSys, False);
    if (haveSky) {
       if (axes(pixelAxes(0)) || axes(pixelAxes(1))) {
          if (! (axes(pixelAxes(0)) && axes(pixelAxes(1)))) {
@@ -371,19 +358,19 @@ void ImageFFT::checkAxes(const CoordinateSystem& cSys, uInt ndim, const Vector<B
 
 void ImageFFT::copyMask (ImageInterface<Float>& out) const
 {
-   if (itsInImagePtrFloat!=0) {
-      copyMask(out, *itsInImagePtrFloat);
+   if (_floatImage) {
+      copyMask(out, *_floatImage);
    } else {
-      copyMask(out, *itsInImagePtrComplex);
+      copyMask(out, *_complexImage);
    }
 }
 
 void ImageFFT::copyMask (ImageInterface<Complex>& out) const
 {
-   if (itsInImagePtrFloat!=0) {
-      copyMask(out, *itsInImagePtrFloat);
+   if (_floatImage) {
+      copyMask(out, *_floatImage);
    } else {
-      copyMask(out, *itsInImagePtrComplex);
+      copyMask(out, *_complexImage);
    }
 }
 
@@ -532,16 +519,16 @@ void ImageFFT::copyMask (ImageInterface<Complex>& out,
 
 void ImageFFT::copyMiscellaneous (ImageInterface<Float>& out) const
 {
-   if (itsInImagePtrFloat!=0) {
-      out.setMiscInfo(itsInImagePtrFloat->miscInfo());
-      out.setImageInfo(itsInImagePtrFloat->imageInfo());
-      out.setUnits(itsInImagePtrFloat->units());
-      out.appendLog(itsInImagePtrFloat->logger());
+   if (_floatImage) {
+      out.setMiscInfo(_floatImage->miscInfo());
+      out.setImageInfo(_floatImage->imageInfo());
+      out.setUnits(_floatImage->units());
+      out.appendLog(_floatImage->logger());
    } else {
-      out.setMiscInfo(itsInImagePtrComplex->miscInfo());
-      out.setImageInfo(itsInImagePtrComplex->imageInfo());
-      out.setUnits(itsInImagePtrComplex->units());
-      out.appendLog(itsInImagePtrComplex->logger());
+      out.setMiscInfo(_complexImage->miscInfo());
+      out.setImageInfo(_complexImage->imageInfo());
+      out.setUnits(_complexImage->units());
+      out.appendLog(_complexImage->logger());
    }
 }
 
@@ -549,47 +536,63 @@ void ImageFFT::copyMiscellaneous (ImageInterface<Float>& out) const
 void ImageFFT::copyMiscellaneous (ImageInterface<Complex>& out) const
 {
 	cout << "out coords " << out.coordinates().worldAxisNames() << endl;
-   if (itsInImagePtrFloat!=0) {
-	   cout << itsInImagePtrFloat->coordinates().worldAxisNames() << endl;
-      out.setMiscInfo(itsInImagePtrFloat->miscInfo());
-      out.setImageInfo(itsInImagePtrFloat->imageInfo());
-      out.setUnits(itsInImagePtrFloat->units());
-      out.appendLog(itsInImagePtrFloat->logger());
+   if (_floatImage) {
+      out.setMiscInfo(_floatImage->miscInfo());
+      out.setImageInfo(_floatImage->imageInfo());
+      out.setUnits(_floatImage->units());
+      out.appendLog(_floatImage->logger());
    } else {
-	   cout << itsInImagePtrComplex->coordinates().worldAxisNames() << endl;
-
-      out.setMiscInfo(itsInImagePtrComplex->miscInfo());
-      out.setImageInfo(itsInImagePtrComplex->imageInfo());
-      out.setUnits(itsInImagePtrComplex->units());
-      out.appendLog(itsInImagePtrComplex->logger());
+      out.setMiscInfo(_complexImage->miscInfo());
+      out.setImageInfo(_complexImage->imageInfo());
+      out.setUnits(_complexImage->units());
+      out.appendLog(_complexImage->logger());
    }
 }
 
+void ImageFFT::_fftsky2(
+	ImageInterface<Complex>& out,
+	const ImageInterface<Float>& in,
+	const Vector<Int>& pixelAxes
+) {
 
-void ImageFFT::fftsky2(ImageInterface<Complex>& out, 
-                       const ImageInterface<Float>& in,
-                       const Vector<Int>& pixelAxes)
-{
+	// Do the FFT.  Use in place complex because it does
+	// all the unscrambling for me.  Replace masked values
+	// by zero and then convert to Complex.  LEL is a marvel.
 
-// Do the FFT.  Use in place complex because it does
-// all the unscrambling for me.  Replace masked values
-// by zero and then convert to Complex.  LEL is a marvel.
-
-   if (in.isMasked()) {
-      Float zero = 0.0;
-      LatticeExpr<Complex> expr(toComplex(replace(in,zero)));
-      out.copyData(expr);
-   } else {
-      LatticeExpr<Complex> expr(toComplex(in));
-      out.copyData(expr);
-   }    
-//
-   Vector<Bool> whichAxes(in.ndim(), False);
-   whichAxes(pixelAxes(0)) = True;
-   whichAxes(pixelAxes(1)) = True;
-   LatticeFFT::cfft(out, whichAxes, True);
+	if (in.isMasked()) {
+		Float zero = 0.0;
+		LatticeExpr<Complex> expr(toComplex(replace(in,zero)));
+		out.copyData(expr);
+	}
+	else {
+		LatticeExpr<Complex> expr(toComplex(in));
+		out.copyData(expr);
+	}
+	Vector<Bool> whichAxes(in.ndim(), False);
+	whichAxes(pixelAxes(0)) = True;
+	whichAxes(pixelAxes(1)) = True;
+	LatticeFFT::cfft(out, whichAxes, True);
 }
 
+void ImageFFT::_fftsky2(
+	ImageInterface<Complex>& out,
+	const ImageInterface<Complex>& in,
+	const Vector<Int>& pixelAxes
+) {
+	if (in.isMasked()) {
+		Complex zero(0, 0);
+		LatticeExpr<Complex> expr(replace(in,zero));
+		out.copyData(expr);
+	}
+	else {
+		LatticeExpr<Complex> expr(in);
+		out.copyData(expr);
+	}
+	Vector<Bool> whichAxes(in.ndim(), False);
+	whichAxes(pixelAxes(0)) = True;
+	whichAxes(pixelAxes(1)) = True;
+	LatticeFFT::cfft(out, whichAxes, True);
+}
 
 void ImageFFT::fft2(ImageInterface<Complex>& out, 
                     const ImageInterface<Float>& in,
@@ -624,79 +627,75 @@ void ImageFFT::fft3(ImageInterface<Complex>& out,
 }
 
 
-void ImageFFT::setSkyCoordinates (LogIO& os,
-                                  ImageInterface<Complex>& out,
-                                  const ImageInterface<Float>& in,
-                                  uInt dC)
-//
-// dC is the DC coordinate number
-//
-{
-// Find the input CoordinateSystem
+void ImageFFT::_setSkyCoordinates (
+	ImageInterface<Complex>& out,
+	const CoordinateSystem& csys,
+	const IPosition& shape, uInt dC
+) {
 
-   CoordinateSystem cSys = in.coordinates();
-   Vector<Int> pixelAxes = cSys.pixelAxes(dC);
-   AlwaysAssert(pixelAxes.nelements()==2,AipsError);
+	// dC is the DC coordinate number
 
-// Set the DirectionCoordinate axes to True
+	// Find the input CoordinateSystem
 
-   Vector<Bool> axes(cSys.nPixelAxes(), False);
-   axes(pixelAxes(0)) = True;
-   axes(pixelAxes(1)) = True;
+	Vector<Int> pixelAxes = csys.pixelAxes(dC);
+	AlwaysAssert(pixelAxes.nelements()==2,AipsError);
 
-// FT the CS
+	// Set the DirectionCoordinate axes to True
 
-   Coordinate* pC = cSys.makeFourierCoordinate(axes, in.shape().asVector());
+	Vector<Bool> axes(csys.nPixelAxes(), False);
+	axes(pixelAxes(0)) = True;
+	axes(pixelAxes(1)) = True;
 
-// Replace TempImage CS with the new one
+	// FT the CS
 
-   CoordinateSystem* pC2 = (CoordinateSystem*)(pC);
-   if (!out.setCoordinateInfo(*pC2)) {
-      os << "Could not replace Coordinate System in internal complex image" << LogIO::EXCEPTION;
-   }
-//
-   delete pC; pC = 0;
-   pC2 = 0;
+	std::tr1::shared_ptr<Coordinate> pC(
+		csys.makeFourierCoordinate(
+			axes, shape.asVector()
+		)
+	);
+
+	// Replace TempImage CS with the new one
+
+	CoordinateSystem* pC2 = (CoordinateSystem*)(pC.get());
+	ThrowIf(
+		! out.setCoordinateInfo(*pC2),
+		"Could not replace Coordinate System in internal complex image"
+	);
 }
 
-void ImageFFT::setCoordinates (LogIO& os,
-                               ImageInterface<Complex>& out,
-                               const CoordinateSystem& cSys,
-                               const Vector<Bool>& axes,
-                               const IPosition& shape)
-{
-// FT CS
+void ImageFFT::_setCoordinates (
+	ImageInterface<Complex>& out,
+	const CoordinateSystem& cSys,
+	const Vector<Bool>& axes,
+	const IPosition& shape
+) {
+	std::tr1::shared_ptr<Coordinate> pC(
+		cSys.makeFourierCoordinate(axes, shape.asVector())
+	);
 
-   Coordinate* pC = cSys.makeFourierCoordinate(axes, shape.asVector());
-
-// Replace TempImage CS with the fiddled one
-
-   CoordinateSystem* pCS = (CoordinateSystem*)(pC);
-   if (!out.setCoordinateInfo(*pCS)) {
-      os << "Could not replace Coordinate System in internal complex image" << LogIO::EXCEPTION;
-   }
-
-//
-   delete pC;
-   pC = 0;
-   pCS = 0;
+	CoordinateSystem *pCS = (CoordinateSystem*)(pC.get());
+	ThrowIf(
+		! out.setCoordinateInfo(*pCS),
+		"Could not replace Coordinate System in internal complex image"
+	);
 }
 
-
-Bool ImageFFT::findSky(LogIO& os, Int& dC, Vector<Int>& pixelAxes, 
-                       Vector<Int>& worldAxes, const CoordinateSystem& cSys,
-                       Bool throwIt)
-{
-   String error;
-   Bool ok = CoordinateUtil::findSky(error, dC, pixelAxes, worldAxes, cSys);
-   if (!ok) {
-      if (throwIt) {
-         os << error << LogIO::EXCEPTION;
-      } else {
-         return False;
-      }
-   }
-   return ok;
+Bool ImageFFT::_findSky(
+	Int& dC, Vector<Int>& pixelAxes,
+	Vector<Int>& worldAxes, const CoordinateSystem& csys,
+	Bool throwIt
+) {
+	if (! csys.hasDirectionCoordinate()) {
+		ThrowIf(
+			throwIt,
+			"Coordinate system does not have a direction coordinate"
+		);
+		return False;
+	}
+	dC = csys.directionCoordinateNumber();
+	pixelAxes = csys.directionAxesNumbers();
+	worldAxes = csys.worldAxes(dC);
+   return True;
 }
 
 } //# NAMESPACE CASA - END

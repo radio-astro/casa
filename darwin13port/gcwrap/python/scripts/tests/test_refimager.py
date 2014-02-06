@@ -458,6 +458,6 @@ def testmakeimage():
      os.system('rm -rf ' + impars['imagename'])
 
      synu = casac.synthesisutils()
-     synu.makeimage( impars ) #, 'DataTest/twopoints_twochan.ms')
+     synu.makeimage( impars , 'DataTest/twopoints_twochan.ms')
      synu.done()
 

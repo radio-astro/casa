@@ -162,144 +162,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////     Build a coordinate system.  ////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ////   To be used from SynthesisImager, to construct the images it needs
-  ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
-  ////       ( need to supply MS only to add  'ObsInfo' to the csys )
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  CoordinateSystem 
-  SynthesisUtilMethods::buildCoordinateSystem(const SynthesisParamsImage& impars,
-					      const MeasurementSet& msobj)
-  {
-    LogIO os( LogOrigin("SynthesisUtilMethods","buildCoordinateSystem",WHERE) );
-
-    /////////////////// Direction Coordinates
-    MVDirection mvPhaseCenter(impars.phaseCenter.getAngle());
-    // Normalize correctly
-    MVAngle ra=mvPhaseCenter.get()(0);
-    ra(0.0);
-
-    MVAngle dec=mvPhaseCenter.get()(1);
-    Vector<Double> refCoord(2);
-    refCoord(0)=ra.get().getValue();    
-    refCoord(1)=dec;
-    Vector<Double> refPixel(2); 
-    refPixel(0) = Double(impars.imsize[0]/2);
-    refPixel(1) = Double(impars.imsize[1]/2);
-
-    Vector<Double> deltas(2);
-    deltas(0)=-1* impars.cellsize[0].get("rad").getValue();
-    deltas(1)=impars.cellsize[1].get("rad").getValue();
-    Matrix<Double> xform(2,2);
-    xform=0.0;xform.diagonal()=1.0;
-    DirectionCoordinate
-      myRaDec(MDirection::Types(impars.phaseCenter.getRefPtr()->getType()),
-	      impars.projection,
-	      refCoord(0), refCoord(1),
-	      deltas(0), deltas(1),
-	      xform,
-	      refPixel(0), refPixel(1));
-
-    /////////////////// Spectral Coordinate
-
-    //Make sure frame conversion is switched off for REST frame data.
-    Bool freqFrameValid=(impars.freqFrame != MFrequency::REST);
-
-    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : impars.freqFrame, 
-				  impars.freqStart, impars.freqStep, 0, 
-				  impars.restFreq.nelements() >0 ? impars.restFreq[0]: Quantity(0.0, "Hz"));
-    for (uInt k=1 ; k < impars.restFreq.nelements(); ++k)
-      mySpectral.setRestFrequency(impars.restFreq[k].getValue("Hz"));
-
-
-    ////////////////// Stokes Coordinate
-   
-    Vector<Int> whichStokes = decideNPolPlanes(impars.stokes);
-    if(whichStokes.nelements()==0)
-      throw(AipsError("Stokes selection of " + impars.stokes + " is invalid"));
-    StokesCoordinate myStokes(whichStokes);
-
-    //////////////////  Build Full coordinate system. 
-
-    CoordinateSystem csys;
-    csys.addCoordinate(myRaDec);
-    csys.addCoordinate(myStokes);
-    csys.addCoordinate(mySpectral);
-
-    //////////////// Set Observatory info, if MS is provided.
-    if( ! msobj.isNull() )
-      {
-	//defining observatory...needed for position on earth
-	ROMSColumns msc(msobj);
-	String telescop = msc.observation().telescopeName()(0);
-	MEpoch obsEpoch = msc.timeMeas()(0);
-	MPosition obsPosition;
-	if(!(MeasTable::Observatory(obsPosition, telescop)))
-	  {
-	    os << LogIO::WARN << "Did not get the position of " << telescop 
-	       << " from data repository" << LogIO::POST;
-	    os << LogIO::WARN 
-	       << "Please contact CASA to add it to the repository."
-	       << LogIO::POST;
-	    os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-	  }
-	
-	ObsInfo myobsinfo;
-	myobsinfo.setTelescope(telescop);
-	myobsinfo.setPointingCenter(mvPhaseCenter);
-	myobsinfo.setObsDate(obsEpoch);
-	myobsinfo.setObserver(msc.observation().observer()(0));
-
-	/// Attach obsInfo to the CoordinateSystem
-	csys.setObsInfo(myobsinfo);
-
-      }// if MS is provided.
-
-    return csys;
-  }
-
-  Vector<Int> SynthesisUtilMethods::decideNPolPlanes(const String& stokes)
-  {
-    Vector<Int> whichStokes(0);
-    if(stokes=="I" || stokes=="Q" || stokes=="U" || stokes=="V" || 
-       stokes=="RR" ||stokes=="LL" || 
-       stokes=="XX" || stokes=="YY" ) {
-      whichStokes.resize(1);
-      whichStokes(0)=Stokes::type(stokes);
-    }
-    else if(stokes=="IV" || stokes=="IQ" || 
-	    stokes=="RRLL" || stokes=="XXYY" ||
-	    stokes=="QU" || stokes=="UV"){
-      whichStokes.resize(2);
-      
-      if(stokes=="IV"){ whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::V;}
-      else if(stokes=="IQ"){whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q;}
-      else if(stokes=="RRLL"){whichStokes[0]=Stokes::RR; whichStokes[1]=Stokes::LL;}
-      else if(stokes=="XXYY"){whichStokes[0]=Stokes::XX; whichStokes[1]=Stokes::YY; }
-      else if(stokes=="QU"){whichStokes[0]=Stokes::Q; whichStokes[1]=Stokes::U; }
-      else if(stokes=="UV"){ whichStokes[0]=Stokes::U; whichStokes[1]=Stokes::V; }
-	
-    }
-  
-    else if(stokes=="IQU" || stokes=="IUV") {
-      whichStokes.resize(3);
-      if(stokes=="IUV")
-	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::U; whichStokes[2]=Stokes::V;}
-      else
-	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q; whichStokes[2]=Stokes::U;}
-    }
-    else if(stokes=="IQUV"){
-      whichStokes.resize(4);
-      whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::Q;
-      whichStokes(2)=Stokes::U; whichStokes(3)=Stokes::V;
-    }
-      
-    return whichStokes;
-  }
-
-
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////    Parameter Containers     ///////////////////////////////////////////////////////
@@ -858,6 +720,148 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return impar;
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////     Build a coordinate system.  ////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////   To be used from SynthesisImager, to construct the images it needs
+  ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
+  ////       ( need to supply MS only to add  'ObsInfo' to the csys )
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  CoordinateSystem 
+  SynthesisParamsImage::buildCoordinateSystem(MeasurementSet& msobj) const
+  {
+    LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
+
+    /////////////////// Direction Coordinates
+    MVDirection mvPhaseCenter(phaseCenter.getAngle());
+    // Normalize correctly
+    MVAngle ra=mvPhaseCenter.get()(0);
+    ra(0.0);
+
+    MVAngle dec=mvPhaseCenter.get()(1);
+    Vector<Double> refCoord(2);
+    refCoord(0)=ra.get().getValue();    
+    refCoord(1)=dec;
+    Vector<Double> refPixel(2); 
+    refPixel(0) = Double(imsize[0]/2);
+    refPixel(1) = Double(imsize[1]/2);
+
+    Vector<Double> deltas(2);
+    deltas(0)=-1* cellsize[0].get("rad").getValue();
+    deltas(1)=cellsize[1].get("rad").getValue();
+    Matrix<Double> xform(2,2);
+    xform=0.0;xform.diagonal()=1.0;
+    DirectionCoordinate
+      myRaDec(MDirection::Types(phaseCenter.getRefPtr()->getType()),
+	      projection,
+	      refCoord(0), refCoord(1),
+	      deltas(0), deltas(1),
+	      xform,
+	      refPixel(0), refPixel(1));
+
+    /////////////////// Spectral Coordinate
+
+    //Make sure frame conversion is switched off for REST frame data.
+    Bool freqFrameValid=(freqFrame != MFrequency::REST);
+
+    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, 
+				  freqStart, freqStep, 0, 
+				  restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
+    for (uInt k=1 ; k < restFreq.nelements(); ++k)
+      mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+
+
+    ////////////////// Stokes Coordinate
+   
+    Vector<Int> whichStokes = decideNPolPlanes(stokes);
+    if(whichStokes.nelements()==0)
+      throw(AipsError("Stokes selection of " + stokes + " is invalid"));
+    StokesCoordinate myStokes(whichStokes);
+
+    //////////////////  Build Full coordinate system. 
+
+    CoordinateSystem csys;
+    csys.addCoordinate(myRaDec);
+    csys.addCoordinate(myStokes);
+    csys.addCoordinate(mySpectral);
+
+    //////////////// Set Observatory info, if MS is provided.
+    if( ! msobj.isNull() )
+      {
+	//defining observatory...needed for position on earth
+	ROMSColumns msc(msobj);
+	String telescop = msc.observation().telescopeName()(0);
+	MEpoch obsEpoch = msc.timeMeas()(0);
+	MPosition obsPosition;
+	if(!(MeasTable::Observatory(obsPosition, telescop)))
+	  {
+	    os << LogIO::WARN << "Did not get the position of " << telescop 
+	       << " from data repository" << LogIO::POST;
+	    os << LogIO::WARN 
+	       << "Please contact CASA to add it to the repository."
+	       << LogIO::POST;
+	    os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+	  }
+	
+	ObsInfo myobsinfo;
+	myobsinfo.setTelescope(telescop);
+	myobsinfo.setPointingCenter(mvPhaseCenter);
+	myobsinfo.setObsDate(obsEpoch);
+	myobsinfo.setObserver(msc.observation().observer()(0));
+
+	/// Attach obsInfo to the CoordinateSystem
+	csys.setObsInfo(myobsinfo);
+
+      }// if MS is provided.
+
+    return csys;
+  }
+
+  Vector<Int> SynthesisParamsImage::decideNPolPlanes(const String& stokes) const
+  {
+    Vector<Int> whichStokes(0);
+    if(stokes=="I" || stokes=="Q" || stokes=="U" || stokes=="V" || 
+       stokes=="RR" ||stokes=="LL" || 
+       stokes=="XX" || stokes=="YY" ) {
+      whichStokes.resize(1);
+      whichStokes(0)=Stokes::type(stokes);
+    }
+    else if(stokes=="IV" || stokes=="IQ" || 
+	    stokes=="RRLL" || stokes=="XXYY" ||
+	    stokes=="QU" || stokes=="UV"){
+      whichStokes.resize(2);
+      
+      if(stokes=="IV"){ whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::V;}
+      else if(stokes=="IQ"){whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q;}
+      else if(stokes=="RRLL"){whichStokes[0]=Stokes::RR; whichStokes[1]=Stokes::LL;}
+      else if(stokes=="XXYY"){whichStokes[0]=Stokes::XX; whichStokes[1]=Stokes::YY; }
+      else if(stokes=="QU"){whichStokes[0]=Stokes::Q; whichStokes[1]=Stokes::U; }
+      else if(stokes=="UV"){ whichStokes[0]=Stokes::U; whichStokes[1]=Stokes::V; }
+	
+    }
+  
+    else if(stokes=="IQU" || stokes=="IUV") {
+      whichStokes.resize(3);
+      if(stokes=="IUV")
+	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::U; whichStokes[2]=Stokes::V;}
+      else
+	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q; whichStokes[2]=Stokes::U;}
+    }
+    else if(stokes=="IQUV"){
+      whichStokes.resize(4);
+      whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::Q;
+      whichStokes(2)=Stokes::U; whichStokes(3)=Stokes::V;
+    }
+      
+    return whichStokes;
+  }// decidenpolplanes
+
+  IPosition SynthesisParamsImage::shp() const
+  {
+    return IPosition( 4, imsize[0], imsize[1], ( decideNPolPlanes(stokes) ).nelements(), nchan );
+  }
+
 
 
  /////////////////////// Grid/FTMachine Parameters

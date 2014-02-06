@@ -69,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 Bool ImageUtilities::pixToWorld (
-	Vector<String>& sWorld,	CoordinateSystem& cSysIn,
+	Vector<String>& sWorld,	const CoordinateSystem& cSysIn,
 	const Int& pixelAxis, const Vector<Int>& cursorAxes,
 	const IPosition& blc, const IPosition& trc,
 	const Vector<Double>& pixels,

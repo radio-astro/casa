@@ -73,10 +73,8 @@ class plotms_test1(test_base):
     def tearDown(self):
        self.tearDowndata()
         
-  
-        
             
-    def test001(self):
+    def stest001(self):
         '''Plotms 1: Write a jpg file using the plotms task'''
         self.plotfile_jpg = self.outputDir + "testPlot001.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -92,7 +90,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(60000, self.plotfile_jpg)
         print
         
-    def test002(self):
+    def stest002(self):
         '''Plotms 2: Check overwrite=False functionality works'''
         self.plotfile_jpg = self.outputDir + "testPlot002.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -111,7 +109,7 @@ class plotms_test1(test_base):
         self.assertFalse(self.res)
         print
 
-    def test003(self):
+    def stest003(self):
         '''Plotms 3: Plot using data selection'''
         self.plotfile_jpg = self.outputDir + "testPlot003.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -127,7 +125,7 @@ class plotms_test1(test_base):
         self.assertTrue(plotSize > 70000)
         self.assertTrue(plotSize < 85000)
     
-    def test004(self):
+    def stest004(self):
         print
         '''Plotms 4: Set a custom plotting symbol'''
         self.plotfile_jpg = self.outputDir + "testPlot004.jpg"
@@ -146,7 +144,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(60000, self.plotfile_jpg)
         print
 
-    def test005(self):
+    def stest005(self):
         '''Plotms 5: Check overwrite=True functionality works'''
         self.plotfile_jpg = self.outputDir + "testPlot005.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -200,7 +198,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(66000, self.plotfile2_jpg)
         print    
 
-    def test007(self):
+    def stest007(self):
         '''Plotms 7: Check that setting an invalid selection returns false and allows a subsequenty plotms command in casapy'''
         self.plotfile_jpg = self.outputDir + "testPlot007.jpg"
         print 'Writing to ', self.plotfile_jpg
