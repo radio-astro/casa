@@ -113,6 +113,7 @@ tsdgrid.xml
 tsdimaging.xml
 tsdmath.xml
 tsdplot.xml
+tsdreduce.xml
 tsdsave.xml
 tsdstat.xml
 setjy.xml
