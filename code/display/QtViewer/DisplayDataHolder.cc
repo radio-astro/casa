@@ -232,9 +232,7 @@ namespace casa {
 
 	bool DisplayDataHolder::removeDD(QtDisplayData* qdd) {
 		bool removed = false;
-		if ( controlling_dd == qdd ){
-			controlling_dd = NULL;
-		}
+		if ( controlling_dd == qdd ) controlling_dd = NULL;
 		if ( qdd != NULL && exists( qdd) ) {
 			dataList.erase(std::remove(dataList.begin(), dataList.end(), qdd), dataList.end());
 			/*if ( isEmpty() || qdd == controlling_dd ) {

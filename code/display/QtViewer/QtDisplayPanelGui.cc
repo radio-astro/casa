@@ -1017,11 +1017,11 @@ void QtDisplayPanelGui::refreshFit() {
 	if ( fitTool != NULL ) {
 		QtDisplayData* controllingDD = dd();
 		if ( controllingDD != NULL ) {
-			std::tr1::shared_ptr<const ImageInterface<Float> > img = controllingDD->imageInterface();
+			std::tr1::shared_ptr<ImageInterface<Float> > img = controllingDD->imageInterface();
 			fitTool->setImage( img );
 		}
 		else {
-			std::tr1::shared_ptr<const ImageInterface<Float> > p;
+			std::tr1::shared_ptr<ImageInterface<Float> > p;
 			fitTool->setImage( p);
 		}
 	}
@@ -1638,8 +1638,17 @@ void QtDisplayPanelGui::notifyDDRemoval( QtDisplayData* qdd ){
 
 
 Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
+	// remove data from display data holder
 	bool removed = displayDataHolder->removeDD( qdd );
 
+	// remove data as controlling dd from all world canvases
+	if ( displayPanel( ) ) {
+		// upon destruction (called via dtor( )), display panel is already gone...
+		ConstListIter<WorldCanvas*>& wcs = *(displayPanel( )->panelDisplay( )->myWCLI);
+		for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
+			wcs.getRight( )->removeDD(qdd->dd());
+	}
+	
 	//In case we are removing the coordinate master.
 	if ( displayDataHolder->isCoordinateMaster( qdd) && qdp_!= NULL ){
 		qdp_->setControllingDD( NULL );

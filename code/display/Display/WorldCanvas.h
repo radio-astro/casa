@@ -1064,6 +1064,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return dd==csMaster() && dd!=0;
 		}
 
+		bool removeDD( const DisplayData *dd ) {
+			bool result = (dd == csMaster( ));
+			if ( result ) itsCSmaster = 0;
+			return result;
+		}
+
 		// Return the names and units of the world coordinate axes.
 		// <group>
 		virtual Vector<String> worldAxisNames() const;

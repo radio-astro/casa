@@ -125,6 +125,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
 	        Bool ignoreRefresh) {
 		worldCanvas()->hold();
+		// if we leave controllingDD set, we "rediscover" dData around line 312:
+		// 			worldCanvas()->csMaster() = controllingDD;
+		if ( controllingDD == &dData ) controllingDD = 0;
 		std::list <DisplayData*>::iterator pos = find( itsDisplayList.begin(), itsDisplayList.end(), &dData );
 		if ( pos != itsDisplayList.end() ) {
 			//Line below was taken out because we can now have a CS master that is not

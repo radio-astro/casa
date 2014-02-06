@@ -155,9 +155,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// region coupling between QtRegionDock and QtRegionSource(s)...
 		void revokeRegion( viewer::Region *r ) {
-			if ( qdp_ ){
-				qdp_->revokeRegion(r);
-			}
+			// may be null at destruction time...
+			if ( qdp_ ) qdp_->revokeRegion(r);
 		}
 
 
