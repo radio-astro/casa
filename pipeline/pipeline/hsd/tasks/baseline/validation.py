@@ -113,6 +113,10 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
             lines = _to_validated_lines(self.inputs.detect_signal)
+            signal = self.inputs.detect_signal.values()[0]
+            for row in self.inputs.index_list:
+                self.datatable.putcell('MASKLIST',row,signal[2])
+                self.datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': lines,
                        'channelmap_range': lines,
                        'cluster_info': {},
@@ -219,6 +223,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
             lines = _to_validated_lines(self.inputs.detect_signal)
+            signal = self.inputs.detect_signal.values()[0]
+            for row in self.inputs.index_list:
+                self.datatable.putcell('MASKLIST',row,signal[2])
+                self.datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': lines,
                        'channelmap_range': lines,
                        'cluster_info': {},
