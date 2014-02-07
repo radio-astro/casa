@@ -172,22 +172,24 @@ Vector<Int> VectorKernel::toKernelTypes (const Vector<String>& kernels)
  
 
 
-VectorKernel::KernelTypes VectorKernel::toKernelType (const String& kernel)
+VectorKernel::KernelTypes VectorKernel::toKernelType(
+	const String& kernel
+) {
+	String kernel2 = upcase(kernel);
+	String kernel3(kernel2.at(0,1));
 
-{
-   String kernel2 = upcase(kernel);
-   String kernel3(kernel2.at(0,1));
-//               
-   if (kernel3==String("B")) {
-      return VectorKernel::BOXCAR;
-   } else if (kernel3==String("G")) {
-      return VectorKernel::GAUSSIAN;
-   } else if (kernel3==String("H")) {
-      return VectorKernel::HANNING;
-   }
-   LogIO os(LogOrigin("VectorKernel", "toKernelType"));
-   os << "Illegal kernel type" << LogIO::EXCEPTION;
-   return VectorKernel::BOXCAR;
+	if (kernel3==String("B")) {
+		return VectorKernel::BOXCAR;
+	}
+	else if (kernel3==String("G")) {
+		return VectorKernel::GAUSSIAN;
+	}
+	else if (kernel3==String("H")) {
+		return VectorKernel::HANNING;
+	}
+	else {
+		ThrowCc("Illegal kernel type" + kernel);
+	}
 }
 
 String VectorKernel::fromKernelType (KernelTypes kernelType)
