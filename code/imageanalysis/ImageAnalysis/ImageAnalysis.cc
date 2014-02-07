@@ -3421,17 +3421,15 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 		*_log << "You have not specified any axes to convolve"
 				<< LogIO::EXCEPTION;
 	}
-	if (smoothaxes.nelements() != kernels.nelements() || smoothaxes.nelements()
-			!= kernelwidths.nelements()) {
-		*_log << "You must give the same number of axes, kernels and widths"
-				<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		smoothaxes.nelements() != kernels.nelements()
+		|| smoothaxes.nelements() != kernelwidths.nelements(),
+		"You must give the same number of axes, kernels and widths"
+	);
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
-		pRegion,
-		mask, _log.get(), False, AxesSpecifier(), extendMask
+		*_imageFloat, pRegion, mask, _log.get(),
+		False, AxesSpecifier(), extendMask
 	);
 
 	// Create convolver
@@ -3439,13 +3437,12 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 
 	// Handle inputs.
 	Bool useImageShapeExactly = False;
-	Vector<Int> smoothaxes2(smoothaxes);
-	for (uInt i = 0; i < smoothaxes2.nelements(); i++) {
+	for (uInt i = 0; i < smoothaxes.nelements(); i++) {
 		VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernels(i));
-		sic.setKernel(uInt(smoothaxes2(i)), type, kernelwidths(i), autoScale,
+		sic.setKernel(uInt(smoothaxes(i)), type, kernelwidths(i), autoScale,
 				useImageShapeExactly, scale);
-		*_log << LogIO::NORMAL << "Axis " << smoothaxes2(i)
-				<< " : kernel shape = " << sic.getKernelShape(uInt(smoothaxes2(
+		*_log << LogIO::NORMAL << "Axis " << smoothaxes(i)
+				<< " : kernel shape = " << sic.getKernelShape(uInt(smoothaxes(
 				i))) << LogIO::POST;
 	}
 

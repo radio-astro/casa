@@ -246,7 +246,6 @@ template<class T> ImageInterface<T>* ImageCollapser<T>::collapse(Bool wantReturn
 	else {
 		return 0;
 	}
-
 }
 
 template<class T> void ImageCollapser<T>::_finishConstruction() {

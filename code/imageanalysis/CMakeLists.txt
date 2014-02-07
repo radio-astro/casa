@@ -119,6 +119,8 @@ install (FILES
 	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageCropper.h
 	ImageAnalysis/ImageCropper.tcc
+	ImageAnalysis/ImageDecimator.h
+    ImageAnalysis/ImageDecimator.tcc
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFFT.h

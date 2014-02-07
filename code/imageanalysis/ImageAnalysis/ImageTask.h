@@ -133,6 +133,8 @@ protected:
 
     virtual inline Bool _supportsMultipleRegions() {return False;}
 
+    virtual inline Bool _supportsMultipleBeams() {return True;}
+
     // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
     // values=0 => the pixel values from the image will be used

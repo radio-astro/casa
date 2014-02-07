@@ -51,18 +51,19 @@ template<class T> void ImageInputProcessor::process(
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
-    if (imagename.empty()) {
-        *_log << "imagename cannot be blank" << LogIO::EXCEPTION;
-    }
+    ThrowIf(
+    	imagename.empty(),
+        "imagename cannot be blank"
+    );
     // Register the functions to create a FITSImage or MIRIADImage object.
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
     ImageInterface<Float> *imagePtr = 0;
     ImageUtilities::openImage(imagePtr, imagename);
-    if (imagePtr == 0) {
-    	*_log << origin;
-    	*_log << "Unable to open image " << imagename << LogIO::EXCEPTION;
-    }
+    ThrowIf(
+    	imagePtr == 0,
+    	"Unable to open image " + imagename
+    );
     image.reset(imagePtr);
 	_process(
 		regionRecord, diagnostics, outputStruct, stokes,
@@ -111,10 +112,11 @@ template<class T> void ImageInputProcessor::_process(
     		vector<Coordinate::Type>::const_iterator iter = requiredCoordinateTypes->begin();
     		iter != requiredCoordinateTypes->end(); iter++
     	) {
-    		if (image->coordinates().findCoordinate(*iter) < 0) {
-    			*_log << "Image " << image->name() << " does not have required coordinate "
-					<< Coordinate::typeToString(*iter) << LogIO::EXCEPTION;
-    		}
+    		ThrowIf(
+    			image->coordinates().findCoordinate(*iter) < 0,
+    			"Image " + image->name() + " does not have required coordinate "
+				+ Coordinate::typeToString(*iter)
+    		);
     	}
     }
 	ImageMetaData md(image);
@@ -127,10 +129,10 @@ template<class T> void ImageInputProcessor::_process(
 		stokesControl, box, image->shape(), image->name(),
 		verbose
 	);
-    if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
-    	*_log << "Only a single n-dimensional rectangular region is supported."
-    		<< LogIO::EXCEPTION;
-    }
+    ThrowIf(
+    	!allowMultipleBoxes && regionRecord.isDefined("regions"),
+    	"Only a single n-dimensional rectangular region is supported"
+    );
     _processHasRun = True;
 }
 

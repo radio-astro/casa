@@ -57,19 +57,19 @@ template<class T> void ImageFFTer<T>::fft() const {
 		fft.getReal(x);
 	}
 	if (! _imag.empty()) {
-		PagedImage<Float> x = this->_createFloatImage(_imag, subImage);
+		PagedImage<Float> x = _createFloatImage(_imag, subImage);
 		fft.getImaginary(x);
 	}
 	if (! _amp.empty()) {
-		PagedImage<Float> x = this->_createFloatImage(_amp, subImage);
+		PagedImage<Float> x = _createFloatImage(_amp, subImage);
 		fft.getAmplitude(x);
 	}
 	if (! _phase.empty()) {
-		PagedImage<Float> x = this->_createFloatImage(_phase, subImage);
+		PagedImage<Float> x = _createFloatImage(_phase, subImage);
 		fft.getPhase(x);
 	}
 	if (! _complex.empty()) {
-		PagedImage<Complex> x = this->_createComplexImage(_complex, subImage);
+		PagedImage<Complex> x = _createComplexImage(_complex, subImage);
 		fft.getComplex(x);
 	}
 }

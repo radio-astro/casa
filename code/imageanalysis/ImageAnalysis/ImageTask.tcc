@@ -40,7 +40,6 @@
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/IO/LogFile.h>
 
-
 namespace casa {
 
 template <class T> ImageTask<T>::ImageTask(
@@ -76,6 +75,13 @@ template <class T> std::vector<OutputDestinationChecker::OutputStruct> ImageTask
 }
 
 template <class T> void ImageTask<T>::_construct(Bool verbose) {
+
+	ThrowIf(
+		! _supportsMultipleBeams() && _image->imageInfo().hasMultipleBeams(),
+		"This application does not support images with multiple "
+		"beams. Please convolve your image with a single beam "
+		"and run this application using that image"
+	);
 	String diagnostics;
 	std::vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
 	std::vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
@@ -104,6 +110,10 @@ template <class T> void ImageTask<T>::_construct(Bool verbose) {
 }
 
 template <class T> void ImageTask<T>::setRegion(const Record& region) {
+	ThrowIf(
+		! _supportsMultipleRegions() && region.isDefined("regions"),
+		"This application does not support multiple region selection"
+	);
     _regionRecord = region;
     _box = "";
     _chan = "";
