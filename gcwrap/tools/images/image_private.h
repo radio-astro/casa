@@ -39,7 +39,7 @@ bool detached() const;
 casac::record* recordFromQuantity(casa::Quantity q);
 casac::record* recordFromQuantity(const casa::Quantum<casa::Vector<casa::Double> >& q);
 casa::Quantity _casaQuantityFromVar(const ::casac::variant& theVar);
-std::auto_ptr<casa::Record> _getRegion(const variant& region, const bool nullIfEmpty) const;
+std::tr1::shared_ptr<casa::Record> _getRegion(const variant& region, const bool nullIfEmpty) const;
 
 static vector<double> _toDoubleVec(const variant& v);
 
@@ -53,7 +53,6 @@ void _processDirection(
 );
 
 template<class T, class U> casac::variant* _getchunk(
-	T inputArrayType, U outputArrayType,
 	const std::vector<int>& blc, const std::vector<int>& trc,
 	const std::vector<int>& inc, const std::vector<int>& axes,
 	const bool list, const bool dropdeg, const bool getmask

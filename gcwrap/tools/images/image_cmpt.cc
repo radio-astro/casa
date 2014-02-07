@@ -62,6 +62,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
+#include <imageanalysis/ImageAnalysis/ImageDecimator.h>
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
@@ -968,12 +969,53 @@ image::coordsys(const std::vector<int>& pixelAxes) {
 		rstat = new ::casac::coordsys();
 		CoordinateSystem csys = _image->coordsys(Vector<Int> (pixelAxes));
 		rstat->setcoordsys(csys);
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;
+}
+
+image* image::decimate(
+	const string& outfile, int axis, int factor, const string& method,
+	const variant& region, const string& mask, bool overwrite, bool stretch
+) {
+	ThrowIf(
+		detached(),
+		"Tool is not attached to an image"
+	);
+	try {
+		String mymethod = method;
+		mymethod.downcase();
+		ImageDecimator<Float>::Function f;
+		if (mymethod.startsWith("n")) {
+			f = ImageDecimator<Float>::NONE;
+		}
+		else if (mymethod.startsWith("m")) {
+			f = ImageDecimator<Float>::MEAN;
+		}
+		else {
+			ThrowCc("Unsupported decimation method" + method);
+		}
+		std::tr1::shared_ptr<Record> regPtr(_getRegion(region, True));
+		ImageDecimator<Float> decimator(
+			_image->getImage(), regPtr.get(),
+			mask, outfile, overwrite
+		);
+		decimator.setFunction(f);
+		decimator.setAxis(axis);
+		decimator.setFactor(factor);
+		decimator.setStretch(stretch);
+		return new image(decimator.decimate(True));
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+	return new image();
 }
 
 ::casac::record*
@@ -1456,7 +1498,7 @@ record* image::fitprofile(const string& box, const variant& region,
 			"This method only supports Float valued images"
 		);
 		String regionName;
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 		if (ngauss < 0) {
 			_log << LogIO::WARN
 				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
@@ -1752,7 +1794,7 @@ image* image::transpose(
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		std::auto_ptr<Record> regionRecord = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionRecord = _getRegion(region, True);
 		fitter.reset(
 			new ImageFitter(
 				image, "", regionRecord.get(), box, sChans,
@@ -1816,17 +1858,13 @@ variant* image::getchunk(
 			return 0;
 		}
 		if (_image->isFloat()) {
-			Float f;
-			double d;
-			return _getchunk(
-				f, d, blc, trc, inc, axes, list, dropdeg, getmask
+			return _getchunk<Float, double>(
+				blc, trc, inc, axes, list, dropdeg, getmask
 			);
 		}
 		else {
-			Complex c;
-			std::complex<double> dc;
-			return _getchunk(
-				c, dc, blc, trc, inc, axes, list, dropdeg, getmask
+			return _getchunk<Complex, std::complex<double> > (
+				blc, trc, inc, axes, list, dropdeg, getmask
 			);
 		}
 	}
@@ -1838,10 +1876,9 @@ variant* image::getchunk(
 }
 
 template<class T, class U> casac::variant* image::_getchunk(
-	T inputArrayType, U outputArrayType,
-	const std::vector<int>& blc, const std::vector<int>& trc,
-	const std::vector<int>& inc, const std::vector<int>& axes,
-	const bool list, const bool dropdeg, const bool getmask
+	const vector<int>& blc, const vector<int>& trc,
+	const vector<int>& inc, const vector<int>& axes,
+	bool list, bool dropdeg, bool getmask
 ) {
 	Array<T> pixels;
 	Array<Bool> pixelMask;
@@ -2528,7 +2565,7 @@ image* image::pad(
 		if (npixels <= 0) {
 			_log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
 		}
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 
 		ImagePadder padder(
 			_image->getImage(), regionPtr.get(), box,
@@ -2572,7 +2609,7 @@ image* image::crop(
 		    }
         }
         std::set<uInt> saxes(axes.begin(), axes.end());
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 
 		ImageCropper<Float> cropper(
 			_image->getImage(), regionPtr.get(), box,
@@ -2924,7 +2961,7 @@ image* image::pv(
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 		PVGenerator pv(
 			_image->getImage(), regionPtr.get(),
 			chans, stokes, mask, outfile, overwrite
@@ -3068,7 +3105,7 @@ image* image::regrid(
 			! coordinates.get(),
 			"Invalid specified coordinate system record."
 		);
-		std::auto_ptr<Record> regionPtr(_getRegion(region, True));
+		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, True));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -3091,27 +3128,6 @@ image* image::regrid(
 		regridder.setStretch(stretch);
 		tr1::shared_ptr<ImageInterface<Float> > x(regridder.regrid(True));
 		return new image(x);
-		/*
-		std::auto_ptr<Record> coordinates(toRecord(csys));
-		String methodU(method);
-		std::auto_ptr<Record> Region(toRecord(region));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Vector<Int> axes;
-		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
-			axes = inaxes;
-		}
-		return new image(
-			_image->regrid(
-				outfile, Vector<Int> (inshape), *coordinates,
-				axes, *Region, mask, methodU, decimate, replicate,
-				doRefChange, dropDegenerateAxes, overwrite,
-				forceRegrid, specAsVelocity, stretch
-			)
-		);
-		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3623,7 +3639,7 @@ bool image::twopointcorrelation(
 			detached(),
 			"Unable to create image"
 		);
-		std::auto_ptr<Record> regionRec = _getRegion(region, False);
+		std::tr1::shared_ptr<Record> regionRec = _getRegion(region, False);
 		String regionStr = region.type() == variant::STRING
 			? region.toString()
 			: "";
@@ -4285,27 +4301,21 @@ bool image::isconform(const string& other) {
 			return True;
 		}
 		return False;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-std::auto_ptr<Record> image::_getRegion(
+std::tr1::shared_ptr<Record> image::_getRegion(
 	const variant& region, const bool nullIfEmpty
 ) const {
-	/*
-	ThrowIf(
-		! _image->isFloat(),
-		"Method" + String(__FUNCTION__) + " only supports Float valued images"
-	);
-	*/
 	switch (region.type()) {
 	case variant::BOOLVEC:
-		return std::auto_ptr<Record>(nullIfEmpty ? 0 : new Record());
+		return std::tr1::shared_ptr<Record>(nullIfEmpty ? 0 : new Record());
 	case variant::STRING:
-		return std::auto_ptr<Record>(
+		return std::tr1::shared_ptr<Record>(
 			region.toString().empty()
 				? nullIfEmpty ? 0 : new Record()
 				: new Record(
@@ -4318,20 +4328,17 @@ std::auto_ptr<Record> image::_getRegion(
 		);
 	case variant::RECORD:
 		{
-			std::auto_ptr<variant> clon(region.clone());
-			return std::auto_ptr<Record>(
+			std::tr1::shared_ptr<variant> clon(region.clone());
+			return std::tr1::shared_ptr<Record>(
 				nullIfEmpty && region.size() == 0
 					? 0
 					: toRecord(
-						std::auto_ptr<variant>(region.clone())->asRecord()
+						std::tr1::shared_ptr<variant>(region.clone())->asRecord()
 					)
 			);
 		}
 	default:
-		_log << "Unsupported type for region " << region.type()
-			<< LogIO::EXCEPTION;
-		// unnecessary but eliminates compiler warning
-		return (std::auto_ptr<Record>(0));
+		ThrowCc("Unsupported type for region " + region.typeString());
 	}
 }
 

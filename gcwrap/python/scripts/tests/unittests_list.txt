@@ -39,6 +39,7 @@ test_ia_commonbeam              dmehring@nrao.edu
 test_ia_convolve                dmehring@nrao.edu
 test_ia_convolve2d              dmehring@nrao.edu
 test_ia_crop                    dmehring@nrao.edu
+test_ia_decimate                dmehring@nrao.edu
 test_ia_decompose               dmehring@nrao.edu
 test_ia_deconvolvecomponentlist dmehring@nrao.edu
 test_ia_deconvolvefrombeam      dmehring@nrao.edu
