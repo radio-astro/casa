@@ -1348,11 +1348,19 @@ bool image::fft(
 		if (mask == "[]") {
 			mask = "";
 		}
-
-		// if default value change it to empty vector
-		IPosition leAxes(axes);
-		if (leAxes.size() == 1 && leAxes[0] == -1) {
-			leAxes.resize(0);
+		Vector<uInt> leAxes(0);
+		if (
+			axes.size() > 1
+			|| (axes.size() == 1 && axes[0] >= 0)
+		) {
+			leAxes.resize(axes.size());
+			for (uInt i=0; i<axes.size(); i++) {
+				ThrowIf(
+					axes[i] < 0,
+					"None of the elements of axes may be less than zero"
+				);
+				leAxes[i] = axes[i];
+			}
 		}
 		if (_image->isFloat()) {
 			ImageFFTer<Float> ffter(
