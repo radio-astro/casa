@@ -78,7 +78,7 @@ ImageRegridder::ImageRegridder(
 
 ImageRegridder::~ImageRegridder() {}
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::regrid(
+ImageInterface<Float>* ImageRegridder::regrid(
 	Bool wantReturn
 ) const {
 	Bool regridByVel = False;
@@ -106,11 +106,13 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::regrid(
 	else {
 		workIm = _regrid();
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(*workIm);
-	if (! wantReturn) {
-		outImage.reset();
+	std::auto_ptr<ImageInterface<Float> > outImage( _prepareOutputImage(*workIm));
+	if (wantReturn) {
+		return outImage.release();
 	}
-	return outImage;
+    else {
+        return 0;
+    }
 }
 
 std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
@@ -222,9 +224,9 @@ void ImageRegridder::_decimateStokes(
 				"", CasacRegionManager::USE_FIRST_STOKES,
 				"", workIm->shape()
 			).toRecord("");
-			workIm = SubImageFactory<Float>::createImage(
+			workIm.reset(SubImageFactory<Float>::createImage(
 				*workIm, "", region, "", False, False, False, False
-			);
+			));
 		}
 		else {
 			// Only include the wanted stokes

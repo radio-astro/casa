@@ -136,7 +136,7 @@ std::tr1::shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
 		subImage, lcbox.toRecord(""), "",
 		this->_getLog().get(), False, AxesSpecifier(), False, True
 	);
-	std::tr1::shared_ptr<ImageInterface<T> > outImage = _prepareOutputImage(cropped);
+	std::tr1::shared_ptr<ImageInterface<T> > outImage( _prepareOutputImage(cropped));
 	if (! wantReturn) {
 		outImage.reset();
 	}

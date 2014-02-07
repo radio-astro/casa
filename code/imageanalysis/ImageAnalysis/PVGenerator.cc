@@ -437,7 +437,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		"", "", "", "", axes, "", False
 	);
 
-	std::tr1::shared_ptr<ImageInterface<Float> > collapsed = collapser.collapse(True);
+	std::tr1::shared_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
@@ -504,7 +504,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
 		newMask->put(newArray);
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(cDropped, 0, newMask.get());
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage(_prepareOutputImage(cDropped, 0, newMask.get()));
 	if (! wantReturn) {
 		outImage.reset();
 	}

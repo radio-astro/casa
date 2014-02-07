@@ -92,11 +92,13 @@ ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
 	ArrayLattice<Float> values(valArray);
 	values.putSlice(subImage.get(), blc);
 	const Array<Float>& vals = values.get();
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(
-		subImage, &vals, &mask, &outShape, &newCoords
-	);
+	std::auto_ptr<ImageInterface<Float> > outImage(
+        _prepareOutputImage(
+		    subImage, &vals, &mask, &outShape, &newCoords
+	    )
+    );
 	if (wantReturn) {
-		return outImage->cloneII();
+		return outImage.release();
 	}
 	return 0;
 }

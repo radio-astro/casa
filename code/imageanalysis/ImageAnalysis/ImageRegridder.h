@@ -97,7 +97,7 @@ public:
 	// collapsed image. The returned pointer is created via new(); it is the caller's
 	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
 	// a NULL pointer is returned and pointer deletion is performed internally.
-	std::tr1::shared_ptr<ImageInterface<Float> > regrid(Bool wantReturn) const;
+	ImageInterface<Float>* regrid(Bool wantReturn) const;
 
 	// regrid the spectral axis in velocity space rather than frequency space?
 	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }

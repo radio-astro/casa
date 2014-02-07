@@ -81,7 +81,7 @@ template<class T> ImageCollapser<T>::ImageCollapser(
 	_finishConstruction();
 }
 
-template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
+template<class T> ImageInterface<T>* ImageCollapser<T>::collapse(Bool wantReturn) const {
 	std::auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
 	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
 		*clone, *this->_getRegion(), this->_getMask(), this->_getLog().get(),
@@ -239,12 +239,12 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 	else {
 		ImageUtilities::copyMiscellaneous(tmpIm, subImage, True);
 	}
-	SPIIT outImage = this->_prepareOutputImage(tmpIm);
+    std::auto_ptr<ImageInterface<T> > outImage(_prepareOutputImage(tmpIm));
 	if (wantReturn) {
-		return outImage;
+		return outImage.release();
 	}
 	else {
-		return SPIIT();
+		return 0;
 	}
 
 }

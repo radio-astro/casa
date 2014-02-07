@@ -2493,17 +2493,17 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	Record r;
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
-		tr1::shared_ptr<ImageInterface<Float> > x;
+        std::tr1::shared_ptr<ImageInterface<Float> >  x;
 		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
 					<< "so converting to a CASA temporary paged image named "
 					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
-            x = SubImageFactory<Float>::createImage(
+            x.reset( SubImageFactory<Float>::createImage(
             	*_imageFloat, tmpImageName, r, "", False,
             	False, True, False
-            );
+            ));
             x.reset(
             	SubImageFactory<Float>::createSubImage(
             		*x, Region, mask, _log.get(),

@@ -220,14 +220,14 @@ template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
 	}
 }
 
-template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
+template <class T> ImageInterface<T>*  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
     const IPosition *const outShape, const CoordinateSystem *const coordsys
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-	SPIIT outImage(
+    std::auto_ptr<ImageInterface<T> > outImage(
 		new TempImage<T>(
 			TiledShape(oShape), csys
 		)
@@ -247,13 +247,14 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 		_removeExistingOutfileIfNecessary();
 		String emptyMask = "";
 		Record empty;
-		outImage = SubImageFactory<T>::createImage(
-			*outImage, _getOutname(), empty, emptyMask,
-			False, False, True, False
-		);
+        PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(SubImageFactory<T>::createImage(
+                    *outImage, _getOutname(), empty, emptyMask,
+                    False, False, True, False));
+        ThrowIf(tmp == 0, "Failed dynamic cast")
+		outImage.reset(tmp);
 	}
 	outImage->put(values == 0 ? image.get() : *values);
-	return outImage;
+	return outImage.release();
 }
 
 }

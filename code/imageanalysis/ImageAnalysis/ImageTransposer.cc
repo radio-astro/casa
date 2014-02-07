@@ -120,7 +120,7 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > output(
+	std::auto_ptr<ImageInterface<Float> > output(
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
 
@@ -143,12 +143,12 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	ImageUtilities::copyMiscellaneous(*output, *_getImage());
 	if (! _getOutname().empty()) {
 		Record empty;
-		output = SubImageFactory<Float>::createImage(
+		output.reset(SubImageFactory<Float>::createImage(
 			*output, _getOutname(), empty, "",
 			False, False, True, False
-		);
+		));
 	}
-	return output->cloneII();
+	return output.release();
 }
 
 ImageTransposer::~ImageTransposer() {}

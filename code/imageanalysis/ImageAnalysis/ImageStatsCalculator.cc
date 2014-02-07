@@ -87,7 +87,7 @@ Record ImageStatsCalculator::calculate() {
 		);
 		std::tr1::shared_ptr<ImageInterface<Float> > tempIm;
 		try {
-			tempIm = collapsed.collapse(True);
+			tempIm.reset(collapsed.collapse(True));
 		}
 		catch (const AipsError& x) {
 			*_getLog() << LogIO::WARN << "Unable to collapse image "

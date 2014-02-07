@@ -212,7 +212,7 @@ Record ImageProfileFitter::fit() {
 				_subImage, IPosition(1, _fitAxis), True,
 				ImageCollapserData::MEAN, "", True
 			);
-			SPIIF x = collapser.collapse(True);
+			SPIIF x(collapser.collapse(True));
 			// _subImage needs to be a SubImage<Float> object
 			_subImage.reset(new SubImage<Float>(SubImageFactory<Float>::createSubImage(
 				*x, Record(), "", _getLog().get(),
@@ -235,7 +235,7 @@ Record ImageProfileFitter::fit() {
 				);
 				_sigma.reset(
 					dynamic_cast<TempImage<Float> *>(
-						collapsedSigma.collapse(True).get()
+						collapsedSigma.collapse(True)
 					)
 				);
 			}

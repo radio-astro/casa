@@ -271,10 +271,10 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		_removeExistingOutfileIfNecessary();
 		String mask = "";
 	    Record empty;
-		outImage = SubImageFactory<Float>::createImage(
+		outImage.reset( SubImageFactory<Float>::createImage(
 			subImage, _getOutname(), empty,
 			mask, False, False, False, False
-		);
+		));
 	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? subImage/pbSubImage
