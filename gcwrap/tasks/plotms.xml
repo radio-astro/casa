@@ -488,7 +488,7 @@ Display Parameters
     
     <param type="bool" name="customsymbol">
         <description>set a custom symbol for unflagged points</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="string" name="symbolshape" subparam="true">

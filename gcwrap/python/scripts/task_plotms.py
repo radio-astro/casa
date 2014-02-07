@@ -219,7 +219,10 @@ def plotms(vis=None, plotindex=None,
                 gridrows = 1
             if not gridcols:
                 gridcols = 1
-            pm.setGridSize( gridrows, gridcols )
+        else:
+            gridrows = 1
+            gridcols = 1
+        pm.setGridSize( gridrows, gridcols )
         pm.setPlotMSFilename(vis, False, plotindex )
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False, plotindex)
         
@@ -277,20 +280,33 @@ def plotms(vis=None, plotindex=None,
         pm.setColorAxis(coloraxis,False,plotindex)
 
         # Set custom symbol
-        symbolshape = symbolshape or 'autoscaling'
-        symbolsize = symbolsize or 2
-        symbolcolor = symbolcolor or '0000ff'
-        symbolfill = symbolfill or 'fill'
-        symboloutline = symboloutline or False
+        if customsymbol:
+            symbolshape = symbolshape
+            symbolsize = symbolsize
+            symbolcolor = symbolcolor
+            symbolfill = symbolfill
+            symboloutline = symboloutline
+        else:
+            symbolsize = 2
+            symbolcolor = '0000ff'
+            symbolfill = 'fill'
+            symboloutline = False
         pm.setSymbol(symbolshape, symbolsize, symbolcolor,
                      symbolfill, symboloutline, False,plotindex)
         
         # Set custom flagged symbol
-        flaggedsymbolshape = flaggedsymbolshape or 'nosymbol'
-        flaggedsymbolsize = flaggedsymbolsize or 2
-        flaggedsymbolcolor = flaggedsymbolcolor or 'ff0000'
-        flaggedsymbolfill = flaggedsymbolfill or 'fill'
-        flaggedsymboloutline = flaggedsymboloutline or False
+        if customflaggedsymbol:
+            flaggedsymbolshape = flaggedsymbolshape
+            flaggedsymbolsize = flaggedsymbolsize
+            flaggedsymbolcolor = flaggedsymbolcolor
+            flaggedsymbolfill = flaggedsymbolfill
+            flaggedsymboloutline = flaggedsymboloutline
+        else:
+            flaggedsymbolshape = 'nosymbol'
+            flaggedsymbolsize = 2
+            flaggedsymbolcolor = 'ff0000'
+            flaggedsymbolfill = 'fill'
+            flaggedsymboloutline = False
         pm.setFlaggedSymbol(flaggedsymbolshape, flaggedsymbolsize,
                             flaggedsymbolcolor, flaggedsymbolfill,
                             flaggedsymboloutline, False, plotindex)
