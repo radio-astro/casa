@@ -1,5 +1,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 
+#include <stdcasa/cboost_foreach.h>
+
 #include <tr1/memory>
 
 namespace casa {
@@ -7,7 +9,7 @@ namespace casa {
 template<class T> ImageFFTer<T>::ImageFFTer(
 	const SPCIIT image,
 	const Record *const region,
-	const String& maskInp, const IPosition& axes
+	const String& maskInp, const Vector<uInt>& axes
 ) : ImageTask<T>(
 		image, "", region, "", "", "",
 		maskInp, "", False
@@ -34,7 +36,6 @@ template<class T> void ImageFFTer<T>::fft() const {
 		*clone, *this->_getRegion(), this->_getMask(), this->_getLog().get(),
 		False, AxesSpecifier(), this->_getStretch()
 	);
-
 	ImageFFT fft;
 	if (_axes.size() == 0) {
 		*this->_getLog() << LogIO::NORMAL << "FFT the direction coordinate" << LogIO::POST;
@@ -42,12 +43,11 @@ template<class T> void ImageFFTer<T>::fft() const {
 	}
 	else {
 		// Set vector of bools specifying axes
-		Vector<Int> intAxes(_axes);
 		Vector<Bool> which(subImage.ndim(), False);
-		for (uInt i = 0; i < intAxes.nelements(); i++) {
-			which(intAxes(i)) = True;
+		foreach_(uInt i, _axes) {
+			which(_axes(i)) = True;
 		}
-		*this->_getLog() << LogIO::NORMAL << "FFT axes " << intAxes + 1 << LogIO::POST;
+		*this->_getLog() << LogIO::NORMAL << "FFT zero-based axes " << _axes << LogIO::POST;
 		fft.fft(subImage, which);
 	}
 

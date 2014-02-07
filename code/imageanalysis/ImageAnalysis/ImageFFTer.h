@@ -31,7 +31,7 @@ public:
 	ImageFFTer(
 		const SPCIIT image,
 		const Record *const region,
-		const String& maskInp, const IPosition& axes
+		const String& maskInp, const Vector<uInt>& axes
 	);
 
 	// destructor
@@ -57,7 +57,7 @@ protected:
 	}
 
 private:
-	IPosition _axes;
+	Vector<uInt> _axes;
 	String _real, _imag, _amp, _phase, _complex;
 
 	// disallow default constructor
