@@ -374,7 +374,8 @@ def flagdata(vis,
                 
             except Exception, instance:
                 casalog.post('%s'%instance,'ERROR')
-                raise Exception, 'Error reading the input list '
+                raise Exception, 'Error reading the input list. Make sure the syntax used in the list '\
+                                 'follows the rules given in the inline help of the task.'
             
             casalog.post('Selected ' + str(vrows.__len__())
                          + ' commands from combined input list(s) ')

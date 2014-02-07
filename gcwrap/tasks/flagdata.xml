@@ -757,6 +757,11 @@
                   IMPORTANT: string values must contain quotes around them or the parser
                              will not work. The parser evaluates the commands in the list
                              and considers only existing Python types.
+	
+                  NOTE: There should be no whitespace between KEY=VALUE since the parser 
+                        first breaks command lines on whitespace, then on "=". Use only whitespaces 
+                        to separate the parameters (no commas). Scroll down to the bottom to see
+                        a detailed description of the input list syntax.
 
                   Example1: the following commands can be saved to a file or group of files
                             and given to the task (e.g. save it to flags.txt).
