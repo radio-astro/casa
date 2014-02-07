@@ -376,6 +376,14 @@ set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 # Targets for creating doxygen documentation
 #
 
+# strip out TeX/LaTeX with dvi2tty...
+find_program( DVI2TTY NAMES dvi2tty )
+if ( DVI2TTY )
+    message( STATUS "Found dvi2tty: ${DVI2TTY}" )
+else( )
+    message( STATUS "Could not find dvi2tty, online embedded TeX documentation will be garbled" )
+endif( )
+
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
 set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5"

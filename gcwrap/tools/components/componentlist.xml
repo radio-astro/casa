@@ -178,7 +178,7 @@ If the position angle is not included, the default is 0 degrees.
 If the star type is not included, the default type is a cross.
 The default is no label string.
 There are currently 22 different types of star marks.
- &lt; 0: No Mark, only the star label is printed
+ \&lt; 0: No Mark, only the star label is printed
    0: Cross             10: Five pointed star
    1: Ellipse           11: Star of David
    2: Box               12: Seven pointed star
@@ -189,10 +189,10 @@ There are currently 22 different types of star marks.
    7: Septagon          17: 12    pointed star
    8: Octagon           18: 13    pointed star
    9: Nine-gon          19: 14    pointed star
-  20: Cross with gap   &gt;20: Ellipse
+  20: Cross with gap   \&gt;20: Ellipse
 The Box (type=2) is different from the diamond in that the
 star size is the half height and width of the box dimensions.
-The Box and the Null (&lt;0) are labeled at RA and Dec plus Delta
+The Box and the Null (\&lt;0) are labeled at RA and Dec plus Delta
 RA and Delta Dec.  The other marks are labeled at the right
 edge of the of the Rotated RA axis.  The CROSS WITH GAP
 (type=20) has the inner third of the cross removed so the
@@ -205,7 +205,7 @@ For more information, see the AIPS help file for
 Caveats:
 \begin{itemize}
 \item In AIPS, the following are supported: 1: 1900; 2: B1950; 3: J2000; 4: Galactic
-5: OHLSSON Gal.; 6: VAN TULDER Galactic; 7: Super Galactic; if &gt; 1000 then year assumed.
+5: OHLSSON Gal.; 6: VAN TULDER Galactic; 7: Super Galactic; if \&gt; 1000 then year assumed.
 Currently, \aipspp\ can support 2 (refer='b1950'), 3
 (refer='j2000'), 4 (refer='gal'), 7 (refer='supergal'). If you
 need any of the others, please contact us.
@@ -234,7 +234,7 @@ up to 7 numbers on each line (in free format):
 
      4.  Major axis of component (milliarcsec), "axis"
 
-     5.  Axial ratio (minor/major, i.e.  &lt; 1), "ratio"
+     5.  Axial ratio (minor/major, i.e.  \&lt; 1), "ratio"
 
      6.  Position angle of major axis (degrees, North  through  East),
          "phi"
@@ -744,7 +744,7 @@ and available in Glish as mycl.
     component could be used to model a physical process. These
     criteria are:
     \begin{itemize}
-    \item $I &gt;= \sqrt{Q^2 + U^2 + V^2}$
+    \item $I \&gt;= \sqrt{Q^2 + U^2 + V^2}$
     \item That the flux, when represented using the Stokes
           representation, has a zero imaginary value.
     \end{itemize}

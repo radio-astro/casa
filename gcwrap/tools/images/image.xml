@@ -735,7 +735,7 @@ In the first example, any default mask associated with the image {\sff
 zz} is ignored.  Only the pixel values are looked at.  In the second
 example, the mask of {\sff zz} is also taken into account via the LEL
 {\cf mask} function. That is, the transient output mask is T (good) only when
-the mask of {\sff zz} is T and the expression {\cf zz&gt;0} is T.
+the mask of {\sff zz} is T and the expression {\cf zz\&gt;0} is T.
 
 \end{verbatim}
 </example>
@@ -1313,11 +1313,11 @@ captured and destroyed via its done() method.  If this is not done, there is no 
 as to when the Python garbage collector will delete it. If the returned object is wanted, it
 should still be deleted as soon as possible for the same reasons, e.g.
 
-collapsed_image = ia.collapse(...)
+collapsed\_image = ia.collapse(...)
 \begin{verbatim}
 # do things (or not) with the collapsed_image and when finished working with the object, do
 \end{verbatim}
-collapsed_image.done()
+collapsed\_image.done()
 
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
 of the the first and last values of that axis in the specified region of the input image. The
@@ -1707,9 +1707,9 @@ temporary image is deleted.
 
 You must specify the shape of the image.  The image must be stored
 in the ascii file. If the shape of the image having N axes is to be
-[s_0, s_1, s_2, ..., s_(N-1)],
-where s_i is the integral number of pixels along axis number i, the file must have
-(s_1 * s_2 * ... * s_(N-1)) rows and each row must have s_0 numerical
+[s\_0, s\_1, s\_2, ..., s\_(N-1)],
+where s\_i is the integral number of pixels along axis number i, the file must have
+(s\_1 * s\_2 * ... * s\_(N-1)) rows and each row must have s\_0 numerical
 values delimited by the value specified by the sep parameter, or spaces if sep is
 not specified. Pixel locations are incremented by row number in such a way that the second
 axis changes fastest. As an example, say we want to create an image with
@@ -1839,7 +1839,7 @@ temporary image is deleted.
 This function reads from the FITS primary array (when the image is at
 the beginning of the FITS file; {\stfaf whichhdu=0}), or an image
 extension (when the image is elsewhere in the FITS file, {\stfaf
-whichhdu $&gt;$ 0}). 
+whichhdu $\&gt;$ 0}). 
 
 By default, any blanked pixels will be converted to a mask value which
 is false, and a pixel value that is NaN.  If you set {\stfaf
@@ -2262,20 +2262,20 @@ the <link anchor="mathematics.randomnumbers">randomnumbers</link>
 \item {binomial} -- the binomial distribution models successfully drawing
 items from a pool. Specify two parameters, $n$ and $p$, respectively.
 $n$ is the number of items in the pool, and $p$, is the probability of
-each item being successfully drawn. It is required that $n &gt; 0$ and 
+each item being successfully drawn. It is required that $n \&gt; 0$ and 
 $0 \le p \le 1$.
 
 \item {discreteuniform} -- models a uniform random variable over the closed interval. Specify 
 two parameters, the low and high values, respectively.
 The low parameter is the lowest possible return value and
-the high parameter is the highest. It is required that $low &lt; high$.
+the high parameter is the highest. It is required that $low \&lt; high$.
 
 \item {erlang} -- Specify two parameters, the  mean and variance,
 respectively. It is required that the mean is non-zero and the variance
 is positive.
 
 \item {geometric} -- Specify one parameter, the probability.
-It is required that $0 \le probability &lt; 1$.
+It is required that $0 \le probability \&lt; 1$.
 
 \item {hypergeometric} -- Specify two parameters, the mean and the variance.
 It is required that the variance is positive and that the mean is non-zero
@@ -2295,7 +2295,7 @@ It is required that the mean is non-negative.
 \item {uniform} -- Model a uniform random variable over a closed
 interval. Specify two parameters, the low and high values.    The low
 parameter is the lowest possible return value and the high parameter can
-never be returned. It is required that $low &lt; high$.
+never be returned. It is required that $low \&lt; high$.
 
 \item {weibull} -- Specify two parameters, alpha and beta.
 It is required that the alpha parameter is not zero.
@@ -2697,10 +2697,10 @@ print "\t----\t calcmask Ex 1 \t----"
 ia.maketestimage('zz', overwrite=true)
 subim = ia.subimage()                # Make "another" image
 ia.calcmask('T')                     # Specify 'True' mask as a string
-ia.calcmask('zz&gt;0')                  # Mask of zz ignored
-ia.calcmask('mask(zz) &amp;&amp; zz&gt;0')      # Mask of zz included
-ia.calcmask(subim.name(true)+'&gt;min('+subim.name(true)+')') # Use tool names
-ia.calcmask('zz&gt;min(zz:nomask)')  # Mask of zz not used in scalar function
+ia.calcmask('zz\&gt;0')                  # Mask of zz ignored
+ia.calcmask('mask(zz) &amp;&amp; zz\&gt;0')      # Mask of zz included
+ia.calcmask(subim.name(true)+'\&gt;min('+subim.name(true)+')') # Use tool names
+ia.calcmask('zz\&gt;min(zz:nomask)')  # Mask of zz not used in scalar function
 subim.done()
 ia.close()
 #
@@ -3420,12 +3420,12 @@ at a particular location at a particular time.
      </param>
   
      <param type="int"  name="ncontour">
-     <description>Number of contours to use in deblending (&gt;= 2)</description>
+     <description>Number of contours to use in deblending (\&gt;= 2)</description>
      <value>11</value>
      </param>
   
      <param type="int"  name="minrange">
-     <description>Minimum number of closed contours in a component (&gt; 0)</description>
+     <description>Minimum number of closed contours in a component (\&gt; 0)</description>
      <value>1</value>
      </param>
   
@@ -3440,22 +3440,22 @@ at a particular location at a particular time.
      </param>
   
      <param type="double"  name="maxrms">
-     <description>Maximum RMS of fit residuals to not retry fit (&gt; 0).  Default is unset.</description>
+     <description>Maximum RMS of fit residuals to not retry fit (\&gt; 0).  Default is unset.</description>
      <value>-1</value>
      </param>
   
      <param type="int"  name="maxretry">
-     <description>Maximum number of times to retry the fit (&gt;= 0).  Default is unset.</description>
+     <description>Maximum number of times to retry the fit (\&gt;= 0).  Default is unset.</description>
      <value>-1</value>
      </param>
   
      <param type="int"  name="maxiter">
-     <description>Maximum number of iterations allowed in a single fit (&gt; 0)</description>
+     <description>Maximum number of iterations allowed in a single fit (\&gt; 0)</description>
      <value>256</value>
      </param>
   
      <param type="double"  name="convcriteria">
-     <description>Criterion to establish convergence (&gt;=0)</description>
+     <description>Criterion to establish convergence (\&gt;=0)</description>
      <value>0.0001</value>
      </param>
      <param type="bool"  name="stretch">
@@ -3975,7 +3975,7 @@ ia.removefile('p.im')
 <input>
   
      <param type="int"  name="nmax">
-	     <description>Maximum number of sources to find, &gt; 0</description>
+	     <description>Maximum number of sources to find, \&gt; 0</description>
      <value>20</value>
      </param>
   
@@ -4086,7 +4086,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value></value>
         </param>
         <param type="int"  name="axis">
-            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
+            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (\&lt;0).</description>
             <value>-1</value>
         </param>
         <param type="any"  name="mask">
@@ -4099,7 +4099,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value>1</value>
         </param>
         <param type="int"  name="poly">
-            <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
+            <description>Order of polynomial element.  Default: do not fit a polynomial (\&lt;0).</description>
             <value>-1</value>
         </param>
         <param type="string"  name="estimates">
@@ -4220,7 +4220,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="string" direction="in" name="spxtype">
-            <description>Type of function to fit. "plp" => power logarithmic polynomial, "ltp" => logarithmic transformed polynomial.</description>
+            <description>Type of function to fit. "plp" $=\&gt;$ power logarithmic polynomial, "ltp" $=\&gt;$ logarithmic transformed polynomial.</description>
             <value/>
         </param>
         <param type="doubleArray" name="spxest">
@@ -4228,12 +4228,12 @@ We use the Componentlist GUI to look at the strongest component.
             <value/>
         </param>
         <param type="boolArray" name="spxfix">
-            <description>Fix the corresponding spectral index function coefficients during the fit. True=>hold fixed.</description>
+            <description>Fix the corresponding spectral index function coefficients during the fit. True$=\&gt;$hold fixed.</description>
             <value/>
         </param>
         <param type="any" name="div">
             <any type="variant"/>
-            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 => calculate a useful value on the fly.</description>
+            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 $=\&gt;$ calculate a useful value on the fly.</description>
             <value>0</value>
         </param>
         <param type="string" name="spxsol">
@@ -4258,15 +4258,15 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="doubleArray"  name="goodamprange">
-            <description>Acceptable amplitude solution range. [0.0] => all amplitude solutions are acceptable.</description>
+            <description>Acceptable amplitude solution range. [0.0] $=\&gt;$ all amplitude solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="doubleArray"  name="goodcenterrange">
-            <description>Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.</description>
+            <description>Acceptable center solution range in pixels relative to region start. [0.0] $=\&gt;$ all center solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="doubleArray"  name="goodfwhmrange">
-            <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
+            <description>Acceptable FWHM solution range in pixels. [0.0] $=\&gt;$ all FWHM solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="any"  name="sigma">
@@ -4324,7 +4324,7 @@ initial estimatE for the new fit. This process should be repeated until the solu
 The convergent solution is very likely the best solution.
 
 AXIS
-The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
+The axis parameter indicates on which axis profiles should be fit; a value \&lt;0 indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.
 
 MINIMUM NUMBER OF PIXELS
@@ -4336,7 +4336,7 @@ The multifit parameter indicates if profiles should be fit at each pixel in the 
 averaged and the fit done to that average profile (false).
 
 POLYNOMIAL FITTING
-The order of the polynomial to fit is specified only via the poly parameter. If poly&lt;0, no polynomial will be fit. No initial estimates of
+The order of the polynomial to fit is specified only via the poly parameter. If poly\&lt;0, no polynomial will be fit. No initial estimates of
 coefficients can be specified; these are determined automatically.
 
 GAUSSIAN SINGLET FITTING
@@ -4344,7 +4344,7 @@ In the absence of an estimates file and no estimates being specified by the p*es
 indicates the maximum number of gaussian singlets that should be fit. The initial estimates of the parameters for these gaussians will be attempted
 automatically in this case. If it deems appropriate, the fitter will fit fewer than this number. In the case where an estimates file is supplied,
 ngauss is ignored (see below). ngauss is also ignored if the p*est parameters are specified or if gmncomps is not an empty array or, if an integer,
-is greater than zero. If estimates is not specified or the p*est parameters are not specified and ngauss=0, gmncomps is empty or 0, and poly&lt;0,
+is greater than zero. If estimates is not specified or the p*est parameters are not specified and ngauss=0, gmncomps is empty or 0, and poly\&lt;0,
 an error will occur as this indicates there is nothing to fit.
 
 One can specify initial estimates of gaussian singlet parameters via an estimates file or the pampest, pcenterest, pfwhmest, and optionally, the
@@ -4386,7 +4386,7 @@ more gaussian multiplets and/or one or more lorentzian singlets simultaneously, 
 of all gaussian singlets to fit; one cannot use an estimates file in this case. If an estimates file is specified, a polynomial
 can be fit simultaneously by specifying the poly parameter. The estimates file must contain initial estimates of parameters
 for all gaussian singlets to be fit. The number of gaussian singlets to fit is gotten from the number of estimates in the file. The file can contain
-comments which are indicated by a "#" at the beginning of a line. All non-comment lines will be interpreted as initial estimates. The
+comments which are indicated by a "\#" at the beginning of a line. All non-comment lines will be interpreted as initial estimates. The
 format of such a line is
 
 [peak intensity], [center], [fwhm], [optional fixed parameter string]
@@ -4411,8 +4411,8 @@ GAUSSIAN MULTIPLET FITTING
 Any number of gaussian multiplets, each containing any number of two or more components, can be simultaneously fit, optionally with a
 polynomial and/or any number of gaussian and/or lorentzian singlets, the only caveat being that the number of parameters to be fit should be
 significantly less than the number of data points. The gmncomps parameter indicates the number of multiplets to fit and the number of
-components in each multiplet. In the case of a single multiplet, an integer (>1) can be specified. For example, mgncomps=4 means fit a
-single quadruplet of gaussians. In the case of 2 or more multiplets, and array of integers (all >1) must be specified. For example,
+components in each multiplet. In the case of a single multiplet, an integer (\&gt;1) can be specified. For example, mgncomps=4 means fit a
+single quadruplet of gaussians. In the case of 2 or more multiplets, and array of integers (all \&gt;1) must be specified. For example,
 gmncomps=[2, 4, 3] means 3 seperate multiples are to be fit, the zeroth being a doublet, the first being a quadruplet, and the second
 being a triplet.
 
@@ -4554,9 +4554,9 @@ attempted: a boolean array indicating which fits were attempted (eg if too few u
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
 valid:     a boolean array indicating which solutions fall within the specified valid ranges of parameter space (see
            section LIMITING RANGES FOR SOLUTION PARAMETERS for details).
-niter:     an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+niter:     an int array indicating the number of iterations for each profile, \&lt;0 if the fit did not converge
 ncomps:    the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
-           &lt;0 if the fit did not converge
+           \&lt;0 if the fit did not converge
 direction: a string array containing the world direction coordinate for each profile
 
 There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
@@ -4600,7 +4600,7 @@ polynomial or a logarithmic transformed polynomial fit, plpsol or ltpsol and plp
 images to write, respectively.
 
 These images simply contain the arrays described for the associated parameter solutions or errors described in previous sections.
-In the case of lorentzian singlets, "_ls" is appended to the image names, in the case of gaussian multiplets, "_gm0", "_gm1", etc
+In the case of lorentzian singlets, "\_ls" is appended to the image names, in the case of gaussian multiplets, "\_gm0", "\_gm1", etc
 are appended to the image names to distinguish each multiplet. Pixels for which fits were not attempted or did not converge will be
 masked as bad. The last axis of these images is a linear axis and repesents component (or coeficient, depending on the funciton fit)
 number (and is named accordingly).
@@ -4799,7 +4799,7 @@ MASK SPECIFICATION
 
 Mask specification can be done using an LEL expression. For example
 
-mask = '"myimage">5' will use only pixels with values greater than 5.
+mask = '"myimage"\&gt;5' will use only pixels with values greater than 5.
 
 INCLUDING AND EXCLUDING PIXELS
 
@@ -5012,7 +5012,7 @@ with {\stfaf inc}. Note that if you retrieve too many pixels, you might
 cause swapping since the pixels are kept in memory. 
 
 Any illegal {\stfaf blc} values are set to zero.  Any illegal {\stfaf
-trc} values are set to the end of the image.  If any {\stfaf trc $&lt;$
+trc} values are set to the end of the image.  If any {\stfaf trc $\&lt;$
 blc}, you get the whole image for that axis.  Any illegal {\stfaf inc}
 values are set to unity. 
 
@@ -5231,7 +5231,7 @@ Suppose that we have a 2-dimensional image. Then:
 #
 print "\t----\t getslice Ex 1 \t----"
 ia.maketestimage();
-rec = ia.getslice (x=[1,20], y=[2,30])     # SLice from [1,2] -&gt; [20,30]
+rec = ia.getslice (x=[1,20], y=[2,30])     # SLice from [1,2] -\&gt; [20,30]
 print rec.keys()
 #['distance', 'xpos', 'axes', 'mask', 'ypos', 'pixel']
 rec = ia.getslice (x=[1,20,25,11], y=[2,30,32,40]) # Polyline slice
@@ -5319,13 +5319,13 @@ hanning smoothed image. This tool should always be captured and closed after
 any desired manipulations have been done. Closing the tool frees up system
 resources (eg memory), eg,
 
-hanning_image = ia.hanning(...)
+hanning\_image = ia.hanning(...)
 \begin{verbatim}
 # do things (or not) with hanning_image 
 ... 
 # close the returned tool promptly upon finishing with it.
 \end{verbatim}
-hanning_image.done()
+hanning\_image.done()
 
 Masked pixels will be assigned the value 0.0 before convolution. 
 The output mask is the combination (logical OR) of the default input
@@ -5424,7 +5424,7 @@ and acquires just a read lock.
      </param>
   
      <param type="int"  name="nbins">
-     <description>Number of bins in histograms, &gt; 0</description>
+     <description>Number of bins in histograms, \&gt; 0</description>
      <value>25</value>
      </param>
   
@@ -5802,7 +5802,7 @@ ia.close(remove=true)
      </param>
   
      <param type="int"  name="nattempts">
-	     <description>Number of attempts, &gt; 0.  Default is unlimiited.</description>
+	     <description>Number of attempts, \&gt; 0.  Default is unlimiited.</description>
      <value>0</value>
      </param>
 </input>
@@ -6826,7 +6826,7 @@ The {\stff open} function first closes the old \imagefile.
             <value>0</value>
         </param>
         <param type="bool" name="padmask">
-            <description>Value of the mask for the padding pixels. True=>good (unmasked), False=>bad (masked).</description>
+            <description>Value of the mask for the padding pixels. True$=\&gt;$good (unmasked), False$=\&gt;$bad (masked).</description>
             <value>false</value>
         </param>
         <param type="bool"  name="overwrite">
@@ -7118,7 +7118,7 @@ pix2 = ia.getchunk()          # get all pixels into an array (again)
 for i in range(len(pix2)):
   pix2[i] = list(pix2[i])     # convert tuple to list so it can be modified
   for j in range(len(pix2[i])):
-    if pix2[i][j] &gt; 5:
+    if pix2[i][j] \&gt; 5:
       pix2[i][j] = 5          # clip values to 5
   pix2[i] = tuple(pix2[i])    # convert list back to tuple
 ia.putchunk(pix2)             # put array back into image
@@ -7722,7 +7722,7 @@ ia.close()
         </param>
         <param type="any"  name="order">
             <any type="variant"/>
-            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+            <description>Zero-based order of axes in output image (eg "120" $=\&gt;$ input$-\&gt;$ output 0-$\&gt;$2, 1-$\&gt;$0, 2-$\&gt;$1))</description>
             <value/>
         </param>
     </input>
@@ -8090,7 +8090,7 @@ ia.maketestimage('zz2',overwrite=true)
 ia.close()
 ia.maketestimage('zz1',overwrite=true)  
 #ia.calcmask('zz1&lt;0')
-ia.replacemaskedpixels(0.0, mask='zz2&gt;0')
+ia.replacemaskedpixels(0.0, mask='zz2\&gt;0')
 ia.close()
 #
 """
@@ -8115,8 +8115,8 @@ ia.calcmask('zz1&lt;0')
 im2 = ia.subimage(outfile='zz2',overwrite=true)
 # r = rg.quarter()
 r=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
-ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'&gt;0')
-# same as ia.replacemaskedpixels(0.0, region=r, mask='zz2&gt;0')
+ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'\&gt;0')
+# same as ia.replacemaskedpixels(0.0, region=r, mask='zz2\&gt;0')
 im2.done()
 ia.close()
 #
@@ -8905,12 +8905,12 @@ ib.done()
      </param>
   
      <param type="int"  name="nx">
-     <description>The number of subplots per page in the x direction, &gt; 0</description>
+     <description>The number of subplots per page in the x direction, \&gt; 0</description>
      <value>1</value>
      </param>
   
      <param type="int"  name="ny">
-     <description>The number of subplots per page in the y direction, &gt; 0</description>
+     <description>The number of subplots per page in the y direction, \&gt; 0</description>
      <value>1</value>
      </param>
   
@@ -9239,7 +9239,7 @@ are computed over with the {\stfaf axes} argument (must be of length 2).
 Presently, only the Structure Function is implemented.  This is defined as :
 
 \begin{displaymath}
-S(lx,ly) = &lt; (data(i,j) - data(i+lx,j+ly))^2 &gt;
+S(lx,ly) = \&lt; (data(i,j) - data(i+lx,j+ly))^2 \&gt;
 \end{displaymath}
 
 where $lx, ly$ are integer lags in the x (0-axis) and y (1-axis)
@@ -9539,13 +9539,13 @@ listed in square brackets.
   
      <param type="double"  name="minpix">
      <description>Minimum pixel value for BITPIX=16,
-     Default is to autoscale if minpix &gt; maxpix.</description>
+     Default is to autoscale if minpix \&gt; maxpix.</description>
      <value>1</value>
      </param>
   
      <param type="double"  name="maxpix">
      <description>Maximum pixel value for BITPIX=16, Default
-     is to autoscale if maxpix &lt; minpix.</description>
+     is to autoscale if maxpix \&lt; minpix.</description>
      <value>-1</value>
      </param>
   
@@ -9714,7 +9714,7 @@ ia.close()
   
      <param type="string"  name="format">
      <description>Format of data in ascii file</description>
-     <value>%e</value>
+     <value>\%e</value>
      </param>
   
      <param type="double"  name="maskvalue">
@@ -10115,7 +10115,7 @@ temporary image is deleted.
 This function reads from the FITS primary array (when the image is at
 the beginning of the FITS file; {\stfaf whichhdu=0}), or an image
 extension (when the image is elsewhere in the FITS file, {\stfaf
-whichhdu $&gt;$ 0}). 
+whichhdu $\&gt;$ 0}). 
 
 By default, any blanked pixels will be converted to a mask value which
 is false, and a pixel value that is NaN.  If you set {\stfaf
@@ -10459,7 +10459,7 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="any" name="width">       
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer \&gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
             <any type="variant"/>
             <value type="int">1</value>
         </param>
