@@ -304,22 +304,26 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ci.first = parameters.dataType(PARAM_WIDTH) == TpInt ?
                     parameters.asInt(PARAM_WIDTH) :
                     parameters.asuInt(PARAM_WIDTH);
-        itsPlotms_.getParameters().setCachedImageSize(ci.first, ci.second);   
+        itsPlotms_.getParameters().setCachedImageSize(ci.first, ci.second);
+        int gridRows = itsPlotms_.getParameters().getRowCount();
+        int gridCols = itsPlotms_.getParameters().getColCount();
         if ( parameters.isDefined( PARAM_GRIDROWS) &&
         		(parameters.dataType( PARAM_GRIDROWS) == TpInt ||
         				parameters.dataType(PARAM_GRIDROWS)==TpUInt)){
-        		int gridRows = parameters.dataType(PARAM_GRIDROWS) == TpInt ?
+        		gridRows = parameters.dataType(PARAM_GRIDROWS) == TpInt ?
                         parameters.asInt(PARAM_GRIDROWS) :
                         parameters.asuInt(PARAM_GRIDROWS);
-        		itsPlotms_.getParameters().setRowCount( gridRows );
         }
         if ( parameters.isDefined( PARAM_GRIDCOLS) &&
                		(parameters.dataType( PARAM_GRIDCOLS) == TpInt ||
                				parameters.dataType(PARAM_GRIDCOLS)==TpUInt)){
-                int gridCols = parameters.dataType(PARAM_GRIDCOLS) == TpInt ?
+                gridCols = parameters.dataType(PARAM_GRIDCOLS) == TpInt ?
                                parameters.asInt(PARAM_GRIDCOLS) :
                                parameters.asuInt(PARAM_GRIDCOLS);
-               	itsPlotms_.getParameters().setColCount( gridCols );
+        }
+        bool changedSize = itsPlotms_.getParameters().setGridSize( gridRows, gridCols );
+        if ( changedSize ){
+        	itsPlotParams_.clear();
         }
         
     }
@@ -592,7 +596,6 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             bool outline = parameters.asBool(PARAM_FLAGGEDSYMBOLOUTLINE);
             PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
             		fill, outline );
-
             ppdisp->setFlaggedSymbol(ps);
         }
         
@@ -850,6 +853,7 @@ bool PlotMSDBusApp::update() {
 	// single threaded here
     itsUpdateFlag_ = false;
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
+
     // update plot parameters
     PlotMSPlotParameters* p;
     for(unsigned int i = 0; i < n; i++) {
@@ -862,10 +866,8 @@ bool PlotMSDBusApp::update() {
         }
     }
     bool successfulUpdate = itsPlotms_.isOperationCompleted();
-
     if ( successfulUpdate ){
     	// check for added plots
-
     	if(itsPlotParams_.size() > n) {
     		vector<PlotMSPlotParameters> v(itsPlotParams_.size() - n,
                 PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
@@ -873,7 +875,6 @@ bool PlotMSDBusApp::update() {
     			v[i] = itsPlotParams_[i + n];
     		}
     		for(unsigned int i = 0; i < v.size(); i++){
-
     			itsPlotms_.addOverPlot(&v[i]);
     		}
     	}

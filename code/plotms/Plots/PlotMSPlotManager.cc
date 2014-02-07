@@ -86,7 +86,9 @@ const vector<PlotMSPlot*>& PlotMSPlotManager::plots() const {
     return itsPlots_; }
 
 PlotMSPlot* PlotMSPlotManager::plot(unsigned int index) {
-    if(index >= itsPlots_.size()) return NULL;
+    if(index >= itsPlots_.size()){
+    	return NULL;
+    }
     else return itsPlots_[index];
 }
 
@@ -145,8 +147,8 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     	plot->parameters() = *params;
     }
     itsPlotParameters_.push_back(&plot->parameters());
-
     itsPages_.setupCurrentPage();
+
 
     bool locationFound = isPlottable( plot );
     if ( locationFound ){
@@ -209,20 +211,40 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 	//Detach the plots from the canvases
 	bool resized = itsPages_.isGridChanged( rows, cols );
 	if ( resized || override ){
+		bool guiShown = itsParent_->guiShown();
 		int plotCount = itsPlots_.size();
-		for ( int i = 0; i < plotCount; i++ ){
-			itsPlots_[i]->detachFromCanvases();
+		for ( int i =0; i < plotCount; i++ ){
+
+			//Wait for existing draw threads to finish before we proceed so
+			//we don't get a seg fault from a draw thread hanging onto deleted
+			//data.
+			itsPlots_[i]->waitForDrawing( true );
+
 			//This is needed to avoid a segfault if the grid size is shrinking so
 			//some of the existing plots may no longer be plotted.
-			itsPages_.disown( itsPlots_[i]);
-		}
-		itsPages_.gridChanged( rows, cols );
-		itsPages_.setupCurrentPage();
 
-		for ( int i = 0; i < plotCount; i++ ){
-			bool showPlot = isPlottable( itsPlots_[i]);
-			if ( showPlot ){
-				itsPlots_[i]->updateLocation();
+			//Clears the canvas and sets the owner to NULL
+			itsPages_.disown( itsPlots_[i]);
+
+		}
+		//We delete all the plots and canvases in scripting mode because
+		//it is easy enough to script them back in.
+		if ( !guiShown ){
+			clearPlotsAndCanvases();
+			itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
+		}
+		//In GUI mode the user has the ability to delete individual plots
+		//as needed and would probably be mad if all the plots disappeared
+		//when the grid size changed.  Instead, we change the grid, and then
+		//try to relocate the plots as best we can.
+		else {
+			itsPages_.gridChanged( rows, cols );
+			itsPages_.setupCurrentPage();
+			for ( int i = 0; i < plotCount; i++ ){
+				bool showPlot = isPlottable( itsPlots_[i]);
+				if ( showPlot ){
+					itsPlots_[i]->updateLocation();
+				}
 			}
 		}
 	}

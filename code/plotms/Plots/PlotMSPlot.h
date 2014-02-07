@@ -96,7 +96,14 @@ public:
     
 
     // IMPLEMENTED METHODS //
-    
+
+    //This method was written because in scripting mode, there was a segfault when
+    //the grid size was changed (for example 2 x 3 to 1x1).  It was in a draw thread
+    //that had stale data it was touching after its associated canvas was deleted.
+    //The purpose of the method is to wait for the draw threads to finish and then
+    //keep them from redrawing while the deletion is in progress.
+    void waitForDrawing( bool holdDrawing );
+
     // Returns a reference to the plot's parameters.
     // <group>
     virtual const PlotMSPlotParameters& parameters() const;

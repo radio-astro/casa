@@ -126,7 +126,7 @@ public:
 	virtual bool isClosed() const {
 		return false;
 	}
-
+	virtual void gridSizeChanged( int /*rowCount*/, int /*colCount*/ );
 private:
 	void initializeCurrentPlot();
 	void initialize( Plotter::Implementation impl );

@@ -414,6 +414,7 @@ public:
     void addAxisListener( AxisListener* listener );
     void clearAxisListeners();
 
+    virtual bool isDrawing() const;
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas
     // is added to the plotter so that it can use the plotter's logger if

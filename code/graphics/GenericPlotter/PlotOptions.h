@@ -548,6 +548,7 @@ public:
     virtual void setColor(const PlotColor& color);
     virtual void setColor(const PlotColorPtr color);
     virtual void setColor(const String& color);
+    String getColor() const;
     // </group>
     
     
@@ -582,7 +583,11 @@ protected:
     static const String REC_UCHAR;         // int (no ushort in Records)
     static const String REC_LINE;          // Record
     static const String REC_AREAFILL;      // Record
+    static const String REC_COLOR;			//String
     // </group>
+
+private:
+    const String DEFAULT_COLOR;
 };
 typedef CountedPtr<PlotSymbol> PlotSymbolPtr;
 

@@ -166,7 +166,7 @@ public:
     virtual void setMinimumSize( int width, int height ) = 0;
     virtual void show() = 0;
     virtual void hide() = 0;
-   
+    virtual bool isDrawing() const = 0;
     // Returns the text of the canvas title, or an empty String if none is
     // shown.  The title is shown above the plotting area.
     virtual String title() const = 0;

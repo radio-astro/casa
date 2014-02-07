@@ -157,7 +157,7 @@ public:
 	virtual bool isDrawing() const = 0;
 	virtual bool isClosed() const = 0;
 	virtual PlotFactoryPtr getPlotFactory();
-	virtual void gridSizeChanged( int /*rowCount*/, int /*colCount*/ ){};
+	virtual void gridSizeChanged( int /*rowCount*/, int /*colCount*/ )=0;
 
 
 protected:

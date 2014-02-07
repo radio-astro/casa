@@ -426,6 +426,10 @@ String QPAxis::axisLabel(PlotAxis axis) const {
 	return axisLabel;
 }
 
+bool QPAxis::isDrawing() const {
+	return false;
+}
+
 
 void QPAxis::setAxisLabel(PlotAxis axis, const String& title) {
 	if ( axisWidget != NULL ){

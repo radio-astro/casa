@@ -146,6 +146,16 @@ void PlotMSParameters::setColCount( int newColCount ){
 	}
 }
 
+bool PlotMSParameters::setGridSize( int newRowCount, int newColCount ){
+	bool changedGridSize = false;
+	if ( colCount != newColCount || rowCount != newRowCount ){
+		colCount = newColCount;
+		rowCount = newRowCount;
+		changedGridSize = true;
+		updateFlag(UPDATE_PLOTMS_OPTIONS );
+	}
+	return changedGridSize;
+}
 
 int PlotMSParameters::getColCount() const {
 	return colCount;

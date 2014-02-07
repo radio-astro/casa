@@ -1534,6 +1534,11 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
     else       event->ignore();
 }
 
+bool QPCanvas::isDrawing() const {
+	bool drawing = m_canvas.isDrawing();
+	return drawing;
+}
+
 
 void QPCanvas::wheelEvent(QWheelEvent* event) {
     int delta = (event->delta() / 8) / 15;

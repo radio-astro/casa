@@ -57,7 +57,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Establish a 2x3 grid
     PlotMSParameters& params = app.getParameters();
     params.setRowCount( 2 );
-    params.setColCount( 1 );
+    params.setColCount( 3 );
 
     // Set up parameters for plot.
     PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
@@ -99,9 +99,81 @@ int main(int /*argc*/, char** /*argv[]*/) {
 		plotParams2.setGroup<PMS_PP_Iteration>();
 		iterParams2 = plotParams2.typedGroup<PMS_PP_Iteration>();
 	}
-	iterParams2->setGridRow( 1 );
-	iterParams2->setGridCol( 0 );
+	iterParams2->setGridRow( 0 );
+	iterParams2->setGridCol( 1 );
 	app.addOverPlot( &plotParams2 );
+
+	 //Make a third plot
+	 PlotMSPlotParameters plotParams3 = PlotMSOverPlot::makeParameters(&app);
+
+	 PMS_PP_MSData* ppdata3 = plotParams3.typedGroup<PMS_PP_MSData>();
+	 if (ppdata3 == NULL) {
+		plotParams3.setGroup<PMS_PP_MSData>();
+		ppdata3 = plotParams3.typedGroup<PMS_PP_MSData>();
+	}
+	ppdata3->setFilename( dataPath );
+	PMS_PP_Iteration* iterParams3 = plotParams3.typedGroup<PMS_PP_Iteration>();
+	if ( iterParams3 == NULL ){
+		plotParams3.setGroup<PMS_PP_Iteration>();
+		iterParams3 = plotParams3.typedGroup<PMS_PP_Iteration>();
+	}
+	iterParams3->setGridRow( 0 );
+	iterParams3->setGridCol( 2 );
+	app.addOverPlot( &plotParams3 );
+
+	 //Make a fourth plot
+	PlotMSPlotParameters plotParams4 = PlotMSOverPlot::makeParameters(&app);
+
+	PMS_PP_MSData* ppdata4 = plotParams4.typedGroup<PMS_PP_MSData>();
+	if (ppdata4 == NULL) {
+		plotParams4.setGroup<PMS_PP_MSData>();
+		ppdata4 = plotParams4.typedGroup<PMS_PP_MSData>();
+	}
+	ppdata4->setFilename( dataPath );
+	PMS_PP_Iteration* iterParams4 = plotParams4.typedGroup<PMS_PP_Iteration>();
+	if ( iterParams4 == NULL ){
+		plotParams4.setGroup<PMS_PP_Iteration>();
+		iterParams4 = plotParams3.typedGroup<PMS_PP_Iteration>();
+	}
+	iterParams4->setGridRow( 1 );
+	iterParams4->setGridCol( 0 );
+	app.addOverPlot( &plotParams4 );
+
+	 //Make a fifth plot
+	PlotMSPlotParameters plotParams5 = PlotMSOverPlot::makeParameters(&app);
+
+	PMS_PP_MSData* ppdata5 = plotParams5.typedGroup<PMS_PP_MSData>();
+	if (ppdata5 == NULL) {
+		plotParams5.setGroup<PMS_PP_MSData>();
+		ppdata5 = plotParams5.typedGroup<PMS_PP_MSData>();
+	}
+	ppdata5->setFilename( dataPath );
+	PMS_PP_Iteration* iterParams5 = plotParams5.typedGroup<PMS_PP_Iteration>();
+	if ( iterParams5 == NULL ){
+		plotParams5.setGroup<PMS_PP_Iteration>();
+		iterParams5 = plotParams5.typedGroup<PMS_PP_Iteration>();
+	}
+	iterParams5->setGridRow( 1 );
+	iterParams5->setGridCol( 0 );
+	app.addOverPlot( &plotParams5 );
+
+	 //Make a sixth plot
+	PlotMSPlotParameters plotParams6 = PlotMSOverPlot::makeParameters(&app);
+
+	PMS_PP_MSData* ppdata6 = plotParams6.typedGroup<PMS_PP_MSData>();
+	if (ppdata6 == NULL) {
+		plotParams6.setGroup<PMS_PP_MSData>();
+		ppdata6 = plotParams6.typedGroup<PMS_PP_MSData>();
+	}
+	ppdata6->setFilename( dataPath );
+	PMS_PP_Iteration* iterParams6 = plotParams6.typedGroup<PMS_PP_Iteration>();
+	if ( iterParams6 == NULL ){
+		plotParams6.setGroup<PMS_PP_Iteration>();
+		iterParams6 = plotParams6.typedGroup<PMS_PP_Iteration>();
+	}
+	iterParams6->setGridRow( 1 );
+	iterParams6->setGridCol( 0 );
+	app.addOverPlot( &plotParams6 );
 
     //We want to print all pages in the output.
     PlotMSExportParam& exportParams = app.getExportParameters();
@@ -120,9 +192,26 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save file check="<<ok;
 
 	 //Now neck down the grid size
-	 params.setRowCount( 1 );
-	 params.setColCount( 1 );
+	 params.setGridSize( 1, 1);
 	 app.setParameters( params );
+
+	 //Make a third plot
+	 PlotMSPlotParameters plotParams7 = PlotMSOverPlot::makeParameters(&app);
+
+	 PMS_PP_MSData* ppdata7 = plotParams7.typedGroup<PMS_PP_MSData>();
+	 if (ppdata7 == NULL) {
+	 		plotParams7.setGroup<PMS_PP_MSData>();
+	 		ppdata7 = plotParams7.typedGroup<PMS_PP_MSData>();
+	 }
+	 ppdata7->setFilename( dataPath );
+	 PMS_PP_Iteration* iterParams7 = plotParams7.typedGroup<PMS_PP_Iteration>();
+	 if ( iterParams7 == NULL ){
+	 	plotParams7.setGroup<PMS_PP_Iteration>();
+	 	iterParams7 = plotParams7.typedGroup<PMS_PP_Iteration>();
+	 }
+	 iterParams7->setGridRow( 0 );
+	 iterParams7->setGridCol( 0 );
+	 app.addOverPlot( &plotParams7 );
 
 	 //Export the second version.
 	 String outFile2( "/tmp/plotMSGridPlacementMultipleRuns2Test.jpg");

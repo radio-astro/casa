@@ -185,7 +185,9 @@ PlotMSRegions PlotMSPlot::visibleSelectedRegions() const {
 bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
 
     bool hold = allDrawingHeld();
-    if(!hold) holdDrawing();
+    if(!hold){
+    	holdDrawing();
+    }
     
     // Initialize plot objects and assign canvases.
     if(!assignCanvases(pages) || !initializePlot()) {
@@ -236,10 +238,11 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
             PMS::LOG_ORIGIN_PARAMS_CHANGED, ss.str(),
             PMS::LOG_EVENT_PARAMS_CHANGED);
-    
-    bool releaseWhenDone = !allDrawingHeld() &&
-                           (updateFlag & PMS_PP::UPDATE_REDRAW);
-    if(releaseWhenDone) holdDrawing();
+    int updateRedraw= updateFlag & PMS_PP::UPDATE_REDRAW;
+    bool releaseWhenDone = !allDrawingHeld() && updateRedraw;
+    if(releaseWhenDone){
+    	holdDrawing();
+    }
     
     // Update MS as needed.
     const PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
@@ -275,8 +278,9 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     
     // Let the child handle the rest of the parameter changes, and release
     // drawing if needed.
-    if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone)
+    if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone){
         releaseDrawing();
+    }
 }
 
 void PlotMSPlot::plotDataChanged() {
@@ -384,20 +388,55 @@ void PlotMSPlot::constructorSetup() {
 
 bool PlotMSPlot::allDrawingHeld() {
     vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        if(!canv[i].null() && !canv[i]->drawingIsHeld()) return false;
-    return true;
+    bool allDrawingHeld = true;
+    int canvasCount = canv.size();
+    for(int i = 0; i < canvasCount; i++){
+        if(!canv[i].null()){
+        	bool canvasDrawingHeld = canv[i]->drawingIsHeld();
+        	if ( !canvasDrawingHeld ){
+        		allDrawingHeld = false;
+        		break;
+        	}
+        }
+    }
+    return allDrawingHeld;
 }
 
 void PlotMSPlot::holdDrawing() {
    vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++) canv[i]->holdDrawing();
+    for(unsigned int i = 0; i < canv.size(); i++){
+    	canv[i]->holdDrawing();
+    }
 }
 
 void PlotMSPlot::releaseDrawing() {
     vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        if(!canv[i].null()) canv[i]->releaseDrawing();
+    for(unsigned int i = 0; i < canv.size(); i++){
+        if(!canv[i].null()){
+        	canv[i]->releaseDrawing();
+        }
+    }
+}
+
+void PlotMSPlot::waitForDrawing( bool holdDrawing ){
+
+	vector<PlotCanvasPtr> canv = canvases();
+	for (unsigned int i = 0; i < canv.size(); i++ ){
+		if ( !canv[i].null()){
+			int callIndex = 0;
+			int maxCalls =  5;
+			bool canvasDrawing = canv[i]->isDrawing();
+			while(  canvasDrawing && callIndex < maxCalls ){
+				usleep(1000000);
+				callIndex++;
+				canvasDrawing = canv[i]->isDrawing();
+			}
+			if ( holdDrawing ){
+				canv[i]->holdDrawing();
+			}
+		}
+	}
+	detachFromCanvases();
 }
 
 }

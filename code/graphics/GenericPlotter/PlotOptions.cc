@@ -299,8 +299,9 @@ const String PlotSymbol::REC_SYMBOL        = "symbol";
 const String PlotSymbol::REC_UCHAR         = "symbolUChar";
 const String PlotSymbol::REC_LINE          = "line";
 const String PlotSymbol::REC_AREAFILL      = "areaFill";
+const String PlotSymbol::REC_COLOR         = "symbolColor";
 
-PlotSymbol::PlotSymbol() { }
+PlotSymbol::PlotSymbol():DEFAULT_COLOR("black") { }
 PlotSymbol::~PlotSymbol() { }
 
 void PlotSymbol::setSize(psize_t size) {
@@ -310,7 +311,7 @@ bool PlotSymbol::isCharacter() const { return symbol() == CHARACTER; }
 
 void PlotSymbol::setLine(const PlotLinePtr l) {
     if(!l.null()) setLine(*l);
-    else          setLine("black", PlotLine::NOLINE);
+    else          setLine(DEFAULT_COLOR, PlotLine::NOLINE);
 }
 
 void PlotSymbol::setLine(const String& color, PlotLine::Style style,
@@ -324,7 +325,7 @@ void PlotSymbol::setLine(const String& color, PlotLine::Style style,
 
 void PlotSymbol::setAreaFill(const PlotAreaFillPtr a) {
     if(!a.null()) setAreaFill(*a);
-    else          setAreaFill("black", PlotAreaFill::NOFILL);
+    else          setAreaFill(DEFAULT_COLOR, PlotAreaFill::NOFILL);
 }
 
 
@@ -351,6 +352,18 @@ void PlotSymbol::setColor(const PlotColorPtr color) {
     if(!color.null()) setColor(*color);
 }
 
+String PlotSymbol::getColor() const {
+	String colorStr = DEFAULT_COLOR;
+	PlotAreaFillPtr plotAreaFill = areaFill();
+	if ( ! plotAreaFill.null() ){
+		PlotColorPtr colorPtr = plotAreaFill->color();
+		if ( !colorPtr.null() ){
+			colorStr = colorPtr->asName();
+		}
+	}
+	return colorStr;
+}
+
 void PlotSymbol::setColor(const String& color) {
     PlotLinePtr l = line();
     l->setColor(color);
@@ -371,6 +384,7 @@ Record PlotSymbol::toRecord() const {
     rec.define(REC_HEIGHTISPIXEL, heightIsPixel());
     rec.define(REC_SYMBOL, (int)symbol());
     rec.define(REC_UCHAR, (int)symbolUChar());
+    rec.define(REC_COLOR, (String)getColor());
     
     PlotLinePtr l = line();
     if(!l.null()) rec.defineRecord(REC_LINE, l->toRecord());
@@ -439,6 +453,9 @@ void PlotSymbol::fromRecord(const Record& record) {
             setAreaFill(a);
         }
     }
+    if (record.isDefined(REC_COLOR) && record.dataType(REC_COLOR) == TpString){
+    	this->setColor( record.asString( REC_COLOR));
+    }
 }
 
 PlotSymbol& PlotSymbol::operator=(const PlotSymbol& rh) {
@@ -448,6 +465,7 @@ PlotSymbol& PlotSymbol::operator=(const PlotSymbol& rh) {
     setSymbol(rh.symbol());
     setLine(rh.line());
     setAreaFill(rh.areaFill());
+    setColor( rh.getColor());
     return *this;
 }
 
@@ -457,7 +475,8 @@ bool PlotSymbol::operator==(const PlotSymbol& rh) const {
     return size() == rh.size() && symbol() == rh.symbol() &&
            (isCharacter() ? symbolChar() == rh.symbolChar() : true) &&
            (isCharacter() ? heightIsPixel() == rh.heightIsPixel() : true) &&
-           *line() == *rh.line() && *areaFill() == *rh.areaFill();
+           *line() == *rh.line() && *areaFill() == *rh.areaFill() &&
+           getColor() == rh.getColor();
 }
 
 bool PlotSymbol::operator!=(const PlotSymbol& rh) const {

@@ -119,6 +119,8 @@ vector<MaskedScatterPlotPtr> PlotMSOverPlot::plots() const {
 	return v;
 }
 
+
+
 vector<PlotCanvasPtr> PlotMSOverPlot::canvases() const {
 
 	if(( itsCanvases_.size() == 0) || (itsCanvases_[0].size() == 0)){
@@ -165,6 +167,7 @@ void PlotMSOverPlot::detachFromCanvases() {
 		for(uInt c = 0; c < itsCanvases_[r].size(); ++c) {
 			if(!itsCanvases_[r][c].null()) {
 				if(itsCanvases_[r][c]->numPlotItems() > 0) {
+					//itsCanvases_[r][c]->clearItems();
 					itsCanvases_[r][c]->removePlotItem(itsPlots_[r][c]);
 				}
 				//This is necessary in scripting mode so that we don't see
@@ -257,6 +260,7 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 			break;
 		}
 	}
+
 	page.setupPage();
 	return true;
 }
@@ -313,15 +317,14 @@ void PlotMSOverPlot::updateLocation(){
 	//Put the plot data on the canvas.
 	attachToCanvases();
 	//Put the plot axis on the canvas.  For scripting mode, we get plots without
-	//axes if the call is not preset.  In Gui mode, we get an exception if it is
+	//axes if the call is not preset.
+		//In Gui mode, we get an exception if it is
 	//called for the case where the number of plots in the grid is going down.  We
 	//seem to need it when the number of plots is going up. However, when reload is
 	//checked, it seems to work.
 	if ( !itsParent_->guiShown()  ){
 		updateCanvas();
 	}
-
-
 }
 
 bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
@@ -399,17 +402,20 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	gridCol = cols;
 
 	bool dataSet = data->isSet();
+
 	bool updateData = (updateFlag & PMS_PP::UPDATE_MSDATA) || (updateFlag & PMS_PP::UPDATE_CACHE);
 
 	// Update cache if needed
 	bool handled = true;
 	if( dataSet && updateData ) {
 		try {
-			handled = !updateCache();
+			handled = updateCache();
 		}
 		catch( AipsError& error ){
+			qDebug() <<" Could not update cache";
 			cerr << "Could not update cache: "<<error.getMesg().c_str()<<endl;
 			cacheLoaded_(false);
+			handled = false;
 		}
 	}
 	else {
@@ -450,7 +456,9 @@ bool PlotMSOverPlot::updateCache() {
 	}
 
 	// Don't load if data isn't set or there was an error during data opening.
-	if(!data->isSet()) return false;
+	if(!data->isSet()){
+		return false;
+	}
 	// Trap bad averaging/iteration combo
 	if (data->averaging().baseline() &&
 			iter->iterationAxis()==PMS::ANTENNA) {
@@ -471,12 +479,14 @@ bool PlotMSOverPlot::updateCache() {
 	if(cache->numXAxes() != cache->numYAxes()){
 		return false;
 	}
+
 	vector<PMS::Axis> caxes(cache->numXAxes() + cache->numYAxes());
 	vector<PMS::DataColumn> cdata(cache->numXAxes() + cache->numYAxes());
 	for(uInt i = 0; i < cache->numXAxes(); ++i) {
 		caxes[i] = cache->xAxis(i);
 		cdata[i] = cache->xDataColumn(i);
 	}
+
 	for(uInt i = cache->numYAxes(); i < caxes.size(); ++i) {
 		caxes[i] = cache->yAxis(i - cache->numXAxes());
 		cdata[i] = cache->yDataColumn(i - cache->numXAxes());
@@ -499,16 +509,25 @@ bool PlotMSOverPlot::updateCache() {
 		}
 	}
 
-
-	bool result = itsParent_->updateCachePlot( this,
+	bool result = true;
+	try {
+		result = itsParent_->updateCachePlot( this,
 			PlotMSOverPlot::cacheLoaded, true );
+	}
+	catch( AipsError& error ){
+		String errorMsg = error.getMesg();
+		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+					PMS::LOG_ORIGIN_PLOT,
+					errorMsg,
+					PMS::LOG_EVENT_PLOT);
+		result = false;
+	}
 	return result;
 }
 
 bool PlotMSOverPlot::updateCanvas() {
 
 	bool set = PMS_PP_RETCALL(itsParams_, PMS_PP_MSData, isSet, false);
-
 	PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
 	PMS_PP_Cache *cache = itsParams_.typedGroup<PMS_PP_Cache>();
 	PMS_PP_Canvas *canv = itsParams_.typedGroup<PMS_PP_Canvas>();
@@ -524,11 +543,10 @@ bool PlotMSOverPlot::updateCanvas() {
 
 	uInt nIter = itsCache_->nIter();
 	uInt rows = itsCanvases_.size();
-
 	for(uInt r = 0; r < rows; ++r) {
 		uInt cols = itsCanvases_[r].size();
 		uInt iterationRows = iter_ + r * cols;
-		if( iterationRows >= nIter /*&& iterationPlot*/ ){
+		if( iterationRows >= nIter  ){
 			break;
 		}
 		for(uInt c = 0; c < cols; ++c) {
@@ -539,6 +557,7 @@ bool PlotMSOverPlot::updateCanvas() {
 			else {
 				setCanvasProperties( r, c, cx, cy, x, y, set, canv,
 						rows, cols, axes, iter, iteration );
+
 			}
 		}
 	}
@@ -603,7 +622,6 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	}
 
 	// Show/hide axes
-
 	canvas->showAllAxes(false);
 	//ShowX and showY determine whether axes are visible at
 	//all.  For visible axes, there is the option of sharing
@@ -666,7 +684,6 @@ bool PlotMSOverPlot::updateDisplay() {
 		PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
 		PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
 		if(cache == NULL || axes == NULL || display == NULL) return false;
-
 		MaskedScatterPlotPtr plot;
 		uInt nIter = itsCache_->nIter();
 		uInt rows = itsPlots_.size();
@@ -693,7 +710,6 @@ bool PlotMSOverPlot::updateDisplay() {
 
 				plot->setSymbol(symbolUnmasked);
 				plot->setMaskedSymbol(symbolMasked);
-
 				// Colorize and set data changed, if redraw is needed
 				if(nIter > 0 && itsCache_->indexer(iter).colorize(
 						display->colorizeFlag(), display->colorizeAxis())) {
@@ -717,10 +733,14 @@ bool PlotMSOverPlot::updateDisplay() {
 			}
 		}
 	} catch(AipsError &err) {
-		itsParent_->showError("Could not update plot: " + err.getMesg());
+		String errorMsg = "Could not update plot: " + err.getMesg();
+		qDebug() << errorMsg.c_str();
+		itsParent_->showError( errorMsg );
 		return false;
 	} catch(...) {
-		itsParent_->showError("Could not update plot, for unknown reasons!");
+		String errorMsg = "Could not update plot, for unknown reasons!";
+		qDebug() << errorMsg.c_str();
+		itsParent_->showError( errorMsg );
 		return false;
 	}
 	return true;
@@ -767,7 +787,7 @@ Int PlotMSOverPlot::nIter() {
 
 bool PlotMSOverPlot::firstIter() {
 	Int nIter = itsCache_->nIter();
-	if((nIter > 1) && (iter_ != 0)) {
+	if( (nIter > 1) && (iter_ != 0) ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.firstPage();
 		iter_ = 0;
@@ -845,7 +865,6 @@ void PlotMSOverPlot::recalculateIteration( ) {
 	if(itsTCLParams_.updateIteration ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		assignCanvases(pages);
-
 	}
 
 	uInt nIter = itsCache_->nIter();

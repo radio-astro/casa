@@ -131,12 +131,14 @@ void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
         
         int rowCount = itsParameters_.getRowCount();
         int colCount = itsParameters_.getColCount();
-        itsPlotManager_.pageGridChanged( rowCount, colCount, false );
+        bool gridChanged = itsPlotManager_.pageGridChanged( rowCount, colCount, false );
         if ( itsPlotter_ != NULL ){
         	pair<int, int> cis = itsParameters_.cachedImageSize();
         	itsPlotter_->setCanvasCachedAxesStackImageSize( cis.first, cis.second );
-        	itsPlotter_->gridSizeChanged( rowCount, colCount );
-        	itsPlotter_->plot();
+        	if ( gridChanged ){
+        		itsPlotter_->gridSizeChanged( rowCount, colCount );
+        		itsPlotter_->plot();
+        	}
         }
     }
 }

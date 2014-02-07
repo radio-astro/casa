@@ -54,11 +54,12 @@ void ClientScript::plot() {
 		initializeCurrentPlot();
 	}
 
-
-	//This is present because it forces a hidden widget to update.
-	//Without it, sometimes the exported plot was not appearing correctly,
-	//i.e., a missing y-axis.
-	itsPlotter_->updateScriptGui();
+	if ( currentPlots.size() > 0 ){
+		//This is present because it forces a hidden widget to update.
+		//Without it, sometimes the exported plot was not appearing correctly,
+		//i.e., a missing y-axis.
+		itsPlotter_->updateScriptGui();
+	}
 }
 
 void ClientScript::initializeCurrentPlot() {
@@ -152,6 +153,11 @@ void ClientScript::showError(const String& message, const String& title, bool wa
 	}
 }
 
+void ClientScript::gridSizeChanged( int /*rowCount*/, int /*colCount*/ ){
+	currentPlots.resize( 0 );
+
+}
+
 
 void ClientScript::initialize(Plotter::Implementation impl){
 	// Try to initialize plotter, and throw error on failure.
@@ -169,7 +175,7 @@ void ClientScript::initialize(Plotter::Implementation impl){
 
 	// Set up plotter.
 	itsPlotter_ = itsFactory_->plotter("PlotMS", false, false,
-	    		plotController->getParameters().logEvents(), false);
+		    		plotController->getParameters().logEvents(), false);
 
 }
 

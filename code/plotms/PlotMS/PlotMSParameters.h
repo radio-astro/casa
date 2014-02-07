@@ -112,10 +112,11 @@ public:
 
 
     //<group>
-    void setRowCount(int rowCount );
+    bool setGridSize( int rows, int cols );
     int getRowCount() const;
-    void setColCount( int colCount );
     int getColCount() const;
+    void setRowCount( int rowCount );
+    void setColCount( int colCount );
     //</group>
 
     // Copy operator.
