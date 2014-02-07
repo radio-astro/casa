@@ -6,10 +6,10 @@
 %%
 %% keyval.dtx  (with options: `package')
 %% 
-%% File: keyval.dtx Copyright (C) 1993 1994 1995 David Carlisle
+%% File: keyval.dtx Copyright (C) 1993 1994 1995 1997 David Carlisle
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{keyval}
-                 [1995/09/21 v1.09 key=value parser (DPC)]
+                 [1997/11/10 v1.10 key=value parser (DPC)]
 \def\setkeys#1#2{%
   \def\KV@prefix{KV@#1@}%
   \KV@do#2,\relax,}
@@ -41,12 +41,21 @@
   \else
     \@tempb\relax
   \fi}
-\def\KV@err#1{\errmessage{key-val: #1}}
+\def\KV@err#1{\PackageError{keyval}{#1}{}}
 \def\@tempa#1{%
-\def\KV@@sp@def##1##2{\KV@@sp@b##2\@nil\@nil#1\@nil\relax##1}}
+\def\KV@@sp@def##1##2{%
+  \futurelet\KV@tempa\KV@@sp@d##2\@nil\@nil#1\@nil\relax##1}%
+\def\KV@@sp@d{%
+  \ifx\KV@tempa\@sptoken
+    \expandafter\KV@@sp@b
+  \else
+    \expandafter\KV@@sp@b\expandafter#1%
+  \fi}%
+\def\KV@@sp@b#1##1 \@nil{\KV@@sp@c##1}%
+  }
 \@tempa{ }
-\def\KV@@sp@b#1#2 \@nil{\KV@@sp@c#1#2}
-\def\KV@@sp@c#1\@nil#2\relax#3{\def#3{#1}}
+\def\KV@@sp@c#1\@nil#2\relax#3{\KV@toks@{#1}\edef#3{\the\KV@toks@}}
+\newtoks\KV@toks@
 \def\define@key#1#2{%
   \@ifnextchar[{\KV@def{#1}{#2}}{\@namedef{KV@#1@#2}####1}}
 \def\KV@def#1#2[#3]{%
