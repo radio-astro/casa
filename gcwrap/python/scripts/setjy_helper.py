@@ -120,10 +120,7 @@ class ss_setjy_helper:
 
  
           validfids.append(fid)
-          # apply field selection to get time specific to the field
-          myms.msselect({'field':str(fid)})
 	  trange=myms.range('time')
-          myms.reset()
 	  if not inparams.has_key(srcnames[fid]):
             inparams[srcnames[fid]]={}
 
@@ -136,13 +133,11 @@ class ss_setjy_helper:
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
             inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
-
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
           # make sure it is int rather than numpy.int32, etc.
           selspws = [int(ispw) for ispw in selspws]
 	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
-
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
 	  freqlist=[]
