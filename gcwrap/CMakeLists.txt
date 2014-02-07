@@ -377,7 +377,7 @@ set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 #
 
 # strip out TeX/LaTeX with dvi2tty...
-find_program( DVI2TTY NAMES dvi2tty )
+find_program( DVI2TTY NAMES dvi2tty PATHS /usr/lib64/casa/01/bin )
 if ( DVI2TTY )
     message( STATUS "Found dvi2tty: ${DVI2TTY}" )
 else( )
