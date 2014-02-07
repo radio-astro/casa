@@ -24,6 +24,7 @@
 % DP 2012-09-27 addition of virtualconcat
 % JO 2012-09-28 Release 4.0.0 edits
 % JO 2013-04-23 Release 4.1.0 edits
+% JO 2013-12-16 Release 4.2.0 edits
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -373,7 +374,7 @@ with an output that contains the list and positions of the
 antennas, followed by the parameters of each scan like observation
 time, source name, frequency and polarization setup: 
 
-\small
+\footnotesize
 \begin{verbatim}
 Input ASDM dataset : TDEM0008.sb3373760.eb3580330.55661.22790537037
 ========================================================================================
@@ -431,7 +432,8 @@ scan #1 from 2011-04-10T05:28:13.200000000 to 2011-04-10T05:33:35.500000256
                  Correlation Mode : CROSS_AND_AUTO
                  Spectral resolution type : FULL_RESOLUTION
                  Atmospheric phase correction : AP_UNCORRECTED
-                 SpectralWindow_0 : numChan = 256, frame = TOPO, firstChan = 8484000000, chandWidth = 125000 x Polarization_0 : corr = RR,LL
+                 SpectralWindow_0 : numChan = 256, frame = TOPO,
+                 firstChan = 8484000000, chandWidth = 125000 x Polarization_0 : corr = RR,LL
 
 scan #2 from 2011-04-10T05:33:35.500000256 to 2011-04-10T05:35:35.200000000
         Intents : OBSERVE_TARGET
@@ -446,7 +448,8 @@ scan #2 from 2011-04-10T05:33:35.500000256 to 2011-04-10T05:35:35.200000000
                  Correlation Mode : CROSS_AND_AUTO
                  Spectral resolution type : FULL_RESOLUTION
                  Atmospheric phase correction : AP_UNCORRECTED
-                 SpectralWindow_0 : numChan = 256, frame = TOPO, firstChan = 8484000000, chandWidth = 125000 x Polarization_0 : corr = RR,LL
+                 SpectralWindow_0 : numChan = 256, frame = TOPO,
+                 firstChan = 8484000000, chandWidth = 125000 x Polarization_0 : corr = RR,LL
 
 scan #3 from 2011-04-10T05:35:35.200000000 to 2011-04-10T05:36:34.999999488
         Intents : OBSERVE_TARGET
@@ -472,7 +475,8 @@ The default inputs of {\tt importasdm} are:
 
 \small
 \begin{verbatim}
-#  importasdm :: Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable)
+#  importasdm :: Convert an ALMA Science Data Model observation into a
+CASA visibility file (MS) or single-dish data format (Scantable)
 asdm                =         ''        #  Name of input asdm directory (on disk)
 vis                 =         ''        #  Root name of the ms to be created. Note the
                                         #   .ms is NOT added
@@ -561,7 +565,7 @@ list of scan specifications. A scan specification consists in an exec
 bock index followed by the character {\tt ':'} followed by a comma separated
 list of scan indexes or scan index ranges. A scan index is relative to
 the exec block it belongs to. Scan indexes are 1-based while exec
-blocks's are 0-based. The expressions
+blocks are 0-based. The expressions
 \begin{verbatim}
          "0:1"
          "2:2~6"
@@ -589,6 +593,47 @@ name or id of the antenna that you want to obtain data. This can be
 done by using antenna parameter that is defined as a subparameter of
 singledish. For single-dish mode, only auto-correlation data are
 filled, i.e. {\tt ocorr\_mode} is forcibly set to 'ao'. 
+%%%%%%
+
+\subsubsection{Import of ASDM data with option {\it lazy=True}}
+
+With release 4.2, {\tt importasdm} offers a new parameter {\it 'lazy'}
+(default = {\it False}).  If the default value {\it False} is chosen,
+{\tt importasdm} will (as in previous versions) fill the visibilities
+into a newly created {\it DATA} column of the MS converting them from their
+binary format in the ASDM to the CASA Table format.
+
+If {\it lazy} is set to {\it True}, the task will create a special
+{\it DATA} column using an ALMA data-specific storage manager ({\tt
+  asdmstman}) which enables CASA to {\it directly} read the binary
+data from the ASDM with on-the-fly conversion.  No redundant copy of
+the raw data is created.
+
+This procedure has the advantage that it saves more than 60\% disk
+space and at least in some cases makes the access to the {\it DATA} column
+ca. 10\% faster because the data I/O volume is decreased.  For the
+same reason, it also accelerates the import itself by ca. a factor 2.
+
+E.g., if your ASDM has a size of 36~GB, the import with default
+parameters will turn this into an MS of 73~GB size (total disk space
+consumption = 36~GB + 73~GB = 109~GB).  With lazy=True, the imported
+MS has a size of only 2 GB (total disk space consumption = 36~GB +
+2~GB = 38~GB).  I.e. your total disk space savings are ca. 65\%. Even
+when you compare to the case where you delete the ASDM after normal
+import, the solution with lazy import and keeping the ASDM will save
+you ca. 48\% disk space (in the example above 38~GB compared to
+73~GB).
+
+The only caveats are the following:
+  \begin{enumerate}
+  \item You must not delete or move away your ASDM (it is referenced by the MS, symbolic links will work, however).
+  \item The {\it lazily} imported DATA column is read-only. But in any
+    normal data reduction, the DATA column is treated as read-only
+    anyway.  So this should not be an obstacle to most analyses.
+  \item If your ASDM has a varying number of polarizations and/or channels in some configuration description(s),
+          the task will automatically switch to normal import and the savings of lazy import will not be available.
+          The ability to handle varying configuration descriptions will be added in future versions.
+ \end{enumerate}
 
 %%%%%%
 \subsubsection{Filling SDM v0 data using {\tt importoldasdm}}
@@ -814,7 +859,7 @@ scaling (based on the measured TSYS, with the weights scaled
 accordingly using the integration time) is
 applied to the visibility amplitudes or not.  If {\tt True}, then it
 will be scaled so as to be the same as AIPS {\tt FILLM}
-(ie. approximately in deciJanskys).
+(i.e. approximately in deciJanskys).
 Note that post-Modcomp data is in raw correlation coefficient and will
 be scaled using the TSYS values, while Modcomp-era data had this
 applied online.  
@@ -858,7 +903,7 @@ The {\tt frequencytol} parameter specifies the frequency separation
 tolerated when assigning data to spectral windows.  The
 default is {\tt frequencytol=150000} (Hz).  
 For Doppler tracked data, where the sky frequency changes with time,
-a {\tt frequencytol} $< 10000$ Hz may may produce too many
+a {\tt frequencytol} $< 10000$ Hz may produce too many
 unnecessary spectral windows.
 
 \subsubsection{Parameter {\tt project} }
@@ -915,7 +960,7 @@ require this feature, simply use {\tt antnamescheme='old'}.
 \label{section:io.import.vla.evlabands}
 
 The {\tt evlabands=True} option is provided to allow users to access
-JVLA frequencies outside the standard VLA tuninings (e.g.\ the extended
+JVLA frequencies outside the standard VLA tunings (e.g.\ the extended
 C-band above 6~GHz).  {\bf ALERT:} use of this option for standard VLA
 data will cause unexpected associations, such as X-band data below
 8~GHz being extracted to C-band (as the JVLA C-band is 4--8~GHz).  Use
@@ -1135,7 +1180,8 @@ The inputs are:
 #  listobs :: List the summary of a data set in the logger or in a file
 vis                 = 'day2_TDEM0003_10s_norx' #  Name of input visibility file (MS)
 selectdata          =       True        #  Data selection parameters
-     field          =         ''        #  Field names or field index numbers: ''==>all, field='0~2,3C286'
+     field          =         ''        #  Field names or field index
+                                        #  numbers: '' ==>all, field='0~2,3C286'
      spw            =         ''        #  spectral-window/frequency/channel
      antenna        =         ''        #  antenna/baselines: ''==>all, antenna ='3,VA04'
      timerange      =         ''        #  time range: ''==>all,timerange='09:14:0~09:54:0'
@@ -1144,12 +1190,14 @@ selectdata          =       True        #  Data selection parameters
      intent         =         ''        #  Select data based on observation intent: ''==>all
      feed           =         ''        #  multi-feed numbers: Not yet implemented
      array          =         ''        #  (sub)array numbers: ''==>all
-     uvrange        =         ''        #  uv range: ''==>all; uvrange ='0~100klambda', default units=meters
+     uvrange        =         ''        #  uv range: ''==>all; uvrange
+                                        #  ='0~100klambda', default units=meters
      observation    =         ''        #  Select data based on observation ID: ''==>all
 
 verbose             =       True        
 listfile            =         ''        #  Name of disk file to write output: ''==>to terminal
-listunfl            =      False        #  List unflagged row counts? If true, it can have significant negative performance impact.
+listunfl            =      False        #  List unflagged row counts?
+                                        #  If true, it can have significant negative performance impact.
 async               =      False        #  If true the taskname must be started using listobs(...)
 
 \end{verbatim}
@@ -1163,7 +1211,7 @@ specified in the {\tt listfile} parameter.  For example, \small
 \end{verbatim}
 \normalsize
 results in the logger messages:
-\small
+\footnotesize
 \begin{verbatim}
 listobs(vis="day2_TDEM0003_10s_norx",selectdata=True,spw="",field="",
         antenna="",uvrange="",timerange="",correlation="",scan="",
@@ -1272,7 +1320,7 @@ async               =      False        #  If true the taskname must be started 
 \normalsize
 
 For example:
-\small
+\footnotesize
 \begin{verbatim}
 Units of columns are: Date/Time(YYMMDD/HH:MM:SS UT), UVDist(wavelength), Phase(deg), UVW(m)
 WEIGHT: 7
@@ -1504,14 +1552,14 @@ timesort            =      False        #  If true, sort by TIME in ascending or
 copypointing        =       True        #  Copy all rows of the POINTING table.
 visweightscale      =         []        #  List of the weight scaling factors to be
                                         #   applied to the individual MSs
-createmms           =      False        #  Should this create a multi-MS output
 async               =      False        #  If true the taskname must be started using
                                         #   concat(...)
 \end{verbatim}
 \normalsize
 
 The {\tt vis} parameter will take a list of one or more MS.  Usually,
-this will contain all the MS to combine.
+this will contain all the MS to combine. {\tt concat} will presort the
+visibilities in time.
 
 With {\tt visweightscale}, a list of weights can be manually specified
 for the respective input data sets. They will be applied at the time
@@ -1534,7 +1582,9 @@ process or if the output MS should not contain a POINTING table. This
 table is quite large for some data (e.g. ALMA) and is mainly needed
 for mosaic imaging.  If you are certain that you will not need it, you
 can save time and diskspace by setting {\tt copypointing} to {\tt
-  False}.
+  False}.  Also, as stated in the ephemeris handling section
+\ref{section:cal.eph.manip.attach}, {\tt concat}
+will correctly merge fields which use the same ephemeris.
 
 The parameters {\tt freqtol} and {\tt dirtol} control how close
 together in frequency and angle on the sky spectral windows or field
@@ -1542,7 +1592,7 @@ locations need to be before calling them the same.
 
 {\bf ALERT:} Note that if multiple frequencies or pointings are
 combined using {\tt freqtol} or {\tt dirtol}, then the data are not
-changed (ie. not rephased to the single phase center).  Use of these 
+changed (i.e. not rephased to the single phase center).  Use of these 
 parameters is intended to be tolerant of small offsets (e.g. planets
 tracked which move slightly in J2000 over the course of observations,
 or combining epochs observed with slightly different positions).
@@ -1637,7 +1687,7 @@ individual selection parameters of particular interest for the tasks:
 Most of the selections are effected through the use of selection
 strings.  This sub-section describes the general rules used in
 constructing and parsing these strings.  Note that some selections
-are done though the use of numbers or lists.  There are also 
+are done through the use of numbers or lists.  There are also 
 parameter-specific rules that are described under each parameter.
 
 All lists of basic selection specification-units are comma separated
@@ -1821,12 +1871,6 @@ integer IDs.  For example, {\tt '>ID'} will select all spectral
 windows with ID greater than the specified value, while {\tt '<ID'}
 will select those with ID lesser than the specified value.
 
-{\bf ALERT:} In the current release, {\tt '<ID'} and
-{\tt '>ID'} are {\em inclusive} with the {\tt ID} specified included
-in the selection, e.g. {\tt spw='<2'} is equivalent to 
-{\tt spw='0,1,2'} and not {\tt spw='0,1'} as was intended.  This will
-be fixed in an upcoming release.
-
 Spectral window selection using strings follows the standard rules:
 \small
 \begin{verbatim}
@@ -1952,7 +1996,7 @@ frequency or velocity falls, or the nearest channel.
 \subsection{The {\tt selectdata} Parameters}
 \label{section:io.selection.selectdata}
 
-The {\tt selectdata} parameter, if set to {\tt True}, will expand
+The {\tt selectdata} parameter, if set to {\tt True} (default), will expand
 the inputs to include a number of sub-parameters, given below and
 in the individual task descriptions (if different).  If 
 {\tt selectdata = False}, then the sub-parameters are treated as
@@ -2280,6 +2324,26 @@ Examples:
 
 %  uvrange = '31Mlambda:5%'                    # +/- 2.5% about 31Ml
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt correlation} Parameter}
+\label{section:io.selection.selectdata.correlation}
+
+The {\tt correlation} parameter will select between different
+correlation products. They can be either the correlation ID or values
+such as 'XX', 'YY', 'XY', 'YX', 'RR', 'LL', 'RL', 'LR'.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt intent} Parameter}
+\label{section:io.selection.selectdata.intent}
+
+{\tt intent} is the scan intent that was specified when
+the observations were set up. They typically describe what was
+intended with a specific scan, i.e. a flux or phase calibration, a
+bandpass, a pointing, an observation of your target, or something else
+or a combination. The format for the scan intents of your observations
+are listed in the logger when you run {\tt listobs}. Minimum matching
+with wildcards will work, like '*BANDPASS*'. This is especially useful
+when multiple intents are attached to scans.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt observation} Parameter}

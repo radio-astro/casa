@@ -4,6 +4,7 @@
 
 % STM 2007-04-13  split from previous version
 % JO 2012-04-19 Release 3.4.0 edits
+% JO 2013-12-10 Release 4.2.0 edits
 
 \chapter[Appendix: Obtaining, Installing, and Customizing CASA]{Obtaining,
   Installing, and Customizing CASA}
@@ -46,7 +47,9 @@ Otherwise, you will encounter errors like:
 
 \small
 \begin{verbatim}
-casapy: error while loading shared libraries: /opt/casa/casapy-20.0.5653-001/lib/liblapack.so.3.1.1: cannot restore segment prot after reloc: Permission denied
+casapy: error while loading shared libraries: 
+  /opt/casa/casapy-20.0.5653-001/lib/liblapack.so.3.1.1: 
+  cannot restore segment prot after reloc: Permission denied
 \end{verbatim}
 \normalsize
 
@@ -55,7 +58,9 @@ linux platforms, see Sect.\,\ref{section:intro.obtaining} for the
 latest supported OSs.
 
 \subsubsection{Using more than one Linux version of CASA}
-Up to CASA 3.3.0, CASA .rpm files prohibited installing more than one CASA release at a time.  Starting with CASA 3.4.0, CASA .rpm files allow previously installed CASA releases to remain installed.  
+Up to CASA 3.3.0, CASA .rpm files prohibited installing more than one
+CASA release at a time.  Starting with CASA 3.4.0, CASA .rpm files
+allow previously installed CASA releases to remain installed.
 
 To start a specific CASA version, type 
 
@@ -136,11 +141,13 @@ should be as easy as copying a file.
 
 \begin{enumerate}
    \item Download the CASA disk image for your OS version from our
-   download site {\url http://casa.nrao.edu/casa\_obtaining.shtml}
+   download site\\ {\url http://casa.nrao.edu/casa\_obtaining.shtml}
    \item Open the disk image file (if your browser does not do so automatically).
    \item Drag the CASA application to the Applications folder of your hard disk.
    \item Eject the CASA disk image.
-   \item Double-click the CASA application to run it for the first time. This ensures everything is properly updated if you had installed a previous version. 
+   \item Double-click the CASA application to run it for the first
+     time. This ensures everything is properly updated if you had
+     installed a previous version.
 \end{enumerate}
 
 You may need to unload the dbus before the copy will work
@@ -193,15 +200,18 @@ Options are:
 \small
 \begin{verbatim}
    --rcdir     directory
-   --logfile   logfilename              specify the name of the log file if other than casapy-DATE.log
+   --logfile   logfilename              specify the name of the log
+                                         file if other than casapy-DATE.log
    --maclogger                          will use the Mac Console program for the logger
    --log2term                           output the logger text in the terminal
    --nologger                           run without launching the logger
    --nologfile                          does not create a logfile 
    --nogui                              will not open the logger GUI 
    --colors=[NoColor|Linux|LightBG]     selects color theme for prompt task inputs
-   --noipython                          does not launch ipython (useful when combined with the -c option)
-   --release <VERSIOn>                  launches CASA version <VERSION> when installed as Linux rpm
+   --noipython                          does not launch ipython
+                                         (useful when combined with the -c option)
+   --release <VERSION>                  launches CASA version
+                                         <VERSION> when installed as Linux rpm
    -r <VERSION>                         alias for --release
    -c filename-or-expression            execute a CASA python script from the command line 
    --help                               print this text and exit
@@ -383,6 +393,8 @@ U    geodetic/Observatories/table.dat
 \end{verbatim}
 \normalsize
 
+We suggest that a cron job is created to repeat that procedure
+regularly. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
