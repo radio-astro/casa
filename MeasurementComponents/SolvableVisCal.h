@@ -51,6 +51,9 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/Timer.h>
+#include <casadbus/plotserver/PlotServerProxy.h>
+#include <casadbus/utilities/BusAccess.h>
+#include <casadbus/session/DBusSession.h>
 
 #include <iostream>
 #include <fstream>
@@ -322,10 +325,13 @@ public:
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
+                         const Float& inGainThres,
+                         const String& antSel,
 			 fluxScaleStruct& oFluxScaleStruct,
 			 const String& oListFile,
                          const Bool& incremental,
-                         const Int& fitorder)=0;
+                         const Int& fitorder,
+                         const Bool& display)=0;
 
   // Report state:
   inline virtual void state() { stateSVC(True); };
@@ -604,10 +610,13 @@ public:
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
+                         const Float& ,
+                         const String& ,
 			 SolvableVisCal::fluxScaleStruct&,
 			 const String&,
                          const Bool&,
-                         const Int&)
+                         const Int&,
+                         const Bool&)
 	{ throw(AipsError("NYI")); };
 
   // SVM-specific write to caltable
@@ -745,10 +754,13 @@ public:
 		 const Vector<Int>& tranFieldIn,
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
+                 const Float& inGainThres,
+                 const String& antSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
 		 const String& oListFile,
                  const Bool& incremental=False,
-                 const Int& fitorder=1);
+                 const Int& fitorder=1,
+                 const Bool& display=False);
 
   // SVJ-specific write to caltable
   virtual void keepNCT();
@@ -768,6 +780,12 @@ public:
 
   virtual void nearest(const Double , Array<Float>& ) {};
   virtual void nearest(const Double , Array<Complex>& ) {};
+
+  //plotting historgram
+  void setupPlotter();
+  void plotHistogram(const String& title, const Int index,
+                     const Vector<Double>& data, const Int nbin);
+
 protected:
  
   // Number of Cal Matrices to form on baseline axis
@@ -841,7 +859,11 @@ private:
   uInt wTime_p,  wField_p, wChan_p, wAmp_p, 
        wPhase_p, wFlag_p,  wPol_p,  wAntCol_p, 
        wTotal_p, wPreAnt_p;
-          
+
+  //for plotting
+  PlotServerProxy* plotter_;
+  Vector<dbus::variant> panels_id_;
+
 };
 
 // Global methods
