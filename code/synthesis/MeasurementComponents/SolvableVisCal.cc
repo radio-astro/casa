@@ -3797,7 +3797,8 @@ SolvableVisJones::SolvableVisJones(VisSet& vs) :
   dJ1_(NULL),                           // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(False)
+  DJValid_(False),
+  plotter_(NULL)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(vs)" << endl;
 }
@@ -3810,7 +3811,8 @@ SolvableVisJones::SolvableVisJones(const Int& nAnt) :
   dJ1_(NULL),                 // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(False)
+  DJValid_(False),
+  plotter_(NULL)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(i,j,k)" << endl;
 }
@@ -5048,11 +5050,13 @@ void SolvableVisJones::fluxscale(const String& outfile,
 				 const Vector<Int>& tranFieldIn,
 				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
-                                 //const Float& threshold,
+                                 const Float& inGainThres,
+                                 const String& antSel,
 				 fluxScaleStruct& oFluxScaleStruct,
 				 const String& oListFile,
                                  const Bool& incremental,
-                                 const Int& fitorder) {
+                                 const Int& fitorder, 
+                                 const Bool& display) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
   //String outCalTabName="_tmp_testfluxscaletab";
@@ -5065,9 +5069,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
   // threshold for gain (amplitude) to be used in 
   // fluxscale determination
   // -1: no threshold
-  Float threshold=-1; 
   // plot histogram of gain ratio
-  Bool report_p=False;
+  Bool report_p=display;
 
   if (incremental) {
     logSink() << LogIO::NORMAL
@@ -5090,6 +5093,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
   PtrBlock< Cube<Double>* > MGWT;
   PtrBlock< Cube<Double>* > MGVAR;
   PtrBlock< Cube<Int>* >    MGN;
+  PtrBlock< Cube<Int>* >    MGNALL;
 
   Int nMSFld; fldNames.shape(nMSFld);
 
@@ -5115,6 +5119,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     MGWT.resize(nFld);   MGWT=NULL;
     MGVAR.resize(nFld);  MGVAR=NULL;
     MGN.resize(nFld);    MGN=NULL;
+    MGNALL.resize(nFld); MGNALL=NULL;
 
     // sort user-specified fields
     Vector<Int> refField; refField = refFieldIn;
@@ -5244,6 +5249,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
     //    cout << "Filling mgnorms....";
 
+    //Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
+    Matrix<Float> medianGains(nFld,nSpw(),0.0); //keeps median (amplitude) gains for each field for each spw
     { // make an inner scope
     Block<String> cols(4);
     cols[0]="SPECTRAL_WINDOW_ID";
@@ -5258,41 +5265,75 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Cube<Double> mg2; 
     Cube<Double> mgwt;   
     Cube<Int>    mgn;    
+    Cube<Int>    mgnall;    
     Int prevFld(-1);
 
     Int lastFld(-1);
 
-    // pre-determine median gain solutions for each field
+    // determine median gain amplitude for each field 
+    // use CTinterface to appy selection with MSSelection syntax
     NewCalTable selct(*ct_);
     CTInterface cti(*ct_);
-    MSSelection mss;
-    Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
+    Vector<Int> selAntList;
+    Vector<Int> allAntList(nElem());
+    indgen(allAntList);
+    vector<Int> tmpAllAntList(allAntList.begin(),allAntList.end());
+    //Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
+    Bool firstpass(true);
     for (Int iFld=0; iFld<nFld; iFld++) {
-      //
+
+      MSSelection mss;
+      //String antSel("!ea25");
+      //String antSel("0~26");
+      //String antSel("");
       mss.setFieldExpr(String::toString(iFld));     
-      TableExprNode ten=mss.toTableExprNode(&cti);
+      if (antSel!="") {
+        mss.setAntennaExpr(antSel);
+      } else {
+        selAntList=allAntList;
+      } 
+      std::vector<Int> tmpSelAntList;
+      for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
+        mss.setSpwExpr(String::toString(iSpw));     
+        try {
+          TableExprNode ten=mss.toTableExprNode(&cti);
+          getSelectedTable(selct,*ct_,ten,"");
+          ROCTMainColumns ctmc(selct);
+          Array<Float> outparams;
+          ctmc.fparamArray(outparams);
 
-      try {
-        getSelectedTable(selct,*ct_,ten,"");
-      
-        ROCTMainColumns ctmc(selct);
-        Array<Float> outparams;
-        ctmc.fparamArray(outparams);
-        IPosition arshp = outparams.shape();
-        //cerr<<"arshp="<<arshp<<endl;
-        //cerr<<"outparams(1,0,n)="<<outparams(IPosition(3,1,0,arshp(arshp.nelements()-1)-1))<<endl;
+          // Get selected antenna list in ant ids.
+          // While it is applied to all fields and spws
+          // the actual selections happen per spw. So we do it here but only for the first
+          // successful selection for the data and use it for the rest of the process.
+          if (antSel!="" && firstpass) {
+            Vector<Int> selantlist=ctmc.antenna1().getColumn();
+	    Int nSelAnt=genSort(selantlist,(Sort::QuickSort | Sort::NoDuplicates));
+	    selantlist.resize(nSelAnt,True);
+            selAntList=selantlist;
+            //cerr<<"selantlist.nelements()="<<selantlist.nelements()<<endl;
+            String oMsg( "" );
+            oMsg+=" Selected antennas: "+String::toString(selAntList);
+            logSink() << oMsg << LogIO::POST;
+            firstpass=false;
+          }
 
-        // take out amplitude only
-        IPosition start(3,0,0,0);
-        Int pinc = 2;
-        if (nPar()==1) pinc = 1; 
-        IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
-        IPosition stride(3,pinc,1,1);
-        Slicer slicer(start,length,stride);
-        Array<Float> subarr=outparams(slicer);
-        medianGains(iFld)=median(subarr);
-      } catch (AipsError x) {
-        // no selection for current field ID so ignore to continue
+          IPosition arshp = outparams.shape();
+          //cerr<<"outparams(1,0,n)="<<outparams(IPosition(3,1,0,arshp(arshp.nelements()-1)-1))<<endl;
+
+          // take out amplitude only
+          IPosition start(3,0,0,0);
+          Int pinc = 2;
+          if (nPar()==1) pinc = 1; 
+          IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
+          IPosition stride(3,pinc,1,1);
+          Slicer slicer(start,length,stride);
+          Array<Float> subarr=outparams(slicer);
+          medianGains(iFld,iSpw)=median(subarr);
+        } catch (AipsError x) {
+         // cerr<<"No selection"<<endl;
+         // no selection for current field ID so ignore to continue
+        }
       }
     }
     while (!ctiter.pastEnd()) {
@@ -5304,7 +5345,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
         mgreft = ctiter.thisTime();
       }
       prevFld = iFld;
-
 
       if (solFreq(iSpw)<0.0) {
 	Vector<Double> freq;
@@ -5321,6 +5361,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	MGWT[iFld]   = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
 	MGVAR[iFld]  = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
 	MGN[iFld]    = new Cube<Int>(nPar(),nElem(),nSpw(),0);
+        // for reporting numbers of solution used
+        MGNALL[iFld] = new Cube<Int>(nPar(),nElem(),nSpw(),0);
 	
       }
       // References to PBs for syntactical convenience
@@ -5331,6 +5373,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	mg2.reference(*(MG2[iFld]));
 	mgwt.reference(*(MGWT[iFld]));
 	mgn.reference(*(MGN[iFld]));
+        mgnall.reference(*(MGNALL[iFld]));
       }
 
       // TBD: Handle "iFitwt" from NewCalTable?
@@ -5340,26 +5383,72 @@ void SolvableVisJones::fluxscale(const String& outfile,
       // amps, flags  [npar]  (one channel, one antenna)
       Vector<Float> amp(amplitude(ctiter.cparam()));
       Vector<Bool> fl(ctiter.flag());
-
       for (Int ipar=0; ipar<nPar(); ipar++) {
 	if (!fl(ipar)) {
 	  Double gn=amp(ipar); // converts to Double
           // evaluate input gain to be within the threshold
-          if (threshold < 0 || 
-              (gn >= (1.0 - threshold) * medianGains(iFld) and 
-               gn <= (1.0 + threshold) * medianGains(iFld)))  {
+          Float lowbound= (inGainThres >0 and inGainThres <1.0)? 1.0 - inGainThres : 0.0;
+          if (inGainThres==0) lowbound=1.0;
+          if (anyEQ(selAntList,iAnt) && (inGainThres < 0 || 
+           //     (gn >= lowbound*medianGains(iFld,iSpw)))  { 
+           // take both lower and upper bounds
+              (gn >= lowbound*medianGains(iFld,iSpw)  and 
+               gn <= (1.0 + inGainThres) * medianGains(iFld,iSpw))))  {
 	    mgok(ipar,iAnt,iSpw)=True;
 	    mg(ipar,iAnt,iSpw) += (wt*gn);
 	    mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
 	    mgn(ipar,iAnt,iSpw)++;
 	    mgwt(ipar,iAnt,iSpw)+=wt;
           }
+          mgnall(ipar,iAnt,iSpw)++;
 	}
       }
       lastFld=iFld;
       ctiter.next();
     }
     } // scope
+
+    //for reporting only
+    if (inGainThres>=0.0) {
+      String oMsg( "" );
+      oMsg+=" Applying gain threshold="+String::toString(inGainThres);
+      logSink() << oMsg << LogIO::POST;
+      for (Int iFld=0; iFld<nFld; iFld++) {
+        if (MGOK[iFld]!=NULL) {
+          Cube<Bool>    mgok;   mgok.reference(*(MGOK[iFld]));
+          Cube<Int>    mgn;    mgn.reference(*(MGN[iFld]));
+          Cube<Int>    mgnall;    mgnall.reference(*(MGNALL[iFld]));
+          //cerr<<"ntrue="<<ntrue(mgok)<< " shape="<<mgok.shape()<<endl;
+          //cerr<<"mgn shape="<<mgn.shape()<<endl;
+          //cerr<<"mgnall shape="<<mgnall.shape()<<endl;
+          for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
+            //cerr<<"median gain="<<medianGains(iFld,iSpw)<<endl;
+            //cerr<<"ntrue(mgok) per spw="<<ntrue(mgok.xyPlane(iSpw))<<endl;
+            for (Int iAnt=0; iAnt<nElem(); iAnt++) {
+              IPosition start(3,0,iAnt,iSpw);
+              IPosition length(3,nPar(),1,1);
+              IPosition stride(3,1,1,1);
+              Slicer slicer(start,length,stride);
+              if (ntrue(mgok(slicer))) {
+             //cerr<<"iAnt:"<<iAnt<<"sum(mgn)="<<sum(mgn(slicer))<<" sum(mgnall(slicer))="<<sum(mgnall(slicer))<<endl;
+                Float frac=Float (sum(mgn(slicer)))/Float (sum(mgnall(slicer)));
+                ostringstream fracstream;
+                fracstream.precision(3);
+                if (frac<1.0) {
+                  fracstream << frac*100.0;
+                  oMsg="";
+                  //cerr<<"iFld="<<iFld<<" iAnt="<<iAnt<<": "<<frac*100.0<<"% of "<<sum(mgnall(slicer))<<" will be used"<<endl;
+                  oMsg+="  Field ID="+String::toString(tranField(iFld))+" Antenna ID="+String::toString(iAnt)+": ";
+                  oMsg+=fracstream.str()+" % of ";
+                  oMsg+=String::toString(sum(mgnall(slicer)) )+" solutions will be used";
+                  logSink() << oMsg << LogIO::POST;
+                }
+              } //ntrue()
+            } //iAnt 
+          } //iSpw
+        }
+      }//iFld
+    }
   /*
 
     // fill per-ant -fld, -spw  mean gain moduli
@@ -5430,7 +5519,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
         Cube<Int>    mgn;    mgn.reference(*(MGN[iFld]));
 
         for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
-	  //	  cout << endl;
           for (Int iAnt=0; iAnt<nElem(); iAnt++) {
 	    for (Int ipar=0;ipar<nPar(); ++ipar) {
 	      if ( mgok(ipar,iAnt,iSpw) && mgwt(ipar,iAnt,iSpw)>0.0 ) {
@@ -5458,10 +5546,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
           }
         }
 
-
       }
     }
-
 
 
     //    cout << "done." << endl;
@@ -5526,6 +5612,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
       Cube<Double> mgvarT; mgvarT.reference(*(MGVAR[tranidx]));
       Cube<Double> mgwtT;  mgwtT.reference(*(MGWT[tranidx]));
 
+      if (report_p) {
+        setupPlotter();
+      }
+      int countvalidspw = 0;
       for (Int ispw=0; ispw<nSpw(); ispw++) {
 
         // Reference spw may be different
@@ -5559,10 +5649,9 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
           // for plotting
           if (report_p) {
-            PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-            String hlab = "fluxscale- Fld:"+String::toString(tranidx)+" Spw:"+String::toString(ispw);
-	    dbus::variant panel_id = plotter->panel( hlab, "ratio", "N", "Fluxscale"+hlab,
-                                               std::vector<int>( ), "right");
+            //cerr<<"plotting for each spw..."<<endl;
+            String hlab = "Fld:"+String::toString(tranidx)+" Spw:"+String::toString(ispw)+
+                          " median="+String::toString(medianGains(tranidx,ispw));
             Vector<Double> tempvec;
             tempvec=mgTspw(mgokTspw).getCompressedArray();
             // determine nbins by Scott's rule
@@ -5570,9 +5659,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
             minMax(minv,maxv,tempvec);
             Double binw = 3.49*stddev(tempvec)/pow(Double (tempvec.nelements()), 1./3.);
             Int inNbins = Int (ceil ((maxv-minv)/binw));
-            plotter->histogram(dbus::af(tempvec),inNbins, "blue",hlab,panel_id.getInt( ));
-            //plotter->scatter(dbus::af(tempvec),dbus::af(tempvec), "blue","","hexagon", 6, -1, panel_id.getInt( ));
-            plotter->release( panel_id.getInt( ) );
+            plotHistogram(hlab,countvalidspw,tempvec,inNbins);
+            countvalidspw++;
           }
 
 	  //	  cout << "mgTspw = " << mgTspw << endl;
@@ -5747,10 +5835,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
            spidx(tranidx,i) = soln(i);
            spidxerr(tranidx,i) = errs(i);
         } 
-        fitFluxD = pow(10.0,(soln(0)));
+        fitFluxD(tranidx) = pow(10.0,(soln(0)));
 //	correct for the proper propagation of error
-        fitFluxDErr = (errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
-	fitRefFreq = pow(10.0,meanLogFreq);
+        fitFluxDErr(tranidx) = (errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
+	fitRefFreq(tranidx) = pow(10.0,meanLogFreq);
         oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
         oFitMsg += " with fitorder="+String::toString<Int>(myfitorder)+": ";
@@ -5928,6 +6016,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         delete MGWT[iFld];
         delete MGVAR[iFld];
         delete MGN[iFld];
+        delete MGNALL[iFld];
       }
     }
 
@@ -5960,6 +6049,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         delete MGWT[iFld];
         delete MGVAR[iFld];
         delete MGN[iFld];
+        delete MGNALL[iFld];
       }
     }
 
@@ -5971,6 +6061,54 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
 }
 
+void SolvableVisJones::setupPlotter() {
+// setjup plotserver
+  plotter_ = dbus::launch<PlotServerProxy>( );
+  panels_id_.resize(nSpw());
+}
+
+void SolvableVisJones::plotHistogram(const String& title,
+                                     const Int index,
+                                     const Vector<Double>& data,
+                                     const Int nbins) {
+// construct histogram in multiple panels 
+  std::string legendloc = "bottom";
+  std::string zoomloc = "";
+  if (index==0) {
+    panels_id_[0] = plotter_->panel( title, "ratio", "N", "Fluxscale",
+                                   std::vector<int>( ), legendloc,zoomloc,0,false,false);
+    std::vector<std::string> loc;
+    loc.push_back("top");
+    //plotter_->loaddock( dock_xml_p, "bottom", loc, panels_id_[0].getInt());
+  }
+  else {
+    panels_id_[index] = plotter_->panel( title, "ratio", "N", "",
+    std::vector<int>( ), legendloc,zoomloc,panels_id_[index-1].getInt(),false,false);
+     
+    // multirow panels
+    /***
+    if (index<3) {
+      //cerr<<"panels_id[index-1].getInt()="<<panels_id_[index-1].getInt()<<endl;
+      panels_id_[index] = plotter_->panel( title, "ratio", "N", "",
+      std::vector<int>( ), legendloc,zoomloc,panels_id_[index-1].getInt(),false,false);
+    }       
+    else {
+      if (index==3) {
+        panels_id_[index] = plotter_->panel( title, "ratio", "N", "",
+                       std::vector<int>( ), legendloc,zoomloc,panels_id_[0].getInt(),true,false);
+      }
+      else {
+        panels_id_[index] = plotter_->panel( title, "ratio", "N", "",
+                                     std::vector<int>( ), legendloc,zoomloc,panels_id_[index-1].getInt(),false,false);
+      } 
+    }
+    ***/
+  }
+  // plot histogram
+  plotter_->erase( panels_id_[index].getInt() );
+  plotter_->histogram(dbus::af(data),nbins,"blue",title,panels_id_[index].getInt( ));
+
+}
 
 void SolvableVisJones::listCal(const Vector<Int> ufldids,
 				  const Vector<Int> uantids,

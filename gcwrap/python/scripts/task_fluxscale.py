@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None,listfile=None,append=None,refspwmap=None,incremental=None,fitorder=None):
+def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None,listfile=None,append=None,refspwmap=None,gainthreshold=None,antenna=None,incremental=None,fitorder=None,display=None):
        """Bootstrap the flux density scale from standard calibrators:
 
        After running gaincal on standard flux density calibrators (with or
@@ -67,6 +67,9 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
 
        fitorder -- the order of spectral fitting when solutions for multiple spws are available
                default: 1
+
+       display -- display statistics (histogram)  of derived correction factors
+               default: false
        """
 
        try:
@@ -76,7 +79,8 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                output = mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
                               transfer=transfer,listfile=listfile,append=append,
-			      refspwmap=refspwmap,incremental=incremental,fitorder=fitorder)
+			      refspwmap=refspwmap,gainthreshold=gainthreshold,antenna=antenna,
+                              incremental=incremental,fitorder=fitorder,display=display)
                mycb.close()
 
                #write history
