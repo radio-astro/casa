@@ -496,26 +496,30 @@ namespace casa {
 	}
 
 	void QtProfile::exportProfile() {
-		QString filterString = tr("FITS files (*.fits);;Text files (*.txt);;Vector Graphic Plotter files(*.plt)");
+		const QString FITS_FILTER = "FITS files (*.fits)";
+		QString formatStr = "Text files (*.txt);;";
+		formatStr.append( FITS_FILTER );
+		QString filterString = tr(formatStr.toStdString().c_str());
 		QString currentDirectory = QDir::currentPath();
 		QFileDialog fd( this, tr("Export profile"), currentDirectory );
 		fd.setFileMode( QFileDialog::AnyFile );
 		fd.setNameFilter( filterString );
 		if ( fd.exec() ) {
 			QStringList fileNames = fd.selectedFiles();
+			QString selectedNameFilter = fd.selectedNameFilter();
 			if ( fileNames.size() > 0 ) {
 				QString outputFileName = fileNames[0];
 				QString ext = outputFileName.section('.', -1);
 				bool ok;
-				if (ext =="fits"){
-					ok = exportFITSSpectrum(/*fn*/outputFileName);
+				if (selectedNameFilter == FITS_FILTER){
+					const QString fitsExtension = "fits";
+					ok = exportFITSSpectrum(outputFileName);
 				}
 				else {
-					if (ext != "txt" && ext != "plt"){
-						//fn.append(".txt");
+					if (ext != "txt"){
 						outputFileName.append( ".txt");
 					}
-					ok = exportASCIISpectrum(/*fn*/outputFileName );
+					ok = exportASCIISpectrum(outputFileName );
 				}
 			}
 		}
@@ -1684,7 +1688,7 @@ namespace casa {
 			return false;
 		}
 
-		// create a new coo and add the spectral one
+		// create a new coordinate system and add the spectral one
 		DisplayCoordinateSystem csysProfile = DisplayCoordinateSystem();
 		csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
 
