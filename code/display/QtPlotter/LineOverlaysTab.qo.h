@@ -48,6 +48,7 @@ namespace casa {
 		void setInitialReferenceFrame( QString referenceStr );
 		void setSpectralCoordinate( SpectralCoordinate coord );
 		void setCanvas( QtCanvas* canvas );
+		void unitsChanged(QString graphUnits );
 		~LineOverlaysTab();
 
 	private slots:
@@ -62,7 +63,7 @@ namespace casa {
 		void addLineToPixelCanvas( float center, float peak,
 		                           QString molecularName, QString chemicalName,
 		                           QString resolvedQNs, QString frequencyUnit, Converter* converter);
-
+		float getShiftedCenter( float center, Converter* converter );
 		Ui::LineOverlaysTabClass ui;
 		SearchMoleculesWidget* searchWidget;
 		QtCanvas* pixelCanvas;

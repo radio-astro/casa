@@ -357,9 +357,11 @@ namespace casa {
 	}
 
 	void QtProfile::setUnitsText( String unitStr ) {
-		QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
+		QString unitStrQ( unitStr.c_str());
+		QString unitLabel("<font color='black'>["+unitStrQ+"]</font>");
 		specFitSettingsWidget->setUnits( unitLabel );
 		momentSettingsWidget->setUnits( unitLabel );
+		lineOverlaysHolder->unitsChanged( unitStrQ );
 	}
 
 
@@ -706,16 +708,17 @@ namespace casa {
 		persist( PERSIST_FREQUENCY_BOTTOM, text);
 		if(lastPX.nelements() > 0) {
 			// update display with new coord type
-			wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+			wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
 			frameChanged( -1 );
 		}
 
 	}
 
 	void QtProfile::replotCurves(){
+		//Smoothing
 		pixelCanvas->clearCurve();
 		if ( lastPX.nelements() > 0 ){
-			wcChanged(coordinate,lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+			wcChanged(coordinate,lastPX, lastPY, lastWX, lastWY, UNKNPROF);
 		}
 	}
 
@@ -816,7 +819,6 @@ namespace casa {
 		lastWY.resize(0);
 		position = QString("");
 		profileStatus->showMessage(position);
-		//pixelCanvas->clearCurve();
 	}
 
 	SpectralCoordinate QtProfile::getSpectralAxis( std::tr1::shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid ){
@@ -1086,7 +1088,7 @@ namespace casa {
 			ypos = "";
 			position = QString("");
 			pixelCanvas->setWelcome(IMAGE_MISSING_ERROR);
-			pixelCanvas->clearCurve();
+			pixelCanvas->clearEverything();
 		}
 		else {
 			cb = computeCB( xa, ya, za );
@@ -1099,7 +1101,7 @@ namespace casa {
 				ypos = "";
 				position = QString("");
 				profileStatus->showMessage(position);
-				pixelCanvas->clearCurve();
+				pixelCanvas->clearEverything();
 			}
 			else {
 				if (cb != cube) {
@@ -1110,7 +1112,7 @@ namespace casa {
 					position = QString("");
 					profileStatus->showMessage(position);
 					pixelCanvas->setWelcome( MISSING_REGION_ERROR );
-					pixelCanvas->clearCurve();
+					pixelCanvas->clearEverything();
 				}
 			}
 		}
@@ -1275,7 +1277,7 @@ namespace casa {
 			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
 						                             WORLD_COORDINATES, coordinateType, 0,
 						                             tabularIndex, 0, cTypeUnit, spcRefFrame,
-						                             (Int)QtProfile::MEAN, 0, cSysRval, -1, getRegionShape());
+						                             (Int)QtProfile::MEAN, 0, cSysRval, -1, lastShape);
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
 				bool topAxisAscendingX = isAxisAscending(xValues);
@@ -1361,7 +1363,7 @@ namespace casa {
 	void QtProfile::setCollapseRange(double xmin, double xmax) {
 		momentSettingsWidget->setRange( xmin, xmax );
 		specFitSettingsWidget->setRange( xmin, xmax );
-		lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
+		//lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
 	}
 
 	void QtProfile::overplot(QList<OverplotInterface> hash) {
@@ -1588,6 +1590,7 @@ namespace casa {
 		SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 		if ( it == spectra_info_map.end( ) ) return;
 		QString shape = it->second.shape( );
+
 		assignProfileType( shape.toStdString(), world_x.size());
 		String c(WORLD_COORDINATES);
 
@@ -2300,7 +2303,7 @@ namespace casa {
 			                        "for the given data \nor\n"
 			                        "No profile available for the "
 			                        "display axes orientation");
-			pixelCanvas->clearCurve();
+			pixelCanvas->clearEverything();
 			cubeZero = true;
 		}
 		return cubeZero;
@@ -3009,6 +3012,7 @@ namespace casa {
 		lastWY.assign(wyv);
 		lastPX.assign(pxv);
 		lastPY.assign(pyv);
+		lastShape = getRegionShape();
 	}
 
 

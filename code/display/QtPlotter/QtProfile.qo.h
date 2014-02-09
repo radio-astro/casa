@@ -441,6 +441,7 @@ namespace casa {
 		int current_region_id;
 		SpectraInfoMap spectra_info_map;
 		ProfileType profileType;
+		String lastShape;
 
 		ColorSummaryWidget* colorSummaryWidget;
 		LegendPreferences* legendPreferencesDialog;
