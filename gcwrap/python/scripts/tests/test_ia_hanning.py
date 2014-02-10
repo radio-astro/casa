@@ -78,7 +78,7 @@ class ia_hanning_test(unittest.TestCase):
         pass
     
     def tearDown(self):
-        pass
+        self.assertTrue(len(tb.showcache()) == 0)
     
     def test_stretch(self):
         """ ia.hanning(): Test stretch parameter"""
@@ -100,6 +100,61 @@ class ia_hanning_test(unittest.TestCase):
         self.assertTrue(type(zz) == type(yy))
         yy.done()
         zz.done()
+    
+    def test_regreesion(self):
+        """Tests moved from imagetest regression"""
+        # Make image
+        imname = 'ia.fromshape.image'
+        imshape = [10,20]
+        myim = ia.newimagefromshape(outfile=imname, shape=imshape)
+        self.assertTrue(myim)
+        pixels = myim.getchunk()
+        self.assertTrue(len(pixels) > 0)
+        for i in range(pixels.shape[0]):
+            for j in range(pixels.shape[1]):
+                if pixels[i][j]>-10000:
+                    pixels[i][j]=1
+        self.assertTrue(myim.putchunk(pixels))
+        self.assertRaises(Exception, myim.hanning, axis=19)
+        hanname = 'hanning.image'
+        myim2 = myim.hanning(outfile=hanname, axis=0, drop=F)
+        self.assertTrue(myim2)
+        pixels2 = myim2.getchunk()
+        self.assertFalse(len(pixels2)==0)
+        self.assertTrue((pixels2 == 1).all())
+        self.assertTrue(myim2.remove(done=T))
+        
+        myim2 = myim.hanning(outfile=hanname, axis=0, drop=T)
+        self.assertTrue(myim2)
+        shape2 = [myim.shape()[0]/2-1,myim.shape()[1]]
+        self.assertTrue((myim2.shape() == shape2).all())
+        pixels2 = myim2.getchunk()
+        self.assertFalse(len(pixels2)==0)
+        self.assertTrue((pixels2 == 1).all())
+        self.assertTrue(myim2.remove(done=T))
+
+        pixels = myim.getregion()
+        mask = myim.getregion(getmask=true)
+        mask[0,0] = F
+        mask[1,0] = F
+        mask[2,0] = F
+        mask[3,0] = F
+        self.assertTrue(myim.putregion(pixelmask=mask))
+        myim2 = myim.hanning(outfile=hanname, axis=0, drop=F)
+        self.assertTrue(myim2)
+        pixels2 = myim2.getregion()
+        mask2 = myim2.getregion(getmask=true)
+        self.assertTrue(mask2[0,0]==F and mask2[1,0]==F)
+        self.assertFalse(mask2[2,0])
+        self.assertFalse(mask2[3,0])
+        self.assertTrue(pixels2[0,0]==0 and pixels2[1,0]==0)
+        self.assertTrue(pixels2[2,0]==0)
+        self.assertTrue(pixels2[3,0]==0.25)
+        
+        self.assertTrue(myim2.done())
+        
+        self.assertTrue(myim.done())
+
     
 def suite():
     return [ia_hanning_test]
