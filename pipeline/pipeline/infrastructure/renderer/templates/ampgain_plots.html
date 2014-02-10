@@ -1,0 +1,92 @@
+<%!
+rsc_path = ""
+import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+
+<link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
+<link href="${self.attr.rsc_path}resources/css/select2-bootstrap.css" rel="stylesheet"/>
+<script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
+
+<!-- include required files and styles for histograms -->
+<script src="${self.attr.rsc_path}resources/js/d3.v3.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
+<script>
+$(document).ready(function () {
+    // push JSON directly into page, avoiding XHR cross-site domain problems
+	var json='${json}';
+	var scores_dict = JSON && JSON.parse(json) || $.parseJSON(json);
+
+    // activate the input fields for spw, antenna, etc.
+    $('.select2').select2();
+
+    // create a new filter pipeline, and tell it to filter based on the scores
+    // in the scores_dict JSON dictionary that is set in the template.
+    var filterPipeline = new FILTERS.FilterPipeline();
+    filterPipeline.setScores(scores_dict);
+
+    // create filters that listen for events on the .select2 input fields we just
+    // created, and add them to the filter pipeline, filtering on the appropriate
+    // dictionary key
+    filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
+    filterPipeline.addFilter(FILTERS.createMatchFilter('antenna', '#select-ant'));
+
+    // get the X-axis label for Tsys
+    var xAxis = PLOTS.xAxisLabels["K"];
+
+    // create histograms and histogram filters for the three distributions we want
+    // to highlight: RMS, average median, and maximum median reached.
+    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median", "#histogram-tsysmedian", xAxis),
+    			  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median_max", "#histogram-tsysmedianmax", xAxis),
+				  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "rms", "#histogram-tsysrms", xAxis)]
+
+    // link histogram ranges to the range checkbox
+    var rangeCheckbox = $("input#rangeCheckbox");
+	rangeCheckbox.click(function() {
+		var state = rangeCheckbox.prop("checked");
+		charts.forEach(function(chart) {
+			chart.histogram.duration(1000).plotExtent(state);
+		});
+	});
+    
+    // add on-click handler to our thumbnails to launch FancyBox with the
+    // relevant thumbnails
+    $("ul.thumbnails li div a").click(function (evt) {
+        evt.preventDefault();
+        var target = this.href;
+        UTILS.launchFancybox(target);
+        return false;
+    });
+
+    // fix the thumbnail margins for plots on the n>1 row
+    UTILS.fixThumbnailMargins();
+});
+</script>
+
+<div class="page-header">
+	<h1>Amp Gain Plots<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
+</div>
+
+<br>
+
+<div class="column-fluid">
+	<ul class="thumbnails">
+	% for plot in sorted(plots, key=lambda p: p.parameters['file']):
+		<li class="span2">
+			<div class="thumbnail">
+				<a class="fancybox"
+				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+				   title="Antenna ${plot.parameters['ant']} "
+				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+						 title="Antenna ${plot.parameters['ant']} "
+						   alt="">
+					</img>
+				</a>
+					<p class="text-center">Antenna index ${plot.parameters['ant']}</p>
+			</div>
+		</li>
+	% endfor
+	</ul>
+</div>
