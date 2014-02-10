@@ -20,8 +20,9 @@ import string
 import re
 
 class taskutil( object ):
-    def __init__( self, dir='' ):
-        self.taskdir=dir
+    def __init__( self, dirname='', title='' ):
+        self.taskdir=dirname
+        self.title=title
         self.tasks=[]
         
     def createtasklist( self ):
@@ -126,7 +127,7 @@ class taskutil( object ):
             values=attr.values()
             name=values[namekey].value.encode('UTF-8')
             #print '   ',name
-            property={}
+            myproperty={}
             ptype=values[typekey].value.encode('UTF-8')
             defaults=childs[i].getElementsByTagName('value')[0]
             if defaults.hasChildNodes():
@@ -149,11 +150,11 @@ class taskutil( object ):
                     description = 'None'
             else:
                 description = 'None'
-            property['2_default']=defaultvalue
-            property['1_type']=ptype
-            property['0_name']=name
-            property['3_description']=description
-            paramlist.append(property)
+            myproperty['2_default']=defaultvalue
+            myproperty['1_type']=ptype
+            myproperty['0_name']=name
+            myproperty['3_description']=description
+            paramlist.append(myproperty)
         dom3.unlink()
         return paramlist
 
@@ -217,8 +218,8 @@ class taskutil( object ):
         f.close()
 
 class taskutil2( taskutil ):
-    def __init__( self, dir='', prefix=None ):
-        super(taskutil2,self).__init__( dir=dir )
+    def __init__( self, dirname='', title='', prefix=None ):
+        super(taskutil2,self).__init__( dirname=dirname, title=title )
         self.prefix = prefix
 
     def createtasklist( self ):
@@ -237,18 +238,23 @@ class taskutil2( taskutil ):
 
 class hetaskutil( object ):
     #def __init__( self, dir='/home/nakazato/ALMA/PIPELINE/Heuristics/src/heuristics', sddir='SDPipelineTaskInterface', ifdir='SFIPipelineTaskInterface' ):
-    def __init__( self, dir='/home/nakazato/ALMA/PIPELINE/Heuristics/src/heuristics', sddir='hsd/TaskInterface', ifdir='hif/TaskInterface' ):
-        self.phdir=dir
-        self.taskdir={}
-        self.keys = ['IF','SD']
-        self.taskdir['IF']=self.phdir+'/'+ifdir
-        self.taskdir['SD']=self.phdir+'/'+sddir
+    def __init__( self, dirname ):
+        self.phdir=dirname
         self.tasks={}
-        self.tasks['IF']=taskutil( self.taskdir['IF'] )
-        self.tasks['SD']=taskutil( self.taskdir['SD'] )
-        self.titles={}
-        self.titles['IF']='Interferometry'
-        self.titles['SD']='Single-Dish'
+        self.addmodule('hif', 'Interferometry')
+        self.addmodule('hsd', 'Single-Dish')
+        
+    @property
+    def keys(self):
+        keys = self.tasks.keys()[:]
+        keys.sort()
+        return keys    
+    
+    def addmodule(self, name, title, version=2):
+        if version == 2:
+            self.tasks[name] = taskutil2(dirname=os.path.join(self.phdir, name, 'cli'), title=title, prefix=name)
+        else:
+            self.tasks[name] = taskutil(dirname=os.path.join(self.phdir, name, 'cli'), title=title)
         
     def createtasklist( self ):
         for key in self.keys:
@@ -261,7 +267,6 @@ class hetaskutil( object ):
         return tasklist
 
     def getparamlist( self, task ):
-        obj=''
         paramlist={}
         tasklist=self.gettasklist()
         target=None
@@ -282,11 +287,11 @@ class hetaskutil( object ):
         basedirs={}
         for key in self.keys:
             if str(key).lower() != 'common':
-                basedirs[key]='h'+str(key).lower()+'_tasklist'
+                basedirs[key]=str(key).lower()+'_tasklist'
             else:
                 basedirs[key]='h_tasklist'
         for key in self.keys:
-            #print 'creating h%s...'%(key.lower())
+            print 'creating %s...'%(key.lower())
             outdirs[key]=os.path.join(outdir,basedirs[key])
             self.tasks[key].createHTML( outdir=outdirs[key] )
         htmlfile=outdir+'/index.html'
@@ -295,7 +300,7 @@ class hetaskutil( object ):
         print >> f, '<H1>List of Heuristics Tasks</H1>'
         print >> f, '<HR>'
         for key in self.keys:
-            print >> f, '<H3>%s</H3>'%self.titles[key]
+            print >> f, '<H3>%s</H3>'%self.tasks[key].title 
             print >> f, '%s tasks available.<BR><BR>'%len(tasklist[key])
             print >> f, '<TABLE>'
             print >> f, '<TR><TH ALIGN="left">task name</TH><TH ALIGN="left">description</TH></TR>'
@@ -311,52 +316,37 @@ class hetaskutil( object ):
         f.close()
 
 class hetaskutil2( hetaskutil ):
-    def __init__( self, dir='', cli='' ):
-        super(hetaskutil2,self).__init__(dir=dir,ifdir=cli,sddir=cli)
-        self.taskdir['COMMON']=self.phdir+'/'+cli
-        self.titles['COMMON']='Common'
-        self.tasks['COMMON']=taskutil2( self.taskdir['COMMON'], prefix='h' )
-        self.tasks['IF']=taskutil2( self.taskdir['IF'], prefix='hif' )
-        self.tasks['SD']=taskutil2( self.taskdir['SD'], prefix='hsd' )
-        self.keys=['COMMON']+self.keys
+    def __init__( self, dirname='', cli='' ):
+        super(hetaskutil2,self).__init__(dirname=dirname)
+        self.addmodule('h', 'Common')
 
 class hetaskutil3( hetaskutil ):
-    def __init__( self, dir='', cli='' ):
-        super(hetaskutil3,self).__init__(dir=dir,ifdir='hif/cli',sddir='hsd/cli')
-        self.taskdir['COMMON']=os.path.join(self.phdir, 'h', cli)
-        self.taskdir['IFA']=os.path.join(self.phdir, 'hifa', cli)
-        self.taskdir['IFV']=os.path.join(self.phdir, 'hifv', cli)
-        self.titles['COMMON']='Common'
-        self.titles['IFA']='Interferometry ALMA'
-        self.titles['IFV']='Interferometry EVLA'
-        self.titles['IF']='Interferometry Common'
-        self.tasks['COMMON']=taskutil2( self.taskdir['COMMON'], prefix='h' )
-        self.tasks['IF']=taskutil2( self.taskdir['IF'], prefix='hif' )
-        self.tasks['IFA']=taskutil2( self.taskdir['IFA'], prefix='hifa' )
-        self.tasks['IFV']=taskutil2( self.taskdir['IFV'], prefix='hifv' )
-        self.tasks['SD']=taskutil2( self.taskdir['SD'], prefix='hsd' )
-        self.keys.extend(['COMMON', 'IFA', 'IFV'])
-        self.keys.sort()
+    def __init__( self, dirname='', cli='' ):
+        super(hetaskutil3,self).__init__(dirname=dirname)
+        self.addmodule('h', 'Common')
+        self.addmodule('hifa', 'Interferometry ALMA')
+        self.addmodule('hifv', 'Interferometry EVLA')
+        self.addmodule('hif', 'Interferometry Common')
 
 def create( dirname='/home/nakazato/ALMA/PIPELINE/Heuristics/src/heuristics' ):
-    het=hetaskutil( dir=dirname )
+    het=hetaskutil( dirname=dirname )
     het.createtasklist()
-    tasklist=het.gettasklist()
     het.createHTML()
 
-def create2( dirname='' ):
-    het=hetaskutil2( dir=dirname, cli='cli' )
-    het.createtasklist()
-    tasklist=het.gettasklist()
-    het.createHTML()
-
-def create3(dirname=None):
-    print __file__
+def create2( dirname=None ):
     if dirname is None:
         # assume that this file is located at pipeline/infrastructure/docutils
         dirname = '/' + os.path.join(*(__file__.split('/')[:-3]))
     print 'pipeline directory is %s'%(dirname)
-    het=hetaskutil3( dir=dirname, cli='cli' )
+    het=hetaskutil2(dirname=dirname)
     het.createtasklist()
-    tasklist=het.gettasklist()
+    het.createHTML()
+
+def create3(dirname=None):
+    if dirname is None:
+        # assume that this file is located at pipeline/infrastructure/docutils
+        dirname = '/' + os.path.join(*(__file__.split('/')[:-3]))
+    print 'pipeline directory is %s'%(dirname)
+    het=hetaskutil3(dirname=dirname)
+    het.createtasklist()
     het.createHTML()
