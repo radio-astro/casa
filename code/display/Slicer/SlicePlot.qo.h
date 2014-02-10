@@ -52,7 +52,7 @@ namespace casa {
 		//Data
 		void setImage( std::tr1::shared_ptr<ImageInterface<float> > img );
 		void updateChannel( int channel );
-		void setRegionSelected( int regionId, bool selected );
+		bool setRegionSelected( int regionId, bool selected );
 
 		//Look and feel
 		void resetCurveColors( bool viewerColors, bool polylineColorUnit,
