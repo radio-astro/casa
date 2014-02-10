@@ -110,7 +110,7 @@ def _get_revision():
         common_svn_prefix = '/branches/project/'
         root = d['Repository Root'] + common_svn_prefix
 
-        branch = os.path.basename(os.path.relpath(url, root))
+        branch = os.path.split(os.path.relpath(url, root))[0]
         if branch == 'pipeline':
             branch = 'trunk'
 
