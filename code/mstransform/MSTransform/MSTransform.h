@@ -56,42 +56,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 // <example>
+// The following is a typical way of using this class and its methods ...
+//
 // <srcblock>
-// // The following is a typical way of using this class and its methods ...
+// MSTransform *mst = new MSTransform();
+// </srcblock>
 //
-// // Open the MS and attach it to the tool. This will create an object of the
-// // FlagDataHandler (fdh) type. The constructor of the fdh takes three arguments,
-// // the MS or CAL table, the iteration approach to use and the time interval. Only the MS
-// // is mandatory to use. By default it will use the FlagDataHandler::SUB_INTEGRATION iteration
-// // approach and 0.0 seconds as the time interval.
+// Create a Record with the desired parameters. The parameters are: data selection parameters and any parameters
+// for the transformations.
 //
-//    MSTransform *mst = new MSTransform();
-//    mst->open('my.ms')
+// <srcblock>
+// Record params = Recod();
+// params.define("spw", "0,1,2");
+// params.define("combinespws",true);
+// mst->configure(params);
+// </srcblock>
 //
-// // Select the data to process. If left blank, the whole MS will be selected. This step
-// // will use the MS Selection class. There are two methods to perform the selection. One takes
-// // a Record of the parameters, the other takes the individual parameters as arguments.
+// Open the MS, select the data and setup the output MS.
 //
-// // 1) First method:
-//    String spw = "0:1~10";
-//    String scan = "1";
-//    Record selection = Record();
-//    selection.define("spw", spw);
-//    selection.define("scan", scan);
-//    mst->selectData(selection);
+// <srcblock>
+// mst->open();
+// </srcblock>
 //
-// // 2) Second method:
-//    mst->selectData(spw=spw, scan=scan);
+// Run the tool and afterwards, destroy any instance of it by calling the destructor.
 //
+// <srcblock>
+// mst->run();
 //
-// // The run method .....
-//
-//     mst->run();
-//
-// // To destroy the tool, call a method to execute the destructor.
-//
-//     mst->done();
-//
+// mst->done();
 // </srcblock>
 // </example>
 //
