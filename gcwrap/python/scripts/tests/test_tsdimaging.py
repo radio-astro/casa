@@ -290,7 +290,8 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('calcChanFreqs failed, check input start and width parameters')
+            pos=str(e).find('Output frequency grid cannot be calculated:  please check start and width parameters')
+            #pos=str(e).find('calcChanFreqs failed, check input start and width parameters')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
@@ -628,21 +629,21 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-#     def test200(self):
-#         """Test 200: Integrated image"""
-#         nchan = 1
-#         start = '' # the first channel
-#         ms.open(self.rawfile)
-#         spwinfo =  ms.getspectralwindowinfo()
-#         ms.close()
-#         spwid0 = spwinfo.keys()[0]
-#         step = '%fHz' % (spwinfo[spwid0]['TotalWidth'])
-#         res=tsdimaging(infiles=self.rawfile,mode=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
-#         self.assertEqual(res,None,
-#                          msg='Any error occurred during imaging')
-#         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
-#         refstats=self.statsinteg
-#         self._checkstats(self.outfile,refstats,ignoremask=True)
+    def test200(self):
+        """Test 200: Integrated image"""
+        nchan = 1
+        ms.open(self.rawfile)
+        spwinfo =  ms.getspectralwindowinfo()
+        ms.close()
+        spwid0 = spwinfo.keys()[0]
+        start = '%fHz' % (spwinfo[spwid0]['Chan1Freq']) 
+        step = '%fHz' % (spwinfo[spwid0]['TotalWidth'])
+        res=tsdimaging(infiles=self.rawfile,mode=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
+        refstats=self.statsinteg
+        self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test201(self):
         """Test 201: Full channel image (mode='frequency')"""
@@ -761,11 +762,27 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
         os.system( 'rm -rf '+self.prefix+'*' )
 
 #     def test300(self):
-#         """Test 300: Integrated image (dochannelmap=False)"""
+#         """Test 300: Integrated image"""
 #         nchan = 1
-#         start = '' # the first channel
-#         step = ??? # need band width in velocity unit
-#         res=tsdimaging(infiles=self.rawfile,mode=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
+#         restfreq = '1420405800.0Hz'
+#         ms.open(self.rawfile)
+#         spwinfo =  ms.getspectralwindowinfo()
+#         ms.close()
+#         spwid0 = spwinfo.keys()[0]
+#         #rfreq = spwinfo[spwid0]['RefFreq']
+#         sfreq = me.frequency(spwinfo[spwid0]['Frame'],
+#                              qa.quantity(spwinfo[spwid0]['Chan1Freq'],'Hz'))
+#         svel = me.todoppler('radio', sfreq, restfreq)
+                    
+#         efreq = me.frequency(spwinfo[spwid0]['Frame'],
+#                              qa.add(sfreq['m0'], qa.quantity(spwinfo[spwid0]['TotalWidth'],'Hz')))
+#         evel = me.todoppler('radio', efreq, restfreq)
+#         start = qa.tos(evel['m0'])
+#         step = qa.tos(qa.sub(svel['m0'],evel['m0']))
+#         start = '-313825.4549816794m/s'
+#         step = '527137.547466598m/s'
+        
+#         res=tsdimaging(infiles=self.rawfile,mode=self.mode,restfreq=restfreq,spw='0',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
 #         self.assertEqual(res,None,
 #                          msg='Any error occurred during imaging')
 #         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)

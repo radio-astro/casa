@@ -6,6 +6,7 @@ from taskinit import casalog, gentools, qatool
 
 import asap as sd
 import sdutil
+from cleanhelper import cleanhelper
 
 @sdutil.sdtask_decorator
 def tsdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, mode, nchan, start, step, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
@@ -18,6 +19,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):
         super(sdimaging_worker,self).__init__(**kwargs)
         self.imager_param = {}
+        self.sorted_idx = []
 
     def parameter_check(self):
         # outfile check
@@ -27,7 +29,17 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile+'.weight',
                                                           'im',
                                                           self.overwrite)
+        # fix spw
+        if self.spw.strip() == '*': self.spw = ''
         # check unit of start and step
+        # fix default
+        if self.mode == 'channel':
+            if self.start == '': self.start = 0
+            if self.step == '': self.step = 1
+        else:
+            if self.start == 0: self.start = ''
+            if self.step == 1: self.step = ''
+        # fix unit
         if self.mode == 'frequency':
             myunit = 'Hz'
         elif self.mode == 'velocity':
@@ -87,7 +99,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         Returns valid selection string for a certain ms
 
         Arguments
-            fileid : file idx in infiles
+            fileid : file idx in infiles list
             param : string (array) selection value
         """
         if type(param) == str:
@@ -98,6 +110,11 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             return param[fileid]
 
     def get_selection_idx_for_ms(self, file_idx):
+        """
+        Returns a dictionary of selection indices for i-th MS in infiles
+
+        Argument: file idx in infiles list
+        """
         if file_idx < len(self.infiles) and file_idx > -1:
             vis = self.infiles[file_idx]
             field = self.get_selection_param_for_ms(file_idx, self.field)
@@ -154,34 +171,38 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # imaging mode
         self.imager_param['mode'] = self.mode
 
-        # work on selection of the first table to get default restfreq and outframe
-        selection_ids = self.get_selection_idx_for_ms(0)
+        # Work on selection of the first table in sorted list
+        # to get default restfreq and outframe
+        imhelper = cleanhelper(self.imager, self.infiles, casalog=casalog)
+        imhelper.sortvislist(self.spw, self.mode, self.step)
+        self.sorted_idx = imhelper.sortedvisindx
+        selection_ids = self.get_selection_idx_for_ms(self.sorted_idx[0])
         # field
-        self.fieldid = selection_ids['field'][0] if type(selection_ids['field']) != int else selection_ids['field']
-        self.sourceid=-1
+        fieldid = selection_ids['field'][0] if type(selection_ids['field']) != int else selection_ids['field']
+        sourceid=-1
         self.open_table(self.field_table)
 #         field_names = self.table.getcol('NAME')
         source_ids = self.table.getcol('SOURCE_ID')
         self.close_table()
 #         if type(self.field)==str:
 #             try:
-#                 self.fieldid = field_names.tolist().index(self.field)
+#                 fieldid = field_names.tolist().index(self.field)
 #             except:
 #                 msg = 'field name '+field+' not found in FIELD table of the first MS'
 #                 raise ValueError, msg
 #         else:
 #             if self.field == -1:
-#                 self.sourceid = source_ids[0]
+#                 sourceid = source_ids[0]
 #             elif self.field < len(field_names):
-#                 self.fieldid = self.field
-#                 self.sourceid = source_ids[self.field]
+#                 fieldid = self.field
+#                 sourceid = source_ids[self.field]
 #             else:
 #                 msg = 'field id %s does not exist in the first MS' % (self.field)
 #                 raise ValueError, msg
-        if self.field == '' or self.fieldid ==-1:
-            self.sourceid = source_ids[0]
-        elif self.fieldid >= 0 and self.fieldid < len(source_ids):
-            self.sourceid = source_ids[self.fieldid]
+        if self.field == '' or fieldid ==-1:
+            sourceid = source_ids[0]
+        elif fieldid >= 0 and fieldid < len(source_ids):
+            sourceid = source_ids[fieldid]
         else:
             raise ValueError, "No valid field in the first MS."
 
@@ -190,7 +211,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             self.open_table(self.source_table)
             source_ids = self.table.getcol('SOURCE_ID')
             for i in range(self.table.nrows()):
-                if self.sourceid == source_ids[i] \
+                if sourceid == source_ids[i] \
                        and self.table.iscelldefined('REST_FREQUENCY',i) \
                        and (selection_ids['spw'] == -1 or \
                             self.table.getcell('SPECTRAL_WINDOW_ID', i) in selection_ids['spw']):
@@ -317,18 +338,27 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['movingsource'] = self.ephemsrcname
 
         # channel map
+        spwsel = str(',').join([str(spwid) for spwid in selection_ids['spw']])
+        srestf = self.imager_param['restfreq'] if type(self.imager_param['restfreq'])==str else "%fHz" % self.imager_param['restfreq']
+        (imnchan, imstart, imstep) = imhelper.setChannelizeDefault(self.mode, spwsel, self.field, self.nchan, self.start, self.step, self.imager_param['outframe'], self.veltype,self.imager_param['phasecenter'], srestf)
+        del imhelper
+        
         # start and step
         if self.mode == 'velocity':
-            startval = [self.imager_param['outframe'], self.start]
-            stepval = self.step
+#             startval = [self.imager_param['outframe'], self.start]
+#             stepval = self.step
+            startval = [self.imager_param['outframe'], imstart]
+            stepval = imstep
         elif self.mode == 'frequency':
-            chan0 = "%fHz" % (freq_chan0)
-            startval = [self.imager_param['outframe'], self.start if self.start!='' else chan0]
-            step0 = "%fHz" % (freq_inc0)
-            stepval = self.step if self.step!='' else step0
+#             chan0 = "%fHz" % (freq_chan0)
+#             startval = [self.imager_param['outframe'], self.start if self.start!='' else chan0]
+#             step0 = "%fHz" % (freq_inc0)
+#             stepval = self.step if self.step!='' else step0
+            startval = [self.imager_param['outframe'], imstart]
+            stepval = imstep
         else: #self.mode==channel
-            startval = int(self.start) if self.start!='' else 0
-            stepval = int(self.step) if self.step!='' else 1
+            startval = int(self.start)
+            stepval = int(self.step)
 
         #startval = 0
         #stepval = self.allchannels
@@ -336,7 +366,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if self.nchan < 0: self.nchan = self.allchannels
         self.imager_param['start'] = startval
         self.imager_param['step'] = stepval
-        self.imager_param['nchan'] = self.nchan
+        self.imager_param['nchan'] = imnchan #self.nchan
         
 
     def execute(self):
@@ -346,20 +376,28 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if len(self.infiles) == 1:
             self.open_imager(self.infiles[0])
             selection_ids = self.get_selection_idx_for_ms(0)
+            spwsel = self.get_selection_param_for_ms(0, self.spw)
+            if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
             ### TODO: channel selection based on spw
             self.imager.selectvis(field=selection_ids['field'],\
-                                  spw=selection_ids['spw'],\
+                                  #spw=selection_ids['spw'],\
+                                  spw=spwsel,\
                                   nchan=-1, start=0, step=1,\
                                   baseline=selection_ids['baseline'],\
                                   scan=selection_ids['scan'])
         else:
             self.close_imager()
-            for idx in (len(self.infiles)):
+            self.sorted_idx.reverse()
+#             for idx in (len(self.infiles)):
+            for idx in self.sorted_idx:
                 name = self.infiles[idx]
                 selection_ids = self.get_selection_idx_for_ms(idx)
+                spwsel = self.get_selection_param_for_ms(idx, self.spw)
+                if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
                 ### TODO: channel selection based on spw
                 self.imager.selectvis(vis=name, field=selection_ids['field'],\
-                                      spw=selection_ids['spw'],\
+                                      #spw=selection_ids['spw'],\
+                                      spw = spwsel,\
                                       nchan=-1, start=0, step=1,\
                                       baseline=selection_ids['baseline'],\
                                       scan=selection_ids['scan'])

@@ -80,13 +80,13 @@ tasks that mostly operate on the ASAP scantable data format.
     <param type="any" name="start" subparam="true">
             <description>start of output spectral dimension</description>
             <any type="variant" limittypes="string int"/>
-	    <value type="string"></value>
+	    <value type="int">0</value>
     </param>
 
     <param type="any" name="step" subparam="true">
             <description>width of output spectral channels</description>
 	    <any type="variant"  limittypes="string int"/>
-	    <value type="string"></value>
+	    <value type="int">1</value>
     </param>
 
     <param type="string" name="veltype" ignorecase="true"  subparam="true">

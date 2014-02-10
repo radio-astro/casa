@@ -47,7 +47,7 @@ def asap_init():
     from tsdfit_cli import tsdfit_cli as tsdfit
     from tsdflag2_cli import tsdflag2_cli as tsdflag2
     from tsdgrid_cli import tsdgrid_cli as tsdgrid
-#     from tsdimaging_cli import tsdimaging_cli as tsdimaging
+    from tsdimaging_cli import tsdimaging_cli as tsdimaging
     from tsdmath_cli import tsdmath_cli as tsdmath
     from tsdplot_cli import tsdplot_cli as tsdplot
     from tsdreduce_cli import tsdreduce_cli as tsdreduce
@@ -81,28 +81,29 @@ def asap_init():
     myf['tsdfit']=tsdfit
     myf['tsdflag2']=tsdflag2
     myf['tsdgrid']=tsdgrid
-#     myf['tsdimaging']=tsdimaging
+    myf['tsdimaging']=tsdimaging
     myf['tsdmath']=tsdmath
     myf['tsdplot']=tsdplot
     myf['tsdreduce']=tsdreduce
     myf['tsdsave']=tsdsave
     myf['tsdstat']=tsdstat
 #     ### WARNINGS for interface changes ###
-#     print("%s NOTICE %s" % ("#"*5, "#"*37))
-#     print("Major interface changes to SINGLE DISH tasks are \nplanned in CASA 4.3 release")
-#     print("")
-#     print("The tasks affected: ")
-#     print("  sdbaseline, sdcal, sdcal2, sdfit, sdflag, sdgrid,")
-#     print("  sdimaging, sdmath, sdplot, sdreduce, sdsave,")
-#     print("  sdsmooth, and sdstat")
-#     print("")
-#     print("Experimental tasks with new interfaces available:")
-#     print("  tsdaverage, tsdbaseline, tsdcal, tsdcal2, tsdfit,")
-#     print("  tsdflag2, tsdgrid, tsdimaging, tsdmath, tsdplot,")
-#     print("  tsdsave, and tsdstat.")
-#     print("Please find details of new parameters in inline help.")
-#     print("")
-#     print("The experimental tasks listed above will be replaced \nwith the current tasks in the next release.")
-#     print("The current tasks will be renamed as ${taskname}_old \nand kept for one release period.")
-#     print("Users are encouraged to update your existing scripts.")
 #     print("#"*50)
+#     print("")
+#     print("Major interface changes to SINGLE DISH tasks are")
+#     print("planned in CASA 4.3 release.")
+#     print("")
+#     print("For CASA 4.3 these interface changes will be implemented in new versions")
+#     print("of the existing tasks: sdbaseline, sdcal, sdcal2, sdfit, sdflag,")
+#     print("sdgrid, sdimaging, sdmath, sdplot, sdsave, and sdstat with the")
+#     print("current name preceded by the letter 't'. Additionally a new task called")
+#     print("tsdaverage will also be available. Task sdsmooth is incorporated in the")
+#     print("new task and will be removed. ")
+#     print("")
+#     print("The experimental tasks beginning with the letter 't' will replace the")
+#     print("current tasks in the next release. The current tasks will be renamed as")
+#     print("{taskname}_old and kept for one release period. Users are encouraged to")
+#     print("update your existing scripts.")
+#     print("")
+#     print("#"*50)
+
