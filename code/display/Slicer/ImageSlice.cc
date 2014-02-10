@@ -332,6 +332,7 @@ namespace casa {
 			(*iter)->clearCurve();
 			iter++;
 		}
+		selected = false;
 		clearCorners();
 	}
 
