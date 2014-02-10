@@ -2,13 +2,12 @@
 # createTaskList.py
 #
 # This module creates HTML summary of currently available tasks.
-# The summary is based on XML files in hif/TaskInterface/ and
-# hsd/TaskInterface/.
+# The summary is based on XML files in <modules>/cli where 
+# <modules> is h, hif, hifa, hifv, and hsd.
 #
 # USAGE:
-#    >>> sys.path.append('<where this script is>')
-#    >>> import createTaskList as tu
-#    >>> tu.create( dirname='<your heuristics path>')
+#    import pipeline.infrastructure.docutils.createTaskList as tu
+#    tu.create3()
 #
 #    It will create directory named 'tasklist' on current directory.
 #    tasklist/index.html is top page for the task list.
@@ -231,9 +230,9 @@ class taskutil2( taskutil ):
             #print 'task=',task
             if self.prefix is None or \
                re.match('%s_.*'%(self.prefix),task) is not None:
-                   #task[:len(self.prefix)] == self.prefix:
-                   #print 'added', task 
-                   self.tasks.append(task)
+                #task[:len(self.prefix)] == self.prefix:
+                #print 'added', task 
+                self.tasks.append(task)
         
 
 class hetaskutil( object ):
@@ -287,6 +286,7 @@ class hetaskutil( object ):
             else:
                 basedirs[key]='h_tasklist'
         for key in self.keys:
+            #print 'creating h%s...'%(key.lower())
             outdirs[key]=os.path.join(outdir,basedirs[key])
             self.tasks[key].createHTML( outdir=outdirs[key] )
         htmlfile=outdir+'/index.html'
@@ -323,12 +323,20 @@ class hetaskutil2( hetaskutil ):
 class hetaskutil3( hetaskutil ):
     def __init__( self, dir='', cli='' ):
         super(hetaskutil3,self).__init__(dir=dir,ifdir='hif/cli',sddir='hsd/cli')
-        self.taskdir['COMMON']=self.phdir+'/h/'+cli
+        self.taskdir['COMMON']=os.path.join(self.phdir, 'h', cli)
+        self.taskdir['IFA']=os.path.join(self.phdir, 'hifa', cli)
+        self.taskdir['IFV']=os.path.join(self.phdir, 'hifv', cli)
         self.titles['COMMON']='Common'
+        self.titles['IFA']='Interferometry ALMA'
+        self.titles['IFV']='Interferometry EVLA'
+        self.titles['IF']='Interferometry Common'
         self.tasks['COMMON']=taskutil2( self.taskdir['COMMON'], prefix='h' )
         self.tasks['IF']=taskutil2( self.taskdir['IF'], prefix='hif' )
+        self.tasks['IFA']=taskutil2( self.taskdir['IFA'], prefix='hifa' )
+        self.tasks['IFV']=taskutil2( self.taskdir['IFV'], prefix='hifv' )
         self.tasks['SD']=taskutil2( self.taskdir['SD'], prefix='hsd' )
-        self.keys=['COMMON']+self.keys
+        self.keys.extend(['COMMON', 'IFA', 'IFV'])
+        self.keys.sort()
 
 def create( dirname='/home/nakazato/ALMA/PIPELINE/Heuristics/src/heuristics' ):
     het=hetaskutil( dir=dirname )
@@ -342,7 +350,12 @@ def create2( dirname='' ):
     tasklist=het.gettasklist()
     het.createHTML()
 
-def create3(dirname=''):
+def create3(dirname=None):
+    print __file__
+    if dirname is None:
+        # assume that this file is located at pipeline/infrastructure/docutils
+        dirname = '/' + os.path.join(*(__file__.split('/')[:-3]))
+    print 'pipeline directory is %s'%(dirname)
     het=hetaskutil3( dir=dirname, cli='cli' )
     het.createtasklist()
     tasklist=het.gettasklist()
