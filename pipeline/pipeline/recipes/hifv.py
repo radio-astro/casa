@@ -145,7 +145,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals (pipelinemode=pipelinemode)
         h_save()
-        testBPdcals_plots()
+        #testBPdcals_plots()
     
 	# Identify and flag basebands with bad deformatters or rfi based on 
         # bp table amps and phases
@@ -162,7 +162,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         # of the bandpass calibrator)
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
         h_save()
-        semifinalBPdcals_plots1()
+        #semifinalBPdcals_plots1()
 
 	# Use flagdata rflag mode again on calibrators
         hifv_checkflag(pipelinemode=pipelinemode, checkflagmode='semi')
@@ -170,7 +170,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         # Re-run semi-final delay and bandpass calibrations
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
         h_save()
-        semifinalBPdcals_plots2()
+        #semifinalBPdcals_plots2()
         
         # Flag spws that have no calibration at this point
         hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='delay.k', bpcaltable='BPcal.b')
@@ -181,7 +181,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         # Do test gain calibrations to establish short solint
         hifv_testgains (pipelinemode=pipelinemode)
         h_save()
-        testgains_plots()
+        #testgains_plots()
     
         # Make gain table for flux density bootstrapping
         # Make a gain table that includes gain and opacity corrections for final
@@ -192,12 +192,12 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         # calibrators with a power-law and puts fit in model column
         hifv_fluxboot (pipelinemode=pipelinemode)
         h_save()
-        fluxboot_plots()
+        #fluxboot_plots()
     
         # Make the final calibration tables
         hifv_finalcals (pipelinemode=pipelinemode)
         h_save()
-        finalcals_plots()
+        #finalcals_plots()
     
         # Apply all the calibrations and check the calibrated data
         hifv_applycals (pipelinemode=pipelinemode)
@@ -208,7 +208,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         # Now run all calibrated data, including the target, through rflag
         hifv_targetflag (pipelinemode=pipelinemode)
         h_save()
-        targetflag_plots()
+        #targetflag_plots()
     
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)

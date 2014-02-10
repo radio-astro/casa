@@ -473,6 +473,13 @@ class semifinalbpSolPhasePerAntennaChart(object):
             except:
                 LOG.warn("Unable to add plot to stack")
                 plots.append(None)
+                
+        #Get BPcal.b to close...
+        stage = 'stage%s' % result.stage_number
+        stage_dir = os.path.join(context.report_dir, stage)
+        # construct the relative filename, eg. 'stageX/testdelay0.png'
+        figfile = os.path.join(stage_dir, 'junk.png')
+        casa.plotcal(caltable='testBPcal.b', xaxis='freq', yaxis='phase', poln='', field='', antenna='0', spw='',        timerange='',  subplot=311,  overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-180,180],        showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 
         return [p for p in plots if p is not None]
 
