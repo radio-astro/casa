@@ -35,7 +35,9 @@ import pipeline.infrastructure.displays.slice as slicedisplay
 import pipeline.infrastructure.displays.tsys as tsys
 import pipeline.infrastructure.displays.wvr as wvr
 import pipeline.infrastructure.displays.singledish as sddisplay
+import pipeline.infrastructure.displays.vla.finalcalsdisplay as finalcalsdisplay
 import pipeline.infrastructure.displays.vla.testBPdcalsdisplay as testBPdcalsdisplay
+import pipeline.infrastructure.displays.vla.semifinalBPdcalsdisplay as semifinalBPdcalsdisplay
 import pipeline.infrastructure.displays.vla.testgainsdisplay as testgainsdisplay
 import pipeline.infrastructure.displays.vla.fluxbootdisplay as fluxbootdisplay
 import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdisplay
@@ -2856,6 +2858,221 @@ class TsyscalPlotRenderer(object):
 
 #-----------------------------------------------------------------------
 
+class T2_4MDetailsfinalcalsRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hifv_finalcals.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsfinalcalsRenderer, self).__init__(template,
+                                                          always_rerender)
+    
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsfinalcalsRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+        
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+        
+        summary_plots = {}
+        finaldelay_subpages = {}
+        phasegain_subpages = {}
+        bpsolamp_subpages = {}
+        bpsolphase_subpages = {}
+        bpsolphaseshort_subpages = {}
+        finalamptimecal_subpages = {}
+        finalampfreqcal_subpages = {}
+        finalphasegaincal_subpages = {}
+        
+        for result in results:
+            
+            plotter = finalcalsdisplay.finalcalsSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+            
+            # generate testdelay plots and JSON file
+            plotter = finalcalsdisplay.finalDelaysPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'finaldelays')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                finaldelay_subpages[ms] = renderer.filename
+            
+                
+            # generate phase Gain plots and JSON file
+            plotter = finalcalsdisplay.finalphaseGainPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'phasegain')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                phasegain_subpages[ms] = renderer.filename
+                
+            # generate amp bandpass solution plots and JSON file
+            plotter = finalcalsdisplay.finalbpSolAmpPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'bpsolamp')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                bpsolamp_subpages[ms] = renderer.filename
+                
+            # generate phase bandpass solution plots and JSON file
+            plotter = finalcalsdisplay.finalbpSolPhasePerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'bpsolphase')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                bpsolphase_subpages[ms] = renderer.filename
+                
+            # generate phase short bandpass solution plots and JSON file
+            plotter = finalcalsdisplay.finalbpSolPhaseShortPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'bpsolphaseshort')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                bpsolphaseshort_subpages[ms] = renderer.filename
+            
+            # generate final amp time cal solution plots and JSON file
+            plotter = finalcalsdisplay.finalAmpTimeCalPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'finalamptimecal')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                finalamptimecal_subpages[ms] = renderer.filename
+                
+            # generate final amp freq cal solution plots and JSON file
+            plotter = finalcalsdisplay.finalAmpFreqCalPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'finalampfreqcal')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                finalampfreqcal_subpages[ms] = renderer.filename
+        
+            # generate final phase gain cal solution plots and JSON file
+            plotter = finalcalsdisplay.finalPhaseGainCalPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'finalcals_plots.html', 'finalphasegaincal')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                finalphasegaincal_subpages[ms] = renderer.filename
+        
+        ctx.update({'summary_plots'   : summary_plots,
+                    'finaldelay_subpages' : finaldelay_subpages,
+                    'phasegain_subpages' : phasegain_subpages,
+                    'bpsolamp_subpages'  : bpsolamp_subpages,
+                    'bpsolphase_subpages' : bpsolphase_subpages,
+                    'bpsolphaseshort_subpages' : bpsolphaseshort_subpages,
+                    'finalamptimecal_subpages' : finalamptimecal_subpages,
+                    'finalampfreqcal_subpages' : finalampfreqcal_subpages,
+                    'finalphasegaincal_subpages' : finalphasegaincal_subpages,
+                    'dirname'         : weblog_dir})
+                
+        return ctx
+
+
+class T2_4MDetailssemifinalBPdcalsRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hifv_semifinalbpdcals.html', 
+                 always_rerender=False):
+        super(T2_4MDetailssemifinalBPdcalsRenderer, self).__init__(template,
+                                                          always_rerender)
+    
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailssemifinalBPdcalsRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+        
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+        
+        summary_plots = {}
+        delay_subpages = {}
+        ampgain_subpages = {}
+        phasegain_subpages = {}
+        bpsolamp_subpages = {}
+        bpsolphase_subpages = {}
+        
+        for result in results:
+            
+            plotter = semifinalBPdcalsdisplay.semifinalBPdcalsSummaryChart(context, result, suffix='1')
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+            
+            # generate testdelay plots and JSON file
+            plotter = semifinalBPdcalsdisplay.DelaysPerAntennaChart(context, result, suffix='1')
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'delays')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                delay_subpages[ms] = renderer.filename
+            
+                
+            # generate phase Gain plots and JSON file
+            plotter = semifinalBPdcalsdisplay.semifinalphaseGainPerAntennaChart(context, result, suffix='1')
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'phasegain')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                phasegain_subpages[ms] = renderer.filename
+                
+            # generate amp bandpass solution plots and JSON file
+            plotter = semifinalBPdcalsdisplay.semifinalbpSolAmpPerAntennaChart(context, result, suffix='1')
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'bpsolamp')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                bpsolamp_subpages[ms] = renderer.filename
+                
+            # generate phase bandpass solution plots and JSON file
+            plotter = semifinalBPdcalsdisplay.semifinalbpSolPhasePerAntennaChart(context, result, suffix='1')
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+            
+             # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'bpsolphase')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                bpsolphase_subpages[ms] = renderer.filename
+        
+        ctx.update({'summary_plots'   : summary_plots,
+                    'delay_subpages' : delay_subpages,
+                    'phasegain_subpages' : phasegain_subpages,
+                    'bpsolamp_subpages'  : bpsolamp_subpages,
+                    'bpsolphase_subpages' : bpsolphase_subpages,
+                    'dirname'         : weblog_dir})
+                
+        return ctx
+
+
 class T2_4MDetailstestBPdcalsRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_testbpdcals.html', 
                  always_rerender=False):
@@ -4366,12 +4583,12 @@ renderer_map = {
         hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=True),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=True),
         hifv.tasks.flagging.checkflag.Checkflag  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_checkflag.html', always_rerender=True),
-        hifv.tasks.semiFinalBPdcals              : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_semifinalbpdcals.html', always_rerender=True),
+        hifv.tasks.semiFinalBPdcals              : T2_4MDetailssemifinalBPdcalsRenderer('t2-4m_details-hifv_semifinalbpdcals.html', always_rerender=True),
         hifv.tasks.fluxscale.solint.Solint       : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_solint.html', always_rerender=True),
         hifv.tasks.fluxscale.testgains.Testgains : T2_4MDetailstestgainsRenderer('t2-4m_details-hifv_testgains.html', always_rerender=True),
         hifv.tasks.setmodel.fluxgains.Fluxgains  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_fluxgains.html', always_rerender=True),
         hifv.tasks.fluxscale.fluxboot.Fluxboot   : T2_4MDetailsfluxbootRenderer('t2-4m_details-hifv_fluxboot.html', always_rerender=True),
-        hifv.tasks.Finalcals                     : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_finalcals.html', always_rerender=True),
+        hifv.tasks.Finalcals                     : T2_4MDetailsfinalcalsRenderer('t2-4m_details-hifv_finalcals.html', always_rerender=True),
         hifv.tasks.Applycals                     : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_applycals.html', always_rerender=True),
         hifv.tasks.flagging.targetflag.Targetflag : T2_4MDetailstargetflagRenderer('t2-4m_details-hifv_targetflag.html', always_rerender=True),
         hifv.tasks.Statwt                         : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_statwt.html', always_rerender=True)
