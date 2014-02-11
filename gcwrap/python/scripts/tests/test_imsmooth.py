@@ -155,7 +155,7 @@ def run_convolve2d(
         beam=beam, overwrite=overwrite
     )
     myia.done()
-    return res
+    res.done()
     
 class imsmooth_test(unittest.TestCase):
     
@@ -182,6 +182,7 @@ class imsmooth_test(unittest.TestCase):
             os.system('rm -rf smooth*')
         os.system('rm -rf ' +targetres_im)
         os.system('rm -rf tr!.im')
+        self.assertTrue(len(tb.showcache()) == 0)
     
     ####################################################################
     # Incorrect inputs to parameters.  The parameters are:
@@ -1042,6 +1043,7 @@ class imsmooth_test(unittest.TestCase):
             self.assertTrue(abs(got.getchunk(blc=blc, trc=trc) - exp.getchunk()).max() < 3e-5)
             exp.done()
             xx.done()
+        myia.done()
         got.done()
                             
     def test_targetres(self):
@@ -1051,9 +1053,8 @@ class imsmooth_test(unittest.TestCase):
         myia.fromshape(imagename, [100, 100])
         csys = myia.coordsys()
         csys.setunits(["arcsec", "arcsec"])
-        csys.setincrement([1, 1])
+        csys.setincrement([-1, 1])
         myia.setcoordsys(csys.torecord())
-        myia.setbrightnessunit("Jy/beam")
         myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
         shape = myia.shape()
         values = make_gauss2d(shape, 3.0, 6.0)
@@ -1063,100 +1064,109 @@ class imsmooth_test(unittest.TestCase):
         emaj = qa.quantity("10arcsec")
         emin = qa.quantity("5arcsec")
         epa = qa.quantity("0deg")
-        for code in (run_convolve2d, run_imsmooth):
-            for targetres in [False, True]:
-                if not targetres:
-                    major = "8arcsec"
-                    minor = "4arcsec"
-                    pa = "0deg"
-                    outfile = "tres1" + str(code)
+        
+        for unit in ("Jy/beam", "K"):
+            myia.open(imagename)
+            myia.setbrightnessunit(unit)
+            myia.done()
+            expected = make_gauss2d(shape, 5.0, 10.0)
+            if (unit == "K"):
+                expected *= 3.0*6.0/5.0/10.0
+            for code in (run_convolve2d, run_imsmooth):
+                for targetres in [False, True]:
+                    if not targetres:
+                        major = "8arcsec"
+                        minor = "4arcsec"
+                        pa = "0deg"
+                        outfile = "tres1" + unit[0] + str(code)
+                    else:
+                        major = "10arcsec"
+                        minor = "5arcsec"
+                        pa = "0deg"
+                        outfile = "tres2" + unit[0] + str(code)
+                    code(
+                         imagename=imagename, kernel="gaussian",
+                         major=major, minor=minor, pa=pa, targetres=targetres,
+                         outfile=outfile
+                    )
+                    myia.open(outfile)
+                    gotbeam = myia.restoringbeam()
+                    gotvals = myia.getchunk()
+                    myia.done()
+                    self._compare_beams(
+                        gotbeam, {"major": emaj, "minor": emin, "pa": epa}
+                    )
+                    maxdiff = (abs(gotvals-expected)).max()
+                    self.assertTrue(maxdiff < 1e-6)     
+        
+        csys.addcoordinate(spectral=True)
+        for unit in ("Jy/beam", "K"):
+            myia.fromshape(
+                outfile=imagename, shape=[100, 100, 2],
+                csys=csys.torecord(), overwrite=True
+            )
+            myia.setbrightnessunit(unit)
+            myia.setrestoringbeam(
+                major="6arcsec", minor="3arcsec", pa="0deg", channel=0
+            )
+            myia.setrestoringbeam(
+                major="4arcsec", minor="2arcsec", pa="0deg", channel=1
+            )
+            values = myia.getchunk()
+            shape = myia.shape()
+            expected = values.copy()
+            for k in range(shape[2]):
+                if k == 0:
+                    xfwhm = 3
+                    yfwhm = 6
                 else:
+                    xfwhm = 2
+                    yfwhm = 4
+                values[:,:,k] = make_gauss2d([shape[0], shape[1]], xfwhm, yfwhm)
+            myia.putchunk(values)
+            outia = iatool()
+            for targetres in [False, True]:
+                ebeam = []
+                if targetres:
                     major = "10arcsec"
                     minor = "5arcsec"
-                    pa = "0deg"
-                    outfile = "tres2" + str(code)
-                code(
-                     imagename=imagename, kernel="gaussian",
-                     major=major, minor=minor, pa=pa, targetres=targetres,
-                     outfile=outfile
-                )
-                myia.open(outfile)
-                gotbeam = myia.restoringbeam()
-                gotvals = myia.getchunk()
-                myia.done()
-                self._compare_beams(
-                    gotbeam, {"major": emaj, "minor": emin, "pa": epa}
-                )
-                maxdiff = (abs(gotvals-expected)).max()
-                self.assertTrue(maxdiff < 1e-6)     
-                
-        csys.addcoordinate(spectral=True)
-        myia.fromshape(
-            outfile=imagename, shape=[100, 100, 2],
-            csys=csys.torecord(), overwrite=True
-        )
-        myia.setbrightnessunit("Jy/beam")
-        myia.setrestoringbeam(
-            major="6arcsec", minor="3arcsec", pa="0deg", channel=0
-        )
-        myia.setrestoringbeam(
-            major="4arcsec", minor="2arcsec", pa="0deg", channel=1
-        )
-        values = myia.getchunk()
-        shape = myia.shape()
-        expected = values.copy()
-        for k in range(shape[2]):
-            if k == 0:
-                xfwhm = 3
-                yfwhm = 6
-            else:
-                xfwhm = 2
-                yfwhm = 4
-            values[:,:,k] = make_gauss2d([shape[0], shape[1]], xfwhm, yfwhm)
-        myia.putchunk(values)
-        outia = iatool()
-        for targetres in [False, True]:
-            ebeam = []
-            if targetres:
-                major = "10arcsec"
-                minor = "5arcsec"
-            else:
-                major = "8arcsec"
-                minor = "4arcsec"
-            pa = "0deg"
-        
-            for k in range(shape[2]):
-                reg = rg.box(blc=[0, 0, k], trc=[shape[0]-1, shape[1]-1, k])
-                subim = myia.subimage(outfile="", region=reg, dropdeg=True)
-                convim = subim.convolve2d(
-                    type="gaussian", major=major, minor=minor,
-                    pa=pa, targetres=targetres
-                )
-                subim.done()
-                expected[:, :, k] = convim.getchunk()
-                gotbeam = convim.restoringbeam()
-                
-                if targetres:
-                    self._compare_beams(gotbeam, {"major": major, "minor": minor, "pa": pa})
-
-                ebeam.append(gotbeam)
-                convim.done()
-            for code in [run_convolve2d, run_imsmooth]:
-                if targetres:
-                    outfile = "tres3" + str(code)
                 else:
-                    outfile = "tres4" + str(code)
-                code(
-                     imagename=imagename, kernel="gaussian",
-                     major=major, minor=minor, pa=pa, targetres=targetres,
-                     outfile=outfile
-                )        
-                outia.open(outfile)
+                    major = "8arcsec"
+                    minor = "4arcsec"
+                pa = "0deg"
+            
                 for k in range(shape[2]):
-                    gotbeam = outia.restoringbeam(channel=k)
-                    self._compare_beams(gotbeam, ebeam[k])
-                    maxdiff = (abs(outia.getchunk()-expected)).max()
-                    self.assertTrue(maxdiff < 1e-6) 
+                    reg = rg.box(blc=[0, 0, k], trc=[shape[0]-1, shape[1]-1, k])
+                    subim = myia.subimage(outfile="", region=reg, dropdeg=True)
+                    convim = subim.convolve2d(
+                        type="gaussian", major=major, minor=minor,
+                        pa=pa, targetres=targetres
+                    )
+                    subim.done()
+                    expected[:, :, k] = convim.getchunk()
+                    gotbeam = convim.restoringbeam()
+                    
+                    if targetres:
+                        self._compare_beams(gotbeam, {"major": major, "minor": minor, "pa": pa})
+    
+                    ebeam.append(gotbeam)
+                    convim.done()
+                for code in [run_convolve2d, run_imsmooth]:
+                    if targetres:
+                        outfile = "tres3" + unit[0] + str(code)
+                    else:
+                        outfile = "tres4" + unit[0] + str(code)
+                    code(
+                         imagename=imagename, kernel="gaussian",
+                         major=major, minor=minor, pa=pa, targetres=targetres,
+                         outfile=outfile
+                    )        
+                    outia.open(outfile)
+                    for k in range(shape[2]):
+                        gotbeam = outia.restoringbeam(channel=k)
+                        self._compare_beams(gotbeam, ebeam[k])
+                        maxdiff = (abs(outia.getchunk()-expected)).max()
+                        self.assertTrue(maxdiff < 1e-6) 
         myia.done()
         outia.done()
 
@@ -1181,8 +1191,7 @@ class imsmooth_test(unittest.TestCase):
                         outfile=outfile
                     )
                 )        
- 
-    
+
     def test_overwrite(self):
         """ test overwrite parameter """
         myia = self.ia
@@ -1241,6 +1250,138 @@ class imsmooth_test(unittest.TestCase):
                 maxdiff = (abs(myia.getchunk()-expected)).max()
                 self.assertTrue(maxdiff < 1e-6) 
                 myia.done()
+                
+    def test_conserve_flux(self):
+        """Test flux density is conserved for images with units of K"""
+        myia = self.ia
+        imagename = "tres1x.im"
+        myia.fromshape(imagename, [100, 100])
+        csys = myia.coordsys()
+        csys.setunits(["arcsec", "arcsec"])
+        csys.setincrement([-1, 1])
+        myia.setcoordsys(csys.torecord())
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
+        shape = myia.shape()
+        values = make_gauss2d(shape, 3.0, 6.0)
+        #expected = make_gauss2d(shape, 5.0, 10.0)
+        myia.putchunk(values)
+        myia.setbrightnessunit("K")
+        zz = myia.fitcomponents()
+        myia.done()
+        mycl = cltool()
+        mycl.fromrecord(zz['results'])
+        expected = mycl.getfluxvalue(0)
+        outfile = "gxg.im"
+        imsmooth(
+            imagename=imagename, targetres=True, major="10arcsec", minor="5arcsec",
+            pa="0deg", outfile=outfile
+        )
+        myia.open(outfile)
+        zz = myia.fitcomponents()
+        myia.done()
+        mycl = cltool()
+        mycl.fromrecord(zz['results'])
+        got = mycl.getfluxvalue(0)
+        self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-8)
+        
+    def test_commonbeam(self):
+        #"""Test commonbeam input parameter in imsmooth"""
+        myia = self.ia
+        imagename = "cb1.im"
+        myia.fromshape(imagename, [100, 100, 5])
+        csys = myia.coordsys()
+        csys.setunits(["arcsec", "arcsec", "Hz"])
+        csys.setincrement([-1, 1, 1e6])
+        myia.setcoordsys(csys.torecord())
+        myia.setbrightnessunit("Jy/beam")
+        myia.done()
+        outfile = "cbout1.im"
+        self.assertFalse(
+            imsmooth(
+                imagename=imagename, major="10arcsec",
+                commonbeam=True, outfile=outfile
+            )           
+        )
+        self.assertFalse(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile
+            )           
+        )
+        
+        myia.open(imagename)
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
+        myia.done()
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=False
+            )           
+        )
+        myia.open(outfile)
+        beam = myia.restoringbeam()
+        myia.done()
+        root2 = math.sqrt(2)
+        self.assertTrue(abs(qa.getvalue(beam['major']) - 6*root2) < 1e-6)
+        self.assertTrue(abs(qa.getvalue(beam['minor']) - 3*root2) < 1e-6)
+        self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        
+        outfile = "cbout2.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=True
+            )           
+        )
+        myia.open(outfile)
+        beam = myia.restoringbeam()
+        myia.done()
+        self.assertTrue(abs(qa.getvalue(beam['major']) - 6) < 1e-5)
+        self.assertTrue(abs(qa.getvalue(beam['minor']) - 3) < 1e-5)
+        self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        
+        myia.open(imagename)
+        myia.setrestoringbeam(remove=True)
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg", channel=0)
+
+        myia.setrestoringbeam(major="8arcsec", minor="4arcsec", pa="0deg", channel=1)
+        myia.done()
+        outfile = "cbout3.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=False
+            )           
+        )
+        myia.open(outfile)
+        for i in range(5):
+            beam = myia.restoringbeam(channel=i)
+            if i == 1:
+                emajor = root2*8
+                eminor = root2*4
+            else:
+                emajor = 10
+                eminor = 5
+            self.assertTrue(abs(qa.getvalue(beam['major']) - emajor) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['minor']) - eminor) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        myia.done()
+        
+        outfile = "cbout4.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=True
+            )           
+        )
+        myia.open(outfile)
+        for i in range(5):
+            beam = myia.restoringbeam(channel=i)
+            self.assertTrue(abs(qa.getvalue(beam['major']) - 8) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['minor']) - 4) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        myia.done()
+        
+
         
 def suite():
     return [imsmooth_test]    

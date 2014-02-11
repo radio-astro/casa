@@ -29,7 +29,7 @@ copytime=time.time()
 
 ## Set flux density scale for the flux density calibrater MWC349
 default('setjy')
-setjy(vis=msfile1,spw='7',field='1',scalebychan=False,fluxdensity=[1.12,0.,0.,0.])
+setjy(vis=msfile1,spw='7',field='1',scalebychan=False,standard='manual',fluxdensity=[1.12,0.,0.,0.])
 
 ## Get preliminary time-dependent phase solutions to improve
 ## coherent average for bandpass solution and derive bandpass
@@ -91,9 +91,9 @@ calphase3mmtime=time.time()
 #use old values
 print '--Set fluxscale (setjy)--'
 default('setjy')
-setjy(vis=msfile1,field='0',spw='7',scalebychan=False,fluxdensity=[2.607,0.,0.,0.])
-setjy(vis=msfile1,field='2',spw='7',scalebychan=False,fluxdensity=[1.107,0.,0.,0.])
-setjy(vis=msfile1,field='4',spw='7',scalebychan=False,fluxdensity=[3.034,0.,0.,0.])
+setjy(vis=msfile1,field='0',spw='7',scalebychan=False,standard='manual',fluxdensity=[2.607,0.,0.,0.])
+setjy(vis=msfile1,field='2',spw='7',scalebychan=False,standard='manual',fluxdensity=[1.107,0.,0.,0.])
+setjy(vis=msfile1,field='4',spw='7',scalebychan=False,standard='manual',fluxdensity=[3.034,0.,0.,0.])
 setjy3mmtime=time.time()
 
 ## Amplitude calibration of 3mm LSB:
@@ -163,7 +163,7 @@ image1time=time.time()
 ###############################################
 
 ## Set flux density scale for the flux density calibrater MWC349
-setjy(vis=msfile2,spw='7',field='4',scalebychan=False,fluxdensity=[1.12,0.,0.,0.])
+setjy(vis=msfile2,spw='7',field='4',scalebychan=False,standard='manual',fluxdensity=[1.12,0.,0.,0.])
 
 ## Get preliminary time-dependent phase solutions to improve
 ## coherent average for bandpass solution and derive bandpass
@@ -226,9 +226,9 @@ calphase3mmtime=time.time()
 #use old values
 print '--Set fluxscale (setjy)--'
 default('setjy')
-setjy(vis=msfile2,field='0',spw='7',scalebychan=False,fluxdensity=[3.235,0.,0.,0.])
-setjy(vis=msfile2,field='1',spw='7',scalebychan=False,fluxdensity=[1.507,0.,0.,0.])
-setjy(vis=msfile2,field='3',spw='7',scalebychan=False,fluxdensity=[5.982,0.,0.,0.])
+setjy(vis=msfile2,field='0',spw='7',scalebychan=False,standard='manual',fluxdensity=[3.235,0.,0.,0.])
+setjy(vis=msfile2,field='1',spw='7',scalebychan=False,standard='manual',fluxdensity=[1.507,0.,0.,0.])
+setjy(vis=msfile2,field='3',spw='7',scalebychan=False,standard='manual',fluxdensity=[5.982,0.,0.,0.])
 setjy3mmtime=time.time()
 
 ## Amplitude calibration of 3mm LSB:

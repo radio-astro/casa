@@ -17,8 +17,7 @@ class sdlist_test(unittest.TestCase):
     The list of tests:
     test00   --- default parameters (raises an error)
     test01   --- valid input filename and save output as a text file
-    test02   --- test scanaverage=True
-    test03   --- test overwrite=True
+    test02   --- test overwrite=True
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdlist/'
@@ -68,18 +67,8 @@ class sdlist_test(unittest.TestCase):
         self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
         
     def test02(self):
-        """Test 2: Test scanaverage=True"""
+        """Test 2: Test overwrite=True"""
         tid = "02"
-        infile = self.infile1
-        outfile = self.outroot+tid+".out"
-        result = sdlist(infile=infile,scanaverage=True,outfile=outfile)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
-
-    def test03(self):
-        """Test 3: Test overwrite=True"""
-        tid = "03"
         infile = self.infile2
         outfile = self.outroot+tid+".out"
         result = sdlist(infile=infile,outfile=outfile)
@@ -95,9 +84,9 @@ class sdlist_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
         
-    def test04(self):
-        """Test 4: Test overwrite=False"""
-        tid = "04"
+    def test03(self):
+        """Test 3: Test overwrite=False"""
+        tid = "03"
         infile = self.infile2
         outfile = self.outroot+tid+".out"
         result = sdlist(infile=infile,outfile=outfile)

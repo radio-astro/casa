@@ -9,6 +9,6 @@
 namespace casa 
 {
 	class LogIO;
-	template<class T> class ImageMetaDataRW;
-	template<class T> class ImageInterface;
+	class ImageMetaDataRW;
+	//template<class T> class ImageInterface;
 }

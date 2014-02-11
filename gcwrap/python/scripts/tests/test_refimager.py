@@ -8,34 +8,36 @@ import commands
 def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=False):
 
      # Iteration parameters - common to all tests below
-     niter=100
-     cycleniter=20
+     niter=200
+     cycleniter=40
      threshold=0.001
      loopgain=0.1
 
      # Interaction ON or OFF
      interactive=False
 
-     if(testnum==7):  ## 2 image-fields, mfs --- Real Imaging.
-          
-          write_file('out7.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
-          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
-                                       field='0',spw='0',\
+     if(testnum==6):  ## 1 image-field, mfs --- WB AWP
+          casalog.post("==================================");
+          casalog.post("Test 6 image-field, mfs --- WB AWP");
+          casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='*',\
                                        usescratch=True,readonly=True,\
-                                       outlierfile='out7.txt',\
-                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
+                                       ftmachine='awprojectft', startmodel='', weighting='natural',\
+                                       aterm=True, psterm=True, mterm=False, wbawp = True, cfcache = "deleteme.cf",\
+                                       dopointing = False, dopbcorr = True, conjbeams = True, computepastep =360.0, rotatepastep =5.0,\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
-     
 
-     if(testnum==6):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
-          
+     if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 5 image-field, mfs, multiple input MSs --- Real Imaging.");
+          casalog.post("==================================");
           paramList = ImagerParameters(msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
@@ -44,29 +46,18 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
 
-
-     if(testnum==5):  ## 1 image-field, mfs --- Real Imaging.
-          
-          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
-                                       usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
-                                       imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
 
      if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 4 image-fields, one cube, one mfs --- Real Imaging.");
+          casalog.post("==================================");
           
-          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
+          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -80,8 +71,33 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
+
+
+     if(testnum==3):  ## 2 image-fields, mfs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 3 image-fields, mfs --- Real Imaging.");
+          casalog.post("==================================");
+          
+          write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543')
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out3.txt',\
+                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
      
-     if(testnum==3):  ## 1 image-field, cube --- Real Imaging.
+     
+     if(testnum==2):  ## 1 image-field, cube --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 2 image-field, cube --- Real Imaging.");
+          casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -90,11 +106,30 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
      
+
+     if(testnum==1):  ## 1 image-field, mfs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 1 image-field, mfs --- Real Imaging.");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[110,110],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
 
      ### Make a cluster def file if a parallel test is to run.
      if parallelmajor==True or parallelminor==True or parallelcube==True:
@@ -165,7 +200,7 @@ def doClean( params = [None,"",False,False,False] , doplot=True ):
 ########################################
 #  Run only Major Cycle
 ########################################
-def doMajor( params = [None,"",False,False,False] , doplot=True ):
+def doMajor( params = [None,"",False,False,False] , doplot=True , tomake='both'):
 
     os.system('rm -rf mytest*')
 
@@ -188,8 +223,10 @@ def doMajor( params = [None,"",False,False,False] , doplot=True ):
     imager.initializeParallelSync()
 
     ### Run it.
-    imager.makePSF()
-    imager.runMajorCycle()
+    if tomake=='both' or tomake=='psf':
+         imager.makePSF()
+    if tomake=='both' or tomake=='residual':
+         imager.runMajorCycle()
 
     imager.deleteTools()
 
@@ -224,6 +261,31 @@ def doMinor( params = [None,"",False,False,False] , doplot=True ):
     imager.deleteTools()
 ########################################
 
+########################################
+#
+#   Predict Model only (for use by setjy too)
+#
+########################################
+########################################
+#
+#   Restore model image, Inputs : model, residual, psf.
+#
+########################################
+def doRestore( params = [None,"",False,False,False] ):
+
+    pminor=params[3]
+    
+    imager = PySynthesisImager(params[0]) 
+
+    imager.initializeDeconvolvers()
+
+    imager.restoreImages()
+
+    imager.deleteTools()
+
+
+########################################
+
 def write_file(filename,str_text):
     '''Save the string in a text file'''
     inp = filename
@@ -254,8 +316,6 @@ def toolTestMajorCycle( testnum=1 ):
      PStool.scattermodel()
      SItool.makepsf()
      SItool.executemajorcycle()
-#     istore = SItool.getimstore(0)
-#     PStool.setimstore(istore)
 
      PStool.gatherpsfweight( )
      PStool.gatherresidual( )
@@ -322,27 +382,36 @@ def toolTestMajorCycle2( testnum=1 ):
 def checkDataPartitioningCode():
 
      ## Make parameter lists.
-     #paramList = ImagerParameters(casalog=casalog, msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
+     #paramList = ImagerParameters(msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
      ## Sync input lists to the same size.
      #paramList.checkParameters()
 
-     params = getparams( testnum=5 ,parallelmajor=True )
-
+     params = getparams( testnum=3 ,parallelmajor=True )
      paramList = params[0]
+     clusterdeffile = params[1]
 
-     # Selection parameters
      selpars = paramList.getSelPars()
+     impars = paramList.getImagePars()
 
-     print 'Selpars : ', selpars
-     
-     # For parallel runs, make this from a config file.
-     ppar = PyParallelImagerHelper(clusterdef=params[1])
-     
-     # This is the function that does the data partitioning and put the selpars
-     # into a dictionary indexed by node 'id'.
-     newselpars = ppar.partitionDataSelection( selpars )
+     synu = casac.synthesisutils()
+     print synu.contdatapartition( selpars , 2)
 
-     print 'NewSelPars : ', newselpars
+     print synu.cubedatapartition( selpars, 2)
+     
+     print synu.cubeimagepartition( impars, 2)
+
+     synu.done()
+
+#     ppar = PyParallelImagerHelper(clusterdef=clusterdeffile)
+#
+#     print 'Selpars : ', selpars
+#     newselpars = ppar.partitionCubeDataSelection( selpars )
+#
+#     print 'Impars : ', impars
+#     newimpars = ppar.partitionCubeDeconvolution( impars )
+#
+#     ppar.takedownCluster()
+#
 
      # The output dictionary should be indexed as follows ( for 2 nodes, and 2 MSs )
      #{ '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,
@@ -353,3 +422,42 @@ def checkDataPartitioningCode():
      #        }
      # }
      #
+
+
+def checkPars():
+
+     params = getparams( testnum=1 )
+     paramList = params[0]
+
+     selpars = paramList.getSelPars()
+     impars = paramList.getImagePars()
+
+     synu = casac.synthesisutils()
+
+#     print selpars['ms0']
+#     fixrec = synu.checkselectionparams( selpars['ms0'] )
+#     print fixrec
+#     print synu.checkselectionparams( fixrec )
+
+
+     print impars['0']
+     fixrec = synu.checkimageparams( impars['0'] )
+     print "---------------------------------------------"
+     print fixrec
+     print "---------------------------------------------"
+     print synu.checkimageparams( fixrec )
+
+     synu.done()
+
+
+def testmakeimage():
+     params = getparams( testnum=1 )
+     paramList = params[0]
+     impars = (paramList.getImagePars())['0']
+
+     os.system('rm -rf ' + impars['imagename'])
+
+     synu = casac.synthesisutils()
+     synu.makeimage( impars , 'DataTest/twopoints_twochan.ms')
+     synu.done()
+

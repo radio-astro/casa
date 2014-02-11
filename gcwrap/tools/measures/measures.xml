@@ -657,8 +657,8 @@ observatory will give you the position of an observatory as given in the
 system. At the time of writing the following observatories are recognised
 (but check e.g. the position GUI for currently known ones, or the
 me.obslist() tool function):
-{\em ALMA ARECIBO ATCA BIMA CLRO DRAO DWL GB GBT GMRT IRAM PDB IRAM_PDB
- JCMT MOPRA MOST NRAO12M NRAO_GBT PKS SAO SMA VLA VLBA WSRT}.
+{\em ALMA ARECIBO ATCA BIMA CLRO DRAO DWL GB GBT GMRT IRAM PDB IRAM\_PDB
+ JCMT MOPRA MOST NRAO12M NRAO\_GBT PKS SAO SMA VLA VLBA WSRT}.
 </description>
 <example>
 

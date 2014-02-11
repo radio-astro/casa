@@ -718,8 +718,11 @@ casac::record* calibrater::fluxscale(
 		      const std::string& listfile,
 		      const bool append, 
 		      const std::vector<int>& refspwmap,
+                      const float gainthreshold,
+                      const std::string& antenna,
                       const bool incremental,
-                      const int fitorder)
+                      const int fitorder,
+                      const bool display)
 {
 
   casac::record* poOutput;
@@ -759,11 +762,14 @@ casac::record* calibrater::fluxscale(
 			     refspwmap,
 			     toCasaString(transfer),
 			     append,
+                             gainthreshold, 
+                             antenna,
 			     oFluxD,
 			     tranidx,
 			     oListFile,
                              incremental,
-                             fitorder);
+                             fitorder,
+                             display);
 
     // Associate the field IDs with the field numbers
 
@@ -839,9 +845,9 @@ casac::record* calibrater::fluxscale(
 	//oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
 	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.row(t)));
 	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.row(t)));
-	oSubRecord.define( "fitFluxd", oFluxD.fitfd);
-	oSubRecord.define( "fitFluxdErr", oFluxD.fitfderr);
-	oSubRecord.define( "fitRefFreq", oFluxD.fitreffreq);
+	oSubRecord.define( "fitFluxd", oFluxD.fitfd(t));
+	oSubRecord.define( "fitFluxdErr", oFluxD.fitfderr(t));
+	oSubRecord.define( "fitRefFreq", oFluxD.fitreffreq(t));
 	
 	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
       }

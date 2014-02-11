@@ -122,7 +122,8 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
                  See help par.stretch.
 
 This task collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
-specified axis. It computes the specified aggregate function for pixel values along the specified axes
+specified axis. Both float valued and complex valued images are supported. It computes the specified
+aggregate function for pixel values along the specified axes
 and places those values in the single remaining plane of those axes in the output image. It returns
 an image analysis tool containing the newly created collapsed image if wantreturn=True. Choices of
 aggregate functions are: max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is

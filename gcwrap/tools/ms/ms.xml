@@ -199,7 +199,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     Just as the fromfits function will convert a \uvfits\ file to a measurement
     set the tofits function will convert a measurement set to a \uvfits\
-    file. Similarly a single dish measurement set ie., one with a FLOAT_DATA
+    file. Similarly a single dish measurement set ie., one with a FLOAT\_DATA
     column rather than a DATA column, can be converted to a single dish \fits\
     file using the tosdfits function.
 
@@ -264,7 +264,7 @@ that have been processed with calibrator or imager.  Items marked with a \all\ d
 not require all the data in the selected measurement set to have the same shape.
 }
 \\ \hline
-                     &amp; range &amp; select &amp; getdata &amp; putdata &amp; comment\\ \hline
+                     \&amp; range &amp; select &amp; getdata &amp; putdata &amp; comment\\ \hline
 \endfirsthead
 \hline
 \multicolumn{6}{|c|}{\slshape Continued from previous page}\\ \hline
@@ -780,11 +780,11 @@ the ms definition itself. -->
   <input>  
        <param type="string" direction="in" name="dircolname">
 	 <description>Name of the direction column in the FIELD table</description>
-	 <value>PHASE_DIR</value>
+	 <value>PHASE\_DIR</value>
          <allowed type="enum">
-	     <value>PHASE_DIR</value>
-	     <value>DELAY_DIR</value>
-	     <value>REFERENCE_DIR</value>
+	     <value>PHASE\_DIR</value>
+	     <value>DELAY\_DIR</value>
+	     <value>REFERENCE\_DIR</value>
          </allowed>
        </param>
 
@@ -1326,7 +1326,7 @@ the ms definition itself. -->
     rows, in general, is not an integer). Thus a row which has half of its
     total bandwidth flagged contributes 0.5 rows to the unflagged row count. A row with 20 of 32 channels of
     homogeneous width contributes 20/32 = 0.625 rows to the unflagged row count. A row with a value of False
-    in the FLAG_ROW column is not counted in the number of unflagged rows.
+    in the FLAG\_ROW column is not counted in the number of unflagged rows.
   </description>
   <example>
     
@@ -1478,7 +1478,7 @@ the ms definition itself. -->
      </param>
     
      <param type="string" name="baseline">
-     <description>Baseline number(s): example: "2&amp;3;4&amp;5"</description>
+     <description>Baseline number(s): example: "2\&amp;3;4\&amp;5"</description>
      <value></value>
      </param>
     
@@ -1519,7 +1519,7 @@ the ms definition itself. -->
     This function computes descriptive statistics on the measurement set.
     It returns the statistical values as a python dictionary.  The given 
     column name must be a numerical column.
-    If it is a complex valued column, the parameter complex_value defines
+    If it is a complex valued column, the parameter complex\_value defines
     which derived real value is used for the statistics computation.
   </description>
   <example>
@@ -1726,20 +1726,20 @@ Table column descriptions:
 
 \begin{tabular}{ll}
 \hline\hline
-Column Name &amp; Description \\
+Column Name \&amp; Description \\
 \hline
-Date/Time   &amp; Average date and time of data sample interval \\
-Intrf       &amp; Interferometer baseline (antenna names) \\
-UVDist      &amp; uv-distance (units of wavelength) \\
-Fld         &amp; Field ID \\
-SpW         &amp; Spectral Window ID \\
-Chn         &amp; Channel number \\
-(Correlated &amp; Correlated polarizations (eg: RR, LL, XY) \\
-  polarization) &amp;   Sub-columns are: Amp, Phs, Wt, F \\
-Amp         &amp; Visibility amplitude \\
-Phs         &amp; Visibility phase \\
-Wt          &amp; Weight of visibility measurement \\
-F           &amp; Flag: `F' = flagged datum; ` ' = unflagged \\
+Date/Time   \&amp; Average date and time of data sample interval \\
+Intrf       \&amp; Interferometer baseline (antenna names) \\
+UVDist      \&amp; uv-distance (units of wavelength) \\
+Fld         \&amp; Field ID \\
+SpW         \&amp; Spectral Window ID \\
+Chn         \&amp; Channel number \\
+(Correlated \&amp; Correlated polarizations (eg: RR, LL, XY) \\
+  polarization) \&amp;   Sub-columns are: Amp, Phs, Wt, F \\
+Amp         \&amp; Visibility amplitude \\
+Phs         \&amp; Visibility phase \\
+Wt          \&amp; Weight of visibility measurement \\
+F           \&amp; Flag: `F' = flagged datum; ` ' = unflagged \\
 \hline\hline
 \end{tabular}
   
@@ -1821,16 +1821,16 @@ Date/Time:                         RR:                      RL:                 
     shape. You do not need to use this function if all the data in
     your measurement set has only one shape.
 
-    The DATA_DESC_ID column in the measurement set contains a
+    The DATA\_DESC\_ID column in the measurement set contains a
     value that maps to a particular row in the POLARIZATION and
-    SPECTRAL_WINDOW subtables. Hence all rows with the same
-    value in the DATA_DESC_ID column must have the same data
-    shape. To select all the data where the DATA_DESC_ID value
+    SPECTRAL\_WINDOW subtables. Hence all rows with the same
+    value in the DATA\_DESC\_ID column must have the same data
+    shape. To select all the data where the DATA\_DESC\_ID value
     is $N$ you call this function with the datadescid argument set to
     $N$. <!-- The examples below make this a bit clearer.-->
 
     It is possible to have a measurement set with differing values in
-    the DATA_DESC_ID column but where all the data is a fixed
+    the DATA\_DESC\_ID column but where all the data is a fixed
     shape. For example this will occur if the reference frequency
     changes but the number of spectral channels is fixed. In cases
     like this all the data can be selected, using this function with
@@ -1858,7 +1858,7 @@ Date/Time:                         RR:                      RL:                 
 
     In this example we display the range of uv distances for the data
     in the specified measurement set. The first print statement will
-    only use data where the DATA_DESC_ID column is 0. This will
+    only use data where the DATA\_DESC\_ID column is 0. This will
     correspond to a specific spectral window and polarization
     setup. The second print statement will print the range of uv
     distances for all the data in the measurement set (which is the
@@ -1991,7 +1991,7 @@ Date/Time:                         RR:                      RL:                 
       ms.select(items=rec)
     
     This example selects all the data from the measurement set where
-    the value in the DATA_DESC_ID column is zero. This
+    the value in the DATA\_DESC\_ID column is zero. This
     corresponds to a particular spectral window and polarization
     setup. It then selects all the data where the first antenna in the
     interferometer is number one, three or five and where the uv
@@ -2357,7 +2357,7 @@ Date/Time:                         RR:                      RL:                 
   <input>
   
      <param type="string" direction="in" name="mode">
-     <description> "channel", "velocity", "frequency", or "channel_b", default = "channel"
+     <description> "channel", "velocity", "frequency", or "channel\_b", default = "channel"
      </description>
      <value>channel</value>
      </param>
@@ -2457,7 +2457,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="mode">
-     <description> "channel", "velocity", "frequency", or "channel_b", default = 
+     <description> "channel", "velocity", "frequency", or "channel\_b", default = 
      </description>
      <value>channel</value>
      </param>
@@ -2918,7 +2918,7 @@ for i in range(len(tcoord)):
   <description>
     This function acts like ms.concatenate() with handling==3 (do not concatenate
     the MAIN and POINTING tables). This is useful for generating, e.g.,
-    SPECTRAL_WINDOW and FIELD tables which contain all used SPW and FIELD ids
+    SPECTRAL\_WINDOW and FIELD tables which contain all used SPW and FIELD ids
     for a set of MSs without having to actually carry out a time-consuming
     concatenation on disk. The MAIN table in the resulting output MS is
     that of the original MS, i.e. it is not touched. 
@@ -3130,7 +3130,7 @@ for i in range(len(tcoord)):
      </param>
     
      <param type="variant" direction="in" name="field">
-     <description>Fields to include, by names or 0-based ids.  ('' =&gt; all)</description>
+     <description>Fields to include, by names or 0-based ids.  ('' =\&gt; all)</description>
      <value type="string"></value>
      </param>
     
@@ -3155,8 +3155,8 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="string" direction="in" name="whichcol">
-     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA', and/or 'FLOAT_DATA'</description>
-     <value>CORRECTED_DATA</value>
+     <description>'DATA', 'MODEL\_DATA', 'CORRECTED\_DATA', and/or 'FLOAT\_DATA'</description>
+     <value>CORRECTED\_DATA</value>
      </param>
   </input>
   <returns type="bool"/>
@@ -3200,7 +3200,7 @@ for i in range(len(tcoord)):
   <keyword>statwt</keyword>
   <input>
      <param type="bool" direction="in" name="dorms">
-     <description>How the scatter should be estimated (True -&gt; rms, False -&gt; stddev)</description>
+     <description>How the scatter should be estimated (True -\&gt; rms, False -\&gt; stddev)</description>
      <value>false</value>
      </param>
 
@@ -3215,12 +3215,12 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="variant" direction="in" name="fitspw">
-     <description>Line-free spectral windows (and :channels) to get the scatter from.  ('' =&gt; all)</description>
+     <description>Line-free spectral windows (and :channels) to get the scatter from.  ('' =\&gt; all)</description>
      <value>*</value>
      </param>
     
      <param type="variant" direction="in" name="fitcorr">
-     <description>Correlations (V, LL, XX, LR, XY, etc.) to get the scatter from.  ('' =&gt; all)</description>
+     <description>Correlations (V, LL, XX, LR, XY, etc.) to get the scatter from.  ('' =\&gt; all)</description>
      <value></value>
      </param>
 
@@ -3240,12 +3240,12 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="variant" direction="in" name="field">
-     <description>Fields to reweight, by names or 0-based ids.  ('' =&gt; all)</description>
+     <description>Fields to reweight, by names or 0-based ids.  ('' =\&gt; all)</description>
      <value></value>
      </param>
     
      <param type="variant" direction="in" name="spw">
-     <description>Spectral windows to reweight.  ('' =&gt; all)</description>
+     <description>Spectral windows to reweight.  ('' =\&gt; all)</description>
      <value>*</value>
      </param>
     
@@ -3261,12 +3261,12 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="variant" name="scan">
-     <description>Scan numbers to reweight.  ('' =&gt; all)</description>
+     <description>Scan numbers to reweight.  ('' =\&gt; all)</description>
      <value></value>
      </param>
      
      <param type="string" direction="in" name="intent">
-     <description>Scan intents to reweight.  ('' =&gt; all)</description>
+     <description>Scan intents to reweight.  ('' =\&gt; all)</description>
      <value></value>
      </param>
 
@@ -3276,18 +3276,18 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="string" direction="in" name="correlation">
-     <description>Correlations (LL, XX, LR, XY, etc.) to reweight.  ('' =&gt; all)</description>
+     <description>Correlations (LL, XX, LR, XY, etc.) to reweight.  ('' =\&gt; all)</description>
      <value></value>
      </param>
 
      <param type="string" direction="in" name="obs">
-     <description>Observation IDs to reweight.  ('' =&gt; all)</description>
+     <description>Observation IDs to reweight.  ('' =\&gt; all)</description>
      <value></value>
      </param>
 
      <param type="string" direction="in" name="datacolumn">
      <description>Which data column to calculate the scatter from.</description>
-     <value>corrected_data</value>
+     <value>corrected\_data</value>
      </param>
   </input>
   <returns type="bool"/>
@@ -3348,7 +3348,7 @@ for i in range(len(tcoord)):
      </param>
     
      <param type="variant" direction="in" name="field">
-     <description>Fields to include, by names or 0-based ids.  ('' =&gt; all)</description>
+     <description>Fields to include, by names or 0-based ids.  ('' =\&gt; all)</description>
      <value></value>
      </param>
     
@@ -3363,7 +3363,7 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="variant" direction="in" name="baseline">
-     <description>Antenna names or indices to select  ('' =&gt; all)</description>
+     <description>Antenna names or indices to select  ('' =\&gt; all)</description>
      <value></value>
      </param>
 
@@ -3393,14 +3393,14 @@ for i in range(len(tcoord)):
      </param>
       
      <param type="string" direction="in" name="whichcol">
-     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA', 'FLOAT_DATA', 'LAG_DATA', and/or 'all'</description>
+     <description>'DATA', 'MODEL\_DATA', 'CORRECTED\_DATA', 'FLOAT\_DATA', 'LAG\_DATA', and/or 'all'</description>
      <value>DATA</value>
      </param>
 
      <param type="variant" name="tileshape">
        <description>Tile shape of the disk data columns, most users should not need to touch this parameter 
-       [0] =&gt; normal tiling, [1] =&gt; fast mosaic style tile 
-       [4,15,351] =&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
+       [0] =\&gt; normal tiling, [1] =\&gt; fast mosaic style tile 
+       [4,15,351] =\&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
        <value></value>
      </param>
 
@@ -3506,7 +3506,7 @@ from spwid 1 of the input data, starting at channel 4, and every
      </param>
     
      <param type="variant" direction="in" name="field">
-     <description>Fields to include, by names or 0-based ids.  ('' =&gt; all)</description>
+     <description>Fields to include, by names or 0-based ids.  ('' =\&gt; all)</description>
      <value></value>
      </param>
     
@@ -3516,7 +3516,7 @@ from spwid 1 of the input data, starting at channel 4, and every
      </param>
     
      <param type="variant" direction="in" name="baseline">
-     <description>Antenna names or indices to select  ('' =&gt; all)</description>
+     <description>Antenna names or indices to select  ('' =\&gt; all)</description>
      <value></value>
      </param>
 
@@ -3546,14 +3546,14 @@ from spwid 1 of the input data, starting at channel 4, and every
      </param>
       
      <param type="string" direction="in" name="whichcol">
-     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA', 'FLOAT_DATA', 'LAG_DATA', and/or 'all'</description>
+     <description>'DATA', 'MODEL\_DATA', 'CORRECTED\_DATA', 'FLOAT\_DATA', 'LAG\_DATA', and/or 'all'</description>
      <value>DATA</value>
      </param>
 
      <param type="variant" name="tileshape">
        <description>Tile shape of the disk data columns, most users should not need to touch this parameter 
-       [0] =&gt; normal tiling, [1] =&gt; fast mosaic style tile 
-       [4,15,351] =&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
+       [0] =\&gt; normal tiling, [1] =\&gt; fast mosaic style tile 
+       [4,15,351] =\&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
        <value></value>
      </param>
 
@@ -3582,7 +3582,7 @@ from spwid 1 of the input data, starting at channel 4, and every
   <description>
     This function splits out part of the MS into a new MS. Time averaging can
     be performed in the process.  Unlike split, the subtables and IDs
-    (ANTENNA1, DATA_DESCRIPTION_ID, etc.) are never changed to account for the
+    (ANTENNA1, DATA\_DESCRIPTION\_ID, etc.) are never changed to account for the
     selection.
 
     As a side effect of that property, partition cannot select by channel or
@@ -4648,9 +4648,9 @@ in spectral window 1.
 
   <description>
      This function generates moments from the MS data. It is only applicable 
-     for single-dish MS, i.e., the MS must have FLOAT_DATA column. Results are 
+     for single-dish MS, i.e., the MS must have FLOAT\_DATA column. Results are 
      stored separate MSs for each moment. The function returns a table object 
-     of the MS that stores a first moment in its FLOAT_DATA column.
+     of the MS that stores a first moment in its FLOAT\_DATA column.
 
      This is defined by analogy with ia.moments(). It allows to generate moments 
      along any axis (spectral axis, direction, and polarization), while ms.moments() 

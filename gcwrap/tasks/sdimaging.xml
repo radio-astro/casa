@@ -325,7 +325,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: [] (=cover all pointings in MS)
                 example: imsize=200 (equivalent to [200,200])
         cell -- x and y cell size. default unit arcmin
-                default: '' (=1/3 PB)
+                default: '' (= 1/3 of FWHM of primary beam)
                 example: cell=['0.2arcmin, 0.2arcmin']
                          cell='0.2arcmin' (equivalent to example above)
         dochannelmap -- channel map image or total power image
@@ -346,9 +346,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          'LGROUP','CMB'
                 default: ''; same as input data or 'LSRK' for multiple-MS inputs
                 example: frame='bary' for Barycentric frame 
-        phasecenter -- image phase center: direction measure or fieldid 
-                default: 0
-                example: 'J2000 13h44m00 -17d02m00', 'AZEL -123d48m29 15d41m41'
+        phasecenter -- image phase center: direction measure or field id 
+                default: '' (= the center of pointing directions in 
+                             POINTING table of infiles)
+                example: 6 (field id), 'J2000 13h44m00 -17d02m00',
+                         'AZEL -123d48m29 15d41m41'
         ephemsrcname -- ephemeris source name for moving source
                 default: ''
                 if the source name in the data matches one of the known 

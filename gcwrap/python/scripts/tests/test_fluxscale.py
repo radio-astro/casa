@@ -67,7 +67,7 @@ class fluxscale1_test(unittest.TestCase):
 
         
     def test_default(self):
-        '''Fluxscale 1a: Create a flux table using field=0 as reference'''
+        '''Fluxscale test 1.1: Create a flux table using field=0 as reference'''
         
         # Input
         gtable = self.gtable
@@ -130,7 +130,7 @@ class fluxscale1_test(unittest.TestCase):
         
             
     def test_incremental(self): 
-        '''Fluxscale 1b: Create an incremental flux table using field=0 as reference'''
+        '''Fluxscale test 1.2: Create an incremental flux table using field=0 as reference'''
         # Input
         gtable = self.gtable
 
@@ -146,6 +146,42 @@ class fluxscale1_test(unittest.TestCase):
 
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
+
+    def test_gainthreshold(self):
+        '''Fluxscale test 1.3: gainthreshold parameter test'''
+        # Input
+        gtable = self.gtable
+
+        # Output
+        outtable = self.msfile + '.thres.fcal'
+
+        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
+                  transfer='1445*', gainthreshold=0.05,incremental=True)
+        self.assertTrue(os.path.exists(outtable))
+
+        # File to compare with
+        #reference = self.reffile2
+
+        # Compare the calibration table with a reference
+        #self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
+
+    def test_antennasel(self):
+        '''Fluxscale test 1.4: antenna de-selection test'''
+        # Input
+        gtable = self.gtable
+
+        # Output
+        outtable = self.msfile + '.antsel.fcal'
+
+        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
+                  transfer='1445*', antenna='!24',incremental=True)
+        self.assertTrue(os.path.exists(outtable))
+
+        # File to compare with
+        #reference = self.reffile2
+
+        # Compare the calibration table with a reference
+        #self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
 
 
 class fluxscale2_test(unittest.TestCase):

@@ -100,6 +100,7 @@
 <xsl:element name="method">
 <xsl:attribute name="name"><xsl:value-of select="@name"/></xsl:attribute>
 <xsl:attribute name="type"><xsl:value-of select="@type"/></xsl:attribute>
+<xsl:if test="@template"> <xsl:attribute name="template"><xsl:value-of select="@template"/></xsl:attribute></xsl:if>
 <xsl:apply-templates select="aps:shortdescription"/>
 <xsl:apply-templates select="aps:output"/>
 <xsl:apply-templates select="aps:inout"/>
@@ -137,6 +138,7 @@
 <xsl:template match="aps:returns">
 <xsl:element name="returns">
 <xsl:attribute name="xsi:type"><xsl:value-of select="@type"/></xsl:attribute>
+<xsl:if test="@template"> <xsl:attribute name="template"><xsl:value-of select="@template"/></xsl:attribute></xsl:if>
 <xsl:if test="@units"> <xsl:attribute name="units"><xsl:value-of select="@units"/></xsl:attribute></xsl:if>
 <xsl:choose>
 <xsl:when test="@type='variant'">

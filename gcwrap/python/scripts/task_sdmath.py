@@ -41,6 +41,7 @@ class sdmath_worker(sdutil.sdtask_template):
     def execute(self):
         # insert varlist into expr
         varlist = self.varlist
+
         for key in varlist.keys():
             regex = re.compile( key )
             if isinstance( varlist[key], str ):
@@ -111,7 +112,7 @@ class sdmath_worker(sdutil.sdtask_template):
             tmpout.set_fluxunit(fluxunit_now)
 
         self.scan = tmpout
-
+        
     def save(self):
         # avoid to call set_fluxunit
         del self.fluxunit

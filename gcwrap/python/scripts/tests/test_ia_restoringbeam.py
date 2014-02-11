@@ -106,48 +106,49 @@ class ia_restoringbeam_test(unittest.TestCase):
         myia = self._myia
         nchan = 10
         npol = 4
-        myia.fromshape(shape=[10, 10, npol, nchan])
-        self.assertFalse(bool(myia.restoringbeam()))
-        major = "4arcsec"
-        minor = "3arcsec"
-        pa = "10deg"
-        myia.setrestoringbeam(major=major, minor=minor, pa=pa, channel=20, polarization=2)
-        nmajor = "10arcsec"
-        nminor = "5arcsec"
-        npa = "40deg"
-        myia.setrestoringbeam(
-            major=nmajor, minor=nminor, pa=npa,
-            channel=2, polarization=1
-        )
-        beams = myia.restoringbeam()
-        self.assertTrue(beams["nChannels"] == nchan)
-        self.assertTrue(beams["nStokes"] == npol)
-        self.assertTrue(len(beams["beams"]) == nchan)
-        for chan in range(nchan):
-            rec = beams["beams"]["*" + str(chan)]
-            for pol in range(npol):
-                bmaj = major
-                bmin = minor
-                bpa = pa
-                if chan == 2 and pol == 1:
-                    bmaj = nmajor
-                    bmin = nminor
-                    bpa = npa
-                beam = rec["*" + str(pol)]
-                self.assertTrue(beam["major"] == qa.quantity(bmaj))
-                self.assertTrue(beam["minor"] == qa.quantity(bmin))
-                self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
-                beam = myia.restoringbeam(channel=chan, polarization=pol)
-                self.assertTrue(beam["major"] == qa.quantity(bmaj))
-                self.assertTrue(beam["minor"] == qa.quantity(bmin))
-                self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
-        for chan in [-1, 10]:
-            for pol in [-1, 10]:
-                if chan != -1 or pol != -1:
-                    self.assertRaises(
-                        Exception, myia.restoringbeam,
-                        channel=chan, polarization=pol
-                    )
+        for t in ['f', 'c']:
+            myia.fromshape(shape=[10, 10, npol, nchan], type=t)
+            self.assertFalse(bool(myia.restoringbeam()))
+            major = "4arcsec"
+            minor = "3arcsec"
+            pa = "10deg"
+            myia.setrestoringbeam(major=major, minor=minor, pa=pa, channel=20, polarization=2)
+            nmajor = "10arcsec"
+            nminor = "5arcsec"
+            npa = "40deg"
+            myia.setrestoringbeam(
+                major=nmajor, minor=nminor, pa=npa,
+                channel=2, polarization=1
+            )
+            beams = myia.restoringbeam()
+            self.assertTrue(beams["nChannels"] == nchan)
+            self.assertTrue(beams["nStokes"] == npol)
+            self.assertTrue(len(beams["beams"]) == nchan)
+            for chan in range(nchan):
+                rec = beams["beams"]["*" + str(chan)]
+                for pol in range(npol):
+                    bmaj = major
+                    bmin = minor
+                    bpa = pa
+                    if chan == 2 and pol == 1:
+                        bmaj = nmajor
+                        bmin = nminor
+                        bpa = npa
+                    beam = rec["*" + str(pol)]
+                    self.assertTrue(beam["major"] == qa.quantity(bmaj))
+                    self.assertTrue(beam["minor"] == qa.quantity(bmin))
+                    self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
+                    beam = myia.restoringbeam(channel=chan, polarization=pol)
+                    self.assertTrue(beam["major"] == qa.quantity(bmaj))
+                    self.assertTrue(beam["minor"] == qa.quantity(bmin))
+                    self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
+            for chan in [-1, 10]:
+                for pol in [-1, 10]:
+                    if chan != -1 or pol != -1:
+                        self.assertRaises(
+                            Exception, myia.restoringbeam,
+                            channel=chan, polarization=pol
+                        )
 
 def suite():
     return [ia_restoringbeam_test]

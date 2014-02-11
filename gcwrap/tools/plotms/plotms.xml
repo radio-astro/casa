@@ -243,6 +243,25 @@ Application-Wide Options Methods
   </returns>
 </method>
 
+<method type="function" name="setGridSize">
+  <keyword>setGridSize</keyword>  
+  <shortdescription>Sets the number of rows and columns in multiple plot displays.</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="rowCount">
+      <description>The number of rows in a multiple plot display.</description>
+      <value>1</value>
+    </param>
+    <param type="int" name="colCount">
+      <description>The number of columns in a multiple plot display.</description>
+      <value>1</value>
+    </param>
+  </input>
+  <example />
+  <returns />
+</method>
+
+
 
 <!--
 ###############################################################################
@@ -1670,8 +1689,9 @@ Execution Methods
 
   </input>
   <example />
-  
-  <returns />
+  <returns type="bool">
+    <description>True if the plot was successfully updated, false if not (for example with an invalid selection).</description>
+  </returns>
 </method>
 
 
@@ -1690,10 +1710,6 @@ Execution Methods
      </param>
      <param type="bool" name="highres">
          <description>Use high resolution? Always true for jpg and png.</description>
-         <value>false</value>
-     </param>
-     <param type="bool" name="interactive">
-         <description>Interactive mode (will pop up confirmation window if true, set false for automated scripts to prevent blocking).</description>
          <value>false</value>
      </param>
   </input>

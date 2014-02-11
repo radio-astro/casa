@@ -1,6 +1,9 @@
 #include <imagemetadata_cmpt.h>
 
+#include <casa/Containers/ValueHolder.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
+#include <images/Images/ImageOpener.h>
+#include <images/Images/ImageUtilities.h>
 
 #include <stdcasa/version.h>
 
@@ -13,34 +16,20 @@ namespace casac {
 const String imagemetadata::_class = "imagemetadata";
 
 imagemetadata::imagemetadata() :
-_log(new LogIO()), _header(0) {
-try {
-	} catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
+_log(new LogIO()), _header(0) {}
 
 imagemetadata::~imagemetadata() {}
 
 bool imagemetadata::close() {
-	try {
-		_header.reset(0);
-		_image.reset(0);
-		return True;
-	}
-	catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+	_header.reset(0);
+	return True;
 }
 
 bool imagemetadata::add(const string& key, const variant& value) {
 	try {
 		_exceptIfDetached();
-		return _header->add(key, value);
+		std::auto_ptr<const ValueHolder> vh(toValueHolder(value));
+		return _header->add(key, *vh);
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -56,7 +45,9 @@ bool imagemetadata::done() {
 variant* imagemetadata::get(const string& key) {
 	try {
 		_exceptIfDetached();
-		return new variant(_header->getFITSValue(key));
+		return fromValueHolder(
+			_header->getFITSValue(key)
+		);
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
@@ -82,23 +73,47 @@ bool imagemetadata::open(const std::string& infile) {
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
-		ImageInterface<Float> *x;
-		ImageUtilities::openImage(x, infile, *_log);
-		_image.reset(x);
-		_header.reset(new ImageMetaDataRW<Float>(x));
+		if (
+			ImageOpener::pagedImageDataType(infile)
+			== TpFloat
+		) {
+			_openImage<Float>(infile);
+		}
+		else {
+			_openImage<Complex>(infile);
+		}
 		return True;
 
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-bool imagemetadata::remove(const string& key, const variant& value) {
+template <class T> void imagemetadata::_openImage(
+	const String& infile
+) {
+	ImageInterface<T> *x;
+	ImageUtilities::openImage(x, infile);
+	ThrowIf(
+		! x,
+		"Unable to open image " + infile
+	);
+	_header.reset(
+		new ImageMetaDataRW(
+			std::tr1::shared_ptr<ImageInterface<T> >(x)
+		)
+	);
+}
+
+bool imagemetadata::remove(
+	const string& key, const variant& value
+) {
 	try {
 		_exceptIfDetached();
-		if (String(key) == ImageMetaData<Float>::MASKS) {
+		if (String(key) == ImageMetaDataBase::MASKS) {
 			return _header->removeMask(value.toString());
 		}
 		else {
@@ -112,11 +127,11 @@ bool imagemetadata::remove(const string& key, const variant& value) {
 	}
 }
 
-
 bool imagemetadata::set(const string& key, const variant& value) {
 	try {
 		_exceptIfDetached();
-		return _header->set(key, value);
+		std::auto_ptr<const ValueHolder> vh(toValueHolder(value));
+		return _header->set(key, *vh);
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "

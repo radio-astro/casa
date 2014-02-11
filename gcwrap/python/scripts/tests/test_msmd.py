@@ -120,6 +120,9 @@ class msmd_test(unittest.TestCase):
         got = self.md.antennaids(["DV12", "DA*", "DV1*"], "1m", qa.quantity(2,"m"))
         self.assertTrue(len(got) == 0)
         
+        got = self.md.antennaids([], mindiameter="25m")
+        self.assertTrue(len(got) == 0)
+        
     def test_chanavgspws(self):
         """Test chanavgspws()"""
         got = self.md.chanavgspws()

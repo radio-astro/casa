@@ -401,7 +401,8 @@ class test_setjy_mms(test_simplecluster):
     def test1_setjy_scratchless_mode_single_model(self):
         """Test 1: Set vis model header in one single field """
 
-        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False,
+                       standard='manual')
         self.assertTrue(retval, "setjy run failed")    
         
         mslocal = mstool()
@@ -428,9 +429,11 @@ class test_setjy_mms(test_simplecluster):
     def test2_setjy_scratchless_mode_multiple_model(self):
         """Test 2: Set vis model header in one multiple fields """
 
-        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False,
+                       standard='manual')
         self.assertTrue(retval, "setjy run failed")
-        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
+        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False,
+                       standard='manual')
         self.assertTrue(retval, "setjy run failed")
                    
         mslocal = mstool()
@@ -457,7 +460,8 @@ class test_setjy_mms(test_simplecluster):
     def test3_setjy_scratch_mode_single_model(self):
         """Test 3: Set MODEL_DATA in one single field"""
 
-        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False,usescratch=True)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False,usescratch=True,
+                       standard='manual')
         self.assertTrue(retval, "setjy run failed")
         
         mslocal = mstool()
@@ -482,9 +486,11 @@ class test_setjy_mms(test_simplecluster):
     def test4_setjy_scratch_mode_multiple_model(self):
         """Test 4: Set MODEL_DATA in multiple fields"""
 
-        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=True)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=True,
+                       standard='manual')
         self.assertTrue(retval, "setjy run failed")
-        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=True)
+        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=True,
+                       standard='manual')
         self.assertTrue(retval, "setjy run failed")
         
         mslocal = mstool()

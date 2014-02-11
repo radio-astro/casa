@@ -470,6 +470,26 @@ else:
     failed_tests.append('Export with conversion layer')
 print myname, ' ***********************************************************'
 
+print myname, ' ***********************************************************'
+print myname, ' Test of the beam parameter:'
+importfits(fitsimage='1904-66_AIT.fits', imagename='1904-66_AIT_2.im', beam=['2arcsec','1arcsec','3.0deg'])
+passed = False
+ia.open('1904-66_AIT_2.im')
+x = ia.restoringbeam()
+ia.close()
+if(x != {} 
+   and x['major']['value']==2. and  x['major']['unit']=='arcsec'
+   and x['minor']['value']==1. and  x['minor']['unit']=='arcsec'
+   and x['positionangle']['value']==3. and  x['positionangle']['unit']=='deg'):
+    passed = True
+
+if passed:
+    print myname, ' beam parameter test passed.'
+    passed_tests.append('beam')
+else:
+    print myname, ' beam parameter test failed.'
+    failed_tests.append('beam')
+print myname, ' ***********************************************************'
 
 
 if len(failed_tests)>0:

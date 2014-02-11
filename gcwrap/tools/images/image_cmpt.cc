@@ -61,8 +61,10 @@
 #include <components/SpectralComponents/SpectralListFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
-#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
+#include <imageanalysis/ImageAnalysis/ImageDecimator.h>
+#include <imageanalysis/ImageAnalysis/ImageFFTer.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
@@ -80,6 +82,8 @@
 #include <memory>
 #include <tr1/memory>
 
+#include <stdcasa/cboost_foreach.h>
+
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __FUNCTION__, WHERE)
@@ -94,46 +98,72 @@ _log(), _image(new ImageAnalysis()) {}
 // private ImageInterface constructor for on the fly components
 // The constructed object will take over management of the provided pointer
 // using a shared_ptr
+
 image::image(casa::ImageInterface<casa::Float> *inImage) :
 	_log(), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage))) {
 	try {
 		_log << _ORIGIN;
 
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-image::image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage) :
+image::image(ImageInterface<Complex> *inImage) :
+	_log(), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> >(inImage))) {
+	try {
+		_log << _ORIGIN;
+
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+image::image(SPIIF inImage) :
 	_log(), _image(new ImageAnalysis(inImage)) {
 	try {
 		_log << _ORIGIN;
 
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-/*
-// private ImageInterface constructor for on the fly components
-image::image(casa::ImageInterface<casa::Float>* inImage,
-		const bool cloneInputPointer) :
-	_log(new LogIO()), _image(new ImageAnalysis(inImage, cloneInputPointer)) {
+image::image(SPIIC inImage) :
+	_log(), _image(new ImageAnalysis(inImage)) {
 	try {
-		_log << LogOrigin("image", "image");
-	} catch (AipsError x) {
+		_log << _ORIGIN;
+
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
-*/
-image::~image() {
+
+image::image(std::tr1::shared_ptr<ImageAnalysis> ia) :
+	_log(), _image(ia) {
+	try {
+		_log << _ORIGIN;
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
 }
+
+image::~image() {}
 
 Bool isunset(const ::casac::variant &theVar) {
 	Bool rstat(False);
@@ -232,7 +262,11 @@ image * image::collapse(
 				? Vector<String> (1, axes.getString())
 				: toVectorString(axes.toStringVec());
 			myAxes = IPosition(
-				_image->getImage()->coordinates().getWorldAxesOrder(
+				_image->isFloat()
+				? _image->getImage()->coordinates().getWorldAxesOrder(
+					axVec, False
+				)
+				: _image->getComplexImage()->coordinates().getWorldAxesOrder(
 					axVec, False
 				)
 			);
@@ -240,14 +274,14 @@ image * image::collapse(
 				IPosition::iterator iter = myAxes.begin();
 				iter != myAxes.end(); iter++
 			) {
-				if (*iter < 0) {
-					_log << "At least one specified axis does not exist"
-						<< LogIO::EXCEPTION;
-				}
+				ThrowIf(
+					*iter < 0,
+					"At least one specified axis does not exist"
+				);
 			}
 		}
 		else {
-			_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
+			ThrowCc("Unsupported type for parameter axes");
 		}
 		String regStr = region.type() == variant::STRING ? region.toString() : "";
 		std::auto_ptr<Record> regRec(
@@ -261,15 +295,26 @@ image * image::collapse(
 			_log << "avdev currently not supported. Let us know if you have a need for it"
 				<< LogIO::EXCEPTION;
 		}
-		ImageCollapser collapser(
-			aggString, _image->getImage(), regStr, regRec.get(), box,
-			chans, stokes, mask, myAxes, outfile, overwrite
-		);
-		collapser.setStretch(stretch);
-		return new image(collapser.collapse(True));
-	} catch (AipsError x) {
+		if (_image->isFloat()) {
+			ImageCollapser<Float> collapser(
+				aggString, _image->getImage(), regStr, regRec.get(), box,
+				chans, stokes, mask, myAxes, outfile, overwrite
+			);
+			collapser.setStretch(stretch);
+			return new image(collapser.collapse(True));
+		}
+		else {
+			ImageCollapser<casa::Complex> collapser(
+				aggString, _image->getComplexImage(), regStr, regRec.get(), box,
+				chans, stokes, mask, myAxes, outfile, overwrite
+			);
+			collapser.setStretch(stretch);
+			return new image(collapser.collapse(True));
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -279,9 +324,9 @@ image* image::imagecalc(
 	const bool overwrite
 ) {
 	try {
-		ImageAnalysis ia;
-        tr1::shared_ptr<ImageInterface<Float> > out(ia.imagecalc(outfile, pixels, overwrite));
-        return  new image(out);
+		std::tr1::shared_ptr<ImageAnalysis> ia(new ImageAnalysis());
+        ia->imagecalc(outfile, pixels, overwrite);
+        return  new image(ia);
 	}
 	catch (const AipsError& x) {
 		RETHROW(x);
@@ -375,7 +420,8 @@ bool image::fromarray(const std::string& outfile,
 			return True;
 		}
 		throw AipsError("Error creating image from array");
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -384,8 +430,8 @@ bool image::fromarray(const std::string& outfile,
 
 void image::_reset() {
 	_image.reset(new ImageAnalysis());
-	_imageFloat.reset();
-	_imageComplex.reset();
+	//_imageFloat.reset();
+	//_imageComplex.reset();
 	_stats.reset(0);
 }
 
@@ -476,21 +522,17 @@ bool image::fromimage(const string& outfile, const string& infile,
 bool image::fromshape(
 	const string& outfile, const vector<int>& shape,
 	const record& csys, const bool linear, const bool overwrite,
-	const bool log
+	const bool log, const string& type
 ) {
 	try {
 		_log << _ORIGIN;
 		_reset();
 		auto_ptr<Record> coordinates(toRecord(csys));
-		if (
-			_image->imagefromshape(
-				outfile, Vector<Int> (shape),
-				*coordinates, linear, overwrite, log
-			)
-		) {
-			return True;
-		}
-		throw AipsError("Error creating image from shape");
+		_image->imagefromshape(
+			outfile, Vector<Int> (shape), *coordinates,
+			linear, overwrite, log, type
+		);
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -501,27 +543,71 @@ bool image::fromshape(
 
 ::casac::image *
 image::adddegaxes(
-	const std::string& outfile, const bool direction,
-	const bool spectral, const std::string& stokes, const bool linear,
-	const bool tabular, const bool overwrite, const bool silent
+	const std::string& outfile, bool direction,
+	bool spectral, const std::string& stokes, bool linear,
+	bool tabular, bool overwrite, bool silent
 ) {
 	try {
         _log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
-		PtrHolder<ImageInterface<Float> > outimage;
-        std::tr1::shared_ptr<const ImageInterface<Float> > x = _image->getImage();
-        ImageUtilities::addDegenerateAxes(
-			_log, outimage, *_image->getImage(), outfile,
-			direction, spectral, stokes, linear, tabular, overwrite, silent
-		);
-		return new image(outimage.ptr()->cloneII());
-	} catch (AipsError x) {
+		if (_image->isFloat()) {
+			PtrHolder<ImageInterface<Float> > outimage;
+			return _adddegaxes(
+				outimage, _image->getImage(),
+				outfile, direction, spectral, stokes, linear,
+				tabular, overwrite, silent
+			);
+			/*
+			ImageUtilities::addDegenerateAxes(
+				_log, outimage, *_image->getImage(), outfile,
+				direction, spectral, stokes, linear, tabular, overwrite, silent
+			);
+			ImageInterface<Float> *outPtr = outimage.ptr();
+			outimage.clear(False);
+			return new image(outPtr);
+			*/
+		}
+		else {
+			PtrHolder<ImageInterface<Complex> > outimage;
+			return _adddegaxes(
+				outimage, _image->getComplexImage(),
+				outfile, direction, spectral, stokes,
+				linear, tabular, overwrite, silent
+			);
+/*
+			ImageUtilities::addDegenerateAxes(
+				_log, outimage, *_image->getComplexImage(), outfile,
+				direction, spectral, stokes, linear, tabular, overwrite, silent
+			);
+			ImageInterface<Complex> *outPtr = outimage.ptr();
+			outimage.clear(False);
+			return new image(outPtr);
+			*/
+		}
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+template<class T> image* image::_adddegaxes(
+	PtrHolder<ImageInterface<T> >& outimage,
+	std::tr1::shared_ptr<const ImageInterface<T> > inImage,
+	const std::string& outfile, bool direction,
+		bool spectral, const std::string& stokes, bool linear,
+		bool tabular, bool overwrite, bool silent
+) {
+	_log << _ORIGIN;
+	ImageUtilities::addDegenerateAxes(
+		_log, outimage, *inImage, outfile,
+		direction, spectral, stokes, linear, tabular, overwrite, silent
+	);
+	ImageInterface<T> *outPtr = outimage.ptr();
+	outimage.clear(False);
+	return new image(outPtr);
 }
 
 ::casac::image* image::convolve(
@@ -602,19 +688,18 @@ image::adddegaxes(
 
 ::casac::record*
 image::boundingbox(const record& region) {
-	::casac::record *rstat = 0;
 	try {
 		_log << _ORIGIN;
-		if (detached())
-			return rstat;
+		if (detached()) {
+			return 0;
+		}
 		Record *Region = toRecord(region);
-		rstat = fromRecord(*_image->boundingbox(*Region));
-	} catch (AipsError x) {
+		return fromRecord(*_image->boundingbox(*Region));
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::string image::brightnessunit() {
@@ -626,7 +711,7 @@ std::string image::brightnessunit() {
 		} else {
 			rstat = "";
 		}
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -640,36 +725,31 @@ bool image::calc(const std::string& expr) {
 		if (detached()) {
 			return False;
 		}
-
-		if (_image->calc(expr)) {
-			_stats.reset(0);
-			return True;
-		}
-		throw AipsError("Error calculating " + expr);
-	} catch (const AipsError& x) {
+		_image->calc(expr);
+		_stats.reset(0);
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-bool image::calcmask(const std::string& mask, const std::string& maskName,
-		const bool makeDefault) {
+bool image::calcmask(
+	const string& mask, const string& maskName, bool makeDefault
+) {
 	bool rstat(false);
 	try {
 		_log << _ORIGIN;
-		if (detached())
+		if (detached()) {
 			return rstat;
-
-		//For now not passing the Regions record...when this is done then
-		//replace this temporary Record  here... it should be a Record of Records..
-		//each element a given region
-		Record regions;
-
-		rstat = _image->calcmask(mask, regions, maskName, makeDefault);
-	} catch (AipsError x) {
+		}
+		Record region;
+		rstat = _image->calcmask(mask, region, maskName, makeDefault);
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;
@@ -732,6 +812,10 @@ record* image::convertflux(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		casa::Quantity value = casaQuantity(qvalue);
 		casa::Quantity majorAxis = casaQuantity(major);
 		casa::Quantity minorAxis = casaQuantity(minor);
@@ -844,9 +928,9 @@ image* image::convolve2d(
 			}
 		}
 		else {
-			majorKernel = casaQuantityFromVar(major);
-			minorKernel = casaQuantityFromVar(minor);
-			paKernel = casaQuantityFromVar(pa);
+			majorKernel = _casaQuantityFromVar(major);
+			minorKernel = _casaQuantityFromVar(minor);
+			paKernel = _casaQuantityFromVar(pa);
 		}
 		_log << _ORIGIN;
 
@@ -885,12 +969,53 @@ image::coordsys(const std::vector<int>& pixelAxes) {
 		rstat = new ::casac::coordsys();
 		CoordinateSystem csys = _image->coordsys(Vector<Int> (pixelAxes));
 		rstat->setcoordsys(csys);
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;
+}
+
+image* image::decimate(
+	const string& outfile, int axis, int factor, const string& method,
+	const variant& region, const string& mask, bool overwrite, bool stretch
+) {
+	ThrowIf(
+		detached(),
+		"Tool is not attached to an image"
+	);
+	try {
+		String mymethod = method;
+		mymethod.downcase();
+		ImageDecimator<Float>::Function f;
+		if (mymethod.startsWith("n")) {
+			f = ImageDecimator<Float>::NONE;
+		}
+		else if (mymethod.startsWith("m")) {
+			f = ImageDecimator<Float>::MEAN;
+		}
+		else {
+			ThrowCc("Unsupported decimation method" + method);
+		}
+		std::tr1::shared_ptr<Record> regPtr(_getRegion(region, True));
+		ImageDecimator<Float> decimator(
+			_image->getImage(), regPtr.get(),
+			mask, outfile, overwrite
+		);
+		decimator.setFunction(f);
+		decimator.setAxis(axis);
+		decimator.setFactor(factor);
+		decimator.setStretch(stretch);
+		return new image(decimator.decimate(True));
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+	return new image();
 }
 
 ::casac::record*
@@ -1096,19 +1221,18 @@ record* image::beamforconvolvedsize(
 		GaussianBeam neededBeam;
 		try {
 			if (mySource.deconvolve(neededBeam, myConvolved)) {
-				// result is a point source which is non-physical in this
-				// case, so throw an exception
-				_log << "Unable to reach target resolution of "
-					<< myConvolved << " Input source "
-					<< mySource << " is probably too large."
-					<< LogIO::EXCEPTION;
+				// throw without a message here, it will be caught
+				// in the associated catch block and a new error will
+				// be thrown with the appropriate message.
+				throw AipsError();
 			}
 		}
 		catch (const AipsError& x) {
-			_log << "Unable to reach target resolution of "
+			ostringstream os;
+			os << "Unable to reach target resolution of "
 				<< myConvolved << " Input source "
-				<< mySource << " is probably too large."
-				<< LogIO::EXCEPTION;
+				<< mySource << " is probably too large.";
+			throw AipsError(os.str());
 		}
 		Record ret;
 		QuantumHolder qh(neededBeam.getMajor());
@@ -1121,7 +1245,7 @@ record* image::beamforconvolvedsize(
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -1132,6 +1256,10 @@ record* image::commonbeam() {
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		ImageInfo myInfo = _image->getImage()->imageInfo();
 		if (! myInfo.hasBeam()) {
 			throw AipsError("This image has no beam(s).");
@@ -1236,13 +1364,8 @@ bool image::done(const bool remove, const bool verbose) {
 		}
 		_image.reset();
 		return True;
-
-		/*
-		 Don't delete _log! bad things happen if you do, because the component is
-		 not released from memory...i.e done == close
-		 */
-
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -1252,8 +1375,9 @@ bool image::done(const bool remove, const bool verbose) {
 bool image::fft(
 	const string& realOut, const string& imagOut,
 	const string& ampOut, const string& phaseOut,
-	const std::vector<int>& axes, const ::casac::record& region,
-	const ::casac::variant& vmask, const bool stretch
+	const std::vector<int>& axes, const record& region,
+	const variant& vmask, const bool stretch,
+	const string& complexOut
 ) {
 	try {
 		_log << LogOrigin(_class, __FUNCTION__);
@@ -1261,24 +1385,54 @@ bool image::fft(
 			return false;
 		}
 
-		Record *Region = toRecord(region);
+		std::tr1::shared_ptr<Record> myregion(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
-
-		// if default value change it to empty vector
-		Vector<Int> leAxes(axes);
-		if (leAxes.size() == 1 && leAxes[0] == -1) {
-			leAxes.resize();
+		Vector<uInt> leAxes(0);
+		if (
+			axes.size() > 1
+			|| (axes.size() == 1 && axes[0] >= 0)
+		) {
+			leAxes.resize(axes.size());
+			for (uInt i=0; i<axes.size(); i++) {
+				ThrowIf(
+					axes[i] < 0,
+					"None of the elements of axes may be less than zero"
+				);
+				leAxes[i] = axes[i];
+			}
 		}
-
-		return _image->fft(
-			realOut, imagOut, ampOut, phaseOut,
-			leAxes, *Region, mask, stretch
-		);
-
-	} catch (AipsError x) {
+		if (_image->isFloat()) {
+			ImageFFTer<Float> ffter(
+				_image->getImage(),
+				myregion.get(), mask, leAxes
+			);
+			ffter.setStretch(stretch);
+			ffter.setReal(realOut);
+			ffter.setImag(imagOut);
+			ffter.setAmp(ampOut);
+			ffter.setPhase(phaseOut);
+			ffter.setComplex(complexOut);
+			ffter.fft();
+		}
+		else {
+			ImageFFTer<Complex> ffter(
+				_image->getComplexImage(),
+				myregion.get(), mask, leAxes
+			);
+			ffter.setStretch(stretch);
+			ffter.setReal(realOut);
+			ffter.setImag(imagOut);
+			ffter.setAmp(ampOut);
+			ffter.setPhase(phaseOut);
+			ffter.setComplex(complexOut);
+			ffter.fft();
+		}
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -1338,15 +1492,19 @@ record* image::fitprofile(const string& box, const variant& region,
 	if (detached()) {
 		return 0;
 	}
-	String regionName;
-	std::auto_ptr<Record> regionPtr = _getRegion(region, True);
-	if (ngauss < 0) {
-		_log << LogIO::WARN
-			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
-			<< LogIO::POST;
-		ngauss = 0;
-	}
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
+		String regionName;
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+		if (ngauss < 0) {
+			_log << LogIO::WARN
+				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
+				<< LogIO::POST;
+			ngauss = 0;
+		}
 		vector<double> mygoodamps = toVectorDouble(goodamprange, "goodamprange");
 		if (mygoodamps.size() > 2) {
 			_log << "Too many elements in goodamprange" << LogIO::EXCEPTION;
@@ -1517,10 +1675,15 @@ image* image::transpose(
 ) {
 	try {
 		_log << LogOrigin("image", __FUNCTION__);
+
 		if (detached()) {
 			throw AipsError("No image specified to transpose");
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		std::auto_ptr<ImageTransposer> transposer(0);
 		switch(order.type()) {
 		case variant::INT:
@@ -1577,32 +1740,38 @@ image* image::transpose(
 		const string& model, const string& estimates,
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
-		const bool overwrite, const bool dooff, const double offset,
-		const bool offsetisfixed, const bool stretch
+		bool overwrite, bool dooff, double offset,
+		bool offsetisfixed, bool stretch, double rms
 ) {
 	if (detached()) {
 		return 0;
 	}
-	int num = in_includepix.size();
-	Vector<Float> includepix(num);
-	num = in_excludepix.size();
-	Vector<Float> excludepix(num);
-	convertArray(includepix, Vector<Double> (in_includepix));
-	convertArray(excludepix, Vector<Double> (in_excludepix));
-	if (includepix.size() == 1 && includepix[0] == -1) {
-		includepix.resize();
-	}
-	if (excludepix.size() == 1 && excludepix[0] == -1) {
-		excludepix.resize();
-	}
 	_log << LogOrigin(_class, __FUNCTION__);
-	String mask = vmask.toString();
-	if (mask == "[]") {
-		mask = "";
-	}
+
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
+
+		int num = in_includepix.size();
+		Vector<Float> includepix(num);
+		num = in_excludepix.size();
+		Vector<Float> excludepix(num);
+		convertArray(includepix, Vector<Double> (in_includepix));
+		convertArray(excludepix, Vector<Double> (in_excludepix));
+		if (includepix.size() == 1 && includepix[0] == -1) {
+			includepix.resize();
+		}
+		if (excludepix.size() == 1 && excludepix[0] == -1) {
+			excludepix.resize();
+		}
+		String mask = vmask.toString();
+		if (mask == "[]") {
+			mask = "";
+		}
 		std::auto_ptr<ImageFitter> fitter;
-        ImageTask::shCImFloat image = _image->getImage();
+        SPCIIF image = _image->getImage();
 		ImageFitter::CompListWriteControl writeControl =
 			complist.empty()
 			? ImageFitter::NO_WRITE
@@ -1625,7 +1794,7 @@ image* image::transpose(
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		std::auto_ptr<Record> regionRecord = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionRecord = _getRegion(region, True);
 		fitter.reset(
 			new ImageFitter(
 				image, "", regionRecord.get(), box, sChans,
@@ -1640,6 +1809,9 @@ image* image::transpose(
 		}
 		if (dooff) {
 			fitter->setZeroLevelEstimate(offset, offsetisfixed);
+		}
+		if (rms != 0) {
+			fitter->setRMS(rms);
 		}
 		ComponentList compList = fitter->fit();
 		Vector<casa::Quantity> flux;
@@ -1677,7 +1849,7 @@ image* image::transpose(
 variant* image::getchunk(
 	const std::vector<int>& blc, const std::vector<int>& trc,
 	const std::vector<int>& inc, const std::vector<int>& axes,
-	const bool list, const bool dropdeg, const bool getmask
+	bool list, bool dropdeg, bool getmask
 ) {
 	try {
 
@@ -1685,43 +1857,54 @@ variant* image::getchunk(
 		if (detached()) {
 			return 0;
 		}
-		Array<Float> pixels;
-		Array<Bool> pixelMask;
-		Vector<Int> iaxes(axes);
-		// if default value change it to empty vector
-		if (iaxes.size() == 1 && iaxes[0] < 0) {
-			iaxes.resize();
-		}
-		_image->getchunk(
-			pixels, pixelMask, Vector<Int>(blc), Vector<Int>(trc),
-			Vector<Int>(inc), iaxes, list, dropdeg, getmask
-		);
-
-		if (getmask) {
-			std::vector<bool> s_pixelmask;
-			std::vector<int> s_shape;
-			pixelMask.tovector(s_pixelmask);
-			pixels.shape().asVector().tovector(s_shape);
-			return new variant(s_pixelmask, s_shape);
+		if (_image->isFloat()) {
+			return _getchunk<Float, double>(
+				blc, trc, inc, axes, list, dropdeg, getmask
+			);
 		}
 		else {
-			std::vector<int> s_shape;
-			pixels.shape().asVector().tovector(s_shape);
-			std::vector<double> d_pixels(pixels.nelements());
-			int i(0);
-			for (
-				Array<Float>::iterator iter = pixels.begin();
-				iter!=pixels.end(); iter++
-			) {
-				d_pixels[i++] = *iter;
-			}
-			return new variant(d_pixels, s_shape);
+			return _getchunk<Complex, std::complex<double> > (
+				blc, trc, inc, axes, list, dropdeg, getmask
+			);
 		}
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
+	}
+}
+
+template<class T, class U> casac::variant* image::_getchunk(
+	const vector<int>& blc, const vector<int>& trc,
+	const vector<int>& inc, const vector<int>& axes,
+	bool list, bool dropdeg, bool getmask
+) {
+	Array<T> pixels;
+	Array<Bool> pixelMask;
+	Vector<Int> iaxes(axes);
+	// if default value change it to empty vector
+	if (iaxes.size() == 1 && iaxes[0] < 0) {
+		iaxes.resize();
+	}
+	_image->getchunk(
+		pixels, pixelMask, Vector<Int>(blc), Vector<Int>(trc),
+		Vector<Int>(inc), iaxes, list, dropdeg, getmask
+	);
+	std::vector<int> s_shape;
+	if (getmask) {
+		std::vector<bool> s_pixelmask;
+		pixelMask.tovector(s_pixelmask);
+		pixelMask.shape().asVector().tovector(s_shape);
+		return new variant(s_pixelmask, s_shape);
+	}
+	else {
+		pixels.shape().asVector().tovector(s_shape);
+		std::vector<U> d_pixels;
+		foreach_(U v, pixels) {
+			d_pixels.push_back(v);
+		}
+		return new variant(d_pixels, s_shape);
 	}
 }
 
@@ -1739,8 +1922,12 @@ image* image::pbcor(
 	}
 	try {
 		_log << _ORIGIN;
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		Array<Float> pbPixels;
-        ImageTask::shCImFloat pb_ptr;
+        SPCIIF pb_ptr;
 		if (pbimage.type() == variant::DOUBLEVEC) {
 			Vector<Int> shape = pbimage.arrayshape();
 			pbPixels.resize(IPosition(shape));
@@ -1749,7 +1936,7 @@ image* image::pbcor(
 		}
 		else if (pbimage.type() == variant::STRING) {
             ImageInterface<Float>* pb;
-            ImageUtilities::openImage(pb, pbimage.getString(), _log);
+            ImageUtilities::openImage(pb, pbimage.getString());
 			if (pb == 0) {
 				_log << "Unable to open primary beam image " << pbimage.getString()
 					<< LogIO::EXCEPTION;
@@ -1783,7 +1970,7 @@ image* image::pbcor(
 			? ImagePrimaryBeamCorrector::DIVIDE
 			: ImagePrimaryBeamCorrector::MULTIPLY;
 		Bool useCutoff = cutoff >= 0.0;
-        ImageTask::shCImFloat shImage = _image->getImage();
+        SPCIIF shImage = _image->getImage();
         std::auto_ptr<ImagePrimaryBeamCorrector> pbcor(
 			(!pb_ptr)
 			? new ImagePrimaryBeamCorrector(
@@ -1800,7 +1987,7 @@ image* image::pbcor(
 		pbcor->setStretch(stretch);
         std::tr1::shared_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
 		return new image(corrected);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -1881,10 +2068,14 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		const int npts, const std::string& method) {
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", "getslice");
-		if (detached())
+		_log << _ORIGIN;
+		if (detached()) {
 			return rstat;
-
+		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		// handle default coord
 		std::vector<int> ncoord(coord);
 		if (ncoord.size() == 1 && ncoord[0] == -1) {
@@ -2349,28 +2540,13 @@ bool image::open(const std::string& infile) {
 		_log << _ORIGIN;
         return _image->open(infile);
 
-	} catch (AipsError x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-/*
-bool image::open(const shImFloat& inImage) {
-	try {
-		if (_log.get() == 0) {
-			_log.reset(new LogIO());
-		}
-		_log << _ORIGIN;
-		_image.reset(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage)));
-		return True;
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
-*/
+
 image* image::pad(
 	const string& outfile, int npixels, double value, bool padmask,
 	bool overwrite, const variant& region, const string& box,
@@ -2382,10 +2558,14 @@ image* image::pad(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		if (npixels <= 0) {
 			_log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
 		}
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 
 		ImagePadder padder(
 			_image->getImage(), regionPtr.get(), box,
@@ -2418,6 +2598,10 @@ image* image::crop(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
         if (axes.size() > 0) {
             std::set<int> saxes(axes.begin(), axes.end());
 	    	if (*saxes.begin() < 0) {
@@ -2425,7 +2609,7 @@ image* image::crop(
 		    }
         }
         std::set<uInt> saxes(axes.begin(), axes.end());
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 
 		ImageCropper<Float> cropper(
 			_image->getImage(), regionPtr.get(), box,
@@ -2466,50 +2650,135 @@ image::pixelvalue(const std::vector<int>& pixel) {
 	return rstat;
 }
 
-bool image::putchunk(const ::casac::variant& pixels,
-		const std::vector<int>& blc, const std::vector<int>& inc,
-		const bool list, const bool locking, const bool replicate) {
+bool image::putchunk(
+	const variant& pixels,
+	const vector<int>& blc, const vector<int>& inc,
+	const bool list, const bool locking, const bool replicate
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return false;
 		}
-		Array<Float> pixelsArray;
-
-		if (pixels.type() == ::casac::variant::DOUBLEVEC) {
-			std::vector<double> pixelVector = pixels.getDoubleVec();
-			Vector<Int> shape = pixels.arrayshape();
-			pixelsArray.resize(IPosition(shape));
-			Vector<Double> localpix(pixelVector);
-			casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-		} else if (pixels.type() == ::casac::variant::INTVEC) {
-			std::vector<int> pixelVector = pixels.getIntVec();
-			Vector<Int> shape = pixels.arrayshape();
-			pixelsArray.resize(IPosition(shape));
-			Vector<Int> localpix(pixelVector);
-			casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-		} else {
-			_log << LogIO::SEVERE
-					<< "pixels is not understood, try using an array "
-					<< LogIO::POST;
-			return False;
+		if (_image->isFloat()) {
+			Float f;
+			return _putchunk(
+				f, pixels, blc, inc, list, locking, replicate
+			);
 		}
+		else {
+			if (
+				pixels.type() == variant::COMPLEXVEC
+			) {
+				Array<Complex> pixelsArray;
+				std::vector<std::complex<double> > pixelVector = pixels.getComplexVec();
+				Vector<Int> shape = pixels.arrayshape();
+				pixelsArray.resize(IPosition(shape));
+				Vector<std::complex<double> > localpix(pixelVector);
+				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+				if (
+					_image->putchunk(
+						pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
+						list, locking, replicate
+					)
+				) {
+					_stats.reset(0);
+					return True;
+				}
+				ThrowCc("Error putting chunk");
+			}
+			else {
+				Complex c;
+				return _putchunk(
+					c, pixels, blc, inc, list, locking, replicate
+				);
+			}
+		}
+		/*
+		if (_image->isFloat()) {
+			Array<Float> pixelsArray;
+			if (pixels.type() == ::casac::variant::DOUBLEVEC) {
+				std::vector<double> pixelVector = pixels.getDoubleVec();
+				Vector<Int> shape = pixels.arrayshape();
+				pixelsArray.resize(IPosition(shape));
+				Vector<Double> localpix(pixelVector);
+				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+			}
+			else if (pixels.type() == ::casac::variant::INTVEC) {
+				std::vector<int> pixelVector = pixels.getIntVec();
+				Vector<Int> shape = pixels.arrayshape();
+				pixelsArray.resize(IPosition(shape));
+				Vector<Int> localpix(pixelVector);
+				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+			}
+			else {
+				ThrowCc(
+					"Unsupported type for pixels parameter. It "
+					"must be either a vector of doubles or ints"
+				);
+			}
+			if (
+				_image->putchunk(
+					pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
+					list, locking, replicate
+				)
+			) {
+				_stats.reset(0);
+				return True;
+			}
+		}
+		else {
 
-		if (
-			_image->putchunk(
-				pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
-				list, locking, replicate
-			)
-		) {
-			_stats.reset(0);
-			return True;
 		}
 		throw AipsError("Error putting chunk.");
+		*/
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+template<class T> bool image::_putchunk(
+	T imageType, const variant& pixels,
+	const vector<int>& blc, const vector<int>& inc,
+	const bool list, const bool locking, const bool replicate
+) {
+	Array<T> pixelsArray;
+	Vector<Int> shape = pixels.arrayshape();
+
+	if (pixels.type() == variant::DOUBLEVEC) {
+		std::vector<double> pixelVector = pixels.getDoubleVec();
+		pixelsArray.resize(IPosition(shape));
+		Vector<Double> localpix(pixelVector);
+		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+	}
+	else if (pixels.type() == variant::INTVEC) {
+		std::vector<int> pixelVector = pixels.getIntVec();
+		pixelsArray.resize(IPosition(shape));
+		Vector<Int> localpix(pixelVector);
+		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+	}
+
+	else {
+		String types = casa::whatType(&imageType) == TpFloat
+			? "doubles or ints"
+			: "complexes, doubles, or ints";
+		ThrowCc(
+			"Unsupported type for pixels parameter. It "
+			"must be either a vector of " + types
+		);
+	}
+	if (
+		_image->putchunk(
+			pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
+			list, locking, replicate
+		)
+	) {
+		_stats.reset(0);
+		return True;
+	}
+	ThrowCc("Error putting chunk");
 }
 
 bool image::putregion(const ::casac::variant& v_pixels,
@@ -2600,8 +2869,9 @@ bool image::putregion(const ::casac::variant& v_pixels,
 }
 
 image* image::pv(
-	const string& outfile, const vector<double>& start,
-	const vector<double>& end, const int width, const string& unit,
+	const string& outfile, const variant& start,
+	const variant& end, const variant& center, const variant& length,
+	const variant& pa, const variant& width, const string& unit,
 	const bool overwrite, const variant& region, const string& chans,
 	const string& stokes, const string& mask, const bool stretch,
 	const bool wantreturn
@@ -2611,27 +2881,133 @@ image* image::pv(
 	}
 	try {
 		_log << _ORIGIN;
-		if (start.size() != 2) {
-			_log << "start must have exactly two elements" << LogIO::EXCEPTION;
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
+		std::tr1::shared_ptr<MVDirection> startMVD, endMVD, centerMVD;
+		Vector<Double> startPix, endPix, centerPix;
+		std::tr1::shared_ptr<casa::Quantity> lengthQ;
+		Double lengthD = 0;
+		if (start.size() > 0 && end.size() > 0) {
+			ThrowIf(
+				center.size() > 0 || length.size() > 0
+				|| pa.size() > 0,
+				"None of center, length, nor pa may be specified if start and end are specified"
+			);
+			ThrowIf(
+				start.type() != end.type(),
+				"start and end must be the same data type"
+			);
+			MVDirection dir;
+			_processDirection(startPix, dir, start, "start");
+			if (startPix.size() == 0) {
+				startMVD.reset(new MVDirection(dir));
+			}
+			_processDirection(endPix, dir, end, "end");
+			if (endPix.size() == 0) {
+				endMVD.reset(new MVDirection(dir));
+			}
 		}
-		if (end.size() != 2) {
-			_log << "end must have exactly two elements" << LogIO::EXCEPTION;
+		else if (
+			center.size() > 0 && width.size() > 0
+			&& pa.size() > 0
+		) {
+			ThrowIf(
+				start.size() > 0 || end.size() > 0,
+				"Neither start nor end may be specified if center, length, and pa are specified"
+			);
+			MVDirection dir;
+			_processDirection(centerPix, dir, center, "center");
+			if (centerPix.size() == 0) {
+				centerMVD.reset(new MVDirection(dir));
+			}
+			if (length.type() == variant::INT || length.type() == variant::DOUBLE) {
+				lengthD = length.toDouble();
+			}
+			else {
+				lengthQ.reset(
+					new casa::Quantity(_casaQuantityFromVar(variant(length)))
+				);
+			}
 		}
-		if (width % 2 == 0) {
-			_log << "width must be an odd integer >= 1." << LogIO::EXCEPTION;
+		else {
+			ThrowCc(
+				"Either both of start and end or all three of "
+				"center, width, and pa must be specified"
+			);
+		}
+		_log << _ORIGIN;
+
+		uInt intWidth = 0;
+		casa::Quantity qWidth;
+		if (width.type() == variant::INT) {
+			intWidth = width.toInt();
+			ThrowIf(
+				intWidth % 2 == 0 || intWidth < 1,
+				"width must be an odd integer >= 1"
+			);
+		}
+		else if (width.type() == variant::STRING || width.type() == variant::RECORD) {
+			qWidth = _casaQuantityFromVar(width);
+		}
+		else if (width.size() == 0) {
+			intWidth = 1;
+		}
+		else {
+			ThrowCc("Unsupported type for width " + width.typeString());
 		}
 		if (outfile.empty() && ! wantreturn) {
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
-		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
 		PVGenerator pv(
 			_image->getImage(), regionPtr.get(),
 			chans, stokes, mask, outfile, overwrite
 		);
-		pv.setEndpoints(start[0], start[1], end[0], end[1]);
+		if (startPix.size() == 2) {
+			pv.setEndpoints(
+				make_pair(startPix[0], startPix[1]),
+				make_pair(endPix[0], endPix[1])
+			);
+		}
+		else if (startMVD) {
+			pv.setEndpoints(*startMVD, *endMVD);
+		}
+		else if (centerMVD) {
+			if (lengthQ) {
+				pv.setEndpoints(
+					*centerMVD, *lengthQ, _casaQuantityFromVar(variant(pa))
+				);
+			}
+			else {
+				pv.setEndpoints(
+					*centerMVD, lengthD, _casaQuantityFromVar(variant(pa))
+				);
+			}
+		}
+		else {
+			if (lengthQ) {
+				pv.setEndpoints(
+					make_pair(centerPix[0], centerPix[1]),
+					*lengthQ, _casaQuantityFromVar(variant(pa))
+				);
+			}
+			else {
+				pv.setEndpoints(
+						make_pair(centerPix[0], centerPix[1]),
+					lengthD, _casaQuantityFromVar(variant(pa))
+				);
+			}
+		}
+		if (intWidth == 0) {
+			pv.setWidth(qWidth);
+		}
+		else {
+			pv.setWidth(intWidth);
+		}
 		pv.setStretch(stretch);
-		pv.setWidth(width);
 		pv.setOffsetUnit(unit);
 		tr1::shared_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
 		image *ret = wantreturn ? new image(resImage) : 0;
@@ -2644,6 +3020,30 @@ image* image::pv(
 	}
 }
 
+void image::_processDirection(
+	Vector<Double>& pixel, MVDirection& dir, const variant& inputDirection,
+	const String& paramName
+) {
+	pixel.resize(0);
+	ThrowIf(
+		inputDirection.size() != 2,
+		paramName + " must have exactly two elements"
+	);
+	variant::TYPE myType = inputDirection.type();
+	if (myType == variant::INTVEC || myType == variant::DOUBLEVEC) {
+		pixel = Vector<Double>(_toDoubleVec(inputDirection));
+	}
+	else if(myType == variant::STRINGVEC) {
+		vector<string> x = inputDirection.toStringVec();
+		casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
+		casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
+		dir = MVDirection(q0, q1);
+	}
+	else {
+		ThrowCc("Unsupported type for " + paramName);
+	}
+
+}
 
 image* image::rebin(
 	const std::string& outfile, const std::vector<int>& bin,
@@ -2695,13 +3095,17 @@ image* image::regrid(
 		        throw AipsError("Unable to create image");
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		auto_ptr<Record> csysRec(toRecord(csys));
 		auto_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
 		ThrowIf (
 			! coordinates.get(),
 			"Invalid specified coordinate system record."
 		);
-		std::auto_ptr<Record> regionPtr(_getRegion(region, True));
+		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, True));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -2724,27 +3128,6 @@ image* image::regrid(
 		regridder.setStretch(stretch);
 		tr1::shared_ptr<ImageInterface<Float> > x(regridder.regrid(True));
 		return new image(x);
-		/*
-		std::auto_ptr<Record> coordinates(toRecord(csys));
-		String methodU(method);
-		std::auto_ptr<Record> Region(toRecord(region));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Vector<Int> axes;
-		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
-			axes = inaxes;
-		}
-		return new image(
-			_image->regrid(
-				outfile, Vector<Int> (inshape), *coordinates,
-				axes, *Region, mask, methodU, decimate, replicate,
-				doRefChange, dropDegenerateAxes, overwrite,
-				forceRegrid, specAsVelocity, stretch
-			)
-		);
-		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2767,7 +3150,7 @@ image* image::regrid(
 			return 0;
 		}
 		Vector<Int> shape(inshape);
-		Quantum<Double> pa(casaQuantityFromVar(inpa));
+		Quantum<Double> pa(_casaQuantityFromVar(inpa));
 		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -2844,15 +3227,24 @@ bool image::replacemaskedpixels(
 record*
 image::restoringbeam(int channel, int polarization) {
 	try {
-		_log << LogOrigin(_class, __FUNCTION__);
+		_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
-		return fromRecord(
-			_image->getImage()->imageInfo().beamToRecord(
-				channel, polarization
-			)
-		);
+		if (_image->isFloat()) {
+			return fromRecord(
+				_image->getImage()->imageInfo().beamToRecord(
+					channel, polarization
+				)
+			);
+		}
+		else {
+			return fromRecord(
+				_image->getComplexImage()->imageInfo().beamToRecord(
+					channel, polarization
+				)
+			);
+		}
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -3058,12 +3450,14 @@ bool image::setmiscinfo(const ::casac::record& info) {
 
 std::vector<int> image::shape() {
 	std::vector<int> rstat(0);
-	_log << LogOrigin("image", __FUNCTION__);
+	_log << _ORIGIN;
 	if (detached()) {
 		return rstat;
 	}
 	try {
-		_image->getImage()->shape().asVector().tovector(rstat);
+		rstat = _image->isFloat()
+			? _image->getImage()->shape().asVector().tovector()
+			: _image->getComplexImage()->shape().asVector().tovector();
 		return rstat;
 	}
 	catch (const AipsError& x) {
@@ -3087,8 +3481,8 @@ bool image::setrestoringbeam(
 		std::auto_ptr<Record> rec(toRecord(beam));
 		if (
 			_image->setrestoringbeam(
-				casaQuantityFromVar(major), casaQuantityFromVar(minor),
-				casaQuantityFromVar(pa), *rec, deleteIt,
+				_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
+				_casaQuantityFromVar(pa), *rec, deleteIt,
 				log, channel, polarization
 			)
 		) {
@@ -3121,6 +3515,10 @@ record* image::statistics(
 		return 0;
 	}
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		std::auto_ptr<Record> regionRec(
 			region.empty() ? 0 : toRecord(region)
 		);
@@ -3128,14 +3526,12 @@ record* image::statistics(
 		if (mtmp == "false" || mtmp == "[]") {
 			mtmp = "";
 		}
-
 		Vector<String> plotStats = toVectorString(plotstats);
 		if (plotStats.size() == 0) {
 			plotStats.resize(2);
 			plotStats[0] = "mean";
 			plotStats[1] = "sigma";
 		}
-
 		Vector<Int> tmpaxes(axes);
 		if (tmpaxes.size() == 1 && tmpaxes[0] == -1) {
 			tmpaxes.resize(0);
@@ -3178,7 +3574,6 @@ record* image::statistics(
 		}
 		_stats->setPlotStats(plotStats);
 		_stats->setAxes(tmpaxes);
-
 		_stats->setIncludePix(tmpinclude);
 		_stats->setPlotter(plotter);
 		_stats->setExcludePix(tmpexclude);
@@ -3240,10 +3635,11 @@ bool image::twopointcorrelation(
 ) {
 	try {
 		_log << _ORIGIN;
-		if (detached()) {
-			throw AipsError("Unable to create image");
-		}
-		std::auto_ptr<Record> regionRec = _getRegion(region, False);
+		ThrowIf(
+			detached(),
+			"Unable to create image"
+		);
+		std::tr1::shared_ptr<Record> regionRec = _getRegion(region, False);
 		String regionStr = region.type() == variant::STRING
 			? region.toString()
 			: "";
@@ -3255,14 +3651,35 @@ bool image::twopointcorrelation(
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
-        tr1::shared_ptr<ImageInterface<Float> > clone(_image->getImage()->cloneII());
-		tr1::shared_ptr<ImageInterface<Float> > tmpIm(
-			SubImageFactory<Float>::createImage(
-				*clone, outfile, *regionRec,
-				mask, dropDegenerateAxes, overwrite, list, stretch
-			)
-		);
-		image *res = wantreturn ? new image(tmpIm) : 0;
+
+		tr1::shared_ptr<ImageAnalysis> ia;
+		if (_image->isFloat()) {
+			ia.reset(
+				new ImageAnalysis(
+					_subimage<Float>(
+						std::tr1::shared_ptr<ImageInterface<Float> >(
+							_image->getImage()->cloneII()
+						),
+						outfile, *regionRec, mask, dropDegenerateAxes,
+						overwrite, list, stretch
+					)
+				)
+			);
+		}
+		else {
+			ia.reset(
+				new ImageAnalysis(
+					_subimage<Complex>(
+						std::tr1::shared_ptr<ImageInterface<Complex> >(
+							_image->getComplexImage()->cloneII()
+						),
+						outfile, *regionRec, mask, dropDegenerateAxes,
+						overwrite, list, stretch
+					)
+				)
+			);
+		}
+		image *res = wantreturn ? new image(ia) : 0;
 		return res;
 	}
 	catch (const AipsError& x) {
@@ -3270,6 +3687,20 @@ bool image::twopointcorrelation(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+template<class T> tr1::shared_ptr<ImageInterface<T> > image::_subimage(
+	std::tr1::shared_ptr<ImageInterface<T> > clone,
+	const String& outfile, const Record& region,
+	const String& mask, bool dropDegenerateAxes,
+	bool overwrite, bool list, bool stretch
+) {
+	return tr1::shared_ptr<ImageInterface<T> >(
+		SubImageFactory<T>::createImage(
+			*clone, outfile, region,
+			mask, dropDegenerateAxes, overwrite, list, stretch
+		)
+	);
 }
 
 record* image::summary(
@@ -3383,7 +3814,7 @@ image::topixel(const ::casac::variant& value) {
 	//  std::vector<double> rstat;
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", "topixel");
+		_log << LogOrigin("image", __FUNCTION__);
 		if (detached())
 			return rstat;
 
@@ -3395,7 +3826,7 @@ image::topixel(const ::casac::variant& value) {
 		mycoords.setcoordsys(cSys);
 		rstat = mycoords.topixel(value);
 
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3407,7 +3838,7 @@ image::topixel(const ::casac::variant& value) {
 image::toworld(const ::casac::variant& value, const std::string& format) {
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", "toworld");
+		_log << LogOrigin("image", __FUNCTION__);
 		if (detached())
 			return rstat;
 
@@ -3457,7 +3888,7 @@ bool image::unlock() {
 			return rstat;
 
 		rstat = _image->unlock();
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3687,13 +4118,10 @@ image* image::newimagefromshape(
 				linear, overwrite, log
 			)
 		);
-		if (outIm.get() != 0) {
-			rstat =  new image(outIm);
-		} else {
-			rstat =  new image();
-		}
-		if(!rstat)
-			throw AipsError("Unable to create image");
+        rstat = outIm.get() ? new image(outIm) : new image(outIm);
+		ThrowIf(
+			rstat == 0, "Unable to create image"
+		);
 		return rstat;
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3804,50 +4232,55 @@ image::recordFromQuantity(const Quantum<Vector<Double> >& q) {
 	return r;
 }
 
-casa::Quantity image::casaQuantityFromVar(const ::casac::variant& theVar) {
-	casa::Quantity retval;
+casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << _ORIGIN;
 		casa::QuantumHolder qh;
 		String error;
-		if (theVar.type() == ::casac::variant::STRING || theVar.type()
-				== ::casac::variant::STRINGVEC) {
-			if (!qh.fromString(error, theVar.toString())) {
-				_log << LogIO::SEVERE << "Error " << error
-						<< " in converting quantity " << LogIO::POST;
-			}
-			retval = qh.asQuantity();
+		if (
+			theVar.type() == ::casac::variant::STRING
+			|| theVar.type() == ::casac::variant::STRINGVEC
+		) {
+			ThrowIf(
+				!qh.fromString(error, theVar.toString()),
+				"Error " + error + " in converting quantity "
+			);
 		}
-		if (theVar.type() == ::casac::variant::RECORD) {
+		else if (theVar.type() == ::casac::variant::RECORD) {
 			//NOW the record has to be compatible with QuantumHolder::toRecord
 			::casac::variant localvar(theVar); //cause its const
-			Record * ptrRec = toRecord(localvar.asRecord());
-			if (!qh.fromRecord(error, *ptrRec)) {
-				_log << LogIO::SEVERE << "Error " << error
-						<< " in converting quantity " << LogIO::POST;
-			}
-			delete ptrRec;
-			retval = qh.asQuantity();
+			auto_ptr<Record> ptrRec(toRecord(localvar.asRecord()));
+			ThrowIf(
+				!qh.fromRecord(error, *ptrRec),
+				"Error " + error + " in converting quantity "
+			);
 		}
-	} catch (const AipsError& x) {
+        else if (theVar.type() == variant::BOOLVEC) {
+            return casa::Quantity();
+        }
+		return qh.asQuantity();
+	}
+	catch (const AipsError& x) {
 		_log << LogOrigin("image", __FUNCTION__);
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return retval;
 }
 
 bool image::isconform(const string& other) {
-	_log << LogOrigin("image", __FUNCTION__);
+	_log << _ORIGIN;
 
 	if (detached()) {
 		return False;
 	}
 	try {
-
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		ImageInterface<Float> *oth = 0;
-		ImageUtilities::openImage(oth, String(other), _log);
+		ImageUtilities::openImage(oth, String(other));
 		if (oth == 0) {
 			throw AipsError("Unable to open image " + other);
 		}
@@ -3868,21 +4301,21 @@ bool image::isconform(const string& other) {
 			return True;
 		}
 		return False;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-std::auto_ptr<Record> image::_getRegion(
+std::tr1::shared_ptr<Record> image::_getRegion(
 	const variant& region, const bool nullIfEmpty
 ) const {
 	switch (region.type()) {
 	case variant::BOOLVEC:
-		return std::auto_ptr<Record>(nullIfEmpty ? 0 : new Record());
+		return std::tr1::shared_ptr<Record>(nullIfEmpty ? 0 : new Record());
 	case variant::STRING:
-		return std::auto_ptr<Record>(
+		return std::tr1::shared_ptr<Record>(
 			region.toString().empty()
 				? nullIfEmpty ? 0 : new Record()
 				: new Record(
@@ -3895,22 +4328,39 @@ std::auto_ptr<Record> image::_getRegion(
 		);
 	case variant::RECORD:
 		{
-			std::auto_ptr<variant> clon(region.clone());
-			return std::auto_ptr<Record>(
+			std::tr1::shared_ptr<variant> clon(region.clone());
+			return std::tr1::shared_ptr<Record>(
 				nullIfEmpty && region.size() == 0
 					? 0
 					: toRecord(
-						std::auto_ptr<variant>(region.clone())->asRecord()
+						std::tr1::shared_ptr<variant>(region.clone())->asRecord()
 					)
 			);
 		}
 	default:
-		_log << "Unsupported type for region " << region.type()
-			<< LogIO::EXCEPTION;
-		// unnecessary but eliminates compiler warning
-		return (std::auto_ptr<Record>(0));
+		ThrowCc("Unsupported type for region " + region.typeString());
 	}
 }
+
+vector<double> image::_toDoubleVec(const variant& v) {
+	variant::TYPE type = v.type();
+	ThrowIf(
+		type != variant::INTVEC && type != variant::LONGVEC
+		&& type != variant::DOUBLEVEC,
+		"variant is not a numeric array"
+	);
+	vector<double> output;
+	if (type == variant::INTVEC || type == variant::LONGVEC) {
+		Vector<Int> x = v.toIntVec();
+		std::copy(x.begin(), x.end(), std::back_inserter(output));
+	}
+	if (type == variant::DOUBLEVEC) {
+		Vector<Double> x = v.toDoubleVec();
+		std::copy(x.begin(), x.end(), std::back_inserter(output));
+	}
+	return output;
+}
+
 
 
 } // casac namespace

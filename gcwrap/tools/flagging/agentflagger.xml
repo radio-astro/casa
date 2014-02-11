@@ -1032,7 +1032,7 @@ given in the string. Note that if ntime='scan' and combinescans=True, all the sc
 be loaded at once, thus requesting a lot of memory depending on the available spws.
 The parameter combinescans should be set to True only when ntime is specified as a 
 time-interval (not 'scan'). By default, the flags will be extended in time, if
-more than 50% of the timeranges are flagged, 80% of the channels are flagged and
+more than 50\% of the timeranges are flagged, 80\% of the channels are flagged and
 it will extend to other polarizations too. This is similar to running the extend
 mode after running tfcrop on the MS.
 
@@ -1123,11 +1123,11 @@ for the extend mode.
     </param>
 
    <param type="double" name="growtime">
-        <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100). Default: </description>
+        <description>Flag all \'ntime\' integrations if more than X\% of the timerange is flagged (0-100). Default: </description>
         <value>50.0</value>
     </param>
     <param type="double" name="growfreq">
-        <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100). Default: </description>
+        <description>Flag all selected channels if more than X\% of the frequency range is flagged(0-100). Default: </description>
         <value>50.0</value>
     </param>
     <param type="bool" name="growaround">

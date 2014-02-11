@@ -1,8 +1,8 @@
 from taskinit import *
 
 def impv(
-    imagename, outfile, start, end, width, unit, overwrite,
-    region, chans, stokes, mask, stretch
+    imagename, outfile, start, end, center, length, pa, width,
+    unit, overwrite, region, chans, stokes, mask, stretch
 ):
     casalog.origin('impv')
     try:
@@ -12,10 +12,10 @@ def impv(
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
         myia.pv(
-            outfile=outfile, start=start, end=end,
-            width=width, unit=unit, overwrite=overwrite, region=region,
-            chans=chans, stokes=stokes, mask=mask, stretch=stretch,
-            wantreturn=False
+            outfile=outfile, start=start, end=end, center=center,
+            length=length, pa=pa, width=width, unit=unit,
+            overwrite=overwrite, region=region, chans=chans,
+            stokes=stokes, mask=mask, stretch=stretch, wantreturn=False
         )
         return True
     except Exception, instance:

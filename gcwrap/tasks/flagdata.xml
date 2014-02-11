@@ -171,7 +171,7 @@
                 <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
-                <description>Data column on which to operate (data,corrected,model,residual,etc.)</description>
+                <description>Data column on which to operate (data,corrected,model,weight,etc.)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
             </param>
@@ -367,7 +367,7 @@
 
             <param type="string" name="name" subparam="true">
                 <description>Name of this summary report (key in summary dictionary)</description>
-                <value>summary</value>
+                <value>Summary</value>
             </param>
 
             <!-- ACTION parameters -->
@@ -605,7 +605,7 @@
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
-                        <default param="name"><value type="string">summary</value></default>
+                        <default param="name"><value type="string">Summary</value></default>
                     </equals>
                 </when>
 
@@ -757,6 +757,11 @@
                   IMPORTANT: string values must contain quotes around them or the parser
                              will not work. The parser evaluates the commands in the list
                              and considers only existing Python types.
+	
+                  NOTE: There should be no whitespace between KEY=VALUE since the parser 
+                        first breaks command lines on whitespace, then on "=". Use only whitespaces 
+                        to separate the parameters (no commas). Scroll down to the bottom to see
+                        a detailed description of the input list syntax.
 
                   Example1: the following commands can be saved to a file or group of files
                             and given to the task (e.g. save it to flags.txt).
@@ -1282,7 +1287,7 @@
                        multiple times in list mode. When calling the summary mode as a 
                        command in a list, one can give different names to each one of 
                        them so that they can be easily pulled out of the summary's dictionary.
-                    default: 'summary'
+                    default: 'Summary'
 
                     In summary mode, the task returns a dictionary of flagging statistics.
 	

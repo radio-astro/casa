@@ -178,7 +178,7 @@ If the position angle is not included, the default is 0 degrees.
 If the star type is not included, the default type is a cross.
 The default is no label string.
 There are currently 22 different types of star marks.
- &lt; 0: No Mark, only the star label is printed
+ \&lt; 0: No Mark, only the star label is printed
    0: Cross             10: Five pointed star
    1: Ellipse           11: Star of David
    2: Box               12: Seven pointed star
@@ -189,10 +189,10 @@ There are currently 22 different types of star marks.
    7: Septagon          17: 12    pointed star
    8: Octagon           18: 13    pointed star
    9: Nine-gon          19: 14    pointed star
-  20: Cross with gap   &gt;20: Ellipse
+  20: Cross with gap   \&gt;20: Ellipse
 The Box (type=2) is different from the diamond in that the
 star size is the half height and width of the box dimensions.
-The Box and the Null (&lt;0) are labeled at RA and Dec plus Delta
+The Box and the Null (\&lt;0) are labeled at RA and Dec plus Delta
 RA and Delta Dec.  The other marks are labeled at the right
 edge of the of the Rotated RA axis.  The CROSS WITH GAP
 (type=20) has the inner third of the cross removed so the
@@ -205,7 +205,7 @@ For more information, see the AIPS help file for
 Caveats:
 \begin{itemize}
 \item In AIPS, the following are supported: 1: 1900; 2: B1950; 3: J2000; 4: Galactic
-5: OHLSSON Gal.; 6: VAN TULDER Galactic; 7: Super Galactic; if &gt; 1000 then year assumed.
+5: OHLSSON Gal.; 6: VAN TULDER Galactic; 7: Super Galactic; if \&gt; 1000 then year assumed.
 Currently, \aipspp\ can support 2 (refer='b1950'), 3
 (refer='j2000'), 4 (refer='gal'), 7 (refer='supergal'). If you
 need any of the others, please contact us.
@@ -234,7 +234,7 @@ up to 7 numbers on each line (in free format):
 
      4.  Major axis of component (milliarcsec), "axis"
 
-     5.  Axial ratio (minor/major, i.e.  &lt; 1), "ratio"
+     5.  Axial ratio (minor/major, i.e.  \&lt; 1), "ratio"
 
      6.  Position angle of major axis (degrees, North  through  East),
          "phi"
@@ -744,7 +744,7 @@ and available in Glish as mycl.
     component could be used to model a physical process. These
     criteria are:
     \begin{itemize}
-    \item $I &gt;= \sqrt{Q^2 + U^2 + V^2}$
+    \item $I \&gt;= \sqrt{Q^2 + U^2 + V^2}$
     \item That the flux, when represented using the Stokes
           representation, has a zero imaginary value.
     \end{itemize}
@@ -1003,6 +1003,10 @@ and available in Glish as mycl.
     \item[spectrumtype, index] See the 
       <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link> 
       function.
+      
+OR
+
+      <link anchor="componentmodels:componentlist.setstokesspectrum.function">setspectrum</link> 
     \item[label] See the 
       <link anchor="componentmodels:componentlist.setlabel.function">setlabel</link> 
       function.
@@ -1495,8 +1499,7 @@ An integer between 0 and one less than the list length, inclusively</description
 
  
    <method type="function" name="getfluxerror">
-   <shortdescription>Get the error in the flux of the
-specified component {\bf (Not implemented yet)}</shortdescription>
+   <shortdescription>Get the error in the flux of the specified component</shortdescription>
    
   <keyword>getfluxerror</keyword>
   <description>
@@ -1516,7 +1519,7 @@ specified component {\bf (Not implemented yet)}</shortdescription>
   <input>
     
      <param type="int" name="which">
-     <description>An index specifying which component.
+     <description>Index specifying which component.
      An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
@@ -2361,6 +2364,153 @@ specified component {\bf (Not implemented yet)}</shortdescription>
 </method>
 
  
+ <method type="function" name="setstokesspectrum">
+   <shortdescription>Change the spectrum of the component</shortdescription>
+   
+  <keyword>setstokesspectrum</keyword>
+  <description>
+    The setstokesspectrum function changes the spectrum of the specified components
+    to the user specified spectrum. This is different from <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link> as it provides ways to control variation of all 4 Stokes parameters with frequency. If only I variation is needed please use <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link>
+
+    The type argument defines what the sort of new spectrum to use. This
+    can be either 'constant' or 'spectral index' or 'tabular'. The parsing of this
+    string is case insensitive.
+
+    If the spectrum type is 'constant' then the remaining arguments in
+    this function are ignored. There are no other parameters needed to
+    specify a constant spectrum.
+
+    But if the spectrum is 'spectral index', the {\tt index} argument is
+    needed. It is a 4 element vector. 
+ 
+   The first element ($\alpha_0$) is the spectral index of stokes I ($ I(\nu)=I(\nu_0)({{\nu}\over{\nu_0}})^{\alpha_0} $)
+
+    The second element ($\alpha_1$) is a spectral index for the fractional linear polarization ( $\sqrt{{{(Q(\nu)^2+U(\nu)^2)}\over{I(\nu)^2}}} =   \sqrt{{{(Q(\nu_0)^2+U(\nu_0)^2)}\over{I(\nu_0)^2}}}({{\nu}\over{\nu_0}})^{\alpha_1}$). $\alpha_1=0$ implies constant fractional linear polarization w.r.t frequency.
+ 
+    The third element is a "Rotation Measure" factor, i.e angle of rotation $\theta= \alpha_2 (\lambda^2 - \lambda_0^2)$ of the linear polarization at frequency $\nu$ w.r.t  frequency $\nu_0$.   
+
+    The fourth element  is a spectral index for the fractional spectral polarization ( $ {{V(\nu)}\over{I(\nu)}} =   {{V(\nu_0)}\over{I(\nu_0)}}({{\nu}\over{\nu_0}})^{\alpha_3}$
+
+    If the spectrum is 'tabular', then {\tt index} is ignored but the six parameters 
+    {\tt tabularfreqs, tabulari, tabularq, tabularu, tabularv and tabularframe} are considered. {\tt tabularfreqs} and {\tt tabulari, tabularq, tabularu, tabularv} have to be list of same lengths and larger than 2. You need at least 2 samples to interpolate the spectral value in between. 
+    The Stokes parameters  of the source is interpolated from these values. Extrappolation outside the range given in {\tt tabularfreqs} is not done.
+    {\tt tabularfreqs} should be float values in 'Hz'
+    {\tt tabulari, tabularq, tabularu, tabularv} should be float values in 'Jy'
+
+
+    You should ensure that the reference
+    frequency is set to the value you desire, using the
+    <link anchor="componentmodels:componentlist.setfreq.function">setfreq</link>
+    function if you change to the spectral index shape.
+
+  </description>
+  <input>
+    
+     <param type="int" name="which">
+     <description>The index specifying the component to modify.
+     A value between 0 and one less than the list length, inclusively</description>
+     </param>
+    
+     <param type="string" name="type">
+     <description>The new spectrum type.
+     A string that is either 'constant or 'spectral index' or 'tabular'</description>
+     <value>spectral index</value>
+     <allowed kind="enum">
+       <value>spectral index</value>
+       <value>constant</value>
+       <value>tabular</value>
+     </allowed>
+     </param>
+     
+     <param type="doubleArray" name="index"> 
+     <description>The spectral index.</description>
+     A 4-element vector of real numbers 
+     <value type="vector"><value>0.0</value></value>
+     </param>
+
+     <param type="doubleArray" name="tabularfreqs">
+       <description>The frequencies of for the tabular values, in Hz</description>
+       <value type="vector">
+	 <value>1.0e11</value>
+       </value>
+     </param>
+
+     <param type="doubleArray" name="tabulari">
+       <description> tabular Stokes I  values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>1.0</value>
+       </value>
+     </param>
+     <param type="doubleArray" name="tabularq">
+       <description> tabular Stokes Q values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>0.0</value>
+       </value>
+     </param>
+     <param type="doubleArray" name="tabularu">
+       <description> tabular Stokes U values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>0.0</value>
+       </value>
+     </param>
+     <param type="doubleArray" name="tabularv">
+       <description> tabular Stokes V values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>0.0</value>
+       </value>
+     </param>
+     
+    <param type="any" name="reffreq">
+     <description> The reference frequency  for spectral index
+     </description>
+     <value>1.4GHz</value>
+     </param>
+
+     <param type="string" name="frame">
+       <description> The frame for which the frequencies given are in</description>
+       <value>LSRK</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+  <example>
+    
+      
+     
+
+      This example add a point source model and revises the model point source spectral variation  changing the spectral index  and setting the reference flux to be at 2GHz.
+     I is assigned a spectral index of 1. fractional linear pol is assigned a spectral index of 0.4 and similarly for fraction circular pol and the linear pol angle is kept fixed with frequency.
+
+    cl.addcomponent(shape='point', flux=[10.0, 0.4, -0.2, 0.1], dir='J2000 19h00m00 -20d00m00')
+    cl.setstokesspectrum(which=0, type='spectral index', index=[1.0, 0.4, 0, 0.4], reffreq='2.0GHz')
+    cl.rename('my19hcomp.cl')
+    cl.done()
+
+    
+
+   In this example a componentlist  is created from scratch and 2 sources are added
+   One whose spectral variation is defined by a spectral index and the other one as 
+   tabular values. Both components have full Stokes parameters spectral variation 
+   defined.
+
+   cl.done()  ### effectively resets state of cl tool
+   ###add first component
+   cl.addcomponent(flux=[10, 0.5, -0.3, 0.2], dir='J2000 15h22m00 5d04m00')
+   cl.setstokesspectrum(which=0, type='spectral index', index=[1.0, 0.4, 0, 0.4], reffreq='2.0GHz')
+   ###adding second component; flux value is unimportant as the tabular values will 
+   ###will set it
+   cl.addcomponent(flux=[1.0, 0, 0, 0],dir='J2000 15h22m30 5d05m00')
+   ##define the IQUV flux variation as tabular values at different frequencies.
+   cl.setstokesspectrum(which=1, type='tabular', tabularfreqs=[1.0e9, 1.1e9, 1.2e9, 1.3e9, 1.4e9, 1.5e9, 1.6e9], tabulari=[10.0, 10.1, 10.2, 10.2, 10.25, 10.3, 1.4], tabularq=[0.2, 0.2, 0.22, 0.23, 0.22, 0.24, 0.25], tabularu=[-0.1, -0.12, -0.13, -0.13, -0.12, -0.14, -0.15], tabularv=[0.1, 0.2, 0.2, 0.2, 0.3, 0.1, 0.15])
+   ###saving the componentlist to disk
+   cl.rename('two_comp.cl')
+   cl.done()  ###done is needed to sync to disk
+
+   
+
+  </example>
+</method>
+
+
    <method type="function" name="setspectrum">
    <shortdescription>Change the spectrum of the component</shortdescription>
    

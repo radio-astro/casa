@@ -50,6 +50,9 @@
 }
 %include "</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h"
 </xsl:text>
+<xsl:if test="aps:instantiate">
+	<xsl:call-template name="instantiate"/>
+</xsl:if>
 <xsl:text disable-output-escaping="yes">
 %{
 #include &lt;exception&gt;
@@ -175,5 +178,16 @@ Output Parameters:
 	      </xsl:choose>
      </xsl:for-each>
 </xsl:template>
-     
+<xsl:template name="instantiate">
+	<xsl:for-each select="aps:instantiate">
+	<xsl:choose>
+		<xsl:when test="@name">
+%template(<xsl:value-of select="@template"/><xsl:value-of select="@name"/>) casac::<xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">&lt;</xsl:text><xsl:value-of select="@template"/><xsl:text disable-output-escaping="yes">&gt;;</xsl:text>
+		</xsl:when>
+		<xsl:when test="@file">
+			<xsl:text disable-output-escaping="yes">#include &lt;</xsl:text><xsl:value-of select="@file"/><xsl:text disable-output-escaping="yes">&gt;</xsl:text>
+		</xsl:when>
+	</xsl:choose>
+</xsl:for-each>
+</xsl:template> 
 </xsl:stylesheet>

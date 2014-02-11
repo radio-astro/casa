@@ -229,9 +229,23 @@ class sdtask_template(sdtask_interface):
             casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
         return selector
-                
+
 
     def get_selector(self, scantb=None):
+        """
+        Get selector instance that select scan(s), IF(s), polarization(s),
+        beam(s), field(s), and timerange set to this class.
+        This method parses attributes of string selection parameter,
+        scan(no), spw, pol(no), and beam(no), and converts to lists of
+        selected IDs, scanlist, iflist, pollist, and beamlist. The lists
+        are saved as attributes of this class.
+        Available range of IDs and time are obtained from a scantable.
+
+        Parameter
+            scantb : input scantable instance to get ID and time range from.
+                     The scantable defined as self.scan is used if scantb
+                     is not defined (default).
+        """
         if not scantb:
             if hasattr(self,'scan') and isinstance(self.scan, scantable):
                 scantb = self.scan
@@ -246,8 +260,14 @@ class sdtask_template(sdtask_interface):
         self.scanlist = scantb.parse_idx_selection("SCAN",self.scanno)
         self.iflist = []
         if self.spw != "":
-            ifno_str = str(',').join(scantb.parse_maskexpr(self.spw).keys())
-            self.iflist = scantb.parse_idx_selection("IF",ifno_str)
+            rfreq = None if not hasattr(self, 'restfreq') else self.restfreq
+            frame = None if (not hasattr(self, 'frame') or self.frame == '') else self.frame
+            doppler = None if (not hasattr(self, 'doppler') or self.doppler == '') else self.doppler
+            masklist = scantb.parse_spw_selection(self.spw, restfreq=rfreq,
+                                                  frame=frame, doppler=doppler)
+            if len(masklist) == 0:
+                raise ValueError, "Invalid spectral window selection. Selection contains no data."
+            self.iflist = masklist.keys()
         self.pollist = scantb.parse_idx_selection("POL",self.polno)
         self.beamlist = scantb.parse_idx_selection("BEAM",self.beamno)
         
@@ -280,7 +300,32 @@ class sdtask_template(sdtask_interface):
             casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
         return selector
-                
+
+    def assert_no_channel_selection_in_spw(self, mode='warn'):
+        """
+        Assert 'spw' does not have channel selection
+        Returns True if spw string does not have channel selecton
+        Returns False or raises an error if spw has channel selection
+
+        Available modes are
+            'result' : just returns the result (true or false)
+            'warn'   : warn user if channel selection is set
+            'error'  : raise an error if channel seledtion is set
+        """
+        if not hasattr(self, 'spw'): return True
+        # find pattern spw = 'spwID:channelRange'
+        has_chan = (self.spw.find(':') > -1)
+        ## TODO: also need to do something with "###Hz" and "###km/s"?
+        #quantap = re.compile('[a-z]', re.IGNORECASE)
+        #has_chan = has_chan or len(quantap.findall(self.spw))
+        if has_chan:
+            if mode.upper().startswith('E'):
+                raise ValueError, "spw parameter should not contain channel selection."
+            elif mode.upper().startswith('W'):
+                casalog.post("Channel selection found in spw parameter. It would be ignored", priority='WARN')
+        
+        return has_chan
+        
         
     def set_to_scan(self):
         if hasattr(self,'fluxunit'):
@@ -300,6 +345,12 @@ class sdtask_template(sdtask_interface):
                         fval = normalise_restfreq(self.restfreq)
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
+        #elif hasattr(self, 'spw') and self.spw != '' and \
+        #         hasattr(self,'restfreq'):
+        #    if self.restfreq not in ['',[]]:
+        #        fval = normalise_restfreq(self.restfreq)
+        #        casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
+        #        self.scan.set_restfreqs(freqs=fval)
 
 class sdtask_template_imaging(sdtask_interface):
     """

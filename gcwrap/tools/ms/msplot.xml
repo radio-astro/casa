@@ -791,7 +791,7 @@ The information that is displayed includes:
 
      The expression strings contain values separated by
      ','. The wildcard character '*' can be used with the names.
-     The '&gt;' and '&lt;' characters can be used to indicate values that are 
+     The '\&gt;' and '\&lt;' characters can be used to indicate values that are 
      greater then, or less then (respectively) a particular value.
 
      Note: that integer values in the antennaNames list will be interpreted
@@ -1114,8 +1114,8 @@ The information that is displayed includes:
 	  
      <param type="stringArray" name="iteration">
        <description> List of strings:  Antenna1, Antenna2, Feed1, Feed2, 
-         Field_id, Scan_number, and Time.
-         Spectral Window/Polarization_id( not available yet ) 
+         Field\_id, Scan\_number, and Time.
+         Spectral Window/Polarization\_id( not available yet ) 
        </description>
      <value></value>
      </param>   
@@ -1181,8 +1181,8 @@ mp.iterplotstop();
 	  
      <param type="stringArray" name="iteration">
        <description> List of strings:  Antenna1, Antenna2, Feed1, Feed2, 
-         Field_id, Scan_number, and Time.
-         Spectral Window/Polarization_id( not available yet ) 
+         Field\_id, Scan\_number, and Time.
+         Spectral Window/Polarization\_id( not available yet ) 
        </description>
      <value></value>
      </param>   
@@ -1231,9 +1231,9 @@ mp.checkplot( plottype='uvdist', column='data', value='amp');
      <param type="string" name="x">
      <description> X-axis, a column name in measurement ests' main table.
          Valid values are: antenna1, antenna2, aziumth, baseline,
-         channel, corrected, data, elevation, feed1, feed2, field_id,
-         frequency, hourangle, ifr_number, model, parallactic_angle,
-         residual, scan_number, time, u, uvdist, v, velocity, w, and weight.
+         channel, corrected, data, elevation, feed1, feed2, field\_id,
+         frequency, hourangle, ifr\_number, model, parallactic\_angle,
+         residual, scan\_number, time, u, uvdist, v, velocity, w, and weight.
      </description>
      <value>uvdist</value>
      </param>
@@ -1273,9 +1273,9 @@ mp.checkplot( plottype='uvdist', column='data', value='amp');
      
      <param type="stringArray" name="iteration">
      <description> List of strings:  Antenna1, Antenna2, Feed1, Feed2, 
-             Field_id, Scan_number, and Time.
+             Field\_id, Scan\_number, and Time.
              Ex: iteration over baselines : ['antenna1','antenna2']
-                    Spectral Window/Polarization_id( not available yet ) 
+                    Spectral Window/Polarization\_id( not available yet ) 
      </description>
      <value></value>
      </param>   
@@ -1322,9 +1322,9 @@ mp.plotxy( X='uvdist', Y='', column='data', iteration=['antenna1, 'antenna2']);
      <param type="string" name="x">
      <description> X-axis, a column name in measurement ests' main table.
          Valid values are: antenna1, antenna2, aziumth, baseline,
-         channel, corrected, data, elevation, feed1, feed2, field_id,
-         frequency, hourangle, ifr_number, model, parallactic_angle,
-         residual, scan_number, time, u, uvdist, v, velocity, w, and weight.
+         channel, corrected, data, elevation, feed1, feed2, field\_id,
+         frequency, hourangle, ifr\_number, model, parallactic\_angle,
+         residual, scan\_number, time, u, uvdist, v, velocity, w, and weight.
      </description>
      <value>uvdist</value>
      </param>
@@ -1364,8 +1364,8 @@ mp.plotxy( X='uvdist', Y='', column='data', iteration=['antenna1, 'antenna2']);
      
      <param type="stringArray" name="iteration">
      <description> List of strings:  Antenna1, Antenna2, Feed1, Feed2,
-                 Field_id, Scan_number, and Time.
-                 Spectral Window/Polarization_id( not available yet ) 
+                 Field\_id, Scan\_number, and Time.
+                 Spectral Window/Polarization\_id( not available yet ) 
      </description>
      <value></value>
      </param>   

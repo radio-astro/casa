@@ -40,6 +40,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
     CORRECTED_DATA) can be selected. It can also be used to create a normal
     MS, split-based on the given data selection parameters.
+	
+    The resulting WEIGHT_SPECTRUM produced by mstransform is in the statistical sense 
+    correct for the simple cases of channel average, and time average, but not for the 
+    general re-gridding case, in which the error propagation formulas applicable for 
+    WEIGHT_SPECTRUM are yet to be defined. Currently, as in cvel, WEIGHT_SPECTRUM is 
+    transformed in the same way as the other data columns, but this is not statistically 
+    correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
+    to define the applicable error propagation formulas.
+
+    NOTE: when splitting the MS, any flagged data will be considered in
+          the output. This is similar to the 'keepflags=True' parameter
+          of split.
 
 </description>
 
@@ -628,10 +640,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         timespan -- Let the timebin span across scan, state or both.
                     State is equivalent to sub-scans. One scan may have several
                     state ids. For ALMA MSs, the sub-scans are limited to about
-                    32s duration each, therefore if you want to do time average
-                    with a timebin greater than 30s, set timespan='state' to allow
-                    for this. It is useful to use the msmd tool to get the number
-                    of states per scan. See help msmd.
+                    30s duration each. In these cases, the task will automatically
+                    add state to the timespan parameter. To see the number of states
+                    in an MS, use the msmd tool. See help msmd.
 
             default: '' (separate time bins by both of the above)
             options: 'scan', 'state', 'state,scan'
@@ -649,6 +660,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 ------ EXAMPLES ------
+	
+More documentation on mstransform can be found here:
+http://www.eso.org/~scastro/ALMA/casa/MST/MSTransformDocs/MSTransformDocs.html
 
 1) Split out a single channel.
     mstransform(vis='ctb80-vsm.ms', outputvis='mychn.ms', datacolumn='data', spw='0:25')

@@ -47,6 +47,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_gencal.py
   test_hanningsmooth.py
   test_ia_adddegaxes.py
+  test_ia_calcmask.py
   test_ia_continuumsub.py
   test_ia_constructors.py
   test_ia_commonbeam.py
@@ -54,10 +55,12 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_convolve.py
   test_ia_convolve2d.py
   test_ia_crop.py
+  test_ia_decimate.py
   test_ia_decompose.py
   test_ia_deconvolvecomponentlist.py
   test_ia_deconvolvefrombeam.py
   test_ia_fft.py
+  test_ia_fromshape.py
   test_ia_getregion.py
   test_ia_hanning.py
   test_ia_histograms.py
@@ -65,6 +68,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_insert.py
   test_ia_isconform.py
   test_ia_pad.py
+  test_ia_putchunk.py
   test_ia_pv.py
   test_ia_modify.py
   test_ia_rebin.py
@@ -152,6 +156,18 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdsmooth.py
   test_sdstat.py
   test_sdtpimaging.py
+  test_tsdaverage.py
+  test_tsdbaseline.py
+  test_tsdcal.py
+  test_tsdcal2.py
+  test_tsdfit.py
+  test_tsdflag2.py
+  test_tsdgrid.py
+  test_tsdimaging.py
+  test_tsdmath.py
+  test_tsdplot.py
+  test_tsdreduce.py
+  test_tsdsave.py
   test_tsdstat.py
   test_setjy.py
   test_simobserve.py

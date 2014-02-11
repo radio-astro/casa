@@ -87,15 +87,25 @@ class componentlist_test(unittest.TestCase):
     def test_summarize(self):
         """Test the cl.summarize() method"""
         # make me a list
-        cl.addcomponent(
+        mycl = cltool()
+        mycl.addcomponent(
             [1,0,0,0],'Jy','Stokes',['J2000', '10:30:00.00', '-20.00.00.0'],
             'gaussian','4arcsec','2arcsec','30deg'
         )
-        self.assertTrue(cl.summarize(0))
-        self.assertRaises(Exception, cl.summarize, 1)
+        self.assertTrue(mycl.summarize(0))
+        self.assertRaises(Exception, mycl.summarize, which=1)
 
-
- 
-
+    def test_getfluxerror(self):
+        """Test cl.getfluxerror()"""
+        mycl = cltool()
+        mycl.addcomponent(
+            [1,0,0,0],'Jy','Stokes',['J2000', '10:30:00.00', '-20.00.00.0'],
+            'gaussian','4arcsec','2arcsec','30deg'
+        )
+        ferror = [0.2, 0.3, 0, 0]
+        mycl.setflux(0, value=mycl.getfluxvalue(0), error=ferror)
+        got = mycl.getfluxerror(0)
+        self.assertTrue((got == ferror).all())
+        
 def suite():
     return [componentlist_test]

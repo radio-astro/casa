@@ -17,6 +17,7 @@
 #include <casa/Logging/LogIO.h>
 
 #include <synthesis/ImagerObjects/SynthesisImager.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <synthesisimager_cmpt.h>
 
@@ -37,13 +38,13 @@ synthesisimager::~synthesisimager()
 }
 
 
-// This function should read in a variant, and convert it to a list of MSs and selpars for itsImager
+/*
 bool
 synthesisimager::selectdata(const std::string& msname, 
 			    const std::string& spw,
-			    const std::string& freqbeg, 
-			    const std::string& freqend, 
-			    const std::string& freqframe,
+			    const std::string& freqbeg, // ? why here ?
+			    const std::string& freqend, // ? why here ?
+			    const std::string& freqframe, // ? why here ?
 			    const std::string& field, 
 			    const std::string& antenna,
 			    const std::string& timestr,
@@ -55,21 +56,29 @@ synthesisimager::selectdata(const std::string& msname,
 			    const bool usescratch,
 			    const bool readonly,
 			    const bool incrmodel)
+*/
+bool 
+synthesisimager::selectdata(const casac::record& selpars)
 {
   Bool rstat(False);
-
+  
   try 
     {
 
       if( ! itsImager ) itsImager = new SynthesisImager();
 
-      casa::MFrequency::Types freqframetype;
-      if( !casa::MFrequency::getType(freqframetype, freqframe) )
-	throw(AipsError("Invalid Frequency Frame " + freqframe));
+      casa::Record recpars = *toRecord( selpars );
+      SynthesisParamsSelect pars;
+      pars.fromRecord( recpars );
 
-      itsImager->selectData( msname, spw, freqbeg, freqend, freqframetype,
-			     field, antenna, timestr, scan, obs, state, uvdist, taql,
-			     usescratch, readonly, incrmodel );
+      itsImager->selectData( pars );
+
+      //      itsImager->selectData( pars.msname, pars.spw, 
+      //		     pars.freqbeg, pars.freqend, pars.freqframe,
+      //		     pars.field, pars.antenna, pars.timestr, pars.scan, 
+      //		     pars.obs, pars.state, pars.uvdist, pars.taql,
+      //		     pars.usescratch, pars.readonly, pars.incrmodel );
+
     } 
   catch  (AipsError x) 
     {
@@ -79,6 +88,47 @@ synthesisimager::selectdata(const std::string& msname,
   return rstat;
 }
 
+
+bool synthesisimager::defineimage(const casac::record& impars, const casac::record& gridpars)
+{
+  Bool rstat(False);
+
+  try 
+    {
+    
+    if( ! itsImager ) itsImager = new SynthesisImager();
+    
+    casa::Record irecpars = *toRecord( impars );
+    SynthesisParamsImage ipars;
+    ipars.fromRecord( irecpars );
+
+    casa::Record grecpars = *toRecord( gridpars );
+    SynthesisParamsGrid gpars;
+    gpars.fromRecord( grecpars );
+
+    itsImager->defineImage( ipars, gpars );
+ 
+    /*
+    itsImager->defineImage( ipars.imageName, ipars.imsize[0], ipars.imsize[1], 
+			    ipars.cellsize[0], ipars.cellsize[1], ipars.stokes, ipars.phaseCenter,
+			    ipars.nchan, ipars.freqStart, ipars.freqStep, ipars.restFreq, ipars.facets, 
+			    gpars.ftmachine, ipars.nTaylorTerms, ipars.refFreq, 
+			    ipars.projection, gpars.distance, ipars.freqFrame, 
+			    gpars.trackSource, gpars.trackDir, ipars.overwrite,
+			    gpars.padding, gpars.useAutoCorr, gpars.useDoublePrec, gpars.wprojplanes, 
+			    gpars.convFunc, ipars.startModel, gpars.aTermOn,
+			    gpars.psTermOn, gpars.mTermOn, gpars.wbAWP, gpars.cfCache,
+			    gpars.doPointing,gpars.doPBCorr,gpars.conjBeams,
+			    gpars.computePAStep,gpars.rotatePAStep);
+    */
+
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+/*
 bool
 synthesisimager::defineimage(const std::string& imagename,
 			     const int nx, 
@@ -106,7 +156,19 @@ synthesisimager::defineimage(const std::string& imagename,
 			     const bool usedoubleprec,
 			     const int wprojplanes,
 			     const std::string& convfunc,
-			     const std::string& startmodel)
+			     const std::string& startmodel,
+
+			     const bool aterm,//    = True,
+			     const bool psterm,//   = True,
+			     const bool mterm,//    = False,
+			     const bool wbawp,//      = True,
+			     const std::string& cfcache,//  = "",
+			     const bool dopointing,// = False,
+			     const bool dopbcorr,//   = True,
+			     const bool conjbeams,//  = True,
+			     const float computepastep,         //=360.0
+			     const float rotatepastep          //=5.0
+			     )
 {
   Bool rstat(False);
 
@@ -157,27 +219,12 @@ synthesisimager::defineimage(const std::string& imagename,
       }
 
 
-      // Convert freqstart, freqstep, restfreq - whatever units.
-      casa::Quantity freqStart, freqStep, refFreq;
-      freqStart = casaQuantity(freqstart);
-      freqStep = casaQuantity(freqstep);
-      refFreq = casaQuantity(reffreq);
-      
-      casa::Vector<casa::Quantity> restFreq;
-      toCasaVectorQuantity( restfreq, restFreq );
-
-
       // Convert projection.
       casa::String projectionStr = toCasaString( projection );
       casa::Projection imageprojection = Projection::type( projectionStr );
 
       // Convert distance
       casa::Quantity cdistance = casaQuantity( distance );
-
-      // Convert freqframe
-      casa::MFrequency::Types freqframetype;
-      if( !casa::MFrequency::getType(freqframetype, freqframe) )
-	throw(AipsError("cmpt : Invalid Frequency Frame " + freqframe));
 
       // Convert trackDir
       casa::MDirection  trackDir;
@@ -187,12 +234,38 @@ synthesisimager::defineimage(const std::string& imagename,
 	  }
 	}
 
+      //----------------------------------------------------------------------------------------------------------------
+      //------------------------------- Frequency Frame Setup : Start ----------------------------------
+      //----------------------------------------------------------------------------------------------------------------
+      //------ Convert all inputs into LSRK start, step and reference -------------------------
+      //----------------------------------------------------------------------------------------------------------------
+
+      // Convert freqstart, freqstep, restfreq - whatever units.
+      casa::Quantity freqStart, freqStep, refFreq;
+      freqStart = casaQuantity(freqstart);
+      freqStep = casaQuantity(freqstep);
+      refFreq = casaQuantity(reffreq);
+
+      // Convert rest-freq
+      casa::Vector<casa::Quantity> restFreq;
+      toCasaVectorQuantity( restfreq, restFreq );
+
+      // Convert freqframe
+      casa::MFrequency::Types freqframetype;
+      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+	throw(AipsError("cmpt : Invalid Frequency Frame " + freqframe));
+
+      //----------------------------------------------------------------------------------------------------------------
+      //------------------------------- Frequency Frame Setup : End ------------------------------------
+      //----------------------------------------------------------------------------------------------------------------
+
+
       itsImager->defineImage( imagename, nX, nY, cellX, cellY, stokes, phaseCenter,
 			      nchan, freqStart, freqStep, restFreq, facets, ftmachine, 
 			      ntaylorterms, refFreq, 
 			      imageprojection, cdistance, freqframetype, tracksource, trackDir, overwrite,
-			      padding, useautocorr, usedoubleprec, 
-			       wprojplanes, convfunc, startmodel);
+			      padding, useautocorr, usedoubleprec, wprojplanes, convfunc, startmodel, aterm,
+			      psterm, mterm,wbawp, cfcache,dopointing,dopbcorr,conjbeams,computepastep,rotatepastep);
     } 
   catch  (AipsError x) 
     {
@@ -201,6 +274,8 @@ synthesisimager::defineimage(const std::string& imagename,
   
   return rstat;
 }
+
+*/
 
 bool synthesisimager::setweighting(const std::string& type,
 				   const std::string& rmode,

@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaultaxes,defaultaxesvalues):
+def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaultaxes,defaultaxesvalues,beam):
 	"""Convert an image FITS file into a CASA image:
 
 	Keyword arguments:
@@ -9,12 +9,10 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 		default: none; example='3C273XC1.fits'
 	imagename -- Name of output CASA image
 		default: none; example: imagename='3C273XC1.image'
-	whichrep -- If fits image has multiple coordinate reps,
-	        choose one.
+	whichrep -- If fits image has multiple coordinate reps, choose one.
 		default: 0 means first; example: whichrep=1
-	whichhdu -- If fits file contains multiple images,
-	        choose this one
-		default=0 mean first; example: whichhdu=1
+	whichhdu -- If fits file contains multiple images, choose this one
+		default=0 means first; example: whichhdu=1
 	zeroblanks -- Set blanked pixels to zero (not NaN)
 		default=True; example: zeroblanks=True
 	overwrite -- Overwrite pre-existing imagename
@@ -23,6 +21,8 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 	        default=False, example: defaultaxes=True
 	defaultaxesvalues -- List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)
 	        default = [], example: defaultaxesvalues=['13.5h', '-2.5deg', '88.5GHz', 'Q'] 
+	beam -- List of values to be used to define the synthesized beam [BMAJ,BMIN,BPA] (as in the FITS keywords)
+	        default = [] (i.e. take from FITS file), example: beam=['0.35arcsec', '0.24arcsec', '25deg']
 
 	"""
 
@@ -36,6 +36,8 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 	addstokes = False
 	addfreq=False
 	defaultorder = ['Right Ascension', 'Declination', 'Stokes', 'Frequency']
+        addbeam = False
+
 
 	try:
 
@@ -75,8 +77,24 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 				tmpname = imagename+'.tmp'
 				os.system('rm -rf '+tmpname)
 
+		if beam!=[]: # user has set beam
+			if type(beam)!=list or len(beam)!=3 or not (type(beam[0])==str and type(beam[1])==str and type(beam[2])):
+				raise TypeError, "Parameter beam is invalid (should be list of 3 strings or empty): "+str(beam)
+			qabeam = []
+			for i in range(0,3):
+				try:
+					qabeam.append(qa.quantity(beam[i]))
+					tmp = qa.toangle(qabeam[i])
+				except:
+					raise TypeError, "Parameter beam["+str(i)+"] is invalid (should be an angle): "+str(beam[i])
+			if (qa.convert(qabeam[0], 'arcsec') >= qa.convert(qabeam[1], 'arcsec')):
+				addbeam = True
+			else:
+				raise TypeError, "Parameter beam["+str(i)+"] is invalid (major axis must be >= minor axis): "+str(beam)
+
 		_myia.fromfits(tmpname,fitsimage,whichrep,whichhdu,zeroblanks)
 		_myia.close()
+
 
 		if addaxes:
 			casalog.post('Adding missing coodinate axes ...', 'INFO')
@@ -152,6 +170,24 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 			_myia.close()
 			ia2.close()
 			os.system('rm -rf '+tmpname)
+
+		if addbeam:
+			_myia.open(imagename)
+			_myia.setrestoringbeam(beam[0], beam[1], beam[2])
+			_myia.close()
+		else:
+			_myia.open(imagename)
+			mybeam = _myia.restoringbeam()
+			_myia.close()
+			if mybeam =={}: # the fits image had no beam
+				casalog.post("This image has no beam or angular resolution provided, so you will not receive warnings from\n"
+					     "tasks such as imregrid if your image pixels do not sample the the angular resolution well.\n"
+					     "(This only affects warnings, not any functionality).\n"
+					     "Providing a beam and brightness units in an image can also be useful for flux calculations.\n"
+					     "If you wish to add a beam or brightness units to your image, please use\n"
+					     "the \"beam\" parameter or ia.setrestoringbeam() and ia.setbrightnessunit()", 'WARN')
+
+
 
 	except Exception, instance:
 		casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')

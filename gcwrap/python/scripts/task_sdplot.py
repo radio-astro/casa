@@ -121,7 +121,7 @@ class sdplot_worker(sdutil.sdtask_template):
         self.__dogrid(nx, ny, cellx, celly, mapcenter)
 
         # Now set fluxunit, specunit, frame, and doppler
-        sdutil.set_fluxunit(self.scan, self.fluxunit, telescopeparm='fix')
+        sdutil.set_fluxunit(self.scan, self.fluxunit, 'fix')
         sdutil.set_spectral_unit(self.scan, self.specunit)
         sdutil.set_freqframe(self.scan, self.frame)
         sdutil.set_doppler(self.scan, self.doppler)

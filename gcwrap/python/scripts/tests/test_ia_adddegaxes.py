@@ -82,78 +82,80 @@ class ia_adddegaxes_test(unittest.TestCase):
     
     def test_general(self):
         """general tests"""
-        myia = self._myia
-        # Make RA/DEC image
-        imname = 'ia.fromshape.image'
-        imshape = [10,10]
-        myim = myia.newimagefromshape(imname, imshape)
-        self.assertTrue(myim)
-        self.assertRaises(Exception, myim.adddegaxes, direction=T)
-        myim2 = myim.adddegaxes(spectral=T)
-        self.assertTrue(myim2)
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        self.assertTrue((s == s2).all())
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        self.assertTrue(types[2] == 'Spectral')
-        self.assertTrue(mycs.done())
-        self.assertTrue(myim2.done())
-        myim2 = myim.adddegaxes(stokes='i')
-        self.assertTrue(myim2)
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        self.assertTrue((s == s2).all())
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        self.assertTrue(types[2] == 'Stokes')
-        self.assertTrue(mycs.done())
-        self.assertTrue(myim2.done())
-        #
-        myim2 = myim.adddegaxes(linear=T)
-        self.assertTrue(myim2)
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        self.assertTrue((s == s2).all())
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        self.assertTrue(types[2] == 'Linear')
-        self.assertTrue(mycs.done())
-        self.assertTrue(myim2.done())
+        myim = self._myia
         
-        myim2 = myim.adddegaxes(tabular=T)
-        self.assertTrue(myim2)
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        self.assertTrue((s == s2).all())
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        self.assertTrue(types[2] == 'Tabular')
-        self.assertTrue(mycs.done())
-        self.assertTrue(myim2.done())
-        self.assertTrue(myim.done())
-        #
-        # Make Spectral image
-        #
-        mycs = cs.newcoordsys(spectral=T)
-        self.assertTrue(mycs)
-        imname = 'ia.fromshape2.image'
-        imshape = [10]
-        myim = myia.newimagefromshape(imname, imshape, csys=mycs.torecord())
-        self.assertTrue(myim)
-        myim2 = myim.adddegaxes(direction=T)
-        self.assertTrue(myim2)
-        s = myim2.shape()
-        s2 = [imshape[0],1,1]
-        self.assertTrue((s == s2).all())
-        mycs2 = myim2.coordsys()
-        types = mycs2.axiscoordinatetypes()
-        self.assertTrue(types[1] == 'Direction' and types[2] == 'Direction')
-        self.assertTrue(mycs2.done())
-        self.assertTrue(myim2.done())
-        self.assertTrue(mycs.done())
-        self.assertTrue(myim.done())
-        
+        for t in ('f', 'c'):
+            # Make RA/DEC image
+            imname = 'ia.fromshape.image_' + t
+            imshape = [10,10]
+            myim.fromshape(imname, imshape, type=t)
+            self.assertTrue(myim)
+            self.assertRaises(Exception, myim.adddegaxes, direction=T)
+            myim2 = myim.adddegaxes(spectral=T)
+            self.assertTrue(myim2)
+            s = myim2.shape()
+            s2 = [imshape[0],imshape[1],1]
+            self.assertTrue((s == s2).all())
+            mycs = myim2.coordsys()
+            types = mycs.axiscoordinatetypes()
+            self.assertTrue(types[2] == 'Spectral')
+            self.assertTrue(mycs.done())
+            self.assertTrue(myim2.done())
+            myim2 = myim.adddegaxes(stokes='i')
+            self.assertTrue(myim2)
+            s = myim2.shape()
+            s2 = [imshape[0],imshape[1],1]
+            self.assertTrue((s == s2).all())
+            mycs = myim2.coordsys()
+            types = mycs.axiscoordinatetypes()
+            self.assertTrue(types[2] == 'Stokes')
+            self.assertTrue(mycs.done())
+            self.assertTrue(myim2.done())
+            #
+            myim2 = myim.adddegaxes(linear=T)
+            self.assertTrue(myim2)
+            s = myim2.shape()
+            s2 = [imshape[0],imshape[1],1]
+            self.assertTrue((s == s2).all())
+            mycs = myim2.coordsys()
+            types = mycs.axiscoordinatetypes()
+            self.assertTrue(types[2] == 'Linear')
+            self.assertTrue(mycs.done())
+            self.assertTrue(myim2.done())
+            
+            myim2 = myim.adddegaxes(tabular=T)
+            self.assertTrue(myim2)
+            s = myim2.shape()
+            s2 = [imshape[0],imshape[1],1]
+            self.assertTrue((s == s2).all())
+            mycs = myim2.coordsys()
+            types = mycs.axiscoordinatetypes()
+            self.assertTrue(types[2] == 'Tabular')
+            self.assertTrue(mycs.done())
+            self.assertTrue(myim2.done())
+            self.assertTrue(myim.done())
+            #
+            # Make Spectral image
+            #
+            mycs = cs.newcoordsys(spectral=T)
+            self.assertTrue(mycs)
+            imname = 'ia.fromshape2.image_' + t
+            imshape = [10]
+            myim.fromshape(imname, imshape, csys=mycs.torecord(), type=t)
+            self.assertTrue(myim)
+            myim2 = myim.adddegaxes(direction=T)
+            self.assertTrue(myim2)
+            s = myim2.shape()
+            s2 = [imshape[0],1,1]
+            self.assertTrue((s == s2).all())
+            mycs2 = myim2.coordsys()
+            types = mycs2.axiscoordinatetypes()
+            self.assertTrue(types[1] == 'Direction' and types[2] == 'Direction')
+            self.assertTrue(mycs2.done())
+            self.assertTrue(myim2.done())
+            self.assertTrue(mycs.done())
+            self.assertTrue(myim.done())
+            
     def test_beams(self):
         """test hyperbeams get accounted for correctly"""
         myia = self._myia

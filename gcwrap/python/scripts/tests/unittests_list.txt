@@ -31,6 +31,7 @@ test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
 test_ia_adddegaxes              dmehring@nrao.edu
+test_ia_calcmask                dmehring@nrao.edu
 test_ia_constructors            dmehring@nrao.edu
 test_ia_continuumsub            dmehring@nrao.edu
 test_ia_convertflux             dmehring@nrao.edu
@@ -38,10 +39,12 @@ test_ia_commonbeam              dmehring@nrao.edu
 test_ia_convolve                dmehring@nrao.edu
 test_ia_convolve2d              dmehring@nrao.edu
 test_ia_crop                    dmehring@nrao.edu
+test_ia_decimate                dmehring@nrao.edu
 test_ia_decompose               dmehring@nrao.edu
 test_ia_deconvolvecomponentlist dmehring@nrao.edu
 test_ia_deconvolvefrombeam      dmehring@nrao.edu
 test_ia_fft                     dmehring@nrao.edu
+test_ia_fromshape               dmehring@nrao.edu
 test_ia_getregion               dmehring@nrao.edu
 test_ia_hanning                 dmehring@nrao.edu
 test_ia_histograms              dmehring@nrao.edu
@@ -50,6 +53,7 @@ test_ia_insert                  dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_modify                  dmehring@nrao.edu
 test_ia_pad                     dmehring@nrao.edu
+test_ia_putchunk                dmehring@nrao.edu
 test_ia_pv                      dmehring@nrao.edu
 test_ia_rebin                   dmehring@nrao.edu
 test_ia_replacemaskedpixels     dmehring@nrao.edu

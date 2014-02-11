@@ -1256,7 +1256,7 @@ with the first two lines containing a format description.
 		Details on TaQL maybe found at http://www.astron.nl/aips++/docs/notes/199</description>
 	<input>
 		<param type="string" name="taqlcommand">
-			<description>TaQL expression></description>
+			<description>TaQL expression</description>
                 <value>TaQL expression</value>
 		</param>
 	</input>
@@ -1347,7 +1347,7 @@ made.  This table query command is equivalent to the Table Query Language
 
 See http://www.astron.nl/casacore/trunk/casacore/doc/notes/199.html for an explanation of TaQL.
 
-If "style" is not blank, "using style &lt;style&gt; " is prepended to the
+If "style" is not blank, "using style \&lt;style\&gt; " is prepended to the
 query.  See
 http://www.astron.nl/casacore/trunk/casacore/doc/notes/199.html#x1-50002.2 for
 an explanation and list of choices for style.  The default (glish) style is
@@ -3161,7 +3161,7 @@ Failure (returning F) is a sign of a bug.
     This function computes descriptive statistics on the table column.
     It returns the statistical values as a dictionary.  The given 
     column name must be a numerical column.
-    If it is a complex valued column, the parameter complex_value defines
+    If it is a complex valued column, the parameter complex\_value defines
     which derived real value is used for the statistics computation.
   </description>
   <example>

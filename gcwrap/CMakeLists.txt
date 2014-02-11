@@ -272,7 +272,8 @@ if( APPLE )
         if( _cxx_version STREQUAL "4.4" )
 	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
         else()
-	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+#	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
         endif()
     endif()
 
@@ -291,7 +292,7 @@ if( APPLE )
         endif( )
     endif( )
 
-    set( python_version 2.6 )
+    set( python_version 2.7 )
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
@@ -375,6 +376,14 @@ set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 # Targets for creating doxygen documentation
 #
 
+# strip out TeX/LaTeX with dvi2tty...
+find_program( DVI2TTY NAMES dvi2tty PATHS /usr/lib64/casa/01/bin )
+if ( DVI2TTY )
+    message( STATUS "Found dvi2tty: ${DVI2TTY}" )
+else( )
+    message( STATUS "Could not find dvi2tty, online embedded TeX documentation will be garbled" )
+endif( )
+
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
 set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5"
@@ -403,7 +412,7 @@ endif()
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
 # rpath when installing)
-set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
+set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:arbitraryExtraPaddingToAllowForRpathGrowth" )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
@@ -629,7 +638,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.226
+           VERSION 1.0.231
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h

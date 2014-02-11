@@ -53,6 +53,21 @@ MS Parameters
     <description>input MS (or CalTable) (blank for none)</description>
     <value />
   </param>
+  
+   <param type="int" name="plotindex">
+    <description>Index of the plot in case of multiple plots</description>
+    <value>0</value>
+  </param>
+  
+  <param type="int" name="gridrows">
+    <description>The number of rows to display, for multiple plots on a page.</description>
+    <value>1</value>
+  </param>
+  
+  <param type="int" name="gridcols">
+    <description>The number of columns to display, for multiple plots on a page.</description>
+    <value>1</value>
+  </param>
 
   <param type="string" name="xaxis">
     <description>plot x-axis (blank for default/current)</description>
@@ -433,14 +448,14 @@ Iteration Parameters
       </allowed>
    </param>
 
-	<param type="int" name="iternx" subparam="true">
-       <description>Number of plot rows on each page. </description>
-       <value>1</value>
+	<param type="int" name="rowindex" subparam="true">
+       <description>In the case of multiple plots per page, this indicates the row location for the plot. Values are 0-based so the first row would have an index 0. </description>
+       <value>0</value>
    </param>
 
-   <param type="int" name="iterny" subparam="true">
-       <description>Number of plot columns on each page.</description>
-       <value>1</value>
+   <param type="int" name="colindex" subparam="true">
+       <description>In the case of multiple plots per page, this indicates the column location for the plot.  Values are 0-based so the first column would have index 0.</description>
+       <value>0</value>
    </param>
 
    <param type="bool" name="xselfscale" subparam="true">
@@ -473,7 +488,7 @@ Display Parameters
     
     <param type="bool" name="customsymbol">
         <description>set a custom symbol for unflagged points</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="string" name="symbolshape" subparam="true">
@@ -710,10 +725,7 @@ Export plot as image Parameters
          <value>False</value>
      </param>
     
-     <param type="bool" name="interactive" subparam="true">
-         <description>Interactive mode (pop up confirmation window if true, set false for automated scripts to prevent blocking).</description>
-         <value>False</value>
-     </param>
+  
      <param type="bool" name="overwrite" subparam="true">
          <description>Overwrite plot file if it already exists?</description>
          <value>False</value>
@@ -1094,7 +1106,6 @@ Constraints
             <default param="expformat"><value type="string"/></default>
             <default param="exprange"><value type="string"/></default>
             <default param="highres"><value type="bool">False</value></default>
-            <default param="interactive"><value type="bool">False</value></default>
             <default param="overwrite"><value type="bool">False</value></default>
         </notequals>
     </when>
@@ -1471,8 +1482,6 @@ Constraints
         			options: 'current', 'all'             
         highres -- use high resolution? Always true for jpg and png.
                    default: false
-        interactive  -- interactive mode? (pop up confirmation window)
-                        default: false (e.g., for automated scripts to prevent blocking).
         overwrite -- Overwrite plot file if it already exists?
                      default: false
       

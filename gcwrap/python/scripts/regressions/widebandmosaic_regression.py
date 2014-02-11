@@ -72,7 +72,7 @@ def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, 
 			  cellx=cell,celly=cell,
 			  nchan=1, 
                           phasecenter = [phasecenter],
-                          stokes='I',mode='mfs')
+                          stokes='IV',mode='mfs')
       im.make(models[0]);
       algo = 'hogbom'
    im.weight(type='natural');
@@ -197,8 +197,12 @@ else:
 
    # 28 Oct 2013 (UR). After fixing more PBSQ and sqrt errors.
    # These are pixel values at the center of the source, pixel 256, 315
+
+   # 29 Jan 2014 (SB): Added Stokes-V testing 
    # Test 1
    correct_cs_intensity = 0.6710
+   #correct_cs_intensity_v = -0.0007073
+   correct_cs_intensity_v = -0.002090328
    correct_cs_avgpb = 0.4830
    # Test 2
    correct_mtmfs_intensity = 0.6803
@@ -218,15 +222,25 @@ else:
    if(os.path.exists(imname1+'.image')):
       ia.open(imname1+'.image');
       midpix = ia.pixelvalue([npix/2,npix/2])
-      midpix = ia.pixelvalue([256,315])
+      midpix = ia.pixelvalue([256,315,0,0])
+      midpix_v = ia.pixelvalue([256,315,1,0])
       ia.close();
       diff_cs_intensity = abs( midpix['value']['value'] - correct_cs_intensity )/ abs(correct_cs_intensity);
       if(diff_cs_intensity<0.02): 
-         print >>logfile,'* Passed Test 1 : peak cs_intensity test ';
+         print >>logfile,'* Passed Test 1 : peak cs_intensity_I test ';
       else: 
-         print >>logfile,'* FAILED Test 1 : peak cs_intensity test at the 2-percent level '
+         print >>logfile,'* FAILED Test 1 : peak cs_intensity_I test at the 2-percent level '
 	 regstate = False;
-      print >>logfile,'-- Test 1 : peak cs_intensity : ' + str(midpix['value']['value']) + ' (' + str(correct_cs_intensity) + ')';
+
+      diff_cs_intensity_v = abs( midpix_v['value']['value'] - correct_cs_intensity_v )/ abs(correct_cs_intensity_v);
+      if(diff_cs_intensity_v<0.02): 
+         print >>logfile,'* Passed Test 1 : peak cs_intensity_V test ';
+      else: 
+         print >>logfile,'* FAILED Test 1 : peak cs_intensity_V test at the 2-percent level '
+	 regstate = False;
+
+      print >>logfile,'-- Test 1 : peak cs_intensity_I : ' + str(midpix['value']['value']) + ' (' + str(correct_cs_intensity) + ')';
+      print >>logfile,'-- Test 1 : peak cs_intensity_V : ' + str(midpix_v['value']['value']) + ' (' + str(correct_cs_intensity_v) + ')';
    else:
       print >>logfile,'-- FAILED Test 1 : No cs_intensity map generated';
       regstate = False;

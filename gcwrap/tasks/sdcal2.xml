@@ -76,7 +76,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="interp" subparam="true">
-        <description>Interpolation type in time[,freq]. Valid options are "nearest", "linear", "cspline", or any numeric string that indicates an order of polynomial interporation. You can specify interpolation type for time and frequency separately by joining two of the above options by comma (e.g., "linear,cspline").</description>
+        <description>Interpolation type in time[,freq]. Valid options are "nearest", "linear", "cspline", or any numeric string that indicates an order of polynomial interpolation. You can specify interpolation type for time and frequency separately by joining two of the above options by comma (e.g., "linear,cspline").</description>
         <value></value>
     </param>
 
@@ -197,7 +197,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    So far, sky calibration has three types, 'ps', 'otf',
                    and 'otfraster'. If observation is configured to 
                    observe reference position, calmode must be 'ps'. 
-                   Otherwise, 'otf' or 'otfraster' shoule be used
+                   Otherwise, 'otf' or 'otfraster' should be used
                    depending on observing pattern. If observing pattern
                    is raster scan, calmode must be 'otfraster' while 
                    'otf' must be used when observing pattern is non-
@@ -209,11 +209,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          'ps,tsys,apply' (do sky and Tsys cal and apply)
             &gt;&gt;&gt; calmode expandable parameter
                  fraction -- Edge marker parameter of 'otf' and 'otfraster'.
-                             Specify a number of OFF scans (at each side of 
-                             the raster rows in 'otfraster' mode) as a 
-                             fraction of total number of data points.
+                             Specify a number of OFF integrations (at each
+                             side of the raster rows in 'otfraster' mode)
+                             as a fraction of total number of integrations.
                              In 'otfraster' mode, number of integrations 
-                             to be marked as OFF, n_off,  is determined by 
+                             to be marked as OFF, n_off, is determined by 
                              the following formula,
 
                                 n_off = floor(fraction * n),
@@ -232,13 +232,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                              where n is number of total integrations.
                              n_off is used as criterion of iterative marking
                              process. Therefore, resulting total number of 
-                             OFFs will be slightly larger than n_off.   
+                             OFFs will be larger than n_off. In practice,
+                             fraction is a geometrical fraction of edge
+                             region. Thus, if integrations are concentrated
+                             on edge region (e.g. some of Lissajous
+                             patterns), then resulting n_off may be 
+                             unexpectedly large.
                          default: '10%'
                          options: '20%' in string style or float value less 
                                   than 1.0 (e.g. 0.15).
-                                  'auto' is available only for 'otfraster' 
+                                  'auto' is available only for 'otfraster'. 
                  noff -- Edge marking parameter for 'otfraster'.
-                         It is used to specify a number of OFF scans near 
+                         It is used to specify a number of OFF spectra near 
                          edge directly. Value of noff comes before setting 
                          by fraction. Note that n_off from both sides will 
                          be marked as OFF so that twice of specified noff 
@@ -252,7 +257,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          default: 0.5
                          options: float value
                  elongated -- Edge marking parameter for 'otf'.
-                              Set True only if observed area is elongeted 
+                              Set True only if observed area is elongated 
                               in one direction.
                          default: False
                  tsysiflist -- List of IFNOs for Tsys calibration. It does 
@@ -327,22 +332,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         for each mode is as follows:
 
             'ps': position switch (including OTF) with explicit
-                  reference (OFF) scans
+                  reference (OFF) spectra
             'otf': non-raster OTF scan without explicit OFFs
                    (e.g. Lissajous, double circle, etc.)
                    intends to calibrate fast scan data
             'otfraster': raster OTF scan without explicit OFFs
 
-        So, if the data contains explicit reference scans, 'ps' should
+        So, if the data contains explicit reference spectra, 'ps' should
         be used. Otherwise, 'otfraster' and 'otf' are appropriate for
         raster OTF and non-raster OTF, respectively. In 'otf' and
-        'otfraster' modes, the task first try to define several scans 
-        near edge as OFF scans, then sky caltable is generated using those 
-        OFF scans. Those modes are designed for OTF observations without 
-        explicit OFF scans. If the observing pattern is raster, you 
+        'otfraster' modes, the task first try to find several integrations 
+        near edge as OFF spectra, then the data are calibrated using those 
+        OFFs. If the observing pattern is raster, you 
         should use the 'otfraster' mode to calibrate data. Otherwise, the 
         'otf' mode should be used. For detail about edge marking, see 
         inline help of sd.edgemarker module and its methods.
+        Those modes are designed for OTF observations without 
+        explicit OFF spectra. However, these modes should work even if
+        explicit reference spectra exist. In this case, these spectra
+        will be ignored and spectra near edges detected by edge
+        marker will be used as reference.
+
+        Except for how to choose OFFs, the procedure to derive calibrated
+        spectra is common for the
+        above three modes. Selected (or preset) OFF integrations are
+        separated by its continuity in time domain, averaged in
+        each segment, then interpolated to timestamps for ON integrations.
+        Effectively, it means that OFF integrations are averaged by each
+        OFF spectrum for 'ps' mode, averaged by either ends of each raster
+        row for 'otfraster' mode, averaged by each temporal segments of
+        detected edges for 'otf' mode. The formula for calibrated spectrum
+        is
+
+            Tsys * (ON - OFF) / OFF. 
   
         You can calibrate data on-the-fly like sdcal task by setting 
         calmode to a composite calmode string separated by comma. 

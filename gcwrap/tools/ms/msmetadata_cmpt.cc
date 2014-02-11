@@ -38,7 +38,7 @@
 #include <casa/Quanta/QLogical.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
+#include <ms/MeasurementSets/MSMetaData.h>
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/regex.hpp>
@@ -140,10 +140,9 @@ vector<int> msmetadata::antennaids(
 		vector<String> myNames;
 		// because variants default to boolvecs even when we specify elsewise in the xml.
 		casa::Quantity mind = mindiameter.type() == variant::BOOLVEC ?
-		casa::Quantity(0, "m") : casaQuantity(mindiameter);
+			casa::Quantity(0, "m") : casaQuantity(mindiameter);
 		casa::Quantity maxd = maxdiameter.type() == variant::BOOLVEC ?
-		casa::Quantity(1, "pc") :casaQuantity(maxdiameter);
-
+			casa::Quantity(1, "pc") :casaQuantity(maxdiameter);
 		ThrowIf(
 			! mind.isConform("m"),
 			"mindiameter must have units of length"
@@ -152,11 +151,12 @@ vector<int> msmetadata::antennaids(
 			! maxd.isConform("m"),
 			"maxdiameter must have units of length"
 		);
+		vector<Int> foundIDs;
 		variant::TYPE type = names.type();
 		if (type == variant::BOOLVEC) {
 			Vector<Int> x(_msmd->nAntennas());
 			indgen(x, 0);
-			return x.tovector();
+			foundIDs = x.tovector();
 		}
 		else if (type == variant::STRING) {
 			myNames.push_back(names.toString());
@@ -165,41 +165,43 @@ vector<int> msmetadata::antennaids(
 			myNames = _vectorStdStringToVectorString(names.toStringVec());
 		}
 		else {
-			*_log << "Unsupported type for parameter names. Must be either a string or string array"
-				<< LogIO::EXCEPTION;
+			ThrowCc(
+				"Unsupported type for parameter names. Must "
+				"be either a string or string array"
+			);
 		}
-
 		vector<String> allNames COMMA foundNames;
 		set<String> foundSet;
-		foreach_(String name, myNames) {
-			Bool expand = name.find('*') != std::string::npos;
-			if (expand) {
-				if (allNames.empty()) {
-					std::map<String COMMA uInt> namesToIDsMap;
-					allNames = _msmd->getAntennaNames(namesToIDsMap);
+		if (foundIDs.empty()) {
+			foreach_(String name, myNames) {
+				Bool expand = name.find('*') != std::string::npos;
+				if (expand) {
+					if (allNames.empty()) {
+						std::map<String COMMA uInt> namesToIDsMap;
+						allNames = _msmd->getAntennaNames(namesToIDsMap);
+					}
+					vector<String> matches = _match(allNames, name);
+					foreach_(String match, matches) {
+						if (foundSet.find(match) == foundSet.end()) {
+							foundNames.push_back(match);
+							foundSet.insert(match);
+						}
+					}
 				}
-				vector<String> matches = _match(allNames, name);
-				foreach_(String match, matches) {
-					if (foundSet.find(match) == foundSet.end()) {
-						foundNames.push_back(match);
-						foundSet.insert(match);
+				else {
+					if (foundSet.find(name) == foundSet.end()) {
+						foundNames.push_back(name);
+						foundSet.insert(name);
 					}
 				}
 			}
-			else {
-				if (foundSet.find(name) == foundSet.end()) {
-					foundNames.push_back(name);
-					foundSet.insert(name);
-				}
-			}
+			foundIDs = _vectorUIntToVectorInt(_msmd->getAntennaIDs(foundNames));
 		}
-		vector<uInt> foundIDs = _msmd->getAntennaIDs(foundNames);
 		Quantum<Vector<Double> > diams = _msmd->getAntennaDiameters();
 		casa::Quantity maxAntD(max(diams.getValue()), diams.getUnit());
 		casa::Quantity minAntD(min(diams.getValue()), diams.getUnit());
-
 		if (mind > minAntD || maxd < maxAntD) {
-			vector<uInt> newList;
+			vector<Int> newList;
 			String unit = diams.getUnit();
 			Vector<Double> v = diams.getValue();
 			foreach_(uInt id, foundIDs) {
@@ -210,7 +212,7 @@ vector<int> msmetadata::antennaids(
 			}
 			foundIDs = newList;
 		}
-		return _vectorUIntToVectorInt(foundIDs);
+		return foundIDs;
 	)
 	return vector<int>();
 }
@@ -845,7 +847,7 @@ record* msmetadata::observatoryposition(const int which) {
 }
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
-    _msmd.reset(new MSMetaDataOnDemand(ms, cachesize));
+    _msmd.reset(new MSMetaData(ms, cachesize));
 }
 
 
