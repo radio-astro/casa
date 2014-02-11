@@ -223,7 +223,11 @@ class selector(_selector):
         selection_list =  map(string.strip, selection.split(','))
         query_list = list(self.generate_query(selection_list))
         if len(query_list) > 0:
-            query = 'SELECT FROM $1 WHERE ' + ' || '.join(query_list)
+            original_query = self.get_query()
+            if len(original_query) == 0 or re.match('.*(SRC|FIELD)NAME.*',original_query):
+                query = 'SELECT FROM $1 WHERE ' + ' || '.join(query_list)
+            else:
+                query = 'SELECT FROM $1 WHERE (' + original_query + ') && (' + ' || '.join(query_list) + ')'
             self._settaql(query)
 
     def generate_query(self, selection_list):
@@ -337,10 +341,16 @@ class FieldIdRegexGenerator(object):
             elif pattern.find('~') >= 0:
                 s = map(string.strip, pattern.split('~'))
                 if len(s) == 2 and s[0].isdigit() and s[1].isdigit():
-                    self.id = [int(s[0])-1,int(s[1])]
+                    id0 = int(s[0])
+                    id1 = int(s[1])
+                    if id0 == 0:
+                        self.id = id1
+                        self.template = string.Template('FIELDNAME == regex(\'.+__${reg}$\')')
+                    else:
+                        self.id = [id0-1,id1]
+                        self.template = string.Template('FIELDNAME == regex(\'.+__${reg}$\') && FIELDNAME != regex(\'.+__${optreg}$\')')
                 else:
                     raise RuntimeError('Invalid syntax: %s'%(pattern))
-                self.template = string.Template('FIELDNAME == regex(\'.+__${reg}$\') && FIELDNAME != regex(\'.+__${optreg}$\')')
             else:
                 raise RuntimeError('Invalid syntax: %s'%(pattern))
             #print 'self.id=',self.id

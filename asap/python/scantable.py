@@ -300,6 +300,184 @@ def parse_fitresult(sres):
 
     return res
 
+def is_number(s):
+    s = s.strip()
+    res = True
+    try:
+        a = float(s)
+        res = True
+    except:
+        res = False
+    finally:
+        return res
+
+def is_frequency(s):
+    s = s.strip()
+    return (s[-2:].lower() == "hz")
+
+def get_freq_by_string(s1, s2):
+    if not (is_number(s1) and is_frequency(s2)):
+        raise RuntimeError("Invalid input string.")
+    
+    prefix_list = ["a", "f", "p", "n", "u", "m", ".", "k", "M", "G", "T", "P", "E"]
+    factor_list = [1e-18, 1e-15, 1e-12, 1e-9, 1e-6, 1e-3, 1.0, 1e+3, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18]
+
+    s1 = s1.strip()
+    s2 = s2.strip()
+    
+    prefix = s2[-3:-2]
+    if is_number(prefix):
+        res1 = float(s1)
+        res2 = float(s2[:-2])
+    else:
+        factor = factor_list[prefix_list.index(prefix)]
+        res1 = float(s1) * factor
+        res2 = float(s2[:-3]) * factor
+
+    return (res1, res2)
+
+def is_velocity(s):
+    s = s.strip()
+    return (s[-3:].lower() == "m/s")
+
+def get_velocity_by_string(s1, s2):
+    if not (is_number(s1) and is_velocity(s2)):
+        raise RuntimeError("Invalid input string.")
+
+    # note that the default velocity unit is km/s
+    prefix_list = [".", "k"]
+    factor_list = [1e-3, 1.0]
+
+    s1 = s1.strip()
+    s2 = s2.strip()
+
+    prefix = s2[-4:-3]
+    if is_number(prefix): # in case velocity unit m/s
+        res1 = float(s1) * 1e-3
+        res2 = float(s2[:-3]) * 1e-3
+    else:
+        factor = factor_list[prefix_list.index(prefix)]
+        res1 = float(s1) * factor
+        res2 = float(s2[:-4]) * factor
+
+    return (res1, res2)
+
+def get_frequency_by_velocity(restfreq, vel, doppler):
+    # vel is in unit of km/s
+
+    # speed of light
+    vel_c = 299792.458
+
+    import math
+    r = vel / vel_c
+
+    if doppler.lower() == 'radio':
+        return restfreq * (1.0 - r)
+    if doppler.lower() == 'optical':
+        return restfreq / (1.0 + r)
+    else:
+        return restfreq * math.sqrt((1.0 - r) / (1.0 + r))
+
+def get_restfreq_in_Hz(s_restfreq):
+    value = 0.0
+    unit = ""
+    s = s_restfreq.replace(" ","")
+
+    for i in range(len(s))[::-1]:
+        if s[i].isalpha():
+            unit = s[i] + unit
+        else:
+            value = float(s[0:i+1])
+            break
+
+    if (unit == "") or (unit.lower() == "hz"):
+        return value
+    elif (len(unit) == 3) and (unit[1:3].lower() == "hz"):
+        unitprefix = unit[0]
+        factor = 1.0
+
+        prefix_list = ["a", "f", "p", "n", "u", "m", ".", "k", "M", "G", "T", "P", "E"]
+        factor_list = [1e-18, 1e-15, 1e-12, 1e-9, 1e-6, 1e-3, 1.0, 1e+3, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18]
+        factor = factor_list[prefix_list.index(unitprefix)]
+        """
+        if (unitprefix == 'a'):
+            factor = 1.0e-18
+        elif (unitprefix == 'f'):
+            factor = 1.0e-15
+        elif (unitprefix == 'p'):
+            factor = 1.0e-12
+        elif (unitprefix == 'n'):
+            factor = 1.0e-9
+        elif (unitprefix == 'u'):
+            factor = 1.0e-6
+        elif (unitprefix == 'm'):
+            factor = 1.0e-3
+        elif (unitprefix == 'k'):
+            factor = 1.0e+3
+        elif (unitprefix == 'M'):
+            factor = 1.0e+6
+        elif (unitprefix == 'G'):
+            factor = 1.0e+9
+        elif (unitprefix == 'T'):
+            factor = 1.0e+12
+        elif (unitprefix == 'P'):
+            factor = 1.0e+15
+        elif (unitprefix == 'E'):
+            factor = 1.0e+18
+        """
+        return value*factor
+    else:
+        mesg = "wrong unit of restfreq."
+        raise Exception, mesg
+
+def normalise_restfreq(in_restfreq):
+    if isinstance(in_restfreq, float):
+        return in_restfreq
+    elif isinstance(in_restfreq, int) or isinstance(in_restfreq, long):
+        return float(in_restfreq)
+    elif isinstance(in_restfreq, str):
+        return get_restfreq_in_Hz(in_restfreq)
+    elif isinstance(in_restfreq, list) or isinstance(in_restfreq, numpy.ndarray):
+        if isinstance(in_restfreq, numpy.ndarray):
+            if len(in_restfreq.shape) > 1:
+                mesg = "given in numpy.ndarray, in_restfreq must be 1-D."
+                raise Exception, mesg
+        
+        res = []
+        for i in xrange(len(in_restfreq)):
+            elem = in_restfreq[i]
+            if isinstance(elem, float):
+                res.append(elem)
+            elif isinstance(elem, int) or isinstance(elem, long):
+                res.append(float(elem))
+            elif isinstance(elem, str):
+                res.append(get_restfreq_in_Hz(elem))
+            elif isinstance(elem, dict):
+                if isinstance(elem["value"], float):
+                    res.append(elem)
+                elif isinstance(elem["value"], int):
+                    dictelem = {}
+                    dictelem["name"]  = elem["name"]
+                    dictelem["value"] = float(elem["value"])
+                    res.append(dictelem)
+                elif isinstance(elem["value"], str):
+                    dictelem = {}
+                    dictelem["name"]  = elem["name"]
+                    dictelem["value"] = get_restfreq_in_Hz(elem["value"])
+                    res.append(dictelem)
+            else:
+                mesg = "restfreq elements must be float, int, or string."
+                raise Exception, mesg
+        return res
+    else:
+        mesg = "wrong type of restfreq given."
+        raise Exception, mesg
+
+def set_restfreq(s, restfreq):
+    rfset = (restfreq != '') and (restfreq != [])
+    if rfset:
+        s.set_restfreqs(normalise_restfreq(restfreq))
+
 class scantable(Scantable):
     """\
         The ASAP container for scans (single-dish data).
@@ -1622,6 +1800,382 @@ class scantable(Scantable):
                 break
         return istart,iend
 
+    @asaplog_post_dec
+    def parse_spw_selection(self, selectstring, restfreq=None, frame=None, doppler=None):
+        """
+        Parse MS type spw/channel selection syntax. 
+
+        Parameters:
+            selectstring : A string expression of spw and channel selection.
+                           Comma-separated expressions mean different spw -
+                           channel combinations. Spws and channel selections
+                           are partitioned by a colon ':'. In a single
+                           selection expression, you can put multiple values
+                           separated by semicolons ';'. Both for spw and
+                           channel selection, allowed cases include single
+                           value, blank('') or asterisk('*') to specify all
+                           available values, two values connected with a
+                           tilde ('~') to specify an inclusive range. Unit
+                           strings for frequency or velocity can be added to
+                           the tilde-connected values. For channel selection
+                           expression, placing a '<' or a '>' is possible to
+                           specify a semi-infinite interval as well.
+
+                     examples:
+                           '' or '*'   = all spws (all channels)
+                           '<2,4~6,9'  = Spws 0,1,4,5,6,9 (all channels)
+                           '3:3~45;60' = channels 3 to 45 and 60 in spw 3
+                           '0~1:2~6,8' = channels 2 to 6 in spws 0,1, and
+                                         all channels in spw8
+                           '1.3~1.5GHz' = all spws that fall in or have at
+                                          least some overwrap with frequency
+                                          range between 1.3GHz and 1.5GHz.
+                           '1.3~1.5GHz:1.3~1.5GHz' = channels that fall
+                                                     between the specified
+                                                     frequency range in spws
+                                                     that fall in or have
+                                                     overwrap with the
+                                                     specified frequency
+                                                     range.
+                           '1:-200~250km/s' = channels that fall between the
+                                              specified velocity range in
+                                              spw 1.
+        Returns:
+        A dictionary of selected (valid) spw and masklist pairs,
+        e.g. {'0': [[50,250],[350,462]], '2': [[100,400],[550,974]]}
+        """
+        if not isinstance(selectstring, str):
+            asaplog.post()
+            asaplog.push("Expression of spw/channel selection must be a string.")
+            asaplog.post("ERROR")
+
+        orig_unit = self.get_unit()
+        self.set_unit('channel')
+        
+        if restfreq is not None:
+            orig_molids = self._getmolidcol_list()
+            set_restfreq(self, restfreq)
+
+        orig_coord   = self._getcoordinfo()
+
+        if frame is not None:
+            orig_frame = orig_coord[1]
+            self.set_freqframe(frame)
+
+        if doppler is not None:
+            orig_doppler = orig_coord[2]
+            self.set_doppler(doppler)
+        """
+        if frame is None: frame = orig_frame
+        self.set_freqframe(frame)
+
+        if doppler is None: doppler = orig_doppler
+        self.set_doppler(doppler)
+        """
+        
+        valid_ifs = self.getifnos()
+
+        comma_sep = selectstring.split(",")
+        res = {}
+
+        for cms_elem in comma_sep:
+            colon_sep = cms_elem.split(":")
+            
+            if (len(colon_sep) > 2):
+                raise RuntimeError("Invalid selection expression: more than two colons!")
+            
+            # parse spw expression and store result in spw_list.
+            # allowed cases include '', '*', 'a', '<a', '>a', 'a~b',
+            # 'a~b*Hz' (where * can be '', 'k', 'M', 'G' etc.),
+            # 'a~b*m/s' (where * can be '' or 'k') and also
+            # several of the above expressions connected with ';'.
+            
+            spw_list = []
+
+            semicolon_sep = colon_sep[0].split(";")
+            
+            for scs_elem in semicolon_sep:
+                scs_elem = scs_elem.strip()
+                
+                lt_sep = scs_elem.split("<")
+                gt_sep = scs_elem.split(">")
+                ti_sep = scs_elem.split("~")
+                
+                lt_sep_length = len(lt_sep)
+                gt_sep_length = len(gt_sep)
+                ti_sep_length = len(ti_sep)
+                
+                len_product = lt_sep_length * gt_sep_length * ti_sep_length
+
+                if (len_product > 2):
+                    # '<', '>' and '~' must not coexist in a single spw expression
+                    
+                    raise RuntimeError("Invalid spw selection.")
+                
+                elif (len_product == 1):
+                    # '', '*', or single spw number.
+                    
+                    if (scs_elem == "") or (scs_elem == "*"):
+                        spw_list = valid_ifs[:] # deep copy
+                    
+                    else: # single number
+                        expr = int(scs_elem)
+                        spw_list.append(expr)
+                        if expr not in valid_ifs:
+                            asaplog.push("Invalid spw given. Ignored.")
+                    
+                else: # (len_product == 2)
+                    # namely, one of '<', '>' or '~' appears just once.
+                    
+                    if (lt_sep_length == 2): # '<a'
+                        if is_number(lt_sep[1]):
+                            no_valid_spw = True
+                            for i in valid_ifs:
+                                if (i < float(lt_sep[1])):
+                                    spw_list.append(i)
+                                    no_valid_spw = False
+
+                            if no_valid_spw:
+                                raise ValueError("Invalid spw selection ('<" + str(lt_sep[1]) + "').")
+                        
+                        else:
+                            raise RuntimeError("Invalid spw selection.")
+                        
+                    elif (gt_sep_length == 2): # '>a'
+                        if is_number(gt_sep[1]):
+                            no_valid_spw = True
+                            for i in valid_ifs:
+                                if (i > float(gt_sep[1])):
+                                    spw_list.append(i)
+                                    no_valid_spw = False
+                            
+                            if no_valid_spw:
+                                raise ValueError("Invalid spw selection ('>" + str(gt_sep[1]) + "').")
+                        
+                        else:
+                            raise RuntimeError("Invalid spw selection.")
+                        
+                    else: # (ti_sep_length == 2) where both boundaries inclusive
+                        expr0 = ti_sep[0].strip()
+                        expr1 = ti_sep[1].strip()
+
+                        if is_number(expr0) and is_number(expr1):
+                            # 'a~b'
+                            expr_pmin = min(float(expr0), float(expr1))
+                            expr_pmax = max(float(expr0), float(expr1))
+                            has_invalid_spw = False
+                            no_valid_spw = True
+                            
+                            for i in valid_ifs:
+                                if (expr_pmin <= i) and (i <= expr_pmax):
+                                    spw_list.append(i)
+                                    no_valid_spw = False
+                                else:
+                                    has_invalid_spw = True
+
+                            if has_invalid_spw:
+                                msg = "Invalid spw is given. Ignored."
+                                asaplog.push(msg)
+                                asaplog.post()
+
+                            if no_valid_spw:
+                                raise ValueError("No valid spw in range ('" + str(expr_pmin) + "~" + str(expr_pmax) + "').")
+                        
+                        elif is_number(expr0) and is_frequency(expr1):
+                            # 'a~b*Hz'
+                            (expr_f0, expr_f1) = get_freq_by_string(expr0, expr1)
+                            no_valid_spw = True
+                            
+                            for coord in self._get_coordinate_list():
+                                expr_p0 = coord['coord'].to_pixel(expr_f0)
+                                expr_p1 = coord['coord'].to_pixel(expr_f1)
+                                expr_pmin = min(expr_p0, expr_p1)
+                                expr_pmax = max(expr_p0, expr_p1)
+                                
+                                spw = coord['if']
+                                pmin = 0.0
+                                pmax = float(self.nchan(spw) - 1)
+                                
+                                if ((expr_pmax - pmin)*(expr_pmin - pmax) <= 0.0):
+                                    spw_list.append(spw)
+                                    no_valid_spw = False
+
+                            if no_valid_spw:
+                                raise ValueError("No valid spw in range ('" + str(expr0) + "~" + str(expr1) + "').")
+                                
+                        elif is_number(expr0) and is_velocity(expr1):
+                            # 'a~b*m/s'
+                            (expr_v0, expr_v1) = get_velocity_by_string(expr0, expr1)
+                            expr_vmin = min(expr_v0, expr_v1)
+                            expr_vmax = max(expr_v0, expr_v1)
+                            no_valid_spw = True
+                            
+                            for coord in self._get_coordinate_list():
+                                spw = coord['if']
+                                
+                                pmin = 0.0
+                                pmax = float(self.nchan(spw) - 1)
+                                
+                                vel0 = coord['coord'].to_velocity(pmin)
+                                vel1 = coord['coord'].to_velocity(pmax)
+                                
+                                vmin = min(vel0, vel1)
+                                vmax = max(vel0, vel1)
+
+                                if ((expr_vmax - vmin)*(expr_vmin - vmax) <= 0.0):
+                                    spw_list.append(spw)
+                                    no_valid_spw = False
+
+                            if no_valid_spw:
+                                raise ValueError("No valid spw in range ('" + str(expr0) + "~" + str(expr1) + "').")
+                            
+                        else:
+                            # cases such as 'aGHz~bkm/s' are not allowed now
+                            raise RuntimeError("Invalid spw selection.")
+
+            # check spw list and remove invalid ones.
+            # if no valid spw left, emit ValueError.
+            if len(spw_list) == 0:
+                raise ValueError("No valid spw in given range.")
+            
+            # parse channel expression and store the result in crange_list.
+            # allowed cases include '', 'a~b', 'a*Hz~b*Hz' (where * can be
+            # '', 'k', 'M', 'G' etc.), 'a*m/s~b*m/s' (where * can be '' or 'k')
+            # and also several of the above expressions connected with ';'.
+            
+            for spw in spw_list:
+                pmin = 0.0
+                pmax = float(self.nchan(spw) - 1)
+                
+                if (len(colon_sep) == 1):
+                    # no expression for channel selection, 
+                    # which means all channels are to be selected.
+                    crange_list = [[pmin, pmax]]
+                
+                else: # (len(colon_sep) == 2)
+                    crange_list = []
+                    
+                    found = False
+                    for i in self._get_coordinate_list():
+                        if (i['if'] == spw):
+                            coord = i['coord']
+                            found = True
+                            break
+
+                    if found:
+                        semicolon_sep = colon_sep[1].split(";")
+                        for scs_elem in semicolon_sep:
+                            scs_elem = scs_elem.strip()
+
+                            ti_sep = scs_elem.split("~")
+                            ti_sep_length = len(ti_sep)
+
+                            if (ti_sep_length > 2):
+                                raise RuntimeError("Invalid channel selection.")
+                        
+                            elif (ti_sep_length == 1):
+                                if (scs_elem == "") or (scs_elem == "*"):
+                                    # '' and '*' for all channels
+                                    crange_list = [[pmin, pmax]]
+                                    break
+                                elif (is_number(scs_elem)):
+                                    # single channel given
+                                    crange_list.append([float(scs_elem), float(scs_elem)])
+                                else:
+                                    raise RuntimeError("Invalid channel selection.")
+
+                            else: #(ti_sep_length == 2)
+                                expr0 = ti_sep[0].strip()
+                                expr1 = ti_sep[1].strip()
+
+                                if is_number(expr0) and is_number(expr1):
+                                    # 'a~b'
+                                    expr_pmin = min(float(expr0), float(expr1))
+                                    expr_pmax = max(float(expr0), float(expr1))
+
+                                elif is_number(expr0) and is_frequency(expr1):
+                                    # 'a~b*Hz'
+                                    (expr_f0, expr_f1) = get_freq_by_string(expr0, expr1)
+                                    expr_p0 = coord.to_pixel(expr_f0)
+                                    expr_p1 = coord.to_pixel(expr_f1)
+                                    expr_pmin = min(expr_p0, expr_p1)
+                                    expr_pmax = max(expr_p0, expr_p1)
+
+                                elif is_number(expr0) and is_velocity(expr1):
+                                    # 'a~b*m/s'
+                                    restf = self.get_restfreqs().values()[0][0]
+                                    (expr_v0, expr_v1) = get_velocity_by_string(expr0, expr1)
+                                    expr_f0 = get_frequency_by_velocity(restf, expr_v0, doppler)
+                                    expr_f1 = get_frequency_by_velocity(restf, expr_v1, doppler)
+                                    expr_p0 = coord.to_pixel(expr_f0)
+                                    expr_p1 = coord.to_pixel(expr_f1)
+                                    expr_pmin = min(expr_p0, expr_p1)
+                                    expr_pmax = max(expr_p0, expr_p1)
+                            
+                                else:
+                                    # cases such as 'aGHz~bkm/s' are not allowed now
+                                    raise RuntimeError("Invalid channel selection.")
+
+                                cmin = max(pmin, expr_pmin)
+                                cmax = min(pmax, expr_pmax)
+                                # if the given range of channel selection has overwrap with
+                                # that of current spw, output the overwrap area.
+                                if (cmin <= cmax):
+                                    cmin = float(int(cmin + 0.5))
+                                    cmax = float(int(cmax + 0.5))
+                                    crange_list.append([cmin, cmax])
+
+                    if (len(crange_list) == 0):
+                        crange_list.append([])
+
+                if res.has_key(spw):
+                    res[spw].extend(crange_list)
+                else:
+                    res[spw] = crange_list
+
+        for spw in res.keys():
+            if spw not in valid_ifs:
+                del res[spw]
+
+        if len(res) == 0:
+            raise RuntimeError("No valid spw.")
+        
+        # restore original values
+        self.set_unit(orig_unit)
+        if restfreq is not None:
+            self._setmolidcol_list(orig_molids)
+        if frame is not None:
+            self.set_freqframe(orig_frame)
+        if doppler is not None:
+            self.set_doppler(orig_doppler)
+        
+        return res
+    
+    @asaplog_post_dec
+    def get_first_rowno_by_if(self, ifno):
+        found = False
+        for irow in xrange(self.nrow()):
+            if (self.getif(irow) == ifno):
+                res = irow
+                found = True
+                break
+
+        if not found: raise RuntimeError("Invalid IF value.")
+        
+        return res
+
+    @asaplog_post_dec
+    def _get_coordinate_list(self):
+        res = []
+        spws = self.getifnos()
+        for spw in spws:
+            elem = {}
+            elem['if']    = spw
+            elem['coord'] = self.get_coordinate(self.get_first_rowno_by_if(spw))
+            res.append(elem)
+
+        return res
+    
     @asaplog_post_dec
     def parse_maskexpr(self, maskstring):
         """
@@ -4474,9 +5028,11 @@ class scantable(Scantable):
             sel = self.get_row_selector(i)
             self.set_selection(basesel+sel)
             nans = numpy.isnan(self._getspectrum(0))
-        if numpy.any(nans):
-            bnans = [ bool(v) for v in nans]
-            self.flag(bnans)
+            if numpy.any(nans):
+                bnans = [ bool(v) for v in nans]
+                self.flag(bnans)
+        
+        self.set_selection(basesel)
 
     def get_row_selector(self, rowno):
         return selector(rows=[rowno])

@@ -1991,7 +1991,7 @@ void STGrid::fillTable( Table &tab )
   for ( Int iy = 0 ; iy < ny_ ; iy++ ) {
     pix(1) = (Double)(iy);
     for ( Int ix = 0 ; ix < nx_ ; ix++ ) {
-      pix(0) = (Double)(nx_-1-ix);
+      pix(0) = (Double)(ix);
       dircoord_->toWorld(dir,pix);
       //os << "dir[" << ix << "," << iy << "]=" << dir << LogIO::POST;
       for ( Int ipol = 0 ; ipol < npol_ ; ipol++ ) {

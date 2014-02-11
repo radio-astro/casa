@@ -2581,15 +2581,20 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
     throw(AipsError("Cannot overwrite bltable. Set overwrite=True."));
   }
 
-  STBaselineTable bt = STBaselineTable(*this);
+  STBaselineTable* btp;
   ROScalarColumn<Double> tcol = ROScalarColumn<Double>(table_, "TIME");
   Vector<Double> timeSecCol = tcol.getColumn();
 
-  if (outBaselineTable && !outbltableexists) {
-    for (int i = 0; i < nRowSt; ++i) {
-      bt.appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
-			 0, timeSecCol[i]);
-      bt.setApply(i, false);
+  if (outBaselineTable) {
+    if (outbltableexists) {
+      btp = new STBaselineTable((String)outbltable);
+    } else {
+      btp = new STBaselineTable(*this);
+      for (int i = 0; i < nRowSt; ++i) {
+        btp->appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
+			   0, timeSecCol[i]);
+        btp->setApply(i, false);
+      }
     }
   }
 
@@ -2625,7 +2630,7 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
 	  fparam[j] = (Int)fpar[j];
 	}
 
-	bt.setdata(uInt(irow), 
+	btp->setdata(uInt(irow), 
 		    uInt(getScan(irow)), uInt(getCycle(irow)), 
 		    uInt(getBeam(irow)), uInt(getIF(irow)), uInt(getPol(irow)), 
 		    uInt(0), timeSecCol[irow], Bool(true), ftype, fparam, 
@@ -2638,9 +2643,10 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
   }
 
   if (outBaselineTable) {
-    bt.save(outbltable);
+    btp->save(outbltable);
   }
 
+  delete btp;
   return res;
 }
 
@@ -2755,6 +2761,7 @@ void Scantable::parseBlInfo(const std::string& blInfo, int& irow, STBaselineFunc
   ss << res[3];
   ss >> masklist0;
   mask = getMaskFromMaskList(nchan(getIF(irow)), splitToIntList(masklist0, ','));
+  ss.clear(); ss.str("");
 
   ss << res[4];
   ss >> thresClip;
@@ -3364,17 +3371,19 @@ double Scantable::getChebyshevPolynomial(int n, double x) {
   } else if (n == 1) {
     return x;
   } else {
-    double res = 0.0;
-    for (int m = 0; m <= n/2; ++m) {
-      double c = 1.0;
-      if (m > 0) {
-	for (int i = 1; i <= m; ++i) {
-	  c *= (double)(n-2*m+i)/(double)i;
-	}
+    double res[n+1];
+    for (int i = 0; i < n+1; ++i) {
+      double res0 = 0.0;
+      if (i == 0) {
+	res0 = 1.0;
+      } else if (i == 1) {
+	res0 = x;
+      } else {
+	res0 = 2.0 * x * res[i-1] - res[i-2];
       }
-      res += (m%2 == 0 ? 1.0 : -1.0)*(double)n/(double)(n-m)*pow(2.0*x, (double)(n-2*m))/2.0*c;
+      res[i] = res0;
     }
-    return res;
+    return res[n];
   }
 }
 
@@ -3546,10 +3555,21 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
   int j = 0;
   for (int i = 0; i < nChan; ++i) {
     maskArray[i] = mask[i] ? 1 : 0;
+    if (isnan(data[i])) maskArray[i] = 0;
+    if (isinf(data[i])) maskArray[i] = 0;
+
+    finalMask[i] = (maskArray[i] == 1);
+    if (finalMask[i]) {
+      j++;
+    }
+
+    /*
+    maskArray[i] = mask[i] ? 1 : 0;
     if (mask[i]) {
       j++;
     }
     finalMask[i] = mask[i];
+    */
   }
 
   int initNData = j;
@@ -3601,6 +3621,7 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
       }
     }
 
+    //compute inverse matrix of the left half of xMatrix
     std::vector<double> invDiag(nDOF);
     for (int i = 0; i < nDOF; ++i) {
       invDiag[i] = 1.0 / xMatrix[i][i];
@@ -3659,7 +3680,8 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
 
     double stdDev = 0.0;
     for (int i = 0; i < nChan; ++i) {
-      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+      if (maskArray[i] == 0) continue;
+      stdDev += residual[i]*residual[i];
     }
     stdDev = sqrt(stdDev/(double)nData);
     rms = (float)stdDev;
@@ -3680,7 +3702,7 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
 	}
       }
       if (newNData == nData) {
-	break; //no more flag to add. iteration stops.
+	break; //no more flag to add. stop iteration.
       } else {
 	nData = newNData;
       }
@@ -3702,7 +3724,7 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
   }
 
   return result;
-}
+} //xMatrix
 
 void Scantable::cubicSplineBaseline(const std::vector<bool>& mask, int nPiece, 
 				    float thresClip, int nIterClip, 
@@ -3945,11 +3967,23 @@ std::vector<float> Scantable::doCubicSplineLeastSquareFitting(const std::vector<
   int j = 0;
   for (int i = 0; i < nChan; ++i) {
     maskArray[i] = mask[i] ? 1 : 0;
+    if (isnan(data[i])) maskArray[i] = 0;
+    if (isinf(data[i])) maskArray[i] = 0;
+
+    finalMask[i] = (maskArray[i] == 1);
+    if (finalMask[i]) {
+      x[j] = i;
+      j++;
+    }
+
+    /*
+    maskArray[i] = mask[i] ? 1 : 0;
     if (mask[i]) {
       x[j] = i;
       j++;
     }
     finalMask[i] = mask[i];
+    */
   }
 
   int initNData = j;
@@ -4160,7 +4194,8 @@ std::vector<float> Scantable::doCubicSplineLeastSquareFitting(const std::vector<
 
     double stdDev = 0.0;
     for (int i = 0; i < nChan; ++i) {
-      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+      if (maskArray[i] == 0) continue;
+      stdDev += residual[i]*residual[i];
     }
     stdDev = sqrt(stdDev/(double)nData);
     rms = (float)stdDev;
@@ -5217,6 +5252,15 @@ void Scantable::setMoleculeIdColumnData(const std::vector<uint>& molids)
   if ( molIds.nelements() != arr.nelements() )
     throw AipsError("The input data size must be the number of rows.");
   mmolidCol_.putColumn(molIds);
+}
+
+
+std::vector<uint> Scantable::getRootTableRowNumbers() const
+{
+  Vector<uInt> rowIds(table_.rowNumbers());
+  vector<uint> res;
+  rowIds.tovector(res);
+  return res;
 }
 
 

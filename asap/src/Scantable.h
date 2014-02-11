@@ -647,6 +647,12 @@ public:
 					    bool csvformat=false) const;
   std::vector<uint> getMoleculeIdColumnData() const;
   void setMoleculeIdColumnData(const std::vector<uint>& molids);
+
+  /**
+   * Get row idx of root table
+   **/
+  std::vector<uint> getRootTableRowNumbers() const;
+
   double calculateModelSelectionCriteria(const std::string& valname,
 					 const std::string& blfunc,
 					 int order,
