@@ -807,12 +807,16 @@ void QtDisplayPanelGui::animationModeChanged( bool modeZ, bool channelCubes ){
 }
 
 void QtDisplayPanelGui::animationImageChanged( int index ){
-	animationImageIndex = index;
-	updateFrameInformationChannel();
-	if ( regionDock_ != NULL ){
-		regionDock_->updateStackOrder( animationImageIndex );
+	if ( index != animationImageIndex ){
+		animationImageIndex = index;
+
+		if ( regionDock_ != NULL ){
+			regionDock_->updateStackOrder( animationImageIndex );
+		}
+		resetListenerImage();
 	}
-	resetListenerImage();
+
+	updateFrameInformationChannel();
 }
 
 void QtDisplayPanelGui::globalColorSettingsChanged( bool global ) {
@@ -904,7 +908,7 @@ void QtDisplayPanelGui::disconnectHistogram() {
 
 void QtDisplayPanelGui::resetListenerImage() {
 	if (qdp_ != NULL ){
-		QtDisplayData* mainImage = qdp_->getChannelDD( animationImageIndex );
+		QtDisplayData* mainImage = qdp_->getRegistered( animationImageIndex );
 		if ( mainImage != NULL ) {
 			std::tr1::shared_ptr<ImageInterface<float> > img = mainImage->imageInterface();
 			if ( sliceTool != NULL ) {
@@ -3179,13 +3183,20 @@ void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChange
 					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
 				} else if ( change == viewer::region::RegionChangeSelected ) {
 					bool marked= region->marked();
-					sliceTool->setRegionSelected( regionId, marked );
-					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
-					updateSliceCorners( regionId, worldX, worldY );
-				} else {
+					bool regionSelected = region->selected();
+					bool positiveSelection = marked || regionSelected;
+					if ( positiveSelection ){
+						bool selectionChange = sliceTool->setRegionSelected( regionId, regionSelected || marked );
+						if ( selectionChange ){
+							sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
+							updateSliceCorners( regionId, worldX, worldY );
+						}
+					}
+				} /*else {
+
 					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
 					updateSliceCorners( regionId, worldX, worldY);
-				}
+				}*/
 			}
 		} else if ( change == viewer::region::RegionChangeDelete ) {
 			sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
@@ -3198,11 +3209,29 @@ void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChange
 void QtDisplayPanelGui::showSlicer() {
 	if ( sliceTool == NULL ) {
 		sliceTool = new SlicerMainWindow( this );
-
-		//Image updates
-		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
-
-
+		if ( qdp_ != NULL ){
+			PanelDisplay* panelDisplay = qdp_->panelDisplay();
+			std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
+			if (pos) {
+				std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+				if ( qrs ) {
+					//Image updates
+					connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
+					connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+									const QList<int> &, const QList<int> & ) ),
+									this, SLOT( sliceChanged( int, viewer::region::RegionChanges, const QList<double>&, const QList<double>&,
+											const QList<int>&, const QList<int> &) ));
+					//So that the slicer knows about regions that were generated
+					//before it was created.
+					connect( qrs.get(), SIGNAL(regionUpdateResponse( int, const QString &, const QString &,
+									const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> &,
+									const QString &, const QString &, const QString &, int, int)),
+									this, SLOT(addSlice( int, const QString&, const QString&, const QList<double>&,
+											const QList<double>&, const QList<int>&, const QList<int>&,
+											const QString&, const QString&, const QString&, int, int)));
+				}
+			}
+		}
 		//Update the polyline with the new slice position
 		connect(sliceTool, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(sliceMarkerPositionChanged(int,int,float)));;
 		connect(sliceTool, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT(sliceMarkerVisibilityChanged(int,bool)));
@@ -3219,24 +3248,10 @@ void QtDisplayPanelGui::generateSliceRegionUpdates(){
 		if (pos) {
 			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 			if ( qrs ) {
-				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-						const QList<int> &, const QList<int> & ) ),
-						this, SLOT( sliceChanged( int, viewer::region::RegionChanges, const QList<double>&, const QList<double>&,
-								const QList<int>&, const QList<int> &) ));
-				//So that the slicer knows about regions that were generated
-				//before it was created.
-				connect( qrs.get(), SIGNAL(regionUpdateResponse( int, const QString &, const QString &,
-						const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> &,
-						const QString &, const QString &, const QString &, int, int)),
-						this, SLOT(addSlice( int, const QString&, const QString&, const QList<double>&,
-								const QList<double>&, const QList<int>&, const QList<int>&,
-								const QString&, const QString&, const QString&, int, int)));
 				qrs->generateExistingRegionUpdates();
 
 			}
 		}
-
-
 	}
 }
 

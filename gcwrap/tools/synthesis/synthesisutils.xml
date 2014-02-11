@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/tools/xml/casa.xsd">
+
+
+ 
+        <tool name="synthesisutils" module="synthesisutils">
+	<needs>synthesisimstore</needs>
+        <shortdescription>tool for synthesis imaging</shortdescription>
+       
+<description>
+synthesisutils is an tool that contains helper functions for synthesisimager
+</description>
+
+<code>
+	<include>tools/synthesis/synthesisutils_forward.h</include>
+<private>
+	<include>tools/synthesis/synthesisutils_private.h</include>
+</private>
+
+</code>
+
+
+<!-- ===================================== -->
+ 
+   <method type="constructor" name="synthesisutils">
+   <shortdescription>Construct an synthesisutils tool</shortdescription>
+   
+<description>
+This is used to construct {\tt synthesisutils} tool. 
+
+</description>
+<input>
+
+</input>
+<returns type="synthesisutils"/>
+<example>
+
+
+</example>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="contdatapartition">
+   <shortdescription>Partition data selection parameters for continuum imaging</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="selpars">
+     <description>All selection parameters for one or more MSs</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="int" name="npart">
+     <description>Number of partitions</description>
+     <value>1</value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="cubedatapartition">
+   <shortdescription>Partition data selection parameters for CUBE imaging</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="selpars">
+     <description>All selection parameters for one or more MSs</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="int" name="npart">
+     <description>Number of partitions</description>
+     <value>1</value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="cubeimagepartition">
+   <shortdescription>Partition image cube parameters for CUBE deconvolution</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="impars">
+     <description>All imaging parameters for one or more image fields</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="int" name="npart">
+     <description>Number of partitions</description>
+     <value>1</value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="checkselectionparams">
+   <shortdescription>Check and Fix Selection Parameters for one MS</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="selpars">
+     <description>All selection parameters for one MS</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="checkimageparams">
+   <shortdescription>Check and Fix Imaging Parameters for one field</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="impars">
+     <description>All imaging parameters for one image-field</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="checkgridparams">
+   <shortdescription>Check and Fix Gridding/FTM Parameters for one field</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="gridpars">
+     <description>All gridding/ftm parameters for one image-field</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="makeimage">
+   <shortdescription>Make an empty image</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="impars">
+     <description>All image parameters for one image-field</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="string" name="msname">
+     <description>Name of MS from which to get observatory information (optional) </description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
+   <method type="function" name="done">
+   <shortdescription>Close the tool</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+
+</tool>
+
+</casaxml>

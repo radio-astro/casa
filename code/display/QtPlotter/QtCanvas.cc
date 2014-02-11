@@ -402,7 +402,7 @@ namespace casa {
 	void QtCanvas::clearCurve() {
 		curveMap.clear();
 		profileFitMarkers.clear();
-		clearMolecularLines( false );
+
 		this->xRangeIsShown = false;
 		curveCount = 0;
 		curveCountPrimary = 0;
@@ -417,6 +417,11 @@ namespace casa {
 		selectedAnnotation = NULL;
 		emit curvesChanged();
 		refreshPixmap();
+	}
+
+	void QtCanvas::clearEverything(){
+		clearMolecularLines( false );
+		clearCurve();
 	}
 
 	void QtCanvas::clearMolecularLines( bool refresh ) {
@@ -718,7 +723,7 @@ namespace casa {
 			QtPlotSettings plotSettings = zoomStack[curZoom];
 			double maxYVal = plotSettings.getMaxY();
 			int peakPixel = this->getPixelY( maxYVal );
-			int zeroPixel = this->getPixelY( 0 );
+			int zeroPixel = this->getRectBottom();
 			molecularLineStack[i]->draw( &painter, centerPixel, peakPixel,
 			                             zeroPixel, width(), height() );
 		}

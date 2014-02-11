@@ -121,10 +121,7 @@ namespace casa {
 		delete converter;
 	}
 
-	void LineOverlaysTab::addLineToPixelCanvas( float center, float peak, QString molecularName,
-	        QString chemicalName, QString resolvedQNs, QString frequencyUnit,
-	        Converter* converter) {
-
+	float LineOverlaysTab::getShiftedCenter( float center, Converter* converter ){
 		//First we have to make the frequency value redshifted.
 		double shiftedCenter = searchWidget->getRedShiftedValue( false, center );
 
@@ -132,6 +129,13 @@ namespace casa {
 		if ( converter != NULL ) {
 			shiftedCenter = converter->convert( shiftedCenter, spectralCoordinate);
 		}
+		return shiftedCenter;
+	}
+
+	void LineOverlaysTab::addLineToPixelCanvas( float center, float peak, QString molecularName,
+	        QString chemicalName, QString resolvedQNs, QString frequencyUnit, Converter* converter) {
+		double shiftedCenter = getShiftedCenter( center, converter );
+
 
 		//Add the line to the pixel canvas.
 		if ( pixelCanvas != NULL ) {
@@ -182,6 +186,23 @@ namespace casa {
 
 	void LineOverlaysTab::eraseLines() {
 		pixelCanvas->clearMolecularLines( true );
+	}
+
+	void LineOverlaysTab::unitsChanged(QString graphUnits ){
+
+		QList<MolecularLine* >  lines = pixelCanvas->getMolecularLines();
+		int lineCount = lines.size();
+		for ( int i = 0; i < lineCount; i++ ){
+			float lineCenter = lines[i]->getOriginalFrequency();
+			QString originalUnits = lines[i]->getOriginalUnits();
+			Converter* converter = NULL;
+			if ( originalUnits != graphUnits ){
+				converter = Converter::getConverter( originalUnits,graphUnits );
+				float shiftedCenter = getShiftedCenter( lineCenter, converter );
+				lines[i]->setCenter( shiftedCenter );
+			}
+			delete converter;
+		}
 	}
 
 	void LineOverlaysTab::setSpectralCoordinate( SpectralCoordinate coord ){

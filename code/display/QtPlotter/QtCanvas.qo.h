@@ -107,6 +107,7 @@ namespace casa {
 		void curveLabelsChanged();
 		void clearCurve();
 		void clearFitCurves();
+		void clearEverything();
 		void clearMolecularLines( bool refresh = true );
 		void setDataRange();
 		void setImageMode(bool);

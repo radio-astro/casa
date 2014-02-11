@@ -293,8 +293,8 @@ namespace casa {
 //               Region and image changes
 //--------------------------------------------------------------------------------
 
-	void SlicerMainWindow::setRegionSelected( int regionId, bool selected ) {
-		slicePlot.setRegionSelected( regionId, selected );
+	bool SlicerMainWindow::setRegionSelected( int regionId, bool selected ) {
+		return slicePlot.setRegionSelected( regionId, selected );
 	}
 
 	void SlicerMainWindow::updateStatisticsLayout() {

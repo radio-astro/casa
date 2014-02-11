@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdmath -->
+
+<task type="function" name="tsdmath" startup="false" category="single dish" visibility="experimental">
+
+  <shortdescription>ASAP SD task: do simple arithmetic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
+
+  <description>ASAP SD task:
+        Do simple arithmetic (subtraction, addition, multiplication, and division) for spectra
+
+        Task Version 2009-02-04 TT
+  </description>
+
+  <input>
+
+    <param type="stringArray" name="infiles">
+	    <description>List of input file names</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="expr">
+        <description>Mathematical expression using spectra</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="varnames">
+        <description>Dictionary of variables and their values used in expr.</description>
+        <any type="variant" limmittype="dict"/>
+        <value type="dict">{}</value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="fluxunit">
+	    <description>units for line flux (K,Jy) (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="any" name="telescopeparam" subparam='true'>
+	    <description>param of telescope for flux conversion</description>
+            <any type='variant' limittype='string doubleArray'/>
+	    <value type='string'/>
+    </param>
+
+    <param type="string" name="scan">
+	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
+	    <description>Select data by scan numbers ('' = all)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="field">
+	    <description>string for selection by source name</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="spw">
+	    <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\'). Note this task only supports IF selction and ignores channel selection.</shortdescription>
+	    <description>Select data by IF ids (spectral window) ('' = all). Note this task only supports IF selction and ignores channel selection.</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="pol">
+            <shortdescription>Select polarization ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by polarization ids ('' = all)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="outfile">
+	    <description>output file name</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="outform">
+	    <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <value>ASAP</value>
+	    <allowed kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+
+    <constraints>
+	    <when param="fluxunit">
+		<equals value=""/>
+		<equals value="K">
+			<default param="telescopeparam"><value type='string'></value></default>
+		</equals>
+	        <equals value="k">
+			<default param="telescopeparam"><value type='string'></value></default>
+	        </equals>
+	        <equals value="Jy">
+			<default param="telescopeparam"><value type='string'></value></default>
+	        </equals>
+	        <equals value="jy">
+			<default param="telescopeparam"><value type='string'></value></default>
+	        </equals>
+	    </when>
+
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+  Keyword arguments:
+        infiles -- List of input file names
+                The file names will automatically replace the phrases 
+                IN0, IN1, ... in expr parameter.
+        expr -- Mathematical expression using scantables 
+        varnames -- Dictionary of variables in expr and their values.
+                Keys must be coincide with variables used in expr.
+                Values are substituted in each value in expr.
+        antenna -- antenna name or id (only effective for MS input). 
+        fluxunit -- units for line flux
+                options: 'K','Jy',''
+                default: '' (keep current fluxunit)
+                WARNING: For GBT data, see description below.
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparam -- the telescope characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparam='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparam=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparam=[0.743] gain in Jy/K
+                                 telescopeparam='FIX' to change default fluxunit
+                                 see description below
+
+        scan -- Select data by scan number range
+                default: '' (use all scans)
+                example: '21~24'
+                this selection is in addition to field, spw, and pol
+        field -- selection string for selecting scans by name
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                this selection is in addition to scan, spw, and pol
+        spw -- Select data by IF ids (spectral window)
+                default: '' (use all IFs)
+                example: '15'
+                NOTE this task only supports IF id selction and ignores channel
+                selection.
+                this selection is in addition to scan, field, and pol
+        pol -- Select data by polarization ids
+                default: '' (use all polarizations)
+                example: '1'
+                NOTE selection by the name of correlation (e.g, 'XX') is NOT
+                supported in this task.
+                this selection is in addition to scan, field, and spw
+        outfile -- Name of output file
+                default: '' (&lt;infile&gt;_cal)
+        outform -- format of output file
+                options: 'ASCII','SDFITS','MS','ASAP'
+                default: 'ASAP'
+                example: the ASAP format is easiest for further sd
+                         processing; use MS for CASA imaging.
+                         If ASCII, then will append some stuff to
+                         the outfile name
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+                WARNING: if outform='ASCII', this parameter is ignored
+
+
+        DESCRIPTION:
+
+        Task sdmath execute a mathematical expression for single dish spectra.
+        The spectral data file can be any of the formats supported by
+        ASAP (scantable, MS, rpfits, and SDFITS). In the expression, 
+        these file names should be put inside of single or double quotes.
+
+        You can use variables in the expression. If you want to use, you 
+        must define varnames dictionary. Name of variables should be simple, 
+        e.g. V0, V1, etc., to avoid unexpected error. Keys of varnames must 
+        be name of variables that you used in the expression, and their 
+        values will be substituted for variables in the expression. Allowed 
+        type for the value is numerical values, one- or two-dimensional lists 
+        (Python list or numpy.ndarray), and filename strings that indicate 
+        spectral data or ASCII text, which is space-separated list of 
+        numerical values consisting of adequate number of rows and columns. 
+        In case you give a list of file names in infiles, they are 
+        automatically referred to as IN0, IN1, etc. in expr and you can not 
+        use IN0, IN1, etc. as variable names in varnames.
+
+        The fluxunit can be set, otherwise, the current settings of the first 
+        spectral data in the expression are used.  
+        Other selections (e.g. scan No, . IF, Pol) also apply to all 
+        the spectral data in the expression, so if any of the data does
+        not contains selection, the task will produce no output. 
+       
+        WARNING for the GBT raw SDFITS format data as input:
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs.  
+        
+        Example:
+        # do on-off/off calculation
+        expr='("orion_on_data.asap"-"orion_off_data.asap")/"orion_off_data.asap"
+        outfile='orion_cal.asap'
+        tsdmath()
+
+        # do on-off/off calculation (using infiles)
+        infiles = ["orion_on_data.asap", "orion_off_data.asap"]
+        expr='(IN0-IN1)/IN1'
+        outfile='orion_cal.asap'
+        tsdmath()
+
+        # do on-off/off calculation using varnames
+        expr='V0/V1-V2'
+        varnames['V0']="orion_on_data.asap"
+        varnames['V1']="orion_off_data.asap"
+        varnames['V2']=1.0
+        outfile='orion_cal.asap'
+        tsdmath()
+
+        # interpretation of ASCII file value for varnames
+        If the contents of input ASCII file is shown as, 
+
+           0.5 0.3 0.2
+           1.0 0.2 0.9
+
+        it is interpreted as a list [[0.5, 0.3, 0.2],[1.0, 0.2, 0.9]]. 
+
+  </example>
+
+</task>
+
+</casaxml>

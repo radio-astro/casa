@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Scantable.cpp 2831 2013-07-31 09:18:39Z KanaSugimoto $
+//# $Id: python_Scantable.cpp 2888 2013-12-26 02:21:30Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 #include <boost/python.hpp>
