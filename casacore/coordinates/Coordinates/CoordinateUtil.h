@@ -186,7 +186,13 @@ class Unit;
 // </thrown>
 //
 // <todo asof="1997/01/23">
-//   <li> This code does all I want at the moment
+//   Many of these methods belong in the CoordinateSystem class,
+//   eg all the add* methods, and in fact CoordinateSystem already has analogs
+//   for many of them. The factory methods which create a CoordinateSystem
+//   could also arguably go in CoordinateSystem as static methods. Having a separate
+//   utility class that really just has methods that operate on or create CoordinateSystem
+//   objects makes no sense. CoordinateUtil is the antithesis of object oriented design,
+//   and we need to endeavor to expunge it from our system.
 // </todo>
 
 //  <linkfrom anchor=defaultAxes classes="CoordinateSystem">
@@ -226,6 +232,21 @@ static void addLinearAxes (CoordinateSystem & coords,
 // Add a spectral axis to the user supplied CoordinateSystem. See the
 // synopsis above for the current default values.
 static void addFreqAxis(CoordinateSystem& coords);
+
+
+// Add one axis for each of the specified coordinate types.
+// Returns the number of axes added.
+// If silent==True, existing axes are silently ignored.
+// This should really be a method of CoordinateSystem, but the
+// code was moved from ImageUtilities which makes heavy use
+// of CoordUtil methods (which aren't available to CoordinateSystem)
+static uInt addAxes (
+	CoordinateSystem& csys,
+	Bool direction,
+	Bool spectral, const String& stokes,
+	Bool linear, Bool tabular,
+	Bool silent=False
+);
 
 // Return a 2-dimensional coordinate system with RA/DEC axes only. 
 static CoordinateSystem defaultCoords2D();

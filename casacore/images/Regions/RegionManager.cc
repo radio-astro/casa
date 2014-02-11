@@ -162,9 +162,10 @@ namespace casa { //# name space casa begins
 			     const String& comment){
   
 
-    *itsLog << LogOrigin("RegionManager", "box");
-    if(blc.nelements() != trc.nelements())
-      throw(AipsError("blc and trc do not have the shape"));
+    ThrowIf(
+      blc.nelements() != trc.nelements(),
+      "blc and trc do not have the shape"
+    );
     IPosition latShape(shape);
     LCBox lcbox(blc, trc, latShape);
 
