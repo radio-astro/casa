@@ -451,7 +451,12 @@ class SDExportData(basetask.StandardTaskTemplate):
         product_tar_list = []
         if os.path.exists(context.report_dir):
             # Define the name of the output tarfile
-            product_tarfilename = 'weblogSD.tar.gz'
+            ps = context.project_structure
+            if ps is None or ps.ousstatus_entity_id == 'unknown':
+                product_tarfilename = 'weblog.tar.gz'
+            else:
+                ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) 
+                product_tarfilename = ousid + '.weblog.tar.gz'
             # Create tar file
             product_tar_list = []
             if not self._executor._dry_run:
