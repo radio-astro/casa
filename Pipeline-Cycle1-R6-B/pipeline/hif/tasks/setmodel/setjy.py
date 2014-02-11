@@ -239,9 +239,19 @@ class SetjyInputs(basetask.StandardInputs):
         
         if not callable(self._standard):
             return self._standard
-            
-        fields = utils.safe_split(self.field)
-        standards = [self._standard(field) for field in fields]
+
+        # field may be an integer, but the standard heuristic operates on
+        # strings, so find the corresponding name of the fields 
+        field_names = []
+        for field in utils.safe_split(self.field):
+            if str(field).isdigit():
+                matching_fields = self.ms.get_fields(field)
+                assert len(matching_fields) is 1
+                field_names.append(matching_fields[0].name)
+            else:
+                field_names.append(field)
+        
+        standards = [self._standard(field) for field in field_names]
         return standards[0] if len(standards) is 1 else standards
 
     @standard.setter
