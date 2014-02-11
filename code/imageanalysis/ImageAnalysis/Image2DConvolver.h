@@ -36,6 +36,8 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
 
+#include <tr1/memory>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -90,7 +92,6 @@ class GaussianBeam;
 // <todo asof="2001/08/28">
 //   <li> 
 // </todo>
- 
 
 template <class T> class Image2DConvolver
 {
@@ -101,7 +102,7 @@ public:
 	// units and logger will be copied from the input to the output
 	// unless you indicate not to (copyMiscellaneous).
 	static void convolve(
-		LogIO& os, ImageInterface<T>& imageOut,
+		LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
 		const ImageInterface<T>& imageIn,
 		const VectorKernel::KernelTypes kernelType,
 		const IPosition& pixelAxes,
@@ -129,13 +130,14 @@ private:
 
 
 	static void _checkKernelParameters(
-		LogIO& os, VectorKernel::KernelTypes kernelType,
-		const Vector<Quantum<Double> >& parameters
+		VectorKernel::KernelTypes kernelType,
+		const Vector<Quantity>& parameters
 	);
 
-	static void _dealWithRestoringBeam (
+	// returns the value by which pixel values will be scaled
+	static T _dealWithRestoringBeam (
 		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
-		Array<T>& kernelArray, const T kernelVolume,
+		const Array<T>& kernelArray, const T kernelVolume,
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
@@ -151,27 +153,27 @@ private:
 		const Vector<Double>& parameters
 	);
 
-	static void fillGaussian(
+	static void _fillGaussian(
 		T& maxVal, T& volume, Matrix<T>& pixels,
 		T height, T xCentre, T yCentre,
 		T majorAxis, T ratio, T positionAngle
 	);
 
 	static T _makeKernel(
-		LogIO& os, Array<T>& kernel,
+		Array<T>& kernel,
 		VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes,
 		const ImageInterface<T>& inImage
 	);
 
-	static IPosition shapeOfKernel(
+	static IPosition _shapeOfKernel(
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Double>& parameters,
 		const uInt ndim, const IPosition& axes
 	);
 
-	static uInt sizeOfGaussian(const Double width, const Double nSigma);
+	static uInt _sizeOfGaussian(const Double width, const Double nSigma);
 
 	static Vector<Quantity> _getConvolvingBeamForTargetResolution(
 		LogIO& os, const Vector<Quantity>& targetBeamParms,

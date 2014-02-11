@@ -76,6 +76,7 @@ namespace casa {
 				QWidget* getPlotHolder() {
 					return plotHolderWidget;
 				}
+				bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
 			signals:
 				void show1DSliceTool();
 			};

@@ -30,6 +30,7 @@
 #include <QThread>
 #include <QProgressDialog>
 #include <casa/Quanta/Quantum.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/MomentSettingsWidgetRadio.ui.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
@@ -188,7 +189,8 @@ namespace casa {
 		void getChannelMinMax( int channelIndex, QString& minStr, QString& maxStr ) const;
 		void convertChannelRanges( const QString& oldUnits, const QString& newUnits );
 		void convertChannelValue( const QString& channelStr, const QString& channelIdentifier,
-		                          Converter* converter, int row, int col, bool toPixels );
+		                          Converter* converter, int row, int col, bool toPixels,
+		                          SpectralCoordinate& coord );
 		String makeChannelInterval( float startChannelIndex,float endChannelIndex ) const;
 		Vector<Int> populateMoments( Vector<QString>& momentNames );
 		Vector<String> populateMethod() const;

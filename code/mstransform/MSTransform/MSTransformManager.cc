@@ -116,7 +116,6 @@ void MSTransformManager::initialize()
 	inputOutputDDIndexMap_p.clear();
 	inputOutputAntennaIndexMap_p.clear();
 	outputInputSPWIndexMap_p.clear();
-//	outputInputDDIndexMap_p.clear();
 
 	// Frequency transformation parameters
 	nspws_p = 1;
@@ -130,7 +129,6 @@ void MSTransformManager::initialize()
 	weightmode_p = MSTransformations::flags;
 	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
 	phaseCenterPar_p = new casac::variant("");
-	userPhaseCenter_p = False;
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
 
@@ -896,7 +894,10 @@ void MSTransformManager::open()
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 			<< "Select data" << LogIO::POST;
 
-	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
+	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old,realmodelcol_p);
+
+	// CAS-5348 (jagonzal): Check if model parameters are defined.
+	realmodelcol_p = dataHandler_p->getRealModelColParam();
 
 	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeMSBasicStructure,
 	// call therefore we have to use the selected MS always
@@ -1643,15 +1644,13 @@ void MSTransformManager::initRefFrameTransParams()
     	if (fieldIdForPhaseCenter >= (Int)fieldTable.nrow() || fieldIdForPhaseCenter < 0)
     	{
     		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
-    				<< "Selected FIELD_ID to determine phase center does not exists " << LogIO::POST;
+    				<< "Selected FIELD_ID to determine phase center does not exist " << LogIO::POST;
     	}
     	else
     	{
     		MSFieldColumns fieldCols(fieldTable);
     		phaseCenter_p = fieldCols.phaseDirMeasCol()(fieldIdForPhaseCenter)(IPosition(1,0));
     	}
-
-    	userPhaseCenter_p = True;
     }
     else
     {
@@ -1663,8 +1662,6 @@ void MSTransformManager::initRefFrameTransParams()
     		MSField fieldTable = outputMs_p->field();
     		MSFieldColumns fieldCols(fieldTable);
     		phaseCenter_p = fieldCols.phaseDirMeasCol()(0)(IPosition(1,0));
-
-    		userPhaseCenter_p = False;
     	}
     	// Parse phase center
     	else
@@ -1675,8 +1672,6 @@ void MSTransformManager::initRefFrameTransParams()
         				<< "Cannot interpret phase center " << phaseCenter << LogIO::POST;
         		return;
         	}
-
-        	userPhaseCenter_p = True;
     	}
     }
 
@@ -1979,6 +1974,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	else
 	{
 		numOfCombInputChanMap_p[spwId] = originalCHAN_FREQ.size();
+		numOfCombInterChanMap_p[spwId] = originalCHAN_FREQ.size();
 		inputCHAN_FREQ = originalCHAN_FREQ;
 		inputCHAN_WIDTH = originalCHAN_WIDTH;
 	}
@@ -2341,7 +2337,7 @@ void MSTransformManager::reindexSysCalSubTable()
     }
     else
     {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "No SYSCAL sub-table found " << LogIO::POST;
     }
 
@@ -2366,8 +2362,8 @@ void MSTransformManager::reindexFreqOffsetSubTable()
     }
     else
     {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "No FREQ_OFF sub-table found " << LogIO::POST;
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "No FREQ_OFFSET sub-table found " << LogIO::POST;
     }
 
     return;
@@ -2498,20 +2494,27 @@ void MSTransformManager::getOutputNumberOfChannels()
 					freqbinMap_p[iter->first] = freqbinMap_p[0];
 				}
 			}
+		}
+	}
 
+	// Access spectral window sub-table
+	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+    uInt nInputSpws = spwTable.nrow();
+    MSSpWindowColumns spwCols(spwTable);
+    ScalarColumn<Int> numChanCol = spwCols.numChan();
+    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
+
+    if (combinespws_p)
+    {
+		map<uInt,uInt>::iterator iter;
+		for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
+		{
 			// Note: This will truncate the result, but it is ok because we are dropping the last channel
 			numOfOutChanMap_p[iter->first] = numOfSelChanMap_p[iter->first] / freqbinMap_p[iter->first];
 		}
-	}
-	else
-	{
-		// Access spectral window sub-table
-		MSSpectralWindow spwTable = outputMs_p->spectralWindow();
-	    uInt nInputSpws = spwTable.nrow();
-	    MSSpWindowColumns spwCols(spwTable);
-	    ScalarColumn<Int> numChanCol = spwCols.numChan();
-	    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
-
+    }
+    else
+    {
 	    // Get number of output channels per input spw
 	    Int spwId;
 	    for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
@@ -2527,8 +2530,7 @@ void MSTransformManager::getOutputNumberOfChannels()
 
 	    	numOfOutChanMap_p[spwId] = numChanCol(spw_idx);
 	    }
-	}
-
+    }
 
 	return;
 }
@@ -2556,7 +2558,9 @@ void MSTransformManager::calculateWeightAndSigmaFactors()
 void MSTransformManager::checkFillFlagCategory()
 {
 	inputFlagCategoryAvailable_p = False;
-	if (!selectedInputMsCols_p->flagCategory().isNull() && selectedInputMsCols_p->flagCategory().isDefined(0))
+	if (	!selectedInputMsCols_p->flagCategory().isNull()
+			&& selectedInputMsCols_p->flagCategory().isDefined(0)
+			&& selectedInputMsCols_p->flagCategory()(0).shape() == 3)
 	{
 		inputFlagCategoryAvailable_p = True;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
@@ -2578,16 +2582,6 @@ void MSTransformManager::checkFillWeightSpectrum()
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
 	}
-
-	// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
-	/*
-	else
-	{
-    	logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-    				<< "WEIGHT_SPECTRUM column not present." << endl
-    				<< " Will fill output WEIGHT_SPECTRUM column using input WEIGHT column" << LogIO::POST;
-	}
-	*/
 
 	return;
 }
@@ -2656,7 +2650,6 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			// timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
@@ -2700,11 +2693,6 @@ void MSTransformManager::checkDataColumnsToFill()
 					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
 				}
-				else
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-				}
 			}
 			else
 			{
@@ -2712,11 +2700,6 @@ void MSTransformManager::checkDataColumnsToFill()
 				{
 					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
-				}
-				else
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
 				}
 			}
 
@@ -2770,7 +2753,6 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::AverageObserved);
-			// timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2834,7 +2816,6 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			// timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2898,7 +2879,6 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			// timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 		else
 		{
@@ -2947,11 +2927,6 @@ void MSTransformManager::checkDataColumnsToFill()
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 									"Adding MODEL_DATA column to output MS as DATA "<< LogIO::POST;
 			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-							"Adding MODEL_DATA column to output MS as DATA from input virtual MODEL_DATA column"<< LogIO::POST;
-			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 		}
@@ -2971,8 +2946,6 @@ void MSTransformManager::checkDataColumnsToFill()
 	if ((realmodelcol_p) and (!modelDataChecked))
 	{
 		dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-					"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
 		datacolumn_p += String(",MODEL");
 	}
 
@@ -3071,15 +3044,6 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
 
-	/*
-	cout 	<< " OBSERVATION_ID="<< vb->observationId()(0)
-			<< " ARRAY_ID="<< vb->arrayId()(0)
-			<< " SCAN_NUMBER="<< vb->scan()(0)
-			<< " STATE_ID="<< vb->stateId()(0)
-			<< " FIELD_ID="<< vb->fieldId()(0)
-			<< " DATA_DESC_ID="<< vb->dataDescriptionIds()  << endl;
-	*/
-
 	if (combinespws_p)
 	{
 		// Fill baseline map using as key Ant1,Ant2,Scan and State,
@@ -3094,13 +3058,6 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 		{
 			pair<Int,Int> baseline = std::make_pair(antenna1(row),antenna2(row));
 			relativeTimeInMiliseconds = (Int)floor(1E3*(vb->time()(row) - vb->time()(0)));
-
-			/*
-			cout 	<< " antenna1(row)=" << antenna1(row)
-					<< " antenna2(row)=" << antenna2(row)
-					<< " time-stamp=" << relativeTimeInMiliseconds << endl;
-			*/
-
 			baselineMap_p[std::make_pair(baseline,relativeTimeInMiliseconds)].push_back(row);
 		}
 
@@ -3128,8 +3085,6 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 
 	// Calculate total number for rows to add
 	nRowsToAdd_p = rowsToAdd*nspws_p;
-
-	// cout << "rowsToAdd=" << nRowsToAdd_p << endl;
 
     return;
 
@@ -3173,40 +3128,16 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 													MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
 
 	MFrequency::Ref outputFrameRef;
-	if (userPhaseCenter_p)
-	{
-		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-				MeasFrame(phaseCenter_p, observatoryPosition_p, currentRowTime));
-	}
-	else
-	{
-		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-				MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
-	}
-
-	/*
-	ostringstream oss;
-	oss.precision(20);
-	oss <<  "inputReferenceFrame_p=" << inputFrameRef << endl;
-	oss <<  "outputReferenceFrame_p=" << outputFrameRef << endl;
-	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-	*/
-
+	outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
+			MeasFrame(phaseCenter_p, observatoryPosition_p, currentRowTime));
 
 	freqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputFrameRef);
 
 	Int spwIndex = 0;
 	if (not combinespws_p)
 	{
-		// jagonzal : This is actually not necessary because we
+		// jagonzal : It is not necessary to map spwIndex because we
 		// pass the original SPWId down to the interpol1D method
-		/*
-		if (inputOutputSPWIndexMap_p.size())
-		{
-			Int originalSPWid = vb->spectralWindows()(0);
-			spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
-		}
-		*/
 		spwIndex = vb->spectralWindows()(0);
 	}
 
@@ -3226,26 +3157,6 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 		bandwidth += chanWidth;
 
 		fftShift_p = - absoluteShift / bandwidth;
-
-		/*
-		ostringstream oss;
-		oss.precision(20);
-		oss <<  "centralChan=" << centralChan << endl;
-		oss <<  "oldCentralFrequencyBeforeRegridding=" << oldCentralFrequencyBeforeRegridding << endl;
-		oss <<  "newCentralFrequencyBeforeRegriddingAtCurrentTime=" << newCentralFrequencyBeforeRegriddingAtCurrentTime << endl;
-		oss <<  "newCentralFrequencyBeforeRegriddingAtReferenceTime=" << newCentralFrequencyBeforeRegriddingAtReferenceTime << endl;
-		oss <<  "absoluteShift=" << absoluteShift << endl;
-		oss <<  "xout[iDone][0]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[0] << endl;
-		oss <<  "xout[iDone][1]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[1] << endl;
-		oss <<  "chanWidth=" << chanWidth<< endl;
-		oss <<  "xout[iDone][endChan]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[inputOutputSpwMap_p[spwIndex].second.NUM_CHAN-1] << endl;
-		oss <<  "bandwidth (xout[iDone][endChan] - xout[iDone][0] + chanWidth)" << bandwidth << endl;
-		oss <<  "chanwidth-spwInfo " << inputOutputSpwMap_p[spwIndex].second.CHAN_WIDTH[0] << endl;
-		oss <<  "bandwidth-spwInfo " << inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH << endl;
-		oss <<  "fftShift_p=" << fftShift_p << endl;
-		logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-		*/
-
 	}
 	else
 	{
@@ -3321,8 +3232,8 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 	else
 	{
-		outputMsCols_p->flagRow().putColumnCells(absoluteRefRows, vb->flagRow());
-		outputMsCols_p->exposure().putColumnCells(absoluteRefRows, vb->exposure());
+		transformAndWriteNotReindexableVector(vb->flagRow(),tmpVectorBool,False,outputMsCols_p->flagRow(),absoluteRefRows);
+		transformAndWriteNotReindexableVector(vb->exposure(),tmpVectorDouble,False,outputMsCols_p->exposure(),absoluteRefRows);
 	}
 
 	if (combinespws_p)
@@ -4197,18 +4108,6 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 							inputPlaneData(pol,outputChannel) += weight*inputDataCube(pol,inputChannel,row);
 							normalizingFactorPlane(pol,outputChannel) += weight;
 							(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCubeLocal,inputPlaneWeights,weight);
-
-							/*
-							cout 	<< "outChan=" << outputChannel
-									<< " inpChan=" << inputChannel
-									<< " spw=" << spw
-									<< " fraction count=" << spwFractionCountsMap[spw]
-									<< " unity contributors=" << unityContributors
-									<< " weight=" << weight
-									<< " value=" << inputDataCube(pol,inputChannel,row)
-									<< " flag=" << inputFlagCube(pol,inputChannel,row)
-									<< " OK" << endl;
-							*/
 						}
 					}
 				}
@@ -5152,18 +5051,6 @@ template <class T> void MSTransformManager::regrid(	Int inputSpw,
 				inputWeightsStripe,
 				outputDataStripe,
 				outputFlagsStripe);
-
-    /*
-	ostringstream oss;
-	oss.precision(20);
-	oss << "inputDataStripe= " << inputDataStripe << endl;
-	oss << "inputFlagsStripe= " << inputFlagsStripe << endl;
-	oss << "inputFreq= " << inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux << endl;
-	oss << "outputFreq= " << inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ << endl;
-	oss << "outputDataStripe= " << outputDataStripe << endl;
-	oss << "outputFlagsStripe= " << outputFlagsStripe << endl;
-	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-	*/
 
 	return;
 }

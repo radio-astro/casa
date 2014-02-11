@@ -283,6 +283,14 @@ namespace casa {
 
 		};
 
+		class QtPointState : public QtRegionState {
+			Q_OBJECT
+		public:
+			QtPointState( const QString &name,
+			               QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+			               Region *region=0, QWidget *parent=0 );
+		};
+
 	}
 }
 

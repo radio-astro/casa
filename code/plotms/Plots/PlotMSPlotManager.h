@@ -87,6 +87,12 @@ public:
     const PlotMSPlot* plot(unsigned int index) const;
     // </group>
     
+    //Set the new size of a multi-plot display.
+    bool pageGridChanged( int rows, int cols, bool override );
+    
+    //Return the current size of a multi-plot page grid.
+    void getGridSize( Int& rows, Int& cols );
+
     // Returns all or one of the plot parameters.
     // <group>
     const vector<PlotMSPlotParameters*>& plotParameters() const;
@@ -97,10 +103,23 @@ public:
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
     PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
-
+    
+    //Remove a plot from the display.
+    void removePlot( PlotMSPlot* plot );
+    
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();
 
+    void unassignPlots();
+
+    vector<String> getFiles() const;
+
+    //Returns the parameters that control the page display (grid rows & cols).
+    PlotMSParameters getPageParameters();
+    
+    //Returns whether or not a canvas has been allocated
+    //for the plot.
+    bool isPlottable( PlotMSPlot* plot ) const;
 private:
     // Parent.
     PlotMSApp* itsParent_;

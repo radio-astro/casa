@@ -35,15 +35,16 @@ namespace casa {
 
 
 	void ConverterVelocityFrequency::convertFrequency( Vector<double> &resultValues,
-	        QString& frequencySourceUnits) {
+	        QString& frequencySourceUnits, SpectralCoordinate& coord ) {
 		//Decide on the multiplier
 		int sourceUnitIndex = FREQUENCY_UNITS.indexOf( frequencySourceUnits );
 		int destUnitIndex = FREQUENCY_UNITS.indexOf( newUnits );
-		Converter::convert( resultValues, sourceUnitIndex, destUnitIndex );
+		Converter::convert( resultValues, sourceUnitIndex, destUnitIndex, coord );
 	}
 
-	Vector<double> ConverterVelocityFrequency::convert( const Vector<double>& oldValues ) {
-		bool unitsUnderstood = setVelocityUnits( oldUnits );
+	Vector<double> ConverterVelocityFrequency::convert( const Vector<double>& oldValues,
+			SpectralCoordinate spectralCoordinate ) {
+		bool unitsUnderstood = spectralCoordinate.setVelocity( oldUnits.toStdString() );
 		Vector<double> resultValues(oldValues.size());
 		bool successfulConversion = false;
 		if ( unitsUnderstood ) {
@@ -55,7 +56,7 @@ namespace casa {
 				String frequencyUnit = frequencyUnits[0];
 				QString freqUnitStr( frequencyUnit.c_str());
 				//Now we convert it to appropriate units;
-				convertFrequency( resultValues, freqUnitStr );
+				convertFrequency( resultValues, freqUnitStr, spectralCoordinate );
 			}
 		}
 		if ( !successfulConversion ) {

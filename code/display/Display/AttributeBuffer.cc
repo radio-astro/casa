@@ -613,10 +613,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Reverse order so we don't screw up the indices.
 		for ( int j = static_cast<int>(indicesToDelete.size() - 1); j >= 0; j-- ){
-			Attribute* attribute = attributes[j];
-			attributes.remove(j);
-			nonDeletable.remove(j);
-			delete attribute;
+			int deleteIndex = indicesToDelete[j];
+			delete attributes[deleteIndex];
+			attributes.remove(deleteIndex);
+			nonDeletable.remove( deleteIndex);
 		}
 	}
 

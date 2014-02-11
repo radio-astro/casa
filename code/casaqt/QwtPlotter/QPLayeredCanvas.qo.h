@@ -252,6 +252,8 @@ public:
     void print(QPainter* painter, const QRect& rect,
             const QwtPlotPrintFilter& filter = QwtPlotPrintFilter()) const;
     
+    // Is drawing in progress?
+    virtual Bool isDrawing() const;
     
     // Event Methods //
     
@@ -268,8 +270,7 @@ protected:
     // Detaches the given item.
     void detachLayeredItem(QPPlotItem* item);
    
-    // Is drawing in progress?
-    virtual Bool isDrawing() const;
+
 
  
     

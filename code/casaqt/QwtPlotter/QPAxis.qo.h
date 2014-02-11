@@ -140,6 +140,8 @@ public:
     	QFrame::setMinimumSize( width, height );
     }
 
+    bool isDrawing() const;
+
     virtual void show(){
     	QFrame::show();
     }
@@ -297,6 +299,8 @@ public:
     // Overrides PlotCanvas::clearPlots().
     void clearPlots();
     
+    virtual void setNotUsed(){}
+
     // Overrides PlotCanvas::clearLayer().
     void clearLayer(PlotCanvasLayer layer);
 
@@ -382,10 +386,20 @@ public:
     PlotFactory* implementationFactory() const;
     virtual bool print( QPrinter& printer );
     virtual QImage grabImageFromCanvas(const PlotExportFormat& format );
-    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
-    		double heightRatio, QRect imageRect );
+    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
+    		double widgetHeight, int axisWidth, int axisHeight, int rowIndex, int colIndex, QRect imageRect );
     virtual const QPalette& palette() const;
     virtual QPalette::ColorRole backgroundRole() const;
+    virtual bool isAxis() const {
+    		return true;
+    	}
+    virtual bool isVertical() const {
+    	bool vertical = false;
+    	if ( axisType == QwtPlot::yLeft || axisType == QwtPlot::yRight ){
+    		vertical = true;
+    	}
+    	return vertical;
+    }
 
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas

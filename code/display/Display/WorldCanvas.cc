@@ -651,7 +651,7 @@ void WorldCanvas::unregisterColormap(Colormap *cmap) {
 }
 
 void WorldCanvas::setColormap(Colormap *cmap) {
-	itsPixelCanvas->setColormap(cmap);
+	if ( cmap != 0 ) itsPixelCanvas->setColormap(cmap);
 }
 
 Colormap *WorldCanvas::colormap() const {

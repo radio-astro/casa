@@ -18,9 +18,9 @@ namespace casa {
 const String ImageTransposer::_class = "ImageTransposer";
 
 ImageTransposer::ImageTransposer(
-		const ImageTask::shCImFloat image, const String& order, const String& outputImage
+		const SPCIIF image, const String& order, const String& outputImage
 )
-	: ImageTask(
+	: ImageTask<Float>(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	),
@@ -40,10 +40,10 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-		const ImageTask::shCImFloat image, const Vector<String> order,
+		const SPCIIF image, const Vector<String> order,
 	const String& outputImage
 )
-:  ImageTask(
+:  ImageTask<Float>(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	), _order(Vector<Int>()), _reverse(IPosition(0)) {
@@ -80,10 +80,10 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-		const ImageTask::shCImFloat image, uInt order,
+		const SPCIIF image, uInt order,
 	const String& outputImage
 )
-:  ImageTask(
+:  ImageTask<Float>(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	), _order(Vector<Int>()), _reverse(IPosition(0)) {
@@ -120,7 +120,7 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > output(
+	std::auto_ptr<ImageInterface<Float> > output(
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
 
@@ -143,12 +143,12 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	ImageUtilities::copyMiscellaneous(*output, *_getImage());
 	if (! _getOutname().empty()) {
 		Record empty;
-		output = SubImageFactory<Float>::createImage(
+		output.reset(SubImageFactory<Float>::createImage(
 			*output, _getOutname(), empty, "",
 			False, False, True, False
-		);
+		));
 	}
-	return output->cloneII();
+	return output.release();
 }
 
 ImageTransposer::~ImageTransposer() {}

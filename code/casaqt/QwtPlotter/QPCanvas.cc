@@ -70,17 +70,38 @@ const String QPCanvas::CLASS_NAME = "QPCanvas";
 const String QPCanvas::DRAW_NAME = "drawItems";
 
 
-bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
-		double heightRatio, QRect imageRect ){
+bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
+		double widgetHeight,int externalAxisWidth, int /*externalAxisHeight*/,
+		int rowIndex, int colIndex, QRect /*imageRect*/ ){
 	PlotAreaFillPtr originalBackground = background();
 	setBackground(*paf);
 
-	QRect geom = geometry();
-	QRect printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
+	//Decide the print rectangle inside the image rectangle.
+	QRect printGeom;
+
+	/*if ( isVisible() ){
+		QRect geom = geometry();
+		double widthRatio = 1;
+		double heightRatio = 1;
+		printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
 	                          (int)((geom.y() * heightRatio) + 0.5),
 	                          (int)((geom.width() * widthRatio) + 0.5),
 	                          (int)((geom.height() * heightRatio) + 0.5));
-	printGeom &= imageRect;
+		printGeom &= imageRect;
+	}
+	else {*/
+		//Note we have to get the position and size differently in scripting mode,
+		//because paint calls do not update the widget when it is hidden.
+		int widthMultiplier = colIndex;
+		if ( colIndex >= 1 && commonY ){
+			widthMultiplier = colIndex - 1;
+		}
+		int xPosition = static_cast<int>(widthMultiplier * widgetWidth + externalAxisWidth);
+		int yPosition = static_cast<int>(rowIndex * widgetHeight);
+		printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
+			static_cast<int>(widgetHeight));
+	//}
+
 	QColor titleColor = asQwtPlot().title().color();
 
 	PlotOperationPtr op = operationExport();
@@ -258,6 +279,7 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
 
 void QPCanvas::enableAxis( QwtPlot::Axis axis, bool enable ){
 	bool horizontalAxis = QPOptions::isAxisX( QPOptions::axis(axis) );
+
 	bool actualEnable = enable;
 	if ( commonX && horizontalAxis ){
 		actualEnable = false;
@@ -265,6 +287,7 @@ void QPCanvas::enableAxis( QwtPlot::Axis axis, bool enable ){
 	else if ( commonY && !horizontalAxis ){
 		actualEnable = false;
 	}
+
 	m_canvas.enableAxis( axis, actualEnable );
 }
 
@@ -305,6 +328,8 @@ void QPCanvas::setTitleFont(const PlotFont& font) {
     t.setColor(f.asQColor());
     m_canvas.setTitle(t);
 }
+
+
 
 
 PlotAreaFillPtr QPCanvas::background() const {
@@ -1507,6 +1532,11 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
     
     if(accept) event->accept();
     else       event->ignore();
+}
+
+bool QPCanvas::isDrawing() const {
+	bool drawing = m_canvas.isDrawing();
+	return drawing;
 }
 
 

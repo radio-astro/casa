@@ -96,17 +96,39 @@ QPalette::ColorRole QPAxis::backgroundRole() const {
 	return axisWidget->backgroundRole();
 }
 
-bool QPAxis::print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
-		double heightRatio, QRect imageRect ){
+bool QPAxis::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
+		double widgetHeight, int axisWidth, int axisHeight,
+		int rowIndex, int colIndex, QRect /*imageRect*/ ){
 	PlotAreaFillPtr originalBackground = background();
 	setBackground(*paf);
 
-	QRect geom = geometry();
-	QRect printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
+	//double widthRatio = imageRect.width() / widgetWidth;
+	//double heightRatio = imageRect.height() / widgetHeight;
+	QRect printGeom;
+	/*if ( isVisible() ){
+		double widthRatio = 1;
+		double heightRatio = 1;
+		QRect geom = geometry();
+		printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
 	                          (int)((geom.y() * heightRatio) + 0.5),
 	                          (int)((geom.width() * widthRatio) + 0.5),
 	                          (int)((geom.height() * heightRatio) + 0.5));
-	printGeom &= imageRect;
+		printGeom &= imageRect;
+	}
+	else {*/
+		if ( isVertical()){
+			int xPosition = 0;
+			int yPosition = static_cast<int>(rowIndex * widgetHeight);
+			printGeom = QRect( xPosition, yPosition, axisWidth,
+					static_cast<int>(widgetHeight));
+		}
+		else {
+			int xPosition = static_cast<int>(colIndex * widgetWidth + axisWidth);
+			int yPosition = static_cast<int>(rowIndex * widgetHeight);
+			printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
+								axisHeight);
+		}
+	//}
 
 	PlotOperationPtr op = operationExport();
 	bool wasCanceled = false;
@@ -404,6 +426,10 @@ String QPAxis::axisLabel(PlotAxis axis) const {
 	return axisLabel;
 }
 
+bool QPAxis::isDrawing() const {
+	return false;
+}
+
 
 void QPAxis::setAxisLabel(PlotAxis axis, const String& title) {
 	if ( axisWidget != NULL ){
@@ -438,54 +464,13 @@ bool QPAxis::colorBarShown(PlotAxis /*axis*/) const {
 }
 
 void QPAxis::showColorBar(bool /*show*/, PlotAxis /*axis*/) {
-    
-    /*QwtScaleWidget* scale = m_canvas.axisWidget(QPOptions::axis(axis));
-    
-    if(!show) {
-        scale->setColorBarEnabled(false);
-        return;
-    }
-    
-    QPRasterPlot* r = NULL;
-    for(unsigned int i = 0; i < m_plotItems.size(); i++) {
-        r = dynamic_cast<QPRasterPlot*>(m_plotItems[i].second);
-        if(r != NULL) break;
-    }
-    
-    if(r == NULL) {
-        scale->setColorBarEnabled(false);
-        return;
-    }
-    
-    prange_t v = r->rasterData()->valueRange();
-    scale->setColorBarEnabled(true);
-    
-    if(r->dataFormat() == PlotRasterData::SPECTROGRAM) {
-        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
-                           r->colorMap());
-    } else {
-        vector<double>* vals = r->rasterData()->colorBarValues();
-        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
-                           QPOptions::rasterMap(*vals));
-        delete vals;
-    }
 
-    m_canvas.enableAxis(QPOptions::axis(axis), true);
-    if(v.first != v.second) setAxisRange(axis, v.first, v.second);
-    else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
-    */
 }
 
 
 prange_t QPAxis::axisRange(PlotAxis /*axis*/) const {
     
-/*    const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
-#if QWT_VERSION < 0x050200
-    return prange_t(div->lBound(), div->hBound());
-#else
-    return prange_t(div->lowerBound(), div->upperBound());
-#endif
-*/
+
 	return prange_t(0,0);
 }
 

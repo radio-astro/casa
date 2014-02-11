@@ -504,6 +504,7 @@ class SubMS
   Bool copySyscal();
   Bool copyWeather();
   Bool copyGenericSubtables();
+  void copyMainTableKeywords(TableRecord& outKeys,const TableRecord& inKeys);
 
   // This falls between copyGenericSubtables() and the copiers for standard
   // subtables like copyFeed().  It is for optional subtables like CALDEVICE

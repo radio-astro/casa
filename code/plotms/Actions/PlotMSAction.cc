@@ -28,37 +28,26 @@
 #include <plotms/Threads/BackgroundThread.h>
 #include <plotms/Client/Client.h>
 #include <QDebug>
+
 namespace casa {
 
 //////////////////////////////
 // PLOTMSACTION DEFINITIONS //
 //////////////////////////////
 
-// Static //
-
-/*const String PlotMSAction::P_PLOT = "plot";
-const String PlotMSAction::P_ON_OFF = "on_off";
-const String PlotMSAction::P_AXES = "axes";
-const String PlotMSAction::P_FILE = "file";
-const String PlotMSAction::P_FORMAT = "format";
-const String PlotMSAction::P_HIGHRES = "highres";
-const String PlotMSAction::P_DPI = "dpi";
-const String PlotMSAction::P_WIDTH = "width";
-const String PlotMSAction::P_HEIGHT = "height";
-const String PlotMSAction::P_INTERACTIVE = "interactive";
-*/
-
-
-
 // Constructors/Destructors //
 
 PlotMSAction::PlotMSAction( Client* requestor,
 		PMSPTMethod postThreadMethod,
-		PMSPTObject postThreadObject )
+		vector<PlotMSPlot*> postObject )
 	:client( requestor ), threadController( NULL ),
-	 postThreadObject( postThreadObject ),
 	 postThreadMethod( postThreadMethod ) {
 	useThreading = true;
+	int postCount = postObject.size();
+	for ( int i = 0; i < postCount; i++ ){
+		postThreadObject.push_back( postObject[i]);
+	}
+
 
 }
 
@@ -69,16 +58,22 @@ void PlotMSAction::setUseThreading( bool useThread ){
 }
 
 
-
-
 // Public Methods //
 bool PlotMSAction::isValid() {
 	return loadParameters();
 }
 
-void PlotMSAction::setUpClientCommunication( BackgroundThread* thread ){
-	//Client gives us the object it wants to use for communication.
-	threadController = client->getThreadController( itsType_, postThreadMethod, postThreadObject );
+void PlotMSAction::setUpClientCommunication( BackgroundThread* thread, int index ){
+	int threadObjectCount = postThreadObject.size();
+	if ( 0 <= index && index < threadObjectCount ){
+		//Client gives us the object it wants to use for communication.
+		threadController = client->getThreadController( itsType_, postThreadMethod, postThreadObject[index], index );
+	}
+	else {
+		threadController = client->getThreadController( itsType_ );
+	}
+
+
 	if ( threadController != NULL ){
 		//We put the thread into the controller so that the client can
 		//later delete it.
@@ -107,9 +102,13 @@ bool PlotMSAction::initiateWork( BackgroundThread* thread ){
 			client->setOperationCompleted( operationCompleted );
 		}	
 		if ( operationCompleted ){
-			if( postThreadMethod != NULL && postThreadObject != NULL){
-				(*postThreadMethod )(postThreadObject, false);
+			int objectSize = postThreadObject.size();
+			if( postThreadMethod != NULL && objectSize > 0){
+				for ( int i = 0; i < objectSize; i++ ){
+					(*postThreadMethod )(postThreadObject[i], false);
+				}
 			}
+
 		}
 
 	}
@@ -122,13 +121,13 @@ bool PlotMSAction::loadParameters(){
 
 bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	itsDoActionResult_ = "";
-
+	bool result = false;
 	if(!isValid() || plotms == NULL) {
 		itsDoActionResult_ = "Set parameters were not valid!";
-		return false;
 	}
-
-	bool result = doActionSpecific( plotms );
+	else {
+		result = doActionSpecific( plotms );
+	}
 	return result;
 }
 

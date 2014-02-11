@@ -906,21 +906,28 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	const CoordinateSystem& csys = getcoordsys();
 	TempImage<Float> x(imShape, csys);
 	x.set(0);
-	SubImage<Float> subimage = SubImageFactory<Float>::createSubImage(
-		x, *regionRec, "", _getLog(), False, AxesSpecifier(), False, True
+	std::tr1::shared_ptr<const SubImage<Float> >subimage(
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				x, *regionRec, "", _getLog(), False,
+				AxesSpecifier(), False, True
+			)
+		)
 	);
-	ImageMetaData<Float> md(&subimage);
+	ImageMetaData md(
+		std::tr1::dynamic_pointer_cast<const ImageInterface<Float> >(subimage)
+	);
 	uInt nChan = md.nChannels();
-	const SpectralCoordinate& subsp = subimage.coordinates().spectralCoordinate();
+	const SpectralCoordinate& subsp = subimage->coordinates().spectralCoordinate();
 	Double subworld;
 	subsp.toWorld(subworld, 0);
 	const SpectralCoordinate& imsp = csys.spectralCoordinate();
 	Double pixOff;
 	imsp.toPixel(pixOff, subworld);
 	Int specAxisNumber = csys.spectralAxisNumber();
-	IPosition start(subimage.ndim(), 0);
-	ArrayLattice<Bool> mask(subimage.getMask());
-	IPosition planeShape = subimage.shape();
+	IPosition start(subimage->ndim(), 0);
+	ArrayLattice<Bool> mask(subimage->getMask());
+	IPosition planeShape = subimage->shape();
 	vector<uInt> myList;
 	planeShape[specAxisNumber] = 1;
 	for (uInt i=0; i<nChan; i++) {

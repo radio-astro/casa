@@ -159,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// control the DD settings.
 		// Note: If the user interface is to be zero-based, you should call
 		// setUIBase(0) _before_ using this routine -- see setUIBase().
-		virtual Record getOptions();
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// set all options to default values (unused so far; incomplete
 		// support in base classes...incomplete here as well).

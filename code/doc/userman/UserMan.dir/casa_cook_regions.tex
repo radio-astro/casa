@@ -4,6 +4,7 @@
 
 % JO  2010-10-12 doc created for CASA 3.1.0
 % JO  2013-04-24 updated "pix"
+% JO  2013-12-16 edits for 4.2.0
 
 
 \chapter[Appendix: CASA Region File Format]
@@ -89,7 +90,9 @@ Possible units of length are:
 
 \end{itemize}
 
-{\it Units must always be included when defining a region.} 
+{\it Units must always be included when defining a region.} If any
+fractional pixels are covered, the entire pixel will be
+selected. For purely single-pixel work there are alternate methods which may be preferable to using regions, eg. ia.topixel, ia.toworld, ia.pixelvalue.
 
 \section{Allowed shapes}
 
@@ -246,7 +249,7 @@ linestyle='-'\\
 \item {\it Symbol characteristics:}
 
 \begin{itemize}
-\item Symbol syze and thickness:\\
+\item Symbol size and thickness:\\
 
 {\tt 
 symsize = 1\\ 

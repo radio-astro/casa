@@ -390,7 +390,7 @@ namespace casa {
 	}
 
 	for ( int x = 0; x < srcValues.size( ); ++x ) {
-	    int bucket = (int) (srcValues[x] / bucketWidth);
+	    int bucket = (int) ((srcValues[x]-minimumValue) / bucketWidth);
 
 	    if ( bucket < 0 ) { bucket = 0; }
 	    if ( bucket >= numBins ) { bucket = numBins-1; }

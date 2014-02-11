@@ -1,4 +1,3 @@
-//# tsubImage->cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -27,29 +26,29 @@
 
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
+#include <tables/Tables/PlainTable.h>
 
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <iomanip>
-
-#include <tables/Tables/PlainTable.h>
 
 namespace casa {
 
 const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
-		const ImageTask::shCImFloat image,
+		const SPCIIF image,
 	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
 	const Bool overwrite
-) : ImageTask(
+) : ImageTask<Float>(
 		image, "", regionRec, "", chanInp, stokes,
 		maskInp, outname, overwrite
 	), _start(0), _end(0), _width(1), _unit("arcsec") {
@@ -59,23 +58,32 @@ PVGenerator::PVGenerator(
 PVGenerator::~PVGenerator() {}
 
 void PVGenerator::setEndpoints(
-	const Double startx, const Double starty,
-	const Double endx, const Double endy
+	const std::pair<Double, Double>& start,
+	const std::pair<Double, Double>& end
 ) {
-	if (startx == endx && starty == endy) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-		*_getLog() << "Start and end pixels must be different."
-			<< LogIO::EXCEPTION;
-	}
-	if (startx < 2 || endx < 2 || starty < 2 || endy < 2) {
-		*_getLog() << "Pixel positions must be contained in the image and be farther than two pixels from image BLC" << LogIO::EXCEPTION;
-	}
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	Double startx = start.first;
+	Double starty = start.second;
+	Double endx = end.first;
+	Double endy = end.second;
+	ThrowIf(
+		startx == endx && starty == endy,
+		"Start and end pixels must be different."
+	);
+	ThrowIf(
+		startx < 2 || endx < 2 || starty < 2 || endy < 2,
+		"Pixel positions must be contained in the image and be "
+		"farther than two pixels from image BLC"
+	);
 	Vector<Int> dirAxes = _getImage()->coordinates().directionAxesNumbers();
 	Int xShape = _getImage()->shape()[dirAxes[0]];
 	Int yShape = _getImage()->shape()[dirAxes[1]];
-	if (startx > xShape-3 || endx > xShape-3 || starty > yShape-3 || endy > yShape-3) {
-		*_getLog() << "pixel positions must be contained in the image and must fall farther than two pixels from the image TRC" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		startx > xShape-3 || endx > xShape-3
+		|| starty > yShape-3 || endy > yShape-3,
+		"Pixel positions must be contained in the image and must fall "
+		"farther than two pixels from the image TRC"
+	);
 
 	_start.reset(new vector<Double>(2));
 	_end.reset(new vector<Double>(2));
@@ -85,12 +93,122 @@ void PVGenerator::setEndpoints(
 	(*_end)[1] = endy;
 }
 
+void PVGenerator::setEndpoints(
+	const std::pair<Double, Double>& center, Double length,
+	const Quantity& pa
+) {
+	ThrowIf(
+		length <= 0,
+		"Length must be positive"
+	);
+	const CoordinateSystem csys = _getImage()->coordinates();
+	Bool xIsLong = csys.isDirectionAbscissaLongitude();
+	Vector<Double> inc = csys.directionCoordinate().increment();
+	Double xoff = sign(inc[0])*length/2;
+	xoff = xIsLong ? xoff*sin(pa.getValue("rad")) : xoff*cos(pa.getValue("rad"));
+	Double yoff = sign(inc[1])*length/2;
+	yoff = xIsLong ? yoff*cos(pa.getValue("rad")) : yoff*sin(pa.getValue("rad"));
+	setEndpoints(
+		std::make_pair(center.first - xoff, center.second - yoff),
+		std::make_pair(center.first + xoff, center.second + yoff)
+	);
+}
+
+void PVGenerator::setEndpoints(
+	const std::pair<Double, Double>& center, const Quantity& length,
+	const Quantity& pa
+) {
+	ThrowIf(
+		! pa.isConform("rad"),
+		"Position angle must have angular units"
+	);
+	Quantity inc = _increment();
+	ThrowIf(
+		! length.isConform(inc),
+		"Units of length are not conformant with direction axes units"
+	);
+	setEndpoints(
+		center, (length/inc).getValue(), pa
+	);
+}
+
+void PVGenerator::setEndpoints(
+	const MVDirection& center, const Quantity& length,
+	const Quantity& pa
+) {
+	MVDirection start = center;
+	start.shiftAngle(length/2, pa - Quantity(180, "deg"));
+	MVDirection end = center;
+	end.shiftAngle(length/2, pa);
+	setEndpoints(start, end);
+}
+
+void PVGenerator::setEndpoints(
+	const MVDirection& center, Double length,
+	const Quantity& pa
+) {
+	setEndpoints(center, length*_increment(), pa);
+}
+
+Quantity PVGenerator::_increment() const {
+	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
+	return Quantity(
+		fabs(dc.increment()[0]),
+		dc.worldAxisUnits()[0]
+	);
+}
+
+void PVGenerator::setEndpoints(
+	const MVDirection& start, const MVDirection& end
+) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
+	Vector<String> units = dc.worldAxisUnits();
+	Vector<Double> sPixel = dc.toPixel(start);
+	Vector<Double> ePixel = dc.toPixel(end);
+	*_getLog() << LogIO::NORMAL << "Setting pixel end points "
+		<< sPixel << ", " << ePixel << LogIO::POST;
+	setEndpoints(
+		make_pair(sPixel[0], sPixel[1]),
+		make_pair(ePixel[0], ePixel[1])
+	);
+}
+
 void PVGenerator::setWidth(uInt width) {
-	if (width % 2 == 0) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE)
-			<< "width must be odd." << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		width % 2 == 0,
+		"Width must be odd."
+	);
 	_width = width;
+}
+
+void PVGenerator::setWidth(const Quantity& q) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
+	Quantity inc(fabs(dc.increment()[0]), dc.worldAxisUnits()[0]);
+	ThrowIf(
+		! q.isConform(inc),
+		"Nonconformant units specified for quantity"
+	);
+	Double nPixels = (q/inc).getValue();
+	if (nPixels < 1) {
+		nPixels = 1;
+		*_getLog() << LogIO::NORMAL << "Using a width of 1 pixel or "
+			<< inc.getValue() << inc.getUnit() << LogIO::POST;
+	}
+	else if (near(fmod(nPixels, 2), 1.0)) {
+		nPixels = floor(nPixels + 0.5);
+	}
+	else {
+		nPixels = ceil(nPixels);
+		if (near(fmod(nPixels, 2), 0.0)) {
+			nPixels += 1;
+		}
+		Quantity qq = nPixels*inc;
+		*_getLog() << LogIO::NORMAL << "Rounding width up to next odd number of pixels ("
+			<< nPixels << "), or " << qq.getValue() << qq.getUnit() << LogIO::POST;
+	}
+	setWidth((uInt)nPixels);
 }
 
 std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
@@ -98,16 +216,19 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
-	if (_start.get() == 0 || _end.get() == 0) {
-		*_getLog() << "Start and/or end points have not been set" << LogIO::EXCEPTION;
-	}
-
+	ThrowIf(
+		_start.get() == 0 || _end.get() == 0,
+		"Start and/or end points have not been set"
+	);
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	std::tr1::shared_ptr<SubImage<Float> > subImage(
-		new SubImage<Float>(SubImageFactory<Float>::createSubImage(
-		*myClone, *_getRegion(), _getMask(),
-		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
-	)));
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				*myClone, *_getRegion(), _getMask(), _getLog().get(),
+				False, AxesSpecifier(), _getStretch(), True
+			)
+		)
+	);
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	CoordinateSystem subCoords = subImage->coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
@@ -115,13 +236,12 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	Int yAxis = dirAxes[1];
 	IPosition subShape = subImage->shape();
 	IPosition origShape = _getImage()->shape();
-	if (
+	ThrowIf(
 		subShape[xAxis] != origShape[xAxis]
-		|| subShape[yAxis] != origShape[yAxis]
-	) {
-		*_getLog() << "You are not permitted to make a region selection "
-			<< "in the direction coordinate" << LogIO::EXCEPTION;
-	}
+		|| subShape[yAxis] != origShape[yAxis],
+		"You are not permitted to make a region selection "
+		"in the direction coordinate"
+	);
 	_checkWidth(subShape[xAxis], subShape[yAxis]);
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	// get the PA of the end points
@@ -149,34 +269,39 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
         ys[1] = start[1] + halfy;
         ys[2] = end[1] - halfy;
         ys[3] = end[1] + halfy;
-        if (
+        ThrowIf(
             min(xs) < 2 || max(xs) > subImage->shape()[xAxis] - 3
-            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3
-        ) {
-            *_getLog() << "Error: specified end points and half width are such "
-                << "that chosen directional region falls outside or within "
-                << "two pixels of the edge of the image." << LogIO::EXCEPTION;
-        }
+            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3,
+            "Error: specified end points and half width are such "
+            "that chosen directional region falls outside or within "
+            "two pixels of the edge of the image."
+        );
     }
-    // rotation occurs about the reference pixel, so move the reference pixel to be
-    // the midpoint of the requested line segment
-    vector<Double> midpoint = (end + start)/2.0;
-    Vector<Double> newRefPix2 = subCoords.referencePixel();
-    newRefPix2[dirAxes[0]] = midpoint[0];
-    newRefPix2[dirAxes[1]] = midpoint[1];
 
-    Vector<Double> newRefVal;
-    subCoords.toWorld(newRefVal, newRefPix2);
-    subCoords.setReferencePixel(newRefPix2);
-    subCoords.setReferenceValue(newRefVal);
-    subImage->setCoordinateInfo(subCoords);
-    cout << "refpix " << newRefPix2 << endl;
-    cout << "refval " << newRefVal << endl;
+    {
+    	// rotation occurs about the reference pixel, so move the reference pixel to be
+    	// on the segment, near the midpoint so that the y value is an integer.
+    	vector<Double> midpoint = (end + start)/2.0;
+    	Double targety = int(midpoint[1]);
+    	Double targetx = targety == midpoint[1]
+    	    ? midpoint[0]
+    	    : (
+    	    	start[0]*(end[1] - targety) + end[0]*(targety - start[1])
+    	    )/(end[1] - start[1]);
+    	Vector<Double> newRefPix = subCoords.referencePixel();
+    	newRefPix[dirAxes[0]] = targetx;
+    	newRefPix[dirAxes[1]] = targety;
+    	Vector<Double> newRefVal;
+    	subCoords.toWorld(newRefVal, newRefPix);
+    	subCoords.setReferencePixel(newRefPix);
+    	subCoords.setReferenceValue(newRefVal);
+    	subImage->setCoordinateInfo(subCoords);
 
-	// rotate the image through this angle, in the opposite direction.
-	*_getLog() << LogIO::NORMAL << "Rotating image by "
-		<< (paInRad*180/C::pi)
-		<< " degrees to align specified slice with the x axis" << LogIO::POST;
+    	// rotate the image through this angle, in the opposite direction.
+    	*_getLog() << LogIO::NORMAL << "Rotating image by " << (paInRad*180/C::pi)
+    		<< " degrees about direction coordinate pixel (" << targetx << ", " << targety
+    		<< ") to align specified slice with the x axis" << LogIO::POST;
+    }
 	Vector<Double> worldStart, worldEnd;
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
@@ -253,6 +378,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 			)
 		);
 	}
+
 	// done with this pointer
 	imageToRotate.reset();
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
@@ -290,6 +416,9 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 			- sqrt(xdiff*xdiff + ydiff*ydiff)
 		) < 1e-6, AipsError
 	);
+	// CAS-6043, because it's possible for the above conditions to be true but the y values to still be
+	// just a little different and on either side of the 0.5 pixel mark
+	//rotPixEnd[yAxis] = rotPixStart[yAxis];
 	// We have rotated so the position of the starting pixel x is smaller than
 	// the ending pixel x.
 	AlwaysAssert(rotPixStart[xAxis] < rotPixEnd[xAxis], AipsError);
@@ -303,11 +432,12 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
-	ImageCollapser collapser(
+	ImageCollapser<Float> collapser(
 		"mean", rotated, "", &lcbox,
 		"", "", "", "", axes, "", False
 	);
-	std::auto_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
+
+	std::tr1::shared_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
@@ -315,7 +445,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 
 	// to determine the pixel increment of the angular offset axis, get the
 	// distance between the end points
-	ImageMetaData<Float> md(collapsed.get());
+	ImageMetaData md(collapsed);
 	Vector<Int> dirShape = md.directionShape();
 	AlwaysAssert(dirShape[1] == 1, AipsError);
 	const DirectionCoordinate& dc = collCoords.directionCoordinate();
@@ -374,7 +504,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
 		newMask->put(newArray);
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(cDropped, 0, newMask.get());
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage(_prepareOutputImage(cDropped, 0, newMask.get()));
 	if (! wantReturn) {
 		outImage.reset();
 	}
@@ -389,8 +519,6 @@ void PVGenerator::setOffsetUnit(const String& s) {
 	}
 	_unit = s;
 }
-
-
 
 String PVGenerator::getClass() const {
 	return _class;

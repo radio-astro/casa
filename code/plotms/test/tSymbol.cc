@@ -75,8 +75,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
-	bool interactive = false;
-	bool ok = app.save(format, interactive );
+	bool ok = app.save(format);
 	cout << "tSymbol:: Result of save="<<ok<<endl;
     
 	ok = tUtil::checkFile( outFile, 130000, 140000, -1 );

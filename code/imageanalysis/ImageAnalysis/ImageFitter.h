@@ -41,7 +41,7 @@
 
 namespace casa {
 
-class ImageFitter : public ImageTask {
+class ImageFitter : public ImageTask<Float> {
 	// <summary>
 	// Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
 	// ultimately call fitsky to do fitting
@@ -102,7 +102,7 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-			const ImageTask::shCImFloat image, const String& region,
+			const SPCIIF image, const String& region,
 		const Record *const regionRec,
 		const String& box="",
 		const String& chanInp="", const String& stokes="",
@@ -146,6 +146,9 @@ public:
 	// an exception if the zero level was not fit for.
 	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
 
+	// set rms level for calculating uncertainties. If not positive, an exception is thrown.
+	void setRMS(Double rms);
+
 protected:
     virtual inline Bool _supportsMultipleRegions() {return True;}
 
@@ -162,7 +165,7 @@ private:
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
 	Record _residStats, inputStats;
-	Double chiSquared;
+	Double /*_chiSquared,*/ _rms;
 	String _kludgedStokes;
 	CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;
@@ -244,8 +247,7 @@ private:
 	) const;
 
 	void _encodeSkyComponentError(
-		LogIO& os, SkyComponent& sky,
-		Double facToJy, const ImageInterface<Float>& subIm,
+		SkyComponent& sky, Double facToJy, const ImageInterface<Float>& subIm,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong
 	) const;

@@ -258,7 +258,9 @@ void PlotSelectTool::getSelectedRects(vector<double>& upperLeftXs,
     }
 }
 
-
+int PlotSelectTool::getSelectedRectCount(){
+	return m_rects.size();
+}
 
 vector<PlotRegion>
 PlotSelectTool::getSelectedRects(PlotCoordinate::System system) const {
@@ -1246,7 +1248,22 @@ bool PlotStandardMouseToolGroup::trackerDrawsText() const {
     return m_tracker->drawsText(); 
 }
 
+int PlotStandardMouseToolGroup::getSelectedRectCount(){
+	PlotSelectToolPtr selectPtr = selectTool();
+	int rectCount = selectPtr->getSelectedRectCount();
+	return rectCount;
+}
 
+void PlotStandardMouseToolGroup::clearSelectedRects(){
+	PlotSelectToolPtr selectPtr = selectTool();
+	selectPtr->clearSelectedRects();
+}
+
+vector<PlotRegion> PlotStandardMouseToolGroup::getSelectedRects(){
+	PlotSelectToolPtr selectPtr = selectTool();
+	vector<PlotRegion> regions = selectPtr->getSelectedRects();
+	return regions;
+}
 
 
 PlotSelectToolPtr PlotStandardMouseToolGroup::selectTool()   {

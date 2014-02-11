@@ -146,6 +146,8 @@ bool lazy = false;
 #include <casa/Logging/StreamLogSink.h>
 #include <casa/Logging/LogSink.h>
 
+#define VARYINGNPOLNCHAN 4 
+
 void info (const string& message) {
   
   if (!verbose){
@@ -159,10 +161,10 @@ void warning (const string& message) {
   LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
 }
 
-void error(const string& message) {
+void error(const string& message, int status=1) {
   LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
   //os << LogIO::POST;
-  exit(1);
+  exit(status);
 }
 
 #include <iostream>
@@ -2283,6 +2285,51 @@ void fillState(MainRow* r_p) {
   LOGEXIT("fillState");
 }
 
+/**
+ * For each row of the ConfigDescription table, this method checks if 
+ * - all the values of numChan derived from the content of dataDescriptionId are equal
+ * - all the values of numCorr derived from the content of dataDescriptionId are equal
+ *
+ * If the two conditions above are satisfied it returns true, and false otherwise.
+ *
+ * This method was developed to check if the lazy filler can be used no a dataset given its
+ * inability to deal with varying number of numChan or numCorr inside a configuration description at
+ * the time when this method is developed.
+*/ 
+bool checkForConstantNPolNChan(ASDM* ds_p) {
+
+  const vector<ConfigDescriptionRow *>& cfgR_v = ds_p->getConfigDescription().get();
+
+  DataDescriptionTable&	ddT  = ds_p->getDataDescription();
+  SpectralWindowTable&	spwT = ds_p->getSpectralWindow();
+  PolarizationTable&	polT = ds_p->getPolarization();
+
+  bool result = true;
+  BOOST_FOREACH (ConfigDescriptionRow* cfgR_p , cfgR_v) {
+    vector <Tag> ddId_v = cfgR_p->getDataDescriptionId();
+
+    bool	firstElement = true;
+    int		numChanRef   = 0;
+    int		numPolRef    = 0;
+
+    BOOST_FOREACH(Tag ddId, ddId_v) {
+      if (firstElement) {
+	numChanRef = spwT.getRowByKey(ddT.getRowByKey(ddId)->getSpectralWindowId())->getNumChan();
+	numPolRef = polT.getRowByKey(ddT.getRowByKey(ddId)->getPolOrHoloId())->getNumCorr();
+	firstElement = false;
+      }
+      else {
+	if ( (numChanRef != spwT.getRowByKey(ddT.getRowByKey(ddId)->getSpectralWindowId())->getNumChan())
+	     ||
+	     (numPolRef != polT.getRowByKey(ddT.getRowByKey(ddId)->getPolOrHoloId())->getNumCorr()) ) {
+	  return false;
+	}
+      }
+    }
+  }
+  return true;
+}
+
 void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   selected_eb_scan_m, const casa::MeasurementSet*  tab_p) {
   ostringstream oss;
 
@@ -3755,7 +3802,11 @@ int main(int argc, char *argv[]) {
       string dummyMSName = vm["ms-directory-prefix"].as< string >();
       dummyMSName = lrtrim(dummyMSName);
       if (boost::algorithm::ends_with(dummyMSName, "/")) dummyMSName.erase(dummyMSName.size()-1);
+#if (BOOST_FILESYSTEM_VERSION == 3)
+      boost::filesystem::path msPath(lrtrim(dummyMSName));
+#else
       boost::filesystem::path msPath(lrtrim(dummyMSName),&boost::filesystem::no_check);
+#endif
       string msDirectory = msPath.branch_path().string();
       msDirectory = lrtrim(msDirectory);
       if (msDirectory.size() == 0) msDirectory = ".";
@@ -3881,6 +3932,18 @@ int main(int argc, char *argv[]) {
   infostream.str("");
   infostream << "Time spent parsing the ASDM medata : " << cpu_time_parse_xml << " s.";
   info(infostream.str());
+
+  //
+  // Let's verify immediately that if the lazy option has been set we have constant numPol x numCorr
+  // on each Configuration Description.
+  //
+  if (lazy && !checkForConstantNPolNChan(ds)) {
+    infostream.str("");
+    infostream << "NOTE: This ASDM cannot be imported in 'lazy' mode because it has a varying number of polarizations and/or channels in some configuration description(s)."
+	       << endl << "      *** Will switch to non-lazy import. ***" << endl;
+    warning(infostream.str());
+    lazy = false;
+  }
 
   //
   // What are the apc literals present in the binary data.

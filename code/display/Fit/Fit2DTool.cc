@@ -445,7 +445,7 @@ namespace casa {
 		}
 	}
 
-	void Fit2DTool::setImage( ImageTask::shCImFloat image ) {
+	void Fit2DTool::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > image ) {
 		this->image = image;
 		bool enableFunctionality = true;
 		if ( image.get() == NULL ) {

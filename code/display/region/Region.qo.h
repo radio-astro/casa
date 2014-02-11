@@ -232,10 +232,9 @@ namespace casa {
 
 			Region( ) : dock_(0), id_(QtId::get_id( )), wc_(0), selected_(false), visible_(true),
 				mouse_in_region(false), z_index_within_range(true) { }
-			Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *, bool hold_signals_=false,
-			        QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
 			Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *,
-			        QtRegionState *supplied_state, bool hold_signals_=false );
+					bool hold_signals_=false, QtRegionState *supplied_state=0,
+			        QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
 
 			// is this region degenerate?
 			virtual bool degenerate( ) const;
@@ -317,7 +316,10 @@ namespace casa {
 				return mystate->markCenter( );
 			}
 
-			virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
+			virtual bool skyComponent( ) const {
+				return mystate->skyComponent();
+				//const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
+			}
 
 			virtual void output( ds9writer &out ) const = 0;
 

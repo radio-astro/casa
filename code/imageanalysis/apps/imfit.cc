@@ -78,8 +78,8 @@ Int main(Int argc, char *argv[]) {
 		excludePixelRange[i] = String::toFloat(excludePixParts[i]);
 	}
 	ImageInterface<Float> *image;
-	ImageUtilities::openImage(image, imagename, log);
-	ImageTask::shCImFloat sImage(image);
+	ImageUtilities::openImage(image, imagename);
+	SPCIIF sImage(image);
 	ImageFitter imFitter(
 		sImage, region, 0, box, chans, stokes, mask, includePixelRange,
 		excludePixelRange, residual, model, estimatesFilename,

@@ -230,8 +230,9 @@ void FeatherMain::resetData(){
 
 void FeatherMain::functionColorsChanged(){
 	FeatherCurveType::CurveType xScatter = preferencesColor.getScatterXCurve();
+	QString xTitle = preferencesColor.getScatterXCurveTitle();
 	QList<FeatherCurveType::CurveType> yScatters = preferencesColor.getScatterYCurve();
-	plotHolder->setScatterCurves( xScatter, yScatters );
+	plotHolder->setScatterCurves( xTitle, xScatter, yScatters );
 
 	QMap<PreferencesColor::CurveType,CurveDisplay> colorMap = preferencesColor.getFunctionColors();
 	plotHolder->setColors( colorMap );

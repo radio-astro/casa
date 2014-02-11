@@ -333,7 +333,9 @@ int main( int argc, const char *argv[] ) {
 
 				if(tryDDcreate) {
 
-					qdd = dpg->createDD(filename, datatype, displaytype);
+					qdd = dpg->createDD(filename, datatype, displaytype, true,
+										-1, false, false, false/*, ddo*/ );
+					dpg->addedData( QString::fromStdString(displaytype), qdd );
 
 
 					if(qdd==0)  cerr << dpg->errMsg() << endl;

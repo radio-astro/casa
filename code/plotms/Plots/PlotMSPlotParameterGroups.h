@@ -1105,7 +1105,9 @@ public:
 		if (index >= itsUnflaggedSymbols_.size())
 			itsUnflaggedSymbols_.resize (index + 1);
 		if (itsUnflaggedSymbols_[index] != value) {
-			itsUnflaggedSymbols_[index] = value;
+			Record newValueRecord = value->toRecord();
+			//itsUnflaggedSymbols_[index] = value;
+			itsUnflaggedSymbols_[index]->fromRecord( newValueRecord );
 			updated();
 		}
 	}
@@ -1131,7 +1133,9 @@ public:
 		if (index >= itsFlaggedSymbols_.size())
 			itsFlaggedSymbols_.resize (index + 1);
 		if (itsFlaggedSymbols_[index] != value) {
-			itsFlaggedSymbols_[index] = value;
+			//itsFlaggedSymbols_[index] = value;
+			Record valueRecord = value->toRecord();
+			itsFlaggedSymbols_[index]->fromRecord( valueRecord );
 			updated();
 		}
 	}
@@ -1207,6 +1211,8 @@ public:
 	}
 
 
+
+
 private:
 	/* Parameters' values */
 	vector<PlotSymbolPtr> itsUnflaggedSymbols_;
@@ -1214,6 +1220,7 @@ private:
 	vector<PlotMSLabelFormat> itsTitleFormats_;
 	vector<bool> itsColorizeFlags_;
 	vector<PMS::Axis> itsColorizeAxes_;
+
 
 	/* Key strings for Record */
 	static const String REC_UNFLAGGEDS;
@@ -1277,8 +1284,8 @@ public:
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
 
-
-
+	//Returns whether or not we are iterating on an axis.
+	bool isIteration() const;
 
 	const PlotMSIterParam& iterParam() const {
 		return itsIterParam_;
@@ -1302,22 +1309,22 @@ public:
 	}
 
 
-	int numRows() const  {
-		return itsIterParam_.Ny();
+	int getGridRow() const  {
+		return itsIterParam_.getGridRow();
 	}
-	void setNumRows(const int &value)  {
-		if (numRows() != value) {
-			itsIterParam_.setNy(value);
+	void setGridRow(const int &value)  {
+		if (getGridRow() != value) {
+			itsIterParam_.setGridRow(value);
 			updated();
 		}
 	}
 
-	int numColumns() const  {
-		return itsIterParam_.Nx();
+	int getGridCol() const  {
+		return itsIterParam_.getGridCol();
 	}
-	void setNumColumns(const int &value)  {
-		if (numColumns() != value) {
-			itsIterParam_.setNx(value);
+	void setGridCol(const int &value)  {
+		if (getGridCol() != value) {
+			itsIterParam_.setGridCol(value);
 			updated();
 		}
 	}
@@ -1334,6 +1341,7 @@ public:
 			else if ( !commonAxis ){
 				validValue = true;
 			}
+
 			if ( validValue ){
 				itsIterParam_.setCommonAxisX( commonAxis );
 				updated();
@@ -1363,18 +1371,8 @@ public:
 		}
 		void setGlobalScaleX( bool globalAxis ){
 			if ( isGlobalScaleX() != globalAxis ){
-				int rowCount = numRows();
-				bool validValue = false;
-				if ( rowCount > 1 ){
-					validValue = true;
-				}
-				else if ( !globalAxis ){
-					validValue = true;
-				}
-				if ( validValue ){
-					itsIterParam_.setGlobalScaleX( globalAxis );
-					updated();
-				}
+				itsIterParam_.setGlobalScaleX( globalAxis );
+				updated();
 			}
 		}
 		Bool isGlobalScaleY() const {
@@ -1382,18 +1380,8 @@ public:
 		}
 		void setGlobalScaleY( bool globalAxis ){
 			if ( isGlobalScaleY() != globalAxis ){
-				int colCount = numColumns();
-				bool validValue = false;
-				if ( colCount > 1 ){
-					validValue = true;
-				}
-				else if ( !globalAxis ){
-					validValue = true;
-				}
-				if ( validValue ){
-					itsIterParam_.setGlobalScaleY( globalAxis );
-					updated();
-				}
+				itsIterParam_.setGlobalScaleY( globalAxis );
+				updated();
 			}
 		}
 private:
@@ -1404,87 +1392,6 @@ private:
 
 
 
-// Subclass of PlotMSPlotParameters::Group to handle export parameters.
-
-class PMS_PP_Export : public PlotMSPlotParameters::Group {
-
-public:
-
-	/* Constructor which takes a factory */
-	PMS_PP_Export (PlotFactoryPtr factory);
-
-	/* Copy constructor.  See operator=(). */
-	PMS_PP_Export (const PMS_PP_Export & copy);
-
-	~PMS_PP_Export();
-
-	/* Implements PlotMSPlotParameters::Group::clone(). */
-	Group *clone() const {
-		return new PMS_PP_Export (*this);
-	}
-
-	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = /*PMS_PP::UPDATE_ITERATION_NAME;*/"Export";
-		return groupName;
-	}
-
-	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
-
-	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
-
-	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
-	bool requiresRedrawOnChange() const {
-		return false;
-	}
-
-	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
-
-	/* Overrides PlotMSPlotParameters::Group::operator==(). */
-	bool operator== (const Group & other) const;
-
-
-	const PlotMSExportParam& getExportParam() const {
-		return itsExportParam_;
-	}
-	void setExportParam(PlotMSExportParam exportParam) {
-		if (itsExportParam_ != exportParam) {
-			itsExportParam_=exportParam;
-			updated();
-		}
-	}
-
-	PMS::ExportRange getExportRange() const {
-		return itsExportParam_.getExportRange();
-	}
-
-	void setExportRange (const PMS::ExportRange & value) {
-		if (getExportRange()!=value) {
-			itsExportParam_.setExportRange(value);
-			updated();
-		}
-	}
-
-
-	void setExportRange (string & value) {
-		itsExportParam_.setExportRange(value);
-		updated();
-	}
-
-
-private:
-	/* Parameters' values */
-	PlotMSExportParam itsExportParam_;
-
-	/* Key strings for Record */
-	static const String REC_EXPORT_RANGE;
-
-
-	void setDefaults();
-};
 
 }
 

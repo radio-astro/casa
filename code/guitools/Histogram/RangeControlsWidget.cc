@@ -80,7 +80,7 @@ void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
 	}
 }
 
-void RangeControlsWidget::setImage( const ImageTask::shCImFloat image ){
+void RangeControlsWidget::setImage(const std::tr1::shared_ptr<const ImageInterface<Float > > image ){
 	this->image = image;
 }
 
@@ -191,7 +191,7 @@ RangeControlsWidget::~RangeControlsWidget(){
 //                       Percentage Calculator
 //*************************************************************************
 
-PercentageCalculator::PercentageCalculator( float minValue, float maxValue, const ImageTask::shCImFloat image ){
+PercentageCalculator::PercentageCalculator( float minValue, float maxValue, const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
 	this->minValue = minValue;
 	this->maxValue = maxValue;
 	this->image = image;

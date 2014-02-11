@@ -38,19 +38,19 @@ ActionCacheRelease::ActionCacheRelease( Client* client )
 	itsType_ = CACHE_RELEASE;
 }
 
-void ActionCacheRelease::setUpWorkParameters(CacheThread* cacheThread, vector<PMS::Axis>& /*axes*/ ){
-	/*ct = new PlotMSCacheThread(plot, a,
-						&PMS_PP_Cache::notifyWatchers, paramsCache);*/
+void ActionCacheRelease::setUpWorkParameters(CacheThread* cacheThread,
+		int /*plotIndex*/, vector<PMS::Axis>& /*axes*/ ){
 	if ( cacheThread != NULL ){
 		cacheThread->setLoad( false );
 		cacheThread->setCacheBase( NULL );
 	}
 }
 
-bool ActionCacheRelease::isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const {
+bool ActionCacheRelease::isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int vectorIndex, int axisIndex ) const {
 	bool valid = false;
-	for(unsigned int j = 0;  j < cacheAxes.size(); j++){
-		if(cacheAxes[j].first == axes[axisIndex]){
+	int cacheCount = cacheAxes.size();
+	for(int j = 0;  j < cacheCount; j++){
+		if(cacheAxes[j].first == axes[vectorIndex][axisIndex]){
 			valid = true;
 			break;
 		}
@@ -58,12 +58,12 @@ bool ActionCacheRelease::isAxesValid( vector<pair<PMS::Axis,unsigned int > > cac
 	return valid;
 }
 
-void ActionCacheRelease::checkFeasibility(PlotMSApp* plotms, vector<PMS::Axis>& a ) const {
+void ActionCacheRelease::checkFeasibility(PlotMSApp* plotms, int plotIndex, vector<PMS::Axis>& a ) const {
 	stringstream ss;
 	ss << "The following axes could not be released because they are "
 			"currently in use:";
 	bool removed = false;
-	PlotMSPlotParameters& params = plot->parameters();
+	PlotMSPlotParameters& params = plots[plotIndex]->parameters();
 	PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
 	PMS::Axis x = paramsCache->xAxis(), y = paramsCache->yAxis();
 	for(int i = 0; i < (int)a.size(); i++) {

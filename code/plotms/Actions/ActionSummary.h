@@ -33,7 +33,9 @@ namespace casa {
 class ActionSummary  : public PlotMSAction {
 public:
 	ActionSummary( Client* client );
-
+	void setSummaryType( PMS::SummaryType type );
+	void setFile( String file );
+	void setVerbose( bool verbose );
 
 	virtual ~ActionSummary();
 protected:
@@ -41,7 +43,10 @@ protected:
 	virtual bool doActionSpecific(PlotMSApp* plotms);
 	virtual bool loadParameters();
 private:
-	PlotMSPlot* plot;
+	//vector<PlotMSPlot*> plots;
+	PMS::SummaryType summaryType;
+	String filename;
+	bool verbose;
 };
 
 } /* namespace casa */

@@ -40,12 +40,12 @@ namespace casa {
 const String ImageRegridder::_class = "ImageRegridder";
 
 ImageRegridder::ImageRegridder(
-	const ImageTask::shCImFloat image,
+	const SPCIIF image,
 	const Record *const regionRec,
 	const String& maskInp, const String& outname, Bool overwrite,
 	const CoordinateSystem& csysTo, const IPosition& axes,
 	const IPosition& shape, Bool dropdeg
-) : ImageTask(
+) : ImageTask<Float>(
 		image, "", regionRec, "", "", "",
 		maskInp, outname, overwrite
 	),
@@ -59,11 +59,11 @@ ImageRegridder::ImageRegridder(
 }
 
 ImageRegridder::ImageRegridder(
-	const ImageTask::shCImFloat image, const String& outname,
-	const ImageTask::shCImFloat templateIm, const IPosition& axes,
+	const SPCIIF image, const String& outname,
+	const SPCIIF templateIm, const IPosition& axes,
 	const Record *const regionRec, const String& maskInp,
 	Bool overwrite, Bool dropdeg, const IPosition& shape
-)  : ImageTask(
+)  : ImageTask<Float>(
 		image, "", regionRec, "", "", "",
 		maskInp, outname, overwrite
 	),
@@ -78,7 +78,7 @@ ImageRegridder::ImageRegridder(
 
 ImageRegridder::~ImageRegridder() {}
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::regrid(
+ImageInterface<Float>* ImageRegridder::regrid(
 	Bool wantReturn
 ) const {
 	Bool regridByVel = False;
@@ -106,31 +106,37 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::regrid(
 	else {
 		workIm = _regrid();
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(*workIm);
-	if (! wantReturn) {
-		outImage.reset();
+	std::auto_ptr<ImageInterface<Float> > outImage( _prepareOutputImage(*workIm));
+	if (wantReturn) {
+		return outImage.release();
 	}
-	return outImage;
+    else {
+        return 0;
+    }
 }
 
 std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*clone, *_getRegion(), _getMask(), _getLog().get(),
-		False, AxesSpecifier(! _dropdeg), _getStretch()
+	std::tr1::shared_ptr<SubImage<Float> > subImage(
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				*clone, *_getRegion(), _getMask(), _getLog().get(),
+				False, AxesSpecifier(! _dropdeg), _getStretch()
+			)
+		)
 	);
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	if (! anyTrue(subImage.getMask())) {
+	if (! anyTrue(subImage->getMask())) {
 		*_getLog() << "All selected pixels are masked" << LogIO::EXCEPTION;
 	}
 	clone.reset(0);
-	const CoordinateSystem csysFrom = subImage.coordinates();
+	const CoordinateSystem csysFrom = subImage->coordinates();
 	CoordinateSystem csysTo = _csysTo;
 	csysTo.setObsInfo(csysFrom.obsInfo());
 	std::set<Coordinate::Type> coordsToRegrid;
 	CoordinateSystem csys = ImageRegrid<Float>::makeCoordinateSystem(
 		*_getLog(), coordsToRegrid, csysTo, csysFrom, _axes,
-		subImage.shape(), False
+		subImage->shape(), False
 	);
 
 	if (csys.nPixelAxes() != _shape.nelements()) {
@@ -138,16 +144,16 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 			<< "The number of pixel axes in the output shape and Coordinate System must be the same"
 			<< LogIO::EXCEPTION;
 	}
-	_checkOutputShape(subImage, coordsToRegrid);
+	_checkOutputShape(*subImage, coordsToRegrid);
 	std::tr1::shared_ptr<ImageInterface<Float> > workIm(
 		new TempImage<Float>(_kludgedShape, csys)
 	);
 	workIm->set(0.0);
-	ImageUtilities::copyMiscellaneous(*workIm, subImage);
+	ImageUtilities::copyMiscellaneous(*workIm, *subImage);
 	String maskName("");
-	ImageMaskAttacher<Float>::makeMask(*workIm, maskName, True, True, *_getLog(), True);
+	ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *_getLog(), True);
 	ThrowIf (
-		! _doImagesOverlap(subImage, *workIm),
+		! _doImagesOverlap(subImage, workIm),
 		"There is no overlap between the (region chosen in) the input image"
 		" and the output image with respect to the axes being regridded."
 	);
@@ -155,7 +161,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(! _doRefChange);
 	ir.regrid(
-		*workIm, _method, _axes, subImage,
+		*workIm, _method, _axes, *subImage,
 		_replicate, _decimate, True,
 		_forceRegrid
 	);
@@ -206,7 +212,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 void ImageRegridder::_decimateStokes(
 	std::tr1::shared_ptr<ImageInterface<Float> >& workIm
 ) const {
-	ImageMetaData<Float> md(workIm.get());
+	ImageMetaData md(workIm);
 	if (_outputStokes.size() < md.nStokes()) {
 		CasacRegionManager rm(workIm->coordinates());
 		String diagnostics;
@@ -218,9 +224,9 @@ void ImageRegridder::_decimateStokes(
 				"", CasacRegionManager::USE_FIRST_STOKES,
 				"", workIm->shape()
 			).toRecord("");
-			workIm = SubImageFactory<Float>::createImage(
+			workIm.reset(SubImageFactory<Float>::createImage(
 				*workIm, "", region, "", False, False, False, False
-			);
+			));
 		}
 		else {
 			// Only include the wanted stokes
@@ -516,7 +522,7 @@ void ImageRegridder::_finishConstruction() {
 				);
 				// This is a kludge to fool the underlying ImageRegrid constructor that the shape
 				// is acceptable to it. We copy just the stokes we from the output of ImageRegrid.
-				ImageMetaData<Float> md(_getImage().get());
+				ImageMetaData md(_getImage());
 				_kludgedShape[csysFrom.polarizationAxisNumber(False)] = md.nStokes();
 			}
 		}
@@ -553,15 +559,15 @@ void ImageRegridder::_finishConstruction() {
 }
 
 Bool ImageRegridder::_doImagesOverlap(
-	const ImageInterface<Float>& image0,
-	const ImageInterface<Float>& image1
+	std::tr1::shared_ptr<const ImageInterface<Float> > image0,
+	std::tr1::shared_ptr<const ImageInterface<Float> >image1
 ) {
-	const CoordinateSystem csys0 = image0.coordinates();
-	const CoordinateSystem csys1 = image1.coordinates();
-	IPosition shape0 = image0.shape();
-	IPosition shape1 = image1.shape();
-	ImageMetaData<Float> md0(&image0);
-	ImageMetaData<Float> md1(&image1);
+	const CoordinateSystem csys0 = image0->coordinates();
+	const CoordinateSystem csys1 = image1->coordinates();
+	IPosition shape0 = image0->shape();
+	IPosition shape1 = image1->shape();
+	ImageMetaData md0(image0);
+	ImageMetaData md1(image1);
 	Bool overlap = False;
 	if (
 		csys0.hasDirectionCoordinate()

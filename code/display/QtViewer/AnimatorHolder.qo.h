@@ -57,10 +57,10 @@ namespace casa {
 
 		void setChannelZAxis( const QString& zAxisTite );
 
-		void foldChannel( ) { channelGroupBox->setChecked(false); }
-		void unfoldChannel( ) { channelGroupBox->setChecked(true); }
-		void foldImage( ) { imageGroupBox->setChecked(false); }
-		void unfoldImage( ) { imageGroupBox->setChecked(true); }
+		void foldChannel( );
+		void unfoldChannel( );
+		void foldImage( );
+		void unfoldImage( );
 
 		~AnimatorHolder();
 
@@ -105,7 +105,7 @@ namespace casa {
 		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 		// animation for images
 		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-		void setImageMode( );
+		void setImageMode( bool channelCubes );
 /*goTo*///displayPanel
 		void goToImage( int image );
 /*frameNumberEdited*/
@@ -176,12 +176,7 @@ namespace casa {
 	private:
 		void initChannel();
 		void initImage();
-		bool addChannelGroupBox();
-		void addImageGroupBox();
         void sizeGroupBox( QGroupBox* );
-		void removeChannelGroupBox();
-		bool removeImageGroupBox();
-		void setHeightFixed();
 		int getAnimationCount() const;
 		void addRemoveChannelAnimatorBasedOnFrameCount();
         int find_height( ) const;

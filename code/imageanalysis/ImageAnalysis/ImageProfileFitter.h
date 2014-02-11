@@ -42,7 +42,7 @@ namespace casa {
 
 class ProfileFitResults;
 
-class ImageProfileFitter : public ImageTask {
+class ImageProfileFitter : public ImageTask<Float> {
 	// <summary>
 	// Top level interface for one-dimensional profile fits.
 	// </summary>
@@ -91,7 +91,7 @@ public:
 	// or a non-empty <src>spectralList</src> can be specified.
 
 	ImageProfileFitter(
-			const ImageTask::shCImFloat image, const String& region,
+			const SPCIIF image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const uInt ngauss, const String& estimatesFilename,

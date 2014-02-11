@@ -37,8 +37,8 @@ const String PlotMSIterParam::GLOBAL_SCALE_X = "globalScaleX";
 const String PlotMSIterParam::GLOBAL_SCALE_Y = "globalScaleY";
 const String PlotMSIterParam::COMMON_AXIS_X = "commonAxisX";
 const String PlotMSIterParam::COMMON_AXIS_Y = "commonAxisY";
-const String PlotMSIterParam::ROW_COUNT = "Nx";
-const String PlotMSIterParam::COL_COUNT = "Ny";
+const String PlotMSIterParam::ROW_INDEX = "rowIndex";
+const String PlotMSIterParam::COL_INDEX = "colIndex";
 
 // Non-Static //
 
@@ -57,12 +57,12 @@ void PlotMSIterParam::fromRecord(const RecordInterface& record) {
 		setIterAxis(record.asString(ITER_AXIS));
 	}
 
-	if (record.isDefined(ROW_COUNT)){
-		setNx(record.asInt(ROW_COUNT));
+	if (record.isDefined(ROW_INDEX)){
+		setGridRow(record.asInt(ROW_INDEX));
 	}
 
-	if (record.isDefined(COL_COUNT)){
-		setNy(record.asInt(COL_COUNT));
+	if (record.isDefined(COL_INDEX)){
+		setGridCol(record.asInt(COL_INDEX));
 	}
 
 	if (record.isDefined(GLOBAL_SCALE_X)){
@@ -92,8 +92,8 @@ Record PlotMSIterParam::toRecord() const {
 	rec.define(COMMON_AXIS_Y, commonAxisY_);
 	rec.define(GLOBAL_SCALE_X, globalScaleX_);
 	rec.define(GLOBAL_SCALE_Y, globalScaleY_);
-	rec.define(ROW_COUNT,Nx_);
-	rec.define(COL_COUNT,Ny_);
+	rec.define(ROW_INDEX,gridRow);
+	rec.define(COL_INDEX,gridCol);
 
 	// Return it
 	return rec;
@@ -105,24 +105,32 @@ Record PlotMSIterParam::toRecord() const {
 bool PlotMSIterParam::operator==(const PlotMSIterParam& other) const {
 
 	return (iterAxis_ == other.iterAxis_ &&
-			Nx_ == other.Nx_ &&
-			Ny_ == other.Ny_) &&
+			gridRow == other.gridRow &&
+			gridCol == other.gridCol &&
 			commonAxisX_ == other.commonAxisX_ &&
 			commonAxisY_ == other.commonAxisY_ &&
 			globalScaleX_ == other.globalScaleX_ &&
-			globalScaleY_ == other.globalScaleY_;
+			globalScaleY_ == other.globalScaleY_);
 }
 
 
 void PlotMSIterParam::setDefaults() {    
 
 	setIterAxis(PMS::NONE);  // No iteration
-	setNx(1);
-	setNy(1);
+	setGridRow(0);
+	setGridCol(0);
 	setGlobalScaleX(False);
 	setGlobalScaleY(False);
 	setCommonAxisX(False);
 	setCommonAxisY(False);
+}
+
+bool PlotMSIterParam::isIteration() const {
+	bool iterationSet = false;
+	if ( iterAxis_ != PMS::NONE ){
+		iterationSet = true;
+	}
+	return iterationSet;
 }
 
 String PlotMSIterParam::summary() const {
@@ -133,8 +141,8 @@ String PlotMSIterParam::summary() const {
 	ss << "Iteration parameters:" << endl;
 	ss << " Iteration Axis = " << iterAxisStr() << endl;
 
-	ss << " Nx             = " << Nx_ << endl;
-	ss << " Ny             = " << Ny_ << endl;
+	ss << " Grid Row        = " << gridRow << endl;
+	ss << " Grid Col        = " << gridCol << endl;
 	ss << " Global Scale X  = " << globalScaleX_ << endl;
 	ss << " Global Scale Y  = " << globalScaleY_ << endl;
 	ss << " Common Axis X   = " << commonAxisX_ << endl;

@@ -51,8 +51,8 @@ const String ImagePrimaryBeamCorrector::_class = "ImagePrimaryBeamCorrector";
 uInt _tempTableNumber = 0;
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-		const ImageTask::shCImFloat image,
-		const ImageTask::shCImFloat pbImage,
+		const SPCIIF image,
+		const SPCIIF pbImage,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
 	const String& chanInp, const String& stokes,
@@ -60,7 +60,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 	const Bool overwrite, const Float cutoff,
 	const Bool useCutoff,
 	const ImagePrimaryBeamCorrector::Mode mode
-) : ImageTask(
+) : ImageTask<Float>(
 		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
 	), _pbImage(pbImage->cloneII()), _cutoff(cutoff),
 	_mode(mode), _useCutoff(useCutoff) {
@@ -69,7 +69,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 }
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-		const ImageTask::shCImFloat image,
+		const SPCIIF image,
 	const Array<Float>& pbArray,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
@@ -78,7 +78,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 	const Bool overwrite, const Float cutoff,
 	const Bool useCutoff,
 	const ImagePrimaryBeamCorrector::Mode mode
-) : ImageTask(
+) : ImageTask<Float>(
 		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
 	), _cutoff(cutoff), _mode(mode), _useCutoff(useCutoff) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
@@ -271,10 +271,10 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		_removeExistingOutfileIfNecessary();
 		String mask = "";
 	    Record empty;
-		outImage = SubImageFactory<Float>::createImage(
+		outImage.reset( SubImageFactory<Float>::createImage(
 			subImage, _getOutname(), empty,
 			mask, False, False, False, False
-		);
+		));
 	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? subImage/pbSubImage

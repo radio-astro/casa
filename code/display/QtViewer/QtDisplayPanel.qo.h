@@ -45,6 +45,8 @@
 #include <display/region/QtRegionSourceFactory.h>
 #include <display/Display/Position.h>
 
+#include <stack>
+
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
 #  include <QtGui>
@@ -134,9 +136,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			friend class QtDisplayPanel;
 		};
 
-
-		QtDisplayPanel( QtDisplayPanelGui* panel, QWidget* parent=0,
+		QtDisplayPanel( QtDisplayPanelGui *panel, const QtDisplayPanel *other, QWidget* parent=0,
 		                const std::list<std::string> &args = std::list<std::string>( ) );
+		QtDisplayPanel( QtDisplayPanelGui *panel, QWidget* parent=0,
+		                const std::list<std::string> &args = std::list<std::string>( ) );
+
 		~QtDisplayPanel();
 
 		Bool isEmptyRegistered() const;
@@ -144,6 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Manipulation of the QtDisplayData's.
 		DisplayDataHolder::DisplayDataIterator beginRegistered() const;
 		DisplayDataHolder::DisplayDataIterator endRegistered() const;
+		QtDisplayData* getRegistered( int index );
 		QtDisplayData* getDD( const std::string& name ) const;
 		QtDisplayData* getDD( const DisplayData *dd ) const;
 		DisplayDataHolder* getDataHolder() const;
@@ -1075,6 +1080,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (pc_) pc_->setUpdateAllowed(allowed);
 		}
 
+		void pushCurrentDrawingState( );
+		void popCurrentDrawingState( );
+
+		float getLabelLineWidth( );
+		void  setLabelLineWidth( float value );
+		float getTickLength( );
+		void  setTickLength( float value );
+
 		void setLineWidthPS(Float &w);
 		void setBackgroundPS(String &w, String &c);
 
@@ -1087,6 +1100,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	private:
+		/**
+		 ** portion of construction shared by multiple constructor functions...
+		 */
+		void construct_( QtPixelCanvas *canvas, const std::list<std::string> &args );
 
 		/**
 		 * Sends a signal containing information about the data pinpointed by the mouse
@@ -1177,6 +1194,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# 0 <= Start_ <=Index_ < End_ <=Len_   and  1 <= Step_ <= Len_.
 		Int zStart_, zEnd_, zStep_;
 		Int bStart_, bEnd_, bStep_;
+
+		std::stack<Record*> drawing_state;
 
 	};
 

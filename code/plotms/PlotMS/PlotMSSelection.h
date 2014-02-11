@@ -84,6 +84,9 @@ public:
     Record toRecord() const;
     // </group>
     
+    //Print out an abbreviated summary of the selection.
+    String toStringShort() const;
+
     // Applies this selection using the first MS into the second MS.  (See the
     // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
@@ -156,6 +159,9 @@ private:
     
     // Initializes the values to their defaults.
     void initDefaults();
+
+    //Returns whether or not any selections have been made.
+    bool isEmpty() const;
 };
 
 }

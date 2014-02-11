@@ -92,6 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// create a main display panel Gui
 		virtual QtDisplayPanelGui *createDPG();
+		virtual QtDisplayPanelGui *createDPG(const QtDisplayPanelGui *);
 		virtual QtCleanPanelGui *createInteractiveCleanGui( );
 
 		// Exits Qt loop.  (Note that the loop can be restarted (and is, in

@@ -28,10 +28,13 @@
 
 #include <images/Images/ImageInterface.h>
 
+#include <imageanalysis/ImageTypedefs.h>
 #include <imageanalysis/IO/OutputDestinationChecker.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 
 #include <casa/namespace.h>
+
+#include <tr1/memory>
 
 namespace casa {
 
@@ -56,19 +59,6 @@ class ImageInputProcessor {
 
 public:
 
-	// struct for checking output file writability
-	/*
-    struct OutputStruct {
-		// label used for messages, eg "residual image", "estmates file"
-		String label;
-		// pointer to the output name
-		String *outputFile;
-		// is this file required to be written, or can the task continue if it cannot be?
-		Bool required;
-		// If a file by the same name already exists, will the task allow it to be overwritten?
-		Bool replaceable;
-	};
-*/
 	//constructor
 	ImageInputProcessor();
 
@@ -87,8 +77,8 @@ public:
 	// the inputs specify multiple n-dimensional rectangles. This should usually
 	// be set to false if the caller can only deal with a single n-dimensional
 	// rectangular region.
-    void process(
-    	ImageInterface<Float>*& image, Record& regionRecord,
+    template<class T> void process(
+    	SPIIT image, Record& regionRecord,
     	String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
     	String& stokes,	const String& imagename,
@@ -112,11 +102,12 @@ public:
 	// the inputs specify multiple n-dimensional rectangles. This should usually
 	// be set to false if the caller can only deal with a single n-dimensional
 	// rectangular region.
-    void process(
+    template<class T> void process(
     	Record& regionRecord,
-    	String& diagnostics, std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
+    	String& diagnostics,
+    	std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
     	String& stokes,
-    	const ImageInterface<Float> *const &image,
+    	SPCIIT image,
     	const Record* regionPtr,
     	const String& regionName, const String& box,
     	const String& chans,
@@ -135,10 +126,10 @@ private:
     Bool _processHasRun;
     uInt _nSelectedChannels;
 
-    void _process(
+    template<class T> void _process(
     	Record& regionRecord, String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct>* outputStruct,
-    	String& stokes, const ImageInterface<Float> *const &image,
+    	String& stokes, SPCIIT image,
     	const Record *const &regionPtr,
     	const String& regionName, const String& box,
     	const String& chans, const CasacRegionManager::StokesControl& stokesControl,
@@ -152,8 +143,8 @@ private:
     	const Record *const regionPtr
     ) const;
 
-    void _setRegion(Record& regionRecord, String& diagnostics,
-    	const ImageInterface<Float> *const image, const String& regionName
+    template<class T> void _setRegion(Record& regionRecord, String& diagnostics,
+    	const ImageInterface<T> *const image, const String& regionName
     ) const;
 
     String _stokesFromRecord(
@@ -163,7 +154,10 @@ private:
     String _pairsToString(const std::vector<uInt>& pairs) const;
 
 };
-
 }
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <imageanalysis/ImageAnalysis/ImageInputProcessor2.tcc>
+#endif
 
 #endif /* IMAGES_IMAGEINPUTPROCESSOR_H */

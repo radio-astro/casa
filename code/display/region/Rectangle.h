@@ -100,9 +100,10 @@ namespace casa {
 
 		protected:
 			Rectangle( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1,
-			           double y1, double x2, double y2, bool hold_signals=false,
+			           double y1, double x2, double y2,
+			           bool hold_signals=false, QtRegionState *supplied_state=0,
 			           QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN ) :
-				Region( name, wc, d, hold_signals, sym ), blc_x(x1<x2?x1:x2),
+				Region( name, wc, d, hold_signals, supplied_state, sym ), blc_x(x1<x2?x1:x2),
 				blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) {
 				initHistogram();
 				complete = true;

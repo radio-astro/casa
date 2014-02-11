@@ -91,6 +91,7 @@ protected:
   String itsImageName;
   Vector<String> itsPartImageNames;
   String itsStartingModelName;
+  Float itsWeightLimit;
 
 };
 

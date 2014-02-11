@@ -222,11 +222,11 @@ void PlotHolder::setColors( const QMap<PreferencesColor::CurveType,CurveDisplay>
 	}
 }
 
-void PlotHolder::setScatterCurves( FeatherCurveType::CurveType xScatter,
+void PlotHolder::setScatterCurves( const QString& title, FeatherCurveType::CurveType xScatter,
 		const QList<FeatherCurveType::CurveType>& yScatters ){
-	plots[SCATTER_X]->setScatterCurves( xScatter, yScatters );
-	plots[SCATTER_Y]->setScatterCurves( xScatter, yScatters );
-	plots[SCATTER_DISTANCE]->setScatterCurves( xScatter, yScatters );
+	plots[SCATTER_X]->setScatterCurves( title, xScatter, yScatters );
+	plots[SCATTER_Y]->setScatterCurves( title, xScatter, yScatters );
+	plots[SCATTER_DISTANCE]->setScatterCurves( title, xScatter, yScatters );
 }
 
 

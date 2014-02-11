@@ -28,10 +28,11 @@
 #ifndef IMAGES_IMAGEMETADATARW_H
 #define IMAGES_IMAGEMETADATARW_H
 
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaDataBase.h>
+
 #include <casa/aips.h>
 
-class casac::variant;
+#include <tr1/memory>
 
 namespace casa {
 
@@ -74,11 +75,12 @@ namespace casa {
 // classes with these methods.
 // </motivation>
 
-template <class T> class ImageMetaDataRW: public ImageMetaData<T> {
+class ImageMetaDataRW : public ImageMetaDataBase {
 
 public:
 
-	ImageMetaDataRW(ImageInterface<Float> *const &image);
+	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<Float> > image);
+	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<Complex> > image);
 
 	// remove, if possible, the specified parameter. Returns True if removal
 	// was successful.
@@ -89,24 +91,23 @@ public:
 	// mask does not exist.
 	Bool removeMask(const String& maskName);
 
-	virtual Record toRecord(Bool verbose) const;
+	Record toRecord(Bool verbose) const;
 
 	// add a key-value pair
-	Bool add(const String& key, const casac::variant& value);
+	Bool add(const String& key, const ValueHolder& value);
 
 	// set (update) the value associated with the key.
-	Bool set(const String& key, const casac::variant& value);
-
+	Bool set(const String& key, const ValueHolder& value);
 
 protected:
 
-	const ImageInterface<T> * const _getImage() const {return _image;}
+	std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const {return _floatImage;}
 
-	ImageInterface<T> * const _getImage() {return _image;}
+	std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const {return _complexImage;}
 
-	const ImageInfo& _getInfo() const { return _image->imageInfo(); }
+	const ImageInfo& _getInfo() const;
 
-	const CoordinateSystem& _getCoords() const { return _image->coordinates(); }
+	const CoordinateSystem& _getCoords() const;
 
 	Vector<String> _getAxisNames() const;
 
@@ -142,9 +143,11 @@ protected:
 
 	String _getTelescope() const;
 
-private:
+	Record _getStatistics() const;
 
-	ImageInterface<Float> * const _image;
+private:
+	std::tr1::shared_ptr<ImageInterface<Float> > _floatImage;
+	std::tr1::shared_ptr<ImageInterface<Complex> > _complexImage;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere
@@ -158,24 +161,31 @@ private:
 	mutable Vector<String> _axisNames, _axisUnits;
 	mutable Vector<Double> _refPixel;
 	mutable vector<Quantity> _refVal, _increment;
-	mutable Record _header;
+	mutable Record _header, _stats;
 
-	ImageMetaDataRW() : _image(0) {}
+	ImageMetaDataRW() {}
 
-	void _setCoordinateValue(const String& key, const casac::variant& value);
+	void _setCoordinateValue(const String& key, const ValueHolder& value);
 
-	void  _checkString(const String& key, const casac::variant& v) const;
+	String  _getString(const String& key, const ValueHolder& value) const;
 
-	void _setUserDefined(const String& key, const casac::variant& v);
+	void _setUserDefined(const String& key, const ValueHolder& v);
 
+	Bool _setUnit(const String& unit);
+
+	Bool _setCsys(const CoordinateSystem& csys);
+
+	Bool _setImageInfo(const ImageInfo& info);
+
+	const TableRecord _miscInfo() const;
+
+	void _setMiscInfo(const TableRecord& rec);
+
+	Bool _hasRegion(const String& maskName) const;
+
+	static Quantity _getQuantity(const ValueHolder& v);
 };
 
-
-
 } //# NAMESPACE CASA - END
-
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <imageanalysis/ImageAnalysis/ImageMetaDataRW.tcc>
-#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

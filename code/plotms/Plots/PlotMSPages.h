@@ -32,6 +32,8 @@
 
 namespace casa {
 
+class PlotMSParameters;
+
 // Represents (potentially) multiple pages for PlotMS, with one being current
 // (visible) at a time.
 class PlotMSPages {
@@ -57,9 +59,7 @@ public:
     // Returns a COPY of the current page.
     PlotMSPage currentPage() const;
 
-    void setCurrentPageNum(uInt num) {
-        if(num < totalPages()) itsCurrentPageNum_ = num;
-    }
+    void setCurrentPageNum(uInt num);
 
     // Accessor
     PlotMSPage& operator[](uInt index) { return itsPages_[index]; }
@@ -79,20 +79,10 @@ public:
     // Clear all pages
     void clear() { itsPages_.clear(); }
 
-    void resize(size_t pages) {
-        size_t currentSize = itsPages_.size();
-        // Shrink if needed
-        if(pages < currentSize) {
-            itsPages_.resize(pages, PlotMSPage(*this));
-        }
-        // If we are adding new pages, initialize them
-        for(size_t i = currentSize; i < pages; ++i) {
-            insertPage(i);
-            itsPages_[i].resize(itsPages_[0].canvasRows(),
-                                itsPages_[0].canvasCols());
-            itsPages_[i].setupPage();
-        }
-    }
+    void resize(size_t pages);
+
+	//Resize the page to the current number of rows and columns.
+    bool gridChanged( int rows, int cols);
 
     // Copy operator.
     PlotMSPages& operator=(const PlotMSPages& copy);
@@ -113,7 +103,24 @@ public:
     // Sets up the current page (see PlotMSPage::setupPage()).
     void setupCurrentPage();
 
+    //Remove the plot from the canvas.
+    void disown( PlotMSPlot* plot );
+
+    PlotMSParameters getPageParameters();
+    
+    //Returns whether the spot at the given location is available for
+    //the plot (either empty or the plot is already occupying it).
+    bool isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const;
+    
+    //Returns the row and column index of the first canvas on the
+    //page, or <-1,-1> if the page is full.
+    pair<int,int> findEmptySpot() const;
+
 private:
+	//Returns whether or not (rows,cols) would represent
+	//a change in the current page size.
+    bool isGridChanged( int rows, int cols ) const;
+
     // Plot manager.
     PlotMSPlotManager* itsManager_;
 

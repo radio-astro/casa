@@ -46,12 +46,12 @@
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 
 namespace casa {
-SpectralCollapser::SpectralCollapser(const ImageTask::shCImFloat image):
+SpectralCollapser::SpectralCollapser(const SPCIIF image):
 		_image(image), _log(new LogIO()), _storePath(""){
 	_setUp();
 }
 
-SpectralCollapser::SpectralCollapser(const ImageTask::shCImFloat image, const String storePath):
+SpectralCollapser::SpectralCollapser(const SPCIIF image, const String storePath):
 		_image(image), _log(new LogIO()), _storePath(storePath){
 	_setUp();
 }
@@ -443,7 +443,7 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 	return True;
 }
 
-Bool SpectralCollapser::_getQualitySubImgs(ImageTask::shCImFloat image, std::tr1::shared_ptr<SubImage<Float> >&  subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const{
+Bool SpectralCollapser::_getQualitySubImgs(SPCIIF image, std::tr1::shared_ptr<SubImage<Float> >&  subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const{
 
 	// check whether the image origin is FITS
 	const FITSQualityImage  * const qImg = dynamic_cast<const FITSQualityImage*const>(image.get());
@@ -532,10 +532,10 @@ Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, Str
 	return True;
 }
 
-Bool SpectralCollapser::_collapse(const ImageTask::shCImFloat image, const String &aggString,
+Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
 		const String& chanInp, const String& outname) const {
 	// create and execute the imcollapse-class
-	ImageCollapser collapser(
+	ImageCollapser<Float> collapser(
 			aggString,                  // String aggString
 			image,                      // const ImageInterface<Float> *const image
 			"",                         // const String& region

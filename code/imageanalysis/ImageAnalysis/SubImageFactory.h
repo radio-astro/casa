@@ -102,7 +102,7 @@ public:
   );
 
   // return a PagedImage if outfile is not blank or a SubImage if it is.
-  static std::tr1::shared_ptr<ImageInterface<T> > createImage(
+  static ImageInterface<T>* createImage(
 	  ImageInterface<T>& image,
 	  const String& outfile, const Record& region,
 	  const String& mask, const Bool dropDegenerateAxes,

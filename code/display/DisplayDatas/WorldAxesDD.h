@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setOptions(Record& rec, Record& recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions();
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Create a new AxesDisplayMethod for drawing on the given
 		// WorldCanvas when the AttributeBuffers are suitably matched to the

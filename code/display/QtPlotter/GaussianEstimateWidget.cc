@@ -222,20 +222,21 @@ namespace casa {
 		fwhmChanged( fwhm );
 	}
 
-	void GaussianEstimateWidget::unitsChanged( const QString& oldUnits, const QString& newUnits) {
+	void GaussianEstimateWidget::unitsChanged( const QString& oldUnits, const QString& newUnits, SpectralCoordinate& coord) {
 		Converter* converter = Converter::getConverter( oldUnits, newUnits);
 		double centerVal = gaussianEstimate.getCenter();
 		double fwhm = gaussianEstimate.getFWHM();
 		double fwhmPoint = centerVal - fwhm;
-		centerVal = converter->convert( centerVal );
-		fwhmPoint = converter->convert( fwhmPoint );
+
+		centerVal = converter->convert( centerVal, coord);
+		fwhmPoint = converter->convert( fwhmPoint, coord);
 		gaussianEstimate.setCenter( static_cast<float>(centerVal) );
 		gaussianEstimate.setFWHM( static_cast<float>(qAbs(centerVal - fwhmPoint)) );
 		QList<QString> keys = molecularLineMap.keys();
 		for ( int i = 0; i < keys.size(); i++ ) {
 			MolecularLine* molecularLine = molecularLineMap[keys[i]];
 			float center = molecularLine->getCenter();
-			center = converter->convert( center );
+			center = converter->convert( center, coord );
 			molecularLine->setCenter( center );
 		}
 		updateUIBasedOnEstimate();

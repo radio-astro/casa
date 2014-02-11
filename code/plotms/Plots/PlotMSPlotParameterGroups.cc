@@ -984,6 +984,7 @@ Record PMS_PP_Display::toRecord() const
 	}
 	rec.define(REC_COLFLAGS, Vector<bool>(itsColorizeFlags_));
 	rec.define(REC_COLAXES, PMS::toIntVector<PMS::Axis>(itsColorizeAxes_));
+
 	return rec;
 }
 
@@ -1059,6 +1060,7 @@ void PMS_PP_Display::fromRecord(const Record& record)
 			valuesChanged = true;
 		}
 	}
+
 	if (valuesChanged) updated();
 }
 
@@ -1075,6 +1077,7 @@ PlotMSPlotParameters::Group& PMS_PP_Display::operator=(const Group& other)
 		itsTitleFormats_ = o->itsTitleFormats_;
 		itsColorizeFlags_ = o->itsColorizeFlags_;
 		itsColorizeAxes_ = o->itsColorizeAxes_;
+
 		updated();
 	}
 	return *this;
@@ -1092,6 +1095,7 @@ bool PMS_PP_Display::operator==(const Group& other) const
 	if (itsTitleFormats_ != o->itsTitleFormats_) return false;
 	if (itsColorizeFlags_.size() != o->itsColorizeFlags_.size() || itsColorizeAxes_.size() != o->itsColorizeAxes_.size() || itsColorizeFlags_.size() != itsColorizeAxes_.size()) return false;
 	for (unsigned int i = 0; i < itsColorizeFlags_.size(); i++) if (itsColorizeFlags_[i] != o->itsColorizeFlags_[i] || (itsColorizeFlags_[i] && itsColorizeAxes_[i] != o->itsColorizeAxes_[i])) return false;
+
 	return true;
     		}
 
@@ -1103,6 +1107,7 @@ void PMS_PP_Display::setDefaults()
 	itsTitleFormats_ = vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT));
 	itsColorizeFlags_ = vector<bool>(1, false);
 	itsColorizeAxes_ = vector<PMS::Axis>(1, PMS::DEFAULT_COLOR_AXIS);
+
 }
 
 void PMS_PP_Display::setColorize(const bool& colorize, const PMS::Axis& axis,
@@ -1133,9 +1138,6 @@ void PMS_PP_Display::resizeVectors(unsigned int newSize)
 			itsFlaggedSymbols_[i] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
 	}
 }
-
-
-
 
 
 //////////////////////////////////
@@ -1192,54 +1194,10 @@ void PMS_PP_Iteration::setDefaults()
 	itsIterParam_.setDefaults();
 }
 
+bool PMS_PP_Iteration::isIteration() const {
+	bool iteration = itsIterParam_.isIteration();
+	return iteration;
+}
 
 }
 
-PMS_PP_Export::PMS_PP_Export(PlotFactoryPtr factory) :
-				PlotMSPlotParameters::Group(factory){
-	setDefaults();
-}
-
-PMS_PP_Export::PMS_PP_Export(const PMS_PP_Export& copy) :
-				PlotMSPlotParameters::Group(copy){
-	setDefaults();
-	operator=(copy);
-}
-
-void PMS_PP_Export::setDefaults(){
-	itsExportParam_.setDefaults();
-}
-
-Record PMS_PP_Export::toRecord() const{
-	return itsExportParam_.toRecord();
-}
-
-void PMS_PP_Export::fromRecord(const Record& record){
-	PlotMSExportParam tmp;
-	tmp.fromRecord(record);
-	if (tmp!=itsExportParam_) {
-		itsExportParam_=tmp;
-		updated();
-	}
-}
-
-PlotMSPlotParameters::Group& PMS_PP_Export::operator=(const Group& other){
-	const PMS_PP_Export* o = dynamic_cast<const PMS_PP_Export*>(&other);
-	if (o != NULL && *this != *o){
-		itsExportParam_ = o->itsExportParam_;
-		updated();
-	}
-	return *this;
-}
-
-
-bool PMS_PP_Export::operator==(const Group& other) const{
-	const PMS_PP_Export* o = dynamic_cast<const PMS_PP_Export*>(&other);
-	if (o == NULL) return false;
-	if (itsExportParam_ != o->itsExportParam_) return false;
-	return true;
-}
-
-PMS_PP_Export::~PMS_PP_Export(){
-
-}

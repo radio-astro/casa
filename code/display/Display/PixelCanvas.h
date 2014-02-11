@@ -871,6 +871,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Abstract base class idiom
 		PixelCanvas();
+		PixelCanvas( const PixelCanvas * );
 		PixelCanvas(PixelCanvasColorTable * pcctbl);
 
 		// Only allowed by derived classes

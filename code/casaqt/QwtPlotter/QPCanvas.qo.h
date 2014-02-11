@@ -122,7 +122,7 @@ public:
     }
 
     virtual void hide(){
-    	QFrame::show();
+    	QFrame::setVisible( false );
     }
 
     // Implements PlotCanvas::title().
@@ -414,6 +414,7 @@ public:
     void addAxisListener( AxisListener* listener );
     void clearAxisListeners();
 
+    virtual bool isDrawing() const;
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas
     // is added to the plotter so that it can use the plotter's logger if
@@ -541,8 +542,9 @@ private:
     
 
     virtual bool print( QPrinter& printer );
-    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
-    		double heightRatio, QRect imageRect );
+    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthWidth,
+    		double widgetHeight, int externalAxisWidth, int externalAxisHeight,
+    		int rowIndex, int colIndex, QRect imageRect );
     virtual int canvasWidth() const{
     	return width();
     }

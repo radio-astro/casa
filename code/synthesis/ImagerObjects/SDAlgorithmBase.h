@@ -61,27 +61,32 @@ public:
   SDAlgorithmBase();
  virtual  ~SDAlgorithmBase();
 
-  // In the base class. Non virtual.
+  // Non virtual. Wrapper function implemented only in the base class. 
   void deconvolve( SIMinorCycleController& loopController,  
 		   CountedPtr<SIImageStore> &imagestore,
 		   Int deconvolverid);
 
 
-  virtual void restore( CountedPtr<SIImageStore> imagestore );
+  // Base Class contains standard restoration. Overload for more complex behaviour.
+  void restore( CountedPtr<SIImageStore> imagestore );
 
 protected:
 
-  // Local functions to be overloaded by various algorithm deconvolvers.
+  // Pure virtual functions to be implemented by various algorithm deconvolvers.
   virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int& iterdone )=0;
   virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
   virtual void finalizeDeconvolver()=0;
+
+  // Base Class implements the option of single-plane images for the minor cycle.
   virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+  virtual void restorePlane();
 
   // Non virtual. Implemented only in the base class.
   Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  void partitionImages();
-  void initializeSubImages(uInt subim);
+  void partitionImages( CountedPtr<SIImageStore> &imagestore );
+  void initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim);
   Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
+  GaussianBeam getPSFGaussian();
 
   // Algorithm name
   String itsAlgorithmName;
@@ -90,9 +95,9 @@ protected:
   IPosition tmpPos_p;
 
   // Image Store
-  CountedPtr<SIImageStore> itsImages;
+  //  CountedPtr<SIImageStore> itsImages;
   Vector<Slicer> itsDecSlices;
-  SubImage<Float> itsResidual, itsPsf, itsModel;
+  SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
   Float itsComp;
 
 };

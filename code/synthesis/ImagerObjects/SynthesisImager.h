@@ -38,6 +38,9 @@
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include<synthesis/ImagerObjects/SIMapperCollection.h>
+#include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
+
+#include <synthesis/TransformMachines/ATerm.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -63,6 +66,8 @@ class SynthesisImager
   //Imager(const Imager&);
   //Imager& operator=(const Imager&);
 
+  virtual Bool selectData(const SynthesisParamsSelect& selpars);
+
   // make all pure-inputs const
   virtual Bool selectData(const String& msname, 
 			  const String& spw="*", 
@@ -80,6 +85,8 @@ class SynthesisImager
 			  const Bool usescratch=False, 
 			  const Bool readonly=False, 
 			  const Bool incrementModel=False);
+
+  virtual Bool defineImage(const SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
 
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way
@@ -107,7 +114,19 @@ class SynthesisImager
 			   const bool useDoublePrec=True, 
 			   const Int wprojplanes=1, 
 			   const String convFunc="SF", 
-			   const String startmodel="");
+			   const String startmodel="",
+			   // The extra params for WB-AWP
+			   const Bool aTermOn    = True,
+			   const Bool psTermOn   = True,
+			   const Bool mTermOn    = False,
+			   const Bool wbAWP      = True,
+			   const String cfCache  = "",
+			   const Bool doPointing = False,
+			   const Bool doPBCorr   = True,
+			   const Bool conjBeams  = True,
+			   const Float computePAStep=360.0,
+			   const Float rotatePAStep=5.0
+			   );
   //Define image via a predefine SIImageStore object
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, 
 			   const String& ftmachine);
@@ -145,6 +164,7 @@ protected:
  
   /////////////// Internal Functions
 
+  /*
   CoordinateSystem buildCoordSys(const MDirection& phasecenter, 
 				 const Quantity& cellx, 
 				 const Quantity& celly,
@@ -157,21 +177,73 @@ protected:
 				 const Quantity& freqStep, 
 				 const Vector<Quantity>& restFreq, 
 				 const MFrequency::Types freqFrame);
+  Vector<Int> decideNPolPlanes(const String& stokes);
+  */
 
   void createFTMachine(CountedPtr<FTMachine>& theFT, 
 		       CountedPtr<FTMachine>& theIFT,  
 		       const String& ftname,
-		       const Int facets=1);
+		       const Int facets=1,
+		       //------------------------------
+		       const Int wprojplane=1,
+		       const Float padding=1.0,
+		       const Bool useAutocorr=False,
+		       const Bool useDoublePrec=True,
+		       const String gridFunction=String("SF"),
+		       //------------------------------
+		       const Bool aTermOn    = True,
+		       const Bool psTermOn   = True,
+		       const Bool mTermOn    = False,
+		       const Bool wbAWP      = True,
+		       const String cfCache  = "",
+		       const Bool doPointing = False,
+		       const Bool doPBCorr   = True,
+		       const Bool conjBeams  = True,
+		       const Float computePAStep   = 360.0,
+		       const Float rotatePAStep    = 5.0,
+		       const Int cache=1000000000,
+		       const Int tile=16);
+  void createIMStore(const String imageName, const CoordinateSystem& cSys,
+		     const Quantity& distance, Int facets, const Bool overwrite);
   void createVisSet(const Bool writeaccess=False);
   
+  void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
+			  const String& ftmName,
+			  const Int facets,          
+			  //----------------------------
+			  const Int wprojPlane,     
+			  const Float padding,      
+			  const Bool useAutocorr,   
+			  const Bool useDoublePrec, 
+			  const String gridFunction,
+			  //---------------------------
+			  const Bool aTermOn,      
+			  const Bool psTermOn,     
+			  const Bool mTermOn,      
+			  const Bool wbAWP,        
+			  const String cfCache,    
+			  const Bool doPointing,   
+			  const Bool doPBCorr,     
+			  const Bool conjBeams,    
+			  const Float computePAStep,
+			  const Float rotatePAStep, 
+			  const Int cache,          
+			  const Int tile);
+  ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
+
   void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);
-  Vector<Int> decideNPolPlanes(const String& stokes);
+
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
   ////For facetted image distinct  ft machines will associated with each facets and 
   //// Only one facetted image allowed
   void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
 		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, const Bool overwrite=False);
+  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
+			  CountedPtr<FTMachine>& ftm,
+			  CountedPtr<FTMachine>& iftm,
+		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, 
+			  const Bool overwrite=False);
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;

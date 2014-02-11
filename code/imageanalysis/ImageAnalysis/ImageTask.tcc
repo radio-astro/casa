@@ -40,11 +40,10 @@
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/IO/LogFile.h>
 
-
 namespace casa {
 
-ImageTask::ImageTask(
-	const shCImFloat image,
+template <class T> ImageTask<T>::ImageTask(
+	const SPCIIT image,
 	const String& region, const Record *const &regionPtr,
 	const String& box, const String& chanInp,
 	const String& stokes, const String& maskInp,
@@ -53,16 +52,16 @@ ImageTask::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False),/* _logFD(0),*/
+	_logfileSupport(False), _logfileAppend(False),
 	_verbosity(NORMAL), _logfile() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }
 
-ImageTask::~ImageTask() {}
+template <class T> ImageTask<T>::~ImageTask() {}
 
-vector<OutputDestinationChecker::OutputStruct> ImageTask::_getOutputStruct() {
-	vector<OutputDestinationChecker::OutputStruct> outputs(0);
+template <class T> std::vector<OutputDestinationChecker::OutputStruct> ImageTask<T>::_getOutputStruct() {
+	std::vector<OutputDestinationChecker::OutputStruct> outputs;
     _outname.trim();
     if (! _outname.empty()) {
         OutputDestinationChecker::OutputStruct outputImage;
@@ -75,27 +74,46 @@ vector<OutputDestinationChecker::OutputStruct> ImageTask::_getOutputStruct() {
     return outputs;
 }
 
-void ImageTask::_construct(Bool verbose) {
+template <class T> void ImageTask<T>::_construct(Bool verbose) {
+
+	ThrowIf(
+		! _supportsMultipleBeams() && _image->imageInfo().hasMultipleBeams(),
+		"This application does not support images with multiple "
+		"beams. Please convolve your image with a single beam "
+		"and run this application using that image"
+	);
 	String diagnostics;
-	vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
-	vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
+	std::vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
+	std::vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
 		? &outputs
 		: 0;
-	vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
-	vector<Coordinate::Type> *coordsPtr = necCoords.size() > 0
+	std::vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
+	std::vector<Coordinate::Type> *coordsPtr = necCoords.size() > 0
 		? &necCoords
 		: 0;
+	ThrowIf(
+		_mustHaveSquareDirectionPixels()
+		&& _image->coordinates().hasDirectionCoordinate()
+		&& ! _image->coordinates().directionCoordinate().hasSquarePixels(),
+		"This application requires that the input image must have square"
+		"direction pixels, but the input image does not. Please regrid it"
+		"so it does and rerun on the regridded image"
+	);
 	ImageInputProcessor inputProcessor;
 	inputProcessor.process(
 		_regionRecord, diagnostics, outputPtr,
-    	_stokesString, _image.get(), _regionPtr,
+    	_stokesString, _image, _regionPtr,
     	_region, _box, _chan,
     	_getStokesControl(), _supportsMultipleRegions(),
     	coordsPtr, verbose
     );
 }
 
-void ImageTask::setRegion(const Record& region) {
+template <class T> void ImageTask<T>::setRegion(const Record& region) {
+	ThrowIf(
+		! _supportsMultipleRegions() && region.isDefined("regions"),
+		"This application does not support multiple region selection"
+	);
     _regionRecord = region;
     _box = "";
     _chan = "";
@@ -103,8 +121,8 @@ void ImageTask::setRegion(const Record& region) {
     _region = "";
 }
 
-void ImageTask::_removeExistingFileIfNecessary(
-	const String& filename, const Bool overwrite
+template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
+	const String& filename, Bool overwrite
 ) {
 	File out(filename);
 	if (out.exists()) {
@@ -133,11 +151,11 @@ void ImageTask::_removeExistingFileIfNecessary(
 	}
 }
 
-void ImageTask::_removeExistingOutfileIfNecessary() const {
+template <class T> void ImageTask<T>::_removeExistingOutfileIfNecessary() const {
 	_removeExistingFileIfNecessary(_outname, _overwrite);
 }
 
-String ImageTask::_summaryHeader() const {
+template <class T> String ImageTask<T>::_summaryHeader() const {
 	String region = _box.empty() ? _region : "";
 	ostringstream os;
 	os << "Input parameters ---" << endl;
@@ -150,133 +168,77 @@ String ImageTask::_summaryHeader() const {
 	return os.str();
 }
 
-void ImageTask::setLogfile(const String& lf) {
-	if (! _logfileSupport) {
-		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
-	}
+template <class T> void ImageTask<T>::setLogfile(const String& lf) {
+	ThrowIf(
+		! _logfileSupport,
+		"Logic Error: This task does not support writing of a log file"
+	);
 	try {
 		_logfile.reset(new LogFile(lf));
 		_logfile->setAppend(_logfileAppend);
 	}
 	catch (const AipsError& x) {}
-	/*
-	String mylf = lf;
-	OutputDestinationChecker::OutputStruct logFile;
-	logFile.label = "log file";
-	logFile.outputFile = &mylf;
-	logFile.required = False;
-	logFile.replaceable = True;
-	OutputDestinationChecker::checkOutput(logFile, *_log);
-	_logfile = mylf;
-	*/
-
 }
 
-// const String& ImageTask::_getLogfile() const {
-const std::tr1::shared_ptr<LogFile> ImageTask::_getLogFile() const {
-	if (! _logfileSupport) {
-		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
-	}
+template <class T> const std::tr1::shared_ptr<LogFile> ImageTask<T>::_getLogFile() const {
+	ThrowIf(
+		! _logfileSupport,
+		"Logic Error: This task does not support writing of a log file"
+	);
 	return _logfile;
 }
 
-Bool ImageTask::_openLogfile() {
+template <class T> Bool ImageTask<T>::_openLogfile() {
 	if (_logfile.get() == 0) {
 		return False;
 	}
 	*_log << LogOrigin(getClass(), __FUNCTION__);
-	if (! _logfileSupport) {
-		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		! _logfileSupport,
+		"Logic Error: This task does not support writing of a log file"
+	);
 	return _logfile->openFile();
-	/*
-	File log(_logfile);
-	switch (File::FileWriteStatus status = log.getWriteStatus()) {
-	case File::OVERWRITABLE:
-		if (_logfileAppend) {
-			_logFD = open(_logfile.c_str(), O_RDWR | O_APPEND);
-		}
-		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
-	case File::CREATABLE:
-		if (status == File::CREATABLE || ! _logfileAppend) {
-			// can fall throw from previous case block so status can be File::OVERWRITABLE
-			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
-			_logFD = FiledesIO::create(_logfile.c_str());
-		}
-		break;
-	default:
-		// checks to see if the log file is not creatable or not writeable should have already been
-		// done and if so _logFile set to the empty string so this method wouldn't be called in
-		// those cases.
-		*_log << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
-	}
-	_logFileIO.reset(new FiledesIO(_logFD, _logfile.c_str()));
-
-	return True;
-	*/
 }
 
-void ImageTask::_closeLogfile() const {
-	/*
-	if (_logFD > 0) {
-		FiledesIO::close(_logFD);
-	}
-	*/
-	if (_logfile.get() != 0) {
+template <class T> void ImageTask<T>::_closeLogfile() const {
+	if (_logfile) {
 		_logfile->closeFile();
 	}
 }
 
-Bool ImageTask::_writeLogfile(
+template<class T> Bool ImageTask<T>::_writeLogfile(
 	const String& output, const Bool open, const Bool close
 ) {
-	/*
-	if (open) {
-		if (! _openLogfile()) {
-			return False;
-		}
-	}
-	*/
-	if (_logfile.get() == 0) {
+	ThrowIf(
+		! _logfileSupport,
+		"Logic Error: This task does not support writing of a log file"
+	);
+	if (! _logfile) {
 		return False;
 	}
-	else {
-		*_log << LogOrigin(getClass(), __FUNCTION__);
-		if (! _logfileSupport) {
-			*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
-		}
-	}
-	_logfile->write(output, open, close);
-	/*
-	_logFileIO->write(output.length(), output.c_str());
-	if (close) {
-		_closeLogfile();
-	}
-	*/
-	return True;
+	return _logfile->write(output, open, close);
 }
 
-void ImageTask::setLogfileAppend(const Bool a) {
-	if (! _logfileSupport) {
-		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
-	}
+template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
+	ThrowIf(
+		! _logfileSupport,
+		"Logic Error: This task does not support writing of a log file"
+	);
 	_logfileAppend = a;
-	if (_logfile.get() != 0) {
+	if (_logfile) {
 		_logfile->setAppend(a);
 	}
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
-    const ImageInterface<Float>& image,
-    const Array<Float> *const values,
+template <class T> ImageInterface<T>*  ImageTask<T>::_prepareOutputImage(
+    const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
-	const IPosition *const outShape,
-	const CoordinateSystem *const coordsys
+    const IPosition *const outShape, const CoordinateSystem *const coordsys
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage(
-		new TempImage<Float>(
+    std::auto_ptr<ImageInterface<T> > outImage(
+		new TempImage<T>(
 			TiledShape(oShape), csys
 		)
 	);
@@ -288,20 +250,21 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 		mymask.reset(new ArrayLattice<Bool>(image.pixelMask().get()));
 	}
 	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
-		dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(*mymask);
+		dynamic_cast<TempImage<T> *>(outImage.get())->attachMask(*mymask);
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, image);
 	if (! _getOutname().empty()) {
 		_removeExistingOutfileIfNecessary();
 		String emptyMask = "";
 		Record empty;
-		outImage = SubImageFactory<Float>::createImage(
-			*outImage, _getOutname(), empty, emptyMask,
-			False, False, True, False
-		);
+        PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(SubImageFactory<T>::createImage(
+                    *outImage, _getOutname(), empty, emptyMask,
+                    False, False, True, False));
+        ThrowIf(tmp == 0, "Failed dynamic cast")
+		outImage.reset(tmp);
 	}
 	outImage->put(values == 0 ? image.get() : *values);
-	return outImage;
+	return outImage.release();
 }
 
 }

@@ -82,7 +82,9 @@ class SIImageStore
   Bool doImagesExist();
   Bool doesImageExist(String imagename);
 
-  void allocateRestoredImage();
+  void setImageInfo(const Record miscinfo);
+
+  //  void allocateRestoredImage();
 
   void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
   void addImages( CountedPtr<SIImageStore> imagestoadd, 
@@ -93,6 +95,7 @@ class SIImageStore
   void divideModelByWeight(const Float weightlimit=C::minfloat);
 
   Bool isValid(){return itsValidity;}
+  Bool checkValidity(const Bool psf, const Bool residual, const Bool weight, const Bool model, const Bool restored);
 
   Bool releaseLocks();
 
@@ -104,20 +107,29 @@ class SIImageStore
 protected:
 // Can make this a utility function elsewhere...
 //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
-static SubImage<Float>* makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image);
-Double memoryBeforeLattice();
-IPosition tileShape();
+  static SubImage<Float>* makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image);
+  Double memoryBeforeLattice();
+  IPosition tileShape();
+ 
+  CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, const Bool overwrite);
   ///////////////////// Member Objects
 
   IPosition itsImageShape;
   String itsImageName;
+  CoordinateSystem itsCoordSys;
+
+  // Misc Information to go into the header. 
+  Record itsMiscInfo;
+
   CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
   Bool itsWeightExists;
 
-  Bool itsPsfNormed, itsResNormed;
+  //  Bool itsPsfNormed, itsResNormed;
 
   Bool itsValidity;
+
+
 
 };
 

@@ -171,7 +171,14 @@ PlotCursor QPPlotter::cursor() const {
 void QPPlotter::setCursor(PlotCursor cursor) {
     QWidget::setCursor(QPOptions::cursor(cursor)); }
 
-void QPPlotter::refresh() {     
+void QPPlotter::updateScriptGui(){
+	setAttribute( Qt::WA_DontShowOnScreen, true );
+	show();
+	refresh();
+}
+
+void QPPlotter::refresh() {
+
     if(!m_layout.null()) {
         vector<PlotCanvasPtr> v = m_layout->allCanvases();
         for(unsigned int i = 0; i < v.size(); i++)
@@ -480,6 +487,24 @@ void QPPlotter::emptyLayout(){
 	}
 }
 
+int QPPlotter::getRowCount(){
+   	int rowCount = 1;
+   	PlotLayoutGrid* g = dynamic_cast<PlotLayoutGrid*>(&(*m_layout));
+   	if(g != NULL) {
+   		rowCount = g->rows();
+   	}
+   	return rowCount;
+}
+
+int QPPlotter::getColCount(){
+    int colCount = 1;
+    PlotLayoutGrid* g = dynamic_cast<PlotLayoutGrid*>(&(*m_layout));
+    if(g != NULL) {
+    	colCount = g->cols();
+    }
+    return colCount;
+}
+
 // Private Methods //
 
 void QPPlotter::setupCanvasFrame() {
@@ -523,9 +548,7 @@ void QPPlotter::setupCanvasFrame() {
         	}
         }
 
-
         if ( commonAxisY ){
-
         	int axisColumn = colCount;
         	if ( axisLocationY == Y_LEFT ){
         		startCols = 1;

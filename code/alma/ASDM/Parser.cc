@@ -167,6 +167,7 @@ namespace asdm {
 			if (dim0 == 0)
 				return value;
 			t.nextToken("\""); // the space
+			//t.nextToken();
 			value[0] = t.nextToken();
 			for (int i = 1; i < dim0; ++i) {
 				t.nextToken(); // the space		

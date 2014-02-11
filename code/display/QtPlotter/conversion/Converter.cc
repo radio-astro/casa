@@ -50,14 +50,6 @@ namespace casa {
 	    QList<QString>() << "m/s" << "10m/s" << "100m/s" << "km/s";
 
 
-	SpectralCoordinate Converter::spectralCoordinate;
-	void Converter::setSpectralCoordinate( SpectralCoordinate coordinate ) {
-		spectralCoordinate = coordinate;
-	}
-	void Converter::setRestFrequency( double restFrequency ) {
-		spectralCoordinate.setRestFrequency( restFrequency );
-	}
-
 	Converter* Converter::getConverter( const QString& oldUnits,
 	                                    const QString& newUnits) {
 		Converter* converter = NULL;
@@ -107,8 +99,6 @@ namespace casa {
 		return unitType;
 	}
 
-
-
 	Converter::Converter( const QString& oldUnitsStr, const QString& newUnitsStr):
 		oldUnits( oldUnitsStr), newUnits( newUnitsStr ) {
 	}
@@ -117,15 +107,15 @@ namespace casa {
 		return newUnits;
 	}
 
-	double Converter::convert ( double oldValue ) {
+	double Converter::convert ( double oldValue, SpectralCoordinate spectralCoordinate ) {
 		Vector<double> sourceValues( 1 );
 		sourceValues[0] = oldValue;
-		Vector<double> destValues = convert( sourceValues );
+		Vector<double> destValues = convert( sourceValues, spectralCoordinate );
 		double result = destValues[0];
 		return result;
 	}
 
-	void Converter::convert( Vector<double> &resultValues, int sourceIndex, int destIndex) {
+	void Converter::convert( Vector<double> &resultValues, int sourceIndex, int destIndex, SpectralCoordinate /*spectralCoordinate*/) {
 		if ( sourceIndex >= 0 && destIndex >= 0 ) {
 			int diff = qAbs( destIndex - sourceIndex );
 			float power = pow( 10, diff );
@@ -141,21 +131,6 @@ namespace casa {
 		}
 	}
 
-	bool Converter::setVelocityUnits( const QString& units ) {
-		bool unitsUnderstood = spectralCoordinate.setVelocity( units.toStdString() );
-		if ( !unitsUnderstood ) {
-			qDebug() << "Converter::setVelocityUnits units=" << units << " were not understood ";
-		}
-		return unitsUnderstood;
-	}
-
-	bool Converter::setWavelengthUnits( const QString& units ) {
-		bool unitsUnderstood = spectralCoordinate.setWavelengthUnit( units.toStdString() );
-		if ( !unitsUnderstood ) {
-			qDebug() << "Converter::setFrequencyUnits units=" << units << " were not understood ";
-		}
-		return unitsUnderstood;
-	}
 
 	Converter::~Converter() {
 		// TODO Auto-generated destructor stub

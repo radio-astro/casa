@@ -34,9 +34,10 @@ namespace casa {
 	public:
 		ConverterFrequency(const QString& oldUnits, const QString& newUnits);
 		static void convertFrequency( Vector<double> &resultValues,
-		                              QString& frequencySourceUnits, QString& frequencyDestUnits);
-		virtual double toPixel( double value );
-		virtual Vector<double> convert( const Vector<double>& oldValues );
+		                              QString& frequencySourceUnits, QString& frequencyDestUnits,
+		                              SpectralCoordinate& spectralCoordinate );
+		virtual double toPixel( double value, SpectralCoordinate spectralCoordinate);
+		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate);
 		virtual ~ConverterFrequency();
 	};
 

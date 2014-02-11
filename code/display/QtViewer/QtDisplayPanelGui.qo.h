@@ -121,7 +121,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	protected:
 		friend class QtViewer;
-		QtDisplayPanelGui( QtViewer* v, QWidget* parent=0, std::string rcstr="dpg",
+		QtDisplayPanelGui( QtViewer *v, QWidget *parent=0, std::string rcstr="dpg",
+		                   const std::list<std::string> &args = std::list<std::string>( ) );
+		QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *parent=0, std::string rcstr="dpg",
 		                   const std::list<std::string> &args = std::list<std::string>( ) );
 
 	public:
@@ -130,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~QtDisplayPanelGui();
 
 		// access to our viewer
-		QtViewer *viewer( ) {
+		QtViewer *viewer( ) const {
 			return v_;
 		}
 		int buttonToolState(const std::string &tool) const;
@@ -144,9 +146,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void status( const std::string &s, const std::string &type="info" );
 
 		// access to graphics panel 'base'....
-		QtDisplayPanel* displayPanel() {
-			return qdp_;
-		}
+		QtDisplayPanel* displayPanel() { return qdp_; }
+		const QtDisplayPanel* displayPanel() const { return qdp_; }
 
 		typedef std::list<viewer::Region*> region_list_t;
 		region_list_t regions( ) {
@@ -154,7 +155,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// region coupling between QtRegionDock and QtRegionSource(s)...
 		void revokeRegion( viewer::Region *r ) {
-			qdp_->revokeRegion(r);
+			// may be null at destruction time...
+			if ( qdp_ ) qdp_->revokeRegion(r);
 		}
 
 
@@ -321,6 +323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void showImageProfile();
 		virtual void hideImageProfile();
 		virtual void refreshImageProfile();
+		void resetImageProfile();
 
 		virtual void hideAllSubwindows();
 		virtual void hideImageMenus();
@@ -434,12 +437,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# Protected, connected by this object itself.
 
 		// Respond to QDP::registrationChange() signal
-		virtual void ddRegChange_() {
-			//hideImageMenus();
-			//updateDDMenus_();
-			arrangeTrackBoxes_();
-			updateFrameInformation();
-		}
+		virtual void ddRegChange_();
 
 		// Respond to registration/close menu clicks.
 		//<group>
@@ -581,7 +579,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		std::string rcid_;
 
 	private:
-		void animationModeChanged( bool modeZ);
+		/**
+		 ** portion of construction shared by multiple constructor functions...
+		 */
+		void construct_( QtDisplayPanel *newpanel, const std::list<std::string> &args );
+
+		void animationModeChanged( bool modeZ, bool channelCubes);
 
 		bool use_new_regions;
 
@@ -597,6 +600,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int getBoundedChannel( int channelNumber ) const;
 		void updateViewedImage();
 		void profiledImageChange();
+		void generateSliceRegionUpdates();
+		void generateHistogramRegionUpdates();
+
 		void clearTools();
 		unsigned int showdataoptionspanel_enter_count;
 		QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)
@@ -663,14 +669,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static std::string idGen( );
 
 	private slots:
-		void to_image_mode( ) { animationModeChanged(true); }
-		void to_channel_mode( ) { animationModeChanged(false); }
+		void to_image_mode( bool channelCubes );
+		void to_channel_mode( );
 		void loadRegions( const QString &path, const QString &type );
 		void incrementMovieChannel();
 		void clear_status_bar( );
 		void reset_status_bar( );
 		void controlling_dd_axis_change(String, String, String, std::vector<int> );
-		//void controlling_dd_update(QtDisplayData*);
+		void initializeProfile( );
 		void showHistogram();
 		void showSlicer();
 		void resetListenerImage();

@@ -448,12 +448,12 @@ void ImageProfileFitterResults::_setResults() {
 	Bool someConverged = anyTrue(convergedArr);
 	String key;
 	IPosition axes(1, _fitAxis);
-	ImageCollapser collapser(
-		_subImage, axes, False, ImageCollapser::ZERO, String(""), False
+	ImageCollapser<Float> collapser(
+		_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
 	);
-	std::auto_ptr<TempImage<Float> > myTemplate(
-		static_cast<TempImage<Float>* >(collapser.collapse(True))
-	);
+    TempImage<Float> *tmp = static_cast<TempImage<Float>* >(collapser.collapse(True));
+    ThrowIf(tmp == 0, "Unable to perform dynamic cast");
+	std::tr1::shared_ptr<TempImage<Float> > myTemplate(tmp);
 	_results.define("attempted", attemptedArr);
 	_results.define(_SUCCEEDED, successArr);
 	_results.define(_CONVERGED, convergedArr);

@@ -5,6 +5,7 @@
 % STM 2007-04-13  split from previous version
 % STM 2007-10-10  update to tasks in beta
 % JO  2011-10-05  Release 3.3 updates
+% JO 2014-02-01 typos
 
 \chapter[Appendix: CASA Dictionaries]{CASA Dictionaries}
 \label{chapter:dict}
@@ -21,8 +22,11 @@ individual tasks, however, is not the same in both
 packages. Nevertheless, the table may give AIPS users a good start if
 they search for functionality in CASA. 
 
-\vspace{5mm}
+
+%\vspace{5mm}
+
 \begin{table}[ht]
+\footnotesize
 \caption[AIPS -- CASA dictionary]
         {\label{table:aips}AIPS -- CASA dictionary}
 \begin{center}
@@ -90,6 +94,7 @@ ZAP 	 & rmtables 	 & Delete data files \\
 \end{tabular}
 \end{center}
 \end{table}
+\normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{MIRIAD -- CASA dictionary}
@@ -103,8 +108,9 @@ provide a scientific user of CASA who is familiar with MIRIAD, with
 a simple translation table to map their existing data reduction
 knowledge to the new package.
 
-\vspace{5mm}
-\begin{table}[ht]
+%\vspace{5mm}
+
+\begin{table}[ht] \footnotesize
 \caption[MIRIAD -- CASA dictionary]
         {\label{table:miriad}MIRIAD -- CASA dictionary}
 \begin{center}
@@ -132,22 +138,12 @@ knowledge to the new package.
   mfcal   &  Bandpass and gain calibration  &  bandpass \\
   prthd   &  Print header of image or uvdata  &  imhead, listobs, vishead  \\
   restor  &  Restore a clean component model  &  clean \\
-  selfcal &  selfcalibration of visibility data  & clean, gaincal, etc. \\
-  tvclip  &  automated flagging based on clip levels  & flagdata, msview \\
-  tvdisp  &  Load image to TV display      &  msview  \\
-  tvflag  &  Interactive TB data editing   &  msview  \\
-  uvaver  &  Average/select data, apply calibration  &  applycal, split  \\
-  uvfit   &  uv-plane component fitter     &  uvmodelfit  \\
-  uvflag  &  Command-based flagging        &  flagdata  \\
-  uvgen   &  Simulator                     &  simobserve, simanalyze \\
-  uvlist  &  List uv-data                  &  listvis  \\
-  uvmodel &  Source model computation      &  ft \\
-  uvplt   &  uv-data plotting              &  plotms\\
-  uvsplit &  split uv file in sources and spectral windows &  split  \\
+  selfcal &  selfcalibration of visibility data  & clean, gaincal, etc.\\ 
 \hline
 \end{tabular}
 \end{center}
 \end{table}
+\normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

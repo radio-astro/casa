@@ -55,7 +55,7 @@ public:
     
     
     // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Annotator"; }
+    QString tabName() const { return /*"Annotator";*/"Annotate"; }
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Does
     // nothing.

@@ -44,10 +44,6 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     setupUi(this);
     
     // Setup widgets.
-    itsIndexChooser_ = new QtIndexChooser(QtIndexChooser::ROW_COL);
-    QtUtilities::putInFrame(chooserFrame, itsIndexChooser_);
-    hideIndex();
-    
     itsTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
     PlotFactoryPtr factory = parent->getPlotFactory();
     itsSymbolWidget_ = new PlotSymbolWidget(factory,
@@ -58,6 +54,8 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     QtUtilities::putInFrame(unflaggedFrame, itsSymbolWidget_);
     QtUtilities::putInFrame(flaggedFrame, itsMaskedSymbolWidget_);
     
+
+
     map<PlotSymbol::Symbol, int> minSymbolSizes = PMS::SYMBOL_MINIMUM_SIZES();
     itsSymbolWidget_->setMinimumSizes(minSymbolSizes);
     itsMaskedSymbolWidget_->setMinimumSizes(minSymbolSizes);
@@ -86,15 +84,12 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     itsLabelDefaults_.insert(colorizeLabel, colorizeLabel->text());
     
     // Connect widgets.
-    connect(itsIndexChooser_, SIGNAL(indexChanged(unsigned int)),
-            SLOT(indexChanged(unsigned int)));
     connect(itsTitleWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(itsSymbolWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(itsMaskedSymbolWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(colorize, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(colorizeChooser, SIGNAL(currentIndexChanged(int)),
             SIGNAL(changed()));
-    
 }
 
 PlotMSDisplayTab::~PlotMSDisplayTab() { }
@@ -110,14 +105,16 @@ void PlotMSDisplayTab::getValue(PlotMSPlotParameters& params) const {
     *d = itsPDisplay_;
         
     unsigned int index = 0;
-    if(itsIndexChooser_->isVisible()) index = itsIndexChooser_->index();
+
     
     d->setTitleFormat(itsTitleWidget_->getValue(), index);
     d->setUnflaggedSymbol(itsSymbolWidget_->getSymbol(), index);
     d->setFlaggedSymbol(itsMaskedSymbolWidget_->getSymbol(), index);
     
-    d->setColorize(colorize->isChecked(),
+    /*d->setColorize(colorize->isChecked(),
             PMS::axis(colorizeChooser->currentText().toStdString()), index);
+            */
+
 }
 
 void PlotMSDisplayTab::setValue(const PlotMSPlotParameters& params) {
@@ -125,11 +122,10 @@ void PlotMSDisplayTab::setValue(const PlotMSPlotParameters& params) {
     if(d == NULL) return; // shouldn't happen
     
     itsPDisplay_ = *d;
-    
-    unsigned int index = 0;
-    if(itsIndexChooser_->isVisible()) index = itsIndexChooser_->index();
-    indexChanged(index);
+
 }
+
+
 
 void PlotMSDisplayTab::update(const PlotMSPlot& plot) {    
     const PlotMSPlotParameters& params = plot.parameters();
@@ -141,8 +137,7 @@ void PlotMSDisplayTab::update(const PlotMSPlot& plot) {
     if(d == NULL || d2 == NULL) return; // shouldn't happen
     
     unsigned int index = 0;
-    if(itsIndexChooser_->isVisible()) index = itsIndexChooser_->index();
-    
+
     highlightWidgetText(titleLabel, d->titleFormat(index) != d2->titleFormat(index));
     highlightWidgetText(unflaggedLabel,
                 *d->unflaggedSymbol(index) != *d2->unflaggedSymbol(index));
@@ -152,35 +147,9 @@ void PlotMSDisplayTab::update(const PlotMSPlot& plot) {
                 d->colorizeFlag(index) != d2->colorizeFlag(index) ||
                 (d->colorizeFlag(index) &&
                  d->colorizeAxis(index)!= d2->colorizeAxis(index)));
-}
 
-void PlotMSDisplayTab::hideIndex() {
-    chooserFrame->setVisible(false);
-    chooserLine->setVisible(false);
-}
-
-void PlotMSDisplayTab::setIndexRowsCols(unsigned int nRows,unsigned int nCols){
-    chooserFrame->setVisible(true);
-    chooserLine->setVisible(true);
-    itsIndexChooser_->setType(QtIndexChooser::ROW_COL);
-    itsIndexChooser_->setRowsCols(nRows, nCols);
-    
-    itsPDisplay_.resizeVectors(nRows * nCols);
 }
 
 
-// Private Slots //
-
-void PlotMSDisplayTab::indexChanged(unsigned int index) {
-    // TODO
-    // set old index values in itsPDisplay_
-    
-    itsTitleWidget_->setValue(itsPDisplay_.titleFormat(index).format);
-    itsSymbolWidget_->setSymbol(itsPDisplay_.unflaggedSymbol(index));
-    itsMaskedSymbolWidget_->setSymbol(itsPDisplay_.flaggedSymbol(index));
-    
-    colorize->setChecked(itsPDisplay_.colorizeFlag(index));
-    setChooser(colorizeChooser, PMS::axis(itsPDisplay_.colorizeAxis(index)));
-}
 
 }

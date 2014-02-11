@@ -78,6 +78,8 @@ public:
     // Returns a string to use as the tab name for this widget.
     virtual QString tabName() const = 0;
     
+
+
     // Returns all tool buttons on this tab.
     virtual QList<QToolButton*> toolButtons() const {
         return QList<QToolButton*>(); }

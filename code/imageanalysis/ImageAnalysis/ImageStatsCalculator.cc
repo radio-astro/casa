@@ -42,11 +42,11 @@ const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
 
 ImageStatsCalculator::ImageStatsCalculator(
-		const ImageTask::shCImFloat image,
+		const SPCIIF image,
 	const Record *const &regionPtr,
 	const String& maskInp,
 	Bool beVerboseDuringConstruction
-) : ImageTask(
+) : ImageTask<Float>(
 		image, "", regionPtr, "", "",
 		"", maskInp, "", False
 	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
@@ -77,13 +77,13 @@ Record ImageStatsCalculator::calculate() {
 				_writeLogfile("# " + *iter, False, False);
 			}
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
-		ImageCollapser collapsed(
+		SPIIF clone(_getImage()->cloneII());
+		ImageCollapser<Float> collapsed(
 			clone,
 			_axes.nelements() == 0
 				? IPosition::makeAxisPath(clone->ndim()).asVector()
 				: _axes,
-			False, ImageCollapser::ZERO, "", False
+			False, ImageCollapserData::ZERO, "", False
 		);
 		std::tr1::shared_ptr<ImageInterface<Float> > tempIm;
 		try {

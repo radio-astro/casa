@@ -51,6 +51,7 @@ public:
 
     QMap<CurveType,CurveDisplay> getFunctionColors() const;
     CurveType getScatterXCurve() const;
+    QString getScatterXCurveTitle() const;
     QList<CurveType> getScatterYCurve() const;
 
     void setDirtyEnabled( bool enabled );

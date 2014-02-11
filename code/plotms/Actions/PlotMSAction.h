@@ -182,9 +182,13 @@ public:
 
 			// Plot actions //
 
-			// Display MS summary info for the current plot.
+			// Display MS summary info for a specific file.
 			// Required parameters: P_PLOT.
 			MS_SUMMARY,
+
+			//Show the summary dialog for the plot that allows the user
+			//to set up parameters for MS_SUMMARY
+			SUMMARY_DIALOG,
 
 			// Updates any set parameters, which updates the plots.
 			// No required parameters.
@@ -196,6 +200,9 @@ public:
 			// Required parameters: P_PLOT, P_FILE.
 			// Optional parameters: P_FORMAT, P_HIGHRES, P_DPI, P_WIDTH, P_HEIGHT.
 			PLOT_EXPORT,
+
+			//Show a dialog that allows the client to set up export parameters.
+			EXPORT_DIALOG,
 
 
 			// Plotter actions //
@@ -210,14 +217,17 @@ public:
 
 			// Quits PlotMS.
 			// No required parameters.
-			QUIT
+			QUIT,
+
+			//Open an ms or cal table for plotting.
+			OPEN
 		};
 
     // Non-Static //
 
     // Constructor.
     PlotMSAction( Client * client, PMSPTMethod postThreadMethod = NULL,
-    		PMSPTObject postThreadObject = NULL );
+    		vector<PlotMSPlot*> postThreadObject = vector<PlotMSPlot*>());
 
     // Destructor.
     virtual ~PlotMSAction();
@@ -238,7 +248,7 @@ protected:
 	 bool useThreading;
 	 virtual bool loadParameters();
 	 virtual bool doActionSpecific( PlotMSApp* plotms ) = 0;
-	 void setUpClientCommunication( BackgroundThread* thread );
+	 void setUpClientCommunication( BackgroundThread* thread, int index );
 	 bool initiateWork( BackgroundThread* thread );
 	 Client* client;
 	 // Action type.
@@ -248,12 +258,13 @@ protected:
 	 String itsDoActionResult_;
 	 ThreadController* threadController;
 
-	 PMSPTObject postThreadObject;
+	 vector<PlotMSPlot*> postThreadObject;
 	 PMSPTMethod* postThreadMethod;
 private:
 	// Returns true if the action is valid or not.  Invalid actions should not
 	// be executed.
 	bool isValid();
+
 
 	PlotMSAction( const PlotMSAction& other );
 

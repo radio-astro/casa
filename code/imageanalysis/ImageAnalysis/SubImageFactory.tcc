@@ -166,7 +166,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     return mySubim;
 }
 
-template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::createImage(
+template<class T> ImageInterface<T>* SubImageFactory<T>::createImage(
 	ImageInterface<T>& image,
 	const String& outfile, const Record& region,
 	const String& mask, const Bool dropDegenerateAxes,
@@ -184,9 +184,9 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::c
 		}
 	}
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	std::tr1::shared_ptr<SubImage<Float> > subImage(
-		new SubImage<Float>(
-			SubImageFactory<Float>::createSubImage(
+	std::auto_ptr<SubImage<T> > subImage(
+		new SubImage<T>(
+			SubImageFactory<T>::createSubImage(
 				image,
 			//	*(ImageRegion::tweakedRegionRecord(&Region)),
 				region,
@@ -195,14 +195,14 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::c
 		)
 	);
 	if (outfile.empty()) {
-		return subImage;
+		return subImage.release();
 	}
 	// Make the output image
 	if (list) {
 		log << LogIO::NORMAL << "Creating image '" << outfile
 			<< "' of shape " << subImage->shape() << LogIO::POST;
 	}
-	PagedImage<Float> outImage(
+	PagedImage<T> outImage(
 			subImage->shape(),
 			subImage->coordinates(), outfile
 	);
@@ -210,10 +210,10 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::c
 	// Make output mask if required
 	if (subImage->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<T>::makeMask(outImage, maskName, False, True, log, list);
+		ImageMaskAttacher::makeMask(outImage, maskName, False, True, log, list);
 	}
 	LatticeUtilities::copyDataAndMask(log, outImage, *subImage);
-	return std::tr1::shared_ptr<PagedImage<T> >(new PagedImage<T>(outImage));
+	return new PagedImage<T>(outImage);
 }
 
 

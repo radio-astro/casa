@@ -38,6 +38,7 @@ namespace casa {
 class PMS_PP_Canvas;
 class PMS_PP_Axes;
 class PMS_PP_Iteration;
+class PMS_PP_Display;
 
 class PlotMSOverPlot : public PlotMSPlot {
 public:
@@ -63,6 +64,7 @@ public:
         bool updateDisplay;
         bool endCacheLog;
         bool updateIteration;
+
         // </group>
 
         // Constructor
@@ -72,6 +74,7 @@ public:
             updateCanvas(false),
             updateDisplay(false),
             endCacheLog(false)
+
         {}
     };
 
@@ -80,23 +83,24 @@ public:
     String spectype() const { return "Over"; }
     vector<MaskedScatterPlotPtr> plots() const;
     vector<PlotCanvasPtr> canvases() const;
-    //void setupPlotSubtabs(PlotMSPlotTab &tab) const;
-    virtual void setupPlotSubtabs(PlotInformationManager& tab) const;
+
     void attachToCanvases();
     void detachFromCanvases();
     //void plotTabHasChanged(PlotMSPlotTab&) {}
     Int iter() { return iter_; }
 
-protected:
-    // Template pattern methods
     bool assignCanvases(PlotMSPages &pages);
+    virtual void updateLocation();
+
+protected:
+
     bool initializePlot();
     bool parametersHaveChanged_(const PlotMSWatchedParameters &params,
                                 int updateFlag, bool releaseWhenDone);
-    void updateCanvasesAndPlotsForAxes();
+
     PlotMSRegions selectedRegions(const vector<PlotCanvasPtr> &canvases) const;
 
-    void resize(PlotMSPages&, uInt rows, uInt cols);
+    virtual void resize(PlotMSPages&, uInt rows, uInt cols);
 
     void constructorSetup();
     void updatePages();
@@ -112,6 +116,8 @@ protected:
     bool resetIter();
     bool setIter( int index );
     void recalculateIteration();
+    virtual Int nIter();
+    bool isIteration() const;
 
     void updatePlots();
     bool updateIndexing();
@@ -120,10 +126,14 @@ protected:
     void logIter(Int iter, Int nIter);
 
 private:
+
+    void getPlotSize( Int& rows, Int& cols );
     vector<vector<MaskedScatterPlotPtr> > itsPlots_;
     vector<vector<PlotCanvasPtr> > itsCanvases_;
     vector<vector</*QPScatterPlot**/ColoredPlotPtr> > itsColoredPlots_;
     TCLParams itsTCLParams_;
+    int gridRow;
+    int gridCol;
 
     Int iter_;
     Int iterStep_;
@@ -133,7 +143,7 @@ private:
     PlotMSOverPlot(const PlotMSOverPlot&);
     PlotMSOverPlot& operator=(const PlotMSOverPlot&);
     // </group>
-
+    //const PMS_PP_Display* getDisplayParams();
     void clearCanvasProperties( int row, int col);
     void setCanvasProperties (int row, int col, PlotAxis cx, PlotAxis cy,
     		PMS::Axis x, PMS::Axis y, bool set, PMS_PP_Canvas *canv,
@@ -144,8 +154,9 @@ public:
     static void cacheLoaded(void *obj, bool wasCanceled)
     {
         PlotMSOverPlot *cobj = static_cast<PlotMSOverPlot*>(obj);
-        if(cobj != NULL)
+        if(cobj != NULL){
             cobj->cacheLoaded_(wasCanceled);
+        }
     }
 private:
     void cacheLoaded_(bool wasCanceled);

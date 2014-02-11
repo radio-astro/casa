@@ -51,7 +51,7 @@ class PlotMSExportThread : public PlotMSThread, public PlotOperationWatcher {
 public:
     // Constructor which takes the plot to export, the export format
     // parameters, and optional post-thread method parameters.
-    PlotMSExportThread( QtProgressWidget* widget, PlotMSPlotter* plotter,
+    PlotMSExportThread( QtProgressWidget* widget, PlotMSPlotter* plotter, const String& location,
     	/*PlotMSPlot* plot, const PlotExportFormat& format, bool interactive,*/
         PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL
     );
@@ -59,7 +59,7 @@ public:
     // Destructor.
     ~PlotMSExportThread();
     virtual void cancel();
-    
+
     // Implements PlotMSThread::startOperation().
     virtual void startOperation();
     
@@ -77,25 +77,19 @@ private:
     PlotMSExportThread operator=( const PlotMSExportThread& other );
 
     // Plot.
-    PlotMSPlot* itsPlot_;
+    vector<PlotMSPlot*> itsPlots_;
     
     // Format.
     //PlotExportFormat itsFormat_;
     String exportLocation;
     
     // Export operations.
-    vector<PlotOperationPtr> itsOperations_;
+    vector<vector<PlotOperationPtr> >itsOperations_;
     
     // Mutex.
     QMutex itsMutex_;
     
     PlotMSPlotter* itsPlotter_;
-
-    // Interactive mode?
-    //Bool _interactive;
-
-
-
 
 };
 

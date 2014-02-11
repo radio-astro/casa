@@ -1,33 +1,7 @@
-//# tSubImage.cc: Test program for class SubImage
-//# Copyright (C) 1998,1999,2000,2001,2003
-//# Associated Universities, Inc. Washington DC, USA.
-//#
-//# This program is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or (at your option)
-//# any later version.
-//#
-//# This program is distributed in the hope that it will be useful, but WITHOUT
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-//# more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with this program; if not, write to the Free Software Foundation, Inc.,
-//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
-//#
-//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
-
 #ifndef IMAGEANALYSIS_IMAGETASK_H
 #define IMAGEANALYSIS_IMAGETASK_H
 
+#include <imageanalysis/ImageTypedefs.h>
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 
 #include <casa/IO/FiledesIO.h>
@@ -40,10 +14,10 @@
 namespace casa {
 class LogFile;
 
+template <class T> class ImageTask {
 
-class ImageTask {
     // <summary>
-    // Virtual base class for image tasking.
+    // Virtual base class for image analysis tasks.
     // </summary>
 
     // <reviewed reviewer="" date="" tests="" demos="">
@@ -61,8 +35,6 @@ class ImageTask {
     // </synopsis>
 
 public:
-
-	typedef  std::tr1::shared_ptr<const ImageInterface<Float> > shCImFloat;
 
 	// verbosity levels
 	enum Verbosity {
@@ -98,7 +70,7 @@ protected:
   	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 
    	ImageTask(
-   		const shCImFloat image,
+   		const SPCIIT image,
     	const String& region, const Record *const &regionPtr,
     	const String& box, const String& chanInp,
     	const String& stokes, const String& maskInp,
@@ -107,14 +79,14 @@ protected:
 
    	virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
 
-    virtual vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
+    virtual std::vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
     // does the lion's share of constructing the object, ie checks validity of
     // inputs, etc.
 
     virtual void _construct(Bool verbose=True);
 
-    inline const shCImFloat _getImage() const {return _image;}
+    inline const SPCIIT _getImage() const {return _image;}
 
     inline const String& _getMask() const {return _mask;}
 
@@ -130,7 +102,7 @@ protected:
 
     // Represents the minimum set of coordinates necessary for the
     // task to function.
-    virtual vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
+    virtual std::vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
 
     void _removeExistingOutfileIfNecessary() const;
 
@@ -148,8 +120,6 @@ protected:
 
     inline Bool _getStretch() const {return _stretch;}
 
-    //const String& _getLogfile() const;
-
     const std::tr1::shared_ptr<LogFile> _getLogFile() const;
 
     Bool _writeLogfile(
@@ -163,13 +133,15 @@ protected:
 
     virtual inline Bool _supportsMultipleRegions() {return False;}
 
+    virtual inline Bool _supportsMultipleBeams() {return True;}
+
     // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system
-    std::tr1::shared_ptr<ImageInterface<Float> > _prepareOutputImage(
-    	const ImageInterface<Float>& image, const Array<Float> *const values=0,
+    ImageInterface<T>* _prepareOutputImage(
+    	const ImageInterface<T>& image, const Array<T> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;
@@ -178,22 +150,24 @@ protected:
 
     Bool _getOverwrite() const { return _overwrite; }
 
+    virtual Bool _mustHaveSquareDirectionPixels() const {return False;}
+
 private:
-    const shCImFloat _image;
+    const SPCIIT _image;
     std::tr1::shared_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;
-    String _region, _box, _chan, _stokesString, _mask, _outname /*, _logfile */;
+    String _region, _box, _chan, _stokesString, _mask, _outname;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
-    //Int _logFD;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
 	std::tr1::shared_ptr<LogFile> _logfile;
-
-
-
-
 };
+
 }
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <imageanalysis/ImageAnalysis/ImageTask.tcc>
+#endif
 
 #endif

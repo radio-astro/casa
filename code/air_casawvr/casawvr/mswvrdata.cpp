@@ -261,10 +261,22 @@ namespace LibAIR {
   {
 
     std::vector<double> ptime, paz, pel;
-    loadPointing(ms,
-		 ptime,
-		 paz,
-		 pel);
+    bool noPointing = false;
+    try{
+      loadPointing(ms,
+		   ptime,
+		   paz,
+		   pel);
+    }
+    catch(const std::runtime_error rE){
+      std::cerr << std::endl << "WARNING: problem while accessing POINTING table:"
+		<< std::endl << "         LibAIR::WVRNearestPointing: " << rE.what() << std::endl;
+      std::cout << std::endl << "WARNING: problem while accessing POINTING table:"
+		<< std::endl << "         LibAIR::WVRNearestPointing: " << rE.what() << std::endl;
+      std::cerr << "Will try to continue using constant AZ=0, EL= 60 deg." << std::endl;
+      std::cout << "Will try to continue using constant AZ=0, EL= 60 deg." << std::endl;
+      noPointing = true;
+    }
 
     size_t wrows=time.size();
     size_t prows=ptime.size();
@@ -276,10 +288,16 @@ namespace LibAIR {
 
     for (size_t wi=0; wi<wrows; ++wi)
     {
-      while(pi<(prows-1) and  ptime[pi]<time[wi])
-	++pi;
-      az[wi]=paz[pi];
-      el[wi]=pel[pi];
+      if(noPointing){
+	az[wi]=0.;
+	el[wi]=60./180.*3.141592;
+      }
+      else{
+	while(pi<(prows-1) and  ptime[pi]<time[wi])
+	  ++pi;
+	az[wi]=paz[pi];
+	el[wi]=pel[pi];
+      }
     }
 
   }

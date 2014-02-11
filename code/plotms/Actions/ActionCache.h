@@ -37,18 +37,18 @@ class CacheThread;
 class ActionCache  : public PlotMSAction {
 public:
 	ActionCache( Client* client );
-	ActionCache( Client* client, PlotMSPlot* plot, PMSPTMethod postThreadMethod = NULL);
+	ActionCache( Client* client, vector<PlotMSPlot*> plots, PMSPTMethod postThreadMethod = NULL);
 	virtual ~ActionCache();
 protected:
 	bool doWork();
-	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const = 0;
+	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int plotIndex, int axisIndex ) const = 0;
 	virtual bool loadParameters();
 	virtual bool loadAxes() = 0;
-	virtual void checkFeasibility(PlotMSApp* plotms, vector<PMS::Axis>& a ) const;
-	virtual void setUpWorkParameters(CacheThread* cacheThread, vector<PMS::Axis>& axes) = 0;
+	virtual void checkFeasibility(PlotMSApp* plotms, int plotIndex, vector<PMS::Axis>& a ) const;
+	virtual void setUpWorkParameters(CacheThread* cacheThread, int plotIndex, vector<PMS::Axis>& axes) = 0;
 	virtual bool doActionSpecific(PlotMSApp* plotms);
-	PlotMSPlot* plot;
-	vector<PMS::Axis> axes;
+	vector<PlotMSPlot*> plots;
+	vector<vector<PMS::Axis> > axes;
 
 };
 

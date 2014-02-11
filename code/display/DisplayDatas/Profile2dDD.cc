@@ -1137,9 +1137,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange || statType);
 	}
 
-	Record Profile2dDD::getOptions() {
-		Record rec = ActiveCaching2dDD::getOptions();
-		Record axisRec = itsAxisLabeller.getOptions();
+	Record Profile2dDD::getOptions( bool scrub ) const {
+		Record rec = ActiveCaching2dDD::getOptions(scrub);
+		Record axisRec = itsAxisLabeller.getOptions( );
 		if (rec.isDefined("aspect")) {
 			rec.removeField("aspect");
 		}

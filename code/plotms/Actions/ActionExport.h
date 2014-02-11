@@ -43,7 +43,9 @@ protected:
 
 	virtual bool loadParameters();
 private:
-	PlotMSPlot* plot;
+	bool exportText( PlotMSApp* plotms );
+	PlotExportFormat adjustFormat(  PlotExportFormat::Type t);
+	vector<PlotMSPlot*> plots;
 	PlotExportFormat format;
 
 	bool interactive;

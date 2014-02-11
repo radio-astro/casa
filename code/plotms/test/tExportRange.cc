@@ -49,6 +49,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
     // Set up plotms object.
     PlotMSApp app(false, false);
 
+    //Make a 2x2 grid
+    PlotMSParameters& overallParams = app.getParameters();
+    overallParams.setRowCount( 2 );
+    overallParams.setColCount( 2 );
 
     // Set up parameters for plot.
     PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
@@ -68,20 +72,15 @@ int main(int /*argc*/, char** /*argv[]*/) {
     	iterationParams = plotParams.typedGroup<PMS_PP_Iteration>();
     }
     iterationParams->setIterationAxis( PMS::SCAN );
-    iterationParams->setNumRows( 2 );
-    iterationParams->setNumColumns( 2 );
     iterationParams->setGlobalScaleX( true );
     iterationParams->setGlobalScaleY( true );
+    qDebug() << "Script setting common axis";
     iterationParams->setCommonAxisX( true );
     iterationParams->setCommonAxisY( true );
 
     //We want to print all (2) pages in the output.
-    PMS_PP_Export* exportParams = plotParams.typedGroup<PMS_PP_Export>();
-    if ( exportParams == NULL ){
-    	plotParams.setGroup<PMS_PP_Export>();
-    	exportParams = plotParams.typedGroup<PMS_PP_Export>();
-    }
-    exportParams->setExportRange( PMS::PAGE_ALL );
+    PlotMSExportParam& exportParams = app.getExportParameters();
+    exportParams.setExportRange( PMS::PAGE_ALL );
 
     //Make the plot.
     app.addOverPlot( &plotParams );
@@ -93,8 +92,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
-	bool interactive = false;
-	bool ok = app.save(format, interactive );
+	bool ok = app.save(format);
 	cout << "tExportRange:: Result of save="<<ok<<endl;
     
 

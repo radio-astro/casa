@@ -32,11 +32,12 @@ namespace casa {
 		ConverterWavelength( oldUnits, newUnits) {
 	}
 
-	Vector<double> ConverterWavelengthVelocity::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterWavelengthVelocity::convert( const Vector<double>& oldValues,
+			SpectralCoordinate spectralCoordinate ) {
 		Vector<double> resultValues( oldValues.size());
 
-		bool validWavelength = setWavelengthUnits( oldUnits );
-		bool validVelocity = setVelocityUnits( newUnits );
+		bool validWavelength = spectralCoordinate.setWavelengthUnit( oldUnits.toStdString() );
+		bool validVelocity = spectralCoordinate.setVelocity( newUnits.toStdString() );
 
 		bool successfulConversion = false;
 		if ( validWavelength && validVelocity ) {

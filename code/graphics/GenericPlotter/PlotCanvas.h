@@ -166,7 +166,7 @@ public:
     virtual void setMinimumSize( int width, int height ) = 0;
     virtual void show() = 0;
     virtual void hide() = 0;
-    
+    virtual bool isDrawing() const = 0;
     // Returns the text of the canvas title, or an empty String if none is
     // shown.  The title is shown above the plotting area.
     virtual String title() const = 0;
@@ -797,6 +797,10 @@ public:
     virtual PlotCoordinate convertCoordinate(const PlotCoordinate& coord,
            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const = 0;
     
+    bool hasSelectedRectangles();
+    vector<PlotRegion> getSelectedRects();
+    void clearSelectedRects();
+
     // Converts the given region into a region with the given system.
     // DEFAULT IMPLEMENTATION.
     virtual PlotRegion convertRegion(const PlotRegion& region,

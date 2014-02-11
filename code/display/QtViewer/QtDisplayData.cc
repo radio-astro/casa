@@ -362,7 +362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
 							regridder.setSpecAsVelocity(True);
-							im_ = regridder.regrid(True);
+							im_.reset(regridder.regrid(True));
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
 						std::string slice_description = ddo["slice"];
@@ -925,7 +925,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	void QtDisplayData::checkAxis() {
+	void QtDisplayData::checkAxis( bool changeSpectralUnits ) {
 		Record rec = getOptions();
 
 		try {
@@ -948,16 +948,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			emit axisChangedProfile(xaxis, yaxis, zaxis, hidden);
 			emit axisChanged(xaxis, yaxis, zaxis, hidden);
 
-			// get the spectral type, units, rest frequency/wavelength
-			// and the frequency system //axislabelspectypeunit
-			String spcRval, spcSys, spcTypeUnit;
-			if (rec.fieldNumber("axislabelspectypeunit") >-1)
-				spcTypeUnit = rec.subRecord("axislabelspectypeunit").asString("value");
-			if (rec.fieldNumber("axislabelrestvalue") >-1)
-				spcRval = rec.subRecord("axislabelrestvalue").asString("value");
-			if (rec.fieldNumber("axislabelfrequencysystem") >-1)
-				spcSys = rec.subRecord("axislabelfrequencysystem").asString("value");
-			emit spectrumChanged(spcTypeUnit, spcRval, spcSys);
+			if ( changeSpectralUnits ){
+				// get the spectral type, units, rest frequency/wavelength
+				// and the frequency system //axislabelspectypeunit
+				String spcRval, spcSys, spcTypeUnit;
+				if (rec.fieldNumber("axislabelspectypeunit") >-1){
+					spcTypeUnit = rec.subRecord("axislabelspectypeunit").asString("value");
+				}
+				if (rec.fieldNumber("axislabelrestvalue") >-1){
+					spcRval = rec.subRecord("axislabelrestvalue").asString("value");
+				}
+				if (rec.fieldNumber("axislabelfrequencysystem") >-1){
+					spcSys = rec.subRecord("axislabelfrequencysystem").asString("value");
+				}
+				emit spectrumChanged(spcTypeUnit, spcRval, spcSys);
+			}
 		} catch(const casa::AipsError& err) {
 			errMsg_ = err.getMesg();
 		} catch(...) {

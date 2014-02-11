@@ -203,6 +203,8 @@ const LogMessage::Priority PMS::DEFAULT_LOG_PRIORITY = LogMessage::DEBUGGING;
 const bool PMS::DEFAULT_CLEAR_SELECTIONS = true;
 const int PMS::DEFAULT_CACHED_IMAGE_WIDTH = -1;
 const int PMS::DEFAULT_CACHED_IMAGE_HEIGHT = -1;
+const int PMS::DEFAULT_GRID_ROWS = 1;
+const int PMS::DEFAULT_GRID_COLS = 1;
 
 const PMS::Axis PMS::DEFAULT_XAXIS = TIME;
 const PMS::Axis PMS::DEFAULT_YAXIS = AMP;

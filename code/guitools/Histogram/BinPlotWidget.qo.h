@@ -39,7 +39,6 @@
 #include <QDebug>
 #include <QMenu>
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <tr1/memory>
 
 using namespace std;
@@ -92,7 +91,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const ImageTask::shCImFloat img );
+    bool setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -238,7 +237,7 @@ private:
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    ImageTask::shCImFloat image;
+    std::tr1::shared_ptr<const ImageInterface<Float> > image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;

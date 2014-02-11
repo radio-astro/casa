@@ -87,14 +87,20 @@ class ImageAnalysis
 
     ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image);
 
+    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> > image);
+
+
     virtual ~ImageAnalysis();
 
     Bool addnoise(const String& type, const Vector<Double>& pars,
                   Record& region, const Bool zero = False);
 
-    std::tr1::shared_ptr<ImageInterface<Float> > imagecalc(const String& outfile, 
-                                      const String& pixels, 
-                                      const Bool overwrite = False);
+    // The current object is replaced by the result of the calculation
+    void imagecalc(
+    	const String& outfile,
+    	const String& pixels,
+    	const Bool overwrite = False
+    );
 
     std::tr1::shared_ptr<ImageInterface<Float> > imageconcat(const String& outfile, 
                                         const Vector<String>& infiles, 
@@ -122,9 +128,12 @@ class ImageAnalysis
                         const Bool dropdeg = False, 
                         const Bool overwrite = False);
 
-    Bool imagefromshape(const String& outfile, const Vector<Int>& shape, 
-                        const Record& csys, const Bool linear = True, 
-                        const Bool overwrite = False, const Bool log = True);
+    void imagefromshape(
+    	const String& outfile, const Vector<Int>& shape,
+    	const Record& csys, const Bool linear=True,
+    	const Bool overwrite=False, const Bool log=True,
+    	const String& type="f"
+    );
 
     ImageInterface<Float> * convolve(
     	const String& outfile,
@@ -137,17 +146,18 @@ class ImageAnalysis
         const Bool stretch=False
     );
 
-    Record* boundingbox(const Record& region);
+    Record* boundingbox(const Record& region) const;
 
     String brightnessunit();
 
-    Bool calc(const String& pixels);
+    void calc(const String& pixels);
 
     // regions should be a Record of Records having different regions
 
-    Bool calcmask(const String& mask, Record& regions, const String& name, 
-                  const Bool asdefault = True);
-
+    Bool calcmask(
+    	const String& mask, Record& regions,
+    	const String& name, const Bool asdefault = True
+    );
 
     tr1::shared_ptr<ImageInterface<Float> > continuumsub(const String& outline,
                                          const String& outcont, Record& region,
@@ -156,7 +166,7 @@ class ImageAnalysis
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    ImageInterface<Float>* convolve2d(
+    std::tr1::shared_ptr<ImageInterface<Float> > convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
             const Quantity& minor, const Quantity& pa,
@@ -209,21 +219,26 @@ class ImageAnalysis
 
     Bool remove(Bool verbose=true);
 
-    Bool fft(
-    	const String& real, const String& imag, const String& amp,
-        const String& phase, const Vector<Int>& axes, Record& region,
-        const String& mask, const Bool stretch
-    );
-
     Record findsources(const Int nmax, const Double cutoff, Record& region, 
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
 
-    Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
-                  const Vector<Int>& blc, const Vector<Int>& trc, 
-                  const Vector<Int>& inc, const Vector<Int>& axes, 
-                  const Bool list = False, const Bool dropdeg = False, 
-                  const bool getmask = False);
+    // Recover some pixels from the image from a simple strided box
+    Bool getchunk(
+    	Array<Float>& pixel, Array<Bool>& pixmask,
+    	const Vector<Int>& blc, const Vector<Int>& trc,
+    	const Vector<Int>& inc, const Vector<Int>& axes,
+    	const Bool list = False, const Bool dropdeg = False,
+    	const bool getmask = False
+    );
+
+    Bool getchunk(
+    	Array<Complex>& pixel, Array<Bool>& pixmask,
+    	const Vector<Int>& blc, const Vector<Int>& trc,
+    	const Vector<Int>& inc, const Vector<Int>& axes,
+    	const Bool list = False, const Bool dropdeg = False,
+    	const bool getmask = False
+    );
 
     Bool getregion(
     	Array<Float>& pixels, Array<Bool>& pixmask, Record& region,
@@ -307,9 +322,17 @@ class ImageAnalysis
     void pixelValue (Bool& offImage, Quantum<Double>& value, Bool& mask,
                      Vector<Int>& pos) const;
 
-    Bool putchunk(const Array<Float>& pixels, const Vector<Int>& blc, 
-                  const Vector<Int>& inc, const Bool list = False, 
-                  const Bool locking = True, const Bool replicate = False);
+    Bool putchunk(
+    	const Array<Float>& pixels, const Vector<Int>& blc,
+    	const Vector<Int>& inc, const Bool list = False,
+    	const Bool locking = True, const Bool replicate = False
+    );
+
+    Bool putchunk(
+    	const Array<Complex>& pixels, const Vector<Int>& blc,
+    	const Vector<Int>& inc, const Bool list = False,
+    	const Bool locking = True, const Bool replicate = False
+    );
 
     Bool putregion(const Array<Float>& pixels, const Array<Bool>& pixelmask, 
                    Record& region, const Bool list = False, 
@@ -376,8 +399,6 @@ class ImageAnalysis
         const Bool remove = False, const Bool log = True,
         Int channel=-1, Int polarization=-1
     );
-
-
 
     bool twopointcorrelation(
     	const String& outfile, Record& region,
@@ -461,7 +482,7 @@ class ImageAnalysis
                                              const Bool zeroblanks = False, 
                                              const Bool overwrite = False);
 
-    Record* echo(Record& v, const Bool godeep = False);
+    static Record* echo(Record& v, const Bool godeep = False);
 
 
 
@@ -493,6 +514,8 @@ class ImageAnalysis
 
     // get the associated ImageInterface object
     std::tr1::shared_ptr<const ImageInterface<Float> > getImage() const;
+    std::tr1::shared_ptr<const ImageInterface<Complex> > getComplexImage() const;
+
 
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
@@ -507,8 +530,10 @@ class ImageAnalysis
     	Bool copyMask=True
     );
 
+    Bool isFloat() const { return _imageFloat; }
 
  private:
+
     //Used for single point extraction.
     //Functions to get you back a spectral profile at direction position x, y.
      //x, y are to be in the world coord value or pixel value...user specifies
@@ -537,7 +562,9 @@ class ImageAnalysis
     		 const Int& whichQuality=0,
     		 const String& restValue="");
     
-    std::tr1::shared_ptr<ImageInterface<Float> > _image;
+    std::tr1::shared_ptr<ImageInterface<Float> > _imageFloat;
+    std::tr1::shared_ptr<ImageInterface<Complex> > _imageComplex;
+
     std::auto_ptr<LogIO> _log;
 
     // Having private version of IS and IH means that they will
@@ -577,11 +604,13 @@ class ImageAnalysis
     
     
 // Make a new image with given CS
-    casa::Bool make_image(casa::String &error, const casa::String &image,
-                          const casa::CoordinateSystem& cSys,
-                          const casa::IPosition& shape,
-                          casa::LogIO& os, casa::Bool log=casa::True,
-                          casa::Bool overwrite=casa::False);
+    void _make_image(
+    	const String &image,
+    	const CoordinateSystem& cSys,
+    	const IPosition& shape,
+    	Bool log=True,
+    	Bool overwrite=False, const String& type="f"
+    );
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*
@@ -623,7 +652,7 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
-   tr1::shared_ptr<ImageInterface<Float> > _fitpolynomial(
+    tr1::shared_ptr<ImageInterface<Float> > _fitpolynomial(
     	const String& residfile,
     	const String& fitfile,
     	const String& sigmafile,
@@ -632,8 +661,65 @@ class ImageAnalysis
     	const bool overwrite = false
     );
 
+    void _onlyFloat(const String& method) const;
+
+    template<class T> Bool _getchunk(
+       	Array<T>& pixel, Array<Bool>& pixmask,
+       	const ImageInterface<T>& image,
+       	const Vector<Int>& blc, const Vector<Int>& trc,
+       	const Vector<Int>& inc, const Vector<Int>& axes,
+       	const Bool list, const Bool dropdeg,
+       	const bool getmask
+    );
+
+    template<class T> Bool _putchunk(
+        ImageInterface<T>& image,
+    	const Array<T>& pixels, const Vector<Int>& blc,
+    	const Vector<Int>& inc, const Bool list,
+    	const Bool locking, const Bool replicate
+    );
+
+    template<class T> static void _destruct(ImageInterface<T>& image);
+
+    template<class T> Bool _setrestoringbeam(
+    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	const Quantity& major, const Quantity& minor,
+    	const Quantity& pa, const Record& rec,
+    	const bool deleteIt, const bool log,
+        Int channel, Int polarization
+    );
+
+    template<class T> Record _summary(
+    	const ImageInterface<T>& image,
+    	const String& doppler, const Bool list,
+    	const Bool pixelorder, const Bool verbose
+    );
+
+    template<class T> std::tr1::shared_ptr<ImageInterface<T> > _imagecalc(
+    	const LatticeExprNode& node, const IPosition& shape,
+    	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
+    	const String& outfile,
+    	Bool overwrite, const String& expr
+    );
+
+    template<class T> void _calc(
+    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	const LatticeExprNode& node
+    );
+
+    template<class T> Bool _calcmask(
+    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	const LatticeExprNode& node,
+    	const String& name, const Bool makedefault
+    );
+
 };
 
 } // casac namespace
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <imageanalysis/ImageAnalysis/ImageAnalysis2.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
+
 #endif
 

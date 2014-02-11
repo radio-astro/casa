@@ -138,7 +138,7 @@ namespace casa {
 		for ( int i = 0; i < plots.size(); i++ ) {
 			plots[i]->setEstimate( estimates[i]);
 			if ( newUnits ) {
-				plots[i]->unitsChanged(specUnitStr, currentUnits);
+				plots[i]->unitsChanged(specUnitStr, currentUnits, spectralCoordinate);
 			}
 
 		}
@@ -323,6 +323,9 @@ namespace casa {
 		}
 	}
 
+	void GaussianEstimateDialog::setSpectralCoordinate( SpectralCoordinate& coord ){
+		spectralCoordinate = coord;
+	}
 
 	void GaussianEstimateDialog::unitsChanged( int /*index*/ ) {
 		QString newUnitStr = ui.axisUnitsComboBox->currentText();
@@ -334,7 +337,7 @@ namespace casa {
 
 			//Reset the gaussian estimates
 			for ( int i = 0; i < plots.size(); i++ ) {
-				plots[i] -> unitsChanged( unitStr, newUnitStr );
+				plots[i] -> unitsChanged( unitStr, newUnitStr, spectralCoordinate );
 			}
 			delete converter;
 			//Store the units we are now using.
@@ -377,7 +380,7 @@ namespace casa {
 			for ( int i = 0; i < static_cast<int>(xValues.size()); i++ ) {
 				xVals[i] = xValues[i];
 			}
-			Vector<double> convertedXValues = converter-> convert( xVals );
+			Vector<double> convertedXValues = converter-> convert( xVals, spectralCoordinate );
 			int count = convertedXValues.size();
 
 			for ( int i = 0; i < count; i++ ) {

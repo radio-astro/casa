@@ -18,6 +18,7 @@
 #
 
 casa_add_library( imageanalysis
+
 Annotations/AnnAnnulus.cc
 Annotations/AnnCenterBox.cc
 Annotations/AnnCircle.cc
@@ -37,10 +38,13 @@ Annotations/RegionTextList.cc
 ImageAnalysis/AntennaResponses.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
-ImageAnalysis/ImageCollapser.cc
+ImageAnalysis/ImageCollapserData.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMetaData.cc
+ImageAnalysis/ImageMetaDataBase.cc
+ImageAnalysis/ImageMetaDataRW.cc
 ImageAnalysis/ImageMomentsProgress.cc
 ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
@@ -51,7 +55,6 @@ ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageRegridder.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
-ImageAnalysis/ImageTask.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
 ImageAnalysis/ProfileFitResults.cc
 ImageAnalysis/PVGenerator.cc
@@ -68,6 +71,11 @@ IO/ProfileFitterEstimatesFileParser.cc
 
 Regions/CasacRegionManager.cc
 )
+
+install (FILES
+    ImageTypedefs.h
+     DESTINATION include/casacode/imageanalysis
+    )
 
 install (FILES
 	Annotations/AnnAnnulus.h
@@ -103,26 +111,33 @@ install (FILES
 	ImageAnalysis/Image2DConvolver.h
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
+	ImageAnalysis/ImageAnalysis2.tcc
 	ImageAnalysis/ImageCollapser.h
+	ImageAnalysis/ImageCollapser.tcc
+	ImageAnalysis/ImageCollapserData.h
 	ImageAnalysis/ImageConvolver.h
 	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageCropper.h
 	ImageAnalysis/ImageCropper.tcc
+	ImageAnalysis/ImageDecimator.h
+    ImageAnalysis/ImageDecimator.tcc
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFFT.h
+	ImageAnalysis/ImageFFTer.h
+	ImageAnalysis/ImageFFTer.tcc
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImageInputProcessor2.tcc
 	ImageAnalysis/ImageMaskAttacher.h
     ImageAnalysis/ImageMaskAttacher.tcc
 	ImageAnalysis/ImageMetaData.h
-    ImageAnalysis/ImageMetaData.tcc
+    ImageAnalysis/ImageMetaDataBase.h
     ImageAnalysis/ImageMetaDataRW.h
-    ImageAnalysis/ImageMetaDataRW.tcc
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
     ImageAnalysis/ImageMomentsProgress.h
@@ -137,6 +152,7 @@ install (FILES
 	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h
 	ImageAnalysis/ImageTask.h
+    ImageAnalysis/ImageTask.tcc
 	ImageAnalysis/ImageTransposer.h
 	ImageAnalysis/ImageTwoPtCorr.h
 	ImageAnalysis/ImageTwoPtCorr.tcc

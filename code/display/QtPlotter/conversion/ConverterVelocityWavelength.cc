@@ -13,10 +13,11 @@ namespace casa {
 		ConverterVelocity( oldUnits, newUnits ) {
 	}
 
-	Vector<double> ConverterVelocityWavelength::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterVelocityWavelength::convert( const Vector<double>& oldValues,
+			SpectralCoordinate spectralCoordinate ) {
 		Vector<double> resultValues( oldValues.size());
-		bool velocitySet = setVelocityUnits( oldUnits );
-		bool wavelengthSet = setWavelengthUnits( newUnits );
+		bool velocitySet = spectralCoordinate.setVelocity( oldUnits.toStdString() );
+		bool wavelengthSet = spectralCoordinate.setWavelengthUnit( newUnits.toStdString() );
 		bool successfulConversion = false;
 		if ( velocitySet && wavelengthSet ) {
 			Vector<double> frequencyValues( oldValues.size());

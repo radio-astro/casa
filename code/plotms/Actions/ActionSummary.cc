@@ -32,38 +32,45 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <casa/Logging/LogFilter.h>
+#include <QDebug>
 
 namespace casa {
 
 ActionSummary::ActionSummary( Client* client )
 	:PlotMSAction( client ){
-	plot = NULL;
+
 	itsType_=MS_SUMMARY;
+	verbose = false;
+	summaryType = PMS::S_ALL;
 }
 
 bool ActionSummary::loadParameters(){
 	bool parametersLoaded = false;
-	if ( client != NULL ){
-		plot = client->getCurrentPlot();
-		if ( plot != NULL ){
-			parametersLoaded = true;
-		}
+	if ( !filename.empty() ){
+		parametersLoaded = true;
 	}
 	return parametersLoaded;
 }
 
+void ActionSummary::setSummaryType( PMS::SummaryType type ){
+	summaryType = type;
+}
+
+void ActionSummary::setFile( String file ){
+	filename = file;
+}
+
+void ActionSummary::setVerbose( bool verbose ){
+	this->verbose = verbose;
+}
+
+
 bool ActionSummary::doActionSpecific(PlotMSApp* plotms) {
-	bool success = false, reenableGlobal = false;
+	bool success = false;
+	bool reenableGlobal = false;
 	try {
 		// Get MS.
 		MeasurementSet ms;
-
-		// Check if MS has already been opened.
-
-	    // Check if filename has been set but not plotted.
-		PlotMSPlotParameters currentlySet = client->getPlotParameters();
-		String filename = PMS_PP_RETCALL(currentlySet, PMS_PP_MSData,
-							 filename, "");
 
 		// If not, exit.
 		if(filename.empty()) {
@@ -91,8 +98,9 @@ bool ActionSummary::doActionSpecific(PlotMSApp* plotms) {
 		LogIO log(LogOrigin(PMS::LOG_ORIGIN,PMS::LOG_ORIGIN_SUMMARY),sink);
 
 		// Log summary of the appropriate type and verbosity.
-		bool vb = client->isMSSummaryVerbose();
-		switch( client->getMSSummaryType()) {
+		//bool vb = client->isMSSummaryVerbose();
+		bool vb = verbose;
+		switch( summaryType ) {
 		        case PMS::S_ALL:          mss.list(log, vb); break;
 		        case PMS::S_WHERE:        mss.listWhere(log, vb); break;
 		        case PMS::S_WHAT:         mss.listWhat(log, vb); break;
@@ -114,7 +122,8 @@ bool ActionSummary::doActionSpecific(PlotMSApp* plotms) {
 		  success = true;
 
 	}
-	catch(AipsError x) {
+	catch(AipsError& x) {
+		qDebug()<<"ActionSummary AipsError: "<<x.getMesg().c_str();
 		itsDoActionResult_ = x.getMesg();
 	}
 	// Cleanup.

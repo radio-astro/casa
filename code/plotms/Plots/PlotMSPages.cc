@@ -27,6 +27,8 @@
 
 #include "PlotMSPages.h"
 #include <plotms/Plots/PlotMSPlotManager.h>
+#include <plotms/PlotMS/PlotMSParameters.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -43,12 +45,24 @@ PlotMSPages::~PlotMSPages() { }
 
 
 unsigned int PlotMSPages::currentPageNumber() const {
-    return itsCurrentPageNum_; }
+    return itsCurrentPageNum_;
+}
+
+void PlotMSPages::setCurrentPageNum(uInt num) {
+	if(num < totalPages()){
+		if ( num != itsCurrentPageNum_ ){
+			itsCurrentPageNum_ = num;
+		}
+    }
+}
 
 PlotMSPage PlotMSPages::currentPage() const {
-    return itsPages_[itsCurrentPageNum_]; }
+    return itsPages_[itsCurrentPageNum_];
+}
 
-unsigned int PlotMSPages::totalPages() const { return itsPages_.size(); }
+unsigned int PlotMSPages::totalPages() const {
+	return itsPages_.size();
+}
 
 
 PlotMSPages& PlotMSPages::operator=(const PlotMSPages& copy) {
@@ -63,24 +77,24 @@ PlotMSPages& PlotMSPages::operator=(const PlotMSPages& copy) {
 }
 
 void PlotMSPages::firstPage() {
-    itsCurrentPageNum_ = 0;
+	setCurrentPageNum( 0 );
 }
 
 void PlotMSPages::nextPage() {
     if(itsCurrentPageNum_ < (totalPages() - 1)) {
-        ++itsCurrentPageNum_;
+        setCurrentPageNum(itsCurrentPageNum_+ 1);
     }
 }
 
 void PlotMSPages::previousPage() {
     if(itsCurrentPageNum_ > 0) {
-        --itsCurrentPageNum_;
+    	setCurrentPageNum( itsCurrentPageNum_ - 1);
     }
 }
 
 void PlotMSPages::lastPage() {
     if(totalPages() > 0) {
-        itsCurrentPageNum_ = totalPages() - 1;
+    	setCurrentPageNum( totalPages() - 1 );
     }
 }
 
@@ -106,13 +120,73 @@ PlotMSPage PlotMSPages::insertPage(int index) {
 
 void PlotMSPages::clearPages() {
     itsManager_->plotter()->setCanvasLayout(PlotCanvasLayoutPtr());
-    for(unsigned int i = 0; i < itsPages_.size(); i++)
+    for(unsigned int i = 0; i < itsPages_.size(); i++){
         itsPages_[i].resize(0, 0);
+    }
+}
+
+bool PlotMSPages::isGridChanged( int rows, int cols ) const {
+	bool resized = false;
+	for(unsigned int i = 0; i < itsPages_.size(); i++){
+		int pageRows = itsPages_[i].canvasRows();
+		int pageCols = itsPages_[i].canvasCols();
+		if ( pageRows != rows || pageCols != cols ){
+			resized = true;
+			break;
+		}
+	}
+	return resized;
+}
+
+void PlotMSPages::disown( PlotMSPlot* plot ){
+	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
+		itsPages_[i].disown( plot );
+	}
+}
+
+PlotMSParameters PlotMSPages::getPageParameters(){
+	return itsManager_->getPageParameters();
+}
+
+
+void PlotMSPages::resize(size_t pages) {
+    size_t currentSize = itsPages_.size();
+    // Shrink if needed
+    if(pages < currentSize) {
+    	itsPages_.resize(pages, PlotMSPage(*this));
+    }
+    // If we are adding new pages, initialize them
+    for(size_t i = currentSize; i < pages; ++i) {
+    	insertPage(i);
+    }
+}
+
+
+
+bool PlotMSPages::gridChanged( int rows, int cols ){
+	bool resized = isGridChanged( rows, cols );
+	if ( resized ){
+		for(unsigned int i = 0; i < itsPages_.size(); i++){
+			int pageRows = itsPages_[i].canvasRows();
+			int pageCols = itsPages_[i].canvasCols();
+			if ( pageRows != rows || pageCols != cols ){
+				itsPages_[i].resize(rows, cols);
+			}
+		}
+	}
+	return resized;
+}
+
+bool PlotMSPages::isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const {
+	return itsPages_[itsCurrentPageNum_].isSpot( rowIndex, colIndex, plot );
+}
+
+pair<int,int> PlotMSPages::findEmptySpot() const {
+	return itsPages_[itsCurrentPageNum_].findEmptySpot();
 }
 
 void PlotMSPages::setupCurrentPage() {
     itsPages_[itsCurrentPageNum_].setupPage();
-
 }
 
 
