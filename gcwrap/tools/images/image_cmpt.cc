@@ -2210,20 +2210,27 @@ record* image::histograms(
 	}
 }
 
-std::vector<std::string> image::history(const bool list, const bool browse) {
-	std::vector<string> rstat;
+std::vector<std::string> image::history(bool list) {
 	try {
-		_log << LogOrigin("image", "history");
-		if (detached())
-			return rstat;
-
-		rstat = fromVectorString(_image->history(list, browse));
-	} catch (AipsError x) {
+		_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return vector<string>();
+		}
+		if (_image->isFloat()) {
+			SPIIF im = _image->getImage();
+			ImageHistory<Float> hist(im);
+			return fromVectorString(hist.get(list));
+		}
+		else {
+			SPIIC im = _image->getComplexImage();
+			ImageHistory<Complex> hist(im);
+			return fromVectorString(hist.get(list));
+		}
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::insert(
@@ -3430,9 +3437,10 @@ bool image::sethistory(const std::string& origin,
 				ImageHistory<Complex> hist(_image->getComplexImage());
 				hist.addHistory(origin, history);
 			}
-			return True;
 		}
-	} catch (const AipsError& x) {
+		return True;
+	}
+	catch (const AipsError& x) {
 		LogOrigin lor("image", "sethistory");
 		_log << lor << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;

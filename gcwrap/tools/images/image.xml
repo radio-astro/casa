@@ -5517,11 +5517,6 @@ we are plotting the function is run synchronously).-->
      <description>List history to the logger?</description>
      <value>true</value>
      </param>
-  
-     <param type="bool"  name="browse">
-     <description>Browse history with table browser? (NOT IMPLEMENTED YET!)</description>
-     <value>false</value>
-     </param>
 </input>
 <returns type="stringArray"/>
 
