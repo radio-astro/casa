@@ -108,6 +108,8 @@ install (FILES
 install (FILES
 	ImageAnalysis/AntennaResponses.h
 	ImageAnalysis/ComponentImager.h
+	ImageAnalysis/Image1DSmoother.h
+	ImageAnalysis/Image1DSmoother.tcc
 	ImageAnalysis/Image2DConvolver.h
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
@@ -121,6 +123,7 @@ install (FILES
 	ImageAnalysis/ImageCropper.tcc
 	ImageAnalysis/ImageDecimator.h
     ImageAnalysis/ImageDecimator.tcc
+    ImageAnalysis/ImageDecimatorData.h
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFFT.h
@@ -129,8 +132,12 @@ install (FILES
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc
+    ImageAnalysis/ImageHanningSmoother.h
+    ImageAnalysis/ImageHanningSmoother.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
+    ImageAnalysis/ImageHistory.h
+    ImageAnalysis/ImageHistory.tcc
 	ImageAnalysis/ImageInputProcessor.h
 	ImageAnalysis/ImageInputProcessor2.tcc
 	ImageAnalysis/ImageMaskAttacher.h

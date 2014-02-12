@@ -961,10 +961,10 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 			ledropdeg, leoverwrite, lelist, False
 		)
 	);
-	if (!subim.get()) {
-		*_log << "Could not form subimage in specified region."
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		!subim,
+		"Could not form subimage in specified region."
+	);
 	const CoordinateSystem& cSys = subim->coordinates();
 	// Spectral axis
 	if (! cSys.hasSpectralAxis()) {
@@ -1635,7 +1635,7 @@ Bool ImageAnalysis::getchunk(
 	);
 }
 
-std::tr1::shared_ptr<const ImageInterface<Complex> > ImageAnalysis::getComplexImage() const {
+SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
 		"This object currently holds a Float valued image. Use "
@@ -1648,7 +1648,20 @@ std::tr1::shared_ptr<const ImageInterface<Complex> > ImageAnalysis::getComplexIm
 	return _imageComplex;
 }
 
-std::tr1::shared_ptr<const ImageInterface<Float> > ImageAnalysis::getImage() const {
+SPIIC ImageAnalysis::getComplexImage() {
+	ThrowIf(
+		_imageFloat,
+		"This object currently holds a Float valued image. Use "
+		"getImage instead"
+	);
+	ThrowIf(
+		! _imageComplex,
+		"This image does not hold a valid Complex valued image"
+	);
+	return _imageComplex;
+}
+
+SPIIF ImageAnalysis::getImage() {
 	ThrowIf(
 		_imageComplex,
 		"This object currently holds a Complex valued image. Use "
@@ -1661,6 +1674,18 @@ std::tr1::shared_ptr<const ImageInterface<Float> > ImageAnalysis::getImage() con
 	return _imageFloat;
 }
 
+SPCIIF ImageAnalysis::getImage() const {
+	ThrowIf(
+		_imageComplex,
+		"This object currently holds a Complex valued image. Use "
+		"getComplexImage instead"
+	);
+	ThrowIf(
+		! _imageFloat,
+		"This image does not hold a valid Float valued image"
+	);
+	return _imageFloat;
+}
 
 Bool ImageAnalysis::getregion(
 	Array<Float>& pixels, Array<Bool>& pixelmask,
@@ -1757,20 +1782,23 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 
 	// Deal with axis
 	Int iAxis = axis;
+	const CoordinateSystem csys = _imageFloat->coordinates();
 	if (iAxis < 0) {
-		iAxis = CoordinateUtil::findSpectralAxis(_imageFloat->coordinates());
-		if (iAxis < 0) {
-			*_log << "Could not find a spectral axis in input image"
-					<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! csys.hasSpectralAxis(),
+			"Image does not have a spectral axis"
+		);
+		iAxis = csys.spectralAxisNumber(False);
 	}
 	else if (iAxis > Int(_imageFloat->ndim()) - 1) {
-		*_log << "Specified axis of " << iAxis + 1
-			<< "is greater than input image dimension of "
-			<< _imageFloat->ndim() << LogIO::EXCEPTION;
+		ThrowCc(
+			"Specified axis of " + String::toString(iAxis + 1)
+			+ "is greater than input image dimension of "
+			+ String::toString(_imageFloat->ndim())
+		);
 	}
 	else if (
-		_imageFloat->coordinates().hasDirectionCoordinate()
+		csys.hasDirectionCoordinate()
 		&& _imageFloat->imageInfo().hasMultipleBeams()
 	) {
 		Vector<Int> dirAxes = _imageFloat->coordinates().directionAxesNumbers();
@@ -1786,15 +1814,13 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
-		Region, mask,
-		_log.get(), False, AxesSpecifier(), extendMask
+		pRegionRegion, pMaskRegion, *_imageFloat, Region,
+		mask, _log.get(), False, AxesSpecifier(), extendMask
 	);
 	IPosition blc(subImage.ndim(), 0);
 	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-			_imageFloat->coordinates(), _imageFloat->shape()
+			csys, _imageFloat->shape()
 		);
 		blc = latRegion.slicer().start();
 	}
@@ -1883,10 +1909,10 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	while (!inIter.atEnd()) {
 		if (isMasked) {
 			inIter.getMask(maskIn, False);
-			hanning_smooth(slice, maskOut, inIter.vectorCursor(), maskIn, True);
+			_hanning_smooth(slice, maskOut, inIter.vectorCursor(), maskIn, True);
 			pMaskOut->putSlice(maskOut, inIter.position());
 		} else {
-			hanning_smooth(slice, maskOut, inIter.vectorCursor(), maskIn, False);
+			_hanning_smooth(slice, maskOut, inIter.vectorCursor(), maskIn, False);
 		}
 		pImOut->putSlice(slice, inIter.position());
 		//
@@ -3594,32 +3620,6 @@ Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 	return ok;
 }
 
-Bool ImageAnalysis::sethistory(const String& origin,
-		const Vector<String>& History) {
-	_onlyFloat(__FUNCTION__);
-	LogOrigin lor;
-	if (origin.empty()) {
-		lor = LogOrigin(className(), __FUNCTION__);
-	} else {
-		lor = LogOrigin(origin);
-	}
-	*_log << lor << LogIO::POST;
-
-	LoggerHolder& log = _imageFloat->logger();
-	// 
-	// Make sure we can write into the history table if needed
-	//
-	log.reopenRW();
-	LogSink& sink = log.sink();
-	for (uInt i = 0; i < History.nelements(); i++) {
-		if (History(i).length() > 0) {
-			LogMessage msg(History(i), lor);
-            sink.postLocally(msg);
-		}
-	}
-	return True;
-}
-
 Bool ImageAnalysis::setmiscinfo(const Record& info) {
 	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "setmiscinfo");
@@ -4200,8 +4200,8 @@ void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
 	}
 }
 
-void ImageAnalysis::hanning_smooth(Array<Float>& out, Array<Bool>& maskOut,
-		const Vector<Float>& in, const Array<Bool>& maskIn, Bool isMasked) const {
+void ImageAnalysis::_hanning_smooth(Array<Float>& out, Array<Bool>& maskOut,
+		const Vector<Float>& in, const Array<Bool>& maskIn, Bool isMasked) {
 	const uInt nIn = in.nelements();
 	const uInt nOut = out.nelements();
 	Bool deleteOut, deleteIn, deleteMaskIn, deleteMaskOut;

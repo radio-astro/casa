@@ -1,5 +1,8 @@
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
 
+#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/ImageHistory.h>
+
 #include<stdcasa/cboost_foreach.h>
 
 namespace casa {
@@ -13,7 +16,7 @@ template<class T> ImageDecimator<T>::ImageDecimator(
 		image, "", region, "", "", "",
 		maskInp, outname, overwrite
 	),
-	_axis(0), _factor(1), _function(NONE) {
+	_axis(0), _factor(1), _function(ImageDecimatorData::NONE) {
 	this->_construct();
 }
 
@@ -33,8 +36,9 @@ template<class T> void ImageDecimator<T>::setAxis(uInt n) {
 	_axis = n;
 }
 
-template<class T> ImageInterface<T>* ImageDecimator<T>::decimate(Bool wantReturn) const {
-	*this->_getLog() << LogOrigin(getClass(), __FUNCTION__);
+template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
+	LogOrigin lor = LogOrigin(getClass(), __FUNCTION__);
+	*this->_getLog() << lor;
 	SPIIT clone(this->_getImage()->cloneII());
 	std::tr1::shared_ptr<SubImage<T> >subImage(
 		new SubImage<T>(
@@ -50,14 +54,13 @@ template<class T> ImageInterface<T>* ImageDecimator<T>::decimate(Bool wantReturn
 			<< "of 1 has been specified which means no planes will "
 			<< "be removed. The resulting image will be a straight "
 			<< "copy of the selected image." << LogIO::POST;
-		std::auto_ptr<ImageInterface<T> > tmp(this->_prepareOutputImage(*subImage));
+		SPIIT tmp(this->_prepareOutputImage(*subImage));
 		if (wantReturn) {
-			return tmp.release();
+			return tmp;
 		}
 		else {
-			return 0;
+			return SPIIT();
 		}
-
 	}
 	CoordinateSystem csys = subImage->coordinates();
 	Vector<Double> refPix = csys.referencePixel();
@@ -71,7 +74,10 @@ template<class T> ImageInterface<T>* ImageDecimator<T>::decimate(Bool wantReturn
 	IPosition shape = subShape;
 	// integer division
 	shape[_axis] = shape[_axis]/_factor;
-	if (_function == NONE) {
+	if (
+		_function == ImageDecimatorData::NONE
+		&& subShape[_axis] % 2 == 1
+	) {
 		shape[_axis]++;
 	}
 	TempImage<T> out(shape, csys);
@@ -89,7 +95,7 @@ template<class T> ImageInterface<T>* ImageDecimator<T>::decimate(Bool wantReturn
 	);
 	IPosition outPos = begin;
 
-	if (_function == NONE) {
+	if (_function == ImageDecimatorData::NONE) {
 		end[_axis] = 0;
 		while(! inIter.atEnd() && outPos[_axis]<shape[_axis]) {
 			if (isMasked) {
@@ -104,7 +110,7 @@ template<class T> ImageInterface<T>* ImageDecimator<T>::decimate(Bool wantReturn
 			outPos[_axis]++;
 		}
 	}
-	else if (_function == MEAN) {
+	else if (_function == ImageDecimatorData::MEAN) {
 		String comment;
 		ImageCollapser<T> collapser(
 			subImage, IPosition(1, _axis), False,
@@ -148,14 +154,18 @@ template<class T> ImageInterface<T>* ImageDecimator<T>::decimate(Bool wantReturn
 			stop[_axis] += _factor;
 		}
 	}
-	std::auto_ptr<ImageInterface<Float> > tmp(
+	SPIIT tmp(
 		this->_prepareOutputImage(out, 0, outMask.get())
 	);
+	ImageHistory<T> hist(tmp);
+	LogIO log = hist.getLogSink();
+	log << lor << LogIO::NORMAL << "Decimated axis " << _axis
+		<< " by keeping only every " << _factor << " planes.";
 	if (wantReturn) {
-		return tmp.release();
+		return tmp;
 	}
 	else {
-		return 0;
+		return SPIIT();
 	}
 }
 

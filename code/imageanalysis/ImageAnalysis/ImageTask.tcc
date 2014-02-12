@@ -246,8 +246,18 @@ template <class T> ImageInterface<T>*  ImageTask<T>::_prepareOutputImage(
 	if (mask != 0) {
 		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
 	}
-	else if (image.hasPixelMask()) {
-		mymask.reset(new ArrayLattice<Bool>(image.pixelMask().get()));
+	// because subimages can have two types of masks, a region mask and
+	// a pixel mask, but most other types of images really just have a
+	// pixel mask. its very confusing
+	else if (image.hasPixelMask() || image.isMasked()) {
+		Array<Bool> maskArray(image.shape(), True);
+		if (image.hasPixelMask()) {
+			maskArray = maskArray && image.pixelMask().get();
+		}
+		if (image.isMasked()) {
+			maskArray = maskArray && image.getMask();
+		}
+		mymask.reset(new ArrayLattice<Bool>(maskArray));
 	}
 	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
 		dynamic_cast<TempImage<T> *>(outImage.get())->attachMask(*mymask);
@@ -257,9 +267,12 @@ template <class T> ImageInterface<T>*  ImageTask<T>::_prepareOutputImage(
 		_removeExistingOutfileIfNecessary();
 		String emptyMask = "";
 		Record empty;
-        PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(SubImageFactory<T>::createImage(
-                    *outImage, _getOutname(), empty, emptyMask,
-                    False, False, True, False));
+        PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(
+        	SubImageFactory<T>::createImage(
+        		*outImage, _getOutname(), empty, emptyMask,
+        		False, False, True, False
+        	)
+        );
         ThrowIf(tmp == 0, "Failed dynamic cast")
 		outImage.reset(tmp);
 	}

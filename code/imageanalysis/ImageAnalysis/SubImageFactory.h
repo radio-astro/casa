@@ -101,12 +101,14 @@ public:
       Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
-  // return a PagedImage if outfile is not blank or a SubImage if it is.
+  // return a true copy of the subimage selected in the given region.
+  // A PagedImage is returned if outfile is not blank or a SubImage
+  // is returned if it is.
   static ImageInterface<T>* createImage(
-	  ImageInterface<T>& image,
+	  const ImageInterface<T>& image,
 	  const String& outfile, const Record& region,
-	  const String& mask, const Bool dropDegenerateAxes,
-	  const Bool overwrite, const Bool list, const Bool extendMask
+	  const String& mask, Bool dropDegenerateAxes,
+	  Bool overwrite, Bool list, Bool extendMask
   );
 
   private:

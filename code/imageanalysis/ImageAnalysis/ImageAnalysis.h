@@ -40,6 +40,8 @@
 #include <casa/Utilities/PtrHolder.h>
 #include <measures/Measures/Stokes.h>
 
+#include <imageanalysis/ImageTypedefs.h>
+
 #include <memory>
 #include <tr1/memory>
 
@@ -387,8 +389,6 @@ class ImageAnalysis
 
     bool setcoordsys(const Record& csys);
 
-    bool sethistory(const String& origin, const Vector<String>& history);
-
     bool setmiscinfo(const Record& info);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -513,8 +513,11 @@ class ImageAnalysis
     Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // get the associated ImageInterface object
-    std::tr1::shared_ptr<const ImageInterface<Float> > getImage() const;
-    std::tr1::shared_ptr<const ImageInterface<Complex> > getComplexImage() const;
+    SPCIIF getImage() const;
+    SPIIF getImage();
+
+    SPCIIC getComplexImage() const;
+    SPIIC getComplexImage();
 
 
     // If file name empty make TempImage (allowTemp=T) or do nothing.
@@ -596,11 +599,11 @@ class ImageAnalysis
     	ImageRegion* pOldMaskRegion
     );
     // Hanning smooth a vector
-    void hanning_smooth (casa::Array<casa::Float>& out,
+    static void _hanning_smooth (casa::Array<casa::Float>& out,
                          casa::Array<casa::Bool>& maskOut,
                          const casa::Vector<casa::Float>& in,
                          const casa::Array<casa::Bool>& maskIn,
-                         casa::Bool isMasked) const;
+                         casa::Bool isMasked);
     
     
 // Make a new image with given CS
