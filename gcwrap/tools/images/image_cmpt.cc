@@ -59,12 +59,15 @@
 #include <tables/LogTables/NewFile.h>
 
 #include <components/SpectralComponents/SpectralListFactory.h>
+
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
+#include <imageanalysis/ImageAnalysis/ImageHanningSmoother.h>
+#include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
@@ -553,38 +556,20 @@ image::adddegaxes(
 			return 0;
 		}
 		if (_image->isFloat()) {
-			PtrHolder<ImageInterface<Float> > outimage;
+			SPCIIF image = _image->getImage();
 			return _adddegaxes(
-				outimage, _image->getImage(),
+				image,
 				outfile, direction, spectral, stokes, linear,
 				tabular, overwrite, silent
 			);
-			/*
-			ImageUtilities::addDegenerateAxes(
-				_log, outimage, *_image->getImage(), outfile,
-				direction, spectral, stokes, linear, tabular, overwrite, silent
-			);
-			ImageInterface<Float> *outPtr = outimage.ptr();
-			outimage.clear(False);
-			return new image(outPtr);
-			*/
 		}
 		else {
-			PtrHolder<ImageInterface<Complex> > outimage;
+			SPCIIC image = _image->getComplexImage();
 			return _adddegaxes(
-				outimage, _image->getComplexImage(),
+				image,
 				outfile, direction, spectral, stokes,
 				linear, tabular, overwrite, silent
 			);
-/*
-			ImageUtilities::addDegenerateAxes(
-				_log, outimage, *_image->getComplexImage(), outfile,
-				direction, spectral, stokes, linear, tabular, overwrite, silent
-			);
-			ImageInterface<Complex> *outPtr = outimage.ptr();
-			outimage.clear(False);
-			return new image(outPtr);
-			*/
 		}
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -594,13 +579,13 @@ image::adddegaxes(
 }
 
 template<class T> image* image::_adddegaxes(
-	PtrHolder<ImageInterface<T> >& outimage,
-	std::tr1::shared_ptr<const ImageInterface<T> > inImage,
+	SPCIIT inImage,
 	const std::string& outfile, bool direction,
 		bool spectral, const std::string& stokes, bool linear,
 		bool tabular, bool overwrite, bool silent
 ) {
 	_log << _ORIGIN;
+	PtrHolder<ImageInterface<T> > outimage;
 	ImageUtilities::addDegenerateAxes(
 		_log, outimage, *inImage, outfile,
 		direction, spectral, stokes, linear, tabular, overwrite, silent
@@ -989,12 +974,12 @@ image* image::decimate(
 	try {
 		String mymethod = method;
 		mymethod.downcase();
-		ImageDecimator<Float>::Function f;
+		ImageDecimatorData::Function f;
 		if (mymethod.startsWith("n")) {
-			f = ImageDecimator<Float>::NONE;
+			f = ImageDecimatorData::NONE;
 		}
 		else if (mymethod.startsWith("m")) {
-			f = ImageDecimator<Float>::MEAN;
+			f = ImageDecimatorData::MEAN;
 		}
 		else {
 			ThrowCc("Unsupported decimation method" + method);
@@ -2101,9 +2086,9 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 }
 
 ::casac::image* image::hanning(
-	const string& outFile, const ::casac::record& region,
-	const ::casac::variant& vmask, const int axis, const bool drop,
-	const bool overwrite, const bool /* async */, const bool stretch
+	const string& outfile, const variant& region,
+	const variant& vmask, int axis, bool drop,
+	bool overwrite, bool /* async */, bool stretch
 ) {
 	_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
@@ -2111,12 +2096,31 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		return 0;
 	}
 	try {
-		Record *Region = toRecord(region);
+		std::tr1::shared_ptr<Record> myregion = _getRegion(
+			region, True
+		);
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
-
+		if (axis < 0) {
+			const CoordinateSystem csys = _image->getImage()->coordinates();
+			ThrowIf(
+				! csys.hasSpectralAxis(),
+				"Axis not specified and image has no spectral coordinate"
+			);
+			axis = csys.spectralAxisNumber(False);
+		}
+		ImageHanningSmoother<Float> smoother(
+			_image->getImage(), myregion.get(),
+			mask, outfile, overwrite
+		);
+		smoother.setAxis(axis);
+		smoother.setDecimate(drop);
+		smoother.setStretch(stretch);
+		smoother.setDecimationFunction(ImageDecimatorData::NONE);
+		return new image(smoother.smooth(True));
+		/*
 		tr1::shared_ptr<ImageInterface<Float> > pImOut(
 			_image->hanning(
 				outFile, *Region, mask, axis, drop,
@@ -2128,7 +2132,8 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		if(!rstat)
 			throw AipsError("Unable create image");
 		return rstat;
-	} catch (AipsError x) {
+		*/
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -3409,7 +3414,6 @@ bool image::setcoordsys(const ::casac::record& csys) {
 
 bool image::sethistory(const std::string& origin,
 		const std::vector<std::string>& history) {
-	bool rstat(false);
 	try {
 		if (detached()) {
 			return false;
@@ -3418,16 +3422,22 @@ bool image::sethistory(const std::string& origin,
 			LogOrigin lor("image", "sethistory");
 			_log << lor << "history string is empty" << LogIO::POST;
 		} else {
-			Vector<String> History = toVectorString(history);
-			rstat = _image->sethistory(origin, History);
+			if(_image->isFloat()) {
+				ImageHistory<Float> hist(_image->getImage());
+				hist.addHistory(origin, history);
+			}
+			else {
+				ImageHistory<Complex> hist(_image->getComplexImage());
+				hist.addHistory(origin, history);
+			}
+			return True;
 		}
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		LogOrigin lor("image", "sethistory");
 		_log << lor << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::setmiscinfo(const ::casac::record& info) {

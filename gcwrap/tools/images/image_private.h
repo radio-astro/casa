@@ -73,7 +73,6 @@ template<class T> tr1::shared_ptr<casa::ImageInterface<T> > _subimage(
 );
 
 template<class T> image* _adddegaxes(
-	casa::PtrHolder<casa::ImageInterface<T> >& outimage,
 	tr1::shared_ptr<const casa::ImageInterface<T> > inImage,
 	const std::string& outfile, bool direction,
 	bool spectral, const std::string& stokes, bool linear,

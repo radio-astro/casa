@@ -101,7 +101,7 @@ class ia_hanning_test(unittest.TestCase):
         yy.done()
         zz.done()
     
-    def test_regreesion(self):
+    def test_regression(self):
         """Tests moved from imagetest regression"""
         # Make image
         imname = 'ia.fromshape.image'
@@ -123,7 +123,6 @@ class ia_hanning_test(unittest.TestCase):
         self.assertFalse(len(pixels2)==0)
         self.assertTrue((pixels2 == 1).all())
         self.assertTrue(myim2.remove(done=T))
-        
         myim2 = myim.hanning(outfile=hanname, axis=0, drop=T)
         self.assertTrue(myim2)
         shape2 = [myim.shape()[0]/2-1,myim.shape()[1]]
@@ -132,7 +131,6 @@ class ia_hanning_test(unittest.TestCase):
         self.assertFalse(len(pixels2)==0)
         self.assertTrue((pixels2 == 1).all())
         self.assertTrue(myim2.remove(done=T))
-
         pixels = myim.getregion()
         mask = myim.getregion(getmask=true)
         mask[0,0] = F

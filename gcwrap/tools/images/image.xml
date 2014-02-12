@@ -1244,7 +1244,7 @@ collapsed.done()
 			the reference pixel of the output image is located at pixel 1/factor times the reference pixel
 			in the input image.
 			
-			This method returns an image analysis tool which references the output image. If this image
+			This method returns an image analysis tool which references the output image. If this tool
 			is not desired, one should capture it anyway and then close() it immediately to free up
 			resources.
 			
@@ -5168,9 +5168,10 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Dictionary (record) defining the region of interest, most often obtained from an rg tool method.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     	<any type="variant" limittypes="record, string"/>
+    	<description>Dictionary or string specifying the region of interest.  Default is whole image.</description>
+     	<value/>
      </param>
   
      <param type="any"  name="mask">
