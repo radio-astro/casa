@@ -135,7 +135,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
 				)
 			);
 			collapser.setRegion(*reg);
-			collapsed.reset(collapser.collapse(True));
+			collapsed = collapser.collapse(True);
 			if (isMasked) {
 				if (collapsed->isMasked()) {
 					Array<Bool> mask = collapsed->pixelMask().get();

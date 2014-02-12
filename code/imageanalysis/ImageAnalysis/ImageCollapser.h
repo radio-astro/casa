@@ -73,7 +73,7 @@ public:
 	// collapsed image. The returned pointer is created via new(); it is the caller's
 	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
 	// a NULL pointer is returned and pointer deletion is performed internally.
-	ImageInterface<T>* collapse(const Bool wantReturn) const;
+	SPIIT collapse(const Bool wantReturn) const;
 
 	static const map<uInt, T (*)(const Array<T>&)>* funcMap();
 

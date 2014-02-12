@@ -233,11 +233,17 @@ Record ImageProfileFitter::fit() {
 					_sigma, IPosition(1, _fitAxis), True,
 					ImageCollapserData::MEAN, "", True
 				);
-				_sigma.reset(
-					dynamic_cast<TempImage<Float> *>(
-						collapsedSigma.collapse(True)
-					)
+				SPIIF collapsed = collapsedSigma.collapse(True);
+				std::tr1::shared_ptr<TempImage<Float> >ctmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(collapsed);
+				/*
+				TempImage<Float> *ctmp = dynamic_cast<TempImage<Float> *>(
+					collapsed.get()
 				);
+				*/
+				ThrowIf(
+					! ctmp, "Dynamic cast failed"
+				);
+				_sigma = ctmp;
 			}
 		}
 		_fitallprofiles();

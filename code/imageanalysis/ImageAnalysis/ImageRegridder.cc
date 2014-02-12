@@ -78,7 +78,7 @@ ImageRegridder::ImageRegridder(
 
 ImageRegridder::~ImageRegridder() {}
 
-ImageInterface<Float>* ImageRegridder::regrid(
+SPIIF ImageRegridder::regrid(
 	Bool wantReturn
 ) const {
 	Bool regridByVel = False;
@@ -106,13 +106,11 @@ ImageInterface<Float>* ImageRegridder::regrid(
 	else {
 		workIm = _regrid();
 	}
-	std::auto_ptr<ImageInterface<Float> > outImage( _prepareOutputImage(*workIm));
-	if (wantReturn) {
-		return outImage.release();
+	SPIIF outImage = _prepareOutputImage(*workIm);
+	if (! wantReturn) {
+		outImage.reset();
 	}
-    else {
-        return 0;
-    }
+    return outImage;
 }
 
 std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {

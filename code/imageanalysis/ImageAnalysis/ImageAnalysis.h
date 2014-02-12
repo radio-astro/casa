@@ -272,8 +272,6 @@ class ImageAnalysis
         const Bool disk=False, const Bool extendMask=False
     );
 
-    Vector<String> history(const Bool list = False, const Bool browse = True);
-
     Bool insert(
     	const String& infile, Record& region,
     	const Vector<double>& locate, Bool verbose

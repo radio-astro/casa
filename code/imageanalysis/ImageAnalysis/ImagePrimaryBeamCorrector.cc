@@ -199,7 +199,7 @@ CasacRegionManager::StokesControl ImagePrimaryBeamCorrector::_getStokesControl()
 	return CasacRegionManager::USE_ALL_STOKES;
 }
 
-ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
+SPIIF ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
@@ -251,16 +251,12 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? subImage/pbSubImage
 		: subImage*pbSubImage;
-	std::auto_ptr<ImageInterface<Float> > outImage(
-		_prepareOutputImage(subImage)
-	);
+	SPIIF outImage = _prepareOutputImage(subImage);
 	outImage->copyData(expr);
-    if (wantReturn) {
-    	return outImage.release();
+    if (! wantReturn) {
+    	outImage.reset();
     }
-    else {
-    	return 0;
-    }
+    return outImage;
 }
 }
 

@@ -2082,43 +2082,6 @@ Record ImageAnalysis::histograms(
 	return rec;
 }
 
-Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
-	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin("ImageAnalysis", "history");
-
-	//
-	if (browse) {
-		*_log << "Table browsing is not implemented yet!" << LogIO::POST;
-	}
-	Vector<String> t;
-	LoggerHolder& logger = _imageFloat->logger();
-	//
-	uInt i = 1;
-	for (LoggerHolder::const_iterator iter = logger.begin(); iter
-			!= logger.end(); iter++, i++) {
-		if (list) {
-			if (!(iter->location()).empty()) {
-				*_log << LogOrigin(iter->location());
-			} else {
-				*_log << LogOrigin("ImageAnalysis", "history");
-			}
-			*_log << endl << iter->message() << endl << LogIO::POST;
-		} else {
-			if (i > t.nelements()) {
-				t.resize(t.nelements() + 100, True);
-			}
-			t(i - 1) = iter->message();
-		}
-	}
-	if (list)
-		*_log << LogIO::POST;
-	//
-	if (!list) {
-		t.resize(i - 1, True);
-	}
-	return t;
-}
-
 Bool ImageAnalysis::insert(
 	const String& infile, Record& Region,
 	const Vector<double>& locatePixel, Bool verbose
@@ -3720,74 +3683,6 @@ Record ImageAnalysis::summary(
 		);
 	}
 }
-
-/*
-Record ImageAnalysis::summary(
-	const String& doppler, const Bool list,
-	const Bool pixelorder, const Bool verbose
-) {
-	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin(className(), __FUNCTION__);
-	Vector<String> messages;
-	Record retval;
-	ImageSummary<Float> s(*_imageFloat);
-	MDoppler::Types velType;
-	if (!MDoppler::getType(velType, doppler)) {
-		*_log << LogIO::WARN << "Illegal velocity type, using RADIO"
-				<< LogIO::POST;
-		velType = MDoppler::RADIO;
-	}
-
-	if (list) {
-		messages = s.list(*_log, velType, False, verbose);
-	}
-	else {
-		// Write messages to local sink only so we can fish them out again
-		LogFilter filter;
-		LogSink sink(filter, False);
-		LogIO osl(sink);
-		messages = s.list(osl, velType, True);
-	}
-	retval.define("messages", messages);
-	Vector<String> axes = s.axisNames(pixelorder);
-	Vector<Double> crpix = s.referencePixels(False); // 0-rel
-	Vector<Double> crval = s.referenceValues(pixelorder);
-	Vector<Double> cdelt = s.axisIncrements(pixelorder);
-	Vector<String> axisunits = s.axisUnits(pixelorder);
-
-	retval.define("ndim", Int(s.ndim()));
-	retval.define("shape", s.shape().asVector());
-	retval.define("tileshape", s.tileShape().asVector());
-	retval.define("axisnames", axes);
-	retval.define("refpix", crpix);
-	retval.define("refval", crval);
-	retval.define("incr", cdelt);
-	retval.define("axisunits", axisunits);
-	retval.define("unit", s.units().getName());
-	retval.define("hasmask", s.hasAMask());
-	retval.define("defaultmask", s.defaultMaskName());
-	retval.define("masks", s.maskNames());
-	retval.define("imagetype", s.imageType());
-
-	ImageInfo info = _imageFloat->imageInfo();
-	Record iRec;
-	String error;
-	Bool ok = info.toRecord(error, iRec);
-	if (! ok) {
-		*_log << LogIO::SEVERE
-				<< "Failed to convert ImageInfo to a record because "
-				<< LogIO::EXCEPTION;
-		*_log << LogIO::SEVERE << error << LogIO::POST;
-	}
-	else if (iRec.isDefined("restoringbeam")) {
-		retval.defineRecord("restoringbeam", iRec.asRecord("restoringbeam"));
-	}
-	else if (iRec.isDefined("perplanebeams")) {
-		retval.defineRecord("perplanebeams", info.beamToRecord(-1, -1));
-	}
-	return retval;
-}
-*/
 
 Bool ImageAnalysis::tofits(
 	const String& fitsfile, const Bool velocity,

@@ -29,7 +29,7 @@ template<class T> void Image1DSmoother<T>::setAxis(uInt n) {
 	_axis = n;
 }
 
-template<class T> ImageInterface<T>* Image1DSmoother<T>::smooth(Bool wantReturn) const {
+template<class T> SPIIF Image1DSmoother<T>::smooth(Bool wantReturn) const {
 	*this->_getLog() << LogOrigin(getClass(), __FUNCTION__);
 
 	SPIIT subImage(
@@ -39,15 +39,11 @@ template<class T> ImageInterface<T>* Image1DSmoother<T>::smooth(Bool wantReturn)
 		)
 	);
 	SPIIT out(_smooth(*subImage));
-	std::auto_ptr<ImageInterface<T> > tmp(
-		this->_prepareOutputImage(*out)
-	);
-	if (wantReturn) {
-		return tmp.release();
+	SPIIF tmp = this->_prepareOutputImage(*out);
+	if (! wantReturn) {
+		tmp.reset();
 	}
-	else {
-		return 0;
-	}
+	return tmp;
 }
 
 }

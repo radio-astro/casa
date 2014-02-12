@@ -52,6 +52,14 @@ public:
 		const vector<string>& history
 	);
 
+	vector<String> get(Bool list) const;
+	vector<string> getAsStdStrings(Bool list) const;
+
+	//Append the specified history to this image's history
+	void append(SPCIIF image);
+
+	void append(SPCIIC image);
+
 	String getClass() const { const static String s = "ImageHistory"; return s; }
 
 	LogIO& getLogSink();

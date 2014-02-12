@@ -61,7 +61,7 @@ void ImagePadder::setPaddingPixels(
 	_good = good;
 }
 
-ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
+SPIIF ImagePadder::pad(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
@@ -92,15 +92,15 @@ ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
 	ArrayLattice<Float> values(valArray);
 	values.putSlice(subImage.get(), blc);
 	const Array<Float>& vals = values.get();
-	std::auto_ptr<ImageInterface<Float> > outImage(
+	SPIIF outImage(
         _prepareOutputImage(
 		    subImage, &vals, &mask, &outShape, &newCoords
 	    )
     );
-	if (wantReturn) {
-		return outImage.release();
+	if (! wantReturn) {
+		outImage.reset();
 	}
-	return 0;
+	return outImage;
 }
 
 String ImagePadder::getClass() const {

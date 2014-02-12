@@ -33,7 +33,7 @@ public:
 	// destructor
 	virtual ~Image1DSmoother() {}
 
-	ImageInterface<T>* smooth(Bool wantReturn) const;
+	SPIIF smooth(Bool wantReturn) const;
 
 	virtual String getClass() const { const static String s = "Image1DSmoother"; return s; }
 

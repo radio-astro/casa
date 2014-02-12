@@ -37,7 +37,9 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 
+#include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+
 #include <imageanalysis/IO/LogFile.h>
 
 namespace casa {
@@ -230,14 +232,14 @@ template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
 	}
 }
 
-template <class T> ImageInterface<T>*  ImageTask<T>::_prepareOutputImage(
+template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
     const IPosition *const outShape, const CoordinateSystem *const coordsys
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-    std::auto_ptr<ImageInterface<T> > outImage(
+    SPIIT outImage(
 		new TempImage<T>(
 			TiledShape(oShape), csys
 		)
@@ -277,7 +279,9 @@ template <class T> ImageInterface<T>*  ImageTask<T>::_prepareOutputImage(
 		outImage.reset(tmp);
 	}
 	outImage->put(values == 0 ? image.get() : *values);
-	return outImage.release();
+	ImageHistory<T> history(outImage);
+	history.append(_image);
+	return outImage;
 }
 
 }

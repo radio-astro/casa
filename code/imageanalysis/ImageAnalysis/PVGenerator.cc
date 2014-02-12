@@ -325,7 +325,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	);
 	Double padNumber = max(0.0, 1 - startPixRot[0]);
 	padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
-	std::tr1::shared_ptr<ImageInterface<Float> > imageToRotate = subImage;
+	SPIIF imageToRotate = subImage;
 	Int nPixels = 0;
 	if (padNumber > 0) {
 		nPixels = (Int)padNumber + 1;
@@ -335,8 +335,8 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 			<< LogIO::POST;
 		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
-		ImageInterface<Float>* padded = padder.pad(True);
-		imageToRotate.reset(padded);
+		SPIIF padded = padder.pad(True);
+		imageToRotate = padded;
 	}
 	IPosition blc(subImage->ndim(), 0);
 	IPosition trc = subShape - 1;
