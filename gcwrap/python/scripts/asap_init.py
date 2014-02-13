@@ -45,7 +45,7 @@ def asap_init():
     from tsdcal_cli import tsdcal_cli as tsdcal
     from tsdcal2_cli import tsdcal2_cli as tsdcal2
     from tsdfit_cli import tsdfit_cli as tsdfit
-    from tsdflag2_cli import tsdflag2_cli as tsdflag2
+    from tsdflag_cli import tsdflag_cli as tsdflag
     from tsdgrid_cli import tsdgrid_cli as tsdgrid
     from tsdimaging_cli import tsdimaging_cli as tsdimaging
     from tsdmath_cli import tsdmath_cli as tsdmath
@@ -79,7 +79,7 @@ def asap_init():
     myf['tsdcal']=tsdcal
     myf['tsdcal2']=tsdcal2
     myf['tsdfit']=tsdfit
-    myf['tsdflag2']=tsdflag2
+    myf['tsdflag']=tsdflag
     myf['tsdgrid']=tsdgrid
     myf['tsdimaging']=tsdimaging
     myf['tsdmath']=tsdmath

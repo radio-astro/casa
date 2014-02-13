@@ -177,7 +177,7 @@ scripts/task_tsdbaseline.py
 scripts/task_tsdcal.py
 scripts/task_tsdcal2.py
 scripts/task_tsdfit.py
-scripts/task_tsdflag2.py
+scripts/task_tsdflag.py
 scripts/task_tsdgrid.py
 scripts/task_tsdimaging.py
 scripts/task_tsdmath.py

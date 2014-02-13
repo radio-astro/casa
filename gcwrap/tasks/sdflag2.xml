@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdflag -->
 
-<task type="function" name="sdflag2" startup="false" category="single dish" visibility="experimental">
+<task type="function" name="sdflag2" startup="false" category="single dish">
 
   <shortdescription>ASAP SD spectral flagging task </shortdescription>
 
