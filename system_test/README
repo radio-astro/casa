@@ -4,4 +4,4 @@ This directory contains tests that exercise CASA in end-to-end, Science use case
    * general/ contains tests that exercise CASA as used by "typical" users. 
    * pipeline/ contains tests that exercise the ALMA/EVLA pipeline. 
 
-Do not add anything to this directory without discussing it with Andy Hale and Scott Rankin.
+Do not add anything to this directory without discussing it with Andy Hale or Scott Rankin.
