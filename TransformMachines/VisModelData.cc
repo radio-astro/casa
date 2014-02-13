@@ -590,7 +590,17 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       if(!fCol.sourceId().isNull()){
 	Int sid=fCol.sourceId().get(fieldIds[0]);
 	Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
-	if(rows.nelements() > 0) row=rows[0];
+	if(rows.nelements() > 0) 
+	  row=rows[0];
+	else{
+	  LogIO logio;
+	  logio << "Invalid Source_id "+String::toString(sid)+" found in FIELD table\n" 
+		<<"Model is being written at Source ID 0 position which will be erased\n" 
+                << "Fix the FIELD table before proceeding " 
+		<<  LogIO::WARN << LogIO::POST;
+    
+	}
+	  
       }
       putRecordByKey(theMS, elkey, theRec, row);
       for (uInt k=0; k < fieldIds.nelements();  ++k){
