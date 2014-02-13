@@ -658,7 +658,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not ok:
             raise RuntimeError, 'setmiscinfo failed in fitsreflect'
         myim.sethistory(history=["A","B","C","D"])
-        history = myim.history(F,F)
+        history = myim.history(F)
         #
         p1 = myim.getregion()
         m1 = myim.getregion(getmask=T)
@@ -710,7 +710,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not (mi['hello'] == 'hello') or not (mi['world'] == 'world'):
             raise RuntimeError, 'miscinfo changed after fits in fitsreflect'
         #
-        history2 = myim2.history(F,F);
+        history2 = myim2.history(F);
         #Behaviour of history logged in FITS changed (2007/10/02)
         #Grab just the messages (indices 2, 4, 6, ...)
 	#
@@ -4861,7 +4861,7 @@ def imagetest(which=None, size=[32,32,8]):
             myim = rec[mytype]['tool']
             ok = myim.sethistory(history=hii)
             if not ok: fail()
-            hio = myim.history(list=F, browse=F)
+            hio = myim.history(list=F)
             if not hio: fail()
             if (len(hii)!=len(hio[0])):
                 fail('History length does not reflect')
