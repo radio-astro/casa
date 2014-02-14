@@ -24,6 +24,29 @@ CalAppOrigin = collections.namedtuple('CalAppOrigin', ['task', 'inputs'])
 
 
 class CalApplication(object):
+    """
+    CalApplication maps calibration tables and their application arguments to
+    a target data selection, encapsulated as |CalFrom| and |CalTo| objects 
+    respectively.
+
+    .. py:attribute:: calto
+
+        the |CalTo| representing the data selection to which the calibration
+        should apply.
+
+    .. py:attribute:: calfrom
+
+        the |CalFrom| representing the calibration and application parameters
+
+    .. py:attribute:: origin
+
+        the |CalAppOrigin| marking how this calibration was created
+
+.. |CalTo| replace:: :class:`CalTo`
+.. |CalFrom| replace:: :class:`CalFrom`
+.. |CalAppOrigin| replace:: :class:`CalAppOrigin`
+    """
+
     def __init__(self, calto, calfrom, origin=None):
         self.calto = calto
         if type(calfrom) is not types.ListType:
@@ -33,6 +56,11 @@ class CalApplication(object):
 
     @staticmethod
     def from_export(s):
+        """
+        Unmarshal a CalApplication from a string.
+
+        :rtype: the unmarshalled :class:`CalApplication` object
+        """
         d = eval(string.replace(s, 'applycal(', 'dict('))
         calto = CalTo(vis=d['vis'], field=d['field'], spw=d['spw'], 
                       antenna=d['antenna'])
@@ -62,9 +90,9 @@ class CalApplication(object):
             with utils.open_table(gaintable) as caltable:
                 viscal = caltable.getkeyword('VisCal')
             
+            caltype = CalFrom.get_caltype_for_viscal(viscal) 
             calfrom = CalFrom(gaintable, gainfield=gainfield, interp=interp, 
-                              spwmap=spwmap, calwt=calwt)
-            calfrom.caltype = CalFrom.get_caltype_for_viscal(viscal) 
+                              spwmap=spwmap, calwt=calwt, caltype=caltype)
             LOG.trace('Marking caltable \'%s\' as caltype \'%s\''
                       '' % (gaintable, calfrom.caltype))
 
@@ -73,6 +101,11 @@ class CalApplication(object):
         return CalApplication(calto, calfroms)
 
     def as_applycal(self):
+        """
+        Get a representation of this object as a CASA applycal call.
+
+        :rtype: string
+        """
         args = {'vis'       : self.vis,
                 'field'     : self.field,
                 'intent'    : self.intent,
@@ -96,14 +129,30 @@ class CalApplication(object):
 
     @property
     def antenna(self):
+        """
+        The antennas to which the calibrations apply.
+
+        :rtype: string
+        """ 
         return self.calto.antenna
 
     @property
     def calwt(self):
+        """
+        The calwt parameters to be used when applying these calibrations.
+        
+        :rtype: a scalar string if representing 1 calibration, otherwise a
+                list of strings
+        """
         l = [cf.calwt for cf in self.calfrom]
         return l[0] if len(l) is 1 else l
     
     def exists(self):
+        """
+        Test whether all calibration tables referred to by this application exist.
+        
+        :rtype: boolean
+        """ 
         for cf in self.calfrom: 
             if not os.path.exists(cf.gaintable):
                 return False
@@ -111,39 +160,83 @@ class CalApplication(object):
 
     @property
     def field(self):
+        """
+        The fields to which the calibrations apply.
+
+        :rtype: string
+        """ 
         return self.calto.field
 
     @property
     def gainfield(self):
+        """
+        The gainfield parameters to be used when applying these calibrations.
+        
+        :rtype: a scalar string if representing 1 calibration, otherwise a
+                list of strings
+        """
         l = [cf.gainfield for cf in self.calfrom]
         return l[0] if len(l) is 1 else l
 
     @property
     def gaintable(self):
+        """
+        The gaintable parameters to be used when applying these calibrations.
+        
+        :rtype: a scalar string if representing 1 calibration, otherwise a
+                list of strings
+        """
         l = [cf.gaintable for cf in self.calfrom]
         return l[0] if len(l) is 1 else l
     
     @property
     def intent(self):
+        """
+        The observing intents to which the calibrations apply.
+
+        :rtype: string
+        """ 
         return self.calto.intent
 
     @property
     def interp(self):
+        """
+        The interp parameters to be used when applying these calibrations.
+        
+        :rtype: a scalar string if representing 1 calibration, otherwise a
+                list of strings
+        """
         l = [cf.interp for cf in self.calfrom]
         return l[0] if len(l) is 1 else l
         
     @property
     def spw(self):
+        """
+        The spectral windows to which the calibrations apply.
+
+        :rtype: string
+        """ 
         return self.calto.spw
     
     @property
     def spwmap(self):
-        # we need to convert tuples back into lists for the CASA argument
+        """
+        The spwmap parameters to be used when applying these calibrations.
+        
+        :rtype: a scalar string if representing 1 calibration, otherwise a
+                list of strings
+        """
+        # convert tuples back into lists for the CASA argument
         l = [list(cf.spwmap) for cf in self.calfrom]
         return l[0] if len(l) is 1 else l 
 
     @property
     def vis(self):
+        """
+        The name of the measurement set to which the calibrations apply.
+
+        :rtype: string
+        """ 
         return self.calto.vis
 
     def __str__(self):
@@ -154,6 +247,11 @@ class CalApplication(object):
 
 
 class CalTo(object):
+    """
+    CalTo represents a target data selection to which a calibration can be 
+    applied.
+    """
+
     __slots__ = ('_antenna', '_intent', '_field', '_spw', '_vis')
       
     def __getstate__(self):
@@ -224,6 +322,25 @@ class CalTo(object):
 
 
 class CalFrom(object):
+    """
+    CalFrom represents a calibration table and the CASA arguments that should
+    be used when applying that calibration table.
+
+    .. py:attribute:: CALTYPES
+
+        an enumeration of calibration table types identified by this code. 
+        
+    .. py:attribute:: CALTYPE_TO_VISCAL
+    
+        mapping of calibration type to caltable identifier as store in the table
+        header
+
+    .. py:attribute:: VISCAL
+    
+        mapping of calibration table header information to a description of
+        that table type
+    """
+
     CALTYPES = {
         'unknown'      : 0,
         'gaincal'      : 1,
@@ -278,6 +395,11 @@ class CalFrom(object):
 
     @staticmethod
     def _calc_hash(gaintable, gainfield, interp, spwmap, calwt):
+        """
+        Generate a hash code unique to the given arguments.
+        
+        :rtype: integer
+        """ 
         result = 17
         result = 37*result + hash(gaintable)
         result = 37*result + hash(gainfield)
@@ -496,10 +618,31 @@ def _ms_dim(): return collections.defaultdict(_spw_dim)
 
 
 class CalState(collections.defaultdict):
+    """
+    CalState is a data structure used to map calibrations for all data
+    registered with the pipeline.
+    
+    It is implemented as a multi-dimensional array indexed by data selection
+    parameters (ms, spw, field, intent, antenna), with the end value being a 
+    list of CalFroms, representing the calibrations to be applied to that data
+    selection.
+    """
+
     def __init__(self, default_factory=_ms_dim):
         super(CalState, self).__init__(default_factory)
 
     def get_caltable(self, caltypes=None):
+        """
+        Get the names of all caltables registered with this CalState. 
+        
+        If an optional caltypes argument is given, only caltables of the
+        requested type will be returned.
+
+        :param caltypes: Caltypes should be one or/a list of table
+        types known in CalFrom.CALTYPES.
+            
+        :rtype: set of strings
+        """ 
         if caltypes is None:
             caltypes = CalFrom.CALTYPES.keys()
 
@@ -595,6 +738,9 @@ class CalState(collections.defaultdict):
 
         
 class CalLibrary(object):
+    """
+    CalLibrary is the root object for the pipeline calibration state.
+    """
     def __init__(self, context):
         self._context = context
         self._active = CalState()
@@ -666,23 +812,45 @@ class CalLibrary(object):
 
     @property
     def active(self):
+        """
+        CalState holding CalApplications to be (pre-)applied to the MS.
+        """
         return self._active
 
     @property
     def applied(self):
+        """
+        CalState holding CalApplications that have been applied to the MS via
+        the pipeline applycal task.
+        """
         return self._applied
 
     def export(self, filename=None):
+        """
+        Export the pre-apply calibration state to disk.
+        
+        The pre-apply calibrations held in the 'active' CalState will be
+        written to disk as a set of equivalent applycal calls.
+        """
         filename = self._calc_filename(filename)
         LOG.info('Exporting current calibration state to %s' % filename)
         self._export(self._active, filename)
 
     def export_applied(self, filename=None):
+        """
+        Export the applied calibration state to disk.
+        
+        The calibrations held in the 'applied' CalState will be written to
+        disk as a set of equivalent applycal calls.
+        """
         filename = self._calc_filename(filename)
         LOG.info('Exporting applied calibration state to %s' % filename)
         self._export(self._applied, filename)
 
     def get_calstate(self, calto, hide_null=True, ignore=[]):
+        """
+        Get the calibration state for a target data selection.
+        """
         # wrap the text-only CalTo in a CalToIdAdapter, which will parse the
         # CalTo properties and give us the appropriate subtable IDs to iterate
         # over 
