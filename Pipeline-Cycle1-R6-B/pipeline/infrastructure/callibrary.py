@@ -62,9 +62,9 @@ class CalApplication(object):
             with utils.open_table(gaintable) as caltable:
                 viscal = caltable.getkeyword('VisCal')
             
+            caltype = CalFrom.get_caltype_for_viscal(viscal) 
             calfrom = CalFrom(gaintable, gainfield=gainfield, interp=interp, 
-                              spwmap=spwmap, calwt=calwt)
-            calfrom.caltype = CalFrom.get_caltype_for_viscal(viscal) 
+                              spwmap=spwmap, calwt=calwt, caltype=caltype)
             LOG.trace('Marking caltable \'%s\' as caltype \'%s\''
                       '' % (gaintable, calfrom.caltype))
 
