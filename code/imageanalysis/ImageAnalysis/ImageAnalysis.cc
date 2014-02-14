@@ -100,6 +100,7 @@
 #include <images/Regions/WCLELMask.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
 #include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
@@ -3920,6 +3921,37 @@ void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,
 
 void ImageAnalysis::_make_image(
 	const String& outfile,
+	const CoordinateSystem& csys, const IPosition& shape,
+	Bool log, Bool overwrite, const String& type
+) {
+	String myType = type;
+	myType.downcase();
+	ThrowIf(
+		myType != "c" && myType != "f",
+		"type must be either 'c' (complex) or 'f' (float)"
+	);
+	myType.downcase();
+	_imageFloat.reset();
+	_imageComplex.reset();
+
+	// This function is generally only called for creating new images,
+	// but you never know, so add histograms protection
+	deleteHist();
+
+    if (myType == "f") {
+	    _imageFloat = ImageFactory::createImage<Float>(
+            outfile, csys, shape, log, overwrite
+       );
+    }
+    else {
+	    _imageComplex = ImageFactory::createImage<Complex>(
+            outfile, csys, shape, log, overwrite
+        );
+    }
+}
+/*
+void ImageAnalysis::_make_image(
+	const String& outfile,
 	const CoordinateSystem& cSys, const IPosition& shape,
 	Bool log, Bool overwrite, const String& type
 ) {
@@ -3987,7 +4019,7 @@ void ImageAnalysis::_make_image(
 		}
 	}
 }
-
+*/
 tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::makeExternalImage(
 	const String& fileName, const CoordinateSystem& cSys,
 	const IPosition& shape, const ImageInterface<Float>& inImage,

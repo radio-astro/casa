@@ -41,7 +41,11 @@ public:
 		const String& history
 	);
 
-	// add multiple history lines, all which have the same origin
+	void addHistory(
+		const LogOrigin& origin,
+		const String& history
+    );
+    // add multiple history lines, all which have the same origin
 	void addHistory(
 		const String& origin,
 		const vector<String>& history

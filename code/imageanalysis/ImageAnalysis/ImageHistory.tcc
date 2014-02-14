@@ -1,6 +1,9 @@
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 
 #include<stdcasa/cboost_foreach.h>
+#include <iomanip>
+
+#include <casa/OS/Time.h>
 
 namespace casa {
 
@@ -15,6 +18,15 @@ template<class T> void ImageHistory<T>::addHistory(
 	vector<String> x;
 	x.push_back(history);
 	addHistory(origin, x);
+}
+
+template<class T> void ImageHistory<T>::addHistory(
+	const LogOrigin& origin,
+	const String& history
+) {
+	vector<String> x;
+	x.push_back(history);
+	addHistory(origin.toString(), x);
 }
 
 template<class T> void ImageHistory<T>::addHistory(
@@ -63,21 +75,21 @@ template<class T> vector<String> ImageHistory<T>::get(
 	LoggerHolder& logger = _image->logger();
 	uInt i = 1;
 	LogIO log;
+    LogMessage msg;
 	for (LoggerHolder::const_iterator iter = logger.begin(); iter
 			!= logger.end(); iter++, i++) {
 		if (list) {
-			LogOrigin lor(getClass(), __FUNCTION__);
-			if (!(iter->location()).empty()) {
-				log << LogOrigin(iter->location());
-			} else {
-				log << lor;
-			}
-			log << endl << iter->message() << endl << LogIO::POST;
+			LogOrigin lor = iter->location().empty()
+				? LogOrigin(getClass(), __FUNCTION__)
+				: LogOrigin(iter->location());
+            msg.origin(lor);
+            Double jdn = iter->time()/C::day + C::MJD0;
+            Time t(jdn);
+            msg.messageTime(t);
+            msg.message(iter->message(), True);
+            log.post(msg);
 		}
 		t.push_back(iter->message());
-	}
-	if (list) {
-		log << LogIO::POST;
 	}
 	return t;
 }
