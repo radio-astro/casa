@@ -73,8 +73,22 @@ template<class T> tr1::shared_ptr<casa::ImageInterface<T> > _subimage(
 );
 
 template<class T> image* _adddegaxes(
-	tr1::shared_ptr<const casa::ImageInterface<T> > inImage,
+	SPCIIT inImage,
 	const std::string& outfile, bool direction,
 	bool spectral, const std::string& stokes, bool linear,
 	bool tabular, bool overwrite, bool silent
 );
+
+template<class T> image* _decimate(
+	SPCIIT image, const string& outfile, int axis,
+	int factor, casa::ImageDecimatorData::Function f,
+	const std::tr1::shared_ptr<casa::Record> region,
+	const string& mask, bool overwrite, bool stretch,
+	const vector<casa::String>& msgs
+) const;
+
+static casa::String _inputsString(
+	const vector<std::pair<String, casac::variant> >& inputs
+);
+
+

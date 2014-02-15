@@ -64,6 +64,7 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageHanningSmoother.h>
@@ -89,7 +90,7 @@
 
 using namespace std;
 
-#define _ORIGIN LogOrigin(_class, __FUNCTION__, WHERE)
+#define _ORIGIN LogOrigin(_class, __func__, WHERE)
 
 namespace casac {
 
@@ -221,7 +222,7 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 		const ::casac::record& region, const bool zeroIt) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached()) {
 			return False;
 		}
@@ -528,14 +529,48 @@ bool image::fromshape(
 	const bool log, const string& type
 ) {
 	try {
-		_log << _ORIGIN;
+		LogOrigin lor("image", __func__);
+		_log << lor;
 		_reset();
 		auto_ptr<Record> coordinates(toRecord(csys));
-		_image->imagefromshape(
-			outfile, Vector<Int> (shape), *coordinates,
-			linear, overwrite, log, type
-		);
-		return True;
+        String mytype = type;
+        mytype.downcase();
+        ThrowIf(
+            ! mytype.startsWith("f") && ! mytype.startsWith("c"),
+            "Input parm type must start with either 'f' or 'c'"
+        );
+		vector<std::pair<LogOrigin, String> > msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__;
+			msgs.push_back(make_pair(lor, os.str()));
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("shape", shape));
+			inputs.push_back(make_pair("csys", csys));
+			inputs.push_back(make_pair("linear", linear));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("log", log));
+			inputs.push_back(make_pair("type", type));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(make_pair(lor, os.str()));
+		}
+        if (mytype.startsWith("f")) {
+            SPIIF myfloat = ImageFactory::floatImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log, &msgs
+            );
+            _image.reset(new ImageAnalysis(myfloat));
+        }
+        else {
+            SPIIC mycomplex = ImageFactory::complexImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log, &msgs
+            );
+            _image.reset(new ImageAnalysis(mycomplex));
+        }
+       	return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -985,22 +1020,83 @@ image* image::decimate(
 			ThrowCc("Unsupported decimation method" + method);
 		}
 		std::tr1::shared_ptr<Record> regPtr(_getRegion(region, True));
-		ImageDecimator<Float> decimator(
-			_image->getImage(), regPtr.get(),
-			mask, outfile, overwrite
-		);
-		decimator.setFunction(f);
-		decimator.setAxis(axis);
-		decimator.setFactor(factor);
-		decimator.setStretch(stretch);
-		return new image(decimator.decimate(True));
+		vector<String> msgs;
+		{
+			msgs.push_back("Ran ia.decimate() on image " + name());
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("axis", axis));
+			inputs.push_back(make_pair("factor", factor));
+			inputs.push_back(make_pair("method", method));
+			inputs.push_back(make_pair("region", region));
+			inputs.push_back(make_pair("mask", mask));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("stretch", stretch));
+			msgs.push_back("ia.decimate" + _inputsString(inputs));
+		}
+		if (_image->isFloat()) {
+			SPCIIF myim = _image->getImage();
+			return _decimate(
+				myim, outfile, axis, factor, f,
+				regPtr, mask, overwrite, stretch, msgs
+			);
+		}
+		else {
+			SPCIIC myim = _image->getComplexImage();
+			return _decimate(
+				myim, outfile, axis, factor, f,
+				regPtr, mask, overwrite, stretch, msgs
+			);
+		}
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return new image();
+}
+
+String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
+	String out = "(";
+	String quote;
+	vector<std::pair<String, variant> >::const_iterator begin = inputs.begin();
+	vector<std::pair<String, variant> >::const_iterator iter = begin;
+	vector<std::pair<String, variant> >::const_iterator end = inputs.end();
+	while (iter != end) {
+		if (iter != begin) {
+			out += ", ";
+		}
+		quote = iter->second.type() == variant::STRING ? "'" : "";
+		out += iter->first + "=" + quote;
+		out += iter->second.toString();
+		out += quote;
+		iter++;
+	}
+	out += ")";
+	return out;
+}
+
+template <class T> image* image::_decimate(
+	const SPCIIT myimage,
+	const string& outfile, int axis, int factor,
+	ImageDecimatorData::Function f,
+	const std::tr1::shared_ptr<Record> region,
+	const string& mask, bool overwrite, bool stretch,
+	const vector<String>& msgs
+) const {
+	ImageDecimator<T> decimator(
+		myimage, region.get(),
+			mask, outfile, overwrite
+	);
+	decimator.setFunction(f);
+	decimator.setAxis(axis);
+	decimator.setFactor(factor);
+	decimator.setStretch(stretch);
+	decimator.addHistory(
+		LogOrigin("image", __func__), msgs
+	);
+	SPIIT out = decimator.decimate(True);
+	return new image(out);
 }
 
 ::casac::record*
@@ -1365,7 +1461,7 @@ bool image::fft(
 	const string& complexOut
 ) {
 	try {
-		_log << LogOrigin(_class, __FUNCTION__);
+		_log << LogOrigin(_class, __func__);
 		if (detached()) {
 			return false;
 		}
@@ -1473,7 +1569,7 @@ record* image::fitprofile(const string& box, const variant& region,
     const vector<double>& goodfwhmrange, const variant& sigma,
     const string& outsigma
 ) {
-	_log << LogOrigin(_class, __FUNCTION__);
+	_log << LogOrigin(_class, __func__);
 	if (detached()) {
 		return 0;
 	}
@@ -1659,7 +1755,7 @@ image* image::transpose(
 	const variant& order
 ) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 
 		if (detached()) {
 			throw AipsError("No image specified to transpose");
@@ -1731,7 +1827,7 @@ image* image::transpose(
 	if (detached()) {
 		return 0;
 	}
-	_log << LogOrigin(_class, __FUNCTION__);
+	_log << LogOrigin(_class, __func__);
 
 	try {
 		ThrowIf(
@@ -1986,7 +2082,7 @@ image* image::pbcor(
 ) {
 	// Recover some pixels and their mask from a region in the image
 	try {
-		_log << LogOrigin(_class, __FUNCTION__);
+		_log << LogOrigin(_class, __func__);
 		if (detached()) {
 			return false;
 		}
@@ -2090,7 +2186,8 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 	const variant& vmask, int axis, bool drop,
 	bool overwrite, bool /* async */, bool stretch
 ) {
-	_log << LogOrigin(_class, __FUNCTION__);
+	LogOrigin lor(_class, __func__);
+	_log << lor;
 	if (detached()) {
 		throw AipsError("Unable to create image");
 		return 0;
@@ -2111,6 +2208,23 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 			);
 			axis = csys.spectralAxisNumber(False);
 		}
+		vector<String> msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__ << "() on image " << name();
+			msgs.push_back(os.str());
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("region", region));
+			inputs.push_back(make_pair("mask", vmask));
+			inputs.push_back(make_pair("axis", axis));
+			inputs.push_back(make_pair("drop", drop));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("stretch", stretch));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(os.str());
+		}
 		ImageHanningSmoother<Float> smoother(
 			_image->getImage(), myregion.get(),
 			mask, outfile, overwrite
@@ -2119,21 +2233,10 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		smoother.setDecimate(drop);
 		smoother.setStretch(stretch);
 		smoother.setDecimationFunction(ImageDecimatorData::NONE);
+		smoother.addHistory(lor, msgs);
 		return new image(smoother.smooth(True));
-		/*
-		tr1::shared_ptr<ImageInterface<Float> > pImOut(
-			_image->hanning(
-				outFile, *Region, mask, axis, drop,
-				overwrite, stretch
-			)
-		);
-		// Return handle to new file
-		casac::image *rstat = new image(pImOut);
-		if(!rstat)
-			throw AipsError("Unable create image");
-		return rstat;
-		*/
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -2164,7 +2267,7 @@ record* image::histograms(
 	const bool force, const bool disk,
 	const bool /* async */, bool stretch
 ) {
-	_log << LogOrigin(_class, __FUNCTION__);
+	_log << LogOrigin(_class, __func__);
 	if (detached()) {
 		return 0;
 	}
@@ -2212,7 +2315,7 @@ record* image::histograms(
 
 std::vector<std::string> image::history(bool list) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached()) {
 			return vector<string>();
 		}
@@ -2238,7 +2341,7 @@ bool image::insert(
 	const std::vector<double>& locate, bool verbose
 ) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached()) {
 			return 0;
 		}
@@ -2463,7 +2566,7 @@ image::moments(
 	const bool stretch, const bool /* async */
 ) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached()) {
 			return 0;
 		}
@@ -3385,7 +3488,7 @@ bool image::set(const ::casac::variant& vpixels, const int pixelmask,
 
 bool image::setbrightnessunit(const std::string& unit) {
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached()) {
 			return False;
 		}
@@ -3441,7 +3544,7 @@ bool image::sethistory(const std::string& origin,
 		return True;
 	}
 	catch (const AipsError& x) {
-		LogOrigin lor("image", "sethistory");
+		LogOrigin lor("image", __func__);
 		_log << lor << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3504,7 +3607,7 @@ bool image::setrestoringbeam(
 				log, channel, polarization
 			)
 		) {
-			_log << LogOrigin("image", __FUNCTION__);
+			_log << LogOrigin("image", __func__);
 			_stats.reset(0);
 			return True;
 		}
@@ -3707,8 +3810,8 @@ bool image::twopointcorrelation(
 	}
 }
 
-template<class T> tr1::shared_ptr<ImageInterface<T> > image::_subimage(
-	std::tr1::shared_ptr<ImageInterface<T> > clone,
+template<class T> SPIIT image::_subimage(
+	SPIIT clone,
 	const String& outfile, const Record& region,
 	const String& mask, bool dropDegenerateAxes,
 	bool overwrite, bool list, bool stretch
@@ -3832,7 +3935,7 @@ image::topixel(const ::casac::variant& value) {
 	//  std::vector<double> rstat;
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached())
 			return rstat;
 
@@ -3856,7 +3959,7 @@ image::topixel(const ::casac::variant& value) {
 image::toworld(const ::casac::variant& value, const std::string& format) {
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		if (detached())
 			return rstat;
 
@@ -4122,10 +4225,53 @@ image* image::newimagefromarray(
 
 image* image::newimagefromshape(
 	const string& outfile, const vector<int>& shape,
-	const record& csys, const bool linear,
-	const bool overwrite, const bool log
+	const record& csys, bool linear,
+	bool overwrite, bool log, const string& type
 ) {
 	try {
+        LogOrigin lor("image", __func__);
+		_log << lor;
+		auto_ptr<Record> coordinates(toRecord(csys));
+        String mytype = type;
+        mytype.downcase();
+        ThrowIf(
+            ! mytype.startsWith("f") && ! mytype.startsWith("c"),
+            "Input parm type must start with either 'f' or 'c'"
+        );
+		vector<std::pair<LogOrigin, String> > msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__;
+			msgs.push_back(make_pair(lor, os.str()));
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("shape", shape));
+			inputs.push_back(make_pair("csys", csys));
+			inputs.push_back(make_pair("linear", linear));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("log", log));
+			inputs.push_back(make_pair("type", type));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(make_pair(lor, os.str()));
+		}
+        if (mytype.startsWith("f")) {
+            SPIIF myfloat = ImageFactory::floatImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log, &msgs
+            );
+            return new image(myfloat);
+        }
+        else {
+            SPIIC mycomplex = ImageFactory::complexImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log, &msgs
+            );
+            return new image(mycomplex);
+        }
+
+/*
+
 		image *rstat(0);
 		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
@@ -4141,7 +4287,9 @@ image* image::newimagefromshape(
 			rstat == 0, "Unable to create image"
 		);
 		return rstat;
-	} catch (const AipsError& x) {
+*/
+    }
+    catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -4279,7 +4427,7 @@ casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 		return qh.asQuantity();
 	}
 	catch (const AipsError& x) {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << LogOrigin("image", __func__);
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

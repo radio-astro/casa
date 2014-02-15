@@ -4859,14 +4859,15 @@ def imagetest(which=None, size=[32,32,8]):
             info('Testing Image type '+rec[mytype]['type'])
             #
             myim = rec[mytype]['tool']
+            nhist = len(myim.history(False))
             ok = myim.sethistory(history=hii)
             if not ok: fail()
             hio = myim.history(list=F)
             if not hio: fail()
-            if (len(hii)!=len(hio[0])):
+            if (len(hii)!=len(hio[nhist])):
                 fail('History length does not reflect')
             for i in range(len(hii)):
-                if (hii[i]!=hio[0][i]):
+                if (hii[i]!=hio[nhist][i]):
                     fail('History fields do not reflect')
             #
             ok = myim.setmiscinfo(mii)
