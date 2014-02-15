@@ -54,8 +54,8 @@ template <class T> ImageTask<T>::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False),
-	_verbosity(NORMAL), _logfile() {
+	_logfileSupport(False), _logfileAppend(False), _suppressHistory(False),
+	_verbosity(NORMAL), _logfile(), _newHistory() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }
@@ -232,6 +232,35 @@ template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
 	}
 }
 
+template <class T> void ImageTask<T>::addHistory(
+	const vector<std::pair<String, String> >& msgs
+) const {
+	_newHistory.insert(
+		_newHistory.end(), msgs.begin(), msgs.end()
+	);
+}
+
+template <class T> void ImageTask<T>::addHistory(
+	const LogOrigin& origin, const String& msg
+) const {
+	std::pair<String, String> x;
+	x.first = origin.fullName();
+	x.second = msg;
+	_newHistory.push_back(x);
+}
+
+template <class T> void ImageTask<T>::addHistory(
+	const LogOrigin& origin, const vector<String>& msgs
+) const {
+	std::pair<String, String> x;
+	x.first = origin.fullName();
+	foreach_(String m, msgs) {
+		x.second = m;
+		_newHistory.push_back(x);
+	}
+}
+
+
 template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
@@ -279,8 +308,16 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 		outImage.reset(tmp);
 	}
 	outImage->put(values == 0 ? image.get() : *values);
-	ImageHistory<T> history(outImage);
-	history.append(_image);
+	if (! _suppressHistory) {
+		ImageHistory<T> history(outImage);
+		history.append(_image);
+		vector<std::pair<String, String> >::const_iterator end = _newHistory.end();
+		vector<std::pair<String, String> >::const_iterator iter = _newHistory.begin();
+		while (iter != end) {
+			history.addHistory(iter->first, iter->second);
+			iter++;
+		}
+	}
 	return outImage;
 }
 

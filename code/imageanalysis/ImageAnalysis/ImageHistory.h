@@ -56,6 +56,10 @@ public:
 		const vector<string>& history
 	);
 
+    void addHistory(
+		const vector<std::pair<LogOrigin, String> >& history
+	);
+
 	vector<String> get(Bool list) const;
 	vector<string> getAsStdStrings(Bool list) const;
 

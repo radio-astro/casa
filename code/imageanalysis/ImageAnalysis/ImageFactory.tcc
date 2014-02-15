@@ -27,6 +27,8 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
+#include <coordinates/Coordinates/CoordinateUtil.h>
+#include <tables/LogTables/NewFile.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 
@@ -36,7 +38,8 @@ namespace casa {
 template <class T> SPIIT ImageFactory::createImage(
     const String& outfile,
     const CoordinateSystem& cSys, const IPosition& shape,
-    Bool log, Bool overwrite 
+    Bool log, Bool overwrite,
+    const vector<std::pair<LogOrigin, String> > *const &msgs
 ) {
     Bool blank = outfile.empty();
     if (! overwrite && ! blank) {
@@ -74,13 +77,59 @@ template <class T> SPIIT ImageFactory::createImage(
        << " of shape " << shape << " with "
        << whatType(x) << " valued pixels.";
     ImageHistory<T> hist(image);
+    if (msgs) {
+        hist.addHistory(*msgs);
+    }
     LogOrigin lor("ImageFactory", __func__);
     hist.addHistory(lor, os.str());
+    image->set(0.0);
     if (log) {
         LogIO mylog;
         mylog << LogIO::NORMAL << os.str() << LogIO::POST; 
     }
     return image;
 }
+
+template <class T> SPIIT ImageFactory::_fromShape(
+	const String& outfile, const Vector<Int>& shapeV,
+	const Record& coordinates, bool linear,
+	Bool overwrite, Bool verbose,
+    const vector<std::pair<LogOrigin, String> > *const &msgs
+) {
+	ThrowIf(
+		shapeV.nelements() == 0,
+		"The shape must have more than zero elements"
+	);
+	ThrowIf(
+		anyTrue(shapeV <= 0),
+		"All elements of shape must be positive"
+	);
+
+    CoordinateSystem mycsys;
+	std::auto_ptr<CoordinateSystem> csysPtr;
+
+	if (coordinates.empty()) {
+		mycsys = CoordinateUtil::makeCoordinateSystem(
+			shapeV, linear
+		);
+		_centerRefPix(mycsys, shapeV);
+	}
+	else {
+		csysPtr.reset(
+			_makeCoordinateSystem(
+				coordinates, shapeV
+			)
+		);
+        mycsys = *csysPtr;
+	}
+
+	return createImage<T>(
+		outfile, mycsys, shapeV, verbose,
+		overwrite, msgs
+	);
+
+}
+
+
 }
 

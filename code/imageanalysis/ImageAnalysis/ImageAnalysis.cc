@@ -667,54 +667,6 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 	return rstat;
 }
 
-void ImageAnalysis::imagefromshape(
-	const String& outfile, const Vector<Int>& shapeV,
-	const Record& coordinates, const Bool linear,
-	const Bool overwrite, const Bool log,
-	const String& type
-) {
-	*_log << LogOrigin(className(), __func__);
-
-	ThrowIf(
-		shapeV.nelements() == 0,
-		"The shape must have more than zero elements"
-	);
-	ThrowIf(
-		anyTrue(shapeV <= 0),
-		"All elements of shape must be positive"
-	);
-
-	CoordinateSystem mycsys;
-	std::auto_ptr<CoordinateSystem> csysPtr;
-
-	if (coordinates.empty()) {
-		mycsys = CoordinateUtil::makeCoordinateSystem(
-			shapeV, linear
-		);
-		centreRefPix(mycsys, shapeV);
-	}
-	else {
-		csysPtr.reset(
-			makeCoordinateSystem(
-				coordinates, shapeV
-			)
-		);
-		mycsys = *csysPtr;
-	}
-
-	String error;
-	_make_image(
-		outfile, mycsys, shapeV, log,
-		overwrite, type
-	);
-	if (_imageFloat.get()) {
-		_imageFloat->set(0.0);
-	}
-	else {
-		_imageComplex->set(Complex(0.0, 0.0));
-	}
-}
-
 ImageInterface<Float> *
 ImageAnalysis::convolve(
 	const String& outFile, Array<Float>& kernelArray,
@@ -751,7 +703,6 @@ ImageAnalysis::convolve(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&region)),
 		region,
 		mask, _log.get(), False, AxesSpecifier(), stretch
 	);
@@ -1291,24 +1242,13 @@ Matrix<Float> ImageAnalysis::decompose(
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat,
 		Region, mask,
 		_log.get(), False, axesSpec, stretch
 	);
 	// Make finder
 	ImageDecomposer<Float> decomposer(subImage);
 
-	/*
-	 * We no longer allow negative thresholds.
-	// Set auto-threshold at 5-sigma
-	if (threshold <= 0.0) {
-		LatticeStatistics<Float> stats(subImage);
-		Array<Double> out;
-		//Bool ok = stats.getSigma (out, True); //what did this do?
-		// Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
-		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
-	}
-	*/
 	// Do it
 	decomposer.setDeblend(!simple);
 	decomposer.setDeblendOptions(threshold, nContour, minRange, nAxis);
@@ -1449,7 +1389,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat,
 		Region,
 		mask, _log.get(), False, axesSpec
 	);
@@ -1967,7 +1907,6 @@ Record ImageAnalysis::histograms(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&regionRec)),
 		regionRec,
 		sMask, _log.get(), False, AxesSpecifier(), extendMask
 	);
@@ -2192,13 +2131,11 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	String mask;
 	SubImage<Float> subRealImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False
 	);
 	SubImage<Float> subImagImage = SubImageFactory<Float>::createSubImage(
 		imagImage,
-		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, 0, False
 	);
@@ -2357,7 +2294,6 @@ Bool ImageAnalysis::modify(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask,  (list ? _log.get() : 0), True, AxesSpecifier(), extendMask
 	);
@@ -2396,7 +2332,6 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpec
 	);
@@ -2841,7 +2776,6 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
 		(list ? _log.get() : 0), _imageFloat->coordinates(), _imageFloat->shape(),
-		//*ImageRegion::tweakedRegionRecord(&region)
 		region
 	);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(_imageFloat->coordinates(),
@@ -3033,7 +2967,6 @@ ImageInterface<Float>* ImageAnalysis::rebin(
 		axesSpecifier = AxesSpecifier(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpecifier, extendMask
 	);
@@ -3126,7 +3059,6 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	AxesSpecifier axesSpecifier;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpecifier, extendMask
 	);
@@ -3346,7 +3278,6 @@ Bool ImageAnalysis::replacemaskedpixels(
 	}
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		pRegion,
 		maskRegion, (list ? _log.get() : 0), True,
 		AxesSpecifier(), extendMask
@@ -3503,7 +3434,6 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	Record *tmpRegion = new Record(p_Region);
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
 		(list ? _log.get() : 0), _imageFloat->coordinates(), _imageFloat->shape(),
-		//*(ImageRegion::tweakedRegionRecord(tmpRegion))
 		*tmpRegion
 	);
 	delete tmpRegion;
@@ -3631,7 +3561,6 @@ Bool ImageAnalysis::twopointcorrelation(
 	AxesSpecifier axesSpecifier;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&theRegion)),
 		theRegion,
 		mask, _log.get(), False, axesSpecifier, stretch
 	);
@@ -3740,7 +3669,6 @@ Bool ImageAnalysis::tofits(
 	}
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		pRegion,
 		mask, _log.get(), False, axesSpecifier, stretch
 	);
@@ -3940,87 +3868,17 @@ void ImageAnalysis::_make_image(
 
     if (myType == "f") {
 	    _imageFloat = ImageFactory::createImage<Float>(
-            outfile, csys, shape, log, overwrite
+            outfile, csys, shape, log, overwrite, 0
        );
     }
     else {
 	    _imageComplex = ImageFactory::createImage<Complex>(
-            outfile, csys, shape, log, overwrite
+            outfile, csys, shape, log, overwrite, 0
         );
     }
 }
-/*
-void ImageAnalysis::_make_image(
-	const String& outfile,
-	const CoordinateSystem& cSys, const IPosition& shape,
-	Bool log, Bool overwrite, const String& type
-) {
-	String myType = type;
-	myType.downcase();
-	ThrowIf(
-		myType != "c" && myType != "f",
-		"type must be either 'c' (complex) or 'f' (float)"
-	);
-	myType.downcase();
-	// Verify outfile
-	if (!overwrite && !outfile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		ThrowIf(
-			!validfile.valueOK(outfile, errmsg),
-			errmsg
-		);
-	}
-	_imageFloat.reset();
-	_imageComplex.reset();
 
-	// This function is generally only called for creating new images,
-	// but you never know, so add histograms protection
-	deleteHist();
-
-	ThrowIf(
-		shape.nelements() != cSys.nPixelAxes(),
-		"Supplied CoordinateSystem and image shape are inconsistent"
-	);
-	*_log << LogOrigin(className(), __func__);
-	if (outfile.empty()) {
-		if (myType == "f") {
-			_imageFloat.reset(new TempImage<Float> (shape, cSys));
-		}
-		else {
-			_imageComplex.reset(new TempImage<Complex> (shape, cSys));
-		}
-		ThrowIf(
-			! _imageFloat && ! _imageComplex,
-			"Failed to create TempImage"
-		);
-		if (log) {
-			*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< shape << " with " << (_imageFloat ? "Float " : "Complex ")
-				<< "valued pixels" << LogIO::POST;
-		}
-	}
-	else {
-		if (myType == "f") {
-			_imageFloat.reset(new PagedImage<Float> (shape, cSys, outfile));
-		}
-		else {
-			_imageComplex.reset(new PagedImage<Complex> (shape, cSys, outfile));
-		}
-		ThrowIf(
-			! _imageFloat && ! _imageComplex,
-			"Failed to create PagedImage"
-		);
-		if (log) {
-			*_log << LogIO::NORMAL << "Creating image '" << outfile
-				<< "' of shape " << shape << " with "
-				<< (_imageFloat ? "Float " : "Complex ")
-				<< "valued pixels"<< LogIO::POST;
-		}
-	}
-}
-*/
-tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::makeExternalImage(
+SPIIF ImageAnalysis::makeExternalImage(
 	const String& fileName, const CoordinateSystem& cSys,
 	const IPosition& shape, const ImageInterface<Float>& inImage,
 	LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask
@@ -4490,82 +4348,6 @@ ImageAnalysis::newimagefromarray(const String& outfile,
 	}
     outImage->flush();
 	return outImage.release();
-}
-
-ImageInterface<Float> *
-ImageAnalysis::newimagefromshape(const String& outfile,
-		const Vector<Int>& shapeV, const Record& coordinates,
-		const Bool linear, const Bool overwrite, const Bool log) {
-	ImageInterface<Float>* outImage = 0;
-
-	try {
-		*_log << LogOrigin(className(), __func__);
-		// Verify outfile
-		if (!overwrite && !outfile.empty()) {
-			NewFile validfile;
-			String errmsg;
-			if (!validfile.valueOK(outfile, errmsg)) {
-				*_log << LogIO::WARN << errmsg << LogIO::POST;
-				return outImage;
-			}
-		}
-		// Some protection
-		if (shapeV.nelements() == 0) {
-			*_log << "The shape is invalid" << LogIO::EXCEPTION;
-		}
-		for (uInt i = 0; i < shapeV.nelements(); i++) {
-			if (shapeV(i) <= 0) {
-				*_log << "The shape is invalid" << LogIO::EXCEPTION;
-			}
-		}
-		CoordinateSystem cSys;
-		if (coordinates.nfields() > 0) {
-			// Make with supplied CoordinateSystem if record not empty
-			PtrHolder<CoordinateSystem> pCS(makeCoordinateSystem(coordinates,
-					shapeV));
-			cSys = *(pCS.ptr());
-		} else {
-			// Make default CoordinateSystem
-			cSys = CoordinateUtil::makeCoordinateSystem(shapeV, linear);
-			centreRefPix(cSys, shapeV);
-		}
-		uInt ndim = shapeV.nelements();
-		if (ndim != cSys.nPixelAxes()) {
-			*_log << LogIO::SEVERE
-					<< "Supplied CoordinateSystem and image shape are inconsistent"
-					<< LogIO::POST;
-			return outImage;
-		}
-		//
-		if (outfile.empty()) {
-			outImage = new TempImage<Float> (IPosition(shapeV), cSys);
-			if (outImage == 0) {
-				*_log << LogIO::SEVERE << "Failed to create TempImage"
-						<< LogIO::POST;
-				return outImage;
-			}
-			if (log) {
-				*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-						<< outImage->shape() << LogIO::POST;
-			}
-		} else {
-			outImage = new PagedImage<Float> (IPosition(shapeV), cSys, outfile);
-			if (outImage == 0) {
-				*_log << LogIO::SEVERE << "Failed to create PagedImage"
-						<< LogIO::POST;
-				return outImage;
-			}
-			if (log) {
-				*_log << LogIO::NORMAL << "Creating image '" << outfile
-						<< "' of shape " << outImage->shape() << LogIO::POST;
-			}
-		}
-		outImage->set(0.0);
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-	}
-	return outImage;
 }
 
 ImageInterface<Float> *

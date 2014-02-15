@@ -130,13 +130,6 @@ class ImageAnalysis
                         const Bool dropdeg = False, 
                         const Bool overwrite = False);
 
-    void imagefromshape(
-    	const String& outfile, const Vector<Int>& shape,
-    	const Record& csys, const Bool linear=True,
-    	const Bool overwrite=False, const Bool log=True,
-    	const String& type="f"
-    );
-
     ImageInterface<Float> * convolve(
     	const String& outfile,
         Array<Float>& kernel,
@@ -463,13 +456,6 @@ class ImageAnalysis
                                               Array<Float> & pixelsArray,
                                               const Record& csys,
                                               const Bool linear = False,
-                                              const Bool overwrite = False,
-                                              const Bool log = True);
-
-    ImageInterface<Float> * newimagefromshape(const String& outfile,
-                                              const Vector<Int>& shape, 
-                                              const Record& csys,
-                                              const Bool linear = True, 
                                               const Bool overwrite = False,
                                               const Bool log = True);
 

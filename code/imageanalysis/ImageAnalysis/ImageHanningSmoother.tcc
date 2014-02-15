@@ -66,7 +66,9 @@ template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
 		decimator.setFunction(ImageDecimatorData::NONE);
 		decimator.setAxis(axis);
 		decimator.setFactor(2);
+		decimator.suppressHistoryWriting(True);
 		out = decimator.decimate(True);
+		this->addHistory(decimator.getHistory());
 	}
 	return out;
 }

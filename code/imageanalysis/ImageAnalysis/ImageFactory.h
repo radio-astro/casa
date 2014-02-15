@@ -30,9 +30,17 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
+#include <casa/BasicSL/String.h>
+#include <casa/Logging/LogOrigin.h>
 #include <casa/namespace.h>
-
+#include <utility>
+#include <vector>
 namespace casa {
+
+class CoordinateSystem;
+class IPosition;
+class Record;
+template <class T> class Vector;
 
 class ImageFactory {
 	// <summary>
@@ -53,7 +61,6 @@ class ImageFactory {
 
 public:
 
-	// destructor
     ~ImageFactory() {};
 
     // Create a TempImage if outfile is empty, otherwise a PagedImage.
@@ -62,11 +69,49 @@ public:
     template <class T> static SPIIT createImage(
         const String& outfile,
         const CoordinateSystem& cSys, const IPosition& shape,
-        Bool log, Bool overwrite
+        Bool log, Bool overwrite,
+        const std::vector<std::pair<LogOrigin, String> > *const &msgs
+    );
+
+    // create an image with the specified shape and specified coordinate system.
+    // If outfile is blank, the returned object is a TempImage, PagedImage otherwise.
+    // If csys is empty,
+    // a default coordiante system is attached to the image, and if linear
+    // is True, it has linear coordinates in place of the direction coordinate.
+
+    static SPIIF floatImageFromShape(
+    	const String& outfile, const Vector<Int>& shape,
+    	const Record& csys, Bool linear=True,
+    	Bool overwrite=False, Bool verbose=True,
+        const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
+    );
+
+    static SPIIC complexImageFromShape(
+    	const String& outfile, const Vector<Int>& shape,
+    	const Record& csys, Bool linear=True,
+    	Bool overwrite=False, Bool verbose=True,
+        const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
     );
 
 private:
 	ImageFactory() {};
+
+	template <class T> static SPIIT _fromShape(
+		const String& outfile, const Vector<Int>& shape,
+		const Record& csys, Bool linear,
+		Bool overwrite, Bool verbose,
+        const std::vector<std::pair<LogOrigin, String> > *const &msgs
+	);
+
+	static void _centerRefPix(
+		CoordinateSystem& csys, const IPosition& shape
+	);
+
+    // Convert a Record to a CoordinateSystem
+    static CoordinateSystem* _makeCoordinateSystem(
+        const casa::Record& cSys,
+        const casa::IPosition& shape
+    );
 };
 }
 #ifndef AIPS_NO_TEMPLATE_SRC

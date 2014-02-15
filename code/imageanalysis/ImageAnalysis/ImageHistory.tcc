@@ -30,6 +30,30 @@ template<class T> void ImageHistory<T>::addHistory(
 }
 
 template<class T> void ImageHistory<T>::addHistory(
+    const vector<std::pair<LogOrigin, String> >& history
+) {
+	LoggerHolder& log = _image->logger();
+	//
+	// Make sure we can write into the history table if needed
+	//
+	log.reopenRW();
+	LogSink& sink = log.sink();
+    vector<std::pair<LogOrigin, String> >::const_iterator begin = history.begin();
+    vector<std::pair<LogOrigin, String> >::const_iterator iter = begin;
+    vector<std::pair<LogOrigin, String> >::const_iterator end = history.end();
+    while (iter != end) {
+		String x = iter->second;
+		x.trim();
+		if (! x.empty()) {
+			LogMessage msg(iter->second, iter->first);
+            sink.postLocally(msg);
+            iter++;
+		}
+	}
+}
+
+
+template<class T> void ImageHistory<T>::addHistory(
 	const String& origin,
 	const vector<String>& history
 ) {

@@ -154,13 +154,13 @@ template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
 			stop[_axis] += _factor;
 		}
 	}
+	ostringstream os;
+	os << "Decimated axis " << _axis << " by keeping only every nth plane, "
+		<< "where n=" << _factor << ".";
+	this->addHistory(lor, os.str());
 	SPIIT tmp(
 		this->_prepareOutputImage(out, 0, outMask.get())
 	);
-	ImageHistory<T> hist(tmp);
-	LogIO log = hist.getLogSink();
-	log << lor << LogIO::NORMAL << "Decimated axis " << _axis
-		<< " by keeping only every " << _factor << " planes.";
 	if (wantReturn) {
 		return tmp;
 	}

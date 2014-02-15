@@ -39,6 +39,7 @@ ImageAnalysis/AntennaResponses.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapserData.cc
+ImageAnalysis/ImageFactory2.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
