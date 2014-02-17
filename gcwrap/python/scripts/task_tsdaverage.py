@@ -6,7 +6,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdaverage(infile, antenna, field, spw, scan, pol, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, kernel, kwidth, chanwidth, verify, plotlevel, outfile, outform, overwrite):
+def tsdaverage(infile, antenna, field, spw, scan, pol, timeaverage, tweight, scanaverage, averageall, polaverage, pweight, kernel, kwidth, chanwidth, verify, plotlevel, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdaverage_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -51,6 +51,8 @@ class sdaverage_worker(sdutil.sdtask_template):
         # set various attributes to self.scan
         self.set_to_scan()
 
+        #WORKAROUND for new tasks (in future this should be done in sdutil)
+        if not self.timeaverage: self.scanaverage = False
         #Average within each scan
         self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight, self.averageall)
 

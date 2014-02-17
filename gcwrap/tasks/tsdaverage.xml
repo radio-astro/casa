@@ -73,12 +73,6 @@ and/or polarization.
 	    <value></value>
     </param>
 
-    <param type="bool" name="scanaverage">
-            <shortdescription>average integs within scans (True,False) </shortdescription>
-            <description>average integs within scans (True,False). If True, spectra are NOT averaged over different scan numbers.</description>
-            <value>False</value>
-    </param>
-
     <param type="bool" name="timeaverage">
             <description>average scans over time (True,False)</description>
             <value>False</value>
@@ -95,6 +89,12 @@ and/or polarization.
 	    <value>tintsys</value>
 	    <value>median</value>
             </allowed>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam="true">
+            <shortdescription>average integs within scans (True,False) </shortdescription>
+            <description>average integs within scans (True,False). If True, spectra are NOT averaged over different scan numbers.</description>
+            <value>False</value>
     </param>
 
     <param type="bool" name="averageall" subparam="true">
@@ -182,6 +182,7 @@ and/or polarization.
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 			<default param="tweight"><value type='string'>tintsys</value></default>
+                        <default param="scanaverage"><value type='bool'>False</value></default>
                         <default param="averageall"><value type='bool'>False</value></default>
                 </equals>
             </when>
@@ -224,109 +225,108 @@ and/or polarization.
   <example>
 
 	Keyword arguments:
-        infile -- name of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
-        field -- Select data by field ID(s) or name(s)
-                default: '' (use all fields)
-                example: 'FLS3a*'
-                this selection is in addition to scan, spw, and pol
-        spw -- Select data by IF ids (spwctral window)
-                default: '' (use all IFs)
-                example: '15'
-                NOTE this task only supports IF id selction and ignores channel
-                selection.
-                this selection is in addition to scanlist, field, and pollist
-        scan -- Select data by scan number range
-                default: '' (use all scans)
-                example: '21~24
-                this selection is in addition to field, spw, and pol
-        pol -- Select data by polarization ids
-                default: '' (use all polarizations)
-                example: '1'
-                NOTE selection by the name of correlation (e.g, 'XX') is NOT
-                supported in this task.
-                this selection is in addition to scan, field, and spw
+infile -- name of input SD dataset
+antenna -- antenna name or id (only effective for MS input). 
+field -- Select data by field ID(s) or name(s)
+        default: '' (use all fields)
+        example: 'FLS3a*'
+        this selection is in addition to scan, spw, and pol
+spw -- Select data by IF ids (spwctral window)
+        default: '' (use all IFs)
+        example: '15'
+        NOTE this task only supports IF id selction and ignores channel
+        selection.
+        this selection is in addition to scanlist, field, and pollist
+scan -- Select data by scan number range
+        default: '' (use all scans)
+        example: '21~24
+        this selection is in addition to field, spw, and pol
+pol -- Select data by polarization ids
+        default: '' (use all polarizations)
+        example: '1'
+        NOTE selection by the name of correlation (e.g, 'XX') is NOT
+        supported in this task.
+        this selection is in addition to scan, field, and spw
+timeaverage -- average times for multiple scan cycles
+        options: (bool) True,False
+        default: False
+        example: if True, this happens after calibration
+
+    &gt;&gt;&gt;timeaverage expandable parameter
+        tweight -- weighting for time average
+                options: 'var'   (1/var(spec) weighted)
+                         'tsys'  (1/Tsys**2 weighted)
+                         'tint'  (integration time weighted)
+                         'tintsys'  (Tint/Tsys**2)
+                         'median'  ( median averaging)
+                default: 'tintsys'
         scanaverage -- average integrations within scans
                 options: (bool) True,False
                 default: False
-        timeaverage -- average times for multiple scan cycles
-                options: (bool) True,False
-                default: False
-                example: if True, this happens after calibration
+        averageall -- average multi-resolution spectra
+                       spectra are averaged by referring 
+                       their frequency coverage
+                 default: False
 
-            &gt;&gt;&gt;timeaverage expandable parameter
-                 tweight -- weighting for time average
-                         options: 'var'   (1/var(spec) weighted)
-                                  'tsys'  (1/Tsys**2 weighted)
-                                  'tint'  (integration time weighted)
-                                  'tintsys'  (Tint/Tsys**2)
-                                  'median'  ( median averaging)
-                         default: 'tintsys'
+polaverage -- average polarizations
+        options: (bool) True,False
+        default: False
 
-                 averageall -- average multi-resolution spectra
-                               spectra are averaged by referring 
-                               their frequency coverage
-                         default: False
+    &gt;&gt;&gt;polaverage expandable parameter
+        pweight -- weighting for polarization average
+                options: 'var'  (1/var(spec) weighted)
+                         'tsys' (1/Tsys**2 weighted)
+                default: 'tsys'
 
-        polaverage -- average polarizations
-                options: (bool) True,False
-                default: False
+kernel -- type of spectral smoothing
+        options: '', 'hanning','gaussian','boxcar','regrid'
+        default: '' (no smoothing)
 
-            &gt;&gt;&gt;polaverage expandable parameter
-                 pweight -- weighting for polarization average
-                         options: 'var'  (1/var(spec) weighted)
-                                  'tsys' (1/Tsys**2 weighted)
-                         default: 'tsys'
+    &gt;&gt;&gt;kernel expandable parameter
+        kwidth -- width of spectral smoothing kernel
+                options: (int) in channels 
+                default: 5
+	        example: 5 or 10 seem to be popular for boxcar
+	                 ignored for hanning (fixed at 5 chans)
+                         (0 will turn off gaussian or boxcar)
+         chanwidth -- channel width of regridded spectra
+	         default: '5' (in channels)
+	         example: '500MHz', '0.2km/s'
 
-	kernel -- type of spectral smoothing
-	        options: '', 'hanning','gaussian','boxcar','regrid'
-	        default: '' (no smoothing)
-
-            &gt;&gt;&gt;kernel expandable parameter
-                 kwidth -- width of spectral smoothing kernel
-	                 options: (int) in channels 
-	                 default: 5
-		         example: 5 or 10 seem to be popular for boxcar
-		                  ignored for hanning (fixed at 5 chans)
-                                  (0 will turn off gaussian or boxcar)
-                 chanwidth -- channel width of regridded spectra
-	                 default: '5' (in channels)
-		         example: '500MHz', '0.2km/s'
-
-        verify -- interactively verify the results of smoothing for each
-                  spectrum.
-                  When verify = True, for each input spectrum, spectra
-                  before and after the smoothing are displayed in a plot
-                  window. At the prompt there are four choices of action:
-                  'Y' (accept the smoothing and continue to the next input
-                  spectrum), 'N' (reject the smoothing and continue to the
-                  next input spectrum), 'A' (accept the current smoothing
-                  and continue non-interactively), and 'R' (reject the
-                  current smoothing and exit from smoothing).
-                  Note that when the smoothing is rejected by 'N' or 'R',
-                  no smoothing is done to the spectrum/spectra. 
-                options: (bool) True,False
-                default: False
-                Note: verification is not yet available for kernel='regrid'
-	outfile -- Name of output ASAP format(scantable) file
-	        default: '' (&lt;infile&gt;_sm)
-	outform -- format of output file
-                options: 'ASCII','SDFITS','MS','ASAP'
-                default: 'ASAP'
-                example: the ASAP format is easiest for further sd
-                         processing; use MS for CASA imaging.
-                         If ASCII, then will append some stuff to
-                         the outfile name
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
-                default: False
-                WARNING: if outform='ASCII', this parameter is ignored
-        plotlevel -- control for plotting of results
-	        options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
-		default: 0 (no plotting)
-		example: plotlevel&lt;0 as abs(plotlevel), e.g.
-		         -1 =&gt; hardcopy of final plot (will be named
-		         &lt;outfile&gt;_smspec.eps)
+verify -- interactively verify the results of smoothing for each
+          spectrum.
+          When verify = True, for each input spectrum, spectra
+          before and after the smoothing are displayed in a plot
+          window. At the prompt there are four choices of action:
+          'Y' (accept the smoothing and continue to the next input
+          spectrum), 'N' (reject the smoothing and continue to the
+          next input spectrum), 'A' (accept the current smoothing
+          and continue non-interactively), and 'R' (reject the
+          current smoothing and exit from smoothing).
+          Note that when the smoothing is rejected by 'N' or 'R',
+          no smoothing is done to the spectrum/spectra. 
+        options: (bool) True,False
+        default: False
+        Note: verification is not yet available for kernel='regrid'
+outfile -- Name of output ASAP format(scantable) file
+        default: '' (&lt;infile&gt;_sm)
+outform -- format of output file
+        options: 'ASCII','SDFITS','MS','ASAP'
+        default: 'ASAP'
+        example: the ASAP format is easiest for further sd
+                 processing; use MS for CASA imaging.
+                 If ASCII, then will append some stuff to
+                 the outfile name
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+        WARNING: if outform='ASCII', this parameter is ignored
+plotlevel -- control for plotting of results
+        options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
+	default: 0 (no plotting)
+	example: plotlevel&lt;0 as abs(plotlevel), e.g.
+	         -1 =&gt; hardcopy of final plot (will be named
+	         &lt;outfile&gt;_smspec.eps)
 
 
 WARNING for the GBT raw SDFITS format data as input:
