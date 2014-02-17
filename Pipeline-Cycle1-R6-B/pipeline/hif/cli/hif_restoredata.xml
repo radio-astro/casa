@@ -14,7 +14,7 @@
 	<value></value>
     </param>
 
-    <param type="stringArray" name="sessions" subparam="true">
+    <param type="stringArray" name="session" subparam="true">
 	<description>List of sessions one per visibility file</description>
 	<value></value>
     </param>
@@ -60,7 +60,7 @@
 	    </equals>
 	    <equals type="string" value="interactive">
 		<default param="vis"><value type="stringArray"></value></default>
-		<default param="sessions"><value type="stringArray"></value></default>
+		<default param="session"><value type="stringArray"></value></default>
 		<default param="products_dir"><value type="string"></value></default>
 		<default param="copytoraw"><value type="bool">False</value></default>
 		<default param="rawdata_dir"><value type="string"></value></default>
@@ -69,7 +69,7 @@
 	    </equals>
 	    <equals type="string" value="getinputs">
 		<default param="vis"><value type="stringArray"></value></default>
-		<default param="sessions"><value type="stringArray"></value></default>
+		<default param="session"><value type="stringArray"></value></default>
 		<default param="products_dir"><value type="string"></value></default>
 		<default param="copytoraw"><value type="bool">False</value></default>
 		<default param="rawdata_dir"><value type="string"></value></default>
@@ -113,9 +113,9 @@ vis -- List of raw visibility  data files to be restored. Assumed to be
    default: None
    example: vis=['uid___A002_X30a93d_X43e']
 
-sessions -- List of sessions one per visibility file. 
+session -- List of sessions one per visibility file. 
    default: None 
-   example: sessions=['session_3']
+   example: session=['session_3']
 
 products_dir -- Name of the data products directory. Currently not
    used.
