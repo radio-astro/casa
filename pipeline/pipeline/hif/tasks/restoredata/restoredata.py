@@ -403,8 +403,12 @@ class RestoreData(basetask.StandardTaskTemplate):
 	    vislist = session_vislists[index]
 
 	    # Open the tarfile and get the names
-	    tarfilename = os.path.join (inputs.rawdata_dir, ousid + session +
-	        '.caltables.tar.gz')
+	    if ousid == '':
+	        tarfilename = glob.glob(os.path.join (inputs.rawdata_dir, '*' + session +
+	            '.caltables.tar.gz'))[0]
+	    else:
+	        tarfilename = os.path.join (inputs.rawdata_dir, ousid + session +
+	            '.caltables.tar.gz')
 	    tar = tarfile.open(tarfilename, 'r:gz')
 	    tarmembers = tar.getmembers()
 
