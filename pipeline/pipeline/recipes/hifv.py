@@ -212,6 +212,12 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
     
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)
+        
+        # Make a list of expected point source calibrators to be cleaned
+        hif_makecleanlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode, imsize=[512])
+    
+        # Make clean images for the selected calibrators
+        hif_cleanlist (pipelinemode=pipelinemode)
     
     except Exception, e:
 	if str(e) == IMPORT_ONLY:
