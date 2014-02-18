@@ -211,149 +211,149 @@ for atmospheric optical depth correction.
   <returns type="void"/>
 
   <example>
-  Keyword arguments:
-        infile -- name of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
-        fluxunit -- units for line flux
-                options: 'K','Jy',''
-                default: '' (keep current fluxunit)
-                WARNING: For GBT data, see description below.
+Keyword arguments:
+infile -- name of input SD dataset
+antenna -- antenna name or id (only effective for MS input). 
+fluxunit -- units for line flux
+        options: 'K','Jy',''
+        default: '' (keep current fluxunit)
+        WARNING: For GBT data, see description below.
 
-            &gt;&gt;&gt; fluxunit expandable parameter
-                 telescopeparam -- the telescope characteristics
-                         options: (str) name or (list) list of gain info
-                         default: '' (none set)
-                         example: if telescopeparam='', it tries to get the telescope
-                                  name from the data.
-                                  Full antenna parameters (diameter,ap.eff.) known
-                                  to ASAP are
-                                  'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
-                                  'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
-                                  to 'K' first then convert to a new fluxunit.
-                                  telescopeparam=[104.9,0.43] diameter(m), ap.eff.
-                                  telescopeparam=[0.743] gain in Jy/K
-                                  telescopeparam='FIX' to change default fluxunit
-                                  see description below
+    &gt;&gt;&gt; fluxunit expandable parameter
+         telescopeparam -- the telescope characteristics
+                 options: (str) name or (list) list of gain info
+                 default: '' (none set)
+                 example: if telescopeparam='', it tries to get the telescope
+                          name from the data.
+                          Full antenna parameters (diameter,ap.eff.) known
+                          to ASAP are
+                          'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                          'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                          to 'K' first then convert to a new fluxunit.
+                          telescopeparam=[104.9,0.43] diameter(m), ap.eff.
+                          telescopeparam=[0.743] gain in Jy/K
+                          telescopeparam='FIX' to change default fluxunit
+                          see description below
 
-        field -- Select data by field ID(s) or name(s)
-                default: '' (use all fields)
-                example: 'FLS3a*'
-                this selection is in addition to scan, spw, and pol
-        spw -- Select data by IF ids (spectral window)
-                default: '' (use all IFs)
-                example: '15'
-                NOTE this task only supports IF id selction and ignores channel
-                selection.
-                this selection is in addition to scan, field, and pol
-        scan -- Select data by scan number range
-                default: '' (use all scans)
-                example: '21~24'
-                this selection is in addition to field, spw, and pol
-        pol -- Select data by polarization ids
-                default: '' (use all polarizations)
-                example: '1'
-                NOTE selection by the name of correlation (e.g, 'XX') is NOT
-                supported in this task.
-                this selection is in addition to scan, field, and spw
+field -- Select data by field ID(s) or name(s)
+        default: '' (use all fields)
+        example: 'FLS3a*'
+        this selection is in addition to scan, spw, and pol
+spw -- Select data by IF ids (spectral window)
+        default: '' (use all IFs)
+        example: '15'
+        NOTE this task only supports IF id selction and ignores channel
+        selection.
+        this selection is in addition to scan, field, and pol
+scan -- Select data by scan number range
+        default: '' (use all scans)
+        example: '21~24'
+        this selection is in addition to field, spw, and pol
+pol -- Select data by polarization ids
+        default: '' (use all polarizations)
+        example: '1'
+        NOTE selection by the name of correlation (e.g, 'XX') is NOT
+        supported in this task.
+        this selection is in addition to scan, field, and spw
 
-        calmode -- calibration mode
-                options: 'ps','nod','otf','otfraster',
-                         'fs','quotient','none'
-                default: 'ps'
-                example: choose mode 'none' if you have
-                         already calibrated and want to
-                         correct for atmospheric opacity defined by tau0.
-                WARNING: 'fsotf' is not implemented yet
-            &gt;&gt;&gt; calmode expandable parameter
-                 fraction -- Edge marker parameter of 'otf' and 'otfraster'.
-                             Specify a number of OFF integrations (at each
-                             side of the raster rows in 'otfraster' mode)
-                             as a fraction of total number of integrations.
-                             In 'otfraster' mode, number of integrations 
-                             to be marked as OFF, n_off, is determined by 
-                             the following formula,
+calmode -- calibration mode
+        options: 'ps','nod','otf','otfraster',
+                 'fs','quotient','none'
+        default: 'ps'
+        example: choose mode 'none' if you have
+                 already calibrated and want to
+                 correct for atmospheric opacity defined by tau0.
+        WARNING: 'fsotf' is not implemented yet
+    &gt;&gt;&gt; calmode expandable parameter
+         fraction -- Edge marker parameter of 'otf' and 'otfraster'.
+                     Specify a number of OFF integrations (at each
+                     side of the raster rows in 'otfraster' mode)
+                     as a fraction of total number of integrations.
+                     In 'otfraster' mode, number of integrations 
+                     to be marked as OFF, n_off, is determined by 
+                     the following formula,
 
-                                n_off = floor(fraction * n),
+                        n_off = floor(fraction * n),
 
-                             where n is number of integrations per raster 
-                             row. Note that n_off from both sides will be  
-                             marked as OFF so that twice of specified 
-                             fraction will be marked at most. For example, 
-                             if you specify fraction='10%', resultant 
-                             fraction of OFF integrations will be 20% at 
-                             most.
-                             In 'otf' mode, n_off is given by,
+                     where n is number of integrations per raster 
+                     row. Note that n_off from both sides will be  
+                     marked as OFF so that twice of specified 
+                     fraction will be marked at most. For example, 
+                     if you specify fraction='10%', resultant 
+                     fraction of OFF integrations will be 20% at 
+                     most.
+                     In 'otf' mode, n_off is given by,
 
-                                n_off = floor(fraction * n),
+                        n_off = floor(fraction * n),
 
-                             where n is number of total integrations.
-                             n_off is used as criterion of iterative marking
-                             process. Therefore, resulting total number of 
-                             OFFs will be larger than n_off. In practice,
-                             fraction is a geometrical fraction of edge
-                             region. Thus, if integrations are concentrated
-                             on edge region (e.g. some of Lissajous
-                             patterns), then resulting n_off may be 
-                             unexpectedly large.
-                         default: '10%'
-                         options: '20%' in string style or float value less 
-                                  than 1.0 (e.g. 0.15).
-                                  'auto' is available only for 'otfraster'. 
-                 noff -- Edge marking parameter for 'otfraster'.
-                         It is used to specify a number of OFF scans near 
-                         edge directly. Value of noff comes before setting 
-                         by fraction. Note that n_off from both sides will 
-                         be marked as OFF so that twice of specified noff 
-                         will be marked at most.
-                         default: -1 (use fraction)
-                         options: any positive integer
-                 width -- Edge marking parameter for 'otf'.
-                          Pixel width with respect to a median spatial 
-                          separation between neighboring two data in time.
-                          Default will be fine in most cases.
-                         default: 0.5
-                         options: float value
-                 elongated -- Edge marking parameter for 'otf'.
-                              Set True only if observed area is elongeted 
-                              in one direction.
-                         default: False
-                 markonly -- Set True if you want to save data just after 
-                             edge marking (i.e. uncalibrated data) to see 
-                             how OFF scans are defined.
-                         default: False
-        tau -- atmospheric optical depth
-                default: 0.0 (no correction)
-        verify -- interactively verify the results of calibration. Only
-                  effective if calmode = 'ps' (but not for ALMA data),
-                  'otf', and 'nod'.
-                  When verify = True, spectra before and after calibration
-                  are displayed in a plot for six spectra in scantable.
-                  At the prompt there are two choices of action:
-                  'Y' (accept the calibration) and 'N' (reject the calibration).
-                  Note that when calibration is rejected by 'N', no
-                  calibration is done to the whole scantable.
-                options: (bool) True,False
-                default: False
-        outfile -- Name of output file
-                default: '' (&lt;infile&gt;_cal)
-        outform -- format of output file
-                options: 'ASCII','SDFITS','MS','ASAP'
-                default: 'ASAP'
-                example: the ASAP format is easiest for further sd
-                         processing; use MS for CASA imaging.
-                         If ASCII, then will append some stuff to
-                         the outfile name
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
-                default: False
-                WARNING: if outform='ASCII', this parameter is ignored
-        plotlevel -- control for plotting of results
-                options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
-                default: 0 (no plotting)
-                example: plotlevel&lt;0 as abs(plotlevel), e.g.
-                         -1 =&gt; hardcopy of final plot (will be named
-                         &lt;outfile&gt;_calspec.eps)
-                WARNING: be careful plotting in fsotf mode!
+                     where n is number of total integrations.
+                     n_off is used as criterion of iterative marking
+                     process. Therefore, resulting total number of 
+                     OFFs will be larger than n_off. In practice,
+                     fraction is a geometrical fraction of edge
+                     region. Thus, if integrations are concentrated
+                     on edge region (e.g. some of Lissajous
+                     patterns), then resulting n_off may be 
+                     unexpectedly large.
+                 default: '10%'
+                 options: '20%' in string style or float value less 
+                          than 1.0 (e.g. 0.15).
+                          'auto' is available only for 'otfraster'. 
+         noff -- Edge marking parameter for 'otfraster'.
+                 It is used to specify a number of OFF scans near 
+                 edge directly. Value of noff comes before setting 
+                 by fraction. Note that n_off from both sides will 
+                 be marked as OFF so that twice of specified noff 
+                 will be marked at most.
+                 default: -1 (use fraction)
+                 options: any positive integer
+         width -- Edge marking parameter for 'otf'.
+                  Pixel width with respect to a median spatial 
+                  separation between neighboring two data in time.
+                  Default will be fine in most cases.
+                 default: 0.5
+                 options: float value
+         elongated -- Edge marking parameter for 'otf'.
+                      Set True only if observed area is elongeted 
+                      in one direction.
+                 default: False
+         markonly -- Set True if you want to save data just after 
+                     edge marking (i.e. uncalibrated data) to see 
+                     how OFF scans are defined.
+                 default: False
+tau -- atmospheric optical depth
+        default: 0.0 (no correction)
+verify -- interactively verify the results of calibration. Only
+          effective if calmode = 'ps' (but not for ALMA data),
+          'otf', and 'nod'.
+          When verify = True, spectra before and after calibration
+          are displayed in a plot for six spectra in scantable.
+          At the prompt there are two choices of action:
+          'Y' (accept the calibration) and 'N' (reject the calibration).
+          Note that when calibration is rejected by 'N', no
+          calibration is done to the whole scantable.
+        options: (bool) True,False
+        default: False
+outfile -- Name of output file
+        default: '' (&lt;infile&gt;_cal)
+outform -- format of output file
+        options: 'ASCII','SDFITS','MS','ASAP'
+        default: 'ASAP'
+        example: the ASAP format is easiest for further sd
+                 processing; use MS for CASA imaging.
+                 If ASCII, then will append some stuff to
+                 the outfile name
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+        WARNING: if outform='ASCII', this parameter is ignored
+plotlevel -- control for plotting of results
+        options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
+        default: 0 (no plotting)
+        example: plotlevel&lt;0 as abs(plotlevel), e.g.
+                 -1 =&gt; hardcopy of final plot (will be named
+                 &lt;outfile&gt;_calspec.eps)
+        WARNING: be careful plotting in fsotf mode!
 
 
 DESCRIPTION:
