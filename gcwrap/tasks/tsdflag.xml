@@ -10,14 +10,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tsdflag" startup="false" category="single dish" visibility="experimental">
 
-  <shortdescription>ASAP SD spectral flagging task </shortdescription>
+  <shortdescription>ASAP SD spectral spectral/row flagging task </shortdescription>
 
 
   <description>
-ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
-
 Task sdflag performs either interactive or non-interactive channel/row 
 based flagging on spectra. 
+
 Currently, there are three ways of non-interactive flagging available: 
 (1) channel or row based flagging by selecting spectra by field,
     lists of scan numbers, IF numbers, and polarization idices in
@@ -275,122 +274,122 @@ data format of infile, the data is overwritten with the new data format
   <returns type="void"/>
 
   <example>
-        Keyword arguments:
-        infile -- name of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
-        mode -- type of flag operation
-                options: (str) 'manual', 'clip', 'interactive', 'rowid'
-                default: 'manual'
+Keyword arguments:
+infile -- name of input SD dataset
+antenna -- antenna name or id (only effective for MS input). 
+mode -- type of flag operation
+        options: (str) 'manual', 'clip', 'interactive', 'rowid'
+        default: 'manual'
 
-             >>> common data selection parameters for all modes except mode='rowid'
-                field -- Select data by field ID(s) or name(s)
-                        default: '' (use all fields)
-                        example: 'FLS3a*'
-                        this selection is in addition to spw, timerange,
-                        scan, pol, and beam
-                spw -- Select data by IF ids (spwctral window) and channel range
-                        default: '' (use all IFs and channels)
-                        example: '15'
-                        this selection is in addition to field, timerange,
-                        scan, pol, and beam
-                timerange -- Select data based on time range:
-                    default = '' (all); example,
-                    timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
-                    Note: YYYY/MM/DD can be dropped as needed:
-                    timerange='09:14:0~09:54:0' # this time range
-                    timerange='09:44:00' # data within one integration of time
-                    timerange='&gt;10:24:00' # data after this time
-                    timerange='09:44:00+00:13:00' #data 13 minutes after time
-                scan -- Select data by scan number range
-                        default: '' (use all scans)
-                        example: '21~24'
-                        this selection is in addition to field, spw,
-                        timerange, pol, and beam
-                pol -- Select data by polarization ids
-                        default: '' (use all polarizations)
-                        example: '1'
-                        this selection is in addition to field, spw,
-                        timerange, scan, and beam
-                beam -- Select data by beam ids
-                        default: '' (use all beams)
-                        example: '0~3'
-                        this selection is in addition to field, spw,
-                        timerange, pol, and scan
+     >>> common data selection parameters for all modes except mode='rowid'
+        field -- Select data by field ID(s) or name(s)
+                default: '' (use all fields)
+                example: 'FLS3a*'
+                this selection is in addition to spw, timerange,
+                scan, pol, and beam
+        spw -- Select data by IF ids (spwctral window) and channel range
+                default: '' (use all IFs and channels)
+                example: '15'
+                this selection is in addition to field, timerange,
+                scan, pol, and beam
+        timerange -- Select data based on time range:
+            default = '' (all); example,
+            timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+            Note: YYYY/MM/DD can be dropped as needed:
+            timerange='09:14:0~09:54:0' # this time range
+            timerange='09:44:00' # data within one integration of time
+            timerange='&gt;10:24:00' # data after this time
+            timerange='09:44:00+00:13:00' #data 13 minutes after time
+        scan -- Select data by scan number range
+                default: '' (use all scans)
+                example: '21~24'
+                this selection is in addition to field, spw,
+                timerange, pol, and beam
+        pol -- Select data by polarization ids
+                default: '' (use all polarizations)
+                example: '1'
+                this selection is in addition to field, spw,
+                timerange, scan, and beam
+        beam -- Select data by beam ids
+                default: '' (use all beams)
+                example: '0~3'
+                this selection is in addition to field, spw,
+                timerange, pol, and scan
 
-             >>> mode='manual' expandable parameters
-                restfreq -- rest frequency
-                            available type includes float, int, string, list of float, 
-                            list of int, list of string, and list of dictionary. the 
-                            default unit of restfreq in case of float, int, or string 
-                            without unit is Hz. string input can be a value only 
-                            (treated as Hz) or a value followed by unit for which 'GHz',
-                            'MHz','kHz',and 'Hz' are available. 
-                            a list can be used to set different rest frequencies for 
-                            each IF. the length of list input must be nIF. dictionary 
-                            input should be a pair of molecule name and frequency with 
-                            keys of 'name' and 'value', respectively. values in the 
-                            dictionary input follows the same manner as for single 
-                            float or string input. 
-                            example: 345.796
-                                     '1420MHz'
-                                     [345.8, 347.0, 356.7]
-                                     ['345.8MHz', '347.0MHz', '356.7MHz']
-                                     [{'name':'CO','value':345}]
-                frame -- frequency frame for spectral axis
-                        options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
-                                 'GEO','GALACTO','LGROUP','CMB'
-                        default: currently set frame in scantable
-                        WARNING: frame='REST' not yet implemented
-                doppler -- doppler mode
-                        options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
-                        default: currently set doppler in scantable
-             >>> mode='clip' expandable parameters
-                clipminmax -- range of data that will NOT be flagged
-                        default: [] (means no clip operation)
-                        example: [0.0,1.5]
-                clipoutside -- clip OUTSIDE the range ?
-                        options: (bool)True,False
-                        default: True
-                        example: clipoutside=False means flag data WITHIN the range.
-             >>> mode='interactive' expandable parameters
-                showflagged -- show flagged data on plots
-                        default: False
-             >>> mode='rowid' expandable parameters
-                rows -- a list of row IDs to apply flag/unflag in the input scannable
-                        Note, this parameter is effective only when one or more row 
-                        IDs are given explicitly
-                        default: [] (means no selection)
-                        example: [0, 2, 3]
-        unflag -- flag or unflag
-                default: False (flag selected data)
-                options: (bool) True, False
-        outfile -- Name of output file
-                default: ''
-                Note: by default (outfile=''), actual output file name is set as follows: 
-                      (1) if overwrite=True (default), infile (input) will be overwritten.
-                      WARNING: If the formats of input and ouput files are different, 
-                               this causes complete loss of input file.
-                      (2) if overwrite=False, outfile will be &lt;infile&gt;_f. 
-        outform -- format of output file
-                options: 'ASCII','SDFITS','MS','ASAP'
-                default: 'ASAP'
-                example: the ASAP format is easiest for further sd
-                         processing; use MS for CASA imaging.
-                WARNING: Be sure outform is same as the input file format when you 
-                         overwrite the input file by overwrite=True and outfile='' (default).
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
+     >>> mode='manual' expandable parameters
+        restfreq -- rest frequency
+                    available type includes float, int, string, list of float, 
+                    list of int, list of string, and list of dictionary. the 
+                    default unit of restfreq in case of float, int, or string 
+                    without unit is Hz. string input can be a value only 
+                    (treated as Hz) or a value followed by unit for which 'GHz',
+                    'MHz','kHz',and 'Hz' are available. 
+                    a list can be used to set different rest frequencies for 
+                    each IF. the length of list input must be nIF. dictionary 
+                    input should be a pair of molecule name and frequency with 
+                    keys of 'name' and 'value', respectively. values in the 
+                    dictionary input follows the same manner as for single 
+                    float or string input. 
+                    example: 345.796
+                             '1420MHz'
+                             [345.8, 347.0, 356.7]
+                             ['345.8MHz', '347.0MHz', '356.7MHz']
+                             [{'name':'CO','value':345}]
+        frame -- frequency frame for spectral axis
+                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                         'GEO','GALACTO','LGROUP','CMB'
+                default: currently set frame in scantable
+                WARNING: frame='REST' not yet implemented
+        doppler -- doppler mode
+                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                default: currently set doppler in scantable
+     >>> mode='clip' expandable parameters
+        clipminmax -- range of data that will NOT be flagged
+                default: [] (means no clip operation)
+                example: [0.0,1.5]
+        clipoutside -- clip OUTSIDE the range ?
+                options: (bool)True,False
                 default: True
-                WARNING: input file is overwritten if overwrite=True and outfile='' (default). 
-                         This causes the complete loss of input file if the formats of
-                         input and ouput files are different.
-        plotlevel -- control for plotting of results
-                options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
-                default: 0 (no plotting)
-                example: plotlevel&lt;0 as abs(plotlevel), e.g.
-                         -1 => hardcopy of final plot (will be named
-                         &lt;outfile&gt;_flag.eps)
-                WARNING: be careful plotting in fsotf mode!
+                example: clipoutside=False means flag data WITHIN the range.
+     >>> mode='interactive' expandable parameters
+        showflagged -- show flagged data on plots
+                default: False
+     >>> mode='rowid' expandable parameters
+        rows -- a list of row IDs to apply flag/unflag in the input scannable
+                Note, this parameter is effective only when one or more row 
+                IDs are given explicitly
+                default: [] (means no selection)
+                example: [0, 2, 3]
+unflag -- flag or unflag
+        default: False (flag selected data)
+        options: (bool) True, False
+outfile -- Name of output file
+        default: ''
+        Note: by default (outfile=''), actual output file name is set as follows: 
+              (1) if overwrite=True (default), infile (input) will be overwritten.
+              WARNING: If the formats of input and ouput files are different, 
+                       this causes complete loss of input file.
+              (2) if overwrite=False, outfile will be &lt;infile&gt;_f. 
+outform -- format of output file
+        options: 'ASCII','SDFITS','MS','ASAP'
+        default: 'ASAP'
+        example: the ASAP format is easiest for further sd
+                 processing; use MS for CASA imaging.
+        WARNING: Be sure outform is same as the input file format when you 
+                 overwrite the input file by overwrite=True and outfile='' (default).
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: True
+        WARNING: input file is overwritten if overwrite=True and outfile='' (default). 
+                 This causes the complete loss of input file if the formats of
+                 input and ouput files are different.
+plotlevel -- control for plotting of results
+        options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
+        default: 0 (no plotting)
+        example: plotlevel&lt;0 as abs(plotlevel), e.g.
+                 -1 => hardcopy of final plot (will be named
+                 &lt;outfile&gt;_flag.eps)
+        WARNING: be careful plotting in fsotf mode!
 
   </example>
 

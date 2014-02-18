@@ -16,7 +16,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 Task sdreduce performs data selection, calibration, spectral averaging
 and/or baseline fitting for single-dish spectra. This task internally
 calls the tasks, sdcal, sdaverage, and sdbaseline and it can be used to
-run all the three steps in one task execution.\n
+run all the three steps in one task execution.
+
 It is possible to skip arbitrary operations by setting calmode = 'none'
 (for calibration), average=False (for time and polarization averaging),
 kernel = 'none' (for smoothing), and/or blfunc='none' (for baseline
