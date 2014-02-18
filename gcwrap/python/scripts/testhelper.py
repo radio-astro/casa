@@ -204,7 +204,7 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
 #                                        print tdata[j]
                                         differs = True
 ###                                elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
-                                elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
+                                elif (isinstance(rdata[j],list)) or (isinstance(rdata[j],np.ndarray)):
                                     for k in range(0,len(rdata[j])):
                                         if (abs(rdata[j][k]-tdata[j][k]) > tolerance*abs(rdata[j][k]+tdata[j][k])):
 #                                            print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
