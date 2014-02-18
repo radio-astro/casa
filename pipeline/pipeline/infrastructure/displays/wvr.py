@@ -271,7 +271,7 @@ class WVRPhaseVsBaselineChart(object):
                                                                  ax1.transData)
         ax1.axhspan(self._min_ratio, 1, facecolor='k', linewidth=0.0, alpha=0.04)
         ax1.text(0.012, numpy.sqrt(self._min_ratio), 'No Improvement', 
-                 transform=trans1, color='k', ha='left', va='top', size=8, alpha=0.4)
+                 transform=trans1, color='k', ha='left', va='center', size=8, alpha=0.4)
 
         ax1.axhline(y=self._median_ratio, color='k', ls='dotted', alpha=0.4)
         ax1.text(0.012, self._median_ratio, 'Median', transform=trans1,
