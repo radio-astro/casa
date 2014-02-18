@@ -636,7 +636,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
         spwinfo =  ms.getspectralwindowinfo()
         ms.close()
         spwid0 = spwinfo.keys()[0]
-        start = '%fHz' % (spwinfo[spwid0]['Chan1Freq']) 
+        start = '%fHz' % (spwinfo[spwid0]['Chan1Freq']+0.5*(spwinfo[spwid0]['TotalWidth']-spwinfo[spwid0]['ChanWidth'])) 
         step = '%fHz' % (spwinfo[spwid0]['TotalWidth'])
         res=tsdimaging(infiles=self.rawfile,mode=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
         self.assertEqual(res,None,
@@ -646,19 +646,14 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
         self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test201(self):
-        """Test 201: Full channel image (mode='frequency')"""
-        tb.open(self.rawfile)
-        if 'FLOAT_DATA' in tb.colnames():
-            nchan=tb.getcell('FLOAT_DATA').shape[1]
-        else:
-            nchan=tb.getcell('DATA').shape[1]
-        tb.close()
+        """Test 201: Full channel image (mode='frequency', nchan = -1)"""
+        nchan = -1
         start = ''
         step = ''
         res=tsdimaging(infiles=self.rawfile,mode=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
-        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,self.ms_nchan)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '17:32:18.690, +57.37.28.536, I, 1.419395e+09Hz',
                   'max': numpy.array([ 24.77152824]),
