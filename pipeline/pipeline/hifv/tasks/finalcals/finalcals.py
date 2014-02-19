@@ -453,12 +453,12 @@ class Finalcals(basetask.StandardTaskTemplate):
                          'field'          : field,
                          'spw'            : spw,
                          'selectdata'     : False,
-                         'modimage'       : model_image,
+                         'model'          : model_image,
                          'listmodels'     : False,
                          'scalebychan'    : True,
                          'fluxdensity'    : -1,
                          'standard'       : 'Perley-Butler 2010',
-                         'usescratch'     : False,
+                         'usescratch'     : True,
                          'async'          : False}
         
             job = casa_tasks.setjy(**task_args)

@@ -142,12 +142,12 @@ class Fluxgains(basetask.StandardTaskTemplate):
                          'field'          : field,
                          'spw'            : spw,
                          'selectdata'     : False,
-                         'modimage'       : modimage,
+                         'model'          : modimage,
                          'listmodels'     : False,
                          'scalebychan'    : True,
                          'fluxdensity'    : -1,
                          'standard'       : 'Perley-Butler 2010',
-                         'usescratch'     : False,
+                         'usescratch'     : True,
                          'async'          : False}
         
             job = casa_tasks.setjy(**task_args)

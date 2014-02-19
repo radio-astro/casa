@@ -59,8 +59,45 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hif_refant (pipelinemode=pipelinemode)
     
         #Heuristic flagging
-        hifv_hflag (pipelinemode=pipelinemode)
+        ##hifv_hflag (pipelinemode=pipelinemode)
+        
+        
+        
+        
+        # Initial test calibrations using bandpass and delay calibrators
+        hifv_testBPdcals (pipelinemode=pipelinemode)
+        #testBPdcals_plots()
     
+	# Identify and flag basebands with bad deformatters or rfi based on 
+        # bp table amps and phases
+        hifv_flagbaddef (pipelinemode=pipelinemode)
+
+	# Flag spws that have no calibration at this point
+        hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='testdelay.k', bpcaltable='testBPcal.b')
+
+	# Flag possible RFI on BP calibrator using rflag
+        hifv_checkflag(pipelinemode=pipelinemode)
+	
+	# DO SEMI-FINAL DELAY AND BANDPASS CALIBRATIONS
+        # (semi-final because we have not yet determined the spectral index
+        # of the bandpass calibrator)
+        hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
+        #semifinalBPdcals_plots1()
+
+	# Use flagdata rflag mode again on calibrators
+        hifv_checkflag(pipelinemode=pipelinemode, checkflagmode='semi')
+    
+        # Re-run semi-final delay and bandpass calibrations
+        hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
+        #semifinalBPdcals_plots2()
+        
+        # Flag spws that have no calibration at this point
+        hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='delay.k', bpcaltable='BPcal.b')
+        
+        
+        
+        
+        
         # Determine solint for scan-average equivalent
         hifv_solint(pipelinemode=pipelinemode)
     

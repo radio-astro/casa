@@ -329,14 +329,14 @@ class Fluxboot(basetask.StandardTaskTemplate):
                              'field'          : str(result[0]),
                              'spw'            : str(spw_i),
                              'selectdata'     : False,
-                             'modimage'       : '',
+                             'model'       : '',
                              'listmodels'     : False,
                              'scalebychan'    : True,
                              'fluxdensity'    : [ result[2], 0, 0, 0 ],
                              'spix'           : result[3],
                              'reffreq'        : str(result[5])+'GHz',
                              'standard'       : 'Perley-Butler 2010',
-                             'usescratch'     : False,
+                             'usescratch'     : True,
                              'async'          : False}
         
                 job = casa_tasks.setjy(**task_args)
