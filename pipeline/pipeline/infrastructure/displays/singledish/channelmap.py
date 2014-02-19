@@ -298,9 +298,6 @@ class SDChannelMapDisplay(SDImageDisplay):
                 t0 = time.time()
 
                 # Draw Total Intensity Map
-                #LOG.debug('masked_data=%s'%(masked_data.tolist()))
-                #LOG.debug('masked_data.shape=%s'%(list(masked_data.shape)))
-                #LOG.debug('ChanVelWidth=%s'%(ChanVelWidth))
                 Total = masked_data.sum(axis=2) * ChanVelWidth
                 Total = numpy.flipud(Total.transpose())
 
