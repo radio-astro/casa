@@ -61,6 +61,7 @@ class fluxscale1_test(unittest.TestCase):
         default('fluxscale')
 
     def tearDown(self):
+        #pass
         shutil.rmtree(self.msfile, ignore_errors=True)        
         os.system('rm -rf ngc5921*.fcal')
         os.system('rm -rf ngc5921*.gcal')
@@ -110,15 +111,6 @@ class fluxscale1_test(unittest.TestCase):
                        'fieldName': '1445+09900002_0', 
                        'fitFluxdErr': 0.0}, 
                        'freq': np.array([  1.41266507e+09]), 
-                 '2': {'fitRefFreq': 0.0, 
-                       'spidxerr': np.array([ 0.,  0.,  0.]), 
-                       'spidx': np.array([ 0.,  0.,  0.]), 
-                       '0': {'fluxdErr': np.array([ 0.00304653,  0.        ,  0.        ,  0.        ]), 
-                             'numSol': np.array([ 54.,   0.,   0.,   0.]), 
-                             'fluxd': np.array([ 0.00604538,  0.        ,  0.        ,  0.        ])}, 
-                       'fitFluxd': 0.0, 
-                        'fieldName': 'N5921_2', 
-                       'fitFluxdErr': 0.0}, 
                  'spwName': np.array(['none'],dtype='|S5'), 
                  'spwID': np.array([0], dtype=np.int32)}
 
