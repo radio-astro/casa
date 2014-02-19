@@ -92,6 +92,7 @@ class SDImportDataResults(basetask.Results):
         super(SDImportDataResults, self).__init__()
         self.mses = mses
         self.scantables = scantables
+        self.origin = {}
         
     def merge_with_context(self, context):
         if not isinstance(context.observing_run, domain.ScantableList):
@@ -241,9 +242,10 @@ class SDImportData(basetask.StandardTaskTemplate):
             self._do_importasdm(asdm)
         # calculate the filenames of the resultant measurement sets
         asdms = [os.path.join(inputs.output_dir, f) for f in to_convert]
+        converted_asdm_abspaths = [self._asdm_to_vis_filename(asdm) for asdm in asdms]
 
         # Now everything is in MS format, create a list of the MSes to import 
-        to_import.extend([self._asdm_to_vis_filename(asdm) for asdm in asdms])
+        to_import.extend(converted_asdm_abspaths)
         
         LOG.info('Creating pipeline objects for measurement set(s) {0}'
                   ''.format(', '.join(to_import)))
@@ -297,13 +299,17 @@ class SDImportData(basetask.StandardTaskTemplate):
             LOG.debug('Setting session to %s for %s' % (inputs.session, 
                                                         st.basename))
             st.session = inputs.session
+            
+        results = SDImportDataResults(observing_run_sd.measurement_sets,
+                                      observing_run_sd)#scantable_list)
+
         for ms in observing_run_sd.measurement_sets:
             LOG.debug('Setting session to %s for %s' % (inputs.session,
                                                         ms.basename))
             ms.session = inputs.session
+            ms_origin = 'ASDM' if ms.name in converted_asdm_abspaths else 'MS'
+            results.origin[ms.basename] = ms_origin
 
-        results = SDImportDataResults(observing_run_sd.measurement_sets,
-                                      observing_run_sd)#scantable_list)
         return results
     
     def analyse(self, results):
