@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdflag -->
 
-<task type="function" name="tsdflag2" startup="false" category="single dish" visibility="experimental">
+<task type="function" name="tsdflag" startup="false" category="single dish" visibility="experimental">
 
   <shortdescription>ASAP SD spectral flagging task </shortdescription>
 
@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <description>
 ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
 
-Task sdflag2 performs either interactive or non-interactive channel/row 
+Task sdflag performs either interactive or non-interactive channel/row 
 based flagging on spectra. 
 Currently, there are three ways of non-interactive flagging available: 
 (1) channel or row based flagging by selecting spectra by field,
@@ -41,13 +41,10 @@ based flagging by selecting 'region's of channels on Flag plotter.
 See the cookbook for details of how to select channel regions and spectra
 on the plotter.
 
-NOTE the task sdflag2 only modifies flag information, FLAGROW and FLAGTRA, 
+NOTE the task sdflag only modifies flag information, FLAGROW and FLAGTRA, 
 in the input scantable. This task keeps all records in input dataset. 
 Data selection parameters are used for selecting data to modify flag
 information.
-This behavior differs from the traditional flagging task, sdflag, in which
-selection parameters are interpreted as filtering parameters of which data
-to output.
 
 If plotlevel&gt;=1, the task asks you if you really apply the 
 flags before it is actually written to the data with a plot 
@@ -141,32 +138,32 @@ data format of infile, the data is overwritten with the new data format
     </param>
 
     <param type="string" name="frame" subparam="true">
-            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame)  Effective only when spw selection is in velocity unit.</shortdescription>
+            <shortdescription>frequency reference frame [\'LSRK\', \'TOPO\', \'LSRD\', \'BARY\', \'GALACTO\', \'LGROUP\', or \'CMB\'] (\'\'=current)</shortdescription>
 	    <description>frequency reference frame (\'\'=current) Effective only when spw selection is in velocity or frequency unit.</description>
 	    <value></value>
             <allowed kind="enum">
-                    <value>lsrk</value>
-                    <value>lsrd</value>
-                    <value>bary</value>
-                    <value>geo</value>
-                    <value>topo</value>
-                    <value>galacto</value>
-                    <value>lgroup</value>
-                    <value>cmb</value>
+                    <value>LSRK</value>
+                    <value>LSRD</value>
+                    <value>BARY</value>
+                    <value>GEO</value>
+                    <value>TOPO</value>
+                    <value>GALACTO</value>
+                    <value>LGROUP</value>
+                    <value>CMB</value>
                     <value></value>
            </allowed>
     </param>
 
     <param type="string" name="doppler" subparam="true">
-	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'] (\'\'=current).  Effective only when spw selection is in velocity unit.</shortdescription>
+	    <shortdescription>doppler convention [\'RADIO\'|\'OPTICAL\'|\'Z\'|\'BETA\'|\'GAMMA\'] (\'\'=current).  Effective only when spw selection is in velocity unit.</shortdescription>
 	    <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit.</description>
 	    <value></value>
             <allowed kind="enum">
-                    <value>radio</value>
-                    <value>optical</value>
-                    <value>z</value>
-                    <value>beta</value>
-                    <value>gamma</value>
+                    <value>RADIO</value>
+                    <value>OPTICAL</value>
+                    <value>Z</value>
+                    <value>BETA</value>
+                    <value>GAMMA</value>
                     <value></value>
            </allowed>
     </param>

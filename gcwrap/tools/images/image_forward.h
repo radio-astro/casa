@@ -2,14 +2,14 @@
 #include <coordsys_cmpt.h>
 #undef NO_INITIALIZE_STATICS
 #include <stdcasa/StdCasa/CasacSupport.h>
-#include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageTypedefs.h>
+#include <imageanalysis/ImageAnalysis/ImageDecimatorData.h>
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <memory>
 #include <tr1/memory>
 
-namespace casa 
-{
+namespace casa {
 	class LogIO;
 	class ImageAnalysis;
 	class ImageStatsCalculator;

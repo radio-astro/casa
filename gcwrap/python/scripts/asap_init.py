@@ -45,7 +45,7 @@ def asap_init():
     from tsdcal_cli import tsdcal_cli as tsdcal
     from tsdcal2_cli import tsdcal2_cli as tsdcal2
     from tsdfit_cli import tsdfit_cli as tsdfit
-    from tsdflag2_cli import tsdflag2_cli as tsdflag2
+    from tsdflag_cli import tsdflag_cli as tsdflag
     from tsdgrid_cli import tsdgrid_cli as tsdgrid
     from tsdimaging_cli import tsdimaging_cli as tsdimaging
     from tsdmath_cli import tsdmath_cli as tsdmath
@@ -79,7 +79,7 @@ def asap_init():
     myf['tsdcal']=tsdcal
     myf['tsdcal2']=tsdcal2
     myf['tsdfit']=tsdfit
-    myf['tsdflag2']=tsdflag2
+    myf['tsdflag']=tsdflag
     myf['tsdgrid']=tsdgrid
     myf['tsdimaging']=tsdimaging
     myf['tsdmath']=tsdmath
@@ -87,23 +87,23 @@ def asap_init():
     myf['tsdreduce']=tsdreduce
     myf['tsdsave']=tsdsave
     myf['tsdstat']=tsdstat
-#     ### WARNINGS for interface changes ###
-#     print("#"*50)
-#     print("")
-#     print("Major interface changes to SINGLE DISH tasks are")
-#     print("planned in CASA 4.3 release.")
-#     print("")
-#     print("For CASA 4.3 these interface changes will be implemented in new versions")
-#     print("of the existing tasks: sdbaseline, sdcal, sdcal2, sdfit, sdflag,")
-#     print("sdgrid, sdimaging, sdmath, sdplot, sdsave, and sdstat with the")
-#     print("current name preceded by the letter 't'. Additionally a new task called")
-#     print("tsdaverage will also be available. Task sdsmooth is incorporated in the")
-#     print("new task and will be removed. ")
-#     print("")
-#     print("The experimental tasks beginning with the letter 't' will replace the")
-#     print("current tasks in the next release. The current tasks will be renamed as")
-#     print("{taskname}_old and kept for one release period. Users are encouraged to")
-#     print("update your existing scripts.")
-#     print("")
-#     print("#"*50)
+    ### WARNINGS for interface changes ###
+    print("#"*50)
+    print("")
+    print("Major interface changes to SINGLE DISH tasks are")
+    print("planned in CASA 4.3 release.")
+    print("")
+    print("For CASA 4.3 these interface changes will be implemented in new versions")
+    print("of the existing tasks: sdbaseline, sdcal, sdcal2, sdfit, sdflag,")
+    print("sdgrid, sdimaging, sdmath, sdplot, sdsave, and sdstat with the")
+    print("current name preceded by the letter 't'. Additionally a new task called")
+    print("tsdaverage will also be available. Task sdsmooth is incorporated in the")
+    print("new task and will be removed. ")
+    print("")
+    print("The experimental tasks beginning with the letter 't' will replace the")
+    print("current tasks in the next release. The current tasks will be renamed as")
+    print("{taskname}_old and kept for one release period. Users are encouraged to")
+    print("update your existing scripts.")
+    print("")
+    print("#"*50)
 

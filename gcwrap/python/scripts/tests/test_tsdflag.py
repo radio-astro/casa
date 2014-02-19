@@ -8,11 +8,11 @@ import unittest
 import numpy
 
 import asap as sd
-from tsdflag2 import tsdflag2
+from tsdflag import tsdflag
 
-class sdflag2_test(unittest.TestCase):
+class sdflag_test(unittest.TestCase):
     """
-    Basic unit tests for task sdflag2.
+    Basic unit tests for task sdflag.
 
     The list of tests:
     test00   --- test channel flagging/unflagging
@@ -36,7 +36,7 @@ class sdflag2_test(unittest.TestCase):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(tsdflag2)
+        default(tsdflag)
 
     def tearDown(self):
         if os.path.exists(self.infile):
@@ -50,7 +50,7 @@ class sdflag2_test(unittest.TestCase):
         #maskflag = [[1,3],[10,15]]
 
         #flag
-        result = tsdflag2(infile=infile, mode=mode, spw=spw)
+        result = tsdflag(infile=infile, mode=mode, spw=spw)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -69,7 +69,7 @@ class sdflag2_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = tsdflag2(infile=infile, mode=mode, spw=spw,
+        result = tsdflag(infile=infile, mode=mode, spw=spw,
                          unflag=True)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
@@ -92,7 +92,7 @@ class sdflag2_test(unittest.TestCase):
         flagrow = '2,4'
 
         #flag
-        result = tsdflag2(infile=infile, mode=mode, row=flagrow)
+        result = tsdflag(infile=infile, mode=mode, row=flagrow)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -110,7 +110,7 @@ class sdflag2_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = tsdflag2(infile=infile, mode=mode, row=flagrow,
+        result = tsdflag(infile=infile, mode=mode, row=flagrow,
                          unflag=True)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
@@ -130,7 +130,7 @@ class sdflag2_test(unittest.TestCase):
         clipminmax = [-3.5, 3.5] #clip at 3.5-sigma level, i.e., flag channels at which abs(value) exceeds 3.5.
 
         #flag
-        result = tsdflag2(infile=infile, mode=mode, clipminmax=clipminmax)
+        result = tsdflag(infile=infile, mode=mode, clipminmax=clipminmax)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -156,7 +156,7 @@ class sdflag2_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = tsdflag2(infile=infile, mode=mode, clipminmax=clipminmax,
+        result = tsdflag(infile=infile, mode=mode, clipminmax=clipminmax,
                          unflag=True)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
@@ -179,14 +179,14 @@ class sdflag2_test(unittest.TestCase):
         spw = '10' # non-existent IF value
         mode = 'manual'
         try:
-            result = tsdflag2(infile=infile, mode=mode, spw=spw)
+            result = tsdflag(infile=infile, mode=mode, spw=spw)
         except Exception, e:
             pos = str(e).find('No valid spw')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
-class sdflag2_test_timerange(unittest.TestCase):
+class sdflag_test_timerange(unittest.TestCase):
     """
-    Basic unit tests for task sdflag2.
+    Basic unit tests for task sdflag.
 
     The list of tests:
     test01   --- test row flagging with selection by timerange 'T0~T1'
@@ -231,7 +231,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         table.putcol('TIME', time_column)
         table.close()
 
-        default(tsdflag2)
+        default(tsdflag)
 
     def tearDown(self):
         if os.path.exists(self.infile):
@@ -249,7 +249,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '2006/01/19/01:50:00~2006/01/19/02:24:00'
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -259,7 +259,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # only second row should be flagged
         timerange = '2006/01/19/02:16:45.0'
         flag_row_expected = numpy.array([False, True, False, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -269,7 +269,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # second and third rows should be flagged
         timerange = '2006/01/19/02:08:00.0+0:30:00'
         flag_row_expected = numpy.array([False, True, True, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -279,7 +279,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # fourth and subsequent rows should be flagged
         timerange = '>2006/01/19/02:42:00'
         flag_row_expected = numpy.array([False, False, False, True, True, True], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -289,7 +289,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # only first row should be flagged
         timerange = '<2006/01/19/02:00:00'
         flag_row_expected = numpy.array([True, False, False, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -300,7 +300,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         timerange = '>2006/01/19/02:42:00'
         flag_row_expected = numpy.array([False, False, False, False, True, False], dtype=bool)
         scanno = '4'
-        tsdflag2(infile=self.infile, mode='manual', scan=scanno, timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', scan=scanno, timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -317,7 +317,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         timerange = '>2006/01/19/02:42:00'
         field = 'SDFLAG2*'
         flag_row_expected = numpy.array([False, False, False, True, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', field=field, timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', field=field, timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -327,7 +327,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '01:50:00~02:24:00'
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -337,7 +337,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # fourth and subsequent rows should be flagged
         timerange = '>02:42:00'
         flag_row_expected = numpy.array([False, False, False, True, True, True], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -347,7 +347,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '2006/01/19/01:50:00~02:24:00'
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -369,7 +369,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '%s~%s'%(T0,T1)
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -389,7 +389,7 @@ class sdflag2_test_timerange(unittest.TestCase):
         T1 = '2006/01/19/02:08:45'
         timerange = '%s~%s'%(T0,T1)
         flag_row_expected = numpy.array([True, True, True, True, True, True], dtype=bool)
-        tsdflag2(infile=self.infile, mode='manual', timerange=timerange)
+        tsdflag(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -397,4 +397,4 @@ class sdflag2_test_timerange(unittest.TestCase):
         
         
 def suite():
-    return [sdflag2_test, sdflag2_test_timerange]
+    return [sdflag_test, sdflag_test_timerange]

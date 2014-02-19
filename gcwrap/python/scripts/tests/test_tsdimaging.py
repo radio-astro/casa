@@ -761,33 +761,37 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-#     def test300(self):
-#         """Test 300: Integrated image"""
-#         nchan = 1
-#         restfreq = '1420405800.0Hz'
-#         ms.open(self.rawfile)
-#         spwinfo =  ms.getspectralwindowinfo()
-#         ms.close()
-#         spwid0 = spwinfo.keys()[0]
-#         #rfreq = spwinfo[spwid0]['RefFreq']
-#         sfreq = me.frequency(spwinfo[spwid0]['Frame'],
-#                              qa.quantity(spwinfo[spwid0]['Chan1Freq'],'Hz'))
-#         svel = me.todoppler('radio', sfreq, restfreq)
-                    
-#         efreq = me.frequency(spwinfo[spwid0]['Frame'],
-#                              qa.add(sfreq['m0'], qa.quantity(spwinfo[spwid0]['TotalWidth'],'Hz')))
-#         evel = me.todoppler('radio', efreq, restfreq)
-#         start = qa.tos(evel['m0'])
-#         step = qa.tos(qa.sub(svel['m0'],evel['m0']))
-#         start = '-313825.4549816794m/s'
-#         step = '527137.547466598m/s'
+    def test300(self):
+        """Test 300: Integrated image"""
+        spwid = '0'
+        nchan = 1
+        restfreq = '1420405800.0Hz'
+        ms.open(self.rawfile)
+        spwinfo =  ms.getspectralwindowinfo()
+        ms.close()
+        chan0_freq = spwinfo[spwid]['Chan1Freq']
+        bandwidth = spwinfo[spwid]['TotalWidth']
+        chanwidth = spwinfo[spwid]['ChanWidth']
+        cent_freq = me.frequency(spwinfo[spwid]['Frame'],
+                                 qa.quantity(chan0_freq+0.5*(bandwidth-chanwidth),'Hz'))
+        cent_vel = me.todoppler('radio', cent_freq, restfreq)
+        # band-edge frequencies
+        start_freq = me.frequency(spwinfo[spwid]['Frame'],
+                                  qa.quantity(chan0_freq-0.5*chanwidth,'Hz'))
+        start_vel = me.todoppler('radio', start_freq, restfreq)
+        end_freq = me.frequency(spwinfo[spwid]['Frame'],
+                                qa.add(start_freq['m0'],
+                                       qa.quantity(bandwidth,'Hz')))
+        end_vel = me.todoppler('radio', end_freq, restfreq)
+        start = qa.tos(cent_vel['m0'])
+        step = qa.tos(qa.sub(start_vel['m0'],end_vel['m0']))
         
-#         res=tsdimaging(infiles=self.rawfile,mode=self.mode,restfreq=restfreq,spw='0',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
-#         self.assertEqual(res,None,
-#                          msg='Any error occurred during imaging')
-#         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
-#         refstats=self.statsinteg
-#         self._checkstats(self.outfile,refstats,ignoremask=True)
+        res=tsdimaging(infiles=self.rawfile,mode=self.mode,restfreq=restfreq,spw=spwid,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,nchan=nchan,start=start,step=step,minweight=self.minweight0)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
+        refstats=self.statsinteg
+        self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test301(self):
         """Test 301: Selected velocity image"""

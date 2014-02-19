@@ -109,7 +109,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        self.unflag_ms()
+#        self.unflag_ms()
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagdata)
 
     def setUp_data4tfcrop(self):
@@ -1204,7 +1205,7 @@ class test_alma(test_base):
         mycmd = ["mode='manual' antenna='DA41'",
                  "mode='manual' autocorr=True"]
         
-        # The first cmd only flags cross-correlations of DV01
+        # The first cmd only flags cross-correlations of DV41
         # The second cmd only flags auto-corrs of all antennas
         # that have processor type=CORRELATOR. The radiometer
         # data should not be flagged, which is in spw=0
