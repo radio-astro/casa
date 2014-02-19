@@ -84,7 +84,7 @@ public:
 	// padded image. The returned pointer is created via new(); it is the caller's
 	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
 	// a NULL pointer is returned and pointer deletion is performed internally.
-	ImageInterface<Float>* pad(const Bool wantReturn) const;
+	SPIIF pad(const Bool wantReturn) const;
 
 	// set the number of pixels to use for padding and their values and if they should be
 	// masked on each edge of the direction plane. <src>good</src>=True means the padding

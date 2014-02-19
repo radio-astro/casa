@@ -755,5 +755,6 @@ namespace casa {
 
 	FindSourcesDialog::~FindSourcesDialog() {
 		clearRegions();
+		delete fileModel;
 	}
 }

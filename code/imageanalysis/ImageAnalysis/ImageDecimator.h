@@ -3,6 +3,8 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
+#include <imageanalysis/ImageAnalysis/ImageDecimatorData.h>
+
 #include <casa/namespace.h>
 
 namespace casa {
@@ -28,12 +30,6 @@ template <class T> class ImageDecimator : public ImageTask<T> {
 
 public:
 
-	enum Function {
-		// just copy the nth plane as is, no function applied
-		NONE,
-		MEAN
-	};
-
 	ImageDecimator(
 		const SPCIIT image,
 		const Record *const region,
@@ -44,7 +40,7 @@ public:
 	// destructor
 	~ImageDecimator() {}
 
-	ImageInterface<T>* decimate(Bool wantReturn) const;
+	SPIIT decimate(Bool wantReturn) const;
 
 	String getClass() const { const static String s = "ImageDecimator"; return s; }
 
@@ -55,7 +51,7 @@ public:
 	void setAxis(uInt n);
 
 	// set the decimation function
-	void setFunction(Function f) { _function = f; }
+	void setFunction(ImageDecimatorData::Function f) { _function = f; }
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
@@ -70,7 +66,7 @@ protected:
 
 private:
 	uInt _axis, _factor;
-	Function _function;
+	ImageDecimatorData::Function _function;
 
 	// disallow default constructor
 	ImageDecimator();

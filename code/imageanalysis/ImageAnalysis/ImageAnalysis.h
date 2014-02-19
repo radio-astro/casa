@@ -40,6 +40,8 @@
 #include <casa/Utilities/PtrHolder.h>
 #include <measures/Measures/Stokes.h>
 
+#include <imageanalysis/ImageTypedefs.h>
+
 #include <memory>
 #include <tr1/memory>
 
@@ -127,13 +129,6 @@ class ImageAnalysis
                         Record& region, const String& mask, 
                         const Bool dropdeg = False, 
                         const Bool overwrite = False);
-
-    void imagefromshape(
-    	const String& outfile, const Vector<Int>& shape,
-    	const Record& csys, const Bool linear=True,
-    	const Bool overwrite=False, const Bool log=True,
-    	const String& type="f"
-    );
 
     ImageInterface<Float> * convolve(
     	const String& outfile,
@@ -270,8 +265,6 @@ class ImageAnalysis
         const Bool disk=False, const Bool extendMask=False
     );
 
-    Vector<String> history(const Bool list = False, const Bool browse = True);
-
     Bool insert(
     	const String& infile, Record& region,
     	const Vector<double>& locate, Bool verbose
@@ -387,8 +380,6 @@ class ImageAnalysis
 
     bool setcoordsys(const Record& csys);
 
-    bool sethistory(const String& origin, const Vector<String>& history);
-
     bool setmiscinfo(const Record& info);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -468,13 +459,6 @@ class ImageAnalysis
                                               const Bool overwrite = False,
                                               const Bool log = True);
 
-    ImageInterface<Float> * newimagefromshape(const String& outfile,
-                                              const Vector<Int>& shape, 
-                                              const Record& csys,
-                                              const Bool linear = True, 
-                                              const Bool overwrite = False,
-                                              const Bool log = True);
-
     ImageInterface<Float> * newimagefromfits(const String& outfile,
                                              const String& infile, 
                                              const Int whichrep = 0,
@@ -513,8 +497,11 @@ class ImageAnalysis
     Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // get the associated ImageInterface object
-    std::tr1::shared_ptr<const ImageInterface<Float> > getImage() const;
-    std::tr1::shared_ptr<const ImageInterface<Complex> > getComplexImage() const;
+    SPCIIF getImage() const;
+    SPIIF getImage();
+
+    SPCIIC getComplexImage() const;
+    SPIIC getComplexImage();
 
 
     // If file name empty make TempImage (allowTemp=T) or do nothing.
@@ -596,11 +583,11 @@ class ImageAnalysis
     	ImageRegion* pOldMaskRegion
     );
     // Hanning smooth a vector
-    void hanning_smooth (casa::Array<casa::Float>& out,
+    static void _hanning_smooth (casa::Array<casa::Float>& out,
                          casa::Array<casa::Bool>& maskOut,
                          const casa::Vector<casa::Float>& in,
                          const casa::Array<casa::Bool>& maskIn,
-                         casa::Bool isMasked) const;
+                         casa::Bool isMasked);
     
     
 // Make a new image with given CS

@@ -133,8 +133,10 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 				_pbImage->coordinates().directionCoordinate()
 			)
 		) {
-			*_getLog() << "Coordinate systems of image and template are different: "
-				<< csys.errorMessage() << LogIO::EXCEPTION;
+			ThrowCc(
+				"Coordinate systems of image and template are different: "
+				+ csys.errorMessage()
+			);
 		}
 		else {
 			// direction coordinates and image shapes are the same
@@ -157,20 +159,19 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 		)
 	);
 	if (pbCopy->ndim() == 2) {
-		if (
+		ThrowIf(
 			! _getImage()->coordinates().directionCoordinate().near(
 				pbCopy->coordinates().directionCoordinate()
-			)
-		) {
-			*_getLog() << "Direction coordinates of input image and primary beam "
-				<< "image are different. Cannot do primary beam correction."
-				<< LogIO::EXCEPTION;
-		}
+			),
+			"Direction coordinates of input image and primary beam "
+			"image are different. Cannot do primary beam correction."
+		);
 	}
 	else {
-		*_getLog() << "Input image and primary beam image have different shapes. "
-			<< "Cannot do primary beam correction."
-			<< LogIO::EXCEPTION;
+		ThrowCc(
+			"Input image and primary beam image have different shapes. "
+			"Cannot do primary beam correction."
+		);
 	}
 	_pbImage.reset(pbCopy);
 	LatticeStatistics<Float> ls(*_pbImage);
@@ -198,7 +199,7 @@ CasacRegionManager::StokesControl ImagePrimaryBeamCorrector::_getStokesControl()
 	return CasacRegionManager::USE_ALL_STOKES;
 }
 
-ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
+SPIIF ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
@@ -246,47 +247,16 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
     	False, AxesSpecifier(), _getStretch()
     );
 	tmpStore.reset(0);
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage;
-	if (_getOutname().empty()) {
-		outImage.reset(
-			new TempImage<Float>(
-				TiledShape(subImage.shape()), subImage.coordinates()
-			)
-		);
-		if (subImage.hasPixelMask()) {
-			dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(subImage.pixelMask());
-		}
-		if (pbSubImage.hasPixelMask()) {
-			LatticeExpr<Bool> mask(pbSubImage.pixelMask());
-			if (outImage->hasPixelMask()) {
-				mask = mask && outImage->pixelMask();
-			}
-			dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(
-				mask
-			);
-		}
-		ImageUtilities::copyMiscellaneous(*outImage, subImage);
-	}
-	else {
-		_removeExistingOutfileIfNecessary();
-		String mask = "";
-	    Record empty;
-		outImage.reset( SubImageFactory<Float>::createImage(
-			subImage, _getOutname(), empty,
-			mask, False, False, False, False
-		));
-	}
+
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? subImage/pbSubImage
 		: subImage*pbSubImage;
+	SPIIF outImage = _prepareOutputImage(subImage);
 	outImage->copyData(expr);
-
-    if (wantReturn) {
-    	return outImage->cloneII();
+    if (! wantReturn) {
+    	outImage.reset();
     }
-    else {
-    	return 0;
-    }
+    return outImage;
 }
 }
 

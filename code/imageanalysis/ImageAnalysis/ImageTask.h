@@ -63,6 +63,26 @@ public:
 
     void setVerbosity(Verbosity verbosity) { _verbosity = verbosity; }
 
+    // These messages will appear in the product image history upon the call to
+    // _prepareOutputImage(). They will be located immediately after the input
+    // image's copied history. The first value in the pair is the log origin.
+    // The second is the associated message. If this method is called more than once
+    // on the same object, messages from subsequent calls are appended to the
+    // end of messages set in prior calls.
+    void addHistory(const vector<std::pair<String, String> >& msgs) const;
+
+    void addHistory(const LogOrigin& origin, const String& msg) const;
+
+    void addHistory(const LogOrigin& origin, const vector<String>& msgs) const;
+
+    // suppress writing the history on _prepareOutputImage() call. Useful for
+    // not writing history to intermediate image products.
+    void suppressHistoryWriting(Bool b) { _suppressHistory = b; }
+
+    // get the history associated with the task. Does not include the
+    // history of the input image.
+    vector<std::pair<String, String> > getHistory() {return _newHistory;}
+
 protected:
 
 	// if <src>outname</src> is empty, no image will be written
@@ -140,7 +160,7 @@ protected:
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system
-    ImageInterface<T>* _prepareOutputImage(
+    SPIIT _prepareOutputImage(
     	const ImageInterface<T>& image, const Array<T> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
@@ -158,10 +178,12 @@ private:
     const Record *const _regionPtr;
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname;
-    Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
+    Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
+    	_suppressHistory;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
 	std::tr1::shared_ptr<LogFile> _logfile;
+	mutable vector<std::pair<String, String> > _newHistory;
 };
 
 }

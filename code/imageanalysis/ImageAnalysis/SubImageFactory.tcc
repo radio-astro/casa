@@ -167,10 +167,10 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 }
 
 template<class T> ImageInterface<T>* SubImageFactory<T>::createImage(
-	ImageInterface<T>& image,
+	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
-	const String& mask, const Bool dropDegenerateAxes,
-	const Bool overwrite, const Bool list, const Bool extendMask
+	const String& mask, Bool dropDegenerateAxes,
+	Bool overwrite, Bool list, Bool extendMask
 ) {
 	LogIO log;
 	log << LogOrigin("SubImageFactory", __FUNCTION__);
@@ -179,43 +179,55 @@ template<class T> ImageInterface<T>* SubImageFactory<T>::createImage(
 	if (!overwrite && !outfile.empty()) {
 		NewFile validfile;
 		String errmsg;
-		if (!validfile.valueOK(outfile, errmsg)) {
-			log << errmsg << LogIO::EXCEPTION;
+		ThrowIf(
+			!validfile.valueOK(outfile, errmsg),
+			errmsg
+		);
+	}
+	TempImage<T> newImage(
+		TiledShape(image.shape()), image.coordinates()
+	);
+	if (image.hasPixelMask()) {
+		ArrayLattice<Bool> mymask(
+			image.pixelMask().get()
+		);
+		if (! allTrue(mymask.get())) {
+			newImage.attachMask(mymask);
 		}
 	}
+	ImageUtilities::copyMiscellaneous(newImage, image);
+	newImage.put(image.get());
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	std::auto_ptr<SubImage<T> > subImage(
+	std::auto_ptr<ImageInterface<T> >outImage(
 		new SubImage<T>(
 			SubImageFactory<T>::createSubImage(
-				image,
-			//	*(ImageRegion::tweakedRegionRecord(&Region)),
-				region,
-				mask, list ? &log : 0, True, axesSpecifier, extendMask
+				newImage, region, mask, list ? &log : 0,
+				True, axesSpecifier, extendMask
 			)
 		)
 	);
 	if (outfile.empty()) {
-		return subImage.release();
+		return outImage.release();
 	}
 	// Make the output image
 	if (list) {
 		log << LogIO::NORMAL << "Creating image '" << outfile
-			<< "' of shape " << subImage->shape() << LogIO::POST;
+			<< "' of shape " << outImage->shape() << LogIO::POST;
 	}
-	PagedImage<T> outImage(
-			subImage->shape(),
-			subImage->coordinates(), outfile
+	PagedImage<T> pagedImage(
+		outImage->shape(),
+		outImage->coordinates(), outfile
 	);
-	ImageUtilities::copyMiscellaneous(outImage, *subImage);
+	ImageUtilities::copyMiscellaneous(pagedImage, *outImage);
 	// Make output mask if required
-	if (subImage->isMasked()) {
+	if (outImage->isMasked()) {
+		cout << "making mask " << endl;
 		String maskName("");
-		ImageMaskAttacher::makeMask(outImage, maskName, False, True, log, list);
+		ImageMaskAttacher::makeMask(pagedImage, maskName, False, True, log, list);
 	}
-	LatticeUtilities::copyDataAndMask(log, outImage, *subImage);
-	return new PagedImage<T>(outImage);
+	LatticeUtilities::copyDataAndMask(log, pagedImage, *outImage);
+	return new PagedImage<T>(pagedImage);
 }
-
 
 } //# NAMESPACE CASA - END
 
