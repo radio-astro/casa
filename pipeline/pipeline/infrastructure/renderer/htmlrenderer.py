@@ -3668,12 +3668,18 @@ class T2_4MDetailsSingleDishInspectDataRenderer(T2_4MDetailsDefaultRenderer):
             for vis in plot_group.keys():
                 if not summary_plots.has_key(vis):
                     summary_plots[vis] = dict([(p['type'], None) for p in plot_types])
-                summary_plots[vis][_types['type']] = plot_group[vis][0]
+                summary_plots[vis][_types['type']] = self._get_summary_plot(_types['type'], 
+                                                                            plot_group, 
+                                                                            vis)#plot_group[vis][0]
             
             plot_list = {}
             for (name, _plots) in plot_group.items():
-                renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
-                                                              _types['plot_title'])
+                if _types['type'] == 'pointing':
+                    renderer = SingleDishPointingPlotsRenderer(context, results, name, _plots,
+                                                               _types['plot_title'])
+                else:
+                    renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
+                                                                  _types['plot_title'])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
                 plot_list[name] = renderer.filename
@@ -3696,6 +3702,13 @@ class T2_4MDetailsSingleDishInspectDataRenderer(T2_4MDetailsDefaultRenderer):
             else:
                 plot_group[key] = [p]
         return plot_group
+    
+    def _get_summary_plot(self, plot_type, plot_group, vis):
+        if plot_type == 'pointing':
+            for plot in plot_group[vis]:
+                if plot.parameters['type'] == 'on source pointing':
+                    return plot
+        return plot_group[vis][0]        
     
         
 class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
@@ -4127,6 +4140,44 @@ class SingleDishGenericPlotsRenderer(object):
     
 class SingleDishInspectDataPlotsRenderer(SingleDishGenericPlotsRenderer):
     template = 'sd_inspectdata_plots.html'   
+
+class SingleDishPointingPlotsRenderer(SingleDishGenericPlotsRenderer):
+    template = 'sd_pointing_plots.html'
+    
+    def __init__(self, context, result, name, plots, plot_title):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.name = name
+        self.plot_title = str(plot_title)
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            spw_id = plot.parameters['spw']
+            ant_id = plot.parameters['ant']
+            pol_id = plot.parameters['pol']
+            type_str = plot.parameters['type']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : str(spw_id),
+                                'ant'       : ant_id,
+                                'pol'       : pol_id,
+                                'type'      : type_str,
+                                'thumbnail' : thumbnail_relpath}
+
+        self.json = json.dumps(d)
 
 class SingleDishPlotFlagBaselinePlotsRenderer(SingleDishGenericPlotsRenderer):
     template = 'generic_x_vs_y_detail_plots.html'    

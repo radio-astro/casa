@@ -214,7 +214,9 @@ class SDInspectionDisplay(object):
             plot = self.doplot(idx, stage_dir)
             t1 = time.time()
             LOG.trace('PROFILE: %s.doplot elapsed time %s sec'%(self.__class__.__name__,t1-t0))
-            if plot is not None:
+            if isinstance(plot, list):
+                plots.extend(plot)
+            elif plot is not None:
                 plots.append(plot)
         return [plots]
 

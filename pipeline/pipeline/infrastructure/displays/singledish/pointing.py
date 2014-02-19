@@ -60,43 +60,66 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         beam_size = casatools.quanta.convert(self.context.observing_run[idx].beam_size[spwid], 'deg')
         obs_pattern = st.pattern[spwid].values()[0]
         rows = self.datatable.get_row_index(idx, spwid)
-        plotfile = os.path.join(stage_dir, 'pointing_%s.png'%(st.basename))
-        self.draw_radec(rows, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern)
-        parameters = {}
-        parameters['intent'] = 'TARGET'
-        parameters['spw'] = spwid
-        parameters['pol'] = 'XXYY'
-        parameters['ant'] = st.antenna.name
-        parameters['type'] = 'sd'
-        parameters['file'] = st.basename
-        parameters['vis'] = vis
-        plot = logger.Plot(plotfile,
-          x_axis='R.A.', y_axis='Dec.',
-          field=parent_ms.fields[0].name,
-          parameters=parameters)
-        return plot
-        
-    def draw_radec(self, rows, plotfile, connect=True, circle=[], ObsPattern=False):
-        """
-        Draw loci of the telescope pointing
-        xaxis: extension header keyword for RA
-        yaxis: extension header keyword for DEC
-        connect: connect points if True
-        """
         datatable = self.datatable
-
-        ROW = datatable.getcol('ROW')
+        
+        plots = []
+        
+        #ROW = datatable.getcol('ROW')
         tRA = datatable.getcol('RA')
         tDEC = datatable.getcol('DEC')
         tNCHAN = datatable.getcol('NCHAN')
+        tSRCTYPE = datatable.getcol('SRCTYPE')
         
-        # Extract RA and DEC
         RA = []
         DEC = []
         for row in rows:
             if tNCHAN[row] > 1:
                 RA.append(tRA[row])
                 DEC.append(tDEC[row])
+        plotfile = os.path.join(stage_dir, 'pointing_full_%s.png'%(st.basename))
+        self.draw_radec(RA, DEC, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern)
+        parameters = {}
+        parameters['intent'] = 'TARGET'
+        parameters['spw'] = spwid
+        parameters['pol'] = 'XXYY'
+        parameters['ant'] = st.antenna.name
+        parameters['type'] = 'full pointing'
+        parameters['file'] = st.basename
+        parameters['vis'] = vis
+        plots.append(logger.Plot(plotfile,
+                                 x_axis='R.A.', y_axis='Dec.',
+                                 field=parent_ms.fields[0].name,
+                                 parameters=parameters))
+        RA = []
+        DEC = []
+        srctype = st.calibration_strategy['srctype']
+        for row in rows:
+            if tNCHAN[row] > 1 and tSRCTYPE[row] == srctype:
+                RA.append(tRA[row])
+                DEC.append(tDEC[row])
+        plotfile = os.path.join(stage_dir, 'pointing_onsource_%s.png'%(st.basename))
+        self.draw_radec(RA, DEC, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern)
+        parameters = {}
+        parameters['intent'] = 'TARGET'
+        parameters['spw'] = spwid
+        parameters['pol'] = 'XXYY'
+        parameters['ant'] = st.antenna.name
+        parameters['type'] = 'on source pointing'
+        parameters['file'] = st.basename
+        parameters['vis'] = vis
+        plots.append(logger.Plot(plotfile,
+                                 x_axis='R.A.', y_axis='Dec.',
+                                 field=parent_ms.fields[0].name,
+                                 parameters=parameters))
+        return plots
+        
+    def draw_radec(self, RA, DEC, plotfile, connect=True, circle=[], ObsPattern=False):
+        """
+        Draw loci of the telescope pointing
+        xaxis: extension header keyword for RA
+        yaxis: extension header keyword for DEC
+        connect: connect points if True
+        """
         span = max(max(RA) - min(RA), max(DEC) - min(DEC))
         xmax = min(RA) - span / 10.0
         xmin = max(RA) + span / 10.0
@@ -105,7 +128,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
         # 2008/9/20 DEC Effect
-        Aspect = 1.0 / math.cos(tDEC[0] / 180.0 * 3.141592653)
+        Aspect = 1.0 / math.cos(DEC[0] / 180.0 * 3.141592653)
 
         # Plotting routine
         #if common.ShowPlot: pl.ion()
