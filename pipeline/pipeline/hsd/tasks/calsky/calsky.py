@@ -130,7 +130,8 @@ class SDCalSky(common.SingleDishTaskTemplate):
             spw = callibrary.SDCalApplication.iflist_to_spw(args['iflist'])
             calto = callibrary.CalTo(vis=scantable.ms_name,
                                      spw=spw,
-                                     antenna=scantable.antenna.name)
+                                     antenna=scantable.antenna.name,
+                                     intent='TARGET,REFERENCE')
 
             # create SDCalFrom object
             calfrom = callibrary.SDCalFrom(gaintable=args['outfile'],

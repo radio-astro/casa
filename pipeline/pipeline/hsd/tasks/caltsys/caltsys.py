@@ -137,7 +137,8 @@ class SDCalTsys(common.SingleDishTaskTemplate):
             spw = callibrary.SDCalApplication.iflist_to_spw(args['iflist'])
             calto = callibrary.CalTo(vis=scantable.ms_name,
                                      spw=spw,
-                                     antenna=scantable.antenna.name)
+                                     antenna=scantable.antenna.name,
+                                     intent='TARGET,REFERENCE')
 
             # create SDCalFrom object
             # need to set spwmap here
