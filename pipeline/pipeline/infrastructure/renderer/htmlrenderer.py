@@ -3970,6 +3970,22 @@ class T2_4MDetailsSingleDishPlotFlagBaselineRenderer(T2_4MDetailsDefaultRenderer
                     summary_plots[vis].append(plot)
         return summary_plots
 
+class T2_4MDetailsSingleDishImportDataRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_importdata.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishImportDataRenderer, self).__init__(template,
+                                                             always_rerender)
+        
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsSingleDishImportDataRenderer, self)        
+        ctx = super_cls.get_display_context(context, result)
+
+        num_mses = reduce(operator.add, [len(r.mses) for r in result])
+
+        ctx.update({'num_mses'      : num_mses})
+
+        return ctx
+
 class SingleDishGenericPlotsRenderer(object):
     template = 'sd_generic_plots.html'
 
@@ -4666,6 +4682,7 @@ renderer_map = {
         hifa.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
+        hsd.tasks.SDImportData   : T2_4MDetailsSingleDishImportDataRenderer(always_rerender=True),
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
         hsd.tasks.SDCalTsys      : T2_4MDetailsSingleDishCalTsysRenderer(always_rerender=True),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
