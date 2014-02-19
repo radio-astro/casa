@@ -126,7 +126,10 @@ casa = { 'build': {
          'files': { 
              'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
          },
-         'state' : { 'startup': True }
+         'state' : {
+             'startup': True,
+             'unwritable': set( )
+         }
        }
 
 
@@ -1027,8 +1030,26 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
         ##make sure unfolded parameters get their default values
         myf['update_params'](func=myf['taskname'], printtext=False, ipython_globals=myf)
         ###
-        taskparameterfile=open(outfile,'w')
-        print >>taskparameterfile, '%-15s    = "%s"'%('taskname', taskname)
+        do_save_inputs = False
+        outpathdir = os.path.realpath(os.path.dirname(outfile))
+        outpathfile = outpathdir + os.path.sep + os.path.basename(outfile)
+        if outpathfile not in casa['state']['unwritable'] and outpathdir not in casa['state']['unwritable']:
+            try:
+                taskparameterfile=open(outfile,'w')
+                print >>taskparameterfile, '%-15s    = "%s"'%('taskname', taskname)
+                do_save_inputs = True
+            except:
+                print "********************************************************************************"
+                print "Warning: no write permission for %s, cannot save task" % outfile
+                if os.path.isfile(outfile):
+                    print "         inputs in %s..." % outpathfile
+                    casa['state']['unwritable'].add(outpathfile)
+                elif not os.path.isdir(outfile):
+                    print "         inputs in dir %s..." % outpathdir
+                    casa['state']['unwritable'].add(outpathdir)
+                else:
+                    print "         inputs because given file (%s) is a dir..." % outpathfile
+                print "********************************************************************************"
         f=zip(myf[taskname].__call__.func_code.co_varnames,myf[taskname].__call__.func_defaults)
         scriptstring='#'+str(taskname)+'('
 	if myparams == None :
@@ -1042,16 +1063,19 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
                 if ( myparams[k].count( '"' ) < 1 ):
                     # if the string doesn't contain double quotes then
                     # use double quotes around it in the parameter file.
-                    print >>taskparameterfile, '%-15s    =  "%s"'%(k, myparams[k])
+                    if do_save_inputs:
+                        print >>taskparameterfile, '%-15s    =  "%s"'%(k, myparams[k])
                     scriptstring=scriptstring+k+'="'+myparams[k]+'",'
                 else:
                     # use single quotes.
-                    print >>taskparameterfile, "%-15s    =  '%s'"%(k, myparams[k])
+                    if do_save_inputs:
+                        print >>taskparameterfile, "%-15s    =  '%s'"%(k, myparams[k])
                     scriptstring=scriptstring+k+"='"+myparams[k]+"',"
             else :
                 if ( j != 0 or k != "self" or
                      str(type(myf[taskname])) != "<type 'instance'>" ) :
-                    print >>taskparameterfile, '%-15s    =  %s'%(k, myparams[k])
+                    if do_save_inputs:
+                        print >>taskparameterfile, '%-15s    =  %s'%(k, myparams[k])
                     scriptstring=scriptstring+k+'='+str(myparams[k])+','
 
             ###Now delete varianle from global user space because
@@ -1070,8 +1094,9 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
         scriptstr.append(scriptstring)
         scriptstring=scriptstring.replace('        ', '')
         scriptstring=scriptstring.replace('\n', '')
-        print >>taskparameterfile,scriptstring
-        taskparameterfile.close()
+        if do_save_inputs:
+            print >>taskparameterfile,scriptstring
+            taskparameterfile.close()
     except TypeError, e:
         print "saveinputs --error: ", e
 
