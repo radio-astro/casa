@@ -3986,6 +3986,75 @@ class T2_4MDetailsSingleDishImportDataRenderer(T2_4MDetailsDefaultRenderer):
 
         return ctx
 
+class T2_4MDetailsSingleDishApplycalRenderer(T2_4MDetailsDefaultRenderer):
+    #FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
+
+    def __init__(self, template='t2-4m_details-hsd_applycal.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishApplycalRenderer, self).__init__(template,
+                                                                     always_rerender)
+
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsSingleDishApplycalRenderer, self)
+        ctx = super_cls.get_display_context(context, result)
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % result.stage_number)
+
+        calapps = {}
+        for r in result:
+            calapps = utils.dict_merge(calapps,
+                                       self.calapps_for_result(r))
+
+        caltypes = {}
+        for r in result:
+            caltypes = utils.dict_merge(caltypes,
+                                        self.caltypes_for_result(r))
+
+        # return all agents so we get ticks and crosses against each one
+        agents = ['before', 'applycal']
+
+        ctx.update({'calapps'  : calapps,
+                    'caltypes' : caltypes,
+                    'agents'   : agents,
+                    'dirname'  : weblog_dir})
+        return ctx
+
+    def calapps_for_result(self, result):
+        calapps = collections.defaultdict(list)
+        #for calapp in result.applied:
+        #for calapp in result.outcome:
+        calapp = result.outcome
+        infile = os.path.basename(calapp.infile)
+        calapps[infile].append(calapp)
+        return calapps
+
+    def caltypes_for_result(self, result):
+        type_map = {
+            'ps' : 'Sky',
+            'otf' : 'Sky',
+            'otfraster'  : 'Sky',
+            'tsys'     : 'T<sub>sys</sub>',
+        }
+        
+        d = {}
+        #for calapp in result.applied:
+        calapp = result.outcome
+        for calfrom in calapp.calfrom:
+            caltype = type_map.get(calfrom.caltype, calfrom.caltype)
+
+            caltype += self.get_gain_solution_type(calfrom)
+                    
+            d[calfrom.gaintable] = caltype
+
+        return d
+                
+    def get_gain_solution_type(self, calfrom):
+        if calfrom.caltype != 'tsys':
+            return ' (%s)'%(calfrom.caltype)
+        return ''
+
+
 class SingleDishGenericPlotsRenderer(object):
     template = 'sd_generic_plots.html'
 
@@ -4686,6 +4755,7 @@ renderer_map = {
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
         hsd.tasks.SDCalTsys      : T2_4MDetailsSingleDishCalTsysRenderer(always_rerender=True),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
+        hsd.tasks.SDApplyCal     : T2_4MDetailsSingleDishApplycalRenderer(always_rerender=True),
         hsd.tasks.SDBaselineOld  : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
