@@ -119,13 +119,8 @@ before calculating the statistics.
             <value></value>
     </param>
 
-    <param type="bool" name="scanaverage">
-            <description>average integrations within scans (True,False) </description>
-            <value>False</value>
-    </param>
-
     <param type="bool" name="timeaverage">
-            <description>average scans over time (True,False)</description>
+            <description>average spectra over time [True, False] (see examples in help)</description>
             <value>False</value>
     </param>
 
@@ -142,8 +137,13 @@ before calculating the statistics.
             </allowed>
     </param>
 
+    <param type="bool" name="scanaverage" subparam="true">
+            <description>average spectra within a scan number [True, False] (see examples in help) </description>
+            <value>False</value>
+    </param>
+
     <param type="bool" name="polaverage">
-            <description>average over polarizations (True,False)</description>
+            <description>average spectra over polarizations [True, False]</description>
             <value>False</value>
     </param>
 
@@ -205,6 +205,7 @@ before calculating the statistics.
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 			<default param="tweight"><value type='string'>tintsys</value></default>
+			<default param="scanaverage"><value type='bool'>False</value></default>
                 </equals>
             </when>
 	    <when param="polaverage">
@@ -245,6 +246,27 @@ depending on which has greater magnitude.
 Note that 'max_abscissa', 'min_abscissa', 'totint' and 'eqw' are
 quantities (python dictionaries with keys, 'unit' and 'value').
 
+-------------------------------------
+AVERAGING OF SPECTRA
+-------------------------------------
+Task sdstat has two averaging modes, i.e., time and polarization average.
+
+When timeaverage=True, spectra are averaged over time for each IF
+(spectral window), polarization, and beam, independently. Note that,
+by default (scanaverage=False), timeaverage=True averages spectra
+irrespective of scan IDs.
+It is possible to average spectra separately for each scan ID by setting
+a sub-parameter scanaverage=True.
+For example, the combination of parameters: scan='0~2', timeaverage=True, and
+scanaverage=False: averages spectra in scan ID 0 through 2 all together
+                   to a spectrum,
+scanaverage=True : averages spectra per scan ID and end up with three
+                   spectra from scan 0, 1, and 2.
+
+When polaverage=True, spectra are averaged over polarization for
+each IF (spectral window) and beam. Note that, so far, time averaging is
+automatically switched on when polaverage is set to True. This behavior
+is not desirable and will be discarded in future.
 
 ------------------
 Keyword arguments
@@ -329,6 +351,8 @@ overwrite -- overwrite the statistics file if already exists
         Returns: a Python dictionary of line statistics
            keys: 'rms','stddev','max','min','max_abscissa',
                  'min_abscissa','sum','median','mean','totint','eqw'
+
+
 -----------
 DESCRIPTION
 -----------

@@ -384,7 +384,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdstat. Test averaging.
 
-    testAve01 --- scanaverage = True
+    testAve01 --- scanaverage = True (timeaverage=True)
     testAve02 --- timeaverage = True, scanaverage=False
     testAve03 --- polaverage = True (this averages all time now)
     #testAve04 --- scanaverage = True, polaverage=True
@@ -409,13 +409,13 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
 
     def testAve01(self):
-        """Test Ave01: scanaverage = True"""
+        """Test Ave01: scanaverage = True  (timeaverage=True)"""
         tid = "Ave01"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
         pol = '0'
         scanaverage=True
-        timeaverage=False
+        timeaverage=True
         tweight = 'tintsys'
         polaverage=False
         pweight = 'tsys'
@@ -588,7 +588,7 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
                                           spw=self.ifno,restfreq=restfreq)
         print "Setting restfreq = %s" % (str(restfreq))
         spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=self.ifno)
-        print "Using spw = %s" % (spw)
+        print "Using spw = '%s'" % (spw)
 
         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
