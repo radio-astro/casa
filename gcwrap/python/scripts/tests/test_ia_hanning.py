@@ -153,6 +153,60 @@ class ia_hanning_test(unittest.TestCase):
         
         self.assertTrue(myim.done())
 
+    def test_general(self):
+        """Test general behavior"""
+        myia = iatool()
+        length = 6
+        myia.fromshape("", [1, 1, length])
+        bb = myia.getchunk()
+        for i in range(length):
+            bb[0, 0, i] = i*i + 1
+        myia.putchunk(bb)
+        for i in range(length):
+            reg = rg.box([0, 0, 0], [0, 0, i])
+            if (i < 2):
+                self.assertRaises(Exception, myia.hanning, region=reg, axis=2)
+            else:
+                for drop in (False, True):
+                    if drop:
+                        for dropmethod in ("n", "m"):
+                            if i==2 or i==3:
+                                if dropmethod=="n":
+                                    expec = [2.5]
+                                else:
+                                    if i == 2:
+                                        expec = [3.0]
+                                    elif i == 3:
+                                        expec = [4.0]
+                            elif i==4 or i==5:
+                                if dropmethod=="n":
+                                    expec = [2.5, 10.5]
+                                else:
+                                    if i == 4:
+                                        expec = [4.0, 12.0]
+                                    if i == 5:
+                                        expec = [4.0, 14.0]
+                            han = myia.hanning(region=reg, axis=2, drop=drop, dropmethod=dropmethod)
+                            got = han.getchunk().ravel()
+                            self.assertTrue((got == expec).all())
+                    else:
+                        dropmethod="n"
+                        if i == 2:
+                            expec = [1.5, 2.5, 3.5]
+                        elif i == 3:
+                            expec = [1.5, 2.5, 5.5, 7.5]
+                        elif i == 4:
+                            expec = [1.5, 2.5, 5.5, 10.5, 13.5]
+                        elif i == 5:
+                            expec = [1.5, 2.5, 5.5, 10.5, 17.5, 21.5]
+                        han = myia.hanning(region=reg, axis=2, drop=drop, dropmethod=dropmethod)
+                        got = han.getchunk().ravel()
+                        self.assertTrue((got == expec).all())
+                    
+        myia.done()
+            
+        
+        
     
 def suite():
     return [ia_hanning_test]

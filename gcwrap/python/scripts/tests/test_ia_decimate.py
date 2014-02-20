@@ -82,7 +82,7 @@ class ia_decimate_test(unittest.TestCase):
         self.assertTrue(len(tb.showcache()) == 0)
     
     def test_stretch(self):
-        """ ia.fft(): Test stretch parameter"""
+        """ ia.decimate(): Test stretch parameter"""
         yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [20, 20, 1, 1])
@@ -122,6 +122,7 @@ class ia_decimate_test(unittest.TestCase):
             expec[2] /= factor
             if m == 0:
                 expec[2] += 1
+            print "method ",method
             self.assertTrue((zz.shape() == expec).all())
             
             inc = myia.coordsys()

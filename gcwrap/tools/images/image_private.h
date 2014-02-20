@@ -52,6 +52,14 @@ void _processDirection(
 	const casa::String& paramName
 );
 
+template <class T> image* _boxcar(
+	SPCIIT myimage, std::tr1::shared_ptr<const casa::Record> region,
+	const casa::String& mask, const std::string& outfile, bool overwrite,
+	bool stretch, int axis, int width, bool drop,
+	casa::ImageDecimatorData::Function dFunction, const casa::LogOrigin& lor,
+	const std::vector<casa::String> msgs
+);
+
 template<class T, class U> casac::variant* _getchunk(
 	const std::vector<int>& blc, const std::vector<int>& trc,
 	const std::vector<int>& inc, const std::vector<int>& axes,
@@ -87,8 +95,17 @@ template<class T> image* _decimate(
 	const vector<casa::String>& msgs
 ) const;
 
+
+template <class T> image* _hanning(
+	SPCIIT image, std::tr1::shared_ptr<const casa::Record> region,
+	const casa::String& mask, const std::string& outfile, bool overwrite,
+	bool stretch, int axis, bool drop,
+	casa::ImageDecimatorData::Function dFunction, const casa::LogOrigin& lor,
+	const std::vector<casa::String> msgs
+);
+
 static casa::String _inputsString(
-	const vector<std::pair<String, casac::variant> >& inputs
+	const std::vector<std::pair<casa::String, casac::variant> >& inputs
 );
 
 

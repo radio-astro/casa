@@ -1226,7 +1226,7 @@ collapsed.done()
 			The method parameter represents how to calculate the pixel values of the output image. A
 			value of method="none" means that every factorth plane of the selected region in the input
 			image will be directly copied to the corresponding plane in the output image. So, if one
-			wanted to copy every thrid spectral plane in the input image to the output image, one would
+			wanted to copy every third spectral plane in the input image to the output image, one would
 			specify factor=3 and method="none". If the selected region along the specified axis had 11
 			planes, then there would be 4 output planes which would map to planes 0, 3, 6, and 9 of
 			the specified region of input image. A value of method="mean" indicates that each of
@@ -2445,6 +2445,146 @@ of the increment (stride).  See also that the trc is modified by
 the increment.
 </example>
 </method>
+
+
+	<method type="function" name="boxcar">
+		<shortdescription>Convolve one axis of image with a boxcar kernel
+		</shortdescription>
+		<input>
+			<param type="string" name="outfile">
+				<description>Output image file name. Default is none.</description>
+				<value />
+			</param>
+			<param type="any" name="region">
+				<any type="variant" limittypes="record, string" />
+				<description>Dictionary or string specifying the region of interest.
+					See help par.region. Default is whole image.</description>
+				<value />
+			</param>
+			<param type="any" name="mask">
+				<any type="variant" />
+				<description>Mask to use. See help par.mask. Default is none.
+				</description>
+				<value />
+			</param>
+			<param type="int" name="axis">
+				<description>Zero-based axis along which to convolve.
+					ia.coordsys().names() gives the order of the axes in the image.
+					Less than 0 means use the spectral axis if there is one, if not an
+					exception is thrown.</description>
+				<value>-1</value>
+			</param>
+			<param type="int" name="width">
+				<description>Width of the boxcar in pixels.</description>
+				<value>2</value>
+			</param>
+			<param type="bool" name="drop">
+				<description>Drop every nth pixel on output, where n is the width of
+					the boxcar?</description>
+				<value>true</value>
+			</param>
+			<param type="string" name="dropmethod">
+				<description>If drop=True, method to use in plane decimation.
+					"n(one)": direct copy of every second plane, "m(ean)": average
+					planes n*i through n*(i+1) - 1 (inclusive) in the smoothed,
+					non-decimated image to form plane i in the output image.
+				</description>
+				<value>none</value>
+			</param>
+			<param type="bool" name="overwrite">
+				<description>Overwrite (unprompted) pre-existing output file?
+				</description>
+				<value>false</value>
+			</param>
+			<param type="bool" name="stretch">
+				<description>Stretch the mask if necessary and possible? See help
+					par.stretch. Default False</description>
+				<value>false</value>
+			</param>
+		</input>
+		<returns type="image" />
+
+		<description>
+
+			This application performs boxcar convolution of one axis of an image
+			defined by
+
+			z[i] = (y[i] + y[i+i] + ... + y[i+w])/w (equation 1)
+
+			where z[i] is the value at pixel i in the box car smoothed image, y[k]
+			is the pixel value of the input image at pixel k, and w is a postivie integer
+			representing the width of the boxcar in pixels. Both float and complex
+			valued images are supported. The length of the axis along which the
+			convolution is to occur must be at least n pixels in the selected region,
+			unless decimation using the mean function is chosen in which case the axis
+			length must be at least 2*n (see below). Masked pixel values are set to
+			zero prior to convolution. All nondefault pixel masks are ignored during
+			the calculation. The convolution is done in the image domain (i.e., not
+			with an FFT).
+
+			If drop=False (no decimation), the length of the output axis will be equal
+			to the length of the input axis - w + 1. The pixel mask, ORed with the OTF mask
+			if specified, is copied from the selected region of the input image to the
+			output image. Thus for example, if the selected region in the input image has
+			six planes along the convolution axis, if the specified boxcar width is 2,
+			and if the pixel values, which are all unmasked, on a slice along this axis
+			are [1, 2, 5, 10, 17, 26], then the corresponding output slice will be of
+			length five and the output pixel values will be [1.5, 3.5, 7.5, 13.5, 21.5].
+
+			If drop=True and dropmethod="none", the output image is the image calculated
+			if drop=True, except that only every wth plane is kept. Both the pixel and mask
+			values of these planes are copied directly to the output image, without further
+			processing. Thus for example, if the selected region in the input image has six
+			planes along the convolution axis, the boxcar width is chosen to be 2, and if
+			the pixel values, which are all unmasked, on a slice along this axis are [1, 2,
+			5, 10, 17, 26], the corresponding output pixel values will be [1.5, 7.5, 21.5].
+
+			If drop=True and dropmethod="mean", first the image described in the drop=False
+			case is calculated. Then, the ith plane of the output image is calculated by
+			averaging the i*w to the (i+1)*w-1  planes of this intermediate image. Thus, for
+			example, if the selected region in the input image has six planes along the
+			convolution axis, the boxcar width is chosen to be 2, and if the pixel values,
+			which are all unmasked, on a slice along this axis are [1, 2, 5, 10, 17, 26],
+			then the corresponding output pixel values will be [2.5, 10.5]. Any pixels at the
+			end of the plane of the intermediate image that do not fall into a complete bin of
+			width w are ignored. Masked values are taken into consideration when forming this
+			average, so if one of the values is masked, it is not used in the average. If at
+			least one of the values	in the intermediate image bin is not masked, the
+			corresponding output pixel will not be masked.
+
+			The smoothed image is written to disk with name {\stfaf outfile}, if specified.
+			If not, no image is written but the image is still accessible via the returned
+			image analysis tool (see below).
+
+			This method always returns an image analysis tool which is attached to the smoothed
+			image. This tool should always be captured and closed after any desired manipulations
+			have been done. Closing the tool frees up system resources (eg memory), eg,
+
+            \begin{verbatim}
+			smoothedim = ia.boxcar(...)
+			# do things (or not) with smoothedim
+			...
+			# close the returned tool promptly upon finishing with it.
+			smoothedim.done()
+			\end{verbatim}
+		</description>
+
+		<example>
+
+			ia.open("mynonsmoothed.im")
+			# smooth the spectral axis by 3 pixels, say it's axis 2 and only
+			# write every other pixel
+			boxcar = ia.boxcar(outfile="myboxcarsmoothed.im", axis=2, drop=True,
+			width=3, dropmethod="n" overwrite=True)
+			# done with input
+			ia.done()
+			# do something with the output image, get statistics say
+			stats = boxcar.statistics()
+			# close the result image
+			boxcar.done()
+		</example>
+	</method>
+
 
  
    <method type="function" name="brightnessunit">
@@ -5204,27 +5344,70 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
+     <param type="string"  name="dropmethod">
+        <description>If drop=True, method to use in plane decimation. "n(one)": direct copy of every second plane, "m(ean)": average planes 2*i and 2*i+1 in the smoothed, non-decimated image to form plane i in the output image. </description>
+        <value>none</value>
+     </param>
+
+
 </input>
 <returns type="image"/>
 
 <description>
 
-This function performs Hanning convolution of one axis of an image defined by
+This application performs Hanning convolution of one axis of an image defined by
 
-z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1] 
+z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1]       (equation 1)
 
 where z[i] is the value at pixel i in the hanning smoothed image, and
 y[i-1], y[i], and y[i+1] are the values of the input image at pixels i-1,
-i, and i+1 respectively.
+i, and i+1 respectively. It supports both float and complex valued images.
+The length of the axis along which the convolution is to occur must be at least
+three pixels in the selected region. Masked pixel values are set to zero prior to
+convolution. All nondefault pixel masks are ignored during the calculation.
 
-The convolution is done in the image domain (i.e., not with an FFT). If drop=True,
-every other pixel is dropped in the output image so that the pixel width and the hanning smoothed resolution 
-are the same. In this case, the first output pixel is centered on the second input pixel, so that the
-(zero-based) jth output pixel is related to the (zero-based) ith input pixel by
+The convolution is done in the image domain (i.e., not with an FFT).
+	
+If drop=False, the length of the output axis will be the same as that of the input
+axis. The output pixel values along the convolution axis will be related to those
+of the input values according to equation 1, except the first and last pixels. In that
+case, 
+    
+    z[0] = 0.5*(y[0] + y[1])
+    
+and,
+    
+    z[N-1] = 0.5*(y[N-2] + y[N-1])
+    
+where N is the number of pixels along the convolution aixs.
+The pixel mask, ORed with the OTF mask if specified, is copied from the selected
+region of the input image to the output image. Thus for example, if the selected
+region in the input image has six planes along the convolution axis, and if the pixel
+values, which are all unmasked, on a slice along this axis are [1, 2, 5, 10, 17, 26],
+the corresponding output pixel values will be [1.5, 2.5, 5.5, 10.5, 17.5, 21.5].
+    
+If drop=True and dropmethod="none", the output image is the image calculated if
+drop=True, except that only the odd-numbered planes are kept. Furthermore, if the
+number of planes along the convolution axis in the selected region of the input image
+is even, the last odd number plane is also discarded. Thus, if the selected region
+has N pixels along the convolution axis in the input image, along the convolution
+axis the output image will have (N-1)/2 planes if N is odd, or (N-2)/2 planes if N
+is even. In this case, the pixel and mask values are copied directly, without further
+processing. Thus for example, if the selected region in the input image has six planes
+along the convolution axis, and if the pixel values, which are all unmasked, on a slice
+along this axis are [1, 2, 5, 10, 17, 26], the corresponding output pixel values will be
+[2.5, 10.5].
 
-j = (i - 1)/2
-
-where i takes on only odd values.
+If drop=True and dropmethod="mean", first the image described in the drop=False case
+is calculated. The first plane and last plane(s) of that image are then discarded as
+described in the drop=True, dropmethod="none" case. Then, the ith plane of the output
+image is calculated by averaging the (2*i)th and (2*i + 1)th planes of the intermediate
+image.Thus for example, if the selected region in the input image has six planes
+along the convolution axis, and if the pixel values, which are all unmasked, on a slice
+along this axis are [1, 2, 5, 10, 17, 26], the corresponding output pixel values will be
+[4.0, 14.0]. Masked values are taken into consideration when forming this average, so if
+one of the values is masked, it is not used in the average. If at least one of the values
+in the input pair is not masked, the corresponding output pixel will not be masked.
 
 The hanning smoothed image is written to disk with name {\stfaf outfile}, if
 specified. If not, no image is written but the image is still accessible via
@@ -5242,13 +5425,6 @@ hanning\_image = ia.hanning(...)
 # close the returned tool promptly upon finishing with it.
 \end{verbatim}
 hanning\_image.done()
-
-Masked pixels will be assigned the value 0.0 before convolution. 
-The output mask is the combination (logical OR) of the default input
-\pixelmask\ (if any) and the OTF mask.  Any other input \pixelmasks\
-will not be copied.  Use function
-<link anchor="images:image.maskhandler.function">maskhandler</link> if you need to copy other
-masks too.
 
 See also the other convolution functions
 <link anchor="images:image.convolve2d.function">convolve2d</link>,
@@ -7892,9 +8068,10 @@ print ia.name(strippath=T)
      <description>The new value(s), Numeric scalar or LEL expression</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     	<any type="variant"/>
+     	<description>The region of interest. see help par.region.  Default is whole image.</description>
+    	<value/>
      </param>
   
      <param type="any"  name="mask">
@@ -7920,9 +8097,9 @@ print ia.name(strippath=T)
 <returns type="bool">T or fail</returns>
 <description>
 
-This function replaces the values of all
-pixels whose total input mask (default input \pixelmask\ and OTF mask)
-is bad (F) with the specified value.    
+This application replaces the values of all pixels whose total input mask
+	(default input \pixelmask\ and OTF mask) is bad (F) with the specified
+	value. It supports both float valued and compplex valued images. 
 
 If the argument {\stfaf update} is F (the default), the actual \pixelmask\
 is left unchanged.  That is, masked pixels remain masked.   However, if

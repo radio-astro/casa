@@ -61,6 +61,7 @@
 #include <components/SpectralComponents/SpectralListFactory.h>
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
@@ -69,6 +70,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageHanningSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
+#include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
@@ -722,6 +724,116 @@ image::boundingbox(const record& region) {
 	}
 }
 
+image* image::boxcar(
+	const string& outfile, const variant& region,
+	const variant& vmask, int axis, int width, bool drop,
+	const string& dropmethod,
+	bool overwrite, bool stretch
+) {
+	LogOrigin lor(_class, __func__);
+	_log << lor;
+	if (detached()) {
+		throw AipsError("Unable to create image");
+	}
+	try {
+		std::tr1::shared_ptr<const Record> myregion = _getRegion(
+			region, True
+		);
+		String mask = vmask.toString();
+		if (mask == "[]") {
+			mask = "";
+		}
+		if (axis < 0) {
+			const CoordinateSystem csys = _image->isFloat()
+				? _image->getImage()->coordinates()
+				: _image->getComplexImage()->coordinates();
+			ThrowIf(
+				! csys.hasSpectralAxis(),
+				"Axis not specified and image has no spectral coordinate"
+			);
+			axis = csys.spectralAxisNumber(False);
+		}
+        ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
+        if (drop) {
+            String mymethod = dropmethod;
+            mymethod.downcase();
+            if (mymethod.startsWith("m")) {
+                dFunction = ImageDecimatorData::MEAN;
+            }
+            else if (mymethod.startsWith("n")) {
+                dFunction = ImageDecimatorData::NONE;
+            }
+            else {
+                ThrowCc(
+                    "Value of dropmethod must be "
+                    "either 'm'(ean) or 'n'(one)"
+                );
+            }
+        }
+		vector<String> msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__ << "() on image " << name();
+			msgs.push_back(os.str());
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("region", region));
+			inputs.push_back(make_pair("mask", vmask));
+			inputs.push_back(make_pair("axis", axis));
+			inputs.push_back(make_pair("width", width));
+			inputs.push_back(make_pair("drop", drop));
+			inputs.push_back(make_pair("dropmethod", dropmethod));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("stretch", stretch));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(os.str());
+		}
+		if (_image->isFloat()) {
+			SPCIIF image = _image->getImage();
+			return _boxcar(
+				image, myregion, mask, outfile,
+				overwrite, stretch, axis, width, drop,
+				dFunction, lor, msgs
+			);
+		}
+		else {
+			SPCIIC image = _image->getComplexImage();
+			return _boxcar(
+				image, myregion, mask, outfile,
+				overwrite, stretch, axis, width, drop,
+				dFunction, lor, msgs
+			);
+		}
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+template <class T> image* image::_boxcar(
+	SPCIIT myimage, std::tr1::shared_ptr<const Record> region,
+	const String& mask, const string& outfile, bool overwrite,
+	bool stretch, int axis, int width, bool drop,
+	ImageDecimatorData::Function dFunction, const LogOrigin& lor,
+	const vector<String> msgs
+) {
+	ImageBoxcarSmoother<T> smoother(
+		myimage, region.get(), mask, outfile, overwrite
+	);
+	smoother.setAxis(axis);
+	smoother.setDecimate(drop);
+	smoother.setStretch(stretch);
+	if (drop) {
+		smoother.setDecimationFunction(dFunction);
+	}
+	smoother.setWidth(width);
+	smoother.addHistory(lor, msgs);
+	return new image(smoother.smooth());
+}
+
 std::string image::brightnessunit() {
 	std::string rstat;
 	try {
@@ -1095,7 +1207,7 @@ template <class T> image* image::_decimate(
 	decimator.addHistory(
 		LogOrigin("image", __func__), msgs
 	);
-	SPIIT out = decimator.decimate(True);
+	SPIIT out = decimator.decimate();
 	return new image(out);
 }
 
@@ -2181,19 +2293,19 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 	return rstat;
 }
 
-::casac::image* image::hanning(
+image* image::hanning(
 	const string& outfile, const variant& region,
 	const variant& vmask, int axis, bool drop,
-	bool overwrite, bool /* async */, bool stretch
+	bool overwrite, bool /* async */, bool stretch,
+    const string& dropmethod
 ) {
 	LogOrigin lor(_class, __func__);
 	_log << lor;
 	if (detached()) {
 		throw AipsError("Unable to create image");
-		return 0;
 	}
 	try {
-		std::tr1::shared_ptr<Record> myregion = _getRegion(
+		std::tr1::shared_ptr<const Record> myregion = _getRegion(
 			region, True
 		);
 		String mask = vmask.toString();
@@ -2201,13 +2313,32 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 			mask = "";
 		}
 		if (axis < 0) {
-			const CoordinateSystem csys = _image->getImage()->coordinates();
+			const CoordinateSystem csys = _image->isFloat()
+				? _image->getImage()->coordinates()
+				: _image->getComplexImage()->coordinates();
 			ThrowIf(
 				! csys.hasSpectralAxis(),
 				"Axis not specified and image has no spectral coordinate"
 			);
 			axis = csys.spectralAxisNumber(False);
 		}
+        ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
+        if (drop) {
+            String mymethod = dropmethod;
+            mymethod.downcase();
+            if (mymethod.startsWith("m")) {
+                dFunction = ImageDecimatorData::MEAN;
+            }
+            else if (mymethod.startsWith("n")) {
+                dFunction = ImageDecimatorData::NONE;
+            }
+            else {
+                ThrowCc(
+                    "Value of dropmethod must be "
+                    "either 'm'(ean) or 'n'(one)"
+                );
+            }
+        }
 		vector<String> msgs;
 		{
 			ostringstream os;
@@ -2221,20 +2352,27 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 			inputs.push_back(make_pair("drop", drop));
 			inputs.push_back(make_pair("overwrite", overwrite));
 			inputs.push_back(make_pair("stretch", stretch));
+			inputs.push_back(make_pair("dropmethod", dropmethod));
 			os.str("");
 			os << "ia." << __func__ << _inputsString(inputs);
 			msgs.push_back(os.str());
 		}
-		ImageHanningSmoother<Float> smoother(
-			_image->getImage(), myregion.get(),
-			mask, outfile, overwrite
-		);
-		smoother.setAxis(axis);
-		smoother.setDecimate(drop);
-		smoother.setStretch(stretch);
-		smoother.setDecimationFunction(ImageDecimatorData::NONE);
-		smoother.addHistory(lor, msgs);
-		return new image(smoother.smooth(True));
+		if (_image->isFloat()) {
+			SPCIIF image = _image->getImage();
+			return _hanning(
+				image, myregion, mask, outfile,
+				overwrite, stretch, axis, drop,
+				dFunction, lor, msgs
+			);
+		}
+		else {
+			SPCIIC image = _image->getComplexImage();
+			return _hanning(
+				image, myregion, mask, outfile,
+				overwrite, stretch, axis, drop,
+				dFunction, lor, msgs
+			);
+		}
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2243,10 +2381,30 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 	}
 }
 
+template <class T> image* image::_hanning(
+	SPCIIT myimage, std::tr1::shared_ptr<const Record> region,
+	const String& mask, const string& outfile, bool overwrite,
+	bool stretch, int axis, bool drop,
+	ImageDecimatorData::Function dFunction, const LogOrigin& lor,
+	const vector<String> msgs
+) {
+	ImageHanningSmoother<T> smoother(
+		myimage, region.get(), mask, outfile, overwrite
+	);
+	smoother.setAxis(axis);
+	smoother.setDecimate(drop);
+	smoother.setStretch(stretch);
+	if (drop) {
+		smoother.setDecimationFunction(dFunction);
+	}
+	smoother.addHistory(lor, msgs);
+	return new image(smoother.smooth());
+}
+
 std::vector<bool> image::haslock() {
 	std::vector<bool> rstat;
 	try {
-		_log << LogOrigin("image", "haslock");
+		_log << LogOrigin("image", __func__);
 		if (detached())
 			return rstat;
 
@@ -3305,8 +3463,8 @@ bool image::rename(const std::string& name, const bool overwrite) {
 }
 
 bool image::replacemaskedpixels(
-	const variant& vpixels,
-	const record& region, const variant& vmask,
+	const variant& pixels,
+	const variant& region, const variant& vmask,
 	const bool updateMask, const bool list,
 	const bool stretch
 ) {
@@ -3315,22 +3473,52 @@ bool image::replacemaskedpixels(
 		return False;
 	}
 	try {
-		String pixels = vpixels.toString();
-		std::auto_ptr<Record> pRegion(toRecord(region));
-		String maskRegion = vmask.toString();
-		if (maskRegion == "[]") {
-			maskRegion = "";
+		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+
+		String mask = vmask.toString();
+		if (mask == "[]") {
+			mask = "";
 		}
-		if (
-			_image->replacemaskedpixels(
-				pixels, *pRegion, maskRegion,
-				updateMask, list, stretch
-			)
-		) {
-			_stats.reset(0);
-			return True;
+		vector<std::pair<LogOrigin, String> > msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__;
+			msgs.push_back(make_pair(_ORIGIN, os.str()));
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("pixels", pixels));
+			inputs.push_back(make_pair("region", region));
+			inputs.push_back(make_pair("mask", vmask));
+			inputs.push_back(make_pair("update", updateMask));
+			inputs.push_back(make_pair("list", list));
+			inputs.push_back(make_pair("stretch", stretch));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(make_pair(_ORIGIN, os.str()));
 		}
-		throw AipsError("Error replacing masked pixels.");
+		if (_image->isFloat()) {
+			SPIIF myfloat = _image->getImage();
+			ImageMaskedPixelReplacer<Float> impr(
+				myfloat, regionPtr.get(), mask
+			);
+			impr.setStretch(stretch);
+			impr.replace(pixels.toString(), updateMask, list);
+			_image.reset(new ImageAnalysis(myfloat));
+			ImageHistory<Float> hist(myfloat);
+			hist.addHistory(msgs);
+		}
+		else {
+			SPIIC mycomplex = _image->getComplexImage();
+			ImageMaskedPixelReplacer<Complex> impr(
+				mycomplex, regionPtr.get(), mask
+			);
+			impr.setStretch(stretch);
+			impr.replace(pixels.toString(), updateMask, list);
+			_image.reset(new ImageAnalysis(mycomplex));
+			ImageHistory<Complex> hist(mycomplex);
+			hist.addHistory(msgs);
+		}
+		_stats.reset(0);
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3816,7 +4004,7 @@ template<class T> SPIIT image::_subimage(
 	const String& mask, bool dropDegenerateAxes,
 	bool overwrite, bool list, bool stretch
 ) {
-	return tr1::shared_ptr<ImageInterface<T> >(
+	return SPIIT(
 		SubImageFactory<T>::createImage(
 			*clone, outfile, region,
 			mask, dropDegenerateAxes, overwrite, list, stretch
