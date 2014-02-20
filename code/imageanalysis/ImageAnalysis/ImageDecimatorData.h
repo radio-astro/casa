@@ -27,7 +27,7 @@ public:
 	// Put new functions before NFUNCS.
 	enum Function {
 		// just copy the nth plane as is, no function applied
-		NONE,
+		COPY,
 		MEAN,
 		NFUNCS
 	};

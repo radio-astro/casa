@@ -37,7 +37,7 @@ template<class T> SPIIT ImageBoxcarSmoother<T>::_smooth(
     IPosition trc = shape - 1;
     // integer division
     trc[axis] = this->_getDecimate()
-		&& this->_getDecimationFunction() == ImageDecimatorData::NONE
+		&& this->_getDecimationFunction() == ImageDecimatorData::COPY
 		? shape[axis]/_width*_width - _width
 		: shape[axis] - _width;
     LCBox lcbox(blc, trc, shape);
@@ -87,7 +87,7 @@ template<class T> void ImageBoxcarSmoother<T>::_boxcarSmooth(
 	typename Array<T>::const_iterator cur = in.begin();
 	typename Array<T>::const_iterator end = in.end();
 	Bool skip = this->_getDecimate()
-		&& this->_getDecimationFunction() == ImageDecimatorData::NONE;
+		&& this->_getDecimationFunction() == ImageDecimatorData::COPY;
 	typename Array<T>::iterator outIter = out.begin();
 	if (skip) {
 		uInt count = 0;

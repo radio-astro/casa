@@ -3,8 +3,6 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 
-#include<stdcasa/cboost_foreach.h>
-
 namespace casa {
 
 template<class T> ImageDecimator<T>::ImageDecimator(
@@ -16,7 +14,7 @@ template<class T> ImageDecimator<T>::ImageDecimator(
 		image, "", region, "", "", "",
 		maskInp, outname, overwrite
 	),
-	_axis(0), _factor(1), _function(ImageDecimatorData::NONE) {
+	_axis(0), _factor(1), _function(ImageDecimatorData::COPY) {
 	this->_construct();
 }
 
@@ -79,7 +77,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 	// integer division
 	shape[_axis] = shape[_axis]/_factor;
 	if (
-		_function == ImageDecimatorData::NONE
+		_function == ImageDecimatorData::COPY
 		&& subShape[_axis] % _factor != 0
 	) {
 		shape[_axis]++;
@@ -98,7 +96,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 		isMasked ? new ArrayLattice<Bool>(out.shape()) : 0
 	);
 	IPosition outPos = begin;
-	if (_function == ImageDecimatorData::NONE) {
+	if (_function == ImageDecimatorData::COPY) {
 		end[_axis] = 0;
 		while(! inIter.atEnd() && outPos[_axis]<shape[_axis]) {
 			if (isMasked) {
@@ -162,7 +160,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 		<< "where n=" << _factor << ". ";
 	this->addHistory(lor, os.str());
     os.str("");
-    if (_function == ImageDecimatorData::NONE) {
+    if (_function == ImageDecimatorData::COPY) {
         os << "Directly copying every i*nth plane "
             << "in input to plane i in output.";
     }

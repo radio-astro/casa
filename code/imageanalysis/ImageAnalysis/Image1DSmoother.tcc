@@ -15,7 +15,7 @@ template<class T> Image1DSmoother<T>::Image1DSmoother(
 		maskInp, outname, overwrite
 	),
 	_axis(0), _nMinPixels(2), _decimate(False),
-	_decimationFunction(ImageDecimatorData::NONE) {}
+	_decimationFunction(ImageDecimatorData::COPY) {}
 
 template<class T> void Image1DSmoother<T>::setAxis(uInt n) {
 	uInt ndim = this->_getImage()->ndim();

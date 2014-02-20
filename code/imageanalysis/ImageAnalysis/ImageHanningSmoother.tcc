@@ -83,7 +83,7 @@ template<class T> Array<T> ImageHanningSmoother<T>::_hanningSmooth(
 	next++;
 	next++;
 	Bool skip = this->_getDecimate()
-		&& this->_getDecimationFunction() == ImageDecimatorData::NONE;
+		&& this->_getDecimationFunction() == ImageDecimatorData::COPY;
 	uInt inc = skip ? 2 : 1;
 	if (skip && size % 2 == 0) {
 		end--;
