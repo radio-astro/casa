@@ -282,7 +282,7 @@ class SetModel(basetask.StandardTaskTemplate):
         '''
         
         setjyinputs = vlasetjy.VLASetjy.Inputs(self.inputs.context,
-             field=field, spw=spw, model=model, intent=intent, fluxdensity=fluxdensity, usescratch=True)
+             field=field, spw=spw, model=model, intent=intent, fluxdensity=fluxdensity)
         setjytask = vlasetjy.VLASetjy(setjyinputs)
         setjy_result = self._executor.execute(setjytask, True)
         

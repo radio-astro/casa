@@ -261,6 +261,9 @@ class VLASetjyInputs(basetask.StandardInputs):
 	# necessary. Not required here.
 	# d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
 	d['selectdata'] = True
+	
+	# Force usescratch to True for now
+	d['usescratch'] = True
 
         return d
 
