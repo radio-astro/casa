@@ -406,7 +406,7 @@ class ReductionGroupDesc(list):
         if pol is None:
             return max(member.iteration)
         else:
-            return member.iteration[pols]
+            return member.iteration[pol]
             
     def iter_countup(self, antenna, spw, pols=None):
         member = self[self.__search_member(antenna, spw)]
