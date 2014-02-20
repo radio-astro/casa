@@ -208,16 +208,13 @@ channels of spectral window.</p>
             <td rowspan="${len(spwmap[st.basename])}">${st.basename}</td>
             <td rowspan="${len(spwmap[st.basename])}">${st.antenna.name}</td>
             <td rowspan="${len(spwmap[st.basename])}">${st.calibration_strategy['calmode']}</td>
-            % if len(spwmap[st.basename]) == 1:
-                <td>${spwmap[st.basename].keys()[0]}</td>
-                <td>${spwmap[st.basename].values()[0]}</td>
-            % else:
-                % for (k,v) in spwmap[st.basename].items():
-                    <td>${k}</td>
-                    <td>${','.join(map(str, v))}</td>
+            % for (k,v) in spwmap[st.basename].items():
+                <td>${k}</td>
+                <td>${','.join(map(str, v))}</td>
+                % if len(spwmap[st.basename]) > 1:
                     </tr><tr>
-                % endfor
-            % endif
+                % endif
+            % endfor
         </tr>
     % endfor
     </tbody>
