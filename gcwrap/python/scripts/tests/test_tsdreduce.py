@@ -66,15 +66,16 @@ class sdreduce_test(unittest.TestCase):
         print "\nCurrent run: "+str(statdict)
         return statdict
 
-    def _teststats0(self,teststat,refstat,places=4):
+    def _teststats0(self,teststat,refstat):
         for stat, refval in refstat.iteritems():
             self.assertTrue(teststat.has_key(stat),
                             msg = "'%s' is not defined in the current run" % stat)
             allowdiff = 0.01
-            #print "Comparing '%s': %f (current run), %f (reference)" % \
-            #      (stat,testdict[stat],refval)
+            #allowdiff = 1.e-8
             reldiff = (teststat[stat]-refval)/refval
-            self.assertTrue(reldiff < allowdiff,\
+            #print "Comparing '%s': %f (current run), %f (reference)" % \
+            #      (stat,teststat[stat],refval)
+            self.assertTrue(abs(reldiff) < allowdiff,\
                             msg="'%s' differs: %f (ref) != %f" % \
                             (stat, refval, teststat[stat]))
 
@@ -123,9 +124,9 @@ class sdreduce_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': 0.21985267102718353, 'min': -0.70194435119628906,
-                   'max_abc': 4093.0, 'max': 0.96840262413024902,
-                   'sum': 5.4850387573242188, 'stddev': 0.21986636519432068,
+        refstat = {'rms': 0.21985267102718353, 'min': -0.7019438743591309,
+                   'max_abc': 4093.0, 'max': 0.9684028029441833,
+                   'sum': 5.486020088195801, 'stddev': 0.21986639499664307,
                    'min_abc': 7623.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
@@ -228,16 +229,21 @@ class sdreduce_test(unittest.TestCase):
         average = True
         # need to run one of average
         timeaverage = True
+        tweight = 'tintsys'
         scanaverage = True
 
         result = tsdreduce(infile=infile,outfile=outfile,
-                       average=average,timeaverage=timeaverage,
-                           scanaverage=scanaverage)
+                          average=average,timeaverage=timeaverage,
+                          tweight = 'tintsys',scanaverage=scanaverage)
+
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-
+        #refstat = {'rms': 4.128033638000488, 'min': 3.2304768562316895,
+        #           'max_abc': 4093.0, 'max': 5.676198482513428,
+        #           'sum': 29638.3515625, 'stddev': 0.24048194289207458,
+        #           'min_abc': 2452.0}
         refstat = {'rms': 4.1353230476379395, 'min': 3.2386586666107178,
                    'max_abc': 4093.0, 'max': 5.6874399185180664,
                    'sum': 29690.876953125, 'stddev': 0.24056948721408844,
@@ -257,7 +263,6 @@ class sdreduce_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-
         refstat = {'rms': 3.5979659557342529, 'min': 2.3542881011962891,
                    'max_abc': 4093.0, 'max': 5.2421674728393555,
                    'sum': 25737.166015625, 'stddev': 0.37295544147491455,
@@ -277,11 +282,10 @@ class sdreduce_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-
-        refstat =  {'rms': 0.42929685115814209, 'min': -1.4878685474395752,
-                    'max_abc': 4093.0, 'max': 1.8000495433807373,
-                    'sum': 6.9646663665771484, 'stddev': 0.42932614684104919,
-                    'min_abc': 7434.0}
+        refstat = {'rms': 0.4292968213558197, 'min': -1.4878684282302856,
+                   'max_abc': 4093.0, 'max': 1.8000496625900269,
+                   'sum': 6.965803146362305, 'stddev': 0.42932620644569397,
+                   'min_abc': 7434.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -301,9 +305,9 @@ class sdreduce_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': 0.37204021215438843, 'min': -1.1878492832183838,
-                   'max_abc': 4093.0, 'max': 1.6387548446655273,
-                   'sum': 9.2789239883422852, 'stddev': 0.3720642626285553,
+        refstat = {'rms': 0.37204012274742126, 'min': -1.1878470182418823,
+                   'max_abc': 4093.0, 'max': 1.638755202293396,
+                   'sum': 9.283474922180176, 'stddev': 0.37206435203552246,
                    'min_abc': 7623.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
@@ -324,9 +328,9 @@ class sdreduce_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': 0.25368797779083252, 'min': -0.87923824787139893,
+        refstat = {'rms': 0.2536879777908325, 'min': -0.8792380690574646,
                    'max_abc': 4093.0, 'max': 1.0637180805206299,
-                   'sum': 4.11566162109375, 'stddev': 0.25370475649833679,
+                   'sum': 4.116354942321777, 'stddev': 0.2537047564983368,
                    'min_abc': 7434.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
@@ -346,7 +350,6 @@ class sdreduce_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-
         refstat = {'rms': 2.126171350479126, 'min': 1.3912382125854492,
                    'max_abc': 4093.0, 'max': 3.0977959632873535,
                    'sum': 15209.0869140625, 'stddev': 0.2203933447599411,
