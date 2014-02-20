@@ -114,7 +114,7 @@ class ia_decimate_test(unittest.TestCase):
             myia.calcmask(imagename + " < 0")
             factor = 4
             if m == 0:
-                method = "none"
+                method = "copy"
             if m == 1:
                 method = "mean"
             zz = myia.decimate("", axis=2, factor=factor, method=method)

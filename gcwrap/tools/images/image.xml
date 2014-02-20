@@ -1196,8 +1196,8 @@ collapsed.done()
                 <value>1</value>
             </param>
             <param type="string"  name="method">
-                <description>Method to use for calculating pixel values of output. Supported values are "none" or "mean".</description>
-                <value>None</value>
+                <description>Method to use for calculating pixel values of output. Supported values are "copy" or "mean".</description>
+                <value>copy</value>
             </param>
             	<param type="any" direction="in" name="region">
             	<any type="variant" limittypes="string record"/>
@@ -1224,10 +1224,10 @@ collapsed.done()
 			of planes. 
 			
 			The method parameter represents how to calculate the pixel values of the output image. A
-			value of method="none" means that every factorth plane of the selected region in the input
+			value of method="copy" means that every factorth plane of the selected region in the input
 			image will be directly copied to the corresponding plane in the output image. So, if one
 			wanted to copy every third spectral plane in the input image to the output image, one would
-			specify factor=3 and method="none". If the selected region along the specified axis had 11
+			specify factor=3 and method="copy". If the selected region along the specified axis had 11
 			planes, then there would be 4 output planes which would map to planes 0, 3, 6, and 9 of
 			the specified region of input image. A value of method="mean" indicates that each of
 			factor number of planes in the range starting at each factorth plane should be averaged to 
@@ -1254,7 +1254,7 @@ collapsed.done()
 		<example>
 			# Copy verbatim every 5th plane of axis 2 of the input image
 			ia.open("myim.im")
-			decimated = ia.decimate("dec1.im", axis=2, factor=5, method="none")
+			decimated = ia.decimate("dec1.im", axis=2, factor=5, method="copy")
 			# do stuff with decimated and then close it
 			decimated.close()
 			
@@ -2483,13 +2483,13 @@ the increment.
 					the boxcar?</description>
 				<value>true</value>
 			</param>
-			<param type="string" name="dropmethod">
+			<param type="string" name="dmethod">
 				<description>If drop=True, method to use in plane decimation.
-					"n(one)": direct copy of every second plane, "m(ean)": average
+					"copy": direct copy of every second plane, "m(ean)": average
 					planes n*i through n*(i+1) - 1 (inclusive) in the smoothed,
 					non-decimated image to form plane i in the output image.
 				</description>
-				<value>none</value>
+				<value>copy</value>
 			</param>
 			<param type="bool" name="overwrite">
 				<description>Overwrite (unprompted) pre-existing output file?
@@ -2509,15 +2509,15 @@ the increment.
 			This application performs boxcar convolution of one axis of an image
 			defined by
 
-			z[i] = (y[i] + y[i+i] + ... + y[i+w])/w (equation 1)
+			z[i] = (y[i] + y[i+i] + ... + y[i+w])/w
 
 			where z[i] is the value at pixel i in the box car smoothed image, y[k]
 			is the pixel value of the input image at pixel k, and w is a postivie integer
 			representing the width of the boxcar in pixels. Both float and complex
 			valued images are supported. The length of the axis along which the
-			convolution is to occur must be at least n pixels in the selected region,
+			convolution is to occur must be at least w pixels in the selected region,
 			unless decimation using the mean function is chosen in which case the axis
-			length must be at least 2*n (see below). Masked pixel values are set to
+			length must be at least 2*w (see below). Masked pixel values are set to
 			zero prior to convolution. All nondefault pixel masks are ignored during
 			the calculation. The convolution is done in the image domain (i.e., not
 			with an FFT).
@@ -2531,7 +2531,7 @@ the increment.
 			are [1, 2, 5, 10, 17, 26], then the corresponding output slice will be of
 			length five and the output pixel values will be [1.5, 3.5, 7.5, 13.5, 21.5].
 
-			If drop=True and dropmethod="none", the output image is the image calculated
+			If drop=True and dmethod="copy", the output image is the image calculated
 			if drop=True, except that only every wth plane is kept. Both the pixel and mask
 			values of these planes are copied directly to the output image, without further
 			processing. Thus for example, if the selected region in the input image has six
@@ -2539,7 +2539,7 @@ the increment.
 			the pixel values, which are all unmasked, on a slice along this axis are [1, 2,
 			5, 10, 17, 26], the corresponding output pixel values will be [1.5, 7.5, 21.5].
 
-			If drop=True and dropmethod="mean", first the image described in the drop=False
+			If drop=True and dmethod="mean", first the image described in the drop=False
 			case is calculated. Then, the ith plane of the output image is calculated by
 			averaging the i*w to the (i+1)*w-1  planes of this intermediate image. Thus, for
 			example, if the selected region in the input image has six planes along the
@@ -2575,7 +2575,7 @@ the increment.
 			# smooth the spectral axis by 3 pixels, say it's axis 2 and only
 			# write every other pixel
 			boxcar = ia.boxcar(outfile="myboxcarsmoothed.im", axis=2, drop=True,
-			width=3, dropmethod="n" overwrite=True)
+			width=3, dmethod="c" overwrite=True)
 			# done with input
 			ia.done()
 			# do something with the output image, get statistics say
@@ -5344,9 +5344,9 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
-     <param type="string"  name="dropmethod">
-        <description>If drop=True, method to use in plane decimation. "n(one)": direct copy of every second plane, "m(ean)": average planes 2*i and 2*i+1 in the smoothed, non-decimated image to form plane i in the output image. </description>
-        <value>none</value>
+     <param type="string"  name="dmethod">
+        <description>If drop=True, method to use in plane decimation. "c(opy)": direct copy of every second plane, "m(ean)": average planes 2*i and 2*i+1 in the smoothed, non-decimated image to form plane i in the output image. </description>
+        <value>copy</value>
      </param>
 
 
@@ -5386,7 +5386,7 @@ region in the input image has six planes along the convolution axis, and if the 
 values, which are all unmasked, on a slice along this axis are [1, 2, 5, 10, 17, 26],
 the corresponding output pixel values will be [1.5, 2.5, 5.5, 10.5, 17.5, 21.5].
     
-If drop=True and dropmethod="none", the output image is the image calculated if
+If drop=True and dmethod="copy", the output image is the image calculated if
 drop=True, except that only the odd-numbered planes are kept. Furthermore, if the
 number of planes along the convolution axis in the selected region of the input image
 is even, the last odd number plane is also discarded. Thus, if the selected region
@@ -5398,9 +5398,9 @@ along the convolution axis, and if the pixel values, which are all unmasked, on 
 along this axis are [1, 2, 5, 10, 17, 26], the corresponding output pixel values will be
 [2.5, 10.5].
 
-If drop=True and dropmethod="mean", first the image described in the drop=False case
+If drop=True and dmethod="mean", first the image described in the drop=False case
 is calculated. The first plane and last plane(s) of that image are then discarded as
-described in the drop=True, dropmethod="none" case. Then, the ith plane of the output
+described in the drop=True, dmethod="copy" case. Then, the ith plane of the output
 image is calculated by averaging the (2*i)th and (2*i + 1)th planes of the intermediate
 image.Thus for example, if the selected region in the input image has six planes
 along the convolution axis, and if the pixel values, which are all unmasked, on a slice

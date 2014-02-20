@@ -727,7 +727,7 @@ image::boundingbox(const record& region) {
 image* image::boxcar(
 	const string& outfile, const variant& region,
 	const variant& vmask, int axis, int width, bool drop,
-	const string& dropmethod,
+	const string& dmethod,
 	bool overwrite, bool stretch
 ) {
 	LogOrigin lor(_class, __func__);
@@ -755,18 +755,18 @@ image* image::boxcar(
 		}
         ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
         if (drop) {
-            String mymethod = dropmethod;
+            String mymethod = dmethod;
             mymethod.downcase();
             if (mymethod.startsWith("m")) {
                 dFunction = ImageDecimatorData::MEAN;
             }
-            else if (mymethod.startsWith("n")) {
-                dFunction = ImageDecimatorData::NONE;
+            else if (mymethod.startsWith("c")) {
+                dFunction = ImageDecimatorData::COPY;
             }
             else {
                 ThrowCc(
-                    "Value of dropmethod must be "
-                    "either 'm'(ean) or 'n'(one)"
+                    "Value of dmethod must be "
+                    "either 'm'(ean) or 'c'(opy)"
                 );
             }
         }
@@ -782,7 +782,7 @@ image* image::boxcar(
 			inputs.push_back(make_pair("axis", axis));
 			inputs.push_back(make_pair("width", width));
 			inputs.push_back(make_pair("drop", drop));
-			inputs.push_back(make_pair("dropmethod", dropmethod));
+			inputs.push_back(make_pair("dmethod", dmethod));
 			inputs.push_back(make_pair("overwrite", overwrite));
 			inputs.push_back(make_pair("stretch", stretch));
 			os.str("");
@@ -1122,14 +1122,14 @@ image* image::decimate(
 		String mymethod = method;
 		mymethod.downcase();
 		ImageDecimatorData::Function f;
-		if (mymethod.startsWith("n")) {
-			f = ImageDecimatorData::NONE;
+		if (mymethod.startsWith("c")) {
+			f = ImageDecimatorData::COPY;
 		}
 		else if (mymethod.startsWith("m")) {
 			f = ImageDecimatorData::MEAN;
 		}
 		else {
-			ThrowCc("Unsupported decimation method" + method);
+			ThrowCc("Unsupported decimation method " + method);
 		}
 		std::tr1::shared_ptr<Record> regPtr(_getRegion(region, True));
 		vector<String> msgs;
@@ -2297,7 +2297,7 @@ image* image::hanning(
 	const string& outfile, const variant& region,
 	const variant& vmask, int axis, bool drop,
 	bool overwrite, bool /* async */, bool stretch,
-    const string& dropmethod
+    const string& dmethod
 ) {
 	LogOrigin lor(_class, __func__);
 	_log << lor;
@@ -2324,18 +2324,18 @@ image* image::hanning(
 		}
         ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
         if (drop) {
-            String mymethod = dropmethod;
+            String mymethod = dmethod;
             mymethod.downcase();
             if (mymethod.startsWith("m")) {
                 dFunction = ImageDecimatorData::MEAN;
             }
-            else if (mymethod.startsWith("n")) {
-                dFunction = ImageDecimatorData::NONE;
+            else if (mymethod.startsWith("c")) {
+                dFunction = ImageDecimatorData::COPY;
             }
             else {
                 ThrowCc(
-                    "Value of dropmethod must be "
-                    "either 'm'(ean) or 'n'(one)"
+                    "Value of dmethod must be "
+                    "either 'm'(ean) or 'c'(opy)"
                 );
             }
         }
@@ -2352,7 +2352,7 @@ image* image::hanning(
 			inputs.push_back(make_pair("drop", drop));
 			inputs.push_back(make_pair("overwrite", overwrite));
 			inputs.push_back(make_pair("stretch", stretch));
-			inputs.push_back(make_pair("dropmethod", dropmethod));
+			inputs.push_back(make_pair("dmethod", dmethod));
 			os.str("");
 			os << "ia." << __func__ << _inputsString(inputs);
 			msgs.push_back(os.str());
