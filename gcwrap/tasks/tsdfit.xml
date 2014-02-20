@@ -79,12 +79,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
-    <param type="bool" name="scanaverage">
-            <shortdescription>average integs within scans (True,False) </shortdescription>
-            <description>average integs within scans (True,False). If True, spectra are NOT averaged over different scan numbers.</description>
-            <value>False</value>
-    </param>
-
     <param type="bool" name="timeaverage">
             <description>average scans over time (True,False)</description>
             <value>False</value>
@@ -101,6 +95,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>tintsys</value>
 	    <value>median</value>
             </allowed>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam='true'>
+            <shortdescription>average integs within scans (True,False) </shortdescription>
+            <description>average integs within scans (True,False). If True, spectra are NOT averaged over different scan numbers.</description>
+            <value>False</value>
     </param>
 
     <param type="bool" name="polaverage">
@@ -206,6 +206,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 			<default param="tweight"><value type='string'>tintsys</value></default>
+			<default param="scanaverage"><value type='bool'>False</value></default>
                 </equals>
             </when>
 	    <when param="polaverage">
@@ -420,6 +421,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         SDtasks are able to handle GBT raw SDFITS format data since the 
         data filler is available. However, the functionality is not well 
         tested yet, so that there may be unknown bugs.  
+
+-------------------------------------
+AVERAGING OF SPECTRA
+-------------------------------------
+Task sdfit has two averaging modes, i.e., time and polarization average.
+
+When timeaverage=True, spectra are averaged over time for each IF
+(spectral window), polarization, and beam, independently. Note that,
+by default (scanaverage=False), timeaverage=True averages spectra
+irrespective of scan IDs.
+It is possible to average spectra separately for each scan ID by setting
+a sub-parameter scanaverage=True.
+For example, the combination of parameters: scan='0~2', timeaverage=True, and
+scanaverage=False: averages spectra in scan ID 0 through 2 all together
+                   to a spectrum,
+scanaverage=True : averages spectra per scan ID and end up with three
+                   spectra from scan 0, 1, and 2.
+
+When polaverage=True, spectra are averaged over polarization for
+each IF (spectral window) and beam. Note that, so far, time averaging is
+automatically switched on when polaverage is set to True. This behavior
+is not desirable and will be discarded in future.
 
   </example>
 

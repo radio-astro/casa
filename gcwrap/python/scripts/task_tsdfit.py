@@ -5,7 +5,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdfit(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, scan, pol, scanaverage, timeaverage, tweight, polaverage, pweight, fitfunc, fitmode, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
+def tsdfit(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, scan, pol, timeaverage, tweight, scanaverage, polaverage, pweight, fitfunc, fitmode, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdfit_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -56,6 +56,8 @@ class sdfit_worker(sdutil.sdtask_template):
     def execute(self):
         self.set_to_scan()
 
+        #WORKAROUND for new tasks (in future this should be done in sdutil)
+        if not self.timeaverage: self.scanaverage = False
         # average data
         self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight)
 
