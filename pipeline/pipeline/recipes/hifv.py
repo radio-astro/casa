@@ -168,6 +168,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
     
         # Flag known bad data
         hifv_flagdata (pipelinemode=pipelinemode, scan=True)
+        h_save()
     
         # Fill model columns for primary calibrators
         hifv_setmodel (pipelinemode=pipelinemode)

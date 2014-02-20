@@ -3,9 +3,14 @@ import os
 import re
 import types
 
+import flaghelper
+
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.hif.tasks.flagging import agentflagger
+import pipeline.infrastructure.casatools as casatools
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -40,6 +45,70 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
     Agent flagger class for VLA data.
     """
     Inputs = VLAAgentFlaggerInputs
+    
+    
+    def prepare(self):
+        af = casatools.agentflagger
+        af.open(msname=self.inputs.ms.name);
+        af.selectdata();
+
+        agentcmds = self._get_flag_commands()
+        print agentcmds
+
+        # Unflag (This is only for testing)
+#         if agentcmds:
+#             LOG.warning('Unflagging all data before processing!')
+#             self._add_agent('mode=unflag')
+
+        for cmd in agentcmds:
+            self._add_agent(cmd)
+
+        # Run all these agents, and get the combined report.
+        af.init()
+        summary_stats_list = af.run(writeflags=True)
+        af.done()
+
+        print summary_stats_list
+
+        # Parse the output summary lists and extract only 'type==summary'
+        # Iterate through the list in the correct order. Do not follow default
+        # 'dictionary-key' ordering.
+        summary_reps=[];
+        for rep in range(0, summary_stats_list['nreport']):
+            repname = 'report' + str(rep)
+            if summary_stats_list[repname]['type'] == 'summary':
+                summary_reps.append(summary_stats_list[repname])
+
+        print '#############################################'
+        print summary_reps
+
+        return agentflagger.AgentFlaggerResults(summary_reps, agentcmds)
+
+    def analyse(self, result):
+        return result
+        
+    def _string_to_dict(self, cmdstring):
+        d = {}
+        for arg in re.split('\s+', cmdstring.strip()):
+            k, v = re.split('=', arg, maxsplit=1)
+            # convert boolean strings to boolean objects
+            v = True if v in ('True', '"True"', "'True'") else v
+            v = False if v in ('False', '"False"', "'False'") else v
+            d[k] = v
+        return d
+
+    def _add_agent(self, cmdstring):
+        agent_cmd = {'apply'      : True,
+                     'sequential' : True}
+        agent_cmd.update(self._string_to_dict(cmdstring))
+
+        # add mode=manual for flags that do not specify the mode, such as the
+        # online flags  
+        if 'mode' not in agent_cmd:
+            agent_cmd['mode'] = 'manual'
+
+        casatools.agentflagger.parseagentparameters(agent_cmd)
+    
     
     def _get_flag_commands(self):
         """ Adding quack and clip
