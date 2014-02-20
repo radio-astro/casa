@@ -25,6 +25,16 @@ template<class T> void ImageDecimator<T>::setFactor(uInt n) {
 	_factor = n;
 }
 
+template<class T> void ImageDecimator<T>::setFunction(
+	ImageDecimatorData::Function f
+) {
+	ThrowIf(
+		f == ImageDecimatorData::NFUNCS,
+		"Setting decimation function to NFUNCS is not allowed"
+	);
+	_function = f;
+}
+
 template<class T> void ImageDecimator<T>::setAxis(uInt n) {
 	uInt ndim = this->_getImage()->ndim();
 	ThrowIf(
@@ -36,8 +46,8 @@ template<class T> void ImageDecimator<T>::setAxis(uInt n) {
 	_axis = n;
 }
 
-template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
-	LogOrigin lor = LogOrigin(getClass(), __FUNCTION__);
+template<class T> SPIIT ImageDecimator<T>::decimate() const {
+	LogOrigin lor = LogOrigin(getClass(), __func__);
 	*this->_getLog() << lor;
 	SPIIT clone(this->_getImage()->cloneII());
 	std::tr1::shared_ptr<SubImage<T> >subImage(
@@ -55,12 +65,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
 			<< "be removed. The resulting image will be a straight "
 			<< "copy of the selected image." << LogIO::POST;
 		SPIIT tmp(this->_prepareOutputImage(*subImage));
-		if (wantReturn) {
-			return tmp;
-		}
-		else {
-			return SPIIT();
-		}
+    	return tmp;
 	}
 	CoordinateSystem csys = subImage->coordinates();
 	Vector<Double> refPix = csys.referencePixel();
@@ -69,14 +74,13 @@ template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
 	Vector<Double> inc = csys.increment();
 	inc[_axis] *= _factor;
 	csys.setIncrement(inc);
-
 	IPosition subShape = subImage->shape();
 	IPosition shape = subShape;
 	// integer division
 	shape[_axis] = shape[_axis]/_factor;
 	if (
 		_function == ImageDecimatorData::NONE
-		&& subShape[_axis] % 2 == 1
+		&& subShape[_axis] % _factor != 0
 	) {
 		shape[_axis]++;
 	}
@@ -94,7 +98,6 @@ template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
 		isMasked ? new ArrayLattice<Bool>(out.shape()) : 0
 	);
 	IPosition outPos = begin;
-
 	if (_function == ImageDecimatorData::NONE) {
 		end[_axis] = 0;
 		while(! inIter.atEnd() && outPos[_axis]<shape[_axis]) {
@@ -156,17 +159,22 @@ template<class T> SPIIT ImageDecimator<T>::decimate(Bool wantReturn) const {
 	}
 	ostringstream os;
 	os << "Decimated axis " << _axis << " by keeping only every nth plane, "
-		<< "where n=" << _factor << ".";
+		<< "where n=" << _factor << ". ";
+	this->addHistory(lor, os.str());
+    os.str("");
+    if (_function == ImageDecimatorData::NONE) {
+        os << "Directly copying every i*nth plane "
+            << "in input to plane i in output.";
+    }
+    else if (_function == ImageDecimatorData::MEAN) {
+        os << "Averaging every i to i*(n-1) planes in the input "
+            << "image to form plane i in the output image.";
+    }
 	this->addHistory(lor, os.str());
 	SPIIT tmp(
 		this->_prepareOutputImage(out, 0, outMask.get())
 	);
-	if (wantReturn) {
-		return tmp;
-	}
-	else {
-		return SPIIT();
-	}
+    return tmp;
 }
 
 

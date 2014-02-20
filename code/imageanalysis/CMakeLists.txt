@@ -115,6 +115,8 @@ install (FILES
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageAnalysis2.tcc
+    ImageAnalysis/ImageBoxcarSmoother.h
+    ImageAnalysis/ImageBoxcarSmoother.tcc
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageCollapser.tcc
 	ImageAnalysis/ImageCollapserData.h
@@ -145,6 +147,8 @@ install (FILES
 	ImageAnalysis/ImageInputProcessor2.tcc
 	ImageAnalysis/ImageMaskAttacher.h
     ImageAnalysis/ImageMaskAttacher.tcc
+    ImageAnalysis/ImageMaskedPixelReplacer.h
+    ImageAnalysis/ImageMaskedPixelReplacer.tcc
 	ImageAnalysis/ImageMetaData.h
     ImageAnalysis/ImageMetaDataBase.h
     ImageAnalysis/ImageMetaDataRW.h

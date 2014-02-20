@@ -299,11 +299,13 @@ Record CasacRegionManager::fromBCS(
 				<< LogIO::EXCEPTION;
 		}
 		_setRegion(regionRecord, diagnostics, regionPtr);
-		if (verbose) {
+        /*
+        if (verbose) {
 			*_getLog() << origin;
 			*_getLog() << LogIO::NORMAL << "Set region from supplied region record"
 				<< LogIO::POST;
 		}
+        */
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
 	else if (! regionName.empty()) {

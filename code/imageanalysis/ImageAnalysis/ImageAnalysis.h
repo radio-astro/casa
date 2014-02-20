@@ -354,13 +354,13 @@ class ImageAnalysis
     );
 
     Bool rename(const String& name, const Bool overwrite = False);
-
+/*
     Bool replacemaskedpixels(
     	const String& pixels, Record& region,
         const String& mask, const Bool update=False,
         const Bool list=False, const Bool extendMask=False
     );
-
+*/
     ImageInterface<Float>* sepconvolve(
     	const String& outfile,
         const Vector<Int>& axes,
@@ -608,7 +608,6 @@ class ImageAnalysis
     void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
                          const casa::Record& Regions,
                          casa::LogIO& logger);
-    
     // Set the cache
     void set_cache(const casa::IPosition& chunk_shape) const;
     
