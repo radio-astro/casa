@@ -123,7 +123,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         # Flag mode clip
         if inputs.clip:
             #flag_cmds = flag_cmds +'\n'
-            flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True')
+            flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True reason=clip')
         
         #print flag_cmds
         
@@ -210,7 +210,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
             int_time = context.evla['msinfo'][m.name].int_time
             
             quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + \
-                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False'
+                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False reason=quack'
             
             return quack_mode_cmd
 
@@ -256,7 +256,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW
-            baseband_cmd = 'mode=manual spw=' + SPWtoflag
+            baseband_cmd = 'mode=manual spw=' + SPWtoflag + ' reason=baseband'
 
         return baseband_cmd
     
