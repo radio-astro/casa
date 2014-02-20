@@ -227,10 +227,12 @@ class sdreduce_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         average = True
         # need to run one of average
+        timeaverage = True
         scanaverage = True
 
         result = tsdreduce(infile=infile,outfile=outfile,
-                       average=average,scanaverage=scanaverage)
+                       average=average,timeaverage=timeaverage,
+                           scanaverage=scanaverage)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),

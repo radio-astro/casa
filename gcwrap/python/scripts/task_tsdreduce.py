@@ -8,7 +8,7 @@ import task_tsdaverage as task_sdaverage
 import task_tsdbaseline as task_sdbaseline
 
 @sdutil.sdtask_decorator
-def tsdreduce(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, kernel, kwidth, chanwidth, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def tsdreduce(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, average, timeaverage, tweight, scanaverage, averageall, polaverage, pweight, kernel, kwidth, chanwidth, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdreduce_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -60,7 +60,9 @@ class sdreduce_worker(sdutil.sdtask_template):
 
         ## channel splitting
         #sdutil.dochannelrange(self.scan, self.channelrange)
-        
+
+        #WORKAROUND for new tasks (in future this should be done in sdutil)
+        if not self.timeaverage: self.scanaverage = False
         # averaging stage
         if self.average:
             self.scan = sdutil.doaverage(self.scan, self.scanaverage,

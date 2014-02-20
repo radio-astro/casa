@@ -167,11 +167,6 @@ fitting).
             <value>False</value>
     </param>
 
-    <param type="bool" name="scanaverage" subparam="true">
-            <description>average spectra within a scan number (do NOT average over scan nummbers) [True, False]</description>
-            <value>False</value>
-    </param>
-
     <param type="bool" name="timeaverage" subparam="true">
             <description>average spectra over time [True, False]</description>
             <value>False</value>
@@ -188,6 +183,11 @@ fitting).
 	    <value>tintsys</value>
 	    <value>median</value>
             </allowed>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam="true">
+            <description>average spectra within a scan number [True, False] valid only if timeaverage=T.</description>
+            <value>False</value>
     </param>
 
     <param type="bool" name="averageall" subparam="true">
@@ -416,9 +416,9 @@ fitting).
             <when param="average">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
-                        <default param="scanaverage"><value type="bool">False</value></default>
                         <default param="timeaverage"><value type="bool">False</value></default>
                         <default param="tweight"><value type="string">tintsys</value></default>
+                        <default param="scanaverage"><value type="bool">False</value></default>
                         <default param="averageall"><value type='bool'>False</value></default>
                         <default param="polaverage"><value type="bool">False</value></default>
                         <default param="pweight"><value type="string">tsys</value></default>
@@ -628,11 +628,6 @@ average -- averaging on spectral data
         default: False
 
     &gt;&gt;&gt;average expandable parameter
-        scanaverage -- average integrations within scans
-               options: (bool) True,False
-               default: False
-               example: if True, this happens in read-in
-               For GBT, set False!
         timeaverage -- average times for multiple scan cycles
                options: (bool) True,False
                default: False
@@ -645,6 +640,10 @@ average -- averaging on spectral data
                         'tintsys'  (Tint/Tsys**2)
                         'median'  ( median averaging)
                default: 'none'
+        scanaverage -- average integrations within scans
+               options: (bool) True,False
+               default: False
+               example: if True, this happens in read-in
         averageall -- average multi-resolution spectra
                       spectra are averaged by referring 
                       their frequency coverage
