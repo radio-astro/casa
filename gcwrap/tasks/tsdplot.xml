@@ -100,11 +100,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
-    <param type="bool" name="scanaverage">
-            <description>average integs within scans (True,False)</description>
-            <value>False</value>
-    </param>
-
     <param type="bool" name="timeaverage">
             <description>average scans over time (True,False)</description>
             <value>False</value>
@@ -121,6 +116,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>tintsys</value>
             <value>median</value>
             </allowed>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam="true">
+            <description>average integs within scans (True,False)</description>
+            <value>False</value>
     </param>
 
     <param type="bool" name="polaverage">
@@ -354,6 +354,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                         <default param="tweight"><value type='string'>tintsys</value></default>
+                        <default param="scanaverage"><value type='bool'>False</value></default>
                 </equals>
             </when>
             <when param="polaverage">
@@ -455,9 +456,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: '' (use all beams)
                 example: '1'
                 this selection is in addition to scan, field, spw, and pol
-        scanaverage -- average integs within scans
-                options: (bool) True,False
-                default: False
         timeaverage -- average times for multiple scan cycles
                 options: (bool) True,False
                 default: False
@@ -470,6 +468,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                   'tintsys'  (Tint/Tsys**2)
                                   'median'  ( median averaging)
                          default: 'tintsys'
+                scanaverage -- average integs within scans
+                        options: (bool) True,False
+                        default: False
         polaverage -- average polarizations
                 options: (bool) True,False
                 default: False
@@ -620,17 +621,33 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         matching using asterisk, e.g., 'FLS3a*'. Selection of scans,
         IFs, polarizations, and beams, is possible by a CASA type 
         selection syntax using a string of comma separated numbers 
-        with operaters, i.e., '~', '&gt;', '&gt;=', '&lt;', and '&lt;='.
+        with operaters, i.e., '~', '&gt;', and '&lt;'.
         For example, the following selection
         scan = "&lt;3,7~9,15"
         is to select scan IDs 0, 1, 2, 7, 8, 9, and 15.
 
-        *** control of plot lines in 'spectra' and 'grid' plottype ***
-        Note that colormap and linestyles cannot be controlled at a time.
-        The 'linestyles' is ignored if both of them are specified.
-        Some plot options, like changing titles, legends, fonts,
-        and the like are not supported in this task.  You should use
-        sd.plotter from the ASAP toolkit directly for this.
+-------------------------------------
+AVERAGING OF SPECTRA
+-------------------------------------
+Task sdplot has two averaging modes, i.e., time and polarization average.
+
+When timeaverage=True, spectra are averaged over time for each IF
+(spectral window), polarization, and beam, independently. Note that,
+by default (scanaverage=False), timeaverage=True averages spectra
+irrespective of scan IDs.
+It is possible to average spectra separately for each scan ID by setting
+a sub-parameter scanaverage=True.
+For example, the combination of parameters: scan='0~2', timeaverage=True, and
+scanaverage=False: averages spectra in scan ID 0 through 2 all together
+                   to a spectrum,
+scanaverage=True : averages spectra per scan ID and end up with three
+                   spectra from scan 0, 1, and 2.
+
+When polaverage=True, spectra are averaged over polarization for
+each IF (spectral window) and beam. Note that, so far, time averaging is
+automatically switched on when polaverage is set to True. This behavior
+is not desirable and will be discarded in future.
+
 
         *** available plottypes ***
         * plottype = 'spectra' plots single dish spectra. Multiple scans,
@@ -653,6 +670,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           and only plot option is amplitude versus data row number.
         * plottype='azel' plots azimuth and elevation tracks of the source.
         * plottype='pointing' plots antenna poinitings.
+
+        *** control of plot lines in 'spectra' and 'grid' plottype ***
+        Note that colormap and linestyles cannot be controlled at a time.
+        The 'linestyles' is ignored if both of them are specified.
+        Some plot options, like changing titles, legends, fonts,
+        and the like are not supported in this task.  You should use
+        sd.plotter from the ASAP toolkit directly for this.
 
         ASAP recognizes the data of the "AT" telescopes, but currently
         does not know about the GBT or any other telescope. This task
