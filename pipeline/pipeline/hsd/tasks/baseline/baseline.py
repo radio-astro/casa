@@ -156,9 +156,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
             # loop over file
             for idx in _file_index:
-                iteration = group_desc.get_iteration(idx, spwid)
+                _iteration = group_desc.get_iteration(idx, spwid)
                 outfile = self._get_dummy_name(context, idx)
-                fitter_inputs = fitter_cls.Inputs(context, idx, spwid, pols, iteration, 
+                fitter_inputs = fitter_cls.Inputs(context, idx, spwid, pols, _iteration, 
                                                   fitorder, edge, outfile)
                 fitter = fitter_cls(fitter_inputs)
                 fitter_result = self._executor.execute(fitter, merge=True)
@@ -168,7 +168,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 
             name_list = [context.observing_run[f].baselined_name
                          for f in _file_index]
-            baselined.append({'name': name_list, 'index': list(_file_index),
+            baselined.append({'group_id': group_id, 'iteration': iteration,
+                              'name': name_list, 'index': list(_file_index),
                               'spw': spwid, 'pols': pols,
                               'lines': detected_lines,
                               'channelmap_range': channelmap_range,

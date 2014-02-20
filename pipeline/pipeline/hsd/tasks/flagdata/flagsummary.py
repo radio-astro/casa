@@ -81,7 +81,9 @@ class SDFlagSummary(object):
                 dt_idx = numpy.array([chunks[1] for chunks in TimeTable]).flatten()
                 # generate summary plot
                 st_prefix = st.name.rstrip('/').split('/')[-1].rstrip('\.asap').replace('\.', '_')
-                FigFileRoot = ("FlagStat_%s_spw%d_pol%d" % (st_prefix, spwid, pol))
+                iteration = _get_iteration(self.context.observing_run.reduction_group,
+                                           idx, spwid, pol)
+                FigFileRoot = ("FlagStat_%s_spw%d_pol%d_iter%d" % (st_prefix, spwid, pol, iteration))
                 time_gap = datatable.get_timegap(idx, spwid, pol)
                 # time_gap[0]: PosGap, time_gap[1]: TimeGap
                 for i in range(len(thresholds)):
@@ -387,3 +389,10 @@ class SDFlagSummary(object):
 
         del threshold, NPpdata, NPpflag, NPprows, PlotData, FlaggedRows, FlaggedRowsCategory
         return os.path.basename(Filename), flag_nums
+    
+def _get_iteration(reduction_group, antenna, spw, pol):
+    for (group_id, group_desc) in reduction_group.items():
+        for group_member in group_desc:
+            if group_member.antenna == antenna and group_member.spw == spw and pol in group_member.pols:
+                return group_member.iteration[pol]
+    raise RuntimeError('Given (%s, %s, %s) is not in reduction group.'%(antenna, spw, pol))

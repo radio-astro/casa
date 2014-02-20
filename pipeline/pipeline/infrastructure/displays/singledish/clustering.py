@@ -117,16 +117,18 @@ class ClusterDisplay(object):
                 # it should be empty cluster (no detection) so skip this cycle
                 continue
             spw = group['spw']
+            group_id = group['group_id']
+            iteration = group['iteration']
             t0 = time.time()
-            plot_score = ClusterScoreDisplay(cluster, spw, stage_dir)
+            plot_score = ClusterScoreDisplay(group_id, iteration, cluster, spw, stage_dir)
             plot_list.extend(plot_score.plot())
             t1 = time.time()
-            plot_property = ClusterPropertyDisplay(cluster, spw, stage_dir)
+            plot_property = ClusterPropertyDisplay(group_id, iteration, cluster, spw, stage_dir)
             plot_list.extend(plot_property.plot())
             antenna = group['index'][0]
             lines = group['lines']
             t2 = time.time()
-            plot_validation = ClusterValidationDisplay(self.context, cluster, spw, antenna, lines, stage_dir)
+            plot_validation = ClusterValidationDisplay(self.context, group_id, iteration, cluster, spw, antenna, lines, stage_dir)
             plot_list.extend(plot_validation.plot())
             t3 = time.time()
 
@@ -144,7 +146,9 @@ class ClusterDisplayWorker(object):
     
     MATPLOTLIB_FIGURE_ID = 8907
     
-    def __init__(self, cluster, spw, stage_dir):
+    def __init__(self, group_id, iteration, cluster, spw, stage_dir):
+        self.group_id = group_id
+        self.iteration = iteration
         self.cluster = cluster
         self.spw = spw
         self.stage_dir = stage_dir
@@ -195,7 +199,7 @@ class ClusterScoreDisplay(ClusterDisplayWorker):
             pl.draw()
 
         plotfile = os.path.join(self.stage_dir,
-                                'cluster_score_%s.png'%(self.spw))
+                                'cluster_score_group%s_spw%s_iter%s.png'%(self.group_id,self.spw,self.iteration))
         pl.savefig(plotfile, format='png', dpi=DPIDetail)
         plot = self._create_plot(plotfile, 'cluster_score',
                                  'Number of Clusters', 'Score')
@@ -231,7 +235,7 @@ class ClusterPropertyDisplay(ClusterDisplayWorker):
             pl.draw()
 
         plotfile = os.path.join(self.stage_dir,
-                                'cluster_property_%s.png'%(self.spw))
+                                'cluster_property_group%s_spw%s_iter%s.png'%(self.group_id,self.spw,self.iteration))
         pl.savefig(plotfile, format='png', dpi=DPISummary)
         plot = self._create_plot(plotfile, 'clustering_property',
                                  'Line Center', 'Line Width')
@@ -245,8 +249,8 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         'final': 'Clustering Analysis at Final stage\n\nGreen Square: Final Grid where the line protection channels are calculated and applied to the baseline subtraction\nBlue Square: Final Grid where the calculated line protection channels are applied to the baseline subtraction\n\nIsolated Grids are eliminated.\n'
     }
 
-    def __init__(self, context, cluster, spw, antenna, lines, stage_dir):
-        super(ClusterValidationDisplay, self).__init__(cluster, spw, stage_dir)
+    def __init__(self, context, group_id, iteration, cluster, spw, antenna, lines, stage_dir):
+        super(ClusterValidationDisplay, self).__init__(group_id, iteration, cluster, spw, stage_dir)
         self.context = context
         self.antenna = antenna
         self.lines = lines
@@ -353,7 +357,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 pl.draw()
 
             plotfile = os.path.join(self.stage_dir,
-                                    'cluster_%s_%s.png'%(self.spw,mode))
+                                    'cluster_group_%s_spw%s_iter%s_%s.png'%(self.group_id,self.spw,self.iteration,mode))
             pl.savefig(plotfile, format='png', dpi=DPISummary)
 
             for obj in plot_objects:
