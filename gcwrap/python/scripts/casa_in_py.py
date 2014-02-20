@@ -172,6 +172,7 @@ from importevla_pg import importevla_pg as importevla
 from split_pg import split_pg as split
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
+from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
 from widefield_pg import widefield_pg as widefield
 from immoments_pg import immoments_pg as immoments
 from uvcontsub_pg import uvcontsub_pg as uvcontsub

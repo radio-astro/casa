@@ -2176,7 +2176,7 @@ class Cleanup(test_base):
         os.system('rm -rf Four_ants_3C286.*ms* g19_d2usb_targets*')
         os.system('rm -rf comb*.*ms* reg*.*ms hann*.*ms favg*.*ms')
         os.system('rm -rf split*.*ms')
-        os.system('rm -rf 3c84scan1*ms*')
+        os.system('rm -rf 3c84scan1*ms* test.mms')
 
     def test_runTest(self):
         '''mstransform: Cleanup'''

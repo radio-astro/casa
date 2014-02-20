@@ -107,6 +107,7 @@ from ft import  ft
 from gaincal import  gaincal
 from gencal import  gencal
 from hanningsmooth import  hanningsmooth
+from hanningsmooth2 import  hanningsmooth2
 from imcontsub import  imcontsub
 from imfit import  imfit
 from imhead import  imhead

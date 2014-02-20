@@ -46,6 +46,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_getchunk.py
   test_gencal.py
   test_hanningsmooth.py
+  test_hanningsmooth2.py
   test_ia_adddegaxes.py
   test_ia_calcmask.py
   test_ia_continuumsub.py

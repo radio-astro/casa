@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hanningsmooth2" category="manipulation" visibility="experimental">
+	<shortdescription>Hanning smooth frequency channel data to remove Gibbs ringing</shortdescription>
+<description>
+		
+    This task is experimental! It uses the MSTransform framework underneath
+    but keeps roughly the same interface as the old hanningsmooth task.
+	
+	NOTE: This task will replace the hanningsmooth task in a later cycle!
+		
+    This function Hanning smooths the frequency channels with
+    a weighted running average. The weights are 0.5 for the central 
+    channel and 0.25 for each of the two adjacent channels. The first 
+    and last channels are flagged. Inclusion of a flagged value in an 
+    average causes that data value to be flagged. 
+				
+    If the 'CORRECTED' data column is requested for an MS that does not contain this column, 
+    it will use 'DATA' to calculate the smoothing and save it to 'DATA' in the output MS.
+    
+    WARNING: by default, all visibility columns will be smoothed. 
+
+</description>
+	
+    <input>
+	    <param type="string" name="vis" mustexist="true">
+        <description>Name of input Measurement set or Multi-MS.</description>
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="outputvis">
+        <description>Name of output Measurement set or Multi-MS.</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="createmms">
+    <description>Create a multi-MS output.</description>
+    <value>False</value>
+    </param>
+	    <param type="string" name="separationaxis" ignorecase="true" subparam="true">
+	        <description>Axis to do parallelization across(scan,spw,both).</description>
+	        <value>both</value>
+	        <allowed kind="enum" ignorecase="true">
+	            <value>both</value>
+	            <value>spw</value>
+	            <value>scan</value>
+	        </allowed>
+	    </param>
+	    <param type="int" name="numsubms" subparam="true">
+	        <description>The number of Sub-MSs to create.</description>
+	        <value>64</value>
+	    </param>
+	    <param type="bool" name="parallel" subparam="true">
+	        <description>Create a multi-MS in parallel using simple_cluster.</description>
+	        <value>False</value>
+	    </param>        
+	    <param type="int" name="ddistart" subparam="true" visibility="hidden">
+	        <description>For internal use only. Do not change it!</description>
+	        <value>-1</value>
+	    </param>
+    
+    <!-- SELECTION parameters -->    
+    <param type="any" name="field">
+        <description>Select field using ID(s) or name(s).</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw">
+        <description>Select spectral window/channels.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="scan" >
+        <description>Select data by scan numbers.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="antenna">
+        <description>Select data based on antenna/baseline.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="correlation">
+        <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'.</description>
+        <any type="variant" limittypes="string stringArray" />
+        <value type="string" />
+    </param>
+
+    <param type="any" name="timerange" >
+        <description>Select data by time range.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="intent" >
+        <description>Select data by scan intent.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="array">
+        <description>Select (sub)array(s) by array ID number.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="uvrange" >
+        <description>Select data by baseline length.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="observation">
+        <description>Select by observation ID(s).</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="feed">
+        <description>Multi-feed numbers: Not yet implemented.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+        
+    <param type="string" name="datacolumn" ignorecase="True">
+        <description>Input data column(s) to process.</description>
+        <value>all</value>
+        <allowed kind="enum" ignorecase="True">
+            <value>all</value>
+            <value>corrected</value>
+            <value>data</value>
+            <value>model</value>
+            <value>data,model,corrected</value>
+            <value>float_data</value>
+            <value>lag_data</value>
+            <value>float_data,data</value>
+            <value>lag_data,data</value>
+        </allowed>
+    </param>
+    				
+        			
+    <constraints>
+          <when param="createmms">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                  <default param="separationaxis"><value type="string">both</value></default>
+                  <default param="numsubms"><value type="int">64</value></default>
+                  <default param="parallel"><value type="bool">False</value></default>
+           </equals>
+          </when>
+    </constraints>
+    
+    </input>
+
+<example>
+
+----- Detailed description of keyword arguments: ------
+
+    vis -- Name of input visibility file (MS or MMS)
+        default: ''; example: vis='ngc5921.ms'
+
+    outputvis -- Name of output visibility file (MS or MMS)
+        default: ''; example: outputvis='out_ngc5921.mms'
+
+    createmms -- Create a multi-MS as the output.
+        default: False
+
+        If True, it will create the smoothed data in a Multi-MS partitioned
+        in the given 'separationaxis' parameter. See 'help partition' for a description
+        of a Multi-MS structure.
+
+        separationaxis -- Axis to do parallelization across. 
+            default: 'both'
+            options: 'scan', 'spw', 'both'
+            The 'both' option will try to partition in both scan and spw axes.
+
+        numsubms -- The number of sub-MSs to create (int).
+            default: 64
+
+        parallel -- Create a multi-MS in parallel, using the simple_cluster
+                    infrastructure. It will run the tool several times in parallel,
+                    one instance for each subMS. Note that for small MSs, we
+                    recommend to not change this parameter as the overhead of creating
+                    a cluster may be larger than the gain to run in parallel. (bool)
+            default: False 
+
+		
+	--- Data selection parameters ---
+	
+    field -- Select field using field id(s) or field name(s).
+             [run listobs to obtain the list iof d's or names]
+        default: ''=all fields If field string is a non-negative
+           integer, it is assumed to be a field index
+           otherwise, it is assumed to be a field name
+           field='0~2'; field ids 0,1,2
+           field='0,4,5~7'; field ids 0,4,5,6,7
+           field='3C286,3C295'; fields named 3C286 and 3C295
+           field = '3,4C*'; field id 3, all names starting with 4C
+
+    spw -- Select spectral window/channels
+        default: ''=all spectral windows and channels
+           spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+           spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+           spw='0:5~61'; spw 0, channels 5 to 61
+           spw='0,10,3:3~45'; spw 0,10 all channels, spw 3 - chans 3 to 45.
+           spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+           spw = '*:3~64'  channels 3 through 64 for all sp id's
+                   spw = ' :3~64' will NOT work.
+
+               NOTE: mstransform does not support multiple channel ranges per
+                     spectral window (';').
+
+    scan -- Scan number range
+        default: ''=all
+
+    antenna -- Select data based on antenna/baseline
+        default: '' (all)
+            Non-negative integers are assumed to be antenna indices, and
+            anything else is taken as an antenna name.
+
+        examples:
+            antenna='5&amp;6': baseline between antenna index 5 and index 6.
+            antenna='VA05&amp;VA06': baseline between VLA antenna 5 and 6.
+            antenna='5&amp;6;7&amp;8': baselines 5-6 and 7-8
+            antenna='5': all baselines with antenna 5
+            antenna='5,6,10': all baselines including antennas 5, 6, or 10
+            antenna='5,6,10&amp;': all baselines with *only* antennas 5, 6, or
+                                   10.  (cross-correlations only.  Use &amp;&amp;
+                                   to include autocorrelations, and &amp;&amp;&amp;
+                                   to get only autocorrelations.)
+            antenna='!ea03,ea12,ea17': all baselines except those that
+                                       include EVLA antennas ea03, ea12, or
+                                       ea17.
+
+    correlation -- Correlation types or expression.
+        default: '' (all correlations)
+        example: correlation='XX,YY' 
+
+    timerange -- Select data based on time range:
+        default: '' (all); examples,
+           timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+           Note: if YYYY/MM/DD is missing date, timerange defaults to the
+           first day in the dataset
+           timerange='09:14:0~09:54:0' picks 40 min on first day
+           timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min
+           on next day
+           timerange='09:44:00' data within one integration of time
+           timerange='&gt;10:24:00' data after this time
+
+    array -- (Sub)array number range
+        default: ''=all
+
+    uvrange -- Select data within uvrange (default units meters)
+        default: ''=all; example:
+            uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+            uvrange='&gt;4klambda';uvranges greater than 4 kilo-lambda
+            uvrange='0~1000km'; uvrange in kilometers
+
+    observation -- Select by observation ID(s)
+        default: ''=all
+
+    feed -- Selection based on the feed - NOT IMPLEMENTED YET
+        default: ''=all
+	
+    datacolumn -- Which data column to use for processing (case-insensitive).
+        default: 'all'; whichever of the visibility data columns that are present.
+        options: 'data', 'model', 'corrected', 'all','float_data', 'lag_data'.
+	
+        example1: datacolumn='data'; it will smooth the input DATA column and save the
+                  smoothed data in DATA of the output MS.
+        example2: datacolumn='corrected'; it will smooth the input CORRECTED_DATA column
+                  and save the smoothed data in DATA of the output MS.
+        example3: datacolumn='all', where the input MS has DATA,CORRECTED_DATA,MODEL_DATA.
+                  It will smooth all three columns and save the smoothed data in
+                  DATA, CORRECTED_DATA and MODEL_DATA of the output MS.
+               
+	
+ </example>
+ </task>
+ </casaxml>

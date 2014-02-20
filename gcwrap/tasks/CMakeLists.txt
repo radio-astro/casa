@@ -35,6 +35,7 @@ ft.xml
 gaincal.xml
 gencal.xml
 hanningsmooth.xml
+hanningsmooth2.xml
 imcollapse.xml
 imcontsub.xml
 imfit.xml
