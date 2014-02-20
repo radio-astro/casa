@@ -419,6 +419,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     corrTypeOK_p = status;
     dataDescriptionIdOK_p = status;
     direction1OK_p = status;
+    firstDirection1OK_p=status;
     direction2OK_p = status;
     exposureOK_p  = status;
     feed1_paOK_p = status;
@@ -2038,10 +2039,18 @@ Vector<Float>& VisBuffer::fillFeed2_pa()
 
 Vector<MDirection>& VisBuffer::fillDirection1()
 {
+  //Timer tim;
+  //tim.mark();
   CheckVisIterBase ();
   // fill feed1_pa cache, antenna, feed and time will be filled automatically
-  feed1_pa();
+  //feed1_pa();
+  // commented above as it calculates the Par-angle for all antennas when
+  //it may not be used at all...a 300% speedup on some large pointing table
+  antenna1();
+  feed1();
+  time();
   direction1OK_p = True;
+  firstDirection1OK_p=True;
   direction1_p.resize(antenna1_p.nelements()); // could also use nRow()
   const ROMSPointingColumns & mspc = msColumns().pointing();
   lastPointTableRow_p = mspc.pointingIndex(antenna1()(0),
@@ -2068,6 +2077,8 @@ Vector<MDirection>& VisBuffer::fillDirection1()
       direction1_p(row) = phaseCenter();
     }
     if (!visIter_p->allBeamOffsetsZero()) {
+      //Now we can calculate the Par-angles
+      feed1_pa();
       RigidVector<Double, 2> beamOffset =
         visIter_p->getBeamOffsets()(0, antenna1_p(row), feed1_p(row));
       if (visIter_p->antennaMounts()(antenna1_p(row)) == "ALT-AZ" ||
@@ -2087,9 +2098,69 @@ Vector<MDirection>& VisBuffer::fillDirection1()
       direction1_p(row).shift(-beamOffset(0), beamOffset(1), True);
     }
   }
+  //tim.show("fill dir1");
+  //cerr << "allbeamOff " << visIter_p->allBeamOffsetsZero() << endl;
+  firstDirection1_p=direction1_p[0];
   return direction1_p;
 }
 
+MDirection& VisBuffer::fillFirstDirection1()
+{
+  //Timer tim;
+  //tim.mark();
+  CheckVisIterBase ();
+  // fill feed1_pa cache, antenna, feed and time will be filled automatically
+  feed1();
+  time();
+  antenna1();
+  
+  //feed1_pa();
+  firstDirection1OK_p=True;
+  const ROMSPointingColumns & mspc = msColumns().pointing();
+  lastPointTableRow_p = mspc.pointingIndex(antenna1()(0),
+                                           time()(0), lastPointTableRow_p);
+  if (visIter_p->allBeamOffsetsZero() && lastPointTableRow_p < 0) {
+    // if no true pointing information is found
+    // just return the phase center from the field table
+    firstDirection1_p=phaseCenter();
+    lastPointTableRow_p = 0;
+    return firstDirection1_p;
+  }
+
+  Int pointIndex1=lastPointTableRow_p;
+
+    //cout << "POINTINDEX " << pointIndex1 << endl;
+    // if no true pointing information is found
+    // use the phase center from the field table
+  if (pointIndex1 >= 0) {
+    
+    firstDirection1_p = mspc.directionMeas(pointIndex1, timeInterval()(0));
+  } else {
+    firstDirection1_p = phaseCenter();
+  }
+  if (!visIter_p->allBeamOffsetsZero()) {
+    feed1_pa();
+    RigidVector<Double, 2> beamOffset =
+      visIter_p->getBeamOffsets()(0, antenna1_p(0), feed1_p(0));
+    if (visIter_p->antennaMounts()(antenna1_p(0)) == "ALT-AZ" ||
+	visIter_p->antennaMounts()(antenna1_p(0)) == "alt-az") {
+      SquareMatrix<Double, 2> xform(SquareMatrix<Double, 2>::General);
+      // SquareMatrix' default constructor is a bit strange.
+      // We will probably need to change it in the future
+      Double cpa = cos(feed1_pa_p(0));
+      Double spa = sin(feed1_pa_p(0));
+      xform(0, 0) = cpa;
+      xform(1, 1) = cpa;
+      xform(0, 1) = -spa;
+      xform(1, 0) = spa;
+      beamOffset *= xform; // parallactic angle rotation
+    }
+    // x direction is flipped to convert az-el type frame to ra-dec
+    firstDirection1_p.shift(-beamOffset(0), beamOffset(1), True);
+    }
+    
+  return firstDirection1_p;
+}
 Vector<MDirection>& VisBuffer::fillDirection2()
 {
   CheckVisIterBase ();

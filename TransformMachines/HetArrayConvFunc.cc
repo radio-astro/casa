@@ -778,7 +778,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //Now that we are calculating all phase gradients on the fly ..
       ///we should clean up some and get rid of the cached variables
-      convSize_p=(*(convSizes_p[0]))[0];
+      
+      convSize_p= nDefined_p > 0 ? (*(convSizes_p[0]))[0] : 0;
       //convSave_p.resize();
       //rec.get("convsave", convSave_p);
       //weightSave_p.resize();

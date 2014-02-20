@@ -1,5 +1,5 @@
 //# VisBuffer.h: buffer for iterating through MS in large blocks
-//# Copyright (C) 1996,1997,1998,1999,2000,2002,2003
+//# Copyright (C) 1996-2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -334,8 +334,13 @@ public:
     virtual const Vector<MDirection>& direction2()  const {
         return This->direction2();
     }
-
-
+    virtual MDirection& firstDirection1() {
+        return firstDirection1OK_p ? firstDirection1_p
+               : fillFirstDirection1();
+    }
+    virtual const MDirection& firstDirection1()  const {
+        return This->firstDirection1();
+    }
     // NOMINAL parallactic angle (feed p.a. offset NOT included)
     virtual Float parang0(Double time) const;
     virtual Vector<Float> parang(Double time) const;
@@ -965,6 +970,7 @@ private:
     virtual Vector<Int>& fillCorrType();
     virtual Int & fillDataDescriptionId ();
     virtual Vector<MDirection>& fillDirection1();
+    virtual MDirection& fillFirstDirection1();
     virtual Vector<MDirection>& fillDirection2();
     virtual Vector<Double>& fillExposure();
     virtual Vector<Int>& fillFeed1();
@@ -1036,6 +1042,7 @@ Bool item ## OK_p;
     CacheStatus (dataDescriptionId);
     CacheStatus (direction1);
     CacheStatus (direction2);
+    CacheStatus (firstDirection1);
     CacheStatus (exposure);
     CacheStatus (feed1_pa);
     CacheStatus (feed1);
@@ -1090,6 +1097,7 @@ Bool item ## OK_p;
     Int dataDescriptionId_p;
     Vector<MDirection> direction1_p; //where the first antenna/feed is pointed to
     Vector<MDirection> direction2_p; //where the second antenna/feed is pointed to
+    MDirection firstDirection1_p;
     Vector<Double> exposure_p;
     Vector<Int> feed1_p;
     Vector<Float> feed1_pa_p;

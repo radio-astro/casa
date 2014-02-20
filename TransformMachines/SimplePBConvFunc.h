@@ -149,6 +149,9 @@ namespace casa{
       Bool calcFluxScale_p;
       std::map<String, Int> vbConvIndex_p;
       virtual Int convIndex(const VisBuffer& vb);
+      std::map<String, Int> ant1PointVal_p;
+      Vector<MDirection> ant1PointingCache_p;
+      const MDirection& pointingDirAnt1(const VisBuffer& vb);
       virtual void storeImageParams(const ImageInterface<Complex>& iimage, const VisBuffer& vb);
       virtual void findUsefulChannels(Vector<Int>& chanMap, Vector<Double>& chanFreqs,  const VisBuffer& vb, const Vector<Double>& visFreq);
       //return the direction pixel corresponding to a direction
