@@ -105,9 +105,10 @@ void BDF2AsdmStManIndex::appendAutoIndex(unsigned int           iDD,
 					 unsigned int		nChan,
 					 unsigned int		nPol,
 					 unsigned int		stepBl,
-					 unsigned int		stepSpw,
+					 unsigned int		iSpw,
 					 const vector<double>&	scaleFactors,
-					 uint64_t		fileOffset) {
+					 uint64_t		fileOffset,
+					 uint32_t               spwOffset) {
   LOGENTER("BDF2AsdmStManIndex::appendAutoIndex");
   AsdmIndex							asdmIndex;
 
@@ -117,11 +118,11 @@ void BDF2AsdmStManIndex::appendAutoIndex(unsigned int           iDD,
   asdmIndex.nChan	 = nChan;
   asdmIndex.nPol	 = nPol;
   asdmIndex.stepBl	 = stepBl;
-  asdmIndex.stepSpw	 = stepSpw;
+  asdmIndex.iSpw	 = iSpw;
   asdmIndex.row		 = 0;   // Temporarily because we do not know yet how the MS MAIN DATA is going to be ordered.
   asdmIndex.scaleFactors = scaleFactors;
   asdmIndex.fileOffset	 = fileOffset;
-  asdmIndex.blockOffset  = iDD * nChan * nPol;
+  asdmIndex.blockOffset  = spwOffset; // iDD * nChan * nPol;
   asdmIndex.dataType     = 10;
 
   autoIndexes_vv[iDD].push_back(asdmIndex);
@@ -135,9 +136,10 @@ void BDF2AsdmStManIndex::appendWVRIndex(unsigned int            iDD,
 					unsigned int		nChan,
 					unsigned int		nPol,
 					unsigned int		stepBl,
-					unsigned int		stepSpw,
+					unsigned int		iSpw,
 					const vector<double>&	scaleFactors,
-					uint64_t		fileOffset) {
+					uint64_t		fileOffset,
+					uint32_t                spwOffset) {
   LOGENTER("BDF2AsdmStManIndex::appendWVRIndex");
   AsdmIndex							asdmIndex;
 
@@ -147,11 +149,11 @@ void BDF2AsdmStManIndex::appendWVRIndex(unsigned int            iDD,
   asdmIndex.nChan	 = nChan;
   asdmIndex.nPol	 = nPol;
   asdmIndex.stepBl	 = stepBl;
-  asdmIndex.stepSpw	 = stepSpw;
+  asdmIndex.iSpw	 = iSpw;
   asdmIndex.row		 = 0;   // Temporarily because we do not know yet how the MS MAIN DATA is going to be ordered.
   asdmIndex.scaleFactors = scaleFactors;
   asdmIndex.fileOffset	 = fileOffset;
-  asdmIndex.blockOffset  = iDD * nChan * nPol;
+  asdmIndex.blockOffset  = spwOffset; //iDD * nChan * nPol;
   asdmIndex.dataType     = 10;  // was 11.
 
   autoIndexes_vv[iDD].push_back(asdmIndex);
@@ -166,9 +168,10 @@ void BDF2AsdmStManIndex::appendCrossIndex(unsigned int          iDD,
 					  unsigned int		nChan,
 					  unsigned int		nPol,
 					  unsigned int		stepBl,
-					  unsigned int		stepSpw,
+					  unsigned int		iSpw,
 					  const vector<double>&	scaleFactors,
 					  uint64_t		fileOffset,
+					  uint32_t              spwOffset,
 					  PrimitiveDataType     dataType) {
   LOGENTER("BDF2AsdmStManIndex::appendCrossIndex");
   AsdmIndex							asdmIndex;
@@ -179,11 +182,11 @@ void BDF2AsdmStManIndex::appendCrossIndex(unsigned int          iDD,
   asdmIndex.nChan	 = nChan;
   asdmIndex.nPol	 = nPol;
   asdmIndex.stepBl	 = stepBl;
-  asdmIndex.stepSpw	 = stepSpw;
+  asdmIndex.iSpw	 = iSpw;
   asdmIndex.row		 = 0;   // Temporarily because we do not know yet how the MS MAIN DATA is going to be ordered.
   asdmIndex.scaleFactors = scaleFactors;
   asdmIndex.fileOffset	 = fileOffset;
-  asdmIndex.blockOffset  = iDD * nChan * nPol;
+  asdmIndex.blockOffset  = spwOffset; 
   switch (dataType) {
   case INT16_TYPE : asdmIndex.dataType = 0; break;
   case INT32_TYPE : asdmIndex.dataType = 1; break;
@@ -248,7 +251,7 @@ void BDF2AsdmStManIndex::dumpAutoCross() {
   for (unsigned int iDD = 0; iDD < numberOfDataDescriptions; iDD++) {
     for (unsigned int i = 0; i < autoIndexes_vv[iDD].size(); i++) {
       autoIndexes_vv[iDD][i].row = MSMainRowNumber;
-      MSMainRowNumber += autoIndexes_vv[iDD][i].nBl ; //* autoIndexes_vv[iDD][i].nSpw;
+      MSMainRowNumber += autoIndexes_vv[iDD][i].nBl ; // * autoIndexes_vv[iDD][i].nSpw;
     }
   
     for (unsigned int i = 0; i < crossIndexes_vv[iDD].size(); i++) {

@@ -70,17 +70,19 @@ struct AsdmIndex
 
   // Get number of rows spanned by the data blocks.
   uInt nrow() const
-  //{ return nBl*nSpw; } 
   { return nBl; } 
 
   //# Data members.
-  uInt  fileNr;
+  uInt  fileNr;  // The file index in the list of BDFs files containing the binary data.
   uInt  nBl, nSpw, nChan, nPol;
-  uInt  stepBl, stepSpw;
+  uInt  stepBl; // The number of values between two consecutive baselines for the same data description.
+  uInt  iSpw;   // The data description index in the sequence of basebands/spectral windows in the BDF.
   Int64 row;
   vector<double> scaleFactors;    //# crossdata scale factor per spw
-  Int64 fileOffset;
-  uInt  blockOffset;
+  Int64 fileOffset;     // The offset from the beginning of the file to the beginning of the block of data
+                        // to be read.
+  uInt  blockOffset;    // The offset from the beginning of the block of data read in the BDF
+                        // to the first value of the 1st baseline of data with data description of index spw
   Short dataType;       //# data type: 0=short 1=int32 3=float cross data
   //                                   10=auto 11=wvr? 12=zerolags
 };

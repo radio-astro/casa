@@ -268,7 +268,7 @@ private:
   void getShort (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
   void getInt   (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
   void getFloat (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
-  void getAuto  (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
+  void getAuto  (const AsdmIndex&, Complex* buf, uInt bl);
   // </group>
 
 
