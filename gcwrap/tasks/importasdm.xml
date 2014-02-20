@@ -181,6 +181,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    </allowed>
     </param>
 
+    <param type="bool" name="bdfflags">
+	    <description>Set the MS FLAG column according to the ASDM _binary_ flags</description>
+	    <value>False</value>
+    </param>
 
     </input>
 
@@ -310,6 +314,9 @@ showversion -- report the version of the asdm2MS being used.
 useversion -- Selects the version of asdm2MS to be used (\'v3\' (default, should work for all data))
               default: v3
 
+bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
+            default: false
+           
   </example>
 
 </task>
