@@ -5199,11 +5199,13 @@ void SolvableVisJones::fluxscale(const String& outfile,
           }
         }
         String noTranSol=x.str();
+        if (x!="") {
 	logSink() << LogIO::WARN
 		  << " The following transfer fields have no solutions available: "
 		  << noTranSol
 		  << LogIO::POST;
-        tranField.reference(implTranField);
+        }
+        //tranField.reference(implTranField);
       }
     }
     tranField.shape(nTran);
