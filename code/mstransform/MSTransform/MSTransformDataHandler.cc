@@ -3017,6 +3017,16 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 			spwCols_0.numChan().put(rowIndex,spwCols_i.numChan()(subms_row_index));
 			spwCols_0.totalBandwidth().put(rowIndex,spwCols_i.totalBandwidth()(subms_row_index));
 
+			// Optional columns (BBC_NO, ASSOC_SPW_ID, ASSOC_NATURE)
+			if (spwCols_i.bbcNo().isNull()==false and spwCols_i.bbcNo().hasContent()==true)
+				spwCols_0.bbcNo().put(rowIndex,spwCols_i.bbcNo()(subms_row_index));
+
+			if (spwCols_i.assocSpwId().isNull()==false and spwCols_i.assocSpwId().hasContent()==true)
+				spwCols_0.assocSpwId().put(rowIndex,spwCols_i.assocSpwId()(subms_row_index));
+
+			if(spwCols_i.assocNature().isNull()==false and spwCols_i.assocNature().hasContent()==true)
+				spwCols_0.assocNature().put(rowIndex,spwCols_i.assocNature()(subms_row_index));
+
 			rowIndex += 1;
 		}
 	}

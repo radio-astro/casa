@@ -23,7 +23,42 @@ def dump_args(func):
    
     return echo_func
 
+'''
+In order to call MSTHelper from another task, a few things are needed:
+See examples in task_partition.py or task_hanningsmooth2.py
+
+ *  to process another task on a MMS, it is assumed that the task
+    has data selection parameters (or at least spw and scan).
+    
+ *  ddistart must be a hidden parameter in the XML interface of the task.
+ 
+ *  MSTHelper will override the ParallelTaskHelper methods:
+    initialize(), generateJobs() and postExecution()
+    
+ *  Snippet of how to use MSTHelper from another class:
+ 
+    from task_mstransform import MSTHelper
+    
+    # Initiate the helper class    
+    msth = MSTHelper(locals()) 
+    
+    # Validate input and output parameters
+    msth.setupIO()
+    
+    if createmms:   
+        # Get a cluster
+        msth.setupCluster(thistask='othertask')
+        try:
+            msth.go()
+        except Exception, instance:
+            casalog.post('%s'%instance,'ERROR')
+            return False
+                    
+        return True
+
+'''
 class MSTHelper(ParallelTaskHelper):
+#    @dump_args
     def __init__(self, args={}):
         
         # Create a copy of the original local parameters
@@ -33,6 +68,10 @@ class MSTHelper(ParallelTaskHelper):
         self.__isMMS = False
         self._calScanList = None
         self._selectionScanList = None
+        
+        if not self.__args.has_key('spw'):
+            self.__args['spw'] = ''
+            
         self.__spwSelection = self.__args['spw']
         self.__spwList = None
         # __ddidict contains the names of the subMSs to consolidate
@@ -107,7 +146,6 @@ class MSTHelper(ParallelTaskHelper):
             elif self.__args['nspw'] > 1:
                 # CANNOT process in sequential either because internally the
                 # spws need to be combined first before the separation!!!!!!
-#                casalog.post('Can only process the MS in sequential', 'WARN')
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
 
@@ -120,7 +158,8 @@ class MSTHelper(ParallelTaskHelper):
         if thistask == '':
             thistask = 'mstransform'
             
-        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
+        # Use the original task parameters
+        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__origpars)
             
     
 #    @dump_args
@@ -152,7 +191,7 @@ class MSTHelper(ParallelTaskHelper):
         """Add the full path for the input and output MS.
            This method overrides the one from ParallelTaskHelper."""
         
-                
+        # self._arg is populated inside ParallelTaskHelper._init_()
         self._arg['vis'] = os.path.abspath(self._arg['vis'])
             
         if (self._arg['outputvis'] != ""):
@@ -612,7 +651,7 @@ class MSTHelper(ParallelTaskHelper):
     def _getSelectionFilter(self):
         ''' This method takes the list of specified selection criteria and
             puts them into a dictionary.  There is a bit of name mangling necessary.
-            The pairs are: (msselection syntax, split task syntanc)'''
+            The pairs are: (msselection syntax, mstransform task syntax)'''
         
         selectionPairs = []
         selectionPairs.append(('field','field'))
@@ -629,7 +668,7 @@ class MSTHelper(ParallelTaskHelper):
     def __generateFilter(self, selectionPairs):
         filter = None
         for (selSyntax, argSyntax) in selectionPairs:
-            if self._arg[argSyntax] != '':
+            if self._arg.has_key(argSyntax) and self._arg[argSyntax] != '':
                 if filter is None:
                     filter = {}
                 filter[selSyntax] = self._arg[argSyntax]
@@ -719,7 +758,7 @@ class MSTHelper(ParallelTaskHelper):
 #    @dump_args
     def postExecution(self):
         '''
-        This overrides the post execution portion of the task helper
+        This method overrides the postExecution method of ParallelTaskHelper
         in this case we probably need to generate the output reference
         ms.
         '''
@@ -780,12 +819,12 @@ class MSTHelper(ParallelTaskHelper):
                                 
                 # Consolidate the spw sub-tables to take channel selection
                 # or averages into account.
-                mtTool = casac.mstransformer()
+                mtlocal1 = mttool()
                 try:                        
-                    mtTool.mergespwtables(toUpdateList)
-                    mtTool.done()
+                    mtlocal1.mergespwtables(toUpdateList)
+                    mtlocal1.done()
                 except Exception, instance:
-                    mtTool.done()
+                    mtlocal1.done()
                     casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
                     raise
                   
@@ -808,7 +847,7 @@ class MSTHelper(ParallelTaskHelper):
                     # (link in target will be created by makeMMS)
                 subtabs_to_omit.append('POINTING')
 
-#            # deal with SYSCAL table
+            # deal with SYSCAL table
             if not self.syscalisempty:
 #                print '******Dealing with SYSCAL table'
                 shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)

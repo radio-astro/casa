@@ -176,4 +176,6 @@ def partition(vis,
                      'WARN')
         return False
 
+    mslocal = None
+    
     return True

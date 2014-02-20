@@ -1170,6 +1170,17 @@ class test_MMS(test_base):
 
         # spw=5 should be spw=1 after consolidation, with 10 channels
         ret = th.verifyMS(self.outputms, 7, 10, 1, ignoreflags=True)
+        
+    def test_CAS6206(self):
+        '''mstransform: verify that all columns are re-indexed in SPW sub-table'''
+        self.outputmms='test.mms'
+        self.outputms='assoc.ms'
+        self.setUp_CAS_5013()
+        mstransform(vis=self.vis, outputvis=self.outputmms,createmms=True, datacolumn='corrected')
+        
+        # if SPW sub-table is not correct, the next step will fail
+        self.assertTrue(mstransform(vis=self.outputmms, outputvis=self.outputms, hanning=True, datacolumn='data'))
+        
 
 
 class test_Parallel(test_base):
