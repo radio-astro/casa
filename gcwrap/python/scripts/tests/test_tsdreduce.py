@@ -71,7 +71,6 @@ class sdreduce_test(unittest.TestCase):
             self.assertTrue(teststat.has_key(stat),
                             msg = "'%s' is not defined in the current run" % stat)
             allowdiff = 0.01
-            #allowdiff = 1.e-8
             reldiff = (teststat[stat]-refval)/refval
             #print "Comparing '%s': %f (current run), %f (reference)" % \
             #      (stat,teststat[stat],refval)
@@ -240,13 +239,9 @@ class sdreduce_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-        #refstat = {'rms': 4.128033638000488, 'min': 3.2304768562316895,
-        #           'max_abc': 4093.0, 'max': 5.676198482513428,
-        #           'sum': 29638.3515625, 'stddev': 0.24048194289207458,
-        #           'min_abc': 2452.0}
-        refstat = {'rms': 4.1353230476379395, 'min': 3.2386586666107178,
-                   'max_abc': 4093.0, 'max': 5.6874399185180664,
-                   'sum': 29690.876953125, 'stddev': 0.24056948721408844,
+        refstat = {'rms': 4.128033638000488, 'min': 3.2304768562316895,
+                   'max_abc': 4093.0, 'max': 5.676198482513428,
+                   'sum': 29638.3515625, 'stddev': 0.24048194289207458,
                    'min_abc': 2452.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
