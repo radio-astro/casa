@@ -666,8 +666,10 @@
                     spw='1:0~5;120~128' # multiple separated channel chunks.
 
                     Note : For modes clip, tfcrop and rflag, channel-ranges can be excluded 
-                    from flagging by selecting ranges such as spw='0:0~5;10~63'. This is a way to
+                    from flagging by leaving them out of the selection range. This is a way to
                     protect known spectral-lines from being flagged by the autoflag algorithms.
+                    Example: if spectral-lines fall in channels 6~9, set the selection range to
+                             spw='0:0~5;10~63'.
 
               correlation -- Correlation types or expression.
                     default: '' (all correlations)
