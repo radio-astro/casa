@@ -238,7 +238,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
             
-            ms_origin = 'ASDM' if ms.name in converted_asdm_abspaths else 'MS'
+            ms_origin = 'SDM' if ms.name in converted_asdm_abspaths else 'MS'
             results.origin[ms.basename] = ms_origin
 
         # get the flux measurements from Source.xml for each MS
