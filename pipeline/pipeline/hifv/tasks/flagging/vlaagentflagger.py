@@ -46,14 +46,13 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
     """
     Inputs = VLAAgentFlaggerInputs
     
-    
+    '''
     def prepare(self):
         af = casatools.agentflagger
         af.open(msname=self.inputs.ms.name);
         af.selectdata();
 
         agentcmds = self._get_flag_commands()
-        print agentcmds
 
         # Unflag (This is only for testing)
 #         if agentcmds:
@@ -68,7 +67,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         summary_stats_list = af.run(writeflags=True)
         af.done()
 
-        print summary_stats_list
+
 
         # Parse the output summary lists and extract only 'type==summary'
         # Iterate through the list in the correct order. Do not follow default
@@ -79,8 +78,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
             if summary_stats_list[repname]['type'] == 'summary':
                 summary_reps.append(summary_stats_list[repname])
 
-        print '#############################################'
-        print summary_reps
+       
 
         return agentflagger.AgentFlaggerResults(summary_reps, agentcmds)
 
@@ -108,7 +106,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
             agent_cmd['mode'] = 'manual'
 
         casatools.agentflagger.parseagentparameters(agent_cmd)
-    
+    '''
     
     def _get_flag_commands(self):
         """ Adding quack and clip
@@ -124,6 +122,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         if inputs.clip:
             #flag_cmds = flag_cmds +'\n'
             flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True reason=clip')
+            flag_cmds.append('mode=summary name=clip')
         
         #print flag_cmds
         
@@ -131,6 +130,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         if inputs.quack: 
             #flag_cmds = flag_cmds + '\n'
             flag_cmds.append(self._get_quack_cmds())
+            flag_cmds.append('mode=summary name=quack')
         
         #print flag_cmds
         
@@ -148,6 +148,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
             to_flag = self._get_baseband_cmds()
             if to_flag:
                 flag_cmds.append(to_flag)
+                flag_cmds.append('mode=summary name=baseband')
         
         if (flag_cmds[-1]== '') : flag_cmds=flag_cmds[0:-1]
             
@@ -251,8 +252,8 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
 
         baseband_cmd = ''
 
-        print bottomSPW
-        print topSPW
+        ##print bottomSPW
+        ##print topSPW
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW

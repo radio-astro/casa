@@ -3542,7 +3542,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
 
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'online', 'template', 'autocorr', 'shadow', 
-                  'intents', 'edgespw']
+                  'intents', 'edgespw', 'clip', 'quack', 'baseband']
 
         flagplots = [self.flagplot(r, context) for r in result]
         # plot object may be None if plot failed to generate
