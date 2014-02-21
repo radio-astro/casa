@@ -241,13 +241,13 @@ class sdflag_worker(sdutil.sdtask_template):
             else:
                 masklist[2] = array(self.scan._getmask(row))
 
-            if self.clip:
+            if self.mode.lower() == 'clip':
                 if self.threshold[0] == self.threshold[1]:
                     masklist[1] = array([True]*nchan)
                 else:
                     masklist[1] = array(self.scan._getclipmask(row, self.threshold[1], self.threshold[0], (not self.clipoutside), self.unflag))
-            elif len(self.flagrow) > 0:
-                masklist[1] = array([(row not in self.flagrow) or self.unflag]*nchan)
+            elif self.mode.lower() == 'rowid':
+                masklist[1] = array([(row not in self.rowlist) or self.unflag]*nchan)
             else:
                 masklist[1] = idefaultmask
             masklist[0] = logical_not(logical_and(masklist[1],masklist[2]))
@@ -261,7 +261,7 @@ class sdflag_worker(sdutil.sdtask_template):
         
         #Apply flag
         if self.plotlevel > 0 and sd.rcParams['plotter.gui']:
-            ans=raw_input("Apply %s (y/N)?: " % self.flagmode)
+            ans=raw_input("Apply %s (y/N)?: " % ('unflag' if self.unflag else 'flag'))
         else:
             casalog.post("Applying selected flags")
             ans = 'Y'
@@ -279,7 +279,7 @@ class sdflag_worker(sdutil.sdtask_template):
         x = self.scan._getabcissa(row)
         y = self.scan._getspectrum(row)
         allmskarr=array(self.scan._getmask(row))
-        plot_data(self.myp,x,y,logical_not(allmskarr),0,"Spectrum after %s" % self.flagmode+'ging')
+        plot_data(self.myp,x,y,logical_not(allmskarr),0,"Spectrum after %sging'" % ('unflag' if self.unflag else 'flag'))
         plot_data(self.myp,x,y,allmskarr,2,"Flagged")
         xlim=[min(x),max(x)]
         self.myp.axes.set_xlim(xlim)
