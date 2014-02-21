@@ -3183,7 +3183,7 @@ image* image::pv(
 			}
 		}
 		else if (
-			center.size() > 0 && width.size() > 0
+			center.size() > 0 && length.size() > 0
 			&& pa.size() > 0
 		) {
 			ThrowIf(
@@ -3282,8 +3282,8 @@ image* image::pv(
 		}
 		pv.setStretch(stretch);
 		pv.setOffsetUnit(unit);
-		tr1::shared_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
-		image *ret = wantreturn ? new image(resImage) : 0;
+		SPIIF out = pv.generate();
+		image *ret = wantreturn ? new image(out) : 0;
 		return ret;
 	}
 	catch (const AipsError& x) {

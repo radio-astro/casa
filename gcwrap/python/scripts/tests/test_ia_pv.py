@@ -151,19 +151,19 @@ class ia_pv_test(unittest.TestCase):
                 if i == 3:
                     center = [4.5, 5]
                     length = 5
-                    pa = "270deg"
+                    pa = "90deg"
                 if i == 4:
                     center = ["0:0:02", "0.0.0"]
                     length = 5
-                    pa = "270deg"
+                    pa = "90deg"
                 if i == 5:
                     center = ["0:0:02", "0.0.0"]
                     length = "5arcmin"
-                    pa = "270deg"
+                    pa = "90deg"
                 if i == 6:
                     center = [4.5, 5]
                     length = "5arcmin"
-                    pa = "270deg"
+                    pa = "90deg"
                 outfile = "test_pv_" + str(code) + str(i)
                 if i <= 2:
                     xx = code(
@@ -361,6 +361,31 @@ class ia_pv_test(unittest.TestCase):
             )
         ) 
         
+    def test_pa(self):
+        """Test that when pa is given, the start of the slice is at pa and end is at pa-180deg"""
+        myia = self.ia
+        myia.open(datapath + "pv_patest_exp.im")
+        expec = myia.getchunk()
+        myia.done()
+        imagename = datapath + "pv_patest.im"
+        outfile = "pv_patest_got1.im"
+        impv(
+             imagename=imagename, outfile=outfile, center=[9,9], length=19,
+             pa="45deg"
+        )
+        myia.open(outfile)
+        got = myia.getchunk()
+        myia.done()
+        self.assertTrue(abs(got/expec - 1).all() < 1e-6)
+        outfile = "pv_patest_got2.im"
+        impv(
+             imagename=imagename, outfile=outfile, center=[9,9], length="19arcmin",
+             pa="45deg"
+        )
+        myia.open(outfile)
+        got = myia.getchunk()
+        myia.done()
+        self.assertTrue(abs(got/expec - 1).all() < 1e-6)
     
 def suite():
     return [ia_pv_test]
