@@ -411,12 +411,18 @@ public:
     //
     // We could improve the performance of this if it would be useful, however I
     // expect that normally you would just call this once to get a template
-    // MDirection, and then call the vector versions. 
+    // MDirection, and then call the vector versions.
+    // The versions which return something other than a Bool will throw an exception
+    // when False when have been returned in the Bool case, because that's why we
+    // use a language that supports exceptions, so the developer doesn't have to
+    // check the return value to determine if the method did what it was supposed to do.
     // <group>
     Bool toWorld(MDirection &world, const Vector<Double> &pixel) const;
     Bool toPixel(Vector<Double> &pixel, const MDirection &world) const;
     Bool toWorld(MVDirection &world, const Vector<Double> &pixel) const;
     Bool toPixel(Vector<Double> &pixel, const MVDirection &world) const;
+
+    MVDirection toWorld(const Vector<Double> &pixel) const;
 
     // This one throws an exception rather than returning False, because that's
     // what exceptions are for.

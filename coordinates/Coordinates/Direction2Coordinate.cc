@@ -65,6 +65,16 @@ Bool DirectionCoordinate::toWorld(MVDirection &world,
     return False;
 }
 
+MVDirection DirectionCoordinate::toWorld(
+	const Vector<Double> &pixel
+) const {
+	MVDirection x;
+	ThrowIf(
+		! toWorld(x, pixel), errorMessage()
+	);
+	return x;
+}
+
 Bool DirectionCoordinate::toPixel(Vector<Double> &pixel,
                                   const MDirection &world) const
 {
