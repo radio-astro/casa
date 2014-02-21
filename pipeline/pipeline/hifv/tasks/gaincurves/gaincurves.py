@@ -95,8 +95,6 @@ class GainCurves(basetask.StandardTaskTemplate):
 
 
     def analyse(self, result):
-        # With no best caltable to find, our task is simply to set the one
-        # caltable as the best result
 
         # double-check that the caltable was actually generated
         on_disk = [ca for ca in result.pool

@@ -7,6 +7,8 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 
+from pipeline.hifv.tasks.flagging.uncalspw import Uncalspw
+
 import itertools
 
 from pipeline.hif.tasks import applycal
@@ -35,6 +37,11 @@ class Applycals(basetask.StandardTaskTemplate):
     def prepare(self):
         
         applycal_results = self._do_applycal(self.inputs.context)
+        
+        inputs = Uncalspw.Inputs(context, bpcaltable='finalBPcal.b', delaycaltable='finaldelay.k')
+        task = Uncalspw(inputs)
+        result = self._executor.execute(task)
+        
         
         return ApplycalsResults()
     

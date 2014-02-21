@@ -120,7 +120,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_applycals (pipelinemode=pipelinemode)
     
         # Flag spws that have no calibration at this point
-        hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='finaldelay.k', bpcaltable='finalBPcal.b')
+        #hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='finaldelay.k', bpcaltable='finalBPcal.b')
     
         # Now run all calibrated data, including the target, through rflag
         hifv_targetflag (pipelinemode=pipelinemode)
@@ -241,7 +241,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         hifv_applycals (pipelinemode=pipelinemode)
     
         # Flag spws that have no calibration at this point
-        hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='finaldelay.k', bpcaltable='finalBPcal.b')
+        #hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='finaldelay.k', bpcaltable='finalBPcal.b')
     
         # Now run all calibrated data, including the target, through rflag
         hifv_targetflag (pipelinemode=pipelinemode)

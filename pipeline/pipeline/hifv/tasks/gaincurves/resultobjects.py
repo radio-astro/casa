@@ -29,10 +29,9 @@ class GainCurvesResults(basetask.Results):
 
     def __repr__(self):
 
-	# Format the Tsyscal results.
+	# Format the GainCurve results.
         s = 'GainCurvesResults:\n'
         for calapplication in self.final:
-            s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
-                spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
-                name=calapplication.gaintable)
+            s += '\tGaincurves caltable written to {name}\n'.format(
+                    name=calapplication.gaintable)
 	return s

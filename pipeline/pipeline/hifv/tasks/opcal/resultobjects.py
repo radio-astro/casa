@@ -8,7 +8,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class OpcalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], opacities=[], spw=[]):
         super(OpcalResults, self).__init__()
         
         self.vis = None
@@ -32,7 +32,6 @@ class OpcalResults(basetask.Results):
 	# Format the Tsyscal results.
         s = 'OpcalResults:\n'
         for calapplication in self.final:
-            s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
-                spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
-                name=calapplication.gaintable)
+            s += '\tGaincurves caltable written to {name}\n'.format(
+                    name=calapplication.gaintable)
 	return s

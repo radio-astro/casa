@@ -27,16 +27,25 @@ class PriorcalsResults(basetask.Results):
         
     def merge_with_context(self, context):
         if self.gc_result:
-            self.gc_result.merge_with_context(context)
-            LOG.info("Priorcals:  Merged gain curves cal")
+            try:
+                self.gc_result.merge_with_context(context)
+                LOG.info("Priorcals:  Merged gain curves cal")
+            except:
+                LOG.warn("No gain curves table written.")
 
         if self.oc_result:
-            self.oc_result.merge_with_context(context)
-            LOG.info("Priorcals:  Merged Opac cal")
+            try:
+                self.oc_result.merge_with_context(context)
+                LOG.info("Priorcals:  Merged Opac cal")
+            except:
+                LOG.warn("No opacities table written.")
 
         if self.rq_result:
-            self.rq_result.merge_with_context(context)
-            LOG.info("Priorcals:  Requantizer gains")
+            try:
+                self.rq_result.merge_with_context(context)
+                LOG.info("Priorcals:  Requantizer gains")
+            except:
+                LOG.warn("No rq gains table written.")
             
         #if self.sw_result:
         #    self.sw_result.merge_with_context(context)
@@ -45,7 +54,7 @@ class PriorcalsResults(basetask.Results):
         if self.antpos_result:
             try:
                 self.antpos_result.merge_with_context(context)
-                LOG.info("Priorcals: Antenna positions corrections")
+                LOG.info("Priorcals: Antenna positions corrections.")
             except:
                 LOG.warn('No antenna position corrections.')
                 
@@ -61,7 +70,7 @@ class PriorcalsResults(basetask.Results):
 
     def __repr__(self):
 
-	# Format the Priorcal results.
+	# Format the Priorcal results text output.
         s = 'Priorcal Results:\n'
         for calapplication in self.final:
             s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
