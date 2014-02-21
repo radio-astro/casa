@@ -85,9 +85,9 @@ public:
 	// destructor
 	~PVGenerator();
 
-	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
+	// perform the collapse. Returns a pointer to the
 	// collapsed image.
-	std::tr1::shared_ptr<ImageInterface<Float> > generate(const Bool wantReturn) const;
+	SPIIF generate() const;
 
 	// set the end points of the slice in direction space. Input values represent pixel
 	// coordinates in the input image.
@@ -168,6 +168,7 @@ private:
 
 	Quantity _increment() const;
 
+	static String _pairToString(const std::pair<Double, Double>& p);
 
 };
 }

@@ -101,7 +101,8 @@ public:
       Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
-  // return a true copy of the subimage selected in the given region.
+  // return a true copy (ie underlying data is a copy of the original, not
+  // a reference) of the subimage selected in the given region.
   // A PagedImage is returned if outfile is not blank or a SubImage
   // is returned if it is.
   static ImageInterface<T>* createImage(

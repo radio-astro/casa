@@ -880,8 +880,11 @@ namespace casa {
 			                          startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
 			QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 			try {
-				result = pvgen.generate( need_result );
-			} catch( AipsError err ) {
+				result = pvgen.generate( );
+                if (! need_result) {
+                    result.reset();
+                }
+            } catch( AipsError err ) {
 				dock_->panel( )->logIO( ) << LogIO::SEVERE << err.getMesg( ) << LogIO::POST;
 				// fallback to P/V failure, create dummy image...
 				// QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );

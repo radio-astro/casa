@@ -43,7 +43,7 @@ namespace casa {
 const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
-		const SPCIIF image,
+	const SPCIIF image,
 	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
@@ -72,8 +72,10 @@ void PVGenerator::setEndpoints(
 	);
 	ThrowIf(
 		startx < 2 || endx < 2 || starty < 2 || endy < 2,
-		"Pixel positions must be contained in the image and be "
-		"farther than two pixels from image BLC"
+		"Line segment end point positions must be contained in the image and be "
+		"farther than two pixels from image edges. The pixel positions for "
+		"the specified line segment are at " + _pairToString(start) + " and "
+		+ _pairToString(end)
 	);
 	Vector<Int> dirAxes = _getImage()->coordinates().directionAxesNumbers();
 	Int xShape = _getImage()->shape()[dirAxes[0]];
@@ -81,16 +83,23 @@ void PVGenerator::setEndpoints(
 	ThrowIf(
 		startx > xShape-3 || endx > xShape-3
 		|| starty > yShape-3 || endy > yShape-3,
-		"Pixel positions must be contained in the image and must fall "
-		"farther than two pixels from the image TRC"
+		"Line segment end point positions must be contained in the image and must fall "
+		"farther than two pixels from the image edges. The pixel positions for "
+		"the specified line segment are at " + _pairToString(start) + " and "
+		+ _pairToString(end)
 	);
-
 	_start.reset(new vector<Double>(2));
 	_end.reset(new vector<Double>(2));
 	(*_start)[0] = startx;
 	(*_start)[1] = starty;
 	(*_end)[0] = endx;
 	(*_end)[1] = endy;
+}
+
+String PVGenerator::_pairToString(const std::pair<Double, Double>& p) {
+	ostringstream os;
+	os << "[" << p.first << ", " << p.second << "]";
+	return os.str();
 }
 
 void PVGenerator::setEndpoints(
@@ -101,21 +110,31 @@ void PVGenerator::setEndpoints(
 		length <= 0,
 		"Length must be positive"
 	);
-	const CoordinateSystem csys = _getImage()->coordinates();
-	Bool xIsLong = csys.isDirectionAbscissaLongitude();
-	Vector<Double> inc = csys.directionCoordinate().increment();
-	Double xoff = sign(inc[0])*length/2;
-	xoff = xIsLong ? xoff*sin(pa.getValue("rad")) : xoff*cos(pa.getValue("rad"));
-	Double yoff = sign(inc[1])*length/2;
-	yoff = xIsLong ? yoff*cos(pa.getValue("rad")) : yoff*sin(pa.getValue("rad"));
-	setEndpoints(
-		std::make_pair(center.first - xoff, center.second - yoff),
-		std::make_pair(center.first + xoff, center.second + yoff)
-	);
+	setEndpoints(center, length*_increment(), pa);
 }
 
 void PVGenerator::setEndpoints(
 	const std::pair<Double, Double>& center, const Quantity& length,
+	const Quantity& pa
+) {
+	Vector<Double> centerV(2);
+	const CoordinateSystem csys = _getImage()->coordinates();
+	if (csys.isDirectionAbscissaLongitude()) {
+		centerV[0] = center.first;
+		centerV[1] = center.second;
+	}
+	else {
+		centerV[0] = center.second;
+		centerV[1] = center.first;
+	}
+	setEndpoints(
+		csys.directionCoordinate().toWorld(centerV),
+		length, pa
+	);
+}
+
+void PVGenerator::setEndpoints(
+	const MVDirection& center, const Quantity& length,
 	const Quantity& pa
 ) {
 	ThrowIf(
@@ -127,19 +146,10 @@ void PVGenerator::setEndpoints(
 		! length.isConform(inc),
 		"Units of length are not conformant with direction axes units"
 	);
-	setEndpoints(
-		center, (length/inc).getValue(), pa
-	);
-}
-
-void PVGenerator::setEndpoints(
-	const MVDirection& center, const Quantity& length,
-	const Quantity& pa
-) {
 	MVDirection start = center;
-	start.shiftAngle(length/2, pa - Quantity(180, "deg"));
+	start.shiftAngle(length/2, pa);
 	MVDirection end = center;
-	end.shiftAngle(length/2, pa);
+	end.shiftAngle(length/2, pa - Quantity(180, "deg"));
 	setEndpoints(start, end);
 }
 
@@ -152,10 +162,13 @@ void PVGenerator::setEndpoints(
 
 Quantity PVGenerator::_increment() const {
 	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
-	return Quantity(
-		fabs(dc.increment()[0]),
-		dc.worldAxisUnits()[0]
+	Vector<String> units = dc.worldAxisUnits();
+	ThrowIf(
+		units[0] != units[1],
+		"Cannot calculate the direction pixel increment because the"
+		"axes have different units of " + units[0] + " and " + units[1]
 	);
+	return Quantity(fabs(dc.increment()[0]), units[0]);
 }
 
 void PVGenerator::setEndpoints(
@@ -211,23 +224,18 @@ void PVGenerator::setWidth(const Quantity& q) {
 	setWidth((uInt)nPixels);
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
-	const Bool wantReturn
-) const {
+SPIIF PVGenerator::generate() const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
 	ThrowIf(
 		_start.get() == 0 || _end.get() == 0,
 		"Start and/or end points have not been set"
 	);
-	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
-	std::tr1::shared_ptr<SubImage<Float> > subImage(
-		new SubImage<Float>(
-			SubImageFactory<Float>::createSubImage(
-				*myClone, *_getRegion(), _getMask(), _getLog().get(),
-				False, AxesSpecifier(), _getStretch(), True
-			)
-		)
+	SPIIF subImage(
+		SubImageFactory<Float>::createImage(
+			*_getImage(), "", *_getRegion(),
+			_getMask(), False, False, False, _getStretch()
+		 )
 	);
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	CoordinateSystem subCoords = subImage->coordinates();
@@ -504,17 +512,13 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
 		newMask->put(newArray);
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage(_prepareOutputImage(cDropped, 0, newMask.get()));
-	if (! wantReturn) {
-		outImage.reset();
-	}
-	return outImage;
+	return _prepareOutputImage(cDropped, 0, newMask.get());
 }
 
 void PVGenerator::setOffsetUnit(const String& s) {
 	Quantity q(1, s);
 	if (! q.isConform("rad")) {
-		*_getLog() << LogOrigin("PVGenerator", __FUNCTION__);
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << s << " is not a unit of angular measure" << LogIO::EXCEPTION;
 	}
 	_unit = s;
