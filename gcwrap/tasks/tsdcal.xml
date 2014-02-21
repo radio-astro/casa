@@ -165,7 +165,7 @@ for atmospheric optical depth correction.
 
 
     <param type="int" name="plotlevel">
-	    <description>plot results (0=none, 1=calibrated spectra, -1=hardcopy)</description>
+	    <description>plot and summarize results (0=none) see description in help</description>
 	    <value>0</value>
     </param>
 
@@ -363,10 +363,10 @@ overwrite -- overwrite the output file if already exists
         default: False
         NOTE this parameter is ignored when outform='ASCII'
 plotlevel -- control for plotting of results
-        options: (int) 0=none, 1=calibrated &lt;0=hardcopy
+        options: (int) 0, 1, 2, and their negative counterparts
         default: 0 (no plotting)
         example: plotlevel=1; plot calibrated spectra
-                 plotlevel=-1; same as 1 but save plot on disk
+                 plotlevel=2; additionally list data before and after operation.
                  plotlevel&lt;0 as abs(plotlevel), e.g.
                  -1 =&gt; hardcopy of final plot (will be named
                  &lt;outfile&gt;_calspec.eps)
