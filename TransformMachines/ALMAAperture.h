@@ -76,6 +76,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Overload these functions.  They are pure virtual in the base class (ATerm).
     //
+    virtual void makeFullJones(ImageInterface<Complex>& pbImage,
+			       const VisBuffer& vb,
+			       Bool doSquint, Int& bandID, Double freqVal);
+
     virtual String name() {return String("ALMA Aperture");};
 
     virtual void applySky(ImageInterface<Float>& outputImage,

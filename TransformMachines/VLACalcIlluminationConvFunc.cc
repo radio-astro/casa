@@ -219,7 +219,11 @@ namespace casa{
     // the parallel-hand aperture illuminations.
     //
     if ((inStokes == Stokes::RL) || (inStokes == Stokes::LR))
-      ap.aperture->shape()(3)=2;
+      {
+	IPosition shp(ap.aperture->shape());
+	shp(3)=2;
+	ap.aperture->resize(shp);
+      }
   }
   //
   //--------------------------------------------------------------------------
@@ -232,7 +236,7 @@ namespace casa{
     ap.aperture->resize(apertureShape);
     ap.aperture->set(0.0);
     BeamCalc::Instance()->calculateAperture(&ap,inStokes);
-}
+  }
   //
   //--------------------------------------------------------------------------
   //
@@ -651,24 +655,34 @@ namespace casa{
     
   */
   
-  void VLACalcIlluminationConvFunc::ftAperture(TempImage<Complex>& uvgrid)
+  void VLACalcIlluminationConvFunc::ftAperture(TempImage<Complex>& uvgrid,
+					       Bool makeMueller)
   {
     //
     // Make SkyJones
     //
+    // Int index = uvgrid.coordinates().findCoordinate(Coordinate::STOKES);
+    // Int inStokes = uvgrid.coordinates().stokesCoordinate(index).stokes()(0);
     // {
     //   String name("uvgrid.im");
-    //   storeImg(name,uvgrid);
+    //   ostringstream tt;
+    //   tt << name << "_" << inStokes;
+    //   storeImg(String(tt),uvgrid);
     // }
+
     LatticeFFT::cfft2d(uvgrid);
+
     // {
     //   String name("ftuvgrid.im");
-    //   storeImg(name,uvgrid);
+    //   ostringstream tt;
+    //   tt << name << "_" << inStokes;
+    //   storeImg(String(tt),uvgrid);
     // }
+    // cerr << "Exiting from VLACalc..." << endl; exit(0);
     //
     // Now make SkyMuller
     //
-    skyMuller(uvgrid);
+    if (makeMueller) skyMuller(uvgrid);
   }
   
   void VLACalcIlluminationConvFunc::loadFromImage(String& /*fileName*/)
@@ -703,7 +717,7 @@ namespace casa{
     
     tmp = buf;
     
-    t(0)=t(1)=t(2)=t(3)=0;
+    t(0)=t(1)=t(2)=t(3)=0;  // Nx, Ny, Nc, Np
     
     if ((inStokes == Stokes::RR) || (inStokes == Stokes::LL))
       {
@@ -713,21 +727,22 @@ namespace casa{
 	    buf(t) = (tmp(n0)*conj(tmp(n1)));
       }
     
-    if (inStokes == Stokes::LR)
+    if ((inStokes == Stokes::LR) || (inStokes == Stokes::RL))
       {
-	t(2)=0;n0(2)=1;n1(2)=0; //LR
+	//LR -- we have L- and R-apertures in the two frequency-axis pixels
+	t(2)=0;n0(3)=1;n1(3)=0; 
 	for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
 	  for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
 	    buf(t) = (tmp(n0)*conj(tmp(n1)));
       }
     
-    if (inStokes == Stokes::RL)
-      {
-	t(2)=0;n0(2)=0;n1(2)=1; //LR
-	for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-	  for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-	    buf(t) = (tmp(n0)*conj(tmp(n1)));
-      }
+    // if (inStokes == Stokes::RL)
+    //   {
+    // 	t(2)=0;n0(2)=0;n1(2)=1; //LR
+    // 	for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
+    // 	  for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
+    // 	    buf(t) = (tmp(n0)*conj(tmp(n1)));
+    //   }
   }
 
   void VLACalcIlluminationConvFunc::skyMuller(ImageInterface<Complex>& skyJones)
@@ -739,173 +754,84 @@ namespace casa{
     IPosition shape=skyJones.shape();
     skyMuller(buf,shape, inStokes);
 
-    // // {
-    // //   skyJones.put(buf);
-    // //   String name("skyjones.im");
-    // //   storeImg(name,skyJones);
-    // // }
-    // Int index = skyJones.coordinates().findCoordinate(Coordinate::STOKES);
-    // Int inStokes = skyJones.coordinates().stokesCoordinate(index).stokes()(0);
-    // Array<Complex> buf=skyJones.get(),tmp;
-    
-    // IPosition t(4,0,0,0,0),n0(4,0,0,0,0),n1(4,0,0,0,0);
-    
-    // Float peak;
-    // peak=0;
-    // for(t(2)=0;t(2)<shape(2);t(2)++)
-    //   for(t(1)=0;t(1)<shape(1);t(1)++)
-    // 	for(t(0)=0;t(0)<shape(0);t(0)++)
-    // 	  if (abs(buf(t)) > peak) peak = abs(buf(t));
-    // if (peak > 1E-8)
-    //   for(t(3)=0;t(3)<shape(3);t(3)++)       // Freq axis
-    // 	for(t(2)=0;t(2)<shape(2);t(2)++)     // Poln axis
-    // 	  for(t(1)=0;t(1)<shape(1);t(1)++)   // y axis
-    // 	    for(t(0)=0;t(0)<shape(0);t(0)++) // X axis
-    // 	      buf(t) = buf(t)/peak;
-    
-    // // {
-    // //   skyJones.put(buf);
-    // //   String name("skyjones.im");
-    // //   storeImg(name,skyJones);
-    // // }
-    
-    // tmp = buf;
-    
-    // t(0)=t(1)=t(2)=t(3)=0;
-    
-    // if ((inStokes == Stokes::RR) || (inStokes == Stokes::LL))
-    //   {
-    // 	t(2)=0;n0(2)=0;n1(2)=0; //RR
-    // 	for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    // 	  for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	    buf(t) = (tmp(n0)*conj(tmp(n1)));
-    //   }
-    
-    // if (inStokes == Stokes::LR)
-    //   {
-    // 	t(2)=0;n0(2)=1;n1(2)=0; //LR
-    // 	for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    // 	  for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	    buf(t) = (tmp(n0)*conj(tmp(n1)));
-    //   }
-    
-    // if (inStokes == Stokes::RL)
-    //   {
-    // 	t(2)=0;n0(2)=0;n1(2)=1; //LR
-    // 	for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    // 	  for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	    buf(t) = (tmp(n0)*conj(tmp(n1)));
-    //   }
-    
-    
-    
-    // IPosition sliceStart0(4,0,0,0,0),sliceStart1(4,0,0,0,0),
-    //   sliceLength(4,shape(0),shape(1),1,1);
-    //
-    // Giving up on fancy slicing of arrays etc. (the commented code
-    // below).  Just do pixel-by-pixel multiplications for of the
-    // Jones planes. For now, computing only the diagonal of the
-    // SkyMuller.
-    //
-    // t(0)=t(1)=t(2)=t(3)=0;
-    // t(2)=0;n0(2)=0;n1(2)=0; //RR
-    // for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    //   for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	buf(t) = (tmp(n0)*conj(tmp(n1)));
-    
-    // t(2)=1;n0(2)=3;n1(2)=0; //LR
-    // for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    //   for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	buf(t) = (tmp(n0)*conj(tmp(n1)));
-    
-    // t(2)=2;n0(2)=0;n1(2)=3; //RL
-    // for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    //   for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	buf(t) = (tmp(n0)*conj(tmp(n1)));
-    
-    // t(2)=3;n0(2)=3;n1(2)=3; //LL
-    // for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-    //   for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
-    // 	buf(t) = (tmp(n0)*conj(tmp(n1)));
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    /*
-      sliceStart0(3)=0; sliceStart1(3)=0;
-      Slicer s0(sliceStart0,sliceLength),s1(sliceStart1,sliceLength);
-      
-      buf(s0) = tmp(s1);
-      buf(s0) *= tmp(s1);
-      //
-      // Muller[1,1]
-      //
-      sliceStart0(3)=0; sliceStart1(3)=1;
-      buf(Slicer(sliceStart0,sliceLength)) = tmp(Slicer(sliceStart0,sliceLength))
-      *tmp(Slicer(sliceStart1,sliceLength));
-      //
-      // Muller[2,2]
-      //
-      sliceStart0(3)=1; sliceStart1(3)=0;
-      buf(Slicer(sliceStart0,sliceLength)) = tmp(Slicer(sliceStart0,sliceLength))
-      *tmp(Slicer(sliceStart1,sliceLength));
-      //
-      // Muller[3,3]
-      //
-      sliceStart0(3)=2; sliceStart1(3)=0;
-      buf(Slicer(sliceStart0,sliceLength)) = tmp(Slicer(sliceStart0,sliceLength))
-      *tmp(Slicer(sliceStart1,sliceLength));
-      */
     skyJones.put(buf);
   }
-  
-  //   Int getVLABandID(Double& freq,String&telescopeName)
-  //   {
-  //     if (telescopeName=="VLA")
-  //       {
-  // 	if ((freq >=1.34E9) && (freq <=1.73E9))
-  // 	  return BeamCalc_VLA_L;
-  // 	else if ((freq >=4.5E9) && (freq <=5.0E9))
-  // 	  return BeamCalc_VLA_C;
-  // 	else if ((freq >=8.0E9) && (freq <=8.8E9))
-  // 	  return BeamCalc_VLA_X;
-  // 	else if ((freq >=14.4E9) && (freq <=15.4E9))
-  // 	  return BeamCalc_VLA_U;
-  // 	else if ((freq >=22.0E9) && (freq <=24.0E9))
-  // 	  return BeamCalc_VLA_K;
-  // 	else if ((freq >=40.0E9) && (freq <=50.0E9))
-  // 	  return BeamCalc_VLA_Q;
-  // 	else if ((freq >=100E6) && (freq <=300E6))
-  // 	  return BeamCalc_VLA_4;
-  //       }
-  //     else 
-  //       if (telescopeName=="EVLA")
-  //       {
-  // 	if ((freq >=0.6E9) && (freq <=2.0E9))
-  // 	  return BeamCalc_EVLA_L;
-  // 	else if ((freq >=2.0E9) && (freq <=4.0E9))
-  // 	  return BeamCalc_EVLA_S;
-  // 	else if ((freq >=4.0E9) && (freq <=8.0E9))
-  // 	  return BeamCalc_EVLA_C;
-  // 	else if ((freq >=8.0E9) && (freq <=12.0E9))
-  // 	  return BeamCalc_EVLA_X;
-  // 	else if ((freq >=12.0E9) && (freq <=18.0E9))
-  // 	  return BeamCalc_EVLA_U;
-  // 	else if ((freq >=18.0E9) && (freq <=26.5E9))
-  // 	  return BeamCalc_EVLA_K;
-  // 	else if ((freq >=26.5E9) && (freq <=40.8E9))
-  // 	  return BeamCalc_EVLA_A;
-  // 	else if ((freq >=4.0E9) && (freq <=50.0E9))
-  // 	  return BeamCalc_EVLA_Q;
-  //       }
-  //     ostringstream mesg;
-  //     mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
-  //     throw(SynthesisError(mesg.str()));
-  //   }
-  
+  //
+  //--------------------------------------------------------------------------
+  //
+  void VLACalcIlluminationConvFunc::makeFullJones(ImageInterface<Complex>& pbImage,
+						  const VisBuffer& vb,
+						  Bool /*doSquint*/, Int bandID, Double freqVal)
+  {
+    LogIO logIO(LogOrigin("VLACalcIlluminationConvFunc","makeJones"));
+    
+    CoordinateSystem skyCS=pbImage.coordinates();
+    CoordinateSystem skyCoords(skyCS);
+    IPosition skyShape = pbImage.shape();
+    Int index;
+    //UNUSED: Double timeValue = getCurrentTimeStamp(vb);
+    AlwaysAssert(bandID>=-1, AipsError);
+    Float pa;
+    if (bandID != -1) ap.band = bandID;
+    pa = getPA(vb);
+    Float Freq, freqLo, freqHi;
+    Vector<Double> chanFreq = vb.frequency();
+
+    if (freqVal > 0)
+      {
+	Freq=freqHi=freqVal;
+	ap.freq=freqHi/1E09;
+      }
+    else
+      {
+	Vector<Double> chanFreq = vb.frequency();
+	index = skyCS.findCoordinate(Coordinate::SPECTRAL);
+	SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
+	Vector<Double> refVal = SpC.referenceValue();
+	
+	freqHi = max(chanFreq);
+	freqHi = refVal[0];
+	freqLo = min(chanFreq);
+	Freq = freqHi ;
+	ap.freq = Freq/1E9;
+      }
+    
+    IPosition imsize(skyShape);
+    CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,freqHi);
+    
+    index = uvCoords.findCoordinate(Coordinate::LINEAR);
+    LinearCoordinate lc=uvCoords.linearCoordinate(index);
+    Vector<Double> uvIncr = lc.increment();
+    
+    index = uvCoords.findCoordinate(Coordinate::STOKES);
+    Int inStokes = uvCoords.stokesCoordinate(index).stokes()(0);
+
+
+    setApertureParams(ap, Freq, pa, bandID, inStokes,
+		      skyShape, uvIncr);
+    regridApertureEngine(ap, inStokes);
+    IPosition apertureShape(ap.aperture->shape());
+
+    Vector<Int> poln(1); poln(0)=inStokes;
+    StokesCoordinate polnCoord(poln);
+    SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
+
+    index = uvCoords.findCoordinate(Coordinate::STOKES);
+    uvCoords.replaceCoordinate(polnCoord,index);
+    index = uvCoords.findCoordinate(Coordinate::SPECTRAL);
+    uvCoords.replaceCoordinate(spectralCoord,index);
+    
+    ap.aperture->setCoordinateInfo(uvCoords);
+    //
+    // Now FT the re-gridded Fourier plane to get the primary beam.
+    //
+    ftAperture(*(ap.aperture),False);
+
+    // if (doSquint==True)
+    // {
+    //   String name("ftapperture.im");
+    //   storeImg(name,*(ap.aperture));
+    // }
+    
+  }
 };
