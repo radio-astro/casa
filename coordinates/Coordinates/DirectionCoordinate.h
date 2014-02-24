@@ -427,6 +427,7 @@ public:
     // This one throws an exception rather than returning False, because that's
     // what exceptions are for.
     Vector<Double> toPixel(const MVDirection &world) const;
+    Vector<Double> toPixel(const MDirection &world) const;
 
      //</group>
 
