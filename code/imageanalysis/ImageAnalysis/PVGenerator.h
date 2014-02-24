@@ -109,18 +109,18 @@ public:
 	);
 
 	void setEndpoints(
-		const MVDirection& center, const Quantity& length,
+		const MDirection& center, const Quantity& length,
 		const Quantity& pa
 	);
 
 	// <src>length in pixels</src>
 	void setEndpoints(
-		const MVDirection& center, Double length,
+		const MDirection& center, Double length,
 		const Quantity& pa
 	);
 
 	void setEndpoints(
-		const MVDirection& start, const MVDirection& end
+		const MDirection& start, const MDirection& end
 	);
 
 	// Set the number of pixels perpendicular to the slice for which averaging

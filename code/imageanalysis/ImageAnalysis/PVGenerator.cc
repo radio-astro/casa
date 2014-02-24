@@ -134,7 +134,7 @@ void PVGenerator::setEndpoints(
 }
 
 void PVGenerator::setEndpoints(
-	const MVDirection& center, const Quantity& length,
+	const MDirection& center, const Quantity& length,
 	const Quantity& pa
 ) {
 	ThrowIf(
@@ -146,15 +146,15 @@ void PVGenerator::setEndpoints(
 		! length.isConform(inc),
 		"Units of length are not conformant with direction axes units"
 	);
-	MVDirection start = center;
+	MDirection start = center;
 	start.shiftAngle(length/2, pa);
-	MVDirection end = center;
+	MDirection end = center;
 	end.shiftAngle(length/2, pa - Quantity(180, "deg"));
 	setEndpoints(start, end);
 }
 
 void PVGenerator::setEndpoints(
-	const MVDirection& center, Double length,
+	const MDirection& center, Double length,
 	const Quantity& pa
 ) {
 	setEndpoints(center, length*_increment(), pa);
@@ -172,11 +172,10 @@ Quantity PVGenerator::_increment() const {
 }
 
 void PVGenerator::setEndpoints(
-	const MVDirection& start, const MVDirection& end
+	const MDirection& start, const MDirection& end
 ) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
-	Vector<String> units = dc.worldAxisUnits();
 	Vector<Double> sPixel = dc.toPixel(start);
 	Vector<Double> ePixel = dc.toPixel(end);
 	*_getLog() << LogIO::NORMAL << "Setting pixel end points "
@@ -458,12 +457,11 @@ SPIIF PVGenerator::generate() const {
 	AlwaysAssert(dirShape[1] == 1, AipsError);
 	const DirectionCoordinate& dc = collCoords.directionCoordinate();
 	Vector<Int> dirAxisNumbers = collCoords.directionAxesNumbers();
-	MVDirection collapsedStart, collapsedEnd;
 	Vector<Double> pixStart(2, 0);
-	dc.toWorld(collapsedStart, pixStart);
+	MVDirection collapsedStart = dc.toWorld(pixStart);
 	Vector<Double> pixEnd(2, 0);
 	pixEnd[0] = dirShape[0];
-	dc.toWorld(collapsedEnd, pixEnd);
+	MVDirection collapsedEnd = dc.toWorld(pixEnd);
 	Quantity separation = collapsedEnd.separation(
 		collapsedStart, dc.worldAxisUnits()[0]
 	);
