@@ -888,7 +888,25 @@ void plotms::setGridParams(
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
 
+void plotms::setLegend( const bool showLegend,  const string& legendPosition,
+                const bool updateImmediately, const int plotIndex)
+{
+    launchApp();
+    string legendPos = legendPosition;
+    if ( showLegend ){
+    	if ( legendPosition=="" ){
+    		legendPos="upperright";
+    	}
+    }
 
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_SHOWLEGEND,  showLegend);
+    params.define(PlotMSDBusApp::PARAM_LEGENDPOSITION,  legendPos);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
+}
 
 void plotms::setXRange(const bool xautorange,  const double xmin, const double xmax,
                 const bool updateImmediately, const int plotIndex) 

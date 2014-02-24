@@ -27,7 +27,8 @@ def plotms(vis=None, plotindex=None,
            plotrange=None,
            title=None, xlabel=None, ylabel=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
-           showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
+           showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None, 
+           showlegend=None, legendposition=None,   
            plotfile=None, expformat=None, exprange=None,
            highres=None, overwrite=None, 
            showgui=None
@@ -154,6 +155,13 @@ def plotms(vis=None, plotindex=None,
     title  -- title along top of plot (called "canvas" in some places)
     exprange -- whether to export all iteration plots or only the current one
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
+    
+    showlegend -- show a legend on the plot
+                    default: False
+    legendposition -- position for the legend.  Legends can be interior or exterior to the plot
+                    Interior legends can be located in the upper right, lower right, upper left, or lower left.
+                    Exterior legends can be located on the right, left, top, or bottom.
+                    default: 'upperright'
     
     """
     # Check if DISPLAY environment variable is set.
@@ -317,7 +325,15 @@ def plotms(vis=None, plotindex=None,
         pm.setYAxisLabel(ylabel,False,plotindex)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
                          showminorgrid, minorwidth, minorstyle, minorcolor, False, plotindex)
+        
+        #Determine if there should be a legend.
+        if not showlegend:
+            showlegend = False
+        if not legendposition:
+            legendposition = 'upperright' 
+        pm.setLegend( showlegend, legendposition )
 
+        #Plot range
         if (len(plotrange)!=4):
             if (len(plotrange)==0):
                 plotrange=[0.0,0.0,0.0,0.0]

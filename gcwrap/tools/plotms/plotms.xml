@@ -1540,7 +1540,7 @@ Locates points in all selected plot regions and returns their meta information a
 
 <!--
 ###############################################################################
-Grid Methods
+Canvas Methods
 ###############################################################################
 -->
 
@@ -1669,6 +1669,33 @@ Grid Methods
 </method>
 
 
+<method type="function" name="setLegend">
+    <keyword>setLegend</keyword>
+    <shortdescription>Set whether or not to display a legend and the position of a legend.</shortdescription>
+    <description />
+    <input>
+        <param type="bool" name="showLegend">
+          <description>Show a legend with the plot?</description>
+          <value>false</value>
+        </param>
+        <param type="string" name="legendPosition">
+          <description>Location for the legend.</description>
+          <value>upperright</value>
+        </param>
+        
+        <param type="bool" name="updateImmediately">
+          <description>whether to apply this change immediately, IF the window is currently shown</description>
+          <value>true</value>
+        </param>
+        <param type="int" name="plotIndex">
+          <description>the index of the plot to apply this change</description>
+          <value>0</value>
+        </param>
+
+    </input>
+  <example />
+  <returns />
+</method>
 
 
 

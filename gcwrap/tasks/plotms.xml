@@ -445,6 +445,7 @@ Iteration Parameters
         <value>spw</value>
         <value>baseline</value>
         <value>antenna</value>
+        <value>time</value>
       </allowed>
    </param>
 
@@ -544,6 +545,7 @@ Display Parameters
             <value>baseline</value>
             <value>channel</value><value>chan</value>
             <value>corr</value>
+            <value>time</value>
         </allowed>
     </param>
 
@@ -629,7 +631,7 @@ Label Parameters
 
 <!--
 ###############################################################################
-Grid Parameters
+Canvas Parameters
 ###############################################################################
 -->
 
@@ -689,6 +691,25 @@ Grid Parameters
 </param>
 
 
+<param type="bool" name="showlegend" subparam="false">
+    <description>Show a legend on the plot.</description>
+    <value>False</value>
+</param>
+
+<param type="string" name="legendposition" subparam="true">
+    <description>Legend position.</description>
+    <allowed kind="enum">
+    	<value />
+        <value>upperRight</value>
+        <value>upperLeft</value>
+        <value>lowerRight</value>
+        <value>lowerLeft</value>
+        <value>exteriorRight</value>
+        <value>exteriorLeft</value>
+        <value>exteriorRight</value>
+        <value>exteriorLeft</value>
+    </allowed>
+</param>
 
 <!--
 ###############################################################################
@@ -1390,7 +1411,7 @@ Constraints
 
     iteraxis -- axis upon which iterate plots (one plot per page, for now)
                 default: '' (no iteration)
-                options: 'scan','field','spw','baseline','antenna',''
+                options: 'scan','field','spw','baseline','antenna', 'time',''
       &gt;&gt;&gt; iteraxis expandable parameters
       	iternx -- Number of rows per page.
       			default: 1
@@ -1423,7 +1444,7 @@ Constraints
     coloraxis -- axis upon which to colorize the plotted points
                 options (= indicates synonyms):
                     'scan',  'field',  'spw',  'antenna1'='ant1',  'antenna2'='ant2',
-                    'baseline',  'channel'='chan',  'corr'='correlation'
+                    'baseline',  'channel'='chan',  'corr'='correlation', 'time'
                 default: ''  (use a single color for all points)
 
     customflaggedsymbol -- If true, use a custom symbol for drawing flagged points
