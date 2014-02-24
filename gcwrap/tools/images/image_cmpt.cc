@@ -3158,7 +3158,7 @@ image* image::pv(
 			! _image->isFloat(),
 			"This method only supports Float valued images"
 		);
-		std::tr1::shared_ptr<MVDirection> startMVD, endMVD, centerMVD;
+		std::tr1::shared_ptr<casa::MDirection> startMD, endMD, centerMD;
 		Vector<Double> startPix, endPix, centerPix;
 		std::tr1::shared_ptr<casa::Quantity> lengthQ;
 		Double lengthD = 0;
@@ -3172,14 +3172,14 @@ image* image::pv(
 				start.type() != end.type(),
 				"start and end must be the same data type"
 			);
-			MVDirection dir;
-			_processDirection(startPix, dir, start, "start");
+			casa::MDirection dir;
+			_processDirection(startPix, dir, start, String("start"));
 			if (startPix.size() == 0) {
-				startMVD.reset(new MVDirection(dir));
+				startMD.reset(new casa::MDirection(dir));
 			}
 			_processDirection(endPix, dir, end, "end");
 			if (endPix.size() == 0) {
-				endMVD.reset(new MVDirection(dir));
+				endMD.reset(new casa::MDirection(dir));
 			}
 		}
 		else if (
@@ -3190,10 +3190,10 @@ image* image::pv(
 				start.size() > 0 || end.size() > 0,
 				"Neither start nor end may be specified if center, length, and pa are specified"
 			);
-			MVDirection dir;
+			casa::MDirection dir;
 			_processDirection(centerPix, dir, center, "center");
 			if (centerPix.size() == 0) {
-				centerMVD.reset(new MVDirection(dir));
+				centerMD.reset(new casa::MDirection(dir));
 			}
 			if (length.type() == variant::INT || length.type() == variant::DOUBLE) {
 				lengthD = length.toDouble();
@@ -3228,7 +3228,7 @@ image* image::pv(
 			intWidth = 1;
 		}
 		else {
-			ThrowCc("Unsupported type for width " + width.typeString());
+			ThrowCc("Unsupported data type for width " + width.typeString());
 		}
 		if (outfile.empty() && ! wantreturn) {
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
@@ -3245,18 +3245,18 @@ image* image::pv(
 				make_pair(endPix[0], endPix[1])
 			);
 		}
-		else if (startMVD) {
-			pv.setEndpoints(*startMVD, *endMVD);
+		else if (startMD) {
+			pv.setEndpoints(*startMD, *endMD);
 		}
-		else if (centerMVD) {
+		else if (centerMD) {
 			if (lengthQ) {
 				pv.setEndpoints(
-					*centerMVD, *lengthQ, _casaQuantityFromVar(variant(pa))
+					*centerMD, *lengthQ, _casaQuantityFromVar(variant(pa))
 				);
 			}
 			else {
 				pv.setEndpoints(
-					*centerMVD, lengthD, _casaQuantityFromVar(variant(pa))
+					*centerMD, lengthD, _casaQuantityFromVar(variant(pa))
 				);
 			}
 		}
@@ -3294,15 +3294,21 @@ image* image::pv(
 }
 
 void image::_processDirection(
-	Vector<Double>& pixel, MVDirection& dir, const variant& inputDirection,
-	const String& paramName
+	Vector<Double>& pixel, casa::MDirection& dir,
+	const variant& inputDirection, const String& paramName
 ) {
-	pixel.resize(0);
-	ThrowIf(
-		inputDirection.size() != 2,
-		paramName + " must have exactly two elements"
-	);
 	variant::TYPE myType = inputDirection.type();
+	ThrowIf(
+		(
+			myType == variant::INTVEC
+			|| myType == variant::DOUBLEVEC
+			|| myType == variant::STRINGVEC
+		) &&
+		inputDirection.size() != 2,
+		"If specified as an array, " + paramName
+		+ " must have exactly two elements"
+	);
+	pixel.resize(0);
 	if (myType == variant::INTVEC || myType == variant::DOUBLEVEC) {
 		pixel = Vector<Double>(_toDoubleVec(inputDirection));
 	}
@@ -3310,12 +3316,26 @@ void image::_processDirection(
 		vector<string> x = inputDirection.toStringVec();
 		casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
 		casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
-		dir = MVDirection(q0, q1);
+		dir = casa::MDirection(q0, q1);
+	}
+	else if (myType == variant::STRING) {
+		string parts[3];
+		split(inputDirection.toString(), parts, 3, Regex("[, \n\t\r\v\f]+"));
+		casa::MDirection::Types frame;
+		casa::MDirection::getType(frame, parts[0]);
+		dir = casa::MDirection::getType(frame, parts[0])
+			? casa::MDirection(
+				_casaQuantityFromVar(parts[1]),
+				_casaQuantityFromVar(parts[2]), frame
+			)
+			: casa::MDirection(
+				_casaQuantityFromVar(parts[0]),
+				_casaQuantityFromVar(parts[1])
+			);
 	}
 	else {
 		ThrowCc("Unsupported type for " + paramName);
 	}
-
 }
 
 image* image::rebin(

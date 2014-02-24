@@ -105,6 +105,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_listpartition.py
   test_listvis.py
   test_makemask.py
+  test_me_shift.py
   test_measures.py
   test_msmoments.py
   test_msmd.py

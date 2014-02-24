@@ -48,7 +48,7 @@ void _reset();
 // the returned value of pixels will have either 0 or two elements, if 0 then the returned
 // value of dir will be set
 void _processDirection(
-	casa::Vector<casa::Double>& pixels, casa::MVDirection& dir, const variant& inputDirection,
+	casa::Vector<casa::Double>& pixels, casa::MDirection& dir, const variant& inputDirection,
 	const casa::String& paramName
 );
 

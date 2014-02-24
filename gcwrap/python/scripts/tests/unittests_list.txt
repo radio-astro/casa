@@ -87,6 +87,7 @@ test_listobs                    dmehring@nrao.edu
 #test_listvis                    scastro@eso.org
 test_listpartition              scastro@eso.org
 test_makemask                   ttsutsum@nrao.edu
+test_me_shift                   dmehring@nrao.edu
 test_measures			jjacobs@nrao.edu
 test_msmd                       dmehring@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp

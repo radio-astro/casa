@@ -368,24 +368,25 @@ class ia_pv_test(unittest.TestCase):
         expec = myia.getchunk()
         myia.done()
         imagename = datapath + "pv_patest.im"
-        outfile = "pv_patest_got1.im"
-        impv(
-             imagename=imagename, outfile=outfile, center=[9,9], length=19,
-             pa="45deg"
-        )
-        myia.open(outfile)
-        got = myia.getchunk()
-        myia.done()
-        self.assertTrue(abs(got/expec - 1).all() < 1e-6)
-        outfile = "pv_patest_got2.im"
-        impv(
-             imagename=imagename, outfile=outfile, center=[9,9], length="19arcmin",
-             pa="45deg"
-        )
-        myia.open(outfile)
-        got = myia.getchunk()
-        myia.done()
-        self.assertTrue(abs(got/expec - 1).all() < 1e-6)
-    
+        
+        for length in [19, "19arcmin"]:
+            for center in [
+                [9,9], ["00h00m4s", "-0d1m"], "00:00:04 -0d1m",
+                "GALACTIC +096.21.17.792 -060.12.37.929"
+            ]:
+                pa = "45deg"
+                if type(center)==str and center.startswith("G"):
+                    # pa = "68.46450771415163deg"
+                    pa = "68.464508deg"
+                outfile = "pv_patest_got" + str(length) + str(center) + ".im"
+                impv(
+                     imagename=imagename, outfile=outfile,
+                     center=center, length=length, pa=pa
+                )
+                myia.open(outfile)
+                got = myia.getchunk()
+                myia.done()
+                self.assertTrue(abs(got/expec - 1).max() < 1e-6)
+
 def suite():
     return [ia_pv_test]

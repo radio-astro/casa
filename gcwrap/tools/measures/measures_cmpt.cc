@@ -853,6 +853,43 @@ measures::frequency(const std::string& rf, const ::casac::variant& v0, const ::c
   return retval;
 }
 
+record* measures::shift(const record& v, const variant& offset, const variant& pa) {
+	try {
+		casa::Quantity myOffset = casaQuantityFromVar(offset);
+		ThrowIf(
+			! myOffset.isConform("rad"),
+			"offset must be an angular quantity"
+		);
+		casa::Quantity myPA = casaQuantityFromVar(pa);
+		ThrowIf(
+			! myPA.isConform("rad"),
+			"pa must be an angular quantity"
+		);
+		MeasureHolder in;
+		std::auto_ptr<Record> x(toRecord(v));
+		String error;
+		ThrowIf(
+			!in.fromRecord(error, *x),
+			"v is not a valid measure"
+		);
+		ThrowIf(
+			! in.isMDirection(),
+			"v is not a direction measure"
+		);
+		casa::MDirection md = in.asMDirection();
+		md.shiftAngle(myOffset, myPA);
+		Record myNew;
+		MeasureHolder(md).toRecord(myNew);
+		return fromRecord(myNew);
+
+	}
+	catch (const AipsError& x) {
+		*itsLog << LogIO::SEVERE << "Exception Reports: "
+			<< x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 // doppler from rf, doppler v0 and optional offset
 //   rf='', v0='0', off=F
 ::casac::record*
