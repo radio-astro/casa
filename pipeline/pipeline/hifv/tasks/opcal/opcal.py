@@ -45,7 +45,7 @@ def _find_spw(vis, bands, context):
     
     all_spws = ','.join(map(str,all_spws_list))
     
-    return all_spws
+    return all_spws, center_frequencies
 
 
 class OpcalInputs(basetask.StandardInputs):
@@ -130,17 +130,18 @@ class Opcal(basetask.StandardTaskTemplate):
         if (((startdate >= 55918.80) and (startdate <= 55938.98)) or ((startdate >= 56253.6) and (startdate <= 56271.6))):
             LOG.info("Weather station broken during this period, using 100%")
             LOG.info("seasonal model for calculating the zenith opacity")
-            plotweather_args = {'vis' : inputs.vis, 'seasonal_weight': 1.0, doPlot=False}
+            seasonal_weight=1.0            
         else:
             LOG.info("Using seasonal_weight of 0.5")
-            plotweather_args = {'vis' : inputs.vis, 'seasonal_weight': 0.5, doPlot=False}
-        
+            seasonal_weight=0.5
+            
+        plotweather_args = {'vis' : inputs.vis, 'seasonal_weight': seasonal_weight, 'doPlot' : True}
         plotweather_job = casa_tasks.plotweather(**plotweather_args)
         opacities = self._executor.execute(plotweather_job)
  
         inputs.parameter = opacities
         
-        inputs.spw = _find_spw(inputs.vis, bands, context)
+        inputs.spw, center_frequencies = _find_spw(inputs.vis, bands, context)
 
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
@@ -153,7 +154,7 @@ class Opcal(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 
-        return resultobjects.OpcalResults(pool=callist, opacities=opacities, spw=spw)
+        return resultobjects.OpcalResults(pool=callist, opacities=opacities, spw=inputs.spw, center_frequencies=center_frequencies, seasonal_weight=seasonal_weight)
 
 
     def analyse(self, result):

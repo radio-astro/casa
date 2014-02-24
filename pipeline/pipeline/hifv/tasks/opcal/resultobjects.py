@@ -8,7 +8,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class OpcalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], opacities=[], spw=[]):
+    def __init__(self, final=[], pool=[], preceding=[], opacities=[], spw=[], center_frequencies=[], seasonal_weight=None):
         super(OpcalResults, self).__init__()
         
         self.vis = None
@@ -16,6 +16,10 @@ class OpcalResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.opacities = opacities
+        self.spw = spw
+        self.center_frequencies = center_frequencies
+        self.seasonal_weight = seasonal_weight
 
     def merge_with_context(self, context):
         if not self.final:
