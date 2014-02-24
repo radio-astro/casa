@@ -218,12 +218,10 @@ namespace casa{
     // If cross-hand pols. are requested, we need to compute both
     // the parallel-hand aperture illuminations.
     //
-    if ((inStokes == Stokes::RL) || (inStokes == Stokes::LR))
-      {
-	IPosition shp(ap.aperture->shape());
-	shp(3)=2;
-	ap.aperture->resize(shp);
-      }
+    IPosition shp(ap.aperture->shape());
+    shp(0)=ap.nx; shp(1)=ap.ny; shp(2)=skyShape(2); shp(3)=skyShape(3);
+    if ((inStokes == Stokes::RL) || (inStokes == Stokes::LR))  shp(3)=4;
+    ap.aperture->resize(shp);
   }
   //
   //--------------------------------------------------------------------------
@@ -232,10 +230,12 @@ namespace casa{
 							 const Int& inStokes)
   {
     IPosition apertureShape(ap.aperture->shape());
+
     apertureShape(0) = ap.nx;  apertureShape(1) = ap.ny;
     ap.aperture->resize(apertureShape);
     ap.aperture->set(0.0);
-    BeamCalc::Instance()->calculateAperture(&ap,inStokes);
+    if (inStokes < 0) BeamCalc::Instance()->calculateAperture(&ap);
+    else BeamCalc::Instance()->calculateAperture(&ap,inStokes);
   }
   //
   //--------------------------------------------------------------------------
@@ -809,7 +809,8 @@ namespace casa{
 
     setApertureParams(ap, Freq, pa, bandID, inStokes,
 		      skyShape, uvIncr);
-    regridApertureEngine(ap, inStokes);
+    //regridApertureEngine(ap, inStokes);
+    regridApertureEngine(ap, -1);
     IPosition apertureShape(ap.aperture->shape());
 
     Vector<Int> poln(1); poln(0)=inStokes;
@@ -827,11 +828,12 @@ namespace casa{
     //
     ftAperture(*(ap.aperture),False);
 
+    pbImage.put(ap.aperture->get());
+
     // if (doSquint==True)
     // {
     //   String name("ftapperture.im");
     //   storeImg(name,*(ap.aperture));
     // }
-    
   }
 };
