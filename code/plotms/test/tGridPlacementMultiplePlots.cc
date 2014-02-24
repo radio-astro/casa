@@ -102,7 +102,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	qDebug() << "tGridPlacementMultiplePlots:: Result of save="<<ok;
     
 
-	ok = tUtil::checkFile( outFile, 80000, 100000, -1 );
+	ok = tUtil::checkFile( outFile, 250000, 300000, -1 );
 	qDebug() << "tGridPlacementMultiplePlots:: Result of save file check="<<ok;
 
 	tUtil::exitMain( false );

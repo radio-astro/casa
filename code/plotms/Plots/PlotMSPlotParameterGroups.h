@@ -276,18 +276,16 @@ public:
 	// </group>
 
 
+	// Setting the data and data columns for the x- and y-axes
+	// <group>
 	void setXAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
-			unsigned int index = 0) {
-		setAxes (axis, yAxis (index), data, yDataColumn (index), index);
-	}
+			unsigned int index = 0);
 	void setYAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
-			unsigned int index = 0) {
-		setAxes (xAxis (index), axis, xDataColumn (index), data, index);
-	}
+			unsigned int index = 0);
 	void setAxes (const PMS::Axis & xAxis, const PMS::Axis & yAxis,
 			const PMS::DataColumn & xData,
 			const PMS::DataColumn & yData, unsigned int index = 0);
-
+	//<group>
 
 	const vector<PMS::Axis> &xAxes() const {
 		return itsXAxes_;
@@ -388,6 +386,7 @@ public:
 		}
 	}
 
+	void resize( int count );
 
 private:
 	/* Parameters' values */
@@ -500,9 +499,12 @@ public:
 		return itsXAxes_[index];
 	}
 	void setXAxis(const PlotAxis & value, unsigned int index = 0) {
-		if (index >= itsXAxes_.size())
+		if (index >= itsXAxes_.size()){
 			itsXAxes_.resize (index + 1);
+
+		}
 		if (itsXAxes_[index] != value) {
+
 			itsXAxes_[index] = value;
 			updated();
 		}
@@ -630,6 +632,9 @@ public:
 			updated();
 		}
 	}
+
+	//Change the size of the vectors.
+	void resize( int count );
 
 private:
 	/* Parameters' values */
@@ -853,7 +858,7 @@ public:
 	const vector < PlotCanvas::LegendPosition > &legendPositions() const {
 		return itsLegendsPos_;
 	}
-	void showLegends (const vector < PlotCanvas::LegendPosition > &value) {
+	void setLegendPositions (const vector < PlotCanvas::LegendPosition > &value) {
 		if (itsLegendsPos_ != value) {
 			itsLegendsPos_ = value;
 			updated();
@@ -865,7 +870,7 @@ public:
 		&>(itsLegendsPos_).resize (index + 1);
 		return itsLegendsPos_[index];
 	}
-	void showLegend (const PlotCanvas::LegendPosition & value,
+	void setLegendPosition (const PlotCanvas::LegendPosition & value,
 			unsigned int index = 0) {
 		if (index >= itsLegendsPos_.size())
 			itsLegendsPos_.resize (index + 1);
@@ -1095,23 +1100,19 @@ public:
 		}
 	}
 	PlotSymbolPtr unflaggedSymbol (unsigned int index = 0) const {
-		if (index >= itsUnflaggedSymbols_.size())
-			const_cast < vector < PlotSymbolPtr >
-		&>(itsUnflaggedSymbols_).resize (index + 1);
+		if (index >= itsUnflaggedSymbols_.size()){
+			int newSize = index+1;
+			vector<PlotSymbolPtr> & unflaggedSymbols = const_cast < vector <PlotSymbolPtr > &>(itsUnflaggedSymbols_);
+			unflaggedSymbols.resize ( newSize);
+			for ( int j = 0; j < newSize; j++ ){
+				if ( unflaggedSymbols[j].null() ){
+					unflaggedSymbols[j]=PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
+				}
+			}
+		}
 		return itsUnflaggedSymbols_[index];
 	}
-	void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
-			0) {
-		if (index >= itsUnflaggedSymbols_.size())
-			itsUnflaggedSymbols_.resize (index + 1);
-		if (itsUnflaggedSymbols_[index] != value) {
-			Record newValueRecord = value->toRecord();
-			//itsUnflaggedSymbols_[index] = value;
-			itsUnflaggedSymbols_[index]->fromRecord( newValueRecord );
-			updated();
-		}
-	}
-
+	void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =0);
 
 	const vector < PlotSymbolPtr > &flaggedSymbols() const {
 		return itsFlaggedSymbols_;
@@ -1123,23 +1124,19 @@ public:
 		}
 	}
 	PlotSymbolPtr flaggedSymbol (unsigned int index = 0) const {
-		if (index >= itsFlaggedSymbols_.size())
-			const_cast < vector < PlotSymbolPtr >
-		&>(itsFlaggedSymbols_).resize (index + 1);
+		if (index >= itsFlaggedSymbols_.size()){
+			int newSize = index + 1;
+			vector<PlotSymbolPtr> & flaggedSymbols = const_cast < vector <PlotSymbolPtr > &>(itsFlaggedSymbols_);
+			flaggedSymbols.resize( newSize );
+			for ( int j = 0; j < newSize; j++ ){
+				if ( flaggedSymbols[j].null()){
+					flaggedSymbols[j] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
+				}
+			}
+		}
 		return itsFlaggedSymbols_[index];
 	}
-	void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
-			0) {
-		if (index >= itsFlaggedSymbols_.size())
-			itsFlaggedSymbols_.resize (index + 1);
-		if (itsFlaggedSymbols_[index] != value) {
-			//itsFlaggedSymbols_[index] = value;
-			Record valueRecord = value->toRecord();
-			itsFlaggedSymbols_[index]->fromRecord( valueRecord );
-			updated();
-		}
-	}
-
+	void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =0);
 
 	const vector < PlotMSLabelFormat > &titleFormats() const {
 		return itsTitleFormats_;
@@ -1176,15 +1173,7 @@ public:
 			const_cast < vector < bool > &>(itsColorizeFlags_).resize (index + 1);
 		return itsColorizeFlags_[index];
 	}
-	void setColorize (const bool & value, unsigned int index = 0) {
-		if (index >= itsColorizeFlags_.size())
-			itsColorizeFlags_.resize (index + 1);
-		if (itsColorizeFlags_[index] != value) {
-			itsColorizeFlags_[index] = value;
-			updated();
-		}
-	}
-
+	void setColorize (const bool & value, unsigned int index = 0);
 
 	const vector < PMS::Axis > &colorizeAxes() const {
 		return itsColorizeAxes_;

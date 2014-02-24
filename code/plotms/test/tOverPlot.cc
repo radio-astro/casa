@@ -28,6 +28,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
 #include <plotms/test/tUtil.h>
 
 
@@ -35,32 +36,24 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
-#include <QDebug>
 
 /**
- * Tests whether a plot can be placed in the second row, second column
- * of a 2x3 page layout.  The uneven number of rows and columns are important
- * to make sure placement is not switched or confused.
+ * Tests whether we can overplot field and scan for the test data with both
+ * plots using a left axis.
  */
-
 int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
-    qDebug() << "tGridPlacement using data from "<<dataPath.c_str();
+    cout << "tOverPlot using data from "<<dataPath.c_str()<<endl;
 
-    // Set up plotms object
+    // Set up plotms object.
     PlotMSApp app(false, false);
 
-
-    //Establish a 2x3 grid
-    PlotMSParameters& params = app.getParameters();
-    params.setRowCount( 2 );
-    params.setColCount( 3 );
 
     // Set up parameters for plot.
     PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
 
-    // Put the data into the plot.
+    // Data
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
     if (ppdata == NULL) {
         plotParams.setGroup<PMS_PP_MSData>();
@@ -68,43 +61,56 @@ int main(int /*argc*/, char** /*argv[]*/) {
     }
     ppdata->setFilename( dataPath );
 
-
-    //Put the plot in the 2nd row, 2nd col
-    PMS_PP_Iteration* iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-    if ( iterParams == NULL ){
-    	plotParams.setGroup<PMS_PP_Iteration>();
-    	iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
+    //Cache and Axes
+    PMS_PP_Cache* cacheParams = plotParams.typedGroup<PMS_PP_Cache>();
+    PMS_PP_Axes* axesParams = plotParams.typedGroup<PMS_PP_Axes>();
+    if(cacheParams == NULL) {
+    	plotParams.setGroup<PMS_PP_Cache>();
+        cacheParams = plotParams.typedGroup<PMS_PP_Cache>();
     }
-    iterParams->setGridRow( 1 );
-    iterParams->setGridCol( 1 );
+    if(axesParams == NULL) {
+       plotParams.setGroup<PMS_PP_Axes>();
+       axesParams = plotParams.typedGroup<PMS_PP_Axes>();
+    }
 
+    //The cache must have exactly as many x-axes as y-axes so we duplicate
+    //the x-axis properties here.
+     int yAxisCount = 2;
+     PMS::Axis xAxis = PMS::TIME;
+     for ( int i = 0; i < yAxisCount; i++ ){
+    	 cacheParams->setXAxis(xAxis, PMS::DATA, i);
+         axesParams->setXAxis( X_BOTTOM, i);
+     }
+     PMS::Axis yAxis1 = PMS::SCAN;
+     cacheParams->setYAxis(yAxis1, PMS::DATA, 0);
+     axesParams->setYAxis( Y_LEFT, 0);
+     PMS::Axis yAxis2 = PMS::FIELD;
+     cacheParams->setYAxis(yAxis2, PMS::DATA, 1);
+     axesParams->setYAxis(Y_LEFT, 1);
 
-    //Make the plot.
-    app.addOverPlot( &plotParams );
+     //We need to set a distinctive color for each set of data
+     //so we can distinguish it.
+     PMS_PP_Display* ppdisp = plotParams.typedGroup<PMS_PP_Display>();
+     if (ppdisp == NULL) {
+    	 plotParams.setGroup<PMS_PP_Display>();
+         ppdisp = plotParams.typedGroup<PMS_PP_Display>();
+     }
+     PlotSymbolPtr ps = app.createSymbol ("diamond", 5, "00FF00", "mesh2", false );
+     ppdisp->setUnflaggedSymbol(ps, 0);
+     PlotSymbolPtr ps2 = app.createSymbol ("diamond", 5, "0000FF", "mesh2", false );
+     ppdisp->setUnflaggedSymbol(ps2, 1);
+     app.addOverPlot( &plotParams );
 
-
-    //QApplication::exec();
-
-    //We want to print all pages in the output.
-    PlotMSExportParam& exportParams = app.getExportParameters();
-    exportParams.setExportRange( PMS::PAGE_ALL );
-
-
-
-
-    String outFile( "/tmp/plotMSGridPlacementTest.jpg");
+    String outFile( "/tmp/plotMSOverplotTest.jpg");
     tUtil::clearFile( outFile );
-
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
-	qDebug() << "tGridPlacement:: Result of save="<<ok;
+	cout << "tOverplot:: Result of save="<<ok<<endl;
     
-
-	ok = tUtil::checkFile( outFile, 60000, 80000, -1 );
-	qDebug() << "tGridPlacement:: Result of save file check="<<ok;
-
-	tUtil::exitMain( false );
+	ok = tUtil::checkFile( outFile, 160000, 170000, -1 );
+	cout << "tOverplot:: Result of save file check="<<ok<<endl;
+	return tUtil::exitMain( false );
 }
 

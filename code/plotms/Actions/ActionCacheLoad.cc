@@ -45,8 +45,48 @@ ActionCacheLoad::ActionCacheLoad( Client* client, vector<PlotMSPlot*> plots,
 	int plotCount = plots.size();
 	for ( int i = 0; i < plotCount; i++ ){
 		vector<PMS::Axis> plotAxes = plots[i]->getCachedAxes();
-		axes.push_back( plots[i]->getCachedAxes() );
-		cachedData.push_back(plots[i]->getCachedData() );
+		vector<PMS::DataColumn> datas = plots[i]->getCachedData();
+		vector<PMS::Axis> plotAxesX;
+		vector<PMS::Axis> plotAxesY;
+		vector<PMS::DataColumn> datasX;
+		vector<PMS::DataColumn> datasY;
+		//Ensure the x,y axes are unique as pairs.  The x-axes
+		//are first in the list and the y-axes are second.
+		int xAxisEnd = plotAxes.size() / 2;
+		for ( int j = 0; j < xAxisEnd; j++ ){
+			bool duplicate = false;
+			int plotAxesXEnd = plotAxesX.size();
+			for ( int k = 0; k < plotAxesXEnd; k++ ){
+				if ( plotAxes[j] == plotAxesX[k] && plotAxes[xAxisEnd+j] == plotAxesY[k]){
+					if ( datas[j] == datasX[k] && datas[xAxisEnd+j] == datasY[k]){
+						duplicate = true;
+						break;
+					}
+				}
+			}
+
+			if ( !duplicate ){
+
+				plotAxesX.push_back( plotAxes[j]);
+				plotAxesY.push_back( plotAxes[xAxisEnd + j]);
+				datasX.push_back(datas[j]);
+				datasY.push_back(datas[xAxisEnd+j]);
+			}
+		}
+
+		int plotAxesXCount = plotAxesX.size();
+		vector<PMS::Axis> uniqueAxes;
+		vector<PMS::DataColumn> uniqueData;
+		for ( int j = 0; j < plotAxesXCount; j++ ){
+			uniqueAxes.push_back( plotAxesX[j] );
+			uniqueData.push_back( datasX[j] );
+		}
+		for ( int j = 0; j < plotAxesXCount; j++ ){
+			uniqueAxes.push_back( plotAxesY[j]);
+			uniqueData.push_back( datasY[j] );
+		}
+		axes.push_back( uniqueAxes );
+		cachedData.push_back( uniqueData );
 	}
 }
 
@@ -107,7 +147,7 @@ bool ActionCacheLoad::loadAxes() {
 			axesLoaded = true;
 		}
 		//We also need to get the data-column,model,corrected,
-		if ( this->cachedData.size() == 0 ){
+		if ( cachedData.size() == 0 ){
 			int plotCount = plots.size();
 			for ( int i = 0; i < plotCount; i++ ){
 				cachedData.push_back(plots[i]->getCachedData());

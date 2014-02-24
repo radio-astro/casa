@@ -37,8 +37,7 @@
 namespace casa {
 
 //# Forward declarations.
-class PlotSymbolWidget;
-class QtLabelWidget;
+class PlotMSDataSymbolWidget;
 
 
 // Subclass of PlotMSPlotSubtab to manage plot display parameters.
@@ -48,7 +47,6 @@ class PlotMSDisplayTab : public PlotMSPlotSubtab, Ui::DisplayTab {
     
 public:
 
-	
     // Constructor which takes the parent tab and plotter.
     PlotMSDisplayTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
@@ -70,15 +68,20 @@ public:
     // Implements PlotMSPlotSubtab::update().  WARNING: for now, only works
     // with PlotMSSinglePlotParameters.
     void update(const PlotMSPlot& plot);
+
+    //Support for overplotting with multiple y-axes.
+    void setAxisIdentifier( int index, QString id );
+    void removeAxisIdentifier( int index );
  
-    
+private slots:
+	void updateText( QLabel* source, bool highlight );
+	void changeSymbolViewed();
+
 private:
+	void makeDataSymbol();
+	void updateMultipleAxisSupport();
     
-    // Label widget for title.
-    QtLabelWidget* itsTitleWidget_;
-    
-    // Symbol widgets for unflagged and flagged points, respectively.
-    PlotSymbolWidget* itsSymbolWidget_, *itsMaskedSymbolWidget_;
+    QList<PlotMSDataSymbolWidget*> dataSymbols;
     
     // Display parameters.
     PMS_PP_Display itsPDisplay_;

@@ -31,7 +31,7 @@
 
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
-
+#include <casaqt/QtUtilities/QtUtilities.h>
 #include <casa/namespace.h>
 
 namespace casa {
@@ -57,6 +57,9 @@ public:
     QLabel* dataLabel() { return AxisWidget::dataLabel; }
     QLabel* attachLabel() { return AxisWidget::attachLabel; }
     QLabel* rangeLabel() { return AxisWidget::rangeLabel; }
+    QLabel* axisLabel(){
+    	return AxisWidget::axisLabel;
+    }
     // </group>
     
     // Gets the current set values in the widget.
@@ -74,21 +77,28 @@ public:
     
     // Sets the "in cache" checkbox to the given.
     void setInCache(bool inCache);
-    
-    /*    
+    void insertLabelDefaults( QMap<QLabel*,QString>& map );
+
+    //Returns an identifier for this axis data.
+    QString getIdentifier() const;
+
 signals:
-    // This signal should be emitted whenever the user changes any value
-    // settings in the GUI.
-    void changed();
-     */
-    
+	void axisIdentifierChanged(PlotMSAxisWidget*);
+	void axisChanged();
+
 private:
+    void initPlotAxis(int attachAxis);
+    void setAttachAxis(PlotAxis attachAxis );
+
     // Widget for the range.
     PlotRangeWidget* itsRangeWidget_;
+
     
 private slots:
     // Slot for when the axis value changed.
     void axisChanged(const QString& value);
+    void axisDataChanged();
+
 };
 
 }

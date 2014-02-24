@@ -81,6 +81,7 @@ bool CacheThread::doWork(){
 	bool success = true;
 
 	 // Make sure axes data vector is same length as axes vector.
+
 	if(itsAxesData.size() != workAxes.size()){
 		 itsAxesData.resize(workAxes.size(), PMS::DEFAULT_DATACOLUMN);
 	}
@@ -96,11 +97,20 @@ bool CacheThread::doWork(){
 			}
 
 			if( itsSetupPlot ) {
+				//There will be an indexer for each data set.
+				int dataCount = itsAxesData.size()/2;
 				if ( itsCache ){
-					itsCache->setUpIndexer(PMS::NONE);
+					itsCache->resizeIndexer( dataCount );
 				}
 				else {
 					throw(AipsError("Problem in CacheThread::run B"));
+				}
+				if ( itsCache ){
+					itsCache->clearRanges();
+					bool globalRanges = False;
+					for ( int i = 0; i < dataCount; i++ ){
+						itsCache->setUpIndexer(PMS::NONE, globalRanges, globalRanges, i);
+					}
 				}
 			}
 			// Release

@@ -134,11 +134,14 @@ public:
     String getLabel(PMS::Axis axis, bool refValueSet = false,
             double refValue = 0) const;
     
+    String getLabel(vector<PMS::Axis> axes, vector<bool> refValueSets, vector<double> refValues ) const;
+
     // Generates a label, using the given double axes and reference values.  If
     // any single axes tags are in the format, the x axis will be used for it.
-    String getLabel(PMS::Axis xAxis, PMS::Axis yAxis,
+    String getLabel(PMS::Axis xAxis, vector<PMS::Axis> yAxes,
             bool xRefValueSet = false, double xRefValue = 0,
-            bool yRefValueSet = false, double yRefValue = 0) const;
+            vector<bool> yRefValueSets=vector<bool>(1,false),
+            vector<double> yRefValues =vector<double>(1,0.0) ) const;
     
     // Equality operators.
     // <group>
@@ -153,9 +156,9 @@ public:
 private:
     // Generates a label using the given format, single axis, and double axes.
     static String getLabel(const String& format, PMS::Axis axis,
-            PMS::Axis xAxis, PMS::Axis yAxis, bool refValueSet,
+            PMS::Axis xAxis, vector<PMS::Axis> yAxes, bool refValueSet,
             double refValue, bool xRefValueSet, double xRefValue,
-            bool yRefValueSet, double yRefValue);
+            vector<bool> yRefValueSets, vector<double> yRefValues);
     
     // Helper method for getLabel() which gets the next token in the format.
     // Returns true if a token was returned; false if the end of the format was

@@ -78,7 +78,7 @@ const unsigned int PlotMSCacheBase::THREAD_SEGMENT = 10;
 PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 		  plotms_(parent),
 		  indexer0_(NULL),
-		  indexer_(),
+		  indexer_(0),
 		  nChunk_(0),
 		  refTime_p(0.0),
 		  nAnt_(0),
@@ -91,13 +91,22 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 		  field_(),
 		  spw_(),
 		  scan_(),
-		  dataLoaded_(false),
-		  netAxesMask_(4,False),
-		  plmask_()
+		  dataLoaded_(false)
 {
 
 	// Make the empty indexer0 object so we have and empty PlotData object
+	int dataCount = 1;
+	currentX_.resize( dataCount );
+	currentY_.resize( dataCount );
 	indexer0_ = new PlotMSIndexer();
+	indexer_.resize(dataCount);
+	netAxesMask_.resize( dataCount );
+	plmask_.resize( dataCount );
+	for ( int i = 0; i < dataCount; i++ ){
+		netAxesMask_[i].resize(4,False);
+		indexer_[i].set( NULL );
+		plmask_[i].set( NULL  );
+	}
 
 	// Set up loaded axes to be initially empty, and set up data columns for
 	// data-based axes.
@@ -107,12 +116,13 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 		if(PMS::axisIsData(axes[i]))
 			loadedAxesData_[axes[i]]= PMS::DEFAULT_DATACOLUMN;
 	}
+	this->iterAxis = PMS::NONE;
 }
 
 PlotMSCacheBase::~PlotMSCacheBase() {
 
 	//  cout << "PMSCB::~PMSCB" << endl;
-
+	
 	delete indexer0_;
 
 	// Deflate everything
@@ -120,6 +130,17 @@ PlotMSCacheBase::~PlotMSCacheBase() {
 	deletePlotMask();
 	deleteCache();
 }
+
+Int PlotMSCacheBase::nIter( int dataIndex ) const {
+	  int iterationCount = -1;
+	  int indexerSize = indexer_.size();
+	  if ( 0 <= dataIndex && dataIndex < indexerSize ){
+		  if ( !indexer_[dataIndex].empty() ){
+		  	  iterationCount = indexer_[dataIndex].nelements();
+	  	  }
+	  }
+	  return iterationCount;
+ };
 
 vector<pair<PMS::Axis, unsigned int> > PlotMSCacheBase::loadedAxes() const {    
 	// have to const-cast loaded axes because the [] operator is not const,
@@ -140,19 +161,47 @@ Record PlotMSCacheBase::locateInfo(int plotIterIndex, const Vector<PlotRegion>& 
     		bool showUnflagged, bool showFlagged, bool selectAll ){
 	Record record;
 	int indexCount = indexer_.size();
+	int dataCount = getDataCount();
 	if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
-		record = indexer_[plotIterIndex]->locateInfo(regions, showUnflagged,
+		for ( int i = 0; i < dataCount; i++ ){
+			Record subRecord = indexer_[i][plotIterIndex]->locateInfo(regions, showUnflagged,
 							showFlagged, selectAll);
+			record.defineRecord( i, subRecord );
+		}
 	}
 	return record;
+}
+
+PMS::Axis PlotMSCacheBase::getIterAxis() const {
+	return iterAxis;
 }
 
 PlotLogMessage* PlotMSCacheBase::locateRange( int plotIterIndex, const Vector<PlotRegion> & regions,
      		bool showUnflagged, bool showFlagged){
 	PlotLogMessage* mesg = NULL;
-	int indexCount = indexer_.size();
-	if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
-		mesg = indexer_[plotIterIndex]->locateRange( regions, showUnflagged, showFlagged );
+	String mesgContents;
+	int dataCount = indexer_.size();
+	if ( dataCount == 1 ){
+		int indexCount = indexer_[0].size();
+		if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+			mesg = indexer_[0][plotIterIndex]->locateRange( regions, showUnflagged, showFlagged );
+		}
+	}
+	else {
+		String contents;
+		PlotLogMessage* subMesg = NULL;
+		for ( int i = 0; i < dataCount; i++ ){
+			int indexCount = indexer_[i].size();
+			if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+				subMesg = indexer_[i][plotIterIndex]->locateRange( regions, showUnflagged, showFlagged );
+				contents.append(String::toString(i+1));
+				contents.append( ": ");
+				contents.append( subMesg->message() );
+				contents.append( "\n");
+			}
+		}
+		mesg = subMesg;
+		mesg->message( contents );
 	}
 	return mesg;
 }
@@ -160,9 +209,28 @@ PlotLogMessage* PlotMSCacheBase::locateRange( int plotIterIndex, const Vector<Pl
 PlotLogMessage* PlotMSCacheBase::flagRange( int plotIterIndex, casa::PlotMSFlagging& flagging,
      		const Vector<PlotRegion>& regions, bool showFlagged){
 	PlotLogMessage* mesg = NULL;
-	int indexCount = indexer_.size();
-	if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
-		mesg = indexer_[plotIterIndex]->flagRange( flagging, regions, showFlagged );
+	int dataCount = indexer_.size();
+	if ( dataCount == 0 ){
+		int indexCount = indexer_[0].size();
+		if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+			mesg = indexer_[0][plotIterIndex]->flagRange( flagging, regions, showFlagged );
+		}
+	}
+	else {
+		String contents;
+		PlotLogMessage* subMesg = NULL;
+		for ( int i = 0; i < dataCount; i++ ){
+			int indexCount = indexer_[i].size();
+			if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+				subMesg = indexer_[i][plotIterIndex]->flagRange( flagging, regions, showFlagged );
+				contents.append(String::toString(i+1));
+				contents.append( ": ");
+				contents.append( subMesg->message() );
+				contents.append( "\n");
+			}
+		}
+		mesg = subMesg;
+		mesg->message( contents );
 	}
 	return mesg;
 }
@@ -192,8 +260,13 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	// 2) the underlying MS has changed, requiring a reloading of metadata
 
 	// Remember the axes that we will load for plotting:
-	currentX_=axes[0];
-	currentY_=axes[1];
+	currentX_.clear();
+	currentY_.clear();
+	int dataCount = axes.size() / 2;
+	for ( int i = 0; i < dataCount; i++ ){
+		currentX_.push_back( axes[i] );
+		currentY_.push_back( axes[dataCount+i] );
+	}
 
 	// Maintain access to this msname, selection, & averager, because we'll
 	// use it if/when we flag, etc.
@@ -207,37 +280,38 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	logLoad(averaging_.summary());
 
 	// Trap (currently) unsupported modes
-	{
-		// Forbid antenna-based/baseline-based combination plots, for now
-		Vector<Bool> nAM=netAxesMask(currentX_,currentY_);
-		if (nAM(2)&&nAM(3))
-			throw(AipsError("Plots of antenna-based vs. baseline-based axes not supported ("+
-					PMS::axis(currentX_)+" and "+PMS::axis(currentY_)));
+	for ( int i = 0; i < dataCount; i++ ){
 
+		// Forbid antenna-based/baseline-based combination plots, for now
+		Vector<Bool> nAM=netAxesMask(currentX_[i],currentY_[i]);
+		if (nAM(2)&&nAM(3)){
+			throw(AipsError("Plots of antenna-based vs. baseline-based axes not supported ("+
+					PMS::axis(currentX_[i])+" and "+PMS::axis(currentY_[i])));
+		}
 		// Can't plot averaged weights yet
 		if (averaging_.anyAveraging()) {
-			if (axes[0] == (PMS::WT) ||
-					axes[0] == (PMS::WTxAMP) ||
-					axes[1] == (PMS::WT) ||
-					axes[1] == (PMS::WTxAMP)) {
-				throw(AipsError("Sorry, the Wt axes options do not yet support averaging."));
+			int axesCount = axes.size();
+			for ( int j = 0; j < axesCount; j++ ){
+				if (axes[j] == (PMS::WT) || axes[j] == (PMS::WTxAMP) ) {
+					throw(AipsError("Sorry, the Wt axes options do not yet support averaging."));
+				}
 			}
 		}
 
-		bool ephemerisX = isEphemerisAxis( currentX_);
-		bool ephemerisY = isEphemerisAxis( currentY_);
+		bool ephemerisX = isEphemerisAxis( currentX_[i]);
+		bool ephemerisY = isEphemerisAxis( currentY_[i]);
 		if ( ephemerisX || ephemerisY ){
 			bool ephemerisAvailable = isEphemeris();
 			if ( !ephemerisAvailable ){
 				String axisName;
 				if ( ephemerisX ){
-					axisName.append( PMS::axis( currentX_));
+					axisName.append( PMS::axis( currentX_[i]));
 				}
 				if ( ephemerisY ){
 					if ( ephemerisX ){
 						axisName.append( " and ");
 					}
-					axisName.append( PMS::axis( currentY_));
+					axisName.append( PMS::axis( currentY_[i]));
 				}
 				String errorMessage( "Not loading axis "+axisName+
 						" because ephemeris data is not available for this ms.");
@@ -254,8 +328,10 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	// TBD:  move down to where we are surer something good will happen?
 	stringstream ss;
 	ss << "Caching for the new plot: ";
-	ss << PMS::axis(currentY_) << "(" << currentY_ << ") vs. ";
-	ss << PMS::axis(currentX_) << "(" << currentX_ << ")...\n";
+	for ( int i = 0; i < dataCount; i++ ){
+		ss << PMS::axis(currentY_[i]) << "(" << currentY_[i] << ") vs. ";
+		ss << PMS::axis(currentX_[i]) << "(" << currentX_[i] << ")...\n";
+	}
 	logLoad(ss.str());
 
 	// Calculate which axes need to be loaded; those that have already been
@@ -291,8 +367,6 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	for(unsigned int i = 0; i < axes.size(); i++) {
 		found = false;
 		axis = axes[i];
-
-
 
 		// add to pending list
 		pendingLoadAxes_[axis]=true;
@@ -346,15 +420,8 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		cout << endl;
 	}
 
+	// Now Load data.
 	if(loadAxes.size() > 0) {
-
-		// Now Load data.
-
-		/*  for some reason, this sometimes causes crash
-      thread->setStatus("Applying MS selection. Please wait...");
-      thread->setAllowedOperations(false,false,false);
-      thread->setProgress(1);
-		 */
 
 		// Call method that actually does the loading (MS- or Cal-specific)
 		loadIt(loadAxes,loadData,thread);
@@ -382,11 +449,14 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	} // something to load
 
 	// Setup/revis masks that we use to realize axes relationships
-	Vector<Bool> xmask(4,False);
-	Vector<Bool> ymask(4,False);
-	setAxesMask(currentX_,xmask);
-	setAxesMask(currentY_,ymask);
-	netAxesMask_=(xmask || ymask);
+	netAxesMask_.resize( dataCount );
+	for ( int i = 0; i < dataCount; i++ ){
+		Vector<Bool> xmask(4,False);
+		Vector<Bool> ymask(4,False);
+		setAxesMask(currentX_[i],xmask);
+		setAxesMask(currentY_[i],ymask);
+		netAxesMask_[i]=(xmask || ymask);
+	}
 
 	/*
   cout << boolalpha;
@@ -396,7 +466,11 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	 */
 
 	// Generate the plot mask from scratch
-	setPlotMask();
+	deletePlotMask();
+	plmask_.resize( dataCount );
+	for ( int i = 0; i < dataCount; i++ ){
+		setPlotMask( i );
+	}
 
 	// At this stage, data is loaded and ready for indexing then plotting....
 	dataLoaded_ = true;
@@ -405,7 +479,8 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	refTime_p=min(time_);
 	refTime_p=86400.0*floor(refTime_p/86400.0);
 	logLoad("refTime = "+MVTime(refTime_p/C::day).string(MVTime::YMD,7));
-
+	QString timeMesg("refTime = ");
+	timeMesg.append(MVTime(refTime_p/C::day).string(MVTime::YMD,7).c_str());
 	logLoad("Finished loading.");
 }
 
@@ -499,9 +574,13 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 
 			if(dataLoaded_ && axisIsMetaData(axes[i])) dataLoaded_ = false;
 
-			if(dataLoaded_ &&
-					(currentX_ == axes[i] || currentY_ == axes[i])) {
-				dataLoaded_ = false;
+			if(dataLoaded_ ){
+				int plotDataCount = getDataCount();
+				for ( int j = 0; j < plotDataCount; j++ ){
+					if ( currentX_[j] == axes[i] || currentY_[j] == axes[i] ) {
+						dataLoaded_ = false;
+					}
+				}
 			}
 		}
 	}
@@ -518,12 +597,21 @@ bool PlotMSCacheBase::isEphemerisAxis( PMS::Axis axis ) const {
 	return ephemerisAxis;
 }
 
-void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool globalYRange) {
+void PlotMSCacheBase::resizeIndexer( int size ){
+	deleteIndexer();
+	indexer_.resize( size );
+	//plmask_.resize( size );
+}
 
+void PlotMSCacheBase::clearRanges(){
+	xminG_=yminG_=xflminG_=yflminG_=DBL_MAX;
+	xmaxG_=ymaxG_=xflmaxG_=yflmaxG_=-DBL_MAX;
+}
 
+void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
+		Bool globalYRange, int dataIndex ) {
 
 	logLoad("Setting up iteration indexing (if necessary), and calculating plot ranges.");
-
 
 	//cout << "############ PlotMSCacheBase::setUpIndexer: " << PMS::axis(iteraxis)
 	//     << " cacheReady() = " << boolalpha << cacheReady() << endl;
@@ -532,7 +620,6 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 
 	// If the cache hasn't been filled, do nothing
 	if (!cacheReady()) return;
-
 	switch (iteraxis) {
 	case PMS::SCAN: {
 		iterValues=scan_(goodChunk_).getCompressedArray();
@@ -553,9 +640,9 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 	case PMS::BASELINE: {
 
 		// Revise axes mask, etc., to ensure baseline-dependence
-		if (!netAxesMask_(2)) {
-			netAxesMask_(2)=True;
-			setPlotMask();
+		if (!netAxesMask_[dataIndex](2)) {
+			netAxesMask_[dataIndex](2)=True;
+			setPlotMask( dataIndex );
 		}
 
 		// Maximum possible baselines (includes ACs)
@@ -592,9 +679,9 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 			throw(AipsError("Iteration over baseline not supported with full baseline averaging."));
 
 		// Revise axes mask, etc., to ensure baseline-dependence
-		if (!netAxesMask_(2)) {
-			netAxesMask_(2)=True;
-			setPlotMask();
+		if (!netAxesMask_[dataIndex](2)) {
+			netAxesMask_[dataIndex](2)=True;
+			setPlotMask( dataIndex );
 		}
 
 		// Find the limited list of _occuring_ antenna indices
@@ -617,11 +704,15 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 	case PMS::TIME: {
 		if (averaging_.time()){
 			double timeInterval= averaging_.timeValue();
+			if ( timeInterval <= 0 ){
+				timeInterval = 1;
+			}
 			double baseTime = getTime( 0, 0 );
 			double endTime = getTime( nChunk_-1, 0 );
 			double totalTime = endTime - baseTime;
 			double quotient = totalTime / timeInterval;
 			nIter = static_cast<int>( ceil(quotient) );
+
 			//It does not make sense to have more iterations than number of chunks.
 			//This could happen if averaging is set less than the time interval between chunks.
 			if ( nIter > nChunk_){
@@ -670,42 +761,49 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 
 	// cout << "********nIter = " << nIter << " iterValues = " << iterValues(IPosition(1,0),IPosition(1,nIter-1)) << endl;
 
-	deleteIndexer();
-	indexer_.resize(nIter);
-	indexer_.set(NULL);
+
+	indexer_[dataIndex].resize(nIter);
+	indexer_[dataIndex].set( NULL );
+
 	for (Int iter=0;iter<nIter;++iter){
-		indexer_[iter] = new PlotMSIndexer(this,currentX_,currentY_,iteraxis,iterValues(iter));
+		indexer_[dataIndex][iter] = new PlotMSIndexer(this,currentX_[dataIndex],currentY_[dataIndex],
+				iteraxis,iterValues(iter), dataIndex);
 	}
 	// Extract global ranges from the indexers
 	// Initialize limits
-	xminG_=yminG_=xflminG_=yflminG_=DBL_MAX;
-	xmaxG_=ymaxG_=xflmaxG_=yflmaxG_=-DBL_MAX;
+
 	Double ixmin,iymin,ixmax,iymax;
 	for (Int iter=0;iter<nIter;++iter) {
-		indexer_[iter]->unmaskedMinsMaxesRaw(ixmin,ixmax,iymin,iymax);
+		indexer_[dataIndex][iter]->unmaskedMinsMaxesRaw(ixmin,ixmax,iymin,iymax);
 		xminG_=min(xminG_,ixmin);
 		xmaxG_=max(xmaxG_,ixmax);
 		yminG_=min(yminG_,iymin);
 		ymaxG_=max(ymaxG_,iymax);
-		indexer_[iter]->maskedMinsMaxesRaw(ixmin,ixmax,iymin,iymax);
+
+		indexer_[dataIndex][iter]->maskedMinsMaxesRaw(ixmin,ixmax,iymin,iymax);
 		xflminG_=min(xflminG_,ixmin);
 		xflmaxG_=max(xflmaxG_,ixmax);
 		yflminG_=min(yflminG_,iymin);
 		yflmaxG_=max(yflmaxG_,iymax);
+
 		// set usage of globals
-		indexer_[iter]->setGlobalMinMax(globalXRange,globalYRange);
+		indexer_[dataIndex][iter]->setGlobalMinMax(globalXRange,globalYRange);
 	}
+
+	//Store the iteration axis.
+	this->iterAxis = iteraxis;
 
 	{
 		stringstream ss;
 		ss << "Global ranges:" << endl
-				<< PMS::axis(currentX_) << ": "
+				<< PMS::axis(currentX_[dataIndex]) << ": "
 				<< xminG_ << "-" << xmaxG_ << " (unflagged); "
 				<< xflminG_ << "-" << xflmaxG_ << " (flagged)." << endl
-				<< PMS::axis(currentY_) << ": "
+				<< PMS::axis(currentY_[dataIndex]) << ": "
 				<< yminG_ << "-" << ymaxG_ << " (unflagged); "
 				<< yflminG_ << "-" << yflmaxG_ << "(flagged).";
 		logLoad(ss.str());
+
 		//  cout << "Use global ranges? : " << boolalpha << globalXRange << " " << globalYRange << endl;
 	}
 }
@@ -826,9 +924,16 @@ void PlotMSCacheBase::deleteCache() {
 
 }
 void PlotMSCacheBase::deleteIndexer() {
-	for (uInt i=0;i<indexer_.nelements();++i)
-		if (indexer_[i]) delete indexer_[i];
-	indexer_.resize(0,True);
+	int indexerCount = indexer_.size();
+	for ( int j = 0; j < indexerCount; j++ ){
+		for (uInt i=0;i<indexer_[j].nelements();++i){
+			if (indexer_[j][i]){
+				delete indexer_[j][i];
+			}
+		}
+		indexer_[j].resize(0,True);
+	}
+	indexer_.clear();
 }
 
 void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
@@ -921,24 +1026,24 @@ Vector<Bool> PlotMSCacheBase::netAxesMask(PMS::Axis xaxis,PMS::Axis yaxis) {
 }
 
 
-void PlotMSCacheBase::setPlotMask() {
+void PlotMSCacheBase::setPlotMask( int dataIndex ) {
 
 	logLoad("Generating the plot mask.");
 
 	// Generate the plot mask
-	deletePlotMask();
-	plmask_.resize(nChunk());
-	plmask_.set(NULL);
+	//deletePlotMask();
+	plmask_[dataIndex].resize(nChunk());
+	plmask_[dataIndex].set(NULL);
 	for (Int ichk=0;ichk<nChunk();++ichk) {
-		plmask_[ichk] = new Array<Bool>();
+		plmask_[dataIndex][ichk] = new Array<Bool>();
 		// create a collapsed version of the flags for this chunk
-		setPlotMask(ichk);
+		setPlotMask(dataIndex, ichk);
 	}
 
 }
 
 
-void PlotMSCacheBase::setPlotMask(Int chunk) {
+void PlotMSCacheBase::setPlotMask(Int dataIndex, Int chunk) {
 
 	// Do nothing if chunk empty
 	if (!goodChunk_(chunk))
@@ -947,7 +1052,7 @@ void PlotMSCacheBase::setPlotMask(Int chunk) {
 	IPosition nsh(3,1,1,1),csh;
 
 	for (Int iax=0;iax<3;++iax) {
-		if (netAxesMask_(iax))
+		if (netAxesMask_[dataIndex](iax))
 			// non-trivial size for this axis
 			nsh(iax)=chunkShapes()(iax,chunk);
 		else
@@ -955,25 +1060,31 @@ void PlotMSCacheBase::setPlotMask(Int chunk) {
 			csh.append(IPosition(1,iax));
 	}
 
-	if (netAxesMask_(3) && !netAxesMask_(2)) {
+	if (netAxesMask_[dataIndex](3) && !netAxesMask_[dataIndex](2)) {
 		nsh(2)=chunkShapes()(3,chunk);   // antenna axis length
-		plmask_[chunk]->resize(nsh);
+
+		plmask_[dataIndex][chunk]->resize(nsh);
 		// TBD: derive antenna flags from baseline flags
-		plmask_[chunk]->set(True);
+		plmask_[dataIndex][chunk]->set(True);
 	}
 	else {
-		plmask_[chunk]->resize(nsh);
-		(*plmask_[chunk]) = operator>(partialNFalse(*flag_[chunk],csh).reform(nsh),uInt(0));
+		plmask_[dataIndex][chunk]->resize(nsh);
+		(*plmask_[dataIndex][chunk]) = operator>(partialNFalse(*flag_[chunk],csh).reform(nsh),uInt(0));
 	}
 
 }
 
 void PlotMSCacheBase::deletePlotMask() {
-
-	for (uInt i=0;i<plmask_.nelements();++i)
-		if (plmask_[i]) delete plmask_[i];
-
-	plmask_.resize(0,True);
+	int dataCount = plmask_.size();
+	for ( int j = 0; j < dataCount; j++ ){
+		for (uInt i=0;i<plmask_[j].nelements();++i){
+			if (plmask_[j][i]) {
+				delete plmask_[j][i];
+			}
+		}
+		plmask_[j].resize(0,True);
+	}
+	plmask_.resize( 0 );
 
 	// This indexer is no longer ready for plotting
 	//dataLoaded_=False;

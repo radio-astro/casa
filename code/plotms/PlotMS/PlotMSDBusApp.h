@@ -103,6 +103,8 @@ public:
     static const String PARAM_MINORSTYLE;    // string
     static const String PARAM_MAJORWIDTH;    // int 
     static const String PARAM_MINORWIDTH;    // int 
+    static const String PARAM_SHOWLEGEND;    //bool
+    static const String PARAM_LEGENDPOSITION; //string
     static const String PARAM_XAUTORANGE;    // bool
     static const String PARAM_XMIN;          // double
     static const String PARAM_XMAX;          // double

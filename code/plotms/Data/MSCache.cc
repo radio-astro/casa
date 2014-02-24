@@ -407,7 +407,14 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 	try {
 		String s;
-		s=vm_.evalVolume(pendingLoadAxes,netAxesMask(currentX_,currentY_));
+		Vector<Bool> mask(4,False);
+		int dataCount = getDataCount();
+		for ( int i = 0; i < dataCount; i++ ){
+			Vector<Bool> subMask = netAxesMask( currentX_[i], currentY_[i]);
+			mask = mask || subMask;
+		}
+
+		s=vm_.evalVolume(pendingLoadAxes, mask);
 		logLoad(s);
 	} catch(AipsError& log) {
 		// catch detected volume excess, clear the existing cache, and rethrow
@@ -1239,7 +1246,7 @@ bool MSCache::isEphemeris(){
 
 void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 		Vector<Int>& flchunks, Vector<Int>& flrelids,
-		Bool flag, PlotMSIndexer* indexer) {
+		Bool flag, PlotMSIndexer* indexer, int dataIndex) {
 
 	// Sort the flags by chunk:
 	Sort sorter;
@@ -1252,8 +1259,8 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 	stringstream ss;
 
 	// Make the VisIterator writable, with selection revised as appropriate
-	Bool selectchan(netAxesMask_(1) && !flagging.channel());
-	Bool selectcorr(netAxesMask_(0) && !flagging.corrAll());
+	Bool selectchan(netAxesMask_[dataIndex](1) && !flagging.channel());
+	Bool selectcorr(netAxesMask_[dataIndex](0) && !flagging.corrAll());
 
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
@@ -1315,7 +1322,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 						Slice corr,chan,bsln;
 
 						// Set flag range on correlation axis:
-						if (netAxesMask_(0) && !flagging.corrAll()) {
+						if (netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
 							// A specific single correlation
 							Int icorr=indexer->getIndex1000(currChunk,irel);
 							corr=Slice(icorr,1,1);
@@ -1324,7 +1331,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 							corr=Slice(0,ncorr,1);
 
 						// Set Flag range on channel axis:
-						if (netAxesMask_(1) && !flagging.channel()) {
+						if (netAxesMask_[dataIndex](1) && !flagging.channel()) {
 							Int ichan=indexer->getIndex0100(currChunk,irel);
 							if (averaging_.channel() && averaging_.channelValue()>0) {
 								Int start=chanAveBounds_p(vb.spectralWindow())(ichan,2);
@@ -1342,7 +1349,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 						// Set Flags on the baseline axis:
 						Int thisA1=Int(getAnt1(currChunk,indexer->getIndex0010(currChunk,irel)));
 						Int thisA2=Int(getAnt2(currChunk,indexer->getIndex0010(currChunk,irel)));
-						if (netAxesMask_(2) &&
+						if (netAxesMask_[dataIndex](2) &&
 								!flagging.antennaBaselinesBased() &&
 								thisA1>-1 ) {
 							// i.e., if baseline is an explicit data axis,

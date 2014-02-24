@@ -212,7 +212,7 @@ protected:
     virtual void constructorSetup();
     
     // Force data update by clearing the cache
-    virtual bool updateData() { itsCache_->clear(); return True; };   
+    virtual bool updateData();
     
     // Returns true if drawing is currently being held on all plot canvases,
     // false otherwise.

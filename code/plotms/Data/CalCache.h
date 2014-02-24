@@ -114,7 +114,7 @@ private:
 			  Vector<Int>& chunks, 
 			  Vector<Int>& relids,
 			  Bool flag,
-			  PlotMSIndexer* indexer);
+			  PlotMSIndexer* indexer, int index);
   
 
   // A container for channel averaging bounds

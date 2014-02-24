@@ -54,6 +54,8 @@ const String PlotMSDBusApp::PARAM_AXIS_X = "xAxis";
 const String PlotMSDBusApp::PARAM_AXIS_Y = "yAxis";
 const String PlotMSDBusApp::PARAM_GRIDROWS = "gridRows";
 const String PlotMSDBusApp::PARAM_GRIDCOLS = "gridCols";
+const String PlotMSDBusApp::PARAM_SHOWLEGEND = "showLegend";
+const String PlotMSDBusApp::PARAM_LEGENDPOSITION = "legendPosition";
 const String PlotMSDBusApp::PARAM_CLEARSELECTIONS = "clearSelections";
 const String PlotMSDBusApp::PARAM_DATACOLUMN_X = "xDataColumn";
 const String PlotMSDBusApp::PARAM_DATACOLUMN_Y = "yDataColumn";
@@ -675,6 +677,18 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             PlotLinePtr plp = ppcan->gridMinorLine();
             plp->setWidth(w);
             ppcan->setGridMinorLine(plp);
+        }
+
+
+        if (parameters.isDefined( PARAM_SHOWLEGEND) &&
+        		parameters.dataType(PARAM_SHOWLEGEND) == TpBool ){
+        	bool showLegend = parameters.asBool( PARAM_SHOWLEGEND);
+        	String legendPosition = "upperright";
+        	if ( parameters.isDefined( PARAM_LEGENDPOSITION ) &&
+        			parameters.dataType( PARAM_LEGENDPOSITION ) ){
+        		legendPosition = parameters.asString( PARAM_LEGENDPOSITION );
+        	}
+        	ppcan->showLegend( showLegend, index );
         }
 
         if(updateImmediately && itsPlotms_.guiShown()) {

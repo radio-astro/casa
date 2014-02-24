@@ -37,12 +37,12 @@ qt4_wrap_cpp( outfiles_qoh
   GuiTabs/PlotMSCanvasTab.qo.h
   GuiTabs/PlotMSDataCollapsible.qo.h
   GuiTabs/PlotMSDataSummaryTab.qo.h
+  GuiTabs/PlotMSDataSymbolWidget.qo.h
   GuiTabs/PlotMSDataTab.qo.h
   GuiTabs/PlotMSDisplayTab.qo.h
   GuiTabs/PlotMSIterateTab.qo.h
   GuiTabs/PlotMSExportTab.qo.h
   GuiTabs/PlotMSFlaggingTab.qo.h
-#  GuiTabs/PlotMSMultiAxesTab.qo.h
   GuiTabs/PlotMSOptionsTab.qo.h
   GuiTabs/PlotMSPlotTab.qo.h
   GuiTabs/PlotMSTab.qo.h
@@ -69,11 +69,11 @@ casa_qt4_wrap_ui( outfiles_ui
   GuiTabs/PlotMSDataTab.ui
   GuiTabs/PlotMSDataCollapsible.ui
   GuiTabs/PlotMSDataSummaryTab.ui
+  GuiTabs/PlotMSDataSymbolWidget.ui
   GuiTabs/PlotMSDisplayTab.ui
   GuiTabs/PlotMSIterateTab.ui
   GuiTabs/PlotMSExportTab.ui
   GuiTabs/PlotMSFlaggingTab.ui
-#  GuiTabs/PlotMSMultiAxesTab.ui
   GuiTabs/PlotMSOptionsTab.ui
   GuiTabs/PlotMSPlotTab.ui
   GuiTabs/PlotMSToolsTab.ui
@@ -158,6 +158,7 @@ casa_add_library( plotms
   GuiTabs/PlotMSCanvasTab.cc
   GuiTabs/PlotMSDataCollapsible.cc
   GuiTabs/PlotMSDataSummaryTab.cc
+  GuiTabs/PlotMSDataSymbolWidget.cc
   GuiTabs/PlotMSDataTab.cc
   GuiTabs/PlotMSDisplayTab.cc
   GuiTabs/PlotMSIterateTab.cc
@@ -226,6 +227,7 @@ INSTALL (FILES
         GuiTabs/PlotMSCanvasTab.qo.h
         GuiTabs/PlotMSDataCollapsible.qo.h
         GuiTabs/PlotMSDataSummaryTab.qo.h
+        GuiTabs/PlotMSDataSymbolWidget.qo.h
         GuiTabs/PlotMSDataTab.qo.h
         GuiTabs/PlotMSDisplayTab.qo.h
         GuiTabs/PlotMSExportTab.qo.h
@@ -272,7 +274,15 @@ casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )
 casa_add_executable( plotms tExportPlot test/tExportPlot.cc )
 casa_add_executable( plotms tDataSelection test/tDataSelection.cc )
 casa_add_executable( plotms tSymbol test/tSymbol.cc )
+casa_add_executable( plotms tLegend test/tLegend.cc )
+casa_add_executable( plotms tOverPlot test/tOverPlot.cc )
+casa_add_executable( plotms tOverLeftRightPlot test/tOverLeftRightPlot.cc )
+casa_add_executable( plotms tOverIterationPlot test/tOverIterationPlot.cc )
 casa_add_executable( plotms tExportRange test/tExportRange.cc )
+casa_add_executable( plotms tTimeColorization test/tTimeColorization.cc )
+casa_add_executable( plotms tTimeColorizationAveraging test/tTimeColorizationAveraging.cc )
+casa_add_executable( plotms tTimeIteration test/tTimeIteration.cc )
+casa_add_executable( plotms tTimeAveragingIteration test/tTimeAveragingIteration.cc )
 casa_add_executable( plotms tGridPlacement test/tGridPlacement.cc )
 casa_add_executable( plotms tGridPlacementMultiplePlots test/tGridPlacementMultiplePlots.cc )
 casa_add_executable( plotms tGridPlacementMultipleRuns test/tGridPlacementMultipleRuns.cc )

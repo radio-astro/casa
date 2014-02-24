@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>AxesTab</class>
- <widget class="QWidget" name="AxesTab" >
-  <property name="geometry" >
+ <widget class="QWidget" name="AxesTab">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,90 +10,138 @@
     <height>336</height>
    </rect>
   </property>
-  <property name="maximumSize" >
+  <property name="maximumSize">
    <size>
     <width>275</width>
     <height>16777215</height>
    </size>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>PlotMS Axes Tab</string>
   </property>
-  <layout class="QVBoxLayout" >
-   <property name="spacing" >
-    <number>3</number>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>1</number>
    </property>
-   <property name="leftMargin" >
-    <number>3</number>
-   </property>
-   <property name="topMargin" >
-    <number>3</number>
-   </property>
-   <property name="rightMargin" >
-    <number>3</number>
-   </property>
-   <property name="bottomMargin" >
-    <number>3</number>
+   <property name="margin">
+    <number>1</number>
    </property>
    <item>
-    <widget class="QLabel" name="xLabel" >
-     <property name="text" >
-      <string>X Axis</string>
-     </property>
-     <property name="textFormat" >
-      <enum>Qt::RichText</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="xFrame" >
-     <property name="frameShape" >
+    <widget class="QFrame" name="xFrame">
+     <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
-     <property name="frameShadow" >
+     <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="Line" name="line" >
-     <property name="orientation" >
+    <widget class="Line" name="line_2">
+     <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="yLabel" >
-     <property name="text" >
-      <string>Y Axis</string>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="yAxisLabel">
+       <property name="text">
+        <string>Y Axis Data:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="yAxisCombo"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="yAxisFrame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="textFormat" >
-      <enum>Qt::RichText</enum>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="yFrame" >
-     <property name="frameShape" >
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow" >
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <spacer>
-     <property name="orientation" >
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" >
-      <size>
-       <width>171</width>
-       <height>261</height>
-      </size>
-     </property>
-    </spacer>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="addYButton">
+       <property name="text">
+        <string>Add Y Axis</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="removeYButton">
+       <property name="text">
+        <string>Remove Y Axis</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

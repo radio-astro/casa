@@ -70,13 +70,11 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     // Setup tab widget.
     tabWidget->removeTab(0);
     
-
     // Create the plot for this tab.
     plotIndex = itsPlotManager_.numPlots();
 
     itsPlotManager_.addOverPlot();
     plotsChanged(itsPlotManager_, plotIndex);
-
 }
 
 void PlotMSPlotTab::removePlot(){
@@ -321,11 +319,32 @@ PlotMSAxesTab* PlotMSPlotTab::insertAxesSubtab (int index)
           if (tab != NULL)
                break;
      }
-     if (tab == NULL)
+     if (tab == NULL){
           tab = new PlotMSAxesTab (this, itsPlotter_);
+          connect( tab, SIGNAL(yAxisIdentifierChanged(int,QString)),
+        		  this, SLOT(changeAxisIdentifier(int,QString)));
+          connect( tab, SIGNAL(yAxisIdentifierRemoved(int)),
+        		  this, SLOT(removeAxisIdentifier(int)));
+     }
      insertSubtab (index, tab);
      return tab;
 }
+
+void PlotMSPlotTab::changeAxisIdentifier( int index, QString id ){
+	PlotMSDisplayTab* displayTab = findDisplayTab();
+	if ( displayTab != NULL ){
+		displayTab->setAxisIdentifier( index, id );
+	}
+}
+
+void PlotMSPlotTab::removeAxisIdentifier( int index ){
+	PlotMSDisplayTab* displayTab = findDisplayTab();
+	if ( displayTab != NULL ){
+		displayTab->removeAxisIdentifier( index );
+	}
+}
+
+
 
 void PlotMSPlotTab::insertAxes (int index)
 {
@@ -442,7 +461,16 @@ PlotMSDisplayTab* PlotMSPlotTab::insertDisplaySubtab (int index){
      return tab;
 }
 
-
+PlotMSDisplayTab* PlotMSPlotTab::findDisplayTab(){
+	PlotMSDisplayTab* tab = NULL;
+	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+		tab = dynamic_cast < PlotMSDisplayTab * >(t);
+		if (tab != NULL){
+			break;
+		}
+	}
+	return tab;
+}
 
 void PlotMSPlotTab::insertDisplay(int index){
 	insertDisplaySubtab( index );

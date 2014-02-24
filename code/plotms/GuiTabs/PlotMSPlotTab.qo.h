@@ -193,6 +193,7 @@ protected:
     // <group>
     PlotMSAxesTab* addAxesSubtab();
     PlotMSAxesTab* insertAxesSubtab(int index);
+
     void insertAxes(int index);
     PlotMSCacheTab* addCacheSubtab();
     PlotMSCacheTab* insertCacheSubtab(int index);
@@ -229,6 +230,7 @@ private:
 
     PlotMSDataTab* findOrCreateDataTab();
     PlotMSIterateTab* findIterateTab();
+    PlotMSDisplayTab* findDisplayTab();
 
     // PlotMSPlotSubtab objects in tab widget.
     QList<PlotMSPlotSubtab*> itsSubtabs_;
@@ -264,7 +266,11 @@ private slots:
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
 
+    //A y-axis has changed its internal data.
+    void changeAxisIdentifier( int index, QString id );
 
+    //y-axis data has been removed.
+    void removeAxisIdentifier( int index );
 
 };
 

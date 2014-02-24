@@ -31,8 +31,6 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
-//#include <plotms/Threads/PlotMSCacheThread.qo.h>
-//#include <plotms/Data/PlotMSIndexer.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -82,10 +80,22 @@ public:
   int nmetadata() const {return N_METADATA;};
   PMS::Axis metadata(int i) {return METADATA[i];};
   
-  // Reference an indexer
-  Int nIter() const { return indexer_.nelements(); };
-  PlotMSIndexer& indexer(uInt i) {return (*indexer_[i]);};
-  PlotMSIndexer& indexer0() { return *indexer0_; };
+  // Reference an indexer; returns -1 if there is no indexer
+  // for the given dataIndex.
+  Int nIter( int dataIndex ) const;
+
+  PlotMSIndexer& indexer( int dataIndex, uInt i) {
+	  return (*indexer_[dataIndex][i]);
+  };
+  PlotMSIndexer& indexer0() {
+	  return *indexer0_;
+  };
+  void resizeIndexer( int size );
+  int getDataCount() const {
+	  return currentX_.size();
+  }
+
+  PMS::Axis getIterAxis() const;
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
@@ -138,13 +148,14 @@ public:
   // Clears the cache of all stored values.  This should be called when the
   // underlying MS or MS selection is changed, thus invalidating stored data.
   void clear();
+  void clearRanges();
   
   // Releases the given axes from the cache.
   void release(const vector<PMS::Axis>& axes);
   
   // Set up indexing for the plot
   void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
-		    Bool globalXRange=False, Bool globalYRange=False);
+		    Bool globalXRange=False, Bool globalYRange=False, int dataIndex = 0);
 
   // Access to flags per chunk
   inline Array<Bool>& flag(Int chunk) { return *flag_[chunk]; };
@@ -230,11 +241,13 @@ protected:
 			  Vector<Int>& chunks, 
 			  Vector<Int>& relids,
 			  Bool flag,
-			  PlotMSIndexer* indexer)=0;
+			  PlotMSIndexer* indexer, int dataIndex)=0;
   
   // Clean up the PtrBlocks
   void deleteCache();
   void deleteIndexer();
+
+
 
   virtual bool isEphemeris() {return false;};
   bool isEphemerisAxis( PMS::Axis axis ) const;
@@ -245,8 +258,8 @@ protected:
   Vector<Bool> netAxesMask(PMS::Axis xaxis,PMS::Axis yaxis);
 
   // Derive the plot mask by appropriately collapsing the flags
-  void setPlotMask();           // all chunks
-  void setPlotMask(Int chunk);  // per chunk
+  void setPlotMask( Int dataIndex);           // all chunks
+  void setPlotMask(Int dataIndex, Int chunk);  // per chunk
 
   // Delete the whole plot mask
   void deletePlotMask();
@@ -286,7 +299,7 @@ protected:
   PlotMSIndexer* indexer0_;
 
   // The indexer into the cache
-  PtrBlock<PlotMSIndexer*> indexer_;
+  vector<PtrBlock<PlotMSIndexer*> > indexer_;
   
   // The number of chunks in the cache
   Int nChunk_;
@@ -335,7 +348,8 @@ protected:
 
   // Current setup/state.
   bool dataLoaded_;
-  PMS::Axis currentX_, currentY_;
+  vector<PMS::Axis> currentX_;
+  vector<PMS::Axis> currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
   map<PMS::Axis, bool> pendingLoadAxes_;
@@ -350,16 +364,18 @@ protected:
   PlotMSTransformations transformations_;
 
   // Axes mask
-  Vector<Bool> netAxesMask_;
+  vector<Vector<Bool> > netAxesMask_;
 
   // collapsed flag mask for plotting
-  PtrBlock<Array<Bool>*> plmask_;
+  vector<PtrBlock<Array<Bool>* > > plmask_;
 
   // meta info for locate output
   Vector<String> antnames_; 	 
   Vector<String> stanames_; 	 
   Vector<String> antstanames_; 	 
-  Vector<String> fldnames_; 	 
+  Vector<String> fldnames_;
+
+  PMS::Axis iterAxis;
 
 };
 typedef CountedPtr<PlotMSCacheBase> PlotMSCacheBasePtr;

@@ -51,13 +51,6 @@
       <property name="margin">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QRadioButton" name="titleSameAsPlot">
-        <property name="text">
-         <string>Same as Plot Title</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>

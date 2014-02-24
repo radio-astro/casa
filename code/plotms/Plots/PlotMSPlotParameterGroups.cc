@@ -308,41 +308,77 @@ bool PMS_PP_Cache::operator==(const Group& other) const
     		}
 
 
-void PMS_PP_Cache::setDefaults()
-{
+void PMS_PP_Cache::setDefaults(){
 	itsXAxes_ = vector<PMS::Axis>(1, PMS::DEFAULT_XAXIS);
 	itsYAxes_ = vector<PMS::Axis>(1, PMS::DEFAULT_YAXIS);
 	itsXData_ = vector<PMS::DataColumn>(1, PMS::DEFAULT_DATACOLUMN);
 	itsYData_ = vector<PMS::DataColumn>(1, PMS::DEFAULT_DATACOLUMN);
 }
 
-unsigned int PMS_PP_Cache::numXAxes() const
-{
+void PMS_PP_Cache::resize( int count ){
+	itsXAxes_ = vector<PMS::Axis>(count, PMS::DEFAULT_XAXIS);
+	itsYAxes_ = vector<PMS::Axis>(count, PMS::DEFAULT_YAXIS);
+	itsXData_ = vector<PMS::DataColumn>(count, PMS::DEFAULT_DATACOLUMN);
+	itsYData_ = vector<PMS::DataColumn>(count, PMS::DEFAULT_DATACOLUMN);
+}
+
+unsigned int PMS_PP_Cache::numXAxes() const{
 	return itsXAxes_.size();
 }
-unsigned int PMS_PP_Cache::numYAxes() const
-{
+
+unsigned int PMS_PP_Cache::numYAxes() const{
 	return itsYAxes_.size();
 }
 
 void PMS_PP_Cache::setAxes(const PMS::Axis& xAxis, const PMS::Axis& yAxis,
 		const PMS::DataColumn& xData, const PMS::DataColumn& yData,
-		unsigned int index)
-{
+		unsigned int index){
+
+	//Resize the vectors if they don't currently support the index.
+	bool resized = false;
+	if (index >= itsXAxes_.size()){
+		resized = true;
+		const_cast< vector<PMS::Axis>& >(itsXAxes_).resize (index + 1);
+	}
+	if (index >= itsXData_.size()){
+		resized = true;
+		const_cast < vector < PMS::DataColumn>& >( itsXData_).resize(index+ 1);
+	}
+	if (index >= itsYAxes_.size()){
+		resized = true;
+		const_cast< vector<PMS::Axis>& >(itsYAxes_).resize (index + 1);
+	}
+	if (index >= itsYData_.size()){
+		resized = true;
+		const_cast < vector < PMS::DataColumn>& >( itsYData_).resize(index+ 1);
+	}
+
+	//Set the data if it represents a change.
+	bool dataUpdated = false;
 	if (itsXAxes_[index] != xAxis || itsYAxes_[index] != yAxis ||
-			itsXData_[index] != xData || itsYData_[index] != yData)
-	{
+			itsXData_[index] != xData || itsYData_[index] != yData){
 		itsXAxes_[index] = xAxis;
 		itsYAxes_[index] = yAxis;
 		itsXData_[index] = xData;
 		itsYData_[index] = yData;
+		dataUpdated = true;
+	}
+
+	if ( resized || dataUpdated ){
 		updated();
 	}
 }
 
+void PMS_PP_Cache::setXAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
+			unsigned int index) {
+	setAxes (axis, yAxis (index), data, yDataColumn (index), index);
+}
 
+void PMS_PP_Cache::setYAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
+			unsigned int index ) {
 
-
+	setAxes (xAxis (index), axis, xDataColumn (index), data, index);
+}
 
 /////////////////////////////
 // PMS_PP_AXES DEFINITIONS //
@@ -577,6 +613,15 @@ void PMS_PP_Axes::setDefaults()
 	itsYRangesSet_ = vector<bool>(1, false);
 	itsXRanges_ = vector<prange_t>(1, prange_t(0.0, 0.0));
 	itsYRanges_ = vector<prange_t>(1, prange_t(0.0, 0.0));
+}
+
+void PMS_PP_Axes::resize( int count ){
+	itsXAxes_ = vector<PlotAxis>(count, PMS::DEFAULT_CANVAS_XAXIS);
+	itsYAxes_ = vector<PlotAxis>(count, PMS::DEFAULT_CANVAS_YAXIS);
+	itsXRangesSet_ = vector<bool>(count, false);
+	itsYRangesSet_ = vector<bool>(count, false);
+	itsXRanges_ = vector<prange_t>(count, prange_t(0.0, 0.0));
+	itsYRanges_ = vector<prange_t>(count, prange_t(0.0, 0.0));
 }
 
 unsigned int PMS_PP_Axes::numXAxes() const
@@ -957,31 +1002,41 @@ const String PMS_PP_Display::REC_COLAXES = "colorizeAxes";
 PMS_PP_Display::PMS_PP_Display(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
 {
 	setDefaults();
-} PMS_PP_Display::PMS_PP_Display(const PMS_PP_Display& copy) : PlotMSPlotParameters::Group(copy)
-{
+}
+
+PMS_PP_Display::PMS_PP_Display(const PMS_PP_Display& copy) : PlotMSPlotParameters::Group(copy){
 	setDefaults();
 	operator=(copy);
-} PMS_PP_Display::~PMS_PP_Display() { }
+}
+
+PMS_PP_Display::~PMS_PP_Display() { }
 
 
-Record PMS_PP_Display::toRecord() const
-{
+Record PMS_PP_Display::toRecord() const {
 	Record rec;
-	{
-		Record tmpRec;
-		for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++) tmpRec.defineRecord(i, itsUnflaggedSymbols_[i] ->toRecord());
-		rec.defineRecord(REC_UNFLAGGEDS, tmpRec);
+
+	Record tmpRec;
+	for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++){
+		if ( !itsUnflaggedSymbols_[i].null()){
+			tmpRec.defineRecord(i, itsUnflaggedSymbols_[i] ->toRecord());
+		}
 	}
-	{
-		Record tmpRec;
-		for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++) tmpRec.defineRecord(i, itsFlaggedSymbols_[i] ->toRecord());
-		rec.defineRecord(REC_FLAGGEDS, tmpRec);
+	rec.defineRecord(REC_UNFLAGGEDS, tmpRec);
+
+	Record tmpRec2;
+	for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++){
+		if ( ! itsFlaggedSymbols_[i].null()){
+			tmpRec2.defineRecord(i, itsFlaggedSymbols_[i] ->toRecord());
+		}
 	}
-	{
-		Record tmpRec;
-		for (unsigned int i = 0; i < itsTitleFormats_.size(); i++) tmpRec.define(i, itsTitleFormats_[i] .format);
-		rec.defineRecord(REC_TITLES, tmpRec);
+	rec.defineRecord(REC_FLAGGEDS, tmpRec2);
+
+	Record tmpRec3;
+	for (unsigned int i = 0; i < itsTitleFormats_.size(); i++){
+		tmpRec3.define(i, itsTitleFormats_[i] .format);
 	}
+	rec.defineRecord(REC_TITLES, tmpRec3);
+
 	rec.define(REC_COLFLAGS, Vector<bool>(itsColorizeFlags_));
 	rec.define(REC_COLAXES, PMS::toIntVector<PMS::Axis>(itsColorizeAxes_));
 
@@ -992,36 +1047,30 @@ Record PMS_PP_Display::toRecord() const
 void PMS_PP_Display::fromRecord(const Record& record)
 {
 	bool valuesChanged = false;
-	if (record.isDefined(REC_UNFLAGGEDS) && record.dataType(REC_UNFLAGGEDS) == TpRecord)
-	{
+	if (record.isDefined(REC_UNFLAGGEDS) && record.dataType(REC_UNFLAGGEDS) == TpRecord){
 		const Record& tmpRec = record.asRecord(REC_UNFLAGGEDS);
-		itsUnflaggedSymbols_.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ? factory()->symbol(*itsUnflaggedSymbols_[0]) : NULL);
-		PlotSymbolPtr tmp= itsUnflaggedSymbols_.size() > 0 ? factory()->symbol(*itsUnflaggedSymbols_[0]) : NULL;
-		for (unsigned int i= 0; i < itsUnflaggedSymbols_.size() && i < tmpRec.nfields(); i++)
-		{
-			if (tmpRec.dataType(i) == TpRecord)
-			{
+		itsUnflaggedSymbols_.resize(tmpRec.nfields(),
+				tmpRec.nfields() > 0 ? PMS::DEFAULT_UNFLAGGED_SYMBOL(factory()) : NULL);
+		PlotSymbolPtr tmp = PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
+		for (unsigned int i= 0; i < itsUnflaggedSymbols_.size() && i < tmpRec.nfields(); i++){
+			if (tmpRec.dataType(i) == TpRecord){
 				tmp->fromRecord(tmpRec.asRecord(i));
-				if (*itsUnflaggedSymbols_[i] != *tmp)
-				{
+				if (*itsUnflaggedSymbols_[i] != *tmp){
 					*itsUnflaggedSymbols_[i] = *tmp;
 					valuesChanged = true;
 				}
 			}
 		}
 	}
-	if (record.isDefined(REC_FLAGGEDS) && record.dataType(REC_FLAGGEDS) == TpRecord)
-	{
+	if (record.isDefined(REC_FLAGGEDS) && record.dataType(REC_FLAGGEDS) == TpRecord){
 		const Record& tmpRec = record.asRecord(REC_FLAGGEDS);
-		itsFlaggedSymbols_.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ? factory()->symbol(*itsFlaggedSymbols_[0]) : NULL);
-		PlotSymbolPtr tmp= itsFlaggedSymbols_.size() > 0 ? factory()->symbol(*itsFlaggedSymbols_[0]) : NULL;
-		for (unsigned int i= 0; i < itsFlaggedSymbols_.size() && i < tmpRec.nfields(); i++)
-		{
-			if (tmpRec.dataType(i) == TpRecord)
-			{
+		itsFlaggedSymbols_.resize(tmpRec.nfields(),
+				tmpRec.nfields() > 0 ? PMS::DEFAULT_FLAGGED_SYMBOL(factory()) : NULL);
+		PlotSymbolPtr tmp= PMS::DEFAULT_FLAGGED_SYMBOL(factory());
+		for (unsigned int i= 0; i < itsFlaggedSymbols_.size() && i < tmpRec.nfields(); i++){
+			if (tmpRec.dataType(i) == TpRecord){
 				tmp->fromRecord(tmpRec.asRecord(i));
-				if (*itsFlaggedSymbols_[i] != *tmp)
-				{
+				if (*itsFlaggedSymbols_[i] != *tmp){
 					*itsFlaggedSymbols_[i] = *tmp;
 					valuesChanged = true;
 				}
@@ -1065,15 +1114,17 @@ void PMS_PP_Display::fromRecord(const Record& record)
 }
 
 
-PlotMSPlotParameters::Group& PMS_PP_Display::operator=(const Group& other)
-{
+PlotMSPlotParameters::Group& PMS_PP_Display::operator=(const Group& other){
 	const PMS_PP_Display* o = dynamic_cast<const PMS_PP_Display*>(&other);
-	if (o != NULL && *this != *o)
-	{
+	if (o != NULL && *this != *o){
 		itsUnflaggedSymbols_.resize(o->itsUnflaggedSymbols_.size());
-		for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++) itsUnflaggedSymbols_[i] = factory()->symbol(*o->itsUnflaggedSymbols_[i]);
+		for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++){
+			itsUnflaggedSymbols_[i] = factory()->symbol(*o->itsUnflaggedSymbols_[i]);
+		}
 		itsFlaggedSymbols_.resize(o->itsFlaggedSymbols_.size());
-		for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++) itsFlaggedSymbols_[i] = factory()->symbol(*o->itsFlaggedSymbols_[i]);
+		for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++){
+			itsFlaggedSymbols_[i] = factory()->symbol(*o->itsFlaggedSymbols_[i]);
+		}
 		itsTitleFormats_ = o->itsTitleFormats_;
 		itsColorizeFlags_ = o->itsColorizeFlags_;
 		itsColorizeAxes_ = o->itsColorizeAxes_;
@@ -1089,9 +1140,25 @@ bool PMS_PP_Display::operator==(const Group& other) const
 	const PMS_PP_Display* o = dynamic_cast<const PMS_PP_Display*>(&other);
 	if (o == NULL) return false;
 	if (itsUnflaggedSymbols_.size() != o->itsUnflaggedSymbols_.size()) return false;
-	for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++) if (*itsUnflaggedSymbols_[i] != *o->itsUnflaggedSymbols_[i]) return false;
+	for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++){
+		if (!itsUnflaggedSymbols_[i].null() && !o->itsUnflaggedSymbols_[i].null() &&
+				*itsUnflaggedSymbols_[i] != *o->itsUnflaggedSymbols_[i]){
+			return false;
+		}
+	}
 	if (itsFlaggedSymbols_.size() != o->itsFlaggedSymbols_.size()) return false;
-	for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++) if (*itsFlaggedSymbols_[i] != *o->itsFlaggedSymbols_[i]) return false;
+	for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++){
+		if (!itsFlaggedSymbols_[i].null() && !o->itsFlaggedSymbols_[i].null() &&
+				*itsFlaggedSymbols_[i] != *o->itsFlaggedSymbols_[i]){
+			return false;
+		}
+		else if (itsFlaggedSymbols_[i].null() && !o->itsFlaggedSymbols_[i].null()){
+			return false;
+		}
+		else if ( !itsFlaggedSymbols_[i].null() && o->itsFlaggedSymbols_[i].null()){
+			return false;
+		}
+	}
 	if (itsTitleFormats_ != o->itsTitleFormats_) return false;
 	if (itsColorizeFlags_.size() != o->itsColorizeFlags_.size() || itsColorizeAxes_.size() != o->itsColorizeAxes_.size() || itsColorizeFlags_.size() != itsColorizeAxes_.size()) return false;
 	for (unsigned int i = 0; i < itsColorizeFlags_.size(); i++) if (itsColorizeFlags_[i] != o->itsColorizeFlags_[i] || (itsColorizeFlags_[i] && itsColorizeAxes_[i] != o->itsColorizeAxes_[i])) return false;
@@ -1120,6 +1187,43 @@ void PMS_PP_Display::setColorize(const bool& colorize, const PMS::Axis& axis,
 		updated();
 	}
 }
+
+void PMS_PP_Display::setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index) {
+	if (index >= itsUnflaggedSymbols_.size()){
+		itsUnflaggedSymbols_.resize (index + 1);
+		itsUnflaggedSymbols_[index] = PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
+	}
+
+	if (itsUnflaggedSymbols_[index] != value) {
+		Record newValueRecord = value->toRecord();
+		itsUnflaggedSymbols_[index]->fromRecord( newValueRecord );
+		updated();
+	}
+}
+
+void PMS_PP_Display::setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index ) {
+	if (index >= itsFlaggedSymbols_.size()){
+		itsFlaggedSymbols_.resize (index + 1);
+		itsFlaggedSymbols_[index] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
+	}
+	if (itsFlaggedSymbols_[index] != value) {
+		Record valueRecord = value->toRecord();
+		itsFlaggedSymbols_[index]->fromRecord( valueRecord );
+		updated();
+	}
+}
+
+void PMS_PP_Display::setColorize (const bool & value, unsigned int index ) {
+	if (index >= itsColorizeFlags_.size()){
+		itsColorizeFlags_.resize (index + 1);
+	}
+	if (itsColorizeFlags_[index] != value) {
+		itsColorizeFlags_[index] = value;
+		updated();
+	}
+}
+
+
 
 void PMS_PP_Display::resizeVectors(unsigned int newSize)
 {

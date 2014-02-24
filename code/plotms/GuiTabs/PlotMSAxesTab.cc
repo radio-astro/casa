@@ -41,34 +41,105 @@ PlotMSAxesTab::PlotMSAxesTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent) :
         PlotMSPlotSubtab(plotTab, parent) {
     setupUi(this);
     
-    // Setup axes widgets.
+    // Setup x-axis widget.
     itsXWidget_ = new PlotMSAxisWidget(PMS::DEFAULT_XAXIS, X_BOTTOM | X_TOP);
-    itsYWidget_ = new PlotMSAxisWidget(PMS::DEFAULT_YAXIS, Y_LEFT | Y_RIGHT);
+    itsXWidget_->axisLabel()->setText("X Axis:");
+    itsXWidget_->insertLabelDefaults( itsLabelDefaults_ );
     QtUtilities::putInFrame(xFrame, itsXWidget_);
-    QtUtilities::putInFrame(yFrame, itsYWidget_);
     
-    // Insert label defaults.
-    itsLabelDefaults_.insert(xLabel, xLabel->text());
-    itsLabelDefaults_.insert(itsXWidget_->dataLabel(),
-                             itsXWidget_->dataLabel()->text());
-    itsLabelDefaults_.insert(itsXWidget_->attachLabel(),
-                             itsXWidget_->attachLabel()->text());
-    itsLabelDefaults_.insert(itsXWidget_->rangeLabel(),
-                             itsXWidget_->rangeLabel()->text());
-    itsLabelDefaults_.insert(yLabel, yLabel->text());
-    itsLabelDefaults_.insert(itsYWidget_->dataLabel(),
-                             itsYWidget_->dataLabel()->text());
-    itsLabelDefaults_.insert(itsYWidget_->attachLabel(),
-                             itsYWidget_->attachLabel()->text());
-    itsLabelDefaults_.insert(itsYWidget_->rangeLabel(),
-                             itsYWidget_->rangeLabel()->text());
-    
+    // Initially, hide multiple y-axis support.
+    setMultipleAxesYEnabled();
+
     // Connect widgets.
-    connect(itsXWidget_, SIGNAL(changed()), SIGNAL(changed()));
-    connect(itsYWidget_, SIGNAL(changed()), SIGNAL(changed()));
+    connect(itsXWidget_, SIGNAL(axisChanged()), SIGNAL(changed()));
+    connect(addYButton, SIGNAL(clicked()), this, SLOT(addYWidget()));
+    connect(removeYButton, SIGNAL(clicked()), this, SLOT(removeYWidget()));
+    connect(yAxisCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(yAxisSelected(int)));
+
+    //Add an initial y-widget.
+    addYWidget();
 }
 
-PlotMSAxesTab::~PlotMSAxesTab() { }
+void PlotMSAxesTab::setMultipleAxesYEnabled(){
+	bool multipleYAxes = false;
+	if ( itsYWidgets_.size() > 1 ){
+		multipleYAxes = true;
+	}
+	yAxisLabel->setVisible( multipleYAxes );
+	yAxisCombo->setVisible( multipleYAxes );
+	removeYButton->setVisible( multipleYAxes );
+}
+
+void PlotMSAxesTab::yAxisSelected( int index ){
+	//Remove the current y-widget from the display and
+	//put in the newly selected one.
+	QLayout* yAxisLayout = yAxisFrame->layout();
+	if ( yAxisLayout == NULL ){
+		yAxisLayout = new QVBoxLayout();
+	}
+	else {
+		QLayoutItem* layoutItem = yAxisLayout->takeAt( 0 );
+		if ( layoutItem != NULL ){
+			QWidget* widget = layoutItem->widget();
+			if ( widget != NULL ){
+				widget->setParent( NULL );
+			}
+			delete layoutItem;
+		}
+	}
+	yAxisLayout->addWidget( itsYWidgets_[index]);
+	yAxisFrame->setLayout( yAxisLayout );
+}
+
+void PlotMSAxesTab::removeYWidget(){
+	int removeIndex = yAxisCombo->currentIndex();
+	PlotMSAxisWidget* removeWidget = itsYWidgets_[removeIndex];
+	itsYWidgets_.removeAt( removeIndex );
+	yAxisCombo->removeItem( removeIndex );
+	setMultipleAxesYEnabled();
+	emit yAxisIdentifierRemoved( removeIndex );
+	delete removeWidget;
+	emit changed();
+}
+
+void PlotMSAxesTab::addYWidget(){
+	PlotMSAxisWidget* yWidget = new PlotMSAxisWidget(PMS::DEFAULT_YAXIS, Y_LEFT | Y_RIGHT );
+
+	int index = itsYWidgets_.size();
+	QString numberStr = "";
+	if ( index > 0 ){
+		numberStr = QString::number( index+1 );
+	}
+	QString axisLabel = "Y Axis "+ numberStr + ":";
+	yWidget->axisLabel()->setText( axisLabel );
+	yWidget->insertLabelDefaults( itsLabelDefaults_ );
+	itsYWidgets_.append( yWidget );
+
+	//Add the new one to the combo box.
+	yAxisCombo->addItem( axisLabel );
+	yAxisCombo->setCurrentIndex( index );
+
+	setMultipleAxesYEnabled();
+
+	connect(yWidget, SIGNAL(axisChanged()), SIGNAL(changed()));
+	connect(yWidget, SIGNAL(axisIdentifierChanged(PlotMSAxisWidget*)),
+			this, SLOT(axisIdentifierChanged(PlotMSAxisWidget*)));
+	//Because we may not have been able to connect to listeners when we
+	//had just one y-axis, let them know the first one exists, too.
+	if ( index <= 1 ){
+		emit yAxisIdentifierChanged( 0, itsYWidgets_[0]->getIdentifier());
+	}
+	emit yAxisIdentifierChanged( index, yWidget->getIdentifier());
+	emit changed();
+}
+
+PlotMSAxesTab::~PlotMSAxesTab() {
+	while( ! itsYWidgets_.isEmpty() ){
+		PlotMSAxisWidget* widget = itsYWidgets_.takeAt(0 );
+		widget->setParent( NULL );
+		delete widget;
+	}
+}
 
 
 void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
@@ -83,13 +154,23 @@ void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
         a = params.typedGroup<PMS_PP_Axes>();
     }
     
-    c->setXAxis(itsXWidget_->axis(), itsXWidget_->data());
-    a->setXAxis(itsXWidget_->attachAxis());
-    a->setXRange(itsXWidget_->rangeCustom(), itsXWidget_->range());
-    
-    c->setYAxis(itsYWidget_->axis(), itsYWidget_->data());
-    a->setYAxis(itsYWidget_->attachAxis());
-    a->setYRange(itsYWidget_->rangeCustom(), itsYWidget_->range());
+    //The cache must have exactly as many x-axes as y-axes so we duplicate
+    //the x-axis properties here.
+    int yAxisCount = itsYWidgets_.size();
+    PMS::Axis xAxis = itsXWidget_->axis();
+    c->resize( yAxisCount );
+    a->resize( yAxisCount );
+    for ( int i = 0; i < yAxisCount; i++ ){
+    	c->setXAxis(xAxis, itsXWidget_->data(), i);
+    	a->setXAxis(itsXWidget_->attachAxis(), i);
+    	a->setXRange(itsXWidget_->rangeCustom(), itsXWidget_->range(), i);
+    }
+
+    for ( int i = 0; i < yAxisCount; i++ ){
+    	c->setYAxis(itsYWidgets_[i]->axis(), itsYWidgets_[i]->data(), i);
+    	a->setYAxis(itsYWidgets_[i]->attachAxis(), i);
+    	a->setYRange(itsYWidgets_[i]->rangeCustom(), itsYWidgets_[i]->range(), i);
+    }
 }
 
 void PlotMSAxesTab::setValue(const PlotMSPlotParameters& params) {
@@ -99,8 +180,22 @@ void PlotMSAxesTab::setValue(const PlotMSPlotParameters& params) {
     
     itsXWidget_->setValue(c->xAxis(), c->xDataColumn(), a->xAxis(),
             a->xRangeSet(), a->xRange());
-    itsYWidget_->setValue(c->yAxis(), c->yDataColumn(), a->yAxis(),
-            a->yRangeSet(), a->yRange());
+    int yAxisCount = a->numYAxes();
+    int yWidgetSize = itsYWidgets_.size();
+    int minValue = qMin( yAxisCount, yWidgetSize );
+    for ( int i = 0; i < minValue; i++ ){
+    	itsYWidgets_[i]->setValue(c->yAxis(i), c->yDataColumn(i), a->yAxis(i),
+            a->yRangeSet(i), a->yRange(i));
+    }
+}
+
+void PlotMSAxesTab::axisIdentifierChanged(PlotMSAxisWidget* axisWidget){
+
+	int yIndex = itsYWidgets_.indexOf( axisWidget );
+	if ( yIndex >= 0 ){
+		QString newIdentifier = axisWidget->getIdentifier();
+		emit yAxisIdentifierChanged( yIndex, newIdentifier );
+	}
 }
 
 void PlotMSAxesTab::update(const PlotMSPlot& plot) {
@@ -120,37 +215,61 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     // Update "in cache" for widgets.
     vector<pair<PMS::Axis,unsigned int> > laxes = plot.cache().loadedAxes();
     bool found = false;
-    for(unsigned int i = 0; !found && i < laxes.size(); i++)
-        if(laxes[i].first == c2->xAxis()) found = true;
+    for(unsigned int i = 0; !found && i < laxes.size(); i++){
+        if(laxes[i].first == c2->xAxis()){
+        	found = true;
+        	break;
+        }
+    }
     itsXWidget_->setInCache(found);
     
-    found = false;
-    for(unsigned int i = 0; !found && i < laxes.size(); i++)
-        if(laxes[i].first == c2->yAxis()) found = true;
-    itsYWidget_->setInCache(found);
-    
+    int yAxisCount = itsYWidgets_.size();
+    for ( int j = 0; j < yAxisCount; j++ ){
+    	found = false;
+    	PMS::Axis yData = c2->yAxis(j);
+    	for(unsigned int i = 0; !found && i < laxes.size(); i++){
+    		if(laxes[i].first == yData){
+    			found = true;
+    			break;
+    		}
+    	}
+    	itsYWidgets_[j]->setInCache(found);
+    }
+
     // Update labels.
-    highlightWidgetText(xLabel, d->isSet() && (c->xAxis() != c2->xAxis() ||
-                (PMS::axisIsData(c->xAxis()) &&
-                 c->xDataColumn() != c2->xDataColumn())));
-    highlightWidgetText(itsXWidget_->dataLabel(), d->isSet() &&
-                c->xDataColumn() != c2->xDataColumn());
+    QLabel* axisXLabel = itsXWidget_->axisLabel();
+    bool axisDifference=false;
+    if ( c->xAxis() != c2->xAxis() ){
+    	axisDifference = true;
+    }
+    bool dataDifference = false;
+    if ( PMS::axisIsData(c->xAxis()) &&
+            c->xDataColumn() != c2->xDataColumn()){
+    	dataDifference = true;
+    }
+
+    highlightWidgetText(axisXLabel, d->isSet() && (axisDifference || dataDifference ));
+    highlightWidgetText(itsXWidget_->dataLabel(), d->isSet() && dataDifference);
     highlightWidgetText(itsXWidget_->attachLabel(), d->isSet() &&
                 a->xAxis() != a2->xAxis());
     highlightWidgetText(itsXWidget_->rangeLabel(), d->isSet() &&
                 (a->xRangeSet() != a2->xRangeSet() ||
                 (a->xRangeSet() && a->xRange() != a2->xRange())));
     
-    highlightWidgetText(yLabel, d->isSet() && (c->yAxis() != c2->yAxis() ||
-                (PMS::axisIsData(c->yAxis()) &&
-                 c->yDataColumn() != c2->yDataColumn())));
-    highlightWidgetText(itsYWidget_->dataLabel(), d->isSet() &&
-                c->yDataColumn() != c2->yDataColumn());
-    highlightWidgetText(itsYWidget_->attachLabel(), d->isSet() &&
-                a->yAxis() != a2->yAxis());
-    highlightWidgetText(itsYWidget_->rangeLabel(), d->isSet() &&
-                (a->yRangeSet() != a2->yRangeSet() ||
-                (a->yRangeSet() && a->yRange() != a2->yRange())));
+    for ( int i = 0; i < yAxisCount; i++ ){
+    	QLabel* axisLabel = itsYWidgets_[i]->axisLabel();
+    	highlightWidgetText(axisLabel, d->isSet() && (c->yAxis(i) != c2->yAxis(i) ||
+                (PMS::axisIsData(c->yAxis(i)) &&
+                 c->yDataColumn(i) != c2->yDataColumn(i))));
+    	highlightWidgetText(itsYWidgets_[i]->dataLabel(), d->isSet() &&
+                c->yDataColumn(i) != c2->yDataColumn(i));
+    	highlightWidgetText(itsYWidgets_[i]->attachLabel(), d->isSet() &&
+                a->yAxis(i) != a2->yAxis(i));
+    	highlightWidgetText(itsYWidgets_[i]->rangeLabel(), d->isSet() &&
+                (a->yRangeSet(i) != a2->yRangeSet(i) ||
+                (a->yRangeSet(i) && a->yRange(i) != a2->yRange(i))));
+    }
+
 }
 
 }

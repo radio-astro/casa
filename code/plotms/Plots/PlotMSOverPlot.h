@@ -30,11 +30,11 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Data/PlotMSIndexer.h>
 
-
 #include <casa/namespace.h>
 
 namespace casa {
 
+class PMS_PP_Cache;
 class PMS_PP_Canvas;
 class PMS_PP_Axes;
 class PMS_PP_Iteration;
@@ -126,10 +126,20 @@ protected:
     void logIter(Int iter, Int nIter);
 
 private:
+    //Adjust the amount of plot data that this plot is holding.
+    void resizePlots( int rows, int cols );
 
+    //Return the dimensions of the plot data that this plot should hold.
     void getPlotSize( Int& rows, Int& cols );
+
+    //Note:  First index for a plot is the dataCount,
+    //second index is the number of iteration.
     vector<vector<MaskedScatterPlotPtr> > itsPlots_;
+
+    //Note:  First index for a canvas is the number of rows,
+    //second index is the column withen a grid.
     vector<vector<PlotCanvasPtr> > itsCanvases_;
+
     vector<vector</*QPScatterPlot**/ColoredPlotPtr> > itsColoredPlots_;
     TCLParams itsTCLParams_;
     int gridRow;
@@ -145,8 +155,8 @@ private:
     // </group>
     //const PMS_PP_Display* getDisplayParams();
     void clearCanvasProperties( int row, int col);
-    void setCanvasProperties (int row, int col, PlotAxis cx, PlotAxis cy,
-    		PMS::Axis x, PMS::Axis y, bool set, PMS_PP_Canvas *canv,
+    void setCanvasProperties (int row, int col, PMS_PP_Cache*,
+    		PMS_PP_Axes* axes, bool set, PMS_PP_Canvas *canv,
     		uInt rows, uInt cols, PMS_PP_Axes *axes, PMS_PP_Iteration *iter,
     		uInt iteration );
 

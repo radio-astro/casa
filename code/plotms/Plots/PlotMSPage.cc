@@ -111,9 +111,11 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
 }
 
 PlotCanvasPtr PlotMSPage::canvas(unsigned int row, unsigned int col) {
-    if(row >= itsCanvases_.size() || col >= itsCanvases_[row].size())
-        return PlotCanvasPtr();
-    else return itsCanvases_[row][col];
+	PlotCanvasPtr canvas = PlotCanvasPtr();
+    if(row < itsCanvases_.size() && col < itsCanvases_[row].size()){
+        canvas = itsCanvases_[row][col];
+    }
+    return canvas;
 }
 
 PlotMSPlot* PlotMSPage::owner(unsigned int row, unsigned int col) {

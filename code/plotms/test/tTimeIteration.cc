@@ -35,32 +35,23 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
-#include <QDebug>
 
 /**
- * Tests whether a plot can be placed in the second row, second column
- * of a 2x3 page layout.  The uneven number of rows and columns are important
- * to make sure placement is not switched or confused.
+ * Tests whether a elevation/amp plot can be iterated with respect to time.
+ * Here, we are not averaging so there should be a single point per time iteration.
  */
-
 int main(int /*argc*/, char** /*argv[]*/) {
 
-	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
-    qDebug() << "tGridPlacement using data from "<<dataPath.c_str();
+	String dataPath= tUtil::getFullPath( "pm_ngc5921.ms" );
+    cout << "tTimeIteration using data from "<<dataPath.c_str()<<endl;
 
-    // Set up plotms object
+    // Set up plotms object.
     PlotMSApp app(false, false);
 
-
-    //Establish a 2x3 grid
-    PlotMSParameters& params = app.getParameters();
-    params.setRowCount( 2 );
-    params.setColCount( 3 );
 
     // Set up parameters for plot.
     PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
 
-    // Put the data into the plot.
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
     if (ppdata == NULL) {
         plotParams.setGroup<PMS_PP_MSData>();
@@ -68,43 +59,43 @@ int main(int /*argc*/, char** /*argv[]*/) {
     }
     ppdata->setFilename( dataPath );
 
+    //Make a 2x2 grid
+    PlotMSParameters& overallParams = app.getParameters();
+    overallParams.setRowCount( 2 );
+    overallParams.setColCount( 2 );
 
-    //Put the plot in the 2nd row, 2nd col
-    PMS_PP_Iteration* iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-    if ( iterParams == NULL ){
-    	plotParams.setGroup<PMS_PP_Iteration>();
-    	iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
+    //Set-up a elevation x amp plot
+    PMS_PP_Cache* cacheParams = plotParams.typedGroup<PMS_PP_Cache>();
+    if(cacheParams == NULL) {
+    	plotParams.setGroup<PMS_PP_Cache>();
+    	cacheParams = plotParams.typedGroup<PMS_PP_Cache>();
     }
-    iterParams->setGridRow( 1 );
-    iterParams->setGridCol( 1 );
+    PMS::Axis xAxis = PMS::EL0;
+    cacheParams->setXAxis(xAxis, PMS::DATA);
+    PMS::Axis yAxis = PMS::AMP;
+    cacheParams->setYAxis(yAxis, PMS::DATA);
 
+    //Set-up iteration with respect to time.
+    PMS_PP_Iteration* iterationParams = plotParams.typedGroup<PMS_PP_Iteration>();
+    if ( iterationParams == NULL ){
+        plotParams.setGroup<PMS_PP_Iteration>();
+        iterationParams = plotParams.typedGroup<PMS_PP_Iteration>();
+    }
+    iterationParams->setIterationAxis( PMS::TIME );
 
-    //Make the plot.
+    //Add the plot
     app.addOverPlot( &plotParams );
 
-
-    //QApplication::exec();
-
-    //We want to print all pages in the output.
-    PlotMSExportParam& exportParams = app.getExportParameters();
-    exportParams.setExportRange( PMS::PAGE_ALL );
-
-
-
-
-    String outFile( "/tmp/plotMSGridPlacementTest.jpg");
+    String outFile( "/tmp/plotTimeIterationTest.jpg");
     tUtil::clearFile( outFile );
-
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
-	qDebug() << "tGridPlacement:: Result of save="<<ok;
+	cout << "tTimeIteration:: Result of save="<<ok<<endl;
     
-
-	ok = tUtil::checkFile( outFile, 60000, 80000, -1 );
-	qDebug() << "tGridPlacement:: Result of save file check="<<ok;
-
-	tUtil::exitMain( false );
+	ok = tUtil::checkFile( outFile, 160000, 170000, -1 );
+	cout << "tTimeIteration:: Result of  save file check="<<ok<<endl;
+	return tUtil::exitMain( false );
 }
 

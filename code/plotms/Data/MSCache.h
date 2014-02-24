@@ -138,7 +138,7 @@ private:
 			  Vector<Int>& chunks, 
 			  Vector<Int>& relids,
 			  Bool flag,
-			  PlotMSIndexer* indexer);
+			  PlotMSIndexer* indexer, int dataIndex);
   
 
 

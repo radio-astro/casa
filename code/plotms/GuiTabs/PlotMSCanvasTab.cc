@@ -48,7 +48,6 @@ PlotMSCanvasTab::PlotMSCanvasTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
     itsTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
     titleFrame->layout()->addWidget(itsTitleWidget_);
     QButtonGroup* group = new QButtonGroup(titleFrame);
-    group->addButton(titleSameAsPlot);
     itsTitleWidget_->addRadioButtonsToGroup(group);
 
     vector<String> leg = PlotCanvas::allLegendPositionStrings();
@@ -76,7 +75,6 @@ PlotMSCanvasTab::PlotMSCanvasTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
     itsLabelDefaults_.insert(gridLabel, gridLabel->text());
     
     // Connect widgets.
-    connect(titleSameAsPlot, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(itsTitleWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(legend, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(legendChooser,SIGNAL(currentIndexChanged(int)), SIGNAL(changed()));
@@ -105,9 +103,9 @@ void PlotMSCanvasTab::getValue(PlotMSPlotParameters& params) const {
         d = params.typedGroup<PMS_PP_Display>();
     }
     
-    if(titleSameAsPlot->isChecked()) c->setTitleFormat(d->titleFormat());
-    else c->setTitleFormat(itsTitleWidget_->getValue());
-    c->showLegend(legend->isChecked(), PlotCanvas::legendPosition(
+    c->setTitleFormat(itsTitleWidget_->getValue());
+    c->showLegend(legend->isChecked());
+    c->setLegendPosition( PlotCanvas::legendPosition(
                   legendChooser->currentText().toStdString()));
     c->showXAxis(xAxis->isChecked()); c->showYAxis(yAxis->isChecked());
     c->setXLabelFormat(itsXLabelWidget_->getValue());
@@ -122,9 +120,7 @@ void PlotMSCanvasTab::setValue(const PlotMSPlotParameters& params) {
     const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
     if(c == NULL || d == NULL) return; // shouldn't happen
     
-    if(c->titleFormat() == d->titleFormat())
-        titleSameAsPlot->setChecked(true);
-    else itsTitleWidget_->setValue(c->titleFormat().format);
+    itsTitleWidget_->setValue(c->titleFormat().format);
     
     legend->setChecked(c->legendShown());
     setChooser(legendChooser, PlotCanvas::legendPosition(c->legendPosition()));
