@@ -616,7 +616,7 @@ bool PlotMSOverPlot::updateCanvas() {
 			}
 			else {
 				setCanvasProperties( r, c, cache, axes, set, canv,
-						rows, cols, axes, iter, iteration );
+						rows, cols, iter, iteration );
 			}
 		}
 	}
@@ -636,7 +636,7 @@ void PlotMSOverPlot::clearCanvasProperties( int row, int col){
 void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		PMS_PP_Cache* cacheParams, PMS_PP_Axes* axesParams,//PlotAxis cx, PlotAxis cy, PMS::Axis x, PMS::Axis y,
 		bool set, PMS_PP_Canvas *canv, uInt rows, uInt cols,
-		PMS_PP_Axes *axes, PMS_PP_Iteration *iter, uInt iteration) {
+	    PMS_PP_Iteration *iter, uInt iteration) {
 
 	PlotCanvasPtr canvas = itsCanvases_[row][col];
 	if(canvas.null()){
@@ -711,13 +711,13 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	// Custom axes ranges
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
-		if ( axes->xRangeSet() ){
-			canvas->setAxisRange(cx, axes->xRange());
+		if ( axesParams->xRangeSet() ){
+			canvas->setAxisRange(cx, axesParams->xRange());
 		}
 		for ( int i = 0; i < yAxisCount; i++ ){
-			if ( axes->yRangeSet(i) ){
+			if ( axesParams->yRangeSet(i) ){
 				PlotAxis cy = axesParams->yAxis( i );
-				canvas->setAxisRange(cy, axes->yRange(i));
+				canvas->setAxisRange(cy, axesParams->yRange(i));
 			}
 		}
 	}

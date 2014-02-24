@@ -157,7 +157,7 @@ private:
     void clearCanvasProperties( int row, int col);
     void setCanvasProperties (int row, int col, PMS_PP_Cache*,
     		PMS_PP_Axes* axes, bool set, PMS_PP_Canvas *canv,
-    		uInt rows, uInt cols, PMS_PP_Axes *axes, PMS_PP_Iteration *iter,
+    		uInt rows, uInt cols, PMS_PP_Iteration *iter,
     		uInt iteration );
 
 public:
