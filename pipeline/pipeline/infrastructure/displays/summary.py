@@ -18,6 +18,7 @@ import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
 from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
+import shutil
 
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = True
@@ -123,6 +124,13 @@ class WeatherChart(object):
             pylab.close()
         except Exception:
             pass
+            
+        #Use plotweather task output for the VLA
+        try:
+            origfile = self.ms.basename+'.plotweather.png'
+            shutil.copy2(origfile, self.figfile)
+        except:
+            LOG.debug('Not a VLA dataset')
 
         return self._get_plot_object()
 

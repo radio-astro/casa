@@ -36,6 +36,6 @@ class OpcalResults(basetask.Results):
 	# Format the Tsyscal results.
         s = 'OpcalResults:\n'
         for calapplication in self.final:
-            s += '\tGaincurves caltable written to {name}\n'.format(
+            s += '\tOpacities caltable written to {name}\n'.format(
                     name=calapplication.gaintable)
 	return s

@@ -13,3 +13,5 @@ from .targetflagdisplay import targetflagSummaryChart
 
 from .finalcalsdisplay import finalcalsSummaryChart, finalDelaysPerAntennaChart, finalphaseGainPerAntennaChart, finalbpSolAmpPerAntennaChart, finalbpSolPhasePerAntennaChart, finalbpSolPhaseShortPerAntennaChart, finalAmpTimeCalPerAntennaChart, finalAmpFreqCalPerAntennaChart, finalPhaseGainCalPerAntennaChart
 
+from .opacitiesdisplay import opacitiesSummaryChart
+
