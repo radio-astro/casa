@@ -105,7 +105,14 @@ UTILS = (function () {
                 }
 
                 if (callback) {
-                    callback();
+                	// keep compatibility with scalar callback function
+                	if (callback instanceof Array) {
+                		for (var i = 0; i < callback.length; i++) {
+                		    callback[i]();
+                		}
+                	} else {
+                		callback();
+                	}
                 }
             }
         });

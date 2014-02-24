@@ -25,6 +25,7 @@ import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
+import pipeline.infrastructure.displays.applycal as applycal
 import pipeline.infrastructure.displays.bandpass as bandpass
 import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
@@ -2367,7 +2368,142 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                     'caltypes' : caltypes,
                     'agents'   : agents,
                     'dirname'  : weblog_dir})
+
+        amp_vs_time_summary_plots = self.create_plots(context, 
+                                                      result, 
+                                                      applycal.AmpVsTimeSummaryChart, 
+                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'])
+
+        phase_vs_time_summary_plots = self.create_plots(context, 
+                                                      result, 
+                                                      applycal.PhaseVsTimeSummaryChart, 
+                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'])
+
+#         amp_vs_freq_phase_summary_plots = self.create_plots(context, 
+#                                                             result, 
+#                                                             applycal.AmpVsFrequencySummaryChart, 
+#                                                             ['PHASE'])
+# 
+#         phase_vs_freq_phase_summary_plots = self.create_plots(context, 
+#                                                               result, 
+#                                                               applycal.PhaseVsFrequencySummaryChart, 
+#                                                               ['PHASE'])
+# 
+#         amp_vs_freq_bandpass_summary_plots = self.create_plots(context, 
+#                                                             result, 
+#                                                             applycal.AmpVsFrequencySummaryChart, 
+#                                                             ['BANDPASS'])
+# 
+#         phase_vs_freq_bandpass_summary_plots = self.create_plots(context, 
+#                                                                  result, 
+#                                                                  applycal.PhaseVsFrequencySummaryChart, 
+#                                                                  ['BANDPASS'])
+# 
+#         self.sort_plots_by_baseband(amp_vs_freq_phase_summary_plots)
+#         self.sort_plots_by_baseband(phase_vs_freq_phase_summary_plots)
+#         self.sort_plots_by_baseband(amp_vs_freq_bandpass_summary_plots)
+#         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
+
+        amp_vs_freq_summary_plots = collections.defaultdict(dict)
+        for intents in [['PHASE'],['BANDPASS']]:
+            plots = self.create_plots(context, 
+                                      result, 
+                                      applycal.AmpVsFrequencySummaryChart, 
+                                      intents)
+            self.sort_plots_by_baseband(plots)
+
+            key = utils.commafy(intents, quotes=False)
+            for vis, vis_plots in plots.items():
+                amp_vs_freq_summary_plots[vis][key] = vis_plots
+
+        phase_vs_freq_summary_plots = collections.defaultdict(dict)
+        for intents in [['PHASE'],['BANDPASS']]:
+            plots = self.create_plots(context, 
+                                      result, 
+                                      applycal.PhaseVsFrequencySummaryChart, 
+                                      intents)
+            self.sort_plots_by_baseband(plots)
+
+            key = utils.commafy(intents, quotes=False)
+            for vis, vis_plots in plots.items():
+                phase_vs_freq_summary_plots[vis][key] = vis_plots
+
+        amp_vs_uv_summary_plots = self.create_plots(context, 
+                                                    result, 
+                                                    applycal.AmpVsUVSummaryChart, 
+                                                    ['AMPLITUDE'])
+
+        phase_vs_uv_summary_plots = self.create_plots(context, 
+                                                      result, 
+                                                      applycal.PhaseVsUVSummaryChart, 
+                                                      ['AMPLITUDE'])
+
+        # detail plots. Don't need the return dictionary, but make sure a 
+        # renderer is passed so the detail page is written to disk
+        self.create_plots(context, 
+                          result, 
+                          applycal.AmpVsFrequencyDetailChart, 
+                          ['BANDPASS', 'PHASE'],
+                          ApplycalAmpVsFreqPlotRenderer)
+
+        self.create_plots(context, 
+                          result, 
+                          applycal.PhaseVsFrequencyDetailChart, 
+                          ['BANDPASS', 'PHASE'],
+                          ApplycalPhaseVsFreqPlotRenderer)
+
+        self.create_plots(context, 
+                          result, 
+                          applycal.AmpVsUVDetailChart, 
+                          ['AMPLITUDE'],
+                          ApplycalAmpVsUVPlotRenderer)
+
+        self.create_plots(context, 
+                          result, 
+                          applycal.PhaseVsUVDetailChart, 
+                          ['AMPLITUDE'],
+                          ApplycalPhaseVsUVPlotRenderer)
+
+        ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
+                    'phase_vs_freq_plots' : phase_vs_freq_summary_plots,
+                    'amp_vs_time_plots'   : amp_vs_time_summary_plots,
+                    'amp_vs_uv_plots'     : amp_vs_uv_summary_plots,
+                    'phase_vs_uv_plots'   : phase_vs_uv_summary_plots,
+                    'phase_vs_time_plots' : phase_vs_time_summary_plots})
+        
         return ctx
+
+    def sort_plots_by_baseband(self, d):
+        for vis, plots in d.items():
+            plots = sorted(plots, 
+                           key=lambda plot: plot.parameters['baseband'])
+            d[vis] = plots
+
+    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None):
+        """
+        Create plots and return a dictionary of vis:[Plots].
+        """
+        d = {}
+        for result in results:
+            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls)
+            d = utils.dict_merge(d, plots)
+        return d
+
+    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None):
+        vis = os.path.basename(result.inputs['vis'])
+        
+        plotter = plotter_cls(context, result, intents)
+        plots = plotter.plot()
+
+        d = collections.defaultdict(dict)
+        d[vis] = plots
+
+        if renderer_cls is not None:
+            renderer = renderer_cls(context, result, plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())        
+
+        return d
 
     def calapps_for_result(self, result):
         calapps = collections.defaultdict(list)
@@ -2499,6 +2635,127 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
             previous_summary = summary
                 
         return total
+
+
+class GenericFieldSpwAntPlotsRenderer(object):
+    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
+    # scores and histograms to generate. there should be a common base class. 
+    template = 'generic_x_vs_y_field_spw_ant_detail_plots.html'
+
+    def __init__(self, context, result, plots):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = os.path.basename(self.result.inputs['vis'])
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            field = plot.parameters['field']
+            spw_id = plot.parameters['spw']
+            ant_id = plot.parameters['ant']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : str(spw_id),
+                                'ant'       : ant_id,
+                                'field'     : field,
+                                'thumbnail' : thumbnail_relpath}
+
+        # Javascript parser requires \" -> \\" conversion 
+        self.json = json.dumps(d).replace('\"', '\\"')
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json,
+                'plot_title' : 'Phase vs time for %s' % self.ms}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
+
+class ApplycalAmpVsFreqPlotRenderer(GenericFieldSpwAntPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('amp_vs_freq-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(ApplycalAmpVsFreqPlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Calibrated amplitude vs frequency for %s' % self.ms
+        return d
+
+
+class ApplycalPhaseVsFreqPlotRenderer(GenericFieldSpwAntPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_freq-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(ApplycalPhaseVsFreqPlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Calibrated phase vs frequency for %s' % self.ms
+        return d
+
+
+class ApplycalAmpVsUVPlotRenderer(GenericPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('amp_vs_uv-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(ApplycalAmpVsUVPlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Calibrated amplitude vs UV distance for %s' % self.ms
+        return d
+
+
+class ApplycalPhaseVsUVPlotRenderer(GenericPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('amp_vs_phase-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(ApplycalPhaseVsUVPlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Calibrated phase vs UV distance for %s' % self.ms
+        return d
 
 
 class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
