@@ -79,6 +79,7 @@ namespace casa {
 		autoScaleY = true;
 		plotError  = 2;
 		showGrid   = 2;
+		gaussEstimateCount = 0;
 		taskMode = LINE_OVERLAY_MODE;
 		topAxisCompatible = false;
 
@@ -733,11 +734,14 @@ namespace casa {
 		refreshPixmap();
 	}
 
+	void QtCanvas::setGaussianEstimateCount( int count ){
+		gaussEstimateCount = count;
+	}
 
 
 	void QtCanvas::showContextMenu( QMouseEvent* event ) {
 		contextMenu.clear();
-		if ( taskMode == SPECTRAL_LINE_MODE ) {
+		if ( taskMode == SPECTRAL_LINE_MODE && gaussEstimateCount > 0 ) {
 			//The user is specifying the (Center,Peak) or the FWHM
 			//of a Gaussian estimate. The point must be in the selected
 			//range to be valid.

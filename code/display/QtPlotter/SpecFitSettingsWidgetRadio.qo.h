@@ -56,6 +56,8 @@ namespace casa {
 		void reset();
 		void pixelsChanged( int pixX, int pixY );
 
+	signals:
+		void gaussEstimateCountChanged( int count );
 
 	private slots:
 		void polyFitChanged( int state );
@@ -87,6 +89,7 @@ namespace casa {
 		String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
 		void getFitBounds( Float& startVal, Float& endVal ) const;
 		int getFitCount(Int& startChannelIndex, Int& endChannelIndex );
+		void setFitEstimate( int row, double xValue, double yValue, bool centerPeak );
 		void clearEstimates();
 		void clear();
 		void emptyCurveList();

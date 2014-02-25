@@ -2415,10 +2415,10 @@ void QtDisplayPanelGui::showImageProfile() {
 		}
 	}
 
-	if ( !profileVisible ){
+	//if ( !profileVisible ){
 		profile_->showNormal();
 		profile_->raise();
-	}
+	//}
 
 	if ( channelDDFound ){
 
