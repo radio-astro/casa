@@ -38,7 +38,7 @@ class Applycals(basetask.StandardTaskTemplate):
         
         applycal_results = self._do_applycal(self.inputs.context)
         
-        inputs = Uncalspw.Inputs(context, bpcaltable='finalBPcal.b', delaycaltable='finaldelay.k')
+        inputs = Uncalspw.Inputs(self.inputs.context, bpcaltable='finalBPcal.b', delaycaltable='finaldelay.k')
         task = Uncalspw(inputs)
         result = self._executor.execute(task)
         

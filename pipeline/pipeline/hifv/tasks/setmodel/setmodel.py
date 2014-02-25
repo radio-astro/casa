@@ -216,12 +216,15 @@ class SetModel(basetask.StandardTaskTemplate):
         
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
+                print "setmodel field: ", myfield
                 spws = field_spws[myfield]
                 #spws = [1,2,3]
                 #reference_frequency = center_frequencies[myspw]
                 
                 
                 for myspw in spws:
+                    print 'setmodel myspw: ', myspw
+                    print "Type of myspw: ", type(myspw)
                     reference_frequency = center_frequencies[myspw]
                     try:
                         EVLA_band = spw2band[myspw]

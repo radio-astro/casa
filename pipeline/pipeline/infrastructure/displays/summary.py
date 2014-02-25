@@ -126,11 +126,13 @@ class WeatherChart(object):
             pass
             
         #Use plotweather task output for the VLA
+        '''
         try:
             origfile = self.ms.basename+'.plotweather.png'
             shutil.copy2(origfile, self.figfile)
         except:
             LOG.debug('Not a VLA dataset')
+        '''
 
         return self._get_plot_object()
 

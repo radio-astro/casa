@@ -210,6 +210,9 @@ def get_task_description(result_obj):
     
     if task_cls is hifv.tasks.setmodel.SetModel:
         return 'Set model: Prepare for calibrations'
+        
+    if task_cls is hifv.tasks.setmodel.VLASetjy:
+        return 'Set model: Prepare for calibrations'
     
     if task_cls is hifv.tasks.priorcals.priorcals.Priorcals:
         return 'Priorcals (gaincurves, opacities, and rq gains)'
@@ -5283,6 +5286,7 @@ renderer_map = {
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
+        hifv.tasks.setmodel.VLASetjy : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_vlasetjy.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailspriorcalsRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
         hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=True),
         hifv.tasks.testBPdcals                   : T2_4MDetailstestBPdcalsRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),

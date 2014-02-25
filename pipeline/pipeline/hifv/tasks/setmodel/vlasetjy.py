@@ -18,7 +18,78 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 
+from pipeline.hifv.tasks.vlautils import VLAUtils
+import numpy
+
+import itertools
+import pipeline.extern.asizeof as asizeof
+
+
 LOG = infrastructure.get_logger(__name__)
+
+def find_standards(positions):
+    """Function for finding standards from the original scripted EVLA pipeline
+    """
+    # set the max separation as ~1'
+    MAX_SEPARATION = 60*2.0e-5
+    position_3C48 = casatools.measures.direction('j2000', '1h37m41.299', '33d9m35.133')
+    fields_3C48 = []
+    position_3C138 = casatools.measures.direction('j2000', '5h21m9.886', '16d38m22.051')
+    fields_3C138 = []
+    position_3C147 = casatools.measures.direction('j2000', '5h42m36.138', '49d51m7.234')
+    fields_3C147 = []
+    position_3C286 = casatools.measures.direction('j2000', '13h31m8.288', '30d30m23.959')
+    fields_3C286 = []
+
+    for ii in range(0,len(positions)):
+        position = casatools.measures.direction('j2000', str(positions[ii][0])+'rad', str(positions[ii][1])+'rad')
+        separation = casatools.measures.separation(position,position_3C48)['value'] * math.pi/180.0
+        if (separation < MAX_SEPARATION):
+            fields_3C48.append(ii)
+        else:
+            separation = casatools.measures.separation(position,position_3C138)['value'] * math.pi/180.0
+            if (separation < MAX_SEPARATION):
+                fields_3C138.append(ii)
+            else:
+                separation = casatools.measures.separation(position,position_3C147)['value'] * math.pi/180.0
+                if (separation < MAX_SEPARATION):
+                    fields_3C147.append(ii)
+                else:
+                    separation = casatools.measures.separation(position,position_3C286)['value'] * math.pi/180.0
+                    if (separation < MAX_SEPARATION):
+                        fields_3C286.append(ii)
+
+    fields = [ fields_3C48, fields_3C138, fields_3C147, fields_3C286 ]
+    
+    return fields
+
+
+def standard_sources(vis):
+    """Get standard source names, fields, and positions - convenience function from
+       the original EVLA scripted pipeline
+    """
+
+    with casatools.TableReader(vis+'/FIELD') as table:
+        field_positions = table.getcol('PHASE_DIR')
+        
+    positions = []
+
+    for ii in range(0,len(field_positions[0][0])):
+        positions.append([field_positions[0][0][ii], field_positions[1][0][ii]])
+
+    standard_source_names = [ '3C48', '3C138', '3C147', '3C286' ]
+    standard_source_fields = find_standards(positions)
+    
+    standard_source_found = False
+    for standard_source_field in standard_source_fields:
+        if standard_source_field:
+            standard_source_found = True
+    if not standard_source_found:
+        standard_source_found = False
+        LOG.error("ERROR: No standard flux density calibrator observed, flux density scale will be arbitrary")
+        QA2_calprep='Fail'
+
+    return standard_source_names, standard_source_fields
 
 
 
@@ -302,6 +373,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
             return result
 
         # get the spectral windows for the spw inputs argument
+        # This is done later in the loop for the VLA
+        print "Type of inputs.spw: ", inputs.spw, type(inputs.spw)
         spws = [spw for spw in inputs.ms.get_spectral_windows(inputs.spw)]
 
         # Multiple spectral windows spawn multiple setjy jobs. Set a unique
@@ -311,10 +384,96 @@ class VLASetjy(basetask.StandardTaskTemplate):
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
+        
+        
+        
+        
+        
+        standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
+        context = self.inputs.context
+        m = context.observing_run.measurement_sets[0]
+        field_spws = context.evla['msinfo'][m.name].field_spws
+        spw2band = context.evla['msinfo'][m.name].spw2band
+        bands = spw2band.values()
+
+        #Look in spectral window domain object as this information already exists!
+        with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
+            channels = table.getcol('NUM_CHAN')
+            originalBBClist = table.getcol('BBC_NO')
+            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
+            reference_frequencies = table.getcol('REF_FREQUENCY')
+    
+        center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
+
+        vlainputs = VLAUtils.Inputs(context)
+        vlautils = VLAUtils(vlainputs)
+        
+        for i, fields in enumerate(standard_source_fields):
+            for myfield in fields:
+                inputs.field = myfield
+                jobs = []
+                VLAspws = field_spws[myfield]
+                print 'VLAspws: ', VLAspws, type(VLAspws)
+                strlistVLAspws = ','.join(str(spw) for spw in VLAspws)
+                spws = [spw for spw in inputs.ms.get_spectral_windows(strlistVLAspws)]
+                
+                for spw in spws:
+                    inputs.spw = spw.id
+                    reference_frequency = center_frequencies[spw.id]
+                    try:
+                        EVLA_band = spw2band[spw.id]
+                    except:
+                        LOG.info('Unable to get band from spw id - using reference frequency instead')
+                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    
+                    LOG.info("Center freq for spw "+str(spw.id)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+                    
+                    model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+        
+                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(spw.id)+" using "+model_image)
+        
+                    task_args = {'vis'            : inputs.vis,
+                                 'field'          : str(myfield),
+                                 'spw'            : str(spw.id),
+                                 'selectdata'     : False,
+                                 'model'          : model_image,
+                                 'intent'         : '',
+                                 'listmodels'     : False,
+                                 'scalebychan'    : True,
+                                 'fluxdensity'    : -1,
+                                 'standard'       : 'Perley-Butler 2010',
+                                 'usescratch'     : True,
+                                 'async'          : False}
+                    
+                    jobs.append(casa_tasks.setjy(**task_args))
+                    
+                    # Flux densities coming from a non-lookup are added to the
+                    # results so that user-provided calibrator fluxes are
+                    # committed back to the domain objects
+                    
+                    if inputs.fluxdensity is not -1:
+                        try:
+                            (I,Q,U,V) = inputs.fluxdensity
+                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
+                        except:
+                            I = inputs.fluxdensity
+                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
+                        result.measurements[field].append(flux)
+                
+                # merge identical jobs into one job with a multi-spw argument
+                # be careful - that comma after spw is required for ignore to
+                # be an iterable of strings!
+                jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                for job in jobs:
+                    self._executor.execute(job)
+        
+        '''
         for field in utils.safe_split(inputs.field):
+            print "setjy field: ", field
             inputs.field = field
             jobs = []
             for spw in spws:
+                print "setjy spw: ", spw, spw.id, type(spw.id)
                 inputs.spw = spw.id
                 task_args = inputs.to_casa_args()
                 jobs.append(casa_tasks.setjy(**task_args))
@@ -339,6 +498,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
             jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
             for job in jobs:
                 self._executor.execute(job)
+        '''
 
         # higher-level tasks may run multiple Setjy tasks before running
         # analyse, so we also tag the end of our jobs so we can identify the

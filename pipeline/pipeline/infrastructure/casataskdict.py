@@ -49,6 +49,7 @@ CasaTaskDict = {
                    'hifv_importdata'  : 'VLAImportData',
                    'hifv_flagdata'    : 'FlagDeterVLA',
                    'hifv_setmodel'    : 'SetModel',
+                   'hifv_vlasetjy'    : 'VLASetjy',
                    'hifv_priorcals'   : 'Priorcals',
                    'hifv_hflag'       : 'Heuristicflag',
                    'hifv_testBPdcals' : 'testBPdcals',
@@ -119,7 +120,8 @@ classToCASATask = {
     #VLA tasks
     hifv_tasks.VLAImportData       : 'hifv_importdata',
     hifv_tasks.FlagDeterVLA        : 'hifv_flagdata',
-    hifv_tasks.SetModel            : 'hifv_setmodel', 
+    hifv_tasks.SetModel            : 'hifv_setmodel',
+    hifv_tasks.VLASetjy            : 'hifv_vlasetjy',
     hifv_tasks.Priorcals           : 'hifv_priorcals',
     hifv_tasks.Heuristicflag       : 'hifv_hflag', 
     hifv_tasks.testBPdcals         : 'hifv_testBPdcals',

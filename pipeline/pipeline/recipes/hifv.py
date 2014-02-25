@@ -49,7 +49,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_flagdata (pipelinemode=pipelinemode, scan=True)
     
         # Fill model columns for primary calibrators
-        hifv_setmodel (pipelinemode=pipelinemode)
+        hifv_vlasetjy (pipelinemode=pipelinemode)
         
         # Gain curves, opacities, antenna position corrections, 
         # requantizer gains (NB: requires CASA 4.1!)
@@ -127,6 +127,12 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
     
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)
+        
+        # Make a list of expected point source calibrators to be cleaned
+        hif_makecleanlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode, imsize=[512])
+    
+        # Make clean images for the selected calibrators
+        hif_cleanlist (pipelinemode=pipelinemode)
     
     except Exception, e:
 	if str(e) == IMPORT_ONLY:
@@ -171,7 +177,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         h_save()
     
         # Fill model columns for primary calibrators
-        hifv_setmodel (pipelinemode=pipelinemode)
+        hifv_vlasetjy (pipelinemode=pipelinemode)
         
         # Gain curves, opacities, antenna position corrections, 
         # requantizer gains (NB: requires CASA 4.1!)
