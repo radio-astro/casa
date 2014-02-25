@@ -249,7 +249,8 @@ class SetModel(basetask.StandardTaskTemplate):
                             
                     try:
                         #Need to add this line back in when calling vla.tasks.setjy
-                        result.measurements[setjy_result[0].measurements.keys()[0]]=setjy_result[0].measurements
+                        #result.measurements[setjy_result[0].measurements.keys()[0]]=setjy_result[0].measurements
+                        result.measurements.update(setjy_result[0].measurements)
                         #print setjy_result.__dict__
                     except Exception, e:
                         LOG.error('Unable to add setjy measurements to the result')
