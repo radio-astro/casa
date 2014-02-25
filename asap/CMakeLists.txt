@@ -117,7 +117,7 @@ if( APPLE )
                        COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
                        OUTPUT_VARIABLE _cxx_version
                        OUTPUT_STRIP_TRAILING_WHITESPACE )
-      if( NOT _cxx_version STREQUAL "4.4" )
+      if( NOT _cxx_version STREQUAL "4.4" AND NOT _cxx_version STREQUAL "4.6" )
          set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
       endif()
    endif()         
