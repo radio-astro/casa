@@ -21,7 +21,7 @@ class PlotmsLeaf(object):
     exactly one plot. 
     """
     def __init__(self, context, result, calto, xaxis, yaxis, 
-                 spw='', ant='', field='', intent='', **plot_args):
+                 spw='', ant='', field='', scan='', intent='', **plot_args):
         self._context = context
         self._result = result
 
@@ -33,6 +33,16 @@ class PlotmsLeaf(object):
 
         self._spw = spw
         self._intent = intent
+
+        # convert intent to scan selection
+        if intent != '':
+            domain_fields = self._ms.get_fields(field)
+            domain_spws = self._ms.get_spectral_windows(spw)
+            scans = [s for s in self._ms.get_scans(scan_intent=intent)
+                     if s.fields.intersection(domain_fields)
+                     and s.spws.intersection(domain_spws)]
+            scan = ','.join([str(s.id) for s in scans])
+        self._scan = scan
 
         # use field name rather than ID if possible
         if field != '':
@@ -71,6 +81,13 @@ class PlotmsLeaf(object):
             'field'    : '' if self._field == '' else '-%s' % filenamer.sanitize(self._field.replace(',','_')),
             'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
         }
+
+        # some filesystems have limits on the length of the filenames. Mosaics
+        # can exceed this limit due to including the names of all the field.
+        # Truncate over-long field components while keeping them unique by
+        # replacing them with the hash of the component  
+        if len(fileparts['field']) > 19:
+            fileparts['field'] = str(hash(fileparts['field']))
         
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
@@ -99,7 +116,7 @@ class PlotmsLeaf(object):
         if self._baseband != '':
             parameters['baseband'] = self._baseband
 
-        for attr in ['spw', 'ant', 'intent']:
+        for attr in ['spw', 'ant', 'intent', 'scan']:
             val = getattr(self, '_%s' % attr)
             if val != '':
                 parameters[attr] = val 
@@ -117,6 +134,7 @@ class PlotmsLeaf(object):
                      'yaxis'     : self._yaxis,
                      'field'     : str(self._field),
                      'spw'       : str(self._spw),
+                     'scan'      : str(self._scan),
                      'antenna'   : self._ant,
                      'plotfile'  : self._plotfile,
                      'showgui'   : False}
@@ -404,7 +422,7 @@ class SpwSummaryChart(PlotmsSpwComposite):
     def __init__(self, context, result, xaxis, yaxis, intent, **kwargs):
         (calto, intent) = _get_summary_args(context, result, intent)
         LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
-
+        
         # request plots per spw, overlaying all antennas
         super(SpwSummaryChart, self).__init__(
                 context, result, calto, xaxis, yaxis, intent=intent, 
