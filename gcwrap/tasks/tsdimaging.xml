@@ -30,11 +30,11 @@ the image by specifying the image center direction (phasecenter),
 number of image pixel (imsize) and size of image pixel (cell).\n
 The frequency coordinate of image is defined by three parameters,
 the number of channels (nchan), the channel id/frequency/velocity of
-the first channel (start), and channel width (step).There are three
-modes available to define unit of start and step, i.e., \'channel\' (use
+the first channel (start), and channel width (width).There are three
+modes available to define unit of start and width, i.e., \'channel\' (use
 channel indices), \'frequency\' (use frequency unit, e.g., \'GHz\'),
 and \'velocity\' (use velocity unit, e.g., \'km/s\'). By default, nchan,
-start, and step are defined so that all selected spectral windows are
+start, and width are defined so that all selected spectral windows are
 covered with the channel width equal to separation of first two
 channels selected.\n
 Finally, polarizations of image is defined by stokes parameter.\n
@@ -108,7 +108,7 @@ available.
 	    <value type="int">0</value>
     </param>
 
-    <param type="any" name="step" subparam="true">
+    <param type="any" name="width" subparam="true">
             <description>width of output spectral channels</description>
 	    <any type="variant"  limittypes="string int"/>
 	    <value type="int">1</value>
@@ -246,7 +246,7 @@ available.
                     <default param="start"><value type="string"></value>
 		        <description>Begin the output cube at the frequency of this channel in the MS</description>
                     </default>
-                    <default param="step"><value type="string"></value>
+                    <default param="width"><value type="string"></value>
                         <description>Width of output channel relative to MS channel (# to average)(\'\' = 1 channel) </description>
                     </default>
                 </equals>
@@ -255,7 +255,7 @@ available.
                     <default param="start"><value type="string"></value>
 		        <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description>
                     </default>
-                    <default param="step"><value type="string"></value>
+                    <default param="width"><value type="string"></value>
                         <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
                     </default>
                 </equals>
@@ -264,7 +264,7 @@ available.
                     <default param="start"><value type="string"></value>
 		        <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in first SpW of MS)</description>
                     </default>
-                    <default param="step"><value type="string"></value>
+                    <default param="width"><value type="string"></value>
                         <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
                     </default>
                     <default param="veltype"><value type="string">radio</value></default>
@@ -389,7 +389,7 @@ mode -- spectral gridding type
            example: start=100 (mode='channel')
                     start='22.3GHz' (mode='frequency')
                     start='5.0km/s' (mode='velocity')
-       step -- Output channel width
+       width -- Output channel width
                For mode='channel', default=1; >1 indicates channel averaging
                example: width=4.
                For mode= 'velocity' or 'frequency', default=''; width of
