@@ -119,6 +119,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     but it has to be False for backwards compatibility
                 -->
 		        <default param="targetres"><value type="bool">False</value></default>
+		        <default param="commonbeam"><value type="bool">False</value></default>
 	        </equals>
             <equals value="gaussian">
                 <default param="beam"><value type="string"></value></default>
