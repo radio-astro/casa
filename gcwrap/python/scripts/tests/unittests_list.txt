@@ -30,6 +30,7 @@ test_gaincal			gmoellen@aoc.nrao.edu
 test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
+test_hanningsmooth2             scastro@eso.org
 test_ia_adddegaxes              dmehring@nrao.edu
 test_ia_boxcar                  dmehring@nrao.edu
 test_ia_calcmask                dmehring@nrao.edu
