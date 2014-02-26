@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
-<%block name="title">Fit spectral index (fluxboot stage)</%block>
+<%block name="title">Flux density bootstrapping and spectral index fitting</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
@@ -45,7 +45,8 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Fit the spectral index of calibrators with a power-law and put the fit in the model column.</p>
+<p>Make a gain table that includes gain and opacity corrections for final amp cal and for flux density bootstrapping.
+Fit the spectral index of calibrators with a power-law and put the fit in the model column.</p>
 
 % for ms in summary_plots:
     

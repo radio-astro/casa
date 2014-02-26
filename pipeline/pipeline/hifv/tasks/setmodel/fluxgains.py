@@ -19,8 +19,7 @@ from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
-from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
-from . import vlasetjy
+from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
 import pipeline.hif.heuristics.findrefant as findrefant
 
 from pipeline.hifv.tasks.vlautils import VLAUtils
@@ -103,7 +102,7 @@ class Fluxgains(basetask.StandardTaskTemplate):
                     #Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
                     try:
-                        setjy_result = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                        setjy_result = self._fluxgains_setjy(calMs, str(myfield), str(myspw), model_image, -1)
                         #result.measurements.update(setjy_result.measurements)
                     except Exception, e:
                         # something has gone wrong, return an empty result
@@ -134,7 +133,7 @@ class Fluxgains(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
     
-    def _do_setjy(self, calMs, field, spw, modimage, fluxdensity):
+    def _fluxgains_setjy(self, calMs, field, spw, modimage, fluxdensity):
         
         
         try:
