@@ -7,7 +7,6 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 
-
 import itertools
 
 from pipeline.hif.tasks import gaincal

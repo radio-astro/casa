@@ -3583,14 +3583,14 @@ class T2_4MDetailspriorcalsRenderer(T2_4MDetailsDefaultRenderer):
 
 
 
-class T2_4MDetailstestgainsRenderer(T2_4MDetailsDefaultRenderer):
+class T2_4MDetailsSolintRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_testgains.html', 
                  always_rerender=False):
-        super(T2_4MDetailstestgainsRenderer, self).__init__(template,
+        super(T2_4MDetailsSolintRenderer, self).__init__(template,
                                                           always_rerender)
     
     def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailstestgainsRenderer, self)
+        super_cls = super(T2_4MDetailsSolintRenderer, self)
         ctx = super_cls.get_display_context(context, results)
         
         weblog_dir = os.path.join(context.report_dir,
@@ -3599,7 +3599,14 @@ class T2_4MDetailstestgainsRenderer(T2_4MDetailsDefaultRenderer):
         summary_plots = {}
         testgainsamp_subpages = {}
         testgainsphase_subpages = {}
-
+        
+        longsolint = {}
+        gain_solint2 = {}
+        
+        shortsol2 = {}
+        short_solint = {}
+        new_gain_solint1 = {}
+        
         
         for result in results:
             
@@ -3630,10 +3637,16 @@ class T2_4MDetailstestgainsRenderer(T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())
                 testgainsphase_subpages[ms] = renderer.filename
            
-        
+            #String type
+            new_gain_solint1[ms] = result.new_gain_solint1
+            longsolint[ms]       = result.longsolint
+            
+
         ctx.update({'summary_plots'   : summary_plots,
                     'testgainsamp_subpages' : testgainsamp_subpages,
                     'testgainsphase_subpages'   : testgainsphase_subpages,
+                    'new_gain_solint1'           : new_gain_solint1,
+                    'longsolint'                : longsolint,
                     'dirname'         : weblog_dir})
                 
         return ctx
@@ -5294,8 +5307,7 @@ renderer_map = {
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=True),
         hifv.tasks.flagging.checkflag.Checkflag  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_checkflag.html', always_rerender=True),
         hifv.tasks.semiFinalBPdcals              : T2_4MDetailssemifinalBPdcalsRenderer('t2-4m_details-hifv_semifinalbpdcals.html', always_rerender=True),
-        hifv.tasks.fluxscale.solint.Solint       : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_solint.html', always_rerender=True),
-        hifv.tasks.fluxscale.testgains.Testgains : T2_4MDetailstestgainsRenderer('t2-4m_details-hifv_testgains.html', always_rerender=True),
+        hifv.tasks.fluxscale.solint.Solint       : T2_4MDetailsSolintRenderer('t2-4m_details-hifv_solint.html', always_rerender=True),
         hifv.tasks.setmodel.fluxgains.Fluxgains  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_fluxgains.html', always_rerender=True),
         hifv.tasks.fluxscale.fluxboot.Fluxboot   : T2_4MDetailsfluxbootRenderer('t2-4m_details-hifv_fluxboot.html', always_rerender=True),
         hifv.tasks.Finalcals                     : T2_4MDetailsfinalcalsRenderer('t2-4m_details-hifv_finalcals.html', always_rerender=True),

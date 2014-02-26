@@ -102,7 +102,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_solint(pipelinemode=pipelinemode)
     
         # Do test gain calibrations to establish short solint
-        hifv_testgains (pipelinemode=pipelinemode)
+        ##hifv_testgains (pipelinemode=pipelinemode)
     
         # Make gain table for flux density bootstrapping
         # Make a gain table that includes gain and opacity corrections for final
