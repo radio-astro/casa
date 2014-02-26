@@ -267,7 +267,7 @@ class sdstat_worker(sdutil.sdtask_template):
             del msks
 
         # set the mask region
-        elif ( len(self.masklist) > 0):
+        elif ( len(self.masklist) > 0 and self.masklist!=[[]]):
             self.msk=self.scan.create_mask(self.masklist,invert=False)
             msks=self.scan.get_masklist(self.msk)
             if len(msks) < 1:

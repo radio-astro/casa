@@ -345,12 +345,12 @@ class sdtask_template(sdtask_interface):
                         fval = normalise_restfreq(self.restfreq)
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
-        #elif hasattr(self, 'spw') and self.spw != '' and \
-        #         hasattr(self,'restfreq'):
-        #    if self.restfreq not in ['',[]]:
-        #        fval = normalise_restfreq(self.restfreq)
-        #        casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
-        #        self.scan.set_restfreqs(freqs=fval)
+        elif hasattr(self, 'spw') and self.spw != '' and \
+                hasattr(self,'restfreq'):
+           if self.restfreq not in ['',[]]:
+               fval = normalise_restfreq(self.restfreq)
+               casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
+               self.scan.set_restfreqs(freqs=fval)
 
 class sdtask_template_imaging(sdtask_interface):
     """
