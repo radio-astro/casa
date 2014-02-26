@@ -4783,13 +4783,15 @@ but can be performed over several contiguous spectral channels.
 If the image has a clean beam, the report will contain both the convolved
 and the deconvolved fit results.
 
-When dooff is False, the method returns a dictionary with two keys, 'converged' and 'results'.
-The value of 'converged' is a boolean array which indicates if the fit converged
-on a channel by channel basis.
-The value of 'results' is a dictionary representing a component list reflecting the
-fit results. In the case of a deconvolved image, the sizes and position angles are those
-of the source convolved with the restoring beam. For convenience, the 'results' dictionary can
-be read into a compoenent list tool (default tool is named cl) using the fromrecord() method
+When dooff is False, the method returns a dictionary with three keys, 'converged', 'results',
+and 'deconvolved'. The value of 'converged' is a boolean array which indicates if the fit
+converged on a channel by channel basis. The value of 'results' is a dictionary representing
+a component list reflecting the fit results. In the case of an image containing beam information,
+the sizes and position angles in the 'results' dictionary are those of the source(s) convolved
+with the restoring beam, while the same parameters in the 'deconvolved dictionary represent the
+source sizes deconvolved from the beam. In the case where the image does not contain a beam,
+'deconvolved' will be absent. Both the 'results' and 'deconvolved' dictionaries can
+be read into a component list tool (default tool is named cl) using the fromrecord() method
 for easier inspection using tool methods, eg
 
 cl.fromrecord(res['results'])

@@ -93,6 +93,7 @@ twogim = "2g.im"
 twogest = "2g_estimates.txt"
 circular = "circular_gaussian.im"
 kimage = "bunitk.im"
+decon_im = "decon_test.im"
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/'
 
@@ -150,7 +151,7 @@ class imfit_test(unittest.TestCase):
             # removing this image with rmtree() etc fails on mac
             # noisy_image,
             noisy_image_xx, expected_model, expected_residual, convolved_model,
-            estimates_convolved, two_gaussians_image, two_gaussians_estimates,
+            estimates_convolved, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
         ] :
@@ -989,19 +990,24 @@ class imfit_test(unittest.TestCase):
         method = "test_CAS_2595"
         test = "test_CAS_2595"
         mycl = cltool()
-        complist = "mycomplist.tbl"
-        def run_fitcomponents(imagename, estimates, overwrite):
+        complist = "mycomplist_CAS-2595.tbl"
+        def run_fitcomponents(imagename, estimates, overwrite, box=""):
             myia = iatool()
             myia.open(imagename)
-            res = myia.fitcomponents(complist=complist, estimates=estimates, overwrite=overwrite)
+            res = myia.fitcomponents(
+                complist=complist, estimates=estimates,
+                box=box, overwrite=overwrite
+            )
             myia.done()
             return res
-        def run_imfit(imagename, estimates, overwrite):
+        def run_imfit(imagename, estimates, overwrite, box=""):
             default('imfit')
-            return imfit(imagename=imagename, estimates=estimates, complist=complist, overwrite=overwrite)
-        #for i in [noisy_image ,two_gaussians_image]:
+            return imfit(
+                imagename=imagename, estimates=estimates, box=box,
+                complist=complist, overwrite=overwrite
+            )
         for code in (run_fitcomponents, run_imfit):
-            res = code(noisy_image, "", False)
+            res = code(noisy_image, "", False, "130,92,169,130")
             mycl.open(complist)
             self.assertTrue(
                 mycl.length() == 1,
@@ -1009,7 +1015,10 @@ class imfit_test(unittest.TestCase):
             )
             mycl.done()
             # don't overwrite existing comp list
-            res = code(two_gaussians_image, two_gaussians_estimates, False)
+            res = code(
+                two_gaussians_image, two_gaussians_estimates, False,
+                "31, 172, 89, 232, 128, 91, 171, 134"
+            )
             mycl.open(complist)
             self.assertTrue(
                 mycl.length() == 1,
@@ -1017,7 +1026,10 @@ class imfit_test(unittest.TestCase):
             )
             mycl.done()
             # now overwrite existing comp list
-            res = code(two_gaussians_image, two_gaussians_estimates, True)
+            res = code(
+                two_gaussians_image, two_gaussians_estimates, True,
+                "31, 172, 89, 232, 128, 91, 171, 134"
+            )
             mycl.open(complist)
             self.assertTrue(
                 mycl.length() == 2,
@@ -1033,7 +1045,7 @@ class imfit_test(unittest.TestCase):
         method = "test_CAS_2999"
         test = "test_CAS_2999"
         imagename = multiplane_image
-        complist = "mycomplist.tbl"
+        complist = "mycomplist_CAS-2999.tbl"
         estimates = two_gauss_multiplane_estimates
         chans = "0~3"
         resid = "residualImage_multi"
@@ -1523,6 +1535,58 @@ class imfit_test(unittest.TestCase):
             got = mycl.getfluxerror(0)[0]
             self.assertTrue(abs(got - 2514) < 1)
             
+    def test_deconvolved_dictionary(self):
+        """Test deconvolved dictionary"""
+        def _comp_lists(zz):
+            decon = cltool()
+            decon.fromrecord(zz['deconvolved'])
+            con = cltool()
+            con.fromrecord(zz['results'])
+            self.assertTrue((decon.getfluxvalue(0) == con.getfluxvalue(0)).all())
+            self.assertTrue((decon.getfluxerror(0) == con.getfluxerror(0)).all())
+            self.assertTrue((decon.getfluxunit(0) == con.getfluxunit(0)))
+            self.assertTrue((decon.getrefdir(0) == con.getrefdir(0)))
+            self.assertTrue((decon.getspectrum(0) == con.getspectrum(0)))
+            self.assertFalse((decon.getshape(0) == con.getshape(0)))
+            return [decon, con]
+            
+        shutil.copytree(datapath + decon_im, decon_im)
+        myia = iatool()
+        myia.open(decon_im)
+        myia.setrestoringbeam("3arcmin", "3arcmin", "0deg")
+        zz = imfit(imagename=decon_im)
+        [decon, con] = _comp_lists(zz)
+        dshape = decon.getshape(0)
+        cshape = con.getshape(0)
+        self.assertTrue(abs(dshape['majoraxis']['value'] - 230) < 1)
+        self.assertTrue(abs(dshape['minoraxis']['value'] - 141) < 1)
+        self.assertTrue(abs(cshape['majoraxis']['value'] - 292) < 1)
+        self.assertTrue(abs(cshape['minoraxis']['value'] - 229) < 1)
+        myia.setrestoringbeam("4arcmin", "4arcmin", "0deg")
+        zz = imfit(imagename=decon_im)
+        [decon, con] = _comp_lists(zz)
+        dshape = decon.getshape(0)
+        cshape = con.getshape(0)
+        major = dshape['majoraxis']['value']
+        minor = dshape['minoraxis']['value']
+        self.assertTrue(major < 1e-59 and major > 0)
+        self.assertTrue(minor < 1e-59 and minor > 0)
+        self.assertTrue(abs(cshape['majoraxis']['value'] - 292) < 1)
+        self.assertTrue(abs(cshape['minoraxis']['value'] - 229) < 1)
+        myia.setrestoringbeam("5arcmin", "5arcmin", "0deg")
+        zz = imfit(imagename=decon_im)
+        [decon, con] = _comp_lists(zz)
+        dshape = decon.getshape(0)
+        cshape = con.getshape(0)
+        self.assertTrue(
+            decon.torecord()['component0']['shape']['type'] == 'Point'
+        )
+        self.assertTrue(abs(cshape['majoraxis']['value'] - 292) < 1)
+        self.assertTrue(abs(cshape['minoraxis']['value'] - 229) < 1)
+        
+        decon.done()
+        con.done()
+        myia.done()
 
         
 

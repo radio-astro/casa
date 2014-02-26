@@ -1992,9 +1992,10 @@ image* image::transpose(
 			new ImageFitter(
 				image, "", regionRecord.get(), box, sChans,
 				stokes, mask, includepix, excludepix, residual, model,
-				estimates, newestimates, complist, writeControl
+				estimates, newestimates, complist
 			)
 		);
+		fitter->setWriteControl(writeControl);
 		fitter->setStretch(stretch);
 		if (! logfile.empty()) {
 			fitter->setLogfile(logfile);
@@ -2006,22 +2007,30 @@ image* image::transpose(
 		if (rms != 0) {
 			fitter->setRMS(rms);
 		}
-		ComponentList compList = fitter->fit();
+		std::pair<ComponentList, ComponentList> compLists = fitter->fit();
 		Vector<casa::Quantity> flux;
 		Vector<Bool> converged = fitter->converged();
-		Record returnRecord, compListRecord;
+		Record returnRecord, convolved, deconvolved;
 		String error;
 
 		Vector<String> allowFluxUnits(2, "Jy.km/s");
 		allowFluxUnits[1] = "K.rad2";
 		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 
-		if (!compList.toRecord(error, compListRecord)) {
-			_log << "Failed to generate output record from result. " << error
-				<< LogIO::EXCEPTION;
+		ThrowIf(
+			! compLists.first.toRecord(error, convolved),
+			"Failed to generate output record convolved list. " + error
+		);
+
+		returnRecord.defineRecord("results", convolved);
+		if (compLists.second.nelements() > 0) {
+			ThrowIf(
+				! compLists.second.toRecord(error, deconvolved),
+				"Failed to generate output record from deconvolved list. " + error
+			);
+			returnRecord.defineRecord("deconvolved", deconvolved);
 		}
-		FluxRep<Double>::clearAllowedUnits();
-		returnRecord.defineRecord("results", compListRecord);
+
 		returnRecord.define("converged", converged);
 		if (dooff) {
 			vector<Double> zeroSol, zeroErr;
@@ -2029,9 +2038,11 @@ image* image::transpose(
 			returnRecord.define("zerooff", Vector<Double>(zeroSol));
 			returnRecord.define("zeroofferr", Vector<Double>(zeroErr));
 		}
+		FluxRep<Double>::clearAllowedUnits();
+
 		return fromRecord(returnRecord);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		FluxRep<Double>::clearAllowedUnits();
 		_log << "Exception Reported: " << x.getMesg()
 			<< LogIO::EXCEPTION;
