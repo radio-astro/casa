@@ -70,7 +70,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, const Bool radial=False );
     void getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     //Get the 1-D slices of the feathering function that will be applied on SD and INTerf data
-    void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    //If normalize=False for the SD then the value for Jy/beam correction to final beam size is multiplied to 
+    //the function
+    void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False, Bool normalize=True);
     void getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     //Get 1-D slices of the feathered data ...
     //note for SD  this
