@@ -433,7 +433,10 @@ if the list has a single float it is assumed to be the gain in Jy/K,
 if two or more elements they are assumed to be telescope diameter (m)
 and aperture efficiency respectively.
 
-WARNING for the GBT raw SDFITS format data as input:
+-------
+WARNING
+-------
+For the GBT raw SDFITS format data as input:
 SDtasks are able to handle GBT raw SDFITS format data since the 
 data filler is available. However, the functionality is not well 
 tested yet, so that there may be unknown bugs.  

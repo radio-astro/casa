@@ -130,7 +130,7 @@ for atmospheric optical depth correction.
     </param>
 
     <param type="bool" name="verify">
-            <description>interactively verify the results of operation for each spectrum [True, False] (see description in help) </description>
+            <description>interactively verify the results of operation [True, False] (see description in help) </description>
             <value>False</value>
     </param>
 
@@ -336,16 +336,13 @@ calmode -- calibration mode
 
 tau -- the zenith atmospheric optical depth for correction 
         default: 0.0 (no correction)
-verify -- interactively verify the results of smoothing for each spectrum.
-          When verify = True, for each input spectrum, spectra
-          before and after the operation are displayed in a plot
-          window. At the prompt there are four choices of action:
-          'Y' (accept the operation and continue to the next input
-          spectrum), 'N' (reject the operation and continue to the 
-          next input spectrum), 'A' (accept the current operation
-          and continue non-interactively), and 'R' (reject the
-          current operation and exit from operation).
-          Note that when the operation is rejected by 'N' or 'R',
+verify -- interactively verify the results of calibration.
+          When verify = True, for the first six on-source spectra (at
+          max), spectra before and after the calibration are displayed
+          in a plot window. At the prompt there are two choices of
+          action: 'Y' (accept the operation for whole dataset),
+          'N' (reject the operation and finish task).
+          Note that when the operation is rejected by 'N',
           no operation is done to the spectrum/spectra.
         options: (bool) True,False
         default: False
