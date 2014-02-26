@@ -45,8 +45,8 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Make a gain table that includes gain and opacity corrections for final amp cal and for flux density bootstrapping.
-Fit the spectral index of calibrators with a power-law and put the fit in the model column.</p>
+<p>Make a gain table that includes gain and opacity corrections for final amp cal and for flux density bootstrapping.</p>
+<p>Fit the spectral index of calibrators with a power-law and put the fit in the model column.</p>
 
 % for ms in summary_plots:
     
@@ -76,5 +76,65 @@ Fit the spectral index of calibrators with a power-law and put the fit in the mo
             % endif
         % endfor
     </ul>
+    
+    
+    
+    % for row in spindex_results[ms]:
+    <table class="table table-bordered table-striped table-condensed"
+	   summary="Spectral Indices">
+	<caption>Spectral Indices</caption>
+        <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Source</th>
+	        <th scope="col" rowspan="2">Band</th>
+		<th scope="col" rowspan="2">Fitted Spectral Index</th>
+		<th scope="col" rowspan="2">SNR</th>
+	    </tr>
+
+	</thead>
+	<tbody>
+
+		<tr>
+		        <td>${row['source']}</td>
+			<td>${row['band']}</td>
+			<td>${row['spix']}</td>
+			<td>${row['SNR']}</td>
+		</tr>
+
+
+	</tbody>
+    </table>
+    % endfor
+    
+    
+    
+    
+    % for row in weblog_results[ms]:
+    <table class="table table-bordered table-striped table-condensed"
+	   summary="Fitting data with a power law">
+	<caption>Fitting data with a power law</caption>
+        <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Frequency [GHz]</th>
+	        <th scope="col" rowspan="2">Data</th>
+		<th scope="col" rowspan="2">Error</th>
+		<th scope="col" rowspan="2">Fitted Data</th>
+	    </tr>
+
+	</thead>
+	<tbody>
+
+	
+		<tr>
+		        <td>${row['freq']}</td>
+			<td>${row['data']}</td>
+			<td>${row['error']}</td>
+			<td>${row['fitteddata']}</td>
+		</tr>
+
+
+	</tbody>
+    </table>
+    % endfor
 
 %endfor

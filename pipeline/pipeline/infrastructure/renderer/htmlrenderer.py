@@ -3666,6 +3666,8 @@ class T2_4MDetailsfluxbootRenderer(T2_4MDetailsDefaultRenderer):
                                   'stage%s' % results.stage_number)
         
         summary_plots = {}
+        weblog_results = {}
+        spindex_results = {}
 
         for result in results:
             
@@ -3673,8 +3675,12 @@ class T2_4MDetailsfluxbootRenderer(T2_4MDetailsDefaultRenderer):
             plots = plotter.plot()
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = plots
+            weblog_results[ms] = result.weblog_results
+            spindex_results[ms] = result.spindex_results
             
         ctx.update({'summary_plots'   : summary_plots,
+                    'weblog_results'  : weblog_results,
+                    'spindex_results' : spindex_results,
                     'dirname'         : weblog_dir})
                 
         return ctx

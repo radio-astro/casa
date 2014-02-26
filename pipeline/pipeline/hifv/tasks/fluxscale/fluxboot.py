@@ -42,7 +42,7 @@ class FluxbootInputs(basetask.StandardInputs):
 
 
 class FluxbootResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], sources=[], flux_densities=[], spws=[]):
+    def __init__(self, final=[], pool=[], preceding=[], sources=[], flux_densities=[], spws=[], weblog_results=[],spindex_results=[]):
         super(FluxbootResults, self).__init__()
 
         self.vis = None
@@ -53,6 +53,8 @@ class FluxbootResults(basetask.Results):
         self.sources = sources
         self.flux_densities = flux_densities
         self.spws = spws
+        self.weblog_results = weblog_results
+        self.spindex_results = spindex_results
 
         
     def merge_with_context(self, context):
@@ -154,10 +156,10 @@ class Fluxboot(basetask.StandardTaskTemplate):
         #LOG.info("Flux densities will be written to " + fluxscale_output)
         fluxscale_result = self._do_fluxscale(context)
         LOG.info("Fitting data with power law")
-        powerfit_results = self._do_powerfit(context, fluxscale_result)
+        powerfit_results, weblog_results, spindex_results = self._do_powerfit(context, fluxscale_result)
         setjy_result = self._do_setjy('calibrators.ms', powerfit_results)
 
-        return FluxbootResults(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities, spws=self.inputs.spws)                        
+        return FluxbootResults(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities, spws=self.inputs.spws, weblog_results=weblog_results, spindex_results=spindex_results)                        
 
 
 
@@ -270,6 +272,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
         ii = 0
         unique_sources = list(np.unique(sources))
         results = []
+        weblog_results = []
+        spindex_results = []
         
         print 'fluxscale result: ', fluxscale_result
         print 'unique_sources: ', unique_sources
@@ -381,17 +385,25 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 spix = bb
                 results.append([ source, uspws, fluxdensity, spix, SNR, reffreq ])
                 LOG.info(source + ' ' + band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR))
+                spindex_results.append({'source': source,
+                                        'band'  : band,
+                                        'spix'  : str(spix),
+                                        'SNR'   : str(SNR)})
                 LOG.info("Frequency, data, error, and fitted data:")
                 for ii in range(len(lfreqs)):
                     SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
                     fderr = lerrs[ii]*(10**lfds[ii])/math.log10(math.e)
                     LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(fderr)+'  '+str(SS))
+                    weblog_results.append({'freq' : str(10.0**lfreqs[ii]/1.0e9),
+                                           'data' : str(10.0**lfds[ii]),
+                                           'error': str(fderr),
+                                           'fitteddata': str(SS)})
         
         self.spix = spix
         
         LOG.info("Setting power-law fit in the model column")
         
-        return results
+        return results, weblog_results, spindex_results
                 
     def _do_setjy(self, calMs, results):
         

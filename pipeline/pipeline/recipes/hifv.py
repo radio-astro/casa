@@ -107,7 +107,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         # Make gain table for flux density bootstrapping
         # Make a gain table that includes gain and opacity corrections for final
         # amp cal, for flux density bootstrapping
-        hifv_fluxgains (pipelinemode=pipelinemode)
+        ##hifv_fluxgains (pipelinemode=pipelinemode)
     
         # Do the flux density boostrapping -- fits spectral index of
         # calibrators with a power-law and puts fit in model column
@@ -223,14 +223,14 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
         hifv_solint(pipelinemode=pipelinemode)
     
         # Do test gain calibrations to establish short solint
-        hifv_testgains (pipelinemode=pipelinemode)
-        h_save()
+        ##hifv_testgains (pipelinemode=pipelinemode)
+        ##h_save()
         #testgains_plots()
     
         # Make gain table for flux density bootstrapping
         # Make a gain table that includes gain and opacity corrections for final
         # amp cal, for flux density bootstrapping
-        hifv_fluxgains (pipelinemode=pipelinemode)
+        ##hifv_fluxgains (pipelinemode=pipelinemode)
     
         # Do the flux density boostrapping -- fits spectral index of
         # calibrators with a power-law and puts fit in model column
