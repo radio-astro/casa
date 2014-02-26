@@ -95,6 +95,12 @@ ComponentShape& ComponentShape::operator=(const ComponentShape& other) {
   return *this;
 }
 
+void ComponentShape::copyDirectionInfo(const ComponentShape& that) {
+	// Call only this class' = method only, not the subclass version
+	ComponentShape::operator=(that);
+}
+
+
 void ComponentShape::setRefDirection(const MDirection& newRefDir) {
   itsDir = newRefDir;
   DebugAssert(ComponentShape::ok(), AipsError);
