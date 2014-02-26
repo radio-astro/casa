@@ -141,6 +141,13 @@ public slots:
 	void toAscii( const QString& filePath );
 	void toPing( const QString& filtPath, int width, int height );
 
+	//The channel has changed value.
+	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic );
+
+	//Histogramming an image versus a region.
+	void imageModeSelected( bool enabled );
+	void regionModeSelected( bool enabled );
+
 protected:
     virtual void resizeEvent( QResizeEvent* event );
     virtual void keyPressEvent( QKeyEvent* event );
@@ -175,9 +182,7 @@ private slots:
 	//Zoom based on an intensity range specified by the user using the zoom context menu.
 	void zoomPercentage( float minValue, float maxValue);
 	void binCountChanged( int count );
-	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic );
-	void imageModeSelected( bool enabled );
-	void regionModeSelected( bool enabled );
+
 	void regionAllModeSelected( bool enabled );
 
 private:

@@ -79,6 +79,7 @@ namespace casa {
 			includePixs[i] = include[i];
 		}
 		int excludeCount = exclude.size();
+		excludePixs.resize( excludeCount );
 		for ( int i = 0; i < excludeCount; i++ ) {
 			excludePixs[i] = exclude[i];
 		}

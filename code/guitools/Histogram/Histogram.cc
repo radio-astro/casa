@@ -149,7 +149,7 @@ void Histogram::setRegion( ImageRegion* region ){
 
 bool Histogram::reset(){
 	bool success = true;
-	if ( image != NULL ){
+	if ( image.get() != NULL ){
 		if ( histogramMaker != NULL ){
 			delete histogramMaker;
 			histogramMaker = NULL;
@@ -178,7 +178,6 @@ bool Histogram::reset(){
 			if ( heightSource != NULL ){
 				QString msg( "Could not make a histogram of the region: ");
 				msg.append( error.getMesg().c_str() );
-				qDebug() << "Could not make histogram message="<<msg;
 				heightSource->postMessage( msg );
 			}
 		}

@@ -351,6 +351,7 @@ void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allCha
 			histogramMap[*iter]->setChannelRange( minValue, maxValue );
 		}
 	}
+
 	int selectedId = getSelectedId();
 	if ( histogramMap.contains( selectedId )){
 		histogramMap[selectedId]->reset();
@@ -680,8 +681,12 @@ int BinPlotWidget::getSelectedId() const {
 	//can find.
 	if ( selectedId == IMAGE_ID && plotMode != FootPrintWidget::IMAGE_MODE ){
 		QList<int> keys = histogramMap.keys();
-		if ( keys.size() > 0 ){
-			id = keys[0];
+		int keyCount = keys.size();
+		for ( int i = 0; i < keyCount; i++ ){
+			if ( keys[i] != IMAGE_ID ){
+				id = keys[i];
+				break;
+			}
 		}
 	}
 	return id;
@@ -1172,7 +1177,7 @@ std::vector<float> BinPlotWidget::getXValues() const {
 
 bool BinPlotWidget::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img ){
 	bool success = true;
-	if ( image != img && img.get() != NULL ){
+	if ( img.get() != NULL && image.get() != img.get()){
 		image = img;
 		clearHistograms();
 		clearAll();
@@ -1227,7 +1232,7 @@ void BinPlotWidget::resetRegion( ){
 
 bool BinPlotWidget::resetImage(){
 	bool success = true;
-	if ( image != NULL ){
+	if ( image.get() != NULL ){
 		if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 			Histogram* histogram = findHistogramFor( IMAGE_ID );
 			histogram->setImage( image );

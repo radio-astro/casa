@@ -82,6 +82,9 @@ void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
 
 void RangeControlsWidget::setImage(const std::tr1::shared_ptr<const ImageInterface<Float > > image ){
 	this->image = image;
+	Unit unit = this->image->units();
+	QString unitStr( unit.getName().c_str());
+	ui.unitsLabel->setText( unitStr );
 }
 
 void RangeControlsWidget::percentageChanged( const QString& newPercentage ){

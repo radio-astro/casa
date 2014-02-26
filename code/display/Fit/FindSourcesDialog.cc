@@ -717,9 +717,9 @@ namespace casa {
 					resetCurrentId( id );
 					populatePixelBox();
 					regionChanged = true;
-				} else {
-					qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
-				}
+				} /*else {
+					qDebug() << "FitSources::updateRegion unrecognized id="<<id;
+				}*/
 			} else {
 				RegionBox* regionToRemove = regions.take(id);
 				delete regionToRemove;

@@ -445,8 +445,6 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
 	if ( shown == "false" ) animationHolder->dismiss( );
 
-	initFit2DTool();
-
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 	std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
 	trkgDockWidget_  = new CursorTrackingHolder( this );
@@ -773,7 +771,7 @@ string QtDisplayPanelGui::addAnimationDockWidget() {
 
 void QtDisplayPanelGui::initAnimationHolder() {
 	if ( animationHolder == NULL ) {
-		animationImageIndex = -1;
+		animationImageIndex = 0;
 
 		animationHolder = new AnimatorHolder( this, this );
 		connect(animationHolder, SIGNAL(revPlayChannelMovie()), SLOT(revPlayChannelMovie_()));
@@ -927,6 +925,12 @@ void QtDisplayPanelGui::resetListenerImage() {
 				} else {
 					histogrammer->setChannelCount( 1 );
 				}
+			}
+
+			if ( fitTool != NULL ){
+				fitTool->setImage( img );
+			}
+			if ( fitTool != NULL || histogrammer != NULL ){
 				generateHistogramRegionUpdates();
 			}
 
@@ -934,7 +938,9 @@ void QtDisplayPanelGui::resetListenerImage() {
 			if ( histogrammer != NULL ) {
 				histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
 			}
-
+			if ( fitTool != NULL ){
+				fitTool->setImage( std::tr1::shared_ptr<ImageInterface<Float> >());
+			}
 		}
 	}
 }
@@ -994,97 +1000,108 @@ void QtDisplayPanelGui::histogramRegionChange( int id, viewer::region::RegionCha
 				regionIterator++;
 			}
 		}
-	} else if ( change == viewer::region::RegionChangeDelete ) {
-		histogrammer->deleteImageRegion( id );
-	} else if ( change == viewer::region::RegionChangeSelected ) {
-		histogrammer->imageRegionSelected( id );
+	}
+	else if ( change == viewer::region::RegionChangeDelete ) {
+		if ( histogrammer != NULL ){
+			histogrammer->deleteImageRegion( id );
+		}
+		if ( fitTool != NULL ){
+			fitTool->deleteImageRegion( id );
+		}
+	}
+	else if ( change == viewer::region::RegionChangeSelected ) {
+		if ( histogrammer != NULL ){
+			histogrammer->imageRegionSelected( id );
+		}
+		if ( fitTool != NULL ){
+			fitTool->imageRegionSelected( id );
+		}
 	}
 }
 
 
 void QtDisplayPanelGui::resetHistogram( viewer::Region* region ) {
-	if ( region != NULL && histogrammer != NULL ) {
-		QtDisplayData* controllingDD = dd();
+	if ( region != NULL && qdp_ != NULL ) {
+		QtDisplayData* controllingDD = qdp_->getRegistered(animationImageIndex);
 		if ( controllingDD != NULL ) {
 			ImageRegion* imageRegion = region->getImageRegion(controllingDD->dd());
 			if ( imageRegion != NULL ) {
 				int regionId = region->getId();
-				histogrammer->setImageRegion( imageRegion, regionId );
+				if ( histogrammer != NULL ){
+					histogrammer->setImageRegion( imageRegion, regionId );
+				}
+				else if ( fitTool != NULL ){
+					fitTool->setImageRegion( imageRegion, regionId );
+				}
 			}
 		}
-	} else {
+	}
+	else {
 		qDebug() << "Update region getting a null region";
 	}
 }
 
-void QtDisplayPanelGui::refreshFit() {
-	if ( fitTool != NULL ) {
-		QtDisplayData* controllingDD = dd();
-		if ( controllingDD != NULL ) {
-			std::tr1::shared_ptr<ImageInterface<Float> > img = controllingDD->imageInterface();
-			fitTool->setImage( img );
-		}
-		else {
-			std::tr1::shared_ptr<ImageInterface<Float> > p;
-			fitTool->setImage( p);
-		}
-	}
-}
-
-
 
 void QtDisplayPanelGui::initFit2DTool() {
-	PanelDisplay* panelDisplay = qdp_->panelDisplay();
-	fitTool = new Fit2DTool( this );
+	if ( qdp_ != NULL ){
+		PanelDisplay* panelDisplay = qdp_->panelDisplay();
+		fitTool = new Fit2DTool( this );
+		resetListenerImage();
 
-	connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshFit()));
-	connect( fitTool, SIGNAL(showOverlay(String, const QString&)),
+		connect( fitTool, SIGNAL(showOverlay(String, const QString&)),
 			this, SLOT(addSkyComponentOverlay(String, const QString&)));
-	connect( fitTool, SIGNAL(addResidualFitImage(String)), this, SLOT(addResidualFitImage(String)));
-	connect( fitTool, SIGNAL(removeOverlay(String)),this, SLOT(removeSkyComponentOverlay(String)));
-	connect( fitTool, SIGNAL(remove2DFitOverlay( QList<RegionShape*>)),this, SLOT( remove2DFitOverlay(QList<RegionShape*>)));
-	connect( fitTool, SIGNAL(add2DFitOverlay( QList<RegionShape*> )),this, SLOT( add2DFitOverlay(QList<RegionShape*>)));
+		connect( fitTool, SIGNAL(addResidualFitImage(String)), this, SLOT(addResidualFitImage(String)));
+		connect( fitTool, SIGNAL(removeOverlay(String)),this, SLOT(removeSkyComponentOverlay(String)));
+		connect( fitTool, SIGNAL(remove2DFitOverlay( QList<RegionShape*>)),this, SLOT( remove2DFitOverlay(QList<RegionShape*>)));
+		connect( fitTool, SIGNAL(add2DFitOverlay( QList<RegionShape*> )),this, SLOT( add2DFitOverlay(QList<RegionShape*>)));
 
-	//Update the channel for the fit.
-	connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
-	refreshFit();
+		//Update the channel for the fit.
+		connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
 
-	//Connect drawing tools so that regions are updated for the fit.
-	std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
-	// one region source is shared among all of the tools...
-	// so there is no need to connect these signals for all of the tools...
-	if ( rect.get( ) != 0 ) {
-		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
-		if ( qrs ) {
-			connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+		//Connect drawing tools so that regions are updated for the fit.
+		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
+		// one region source is shared among all of the tools...
+		// so there is no need to connect these signals for all of the tools...
+		if ( rect.get( ) != 0 ) {
+			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+			if ( qrs ) {
+				connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
 					const QList<double> &, const QList<int> &, const QList<int> &,
 					const QString &, const QString &, const QString &, int, int ) ),
 					fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 							const QList<double> &, const QList<int> &, const QList<int> &,
 							const QString &, const QString &, const QString &, int, int ) ) );
-			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
 					const QList<int> &, const QList<int> & ) ),
 					fitTool, SLOT( updateRegion( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
 							const QList<int> &, const QList<int> & ) ) );
-			connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
+				connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
 					const QList<double> &, const QList<int> &, const QList<int> &,
 					const QString &, const QString &, const QString &, int, int ) ),
 					fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 							const QList<double> &, const QList<int> &, const QList<int> &,
 							const QString &, const QString &, const QString &, int, int ) ) );
-			qrs->generateExistingRegionUpdates( );
+				qrs->generateExistingRegionUpdates( );
+			}
 		}
 	}
 }
 
 
 void QtDisplayPanelGui::showFitInteractive() {
-	fitTool->showNormal();	// (Magic formula to bring a window up,
-	fitTool->raise();
+	if ( fitTool == NULL ){
+		initFit2DTool();
+	}
+	if ( fitTool != NULL ){
+		fitTool->showNormal();	// (Magic formula to bring a window up,
+		fitTool->raise();
+	}
 }
 
 void QtDisplayPanelGui::hideFit2DTool() {
-	fitTool->hide();
+	if ( fitTool != NULL ){
+		fitTool->hide();
+	}
 }
 
 

@@ -683,7 +683,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
 		void showFitInteractive();
 		void showCleanTool( );
-		void refreshFit();
 		void addSkyComponentOverlay(String path, const QString& colorName);
 		void removeSkyComponentOverlay( String path );
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );

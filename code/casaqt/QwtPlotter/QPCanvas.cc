@@ -419,7 +419,7 @@ double QPCanvas::axisReferenceValue(PlotAxis axis) const {
 }
 
 void QPCanvas::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
-    m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); 
+    m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value);
     int axisListenerCount = axisListeners.size();
        for ( int i = 0; i < axisListenerCount; i++ ){
        	axisListeners[i]->setAxisReferenceValue( axis, on, value );
@@ -755,6 +755,7 @@ void QPCanvas::setCachedAxesStackImageSize(int width, int height) {
 
 
 bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
+
     logMethod(CLASS_NAME, "plotItem", true);
     if(item.null() || !item->isValid()) {
         logMethod(CLASS_NAME, "plotItem", false);
@@ -811,7 +812,7 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
             contains = (i < m_usedColors.size());
         }
         
-	QString eh = QPPlotter::GLOBAL_COLORS[ri];
+        QString eh = QPPlotter::GLOBAL_COLORS[ri];
         QPColor color(eh);
         line.setColor(color);
         symbol.setColor(color);
@@ -831,21 +832,24 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
         m_legendFontSet = true;
     }
     
-    PlotAxis xAxis = item->xAxis(), yAxis = item->yAxis();
+    PlotAxis xAxis = item->xAxis();
+    PlotAxis yAxis = item->yAxis();
     if(!cartesianAxisShown(xAxis)){
     	enableAxis( QPOptions::axis(xAxis), true );
     }
     if(!cartesianAxisShown(yAxis)){
-    	enableAxis( QPOptions::axis(xAxis), true );
+    	enableAxis( QPOptions::axis(yAxis), true );
     }
     
     qitem->setZ(zOrder++);
     qitem->attach(this, layer);
     
-    if(layer == MAIN)
+    if(layer == MAIN){
         m_plotItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
-    else
+    }
+    else {
         m_layeredItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
+    }
     m_canvas.setLayerChanged(layer);
     
     if(replot) {
