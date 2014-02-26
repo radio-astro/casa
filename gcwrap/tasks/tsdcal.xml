@@ -46,6 +46,13 @@ for atmospheric optical depth correction.
 	    <shortdescription>units of the flux [\'K\' or \'Jy\'] (\'\'=current)</shortdescription>
 	    <description>units of the flux (\'\'=current)</description>
 	    <value></value>
+            <allowed kind="enum">
+                    <value></value>
+                    <value>K</value>
+                    <value>Jy</value>
+                    <value>k</value>
+                    <value>jy</value>
+            </allowed>
     </param>
 
     <param type="any" name="telescopeparam" subparam='true'>
@@ -55,12 +62,12 @@ for atmospheric optical depth correction.
     </param>
 
     <param type="string" name="field">
-	    <description>select data by field IDs and names, e.g. \'3C2*\' (\'\' = all)</description>
+	    <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
 	    <value></value>
     </param>
 
     <param type="string" name="spw">
-	    <description>select data by IF IDs (spectral windows), e.g., \'3,5,7\' (\'\' = all)</description>
+	    <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
 	    <value></value>
     </param>
 
@@ -91,7 +98,7 @@ for atmospheric optical depth correction.
     </param>
 
     <param type="any" name="fraction" subparam="true">
-	    <description>fraction of the OFF data to mark as OFF data, e.g., \'10%\'</description>
+	    <description>fraction of the OFF data to mark as OFF spectra, e.g., \'10%\'</description>
             <any type="variant" limittype="string double"/>
             <value type="string">10%</value>
     </param>
@@ -130,7 +137,7 @@ for atmospheric optical depth correction.
     </param>
 
     <param type="bool" name="verify">
-            <description>interactively verify the results of operation [True, False] (see description in help) </description>
+            <description>interactively verify the results of calibration [True, False] (see description in help)</description>
             <value>False</value>
     </param>
 

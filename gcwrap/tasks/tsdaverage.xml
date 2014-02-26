@@ -220,7 +220,7 @@ and/or polarization.
 
   <example>
 
-	Keyword arguments:
+Keyword arguments:
 infile -- name of input SD dataset
 antenna -- select an antenna name or ID
         default: 0
@@ -291,7 +291,7 @@ kernel -- type of spectral smoothing kernel
 	        example: 5 or 10 seem to be popular for boxcar
 	                 ignored for hanning (fixed at 5 chans)
                          (0 will turn off gaussian or boxcar)
-         chanwidth -- channel width of regridded spectra
+        chanwidth -- channel width of regridded spectra
 	         default: '5' (in channels)
 	         example: '500MHz', '0.2km/s'
         verify -- interactively verify the results of smoothing for each
