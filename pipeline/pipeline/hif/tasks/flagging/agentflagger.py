@@ -313,7 +313,14 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             return []
 
         f = flaghelper.readFile(filename)
-        flagcmds = flaghelper.makeDict(f)
+        flagcmds = flaghelper.parseDictionary(f)
+
+        # In using parseDictionary instead of makeDict, flagcmds['command'] 
+        # has changed format and is now an OrderedDict. Convert this 
+        # OrderedDict back to a string.
+        for d in flagcmds.values():
+            d['command'] = dict_to_cmd(d['command'])
+        
         return [flagcmds[k] for k in sorted(flagcmds.keys())]
 
     def _string_to_dict(self, cmdstring):
@@ -325,3 +332,11 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             v = False if v in ('False', '"False"', "'False'") else v
             d[k] = v
         return d
+
+
+def dict_to_cmd(d):
+    return ' '.join(map(_format_arg_value, d.items()))
+
+def _format_arg_value(arg_val):
+    arg, val = arg_val
+    return '%s=%s' % (arg, val)
