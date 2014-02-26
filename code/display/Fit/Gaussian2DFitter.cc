@@ -100,8 +100,8 @@ namespace casa {
 
 		// do the fit
 		try {
-			ComponentList componentList = fitter.fit();
-			fitResultList.fromComponentList( componentList );
+            std::pair<ComponentList, ComponentList> componentLists = fitter.fit();
+			fitResultList.fromComponentList( componentLists.first );
 
 			//If the fit did not converge record an error.
 			if (!fitter.converged(0)) {

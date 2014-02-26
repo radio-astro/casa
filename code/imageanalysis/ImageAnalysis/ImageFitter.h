@@ -103,7 +103,7 @@ public:
 
 	ImageFitter(
 			const SPCIIF image, const String& region,
-		const Record *const regionRec,
+		const Record *const &regionRec,
 		const String& box="",
 		const String& chanInp="", const String& stokes="",
 		const String& maskInp="",
@@ -111,16 +111,19 @@ public:
 		const Vector<Float>& excludepix = Vector<Float>(0),
 		const String& residualInp="", const String& modelInp="",
 		const String& estiamtesFilename="",
-		const String& newEstimatesInp="", const String& compListName="",
-		const CompListWriteControl writeControl=NO_WRITE
+		const String& newEstimatesInp="", const String& compListName=""
 	);
 
 	// destructor
 	~ImageFitter();
 
 	// Do the fit. If componentList is specified, store the fitted components in
-	// that object.
-	ComponentList fit();
+	// that object. The first list in the returned pair represents the convolved components.
+	// The second list represents the deconvolved components. If the image has no beam,
+	// the two lists will be the same.
+	std::pair<ComponentList, ComponentList> fit();
+
+	void setWriteControl(CompListWriteControl x) { _writeControl = x; }
 
 	inline String getClass() const {return _class;}
 
@@ -136,7 +139,7 @@ public:
 
 	// set the zero level estimate. Implies fitting of zero level should be done. Must be
 	// called before fit() to have an effect.
-	void setZeroLevelEstimate(const Double estimate, const Bool isFixed);
+	void setZeroLevelEstimate(Double estimate, Bool isFixed);
 
 	// Unset zero level (resets to zero). Implies fitting of zero level should not be done.
 	// Call prior to fit().
@@ -157,15 +160,15 @@ private:
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
 	Vector<Float> _includePixelRange, _excludePixelRange;
-	ComponentList _estimates, _curResults;
-	Vector<String> _fixed;
+	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
+	Vector<String> _fixed, _deconvolvedMessages;
 	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
 	Record _residStats, inputStats;
-	Double /*_chiSquared,*/ _rms;
+	Double _rms;
 	String _kludgedStokes;
 	CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;
@@ -190,7 +193,7 @@ private:
 	String _resultsToString();
 
 	//summarize the size details in a nicely formatted string
-	String _sizeToString(const uInt compNumber) const;
+	String _sizeToString(const uInt compNumber);
 
 	String _fluxToString(uInt compNumber) const;
 
@@ -204,6 +207,8 @@ private:
 
 	// Set the convolved sizes of the fitted components.
 	void _setSizes();
+
+	void _setDeconvolvedSizes();
 
 	void _getStandardDeviations(Double& inputStdDev, Double& residStdDev) const;
 
@@ -226,7 +231,6 @@ private:
 	    Array<Bool>& pixelMask, Bool& converged,
 	    Double& zeroLevelOffsetSolution,
 	    Double& zeroLevelOffsetError,
-	    const uInt& chan,
 		const Vector<String>& models,
 		const Bool fitIt,
 		const Bool deconvolveIt, const Bool list,

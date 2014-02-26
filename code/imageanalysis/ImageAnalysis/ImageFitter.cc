@@ -1,36 +1,7 @@
-//# tSubImage.cc: Test program for class SubImage
-//# Copyright (C) 1998,1999,2000,2001,2003
-//# Associated Universities, Inc. Washington DC, USA.
-//#
-//# This program is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or (at your option)
-//# any later version.
-//#
-//# This program is distributed in the hope that it will be useful, but WITHOUT
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-//# more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with this program; if not, write to the Free Software Foundation, Inc.,
-//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
-//#
-//# $Id: $
-
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
 #include <casa/Containers/HashMap.h>
 #include <casa/Containers/HashMapIter.h>
-//#include <casa/IO/FilebufIO.h>
-//#include <casa/IO/FiledesIO.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/UnitMap.h>
@@ -40,6 +11,7 @@
 #include <casa/Utilities/Precision.h>
 
 #include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/SpectralModel.h>
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
@@ -72,14 +44,13 @@ const String ImageFitter::_class = "ImageFitter";
 
 ImageFitter::ImageFitter(
 		const SPCIIF image, const String& region,
-	const Record *const regionRec,
+	const Record *const &regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const String& residualInp,
 	const String& modelInp, const String& estimatesFilename,
-	const String& newEstimatesInp, const String& compListName,
-	const CompListWriteControl writeControl
+	const String& newEstimatesInp, const String& compListName
 ) : ImageTask<Float>(
 		image, region, regionRec, box,
 		chanInp, stokes,
@@ -91,8 +62,8 @@ ImageFitter::ImageFitter(
 	_excludePixelRange(excludepix), _estimates(), _fixed(0),
 	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
-	_fitConverged(Vector<Bool>(0)), _peakIntensities(), _rms(0),
-	_writeControl(writeControl), _zeroLevelOffsetEstimate(0),
+	_fitConverged(0), _peakIntensities(), _rms(0),
+	_writeControl(NO_WRITE), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0),
 	_stokesPixNumber(-1), _chanPixNumber(-1) {
 	if (
@@ -110,7 +81,7 @@ ImageFitter::ImageFitter(
 
 ImageFitter::~ImageFitter() {}
 
-ComponentList ImageFitter::fit() {
+std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	LogOrigin origin(_class, __FUNCTION__);;
 	*_getLog() << origin;
 	Bool converged;
@@ -158,7 +129,7 @@ ComponentList ImageFitter::fit() {
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
 	String resultsString = _resultsHeader();
 	*_getLog() << LogIO::NORMAL << resultsString << LogIO::POST;
-	ComponentList compList;
+	ComponentList convolvedList, deconvolvedList;
 	Bool anyConverged = False;
 	Array<Float> residPixels, modelPixels;
 	Double zeroLevelOffsetSolution, zeroLevelOffsetError;
@@ -171,24 +142,26 @@ ComponentList ImageFitter::fit() {
 		_setIncludeExclude(fitter);
 		Array<Float> pixels, curResidPixels, curModelPixels;
 		Array<Bool> pixelMask;
-		_curResults = ComponentList();
+		_curConvolvedList = ComponentList();
+		_curDeconvolvedList = ComponentList();
 		try {
 			_fitsky(
 				fitter, pixels, pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
-				_curChan, models,
+				models,
 				fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
 		}
 		catch (const AipsError& err) {
 			*_getLog() << origin << LogIO::WARN << "Fit failed to converge because of exception: "
 				<< err.getMesg() << LogIO::POST;
-			converged = false;
+			converged = False;
 		}
 		*_getLog() << origin;
 		anyConverged |= converged;
 		if (converged) {
-			compList.addList(_curResults);
+			convolvedList.addList(_curConvolvedList);
+			deconvolvedList.addList(_curDeconvolvedList);
 			if (_doZeroLevel) {
 				_zeroLevelOffsetSolution.push_back(
 					zeroLevelOffsetSolution
@@ -198,7 +171,6 @@ ComponentList ImageFitter::fit() {
 				);
 				zeroLevelOffsetEstimate = zeroLevelOffsetSolution;
 			}
-			//_chiSquared = fitter.chiSquared();
 			fitter.residual(curResidPixels, curModelPixels, pixels);
 			// coordinates arean't important, just need the stats for a masked lattice.
 			TempImage<Float> residPlane(
@@ -252,7 +224,8 @@ ComponentList ImageFitter::fit() {
 			Record estimatesRecord;
 			_setFluxes();
 			_setSizes();
-			_curResults.toRecord(errmsg, estimatesRecord);
+			_setDeconvolvedSizes();
+			_curConvolvedList.toRecord(errmsg, estimatesRecord);
 			*_getLog() << origin;
 		}
 		String currentResultsString = _resultsToString();
@@ -260,7 +233,7 @@ ComponentList ImageFitter::fit() {
 		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
 	}
 	if (anyConverged) {
-		_writeCompList(compList);
+		_writeCompList(convolvedList);
 	}
 	else {
 		*_getLog() << LogIO::WARN
@@ -303,10 +276,15 @@ ComponentList ImageFitter::fit() {
 		_writeNewEstimatesFile();
 	}
 	_writeLogfile(resultsString);
-	return compList;
+	std::pair<ComponentList, ComponentList> lists;
+	lists.first = convolvedList;
+	lists.second = deconvolvedList;
+	return lists;
 }
 
-void ImageFitter::setZeroLevelEstimate(const Double estimate, const Bool isFixed) {
+void ImageFitter::setZeroLevelEstimate(
+	Double estimate, Bool isFixed
+) {
 	_doZeroLevel = True;
 	_zeroLevelOffsetEstimate = estimate;
 	_zeroLevelIsFixed = isFixed;
@@ -318,14 +296,11 @@ void ImageFitter::unsetZeroLevelEstimate() {
 	_zeroLevelIsFixed = False;
 }
 
-void ImageFitter::getZeroLevelSolution(vector<Double>& solution, vector<Double>& error) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	if (! _fitDone) {
-		*_getLog() << "Fit hasn't been done yet." << LogIO::EXCEPTION;
-	}
-	if (! _doZeroLevel) {
-		*_getLog() << "Zero level was not fit." << LogIO::EXCEPTION;
-	}
+void ImageFitter::getZeroLevelSolution(
+	vector<Double>& solution, vector<Double>& error
+) {
+	ThrowIf(! _fitDone, "Fit hasn't been done yet");
+	ThrowIf(! _doZeroLevel, "Zero level was not fit");
 	solution = _zeroLevelOffsetSolution;
 	error = _zeroLevelOffsetError;
 }
@@ -336,14 +311,14 @@ void ImageFitter::setRMS(Double rms) {
 }
 
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
-    *_getLog() << LogOrigin("ImageFitter", __FUNCTION__);
+    *_getLog() << LogOrigin(_class, __FUNCTION__);
 	Bool doInclude = (_includePixelRange.nelements() > 0);
 	Bool doExclude = (_excludePixelRange.nelements() > 0);
-	if (doInclude && doExclude) {
-		*_getLog() << "You cannot give both an include and an exclude pixel range"
-			<< LogIO::EXCEPTION;
-	}
-	else if (!doInclude && !doExclude) {
+	ThrowIf(
+		doInclude && doExclude,
+		"You cannot give both an include and an exclude pixel range"
+	);
+	if (!doInclude && !doExclude) {
 		*_getLog() << LogIO::NORMAL << "Selecting all pixel values because neither "
 			<< "includepix nor excludepix was specified" << LogIO::POST;
 		return;
@@ -356,7 +331,8 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 			*_getLog() << LogIO::NORMAL << "Selecting pixels from "
 				<< -abs(_includePixelRange(0)) << " to " << abs(_includePixelRange(0))
 				<< LogIO::POST;
-		} else if (_includePixelRange.nelements() > 1) {
+		}
+		else if (_includePixelRange.nelements() > 1) {
 			fitter.setIncludeRange(
 				_includePixelRange(0), _includePixelRange(1)
 			);
@@ -386,9 +362,7 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 }
 
 Bool ImageFitter::converged(uInt plane) const {
-	if (! _fitDone) {
-		throw AipsError("fit has not yet been performed");
-	}
+	ThrowIf(! _fitDone, "fit has not yet been performed");
 	return _fitConverged[plane];
 }
 
@@ -483,8 +457,6 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 
 	CasacRegionManager rm(_getImage()->coordinates());
 	uInt nSelectedChannels;
-	// Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
-	// uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
 	_chanVec = _getChans().empty()
 		? rm.setSpectralRanges(
 			nSelectedChannels, _getRegion(), _getImage()->shape()
@@ -573,7 +545,7 @@ String ImageFitter::_resultsToString() {
 	summary << "*** Details of fit for channel number " << _curChan << endl;
 
 	uInt relChan = _curChan - _chanVec[0];
-	if (converged(relChan)) {
+	if (_fitConverged[relChan]) {
 		if (_noBeam) {
 			*_getLog() << LogIO::WARN << "Flux density not reported because "
 					<< "there is no clean beam in image header so these quantities cannot "
@@ -589,9 +561,10 @@ String ImageFitter::_resultsToString() {
 				<< " +/- " << _zeroLevelOffsetError[relChan] << " "
 				<< units << endl;
 		}
-		for (uInt i = 0; i < _curResults.nelements(); i++) {
+		uInt n = _curConvolvedList.nelements();
+		for (uInt i = 0; i < n; i++) {
 			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
-			summary << _curResults.component(i).positionToString(&(_getImage()->coordinates())) << endl;
+			summary << _curConvolvedList.component(i).positionToString(&(_getImage()->coordinates())) << endl;
 			summary << _sizeToString(i) << endl;
 			summary << _fluxToString(i) << endl;
 			summary << _spectrumToString(i) << endl;
@@ -623,7 +596,7 @@ String ImageFitter::_statisticsToString() const {
 }
 
 void ImageFitter::_setFluxes() {
-	uInt ncomps = _curResults.nelements();
+	uInt ncomps = _curConvolvedList.nelements();
 	_fluxDensities.resize(ncomps);
 	_fluxDensityErrors.resize(ncomps);
 	_peakIntensities.resize(ncomps);
@@ -659,12 +632,12 @@ void ImageFitter::_setFluxes() {
     converter.setShape(ComponentType::GAUSSIAN);
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {
-		_curResults.getFlux(fluxQuant, i);
+		_curConvolvedList.getFlux(fluxQuant, i);
 		Bool fluxIsFixed = _fixed[i].contains("f")
 			&& _fixed[i].contains("a")
 			&& _fixed[i].contains("b");
 		// TODO there is probably a better way to get the flux component we want...
-		Vector<String> polarization = _curResults.getStokes(i);
+		Vector<String> polarization = _curConvolvedList.getStokes(i);
 		for (uInt j=0; j<polarization.size(); j++) {
 			if (polarization[j] == _kludgedStokes) {
 				_fluxDensities[i] = fluxQuant[j];
@@ -672,7 +645,7 @@ void ImageFitter::_setFluxes() {
 					_fluxDensityErrors[i] = 0;
 				}
 				else {
-					std::complex<double> error = _curResults.component(i).flux().errors()[j];
+					std::complex<double> error = _curConvolvedList.component(i).flux().errors()[j];
 					_fluxDensityErrors[i].setValue(sqrt(error.real()*error.real()
 						+ error.imag()*error.imag()));
 				}
@@ -681,7 +654,7 @@ void ImageFitter::_setFluxes() {
 				break;
 			}
 		}
-		const ComponentShape* compShape = _curResults.getShape(i);
+		const ComponentShape* compShape = _curConvolvedList.getShape(i);
 		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
 		_majorAxes[i] = (static_cast<const GaussianShape *>(compShape))->majorAxis();
 		_minorAxes[i] = (static_cast<const GaussianShape *>(compShape))->minorAxis();
@@ -737,20 +710,22 @@ void ImageFitter::_setFluxes() {
 			);
 			Vector<std::complex<double> > errors(4, std::complex<double>(0, 0));
 			errors[polNum] = std::complex<double>(_fluxDensityErrors[i].getValue(), 0);
-			_curResults.component(i).flux().setErrors(errors);
+			_curConvolvedList.component(i).flux().setErrors(errors);
+			if (_getImage()->imageInfo().hasBeam()) {
+				_curDeconvolvedList.component(i).flux().setErrors(errors);
+			}
 		}
 	}
 }
 
 void ImageFitter::_setSizes() {
-	uInt ncomps = _curResults.nelements();
+	uInt ncomps = _curConvolvedList.nelements();
 	_positionAngles.resize(ncomps);
 	_majorAxisErrors.resize(ncomps);
 	_minorAxisErrors.resize(ncomps);
 	_positionAngleErrors.resize(ncomps);
 	Double rmsPeak = ! near(_rms, 0.0) ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(rmsPeak, _bUnit);
-
 	Quantity xBeam;
 	Quantity yBeam;
 	Quantity paBeam;
@@ -768,18 +743,17 @@ void ImageFitter::_setSizes() {
 		yBeam = Quantity(pixInc[1], "rad");
 		paBeam = Quantity(0, "rad");
 	}
-	for(uInt i=0; i<_curResults.nelements(); i++) {
-		const ComponentShape* compShape = _curResults.getShape(i);
+	uInt n = _curConvolvedList.nelements();
+	for(uInt i=0; i<n; i++) {
+		const ComponentShape* compShape = _curConvolvedList.getShape(i);
 		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
 		_positionAngles[i]  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
 		_majorAxisErrors[i] = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
 		_minorAxisErrors[i] = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
 		_positionAngleErrors[i] = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
 		Double signalToNoise = fabs((_peakIntensities[i]/rmsPeakError).getValue());
-
 		Quantity paRelToBeam = _positionAngles[i] - paBeam;
 		paRelToBeam.convert("rad");
-
 		xBeam.convert(_majorAxisErrors[i].getUnit());
 		yBeam.convert(_majorAxisErrors[i].getUnit());
 		Double xBeamVal = xBeam.getValue();
@@ -831,12 +805,10 @@ void ImageFitter::_setSizes() {
 		_minorAxisErrors[i].convert(_minorAxes[i].getUnit());
 		_positionAngleErrors[i].convert(_positionAngles[i].getUnit());
 		GaussianShape* newShape = dynamic_cast<GaussianShape *>(compShape->clone());
-
 		newShape->setErrors(
 			_majorAxisErrors[i], _minorAxisErrors[i],
 			_positionAngleErrors[i]
 		);
-
 		// set the position uncertainties
 
 		Quantity latError = compShape->refDirectionErrorLat();
@@ -866,36 +838,35 @@ void ImageFitter::_setSizes() {
 		}
 		newShape->setRefDirectionError(latError, longError);
 		Vector<Int> index(1, i);
-		_curResults.setShape(index, *newShape);
+		_curConvolvedList.setShape(index, *newShape);
 	}
 }
 
-String ImageFitter::_sizeToString(const uInt compNumber) const  {
-	ostringstream size;
-	const ComponentShape* compShape = _curResults.getShape(compNumber);
-	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
-	GaussianBeam beam = _getImage()->imageInfo().restoringBeam(_chanPixNumber, _stokesPixNumber);
-	Bool hasBeam = _getImage()->imageInfo().hasBeam();
-	size << "Image component size";
-	if (hasBeam) {
-		size << " (convolved with beam)";
+void ImageFitter::_setDeconvolvedSizes() {
+	if (! _getImage()->imageInfo().hasBeam()) {
+		return;
 	}
-	size << " ---" << endl;
-	size << compShape->sizeToString() << endl;
-	if (hasBeam) {
-		Quantity maj = _majorAxes[compNumber];
-		Quantity minor = _minorAxes[compNumber];
-		Quantity pa = _positionAngles[compNumber];
-		const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
+	GaussianBeam beam = _getImage()->imageInfo().restoringBeam(
+		_chanPixNumber, _stokesPixNumber
+	);
+	uInt n = _curConvolvedList.nelements();
+	static const Quantity tiny(1e-60, "arcsec");
+	static const Quantity zero(0, "deg");
+	_deconvolvedMessages.resize(n);
+	_deconvolvedMessages.set("");
+	for (uInt i=0; i<n; i++) {
+		Quantity maj = _majorAxes[i];
+		Quantity minor = _minorAxes[i];
+		Quantity pa = _positionAngles[i];
+		std::tr1::shared_ptr<GaussianShape> gaussShape(
+			static_cast<const GaussianShape *>(
+				_curDeconvolvedList.getShape(i)->clone()
+			)
+		);
+		std::tr1::shared_ptr<PointShape> point;
 		Quantity emaj = gaussShape->majorAxisError();
 		Quantity emin = gaussShape->minorAxisError();
 		Quantity epa  = gaussShape->positionAngleError();
-		size << "Clean beam size ---" << endl;
-		// CAS-4577, users want two digits, so just do it explicitly here rather than using
-		// TwoSidedShape::sizeToString
-		size << std::fixed << std::setprecision(2) << "       --- major axis FWHM: " << beam.getMajor() << endl;
-		size << "       --- minor axis FWHM: " << beam.getMinor() << endl;
-		size << "       --- position angle: " << beam.getPA(True) << endl;
 		Bool fitSuccess = False;
 		Angular2DGaussian bestSol(maj, minor, pa);
 		Angular2DGaussian bestDecon;
@@ -908,10 +879,192 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			fitSuccess = False;
 			isPointSource = True;
 		}
-		size << "Image component size (deconvolved from beam) ---" << endl;
+		ostringstream size;
 		Angular2DGaussian decon;
 		if(fitSuccess) {
 			if (isPointSource) {
+				size << "    Component is a point source" << endl;
+				gaussShape->setWidth(tiny, tiny, zero);
+				Angular2DGaussian largest(
+					maj + emaj,
+					minor + emin,
+					pa - epa
+				);
+				Bool isPointSource1 = True;
+				Bool fitSuccess1 = False;
+				try {
+					isPointSource1 = beam.deconvolve(decon, largest);
+					fitSuccess = True;
+				}
+				catch (const AipsError& x) {
+					fitSuccess1 = False;
+					isPointSource1 = True;
+				}
+				// note that the code is purposefully written in such a way that
+				// fitSuccess* = False => isPointSource* = True and the conditionals
+				// following rely on that fact to make the code a bit clearer
+				Angular2DGaussian lsize;
+				if (! isPointSource1) {
+					lsize = decon;
+	            }
+				largest.setPA(pa + epa);
+				Bool isPointSource2 = True;
+				Bool fitSuccess2 = False;
+				try {
+					isPointSource2 = beam.deconvolve(decon, largest);
+					fitSuccess2 = True;
+	            }
+				catch (const AipsError& x) {
+					fitSuccess2 = False;
+					isPointSource2 = True;
+	            }
+				if (isPointSource2) {
+					if (isPointSource1) {
+						size << "    An upper limit on its size cannot be determined" << endl;
+						point.reset(new PointShape());
+						point->copyDirectionInfo(*gaussShape);
+					}
+					else {
+						size << "    It may be as large as " << std::setprecision(2) << lsize.getMajor()
+							<< " x " << lsize.getMinor() << endl;
+						gaussShape->setErrors(lsize.getMajor(), lsize.getMinor(), zero);
+	                }
+				}
+				else {
+					if (isPointSource1) {
+						size << "    It may be as large as " << std::setprecision(2) << decon.getMajor()
+							<< " x " << decon.getMinor() << endl;
+						gaussShape->setErrors(decon.getMajor(), decon.getMinor(), zero);
+					}
+					else {
+						Quantity lmaj = max(decon.getMajor(), lsize.getMajor());
+						Quantity lmin = max(decon.getMinor(), lsize.getMinor());
+						size << "    It may be as large as " << std::setprecision(2) << lmaj
+							<< " x " << lmin << endl;
+						gaussShape->setErrors(lmaj, lmin, zero);
+					}
+				}
+			}
+			else {
+				Vector<Quantity> majRange(2, maj - emaj);
+				majRange[1] = maj + emaj;
+				Vector<Quantity> minRange(2, minor - emin);
+				minRange[1] = minor + emin;
+				Vector<Quantity> paRange(2, pa - epa);
+				paRange[1] = pa + epa;
+				Angular2DGaussian sourceIn;
+				Quantity mymajor, myminor;
+				for (uInt i=0; i<2; i++) {
+					for (uInt j=0; j<2; j++) {
+						// have to check in case ranges overlap, CAS-5211
+						mymajor = max(majRange[i], minRange[j]);
+						myminor = min(majRange[i], minRange[j]);
+						if (mymajor.getValue() > 0 && myminor.getValue() > 0) {
+							sourceIn.setMajorMinor(mymajor, myminor);
+							for (uInt k=0; k<2; k++) {
+								sourceIn.setPA(paRange[k]);
+								decon = Angular2DGaussian();
+								try {
+									isPointSource = beam.deconvolve(decon, sourceIn);
+								}
+								catch (const AipsError& x) {
+									fitSuccess = False;
+								}
+								if (fitSuccess) {
+									Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
+									errMaj.convert(emaj.getUnit());
+									Quantity errMin = abs(bestDecon.getMinor() - decon.getMinor());
+									errMin.convert(emin.getUnit());
+									Quantity errPA = abs(bestDecon.getPA(True) - decon.getPA(True));
+									errPA.convert("deg");
+									errPA.setValue(fmod(errPA.getValue(), 180.0));
+									errPA.convert(epa.getUnit());
+									emaj = max(emaj, errMaj);
+									emin = max(emin, errMin);
+									epa = max(epa, errPA);
+								}
+							}
+						}
+					}
+				}
+				size << TwoSidedShape::sizeToString(
+					bestDecon.getMajor(), bestDecon.getMinor(),
+					bestDecon.getPA(True), True, emaj, emin, epa
+				);
+				gaussShape->setWidth(
+					bestDecon.getMajor(), bestDecon.getMinor(),
+					bestDecon.getPA(True)
+				);
+				gaussShape->setErrors(emaj, emin, epa);
+			}
+		}
+		else {
+			point.reset(new PointShape());
+			point->copyDirectionInfo(*gaussShape);
+			size << "    Could not deconvolve source from beam. "
+				<< "Source may be (only marginally) resolved in only one direction.";
+		}
+		_deconvolvedMessages[i] = size.str();
+		if (point) {
+			_curDeconvolvedList.setShape(Vector<Int>(1, i), *point);
+		}
+		else {
+			_curDeconvolvedList.setShape(Vector<Int>(1, i), *gaussShape);
+		}
+	}
+}
+
+String ImageFitter::_sizeToString(const uInt compNumber) {
+	ostringstream size;
+	const ComponentShape* compShape = _curConvolvedList.getShape(compNumber);
+	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
+	Bool hasBeam = _getImage()->imageInfo().hasBeam();
+	size << "Image component size";
+	if (hasBeam) {
+		size << " (convolved with beam)";
+	}
+	size << " ---" << endl;
+	size << compShape->sizeToString() << endl;
+	if (hasBeam) {
+		GaussianBeam beam = _getImage()->imageInfo().restoringBeam(
+			_chanPixNumber, _stokesPixNumber
+		);
+		/*
+		Quantity maj = _majorAxes[compNumber];
+		Quantity minor = _minorAxes[compNumber];
+		Quantity pa = _positionAngles[compNumber];
+		const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
+		Quantity emaj = gaussShape->majorAxisError();
+		Quantity emin = gaussShape->minorAxisError();
+		Quantity epa  = gaussShape->positionAngleError();
+		*/
+		size << "Clean beam size ---" << endl;
+		// CAS-4577, users want two digits, so just do it explicitly here rather than using
+		// TwoSidedShape::sizeToString
+		size << std::fixed << std::setprecision(2) << "       --- major axis FWHM: " << beam.getMajor() << endl;
+		size << "       --- minor axis FWHM: " << beam.getMinor() << endl;
+		size << "       --- position angle: " << beam.getPA(True) << endl;
+		/*
+		Bool fitSuccess = False;
+		Angular2DGaussian bestSol(maj, minor, pa);
+		Angular2DGaussian bestDecon;
+		Bool isPointSource = True;
+		try {
+			isPointSource = beam.deconvolve(bestDecon, bestSol);
+			fitSuccess = True;
+		}
+		catch (const AipsError& x) {
+			fitSuccess = False;
+			isPointSource = True;
+		}
+		*/
+		size << "Image component size (deconvolved from beam) ---" << endl;
+		size << _deconvolvedMessages[compNumber];
+		/*
+		Angular2DGaussian decon;
+		if(fitSuccess) {
+			if (isPointSource) {
+				_curDeconvolvedList.setShape(Vector<Int>(1, compNumber), PointShape());
                 Angular2DGaussian largest(
                 	maj + emaj,
 					minor + emin,
@@ -948,7 +1101,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
                 }
                 if (isPointSource2) {
                 	if (isPointSource1) {
-                		size << "    An upper limit on its size can not be determined" << endl;
+                		size << "    An upper limit on its size cannot be determined" << endl;
                 	}
                 	else {
                 		size << "    It may be as large as " << std::setprecision(2) << lsize.getMajor()
@@ -1020,6 +1173,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			size << "    Could not deconvolve source from beam. "
 				<< "Source may be (only marginally) resolved in only one direction.";
 		}
+		*/
 	}
 	return size.str();
 }
@@ -1038,7 +1192,7 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	ostringstream fluxes;
 	Quantity fluxDensity = _fluxDensities[compNumber];
 	Quantity fluxDensityError = _fluxDensityErrors[compNumber];
-	Vector<String> polarization = _curResults.getStokes(compNumber);
+	Vector<String> polarization = _curConvolvedList.getStokes(compNumber);
 	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
 	    	? Quantity(1.0, "beam")
 	    	: Quantity(1.0, "pixel");
@@ -1158,7 +1312,7 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 	unitPrefix[7] = "u";
 	unitPrefix[8] = "n";
 	ostringstream spec;
-	const SpectralModel& spectrum = _curResults.component(compNumber).spectrum();
+	const SpectralModel& spectrum = _curConvolvedList.component(compNumber).spectrum();
 	Quantity frequency = spectrum.refFrequency().get("MHz");
 	Quantity c(C::c, "m/s");
 	Quantity wavelength = c/frequency;
@@ -1199,8 +1353,9 @@ void ImageFitter::_writeNewEstimatesFile() const {
 	Vector<Double> world(ndim,0), pixel(ndim,0);
 	_getImage()->coordinates().toWorld(world, pixel);
 
-	for (uInt i=0; i<_curResults.nelements(); i++) {
-		MDirection mdir = _curResults.getRefDirection(i);
+	uInt n = _curConvolvedList.nelements();
+	for (uInt i=0; i<n; i++) {
+		MDirection mdir = _curConvolvedList.getRefDirection(i);
 		Quantity lat = mdir.getValue().getLat("rad");
 		Quantity longitude = mdir.getValue().getLong("rad");
 		world[dirAxesNumbers[0]] = longitude.getValue();
@@ -1221,12 +1376,6 @@ void ImageFitter::_writeNewEstimatesFile() const {
 	String output = out.str();
 	File estimates(_newEstimatesFileName);
 	String action = (estimates.getWriteStatus() == File::OVERWRITABLE) ? "Overwrote" : "Created";
-	/*
-	Int fd = FiledesIO::create(_newEstimatesFileName.c_str());
-	FiledesIO fio(fd, _newEstimatesFileName.c_str());
-	fio.write(output.length(), output.c_str());
-	FiledesIO::close(fd);
-	*/
 	LogFile newEstimates(_newEstimatesFileName);
 	newEstimates.write(output, True, True);
 	*_getLog() << LogIO::NORMAL << action << " file "
@@ -1243,7 +1392,7 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 		{
 			File file(_compListName);
 			if (file.exists()) {
-				LogOrigin logOrigin("ImageFitter", __FUNCTION__);
+				LogOrigin logOrigin(_class, __FUNCTION__);
 				*_getLog() << logOrigin;
 				*_getLog() << LogIO::WARN << "Requested persistent component list " << _compListName
 						<< " already exists and user does not wish to overwrite it so "
@@ -1272,7 +1421,7 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 void ImageFitter::_fitsky(
 	Fit2D& fitter, Array<Float>& pixels, Array<Bool>& pixelMask,
 	Bool& converged, Double& zeroLevelOffsetSolution,
-   	Double& zeroLevelOffsetError, const uInt& chan,
+   	Double& zeroLevelOffsetError,
 	const Vector<String>& models,
 	const Bool fitIt, const Bool deconvolveIt, const Bool list,
 	const Double zeroLevelEstimate
@@ -1323,7 +1472,7 @@ void ImageFitter::_fitsky(
 		const CoordinateSystem& imcsys = subImageTmp.coordinates();
 		if (imcsys.hasSpectralAxis()) {
 			uInt spectralAxisNumber = imcsys.spectralAxisNumber();
-			startPos[spectralAxisNumber] = chan - _chanVec[0];
+			startPos[spectralAxisNumber] = _curChan - _chanVec[0];
 			endPos[spectralAxisNumber] = startPos[spectralAxisNumber];
 		}
 		if (imcsys.hasPolarizationCoordinate()) {
@@ -1375,7 +1524,7 @@ void ImageFitter::_fitsky(
 			deconvolveIt,
 			_getImage()->imageInfo().restoringBeam(_chanPixNumber, _stokesPixNumber)
 		);
-		_curResults.add(result(0));
+		_curConvolvedList.add(result(0));
 	}
 	// For ease of use, make each model have a mask string
 	Vector<String> fixedParameters(_fixed.copy());
@@ -1497,7 +1646,10 @@ void ImageFitter::_fitsky(
                     << "This may be a bug. Conact us with the image and the input parameters "
                     << "you used and we will have a look." << LogIO::EXCEPTION;
             }
-			_curResults.add(result(j));
+			_curConvolvedList.add(result(j));
+			if (_getImage()->imageInfo().hasBeam()) {
+				_curDeconvolvedList.add(result(j).copy());
+			}
 			j++;
 		}
 	}
