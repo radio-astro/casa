@@ -5354,6 +5354,7 @@ renderer_map = {
         hifv.tasks.fluxscale.fluxboot.Fluxboot   : T2_4MDetailsfluxbootRenderer('t2-4m_details-hifv_fluxboot.html', always_rerender=True),
         hifv.tasks.Finalcals                     : T2_4MDetailsfinalcalsRenderer('t2-4m_details-hifv_finalcals.html', always_rerender=True),
         hifv.tasks.Applycals                     : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_applycals.html', always_rerender=True),
+        #hifv.tasks.Applycals                     :T2_4MDetailsApplycalRenderer(always_rerender=True),
         hifv.tasks.flagging.targetflag.Targetflag : T2_4MDetailstargetflagRenderer('t2-4m_details-hifv_targetflag.html', always_rerender=True),
         hifv.tasks.Statwt                         : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_statwt.html', always_rerender=True)
 
