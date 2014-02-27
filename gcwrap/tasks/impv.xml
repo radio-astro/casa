@@ -22,35 +22,40 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Output image name. If empty, no image is written.</description>
             <value/>
         </param>
+        <param type="string" name="mode">
+            <description>If "coords", use start and end values. If "length", use center, width, and pa values.</description>
+            <value>coords</value>
+            <example>mode="coords"</example>
+        </param>
         <param type="any" name="start">
-            <any type="variant"/>
+            <any type="variant" limittypes="string stringArray intArray doubleArray"/>
             <description>The starting pixel in the direction plane (array of two values).</description>
-            <value type="vector"/>
+            <value type="string"/>
             <example>[20, 5]</example>
         </param>
         <param type="any" name="end">
-            <any type="variant"/>
+            <any type="variant" limittypes="string stringArray intArray doubleArray"/>
             <description>The ending pixel in the direction plane (array of two values).</description>
-            <value type="vector"/>
+            <value type="string"/>
             <example>[200,300]</example>
         </param>
         <param type="any" name="center" subparam="true">
             <description>The center point in the direction plane (array of two values). If specified, length and pa must also be specified and neither of start nor end may be specified.</description>
-            <any type="variant"/>
-            <value type="vector"/>
+            <any type="variant" limittypes="string stringArray intArray doubleArray"/>
+            <value type="string"/>
         </param>
         <param type="any" name="length" subparam="true">
             <description>The length of the segmaent in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
-            <any type="variant"/>
-            <value type="vector"/>
+            <any type="variant" limittypes="string int double stringArray record"/>
+            <value type="string"/>
         </param>
         <param type="any" name="pa" subparam="true">
             <description>The position angle of the segmaent in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
-            <any type="variant"/>
-            <value type="vector"/>
+            <any type="variant" limittypes="string record"/>
+            <value type="string"/>
         </param>
         <param type="any" name="width">
-            <any type="variant"/>
+            <any type="variant" limittypes="string int record"/>
             <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
             <value type="int">1</value>
         </param>
@@ -63,7 +68,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <param type="any"  name="region" subparam="true">
-            <any type="variant"/>
+            <any type="variant" limittypes="string record"/>
             <description>Region selection. Default is entire image. No selection is permitted in the direction plane. See help par.region.</description>
             <value>""</value>
         </param>
@@ -106,16 +111,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                 </equals>
             </when>
-            <when param="start">
-                <equals type="vector" value="[]">
+            <when param="mode">
+                <equals type="string" value="coords">
+                    <default param="start">
+                        <value>""</value>
+                    </default>
+                    <default param="end">
+                        <value>""</value>
+                    </default>
+                </equals>
+                <equals type="string" value="length">
                     <default param="center">
-                        <value type="vector"/>
+                        <value>""</value>
                     </default>
                     <default param="length">
-                        <value  type="vector"/>
+                        <value>""</value>
                     </default>
                     <default param="pa">
-                        <value type="vector"/>
+                        <value>""</value>
                     </default>
                 </equals>
             </when>
@@ -127,19 +140,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
+mode             Indicates which sets of parameters to use for defining the slice. mode="coords" means use
+                 start and end parameters. mode="length" means use center, length, and pa parameters to define
+                 the slice.
 start            The starting pixel in the direction plane (array of two values), such as [20, 5] or ["14h20m20.5s","-30d45m25.4s"].
-                 If specified, end must also be specified and none of center, length, nor pa may be specified.
+                 Used iff mode="coords".
 end              The ending pixel in the direction plane (array of two values), such as [200, 300].
-                 If specified, start must also be specified and none of center, length, nor pa may be specified
+                 Used iff mode="coords".
 center           The center of the slice in the direction plane (array of two values), such as [20, 5] or ["14h20m20.5s","-30d45m25.4s"]. 
-                 If specified, length and pa must also be specified and neither start nor end may be specified.
+                 Used iff mode="length".
 length           The length of the slice in the direction plane. May be specified as a single numerical value, in which
                  case it is interpreted as the number of pixels, or as a valid quantity which must be conformant with
                  the direction axes units (eg "40arcsec", {"value": 40, "unit": "arcsec"}).
-                 If specified, center and pa must also be specified and neither start nor end may be specified.
-pa               Position angle of the slice, measured from north through east. Must be expressed as a valid angular
+                 Used iff mode="length".
+pa               Position angle of the slice, measured from the direction of positive latitude of the positive longitude
+                 (eg north through east in an equatorial coordinate system). Must be expressed as a valid angular
                  quantity (eg "40deg", {"value": 40, "unit": "deg"}).
-                 If specified, center and length must also be specified and neither start nor end may be specified.
+                 Used iff mode="length".
 width            Width, in pixels, for averaging pixels perpendicular to the slice.
                  This value is determined after rotating the image so the slice lies horizontally.
                  A value of one means no averaging. A value of 3 means average one pixel on each
@@ -161,22 +178,27 @@ mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
                  See help par.stretch.
 
-Create a position-velocity image by specifying either two points between which a slice is taken in the direction
-coordinate or a center, position angle, and length describing the slice. The spectral extent of the resulting image
-will be that provided by the region specification or the entire spectral range of the input image if no region is
-specified. One may not specify a region in direction space; that is accomplished by specifying the start and end
-points or the center, length, and position angle of the slice. The parameters
-start and end may be specified as two element arrays of numerical values, in which case these values will be
-interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
-each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
-format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]). The center parameter is specified in the same way.
-The length parameter may be specified as a single numerical value, in which case it is interpreted as the length in pixels, or
-a valid quantity, in which case it must have units conformant with the direction axes units. The pa (position angle) parameter
-must be specified as a valid quantity with angular units. The position angle is interpreted in the usual astronomical sense; ie
-measured from north through east. Either start/end or center/pa/length must be specified; if a parameter from one of
-these sets is specified, a parameter from the other set may not be specified. In either case, the end points of the
-segment must fail within the input image, and they both must be at least 2 pixels from the edge of the input image to facilite
-rotation (see below).
+Create a position-velocity image. The way the slice is specified is controlled by the mode parameter. When
+mode="coords", start end end are used to specified the points between which a slice is taken in the direction
+coordinate. If mode="length"  center, pa (position angle), and length are used to specify the slice. The spectral
+extent of the resulting image will be that provided by the region specification or the entire spectral range of
+the input image if no region is specified. One may not specify a region in direction space; that is accomplished by
+specifying the slice as described previously. The parameters start and end may be specified as two
+element arrays of numerical values, in which case these values will be interpreted as pixel locations in the input
+image. Alternatively, they may be expressed as arrays of two strings each representing the direction. These strings
+can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal format (eg ["14h20m20.5s","-30d45m25.4s"],
+["14:20:20.5s","-30.45.25.4"]). In addition, they may be expressed as a single string containing the longitude-like and
+latitude-like values and optionally a reference frame value, eg "J2000 14:20:20.5s -30.45.25.4".The center parameter can
+be specified in the same way. The length parameter may be specified as a single numerical value, in which case it is
+interpreted as the length in pixels, or a valid quantity, in which case it must have units conformant with the
+direction axes units. The pa (position angle) parameter must be specified as a valid quantity with angular units.
+The position angle is interpreted in the usual astronomical sense; eg measured from north through east in an equatorial
+coordinate system. The slice in this case starts at the specified position angle and ends on the opposite side of
+the specified center. Thus pa="45deg" means start at a point at a pa of 45 degrees relative to the specified center and
+end at a point at a pa of 215 degrees relative to the center. Either start/end or center/pa/length must be specified;
+if a parameter from one of these sets is specified, a parameter from the other set may not be specified. In either
+case, the end points of the segment must fail within the input image, and they both must be at least 2 pixels from the
+edge of the input image to facilite rotation (see below).
 
 One may specify a width, which is the number of pixels centered along and perpendicular
 to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which

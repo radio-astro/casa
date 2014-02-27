@@ -10600,18 +10600,19 @@ used to create a 2D temporary image.
         coordinate or a center, position angle, and length describing the slice. The spectral extent of the resulting image
         will be that provided by the region specification or the entire spectral range of the input image if no region is
         specified. One may not specify a region in direction space; that is accomplished by specifying the start and end
-        points or the center, length, and position angle of the slice. The parameters
-        start and end may be specified as two element arrays of numerical values, in which case these values will be
-        interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
-        each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
-        format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]). The center parameter is specified in the same way.
-        The length parameter may be specified as a single numerical value, in which case it is interpreted as the length in pixels, or
-        a valid quantity, in which case it must have units conformant with the direction axes units. The pa (position angle) parameter
-        must be specified as a valid quantity with angular units. The position angle is interpreted in the usual astronomical sense; ie
-        measured from north through east. Either start/end or center/pa/length must be specified; if a parameter from one of
-        these sets is specified, a parameter from the other set may not be specified. In either case, the end points of the
-        segment must fail within the input image, and they both must be at least 2 pixels from the edge of the input image to facilite
-        rotation (see below).
+        points or the center, length, and position angle of the slice. The parameters start and end may be specified as two
+        element arrays of numerical values, in which case these values will be interpreted as pixel locations in the input
+        image. Alternatively, they may be expressed as arrays of two strings each representing the direction. These strings
+        can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal format (eg ["14h20m20.5s","-30d45m25.4s"],
+        ["14:20:20.5s","-30.45.25.4"]). In addition, they may be expressed as a single string containing the longitude and
+        latitude values and optionally a reference frame value, eg "J2000 14:20:20.5s -30.45.25.4". The center parameter is
+        specified in the same way. The length parameter may be specified as a single numerical value, in which case it is
+        interpreted as the length in pixels, or a valid quantity, in which case it must have units conformant with the direction
+        axes units. The pa (position angle) parameter must be specified as a valid quantity with angular units. The position
+        angle is interpreted in the usual astronomical sense; ie measured from north through east. Either start/end or
+        center/pa/length must be specified; if a parameter from one of these sets is specified, a parameter from the other set may
+        not be specified. In either case, the end points of the segment must fail within the input image, and they both must be at
+        least 2 pixels from the edge of the input image to facilite rotation (see below).
 
         One may specify a width, which is the number of pixels centered along and perpendicular
         to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which

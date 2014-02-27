@@ -92,11 +92,12 @@ def run_ia_pv(
 
 def run_impv(
     imagename, outfile, start, end, width,
-    center=[], length=[], pa=[]
+    center=[], length=[], pa=[], mode="coords"
 ):
     return impv(
         imagename=imagename, outfile=outfile, start=start,
-        end=end, width=width, center=center, length=length, pa=pa
+        end=end, width=width, center=center, length=length,
+        mode=mode, pa=pa
     )
 
 
@@ -136,46 +137,67 @@ class ia_pv_test(unittest.TestCase):
         myia.done()
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
-        for code in [run_ia_pv, run_impv]:
+        for code in [0, 1]:
             # no width
             for i in range(7):
                 if i == 0:
                     start = [2, 5]
                     end = [7, 5]
+                    mode = "coords"
                 elif i == 1:
                     start = ["3.00000038arcmin", "0'"]
                     end = ["2.15980000e+04'", "0arcmin"]
+                    mode = "coords"
                 if i == 2:
                     start = ["0h0m12s", "0d0m0s" ]
                     end = ["23:59:52", "0.0.0"]
+                    mode = "coords"
                 if i == 3:
                     center = [4.5, 5]
                     length = 5
                     pa = "90deg"
+                    mode = "length"
                 if i == 4:
                     center = ["0:0:02", "0.0.0"]
                     length = 5
                     pa = "90deg"
+                    mode = "length"
                 if i == 5:
                     center = ["0:0:02", "0.0.0"]
                     length = "5arcmin"
                     pa = "90deg"
+                    mode = "length"
                 if i == 6:
                     center = [4.5, 5]
                     length = "5arcmin"
                     pa = "90deg"
+                    mode = "length"
                 outfile = "test_pv_" + str(code) + str(i)
                 if i <= 2:
-                    xx = code(
-                        imagename=imagename, outfile=outfile, start=start,
-                        end=end, width=1
-                    )
+                    if code == 0:
+                        xx = run_ia_pv(
+                            imagename=imagename, outfile=outfile, start=start,
+                            end=end, width=1
+                        )
+                    elif code == 1:
+                        xx = run_impv(
+                            imagename=imagename, outfile=outfile, start=start,
+                            end=end, width=1, mode=mode
+                        )
                 else:
-                    xx = code(
-                        imagename=imagename, outfile=outfile, start=[],
-                        end=[], width=1, center=center, length=length,
-                        pa=pa
-                    )
+                    if code == 0:
+                        xx = run_ia_pv(
+                            imagename=imagename, outfile=outfile, start=[],
+                            end=[], width=1, center=center, length=length,
+                            pa=pa
+                        )
+                    elif code == 1:
+                        print "*** mode ", mode
+                        xx = run_impv(
+                            imagename=imagename, outfile=outfile, start=[],
+                            end=[], width=1, center=center, length=length,
+                            pa=pa, mode=mode
+                        )
                 if (type(xx) == type(ia)):
                     xx.done()
                 self.assertTrue(len(tb.showcache())== 0)
@@ -209,10 +231,16 @@ class ia_pv_test(unittest.TestCase):
                     width = "1.1arcmin"
                 elif i == 3:
                     width = qa.quantity("1.2arcmin")
-                xx = code(
-                    imagename=imagename, outfile=outfile, start=[2, 5],
-                    end=[7, 5], width=width
-                )
+                if code == 0:
+                    xx = run_ia_pv(
+                        imagename=imagename, outfile=outfile, start=[2, 5],
+                        end=[7, 5], width=width
+                    )
+                elif code == 1:
+                    xx = run_impv(
+                        imagename=imagename, outfile=outfile, start=[2, 5],
+                        end=[7, 5], width=width, mode="coords"
+                    )
                 if (type(xx) == type(ia)):
                     xx.done()
                 pv.open(outfile)
@@ -381,7 +409,8 @@ class ia_pv_test(unittest.TestCase):
                 outfile = "pv_patest_got" + str(length) + str(center) + ".im"
                 impv(
                      imagename=imagename, outfile=outfile,
-                     center=center, length=length, pa=pa
+                     center=center, length=length, pa=pa,
+                     mode="length"
                 )
                 myia.open(outfile)
                 got = myia.getchunk()

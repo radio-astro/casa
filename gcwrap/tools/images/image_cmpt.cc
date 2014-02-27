@@ -3173,10 +3173,10 @@ image* image::pv(
 		Vector<Double> startPix, endPix, centerPix;
 		std::tr1::shared_ptr<casa::Quantity> lengthQ;
 		Double lengthD = 0;
-		if (start.size() > 0 && end.size() > 0) {
+		if (! start.empty() && ! end.empty()) {
 			ThrowIf(
-				center.size() > 0 || length.size() > 0
-				|| pa.size() > 0,
+				! center.empty() || ! length.empty()
+				|| ! pa.empty(),
 				"None of center, length, nor pa may be specified if start and end are specified"
 			);
 			ThrowIf(
@@ -3194,12 +3194,13 @@ image* image::pv(
 			}
 		}
 		else if (
-			center.size() > 0 && length.size() > 0
-			&& pa.size() > 0
+			! center.empty() && ! length.empty()
+			&& ! pa.empty()
 		) {
 			ThrowIf(
-				start.size() > 0 || end.size() > 0,
-				"Neither start nor end may be specified if center, length, and pa are specified"
+				! start.empty() || ! end.empty(),
+				"Neither start nor end may be specified "
+				"if center, length, and pa are specified"
 			);
 			casa::MDirection dir;
 			_processDirection(centerPix, dir, center, "center");
@@ -3232,10 +3233,13 @@ image* image::pv(
 				"width must be an odd integer >= 1"
 			);
 		}
-		else if (width.type() == variant::STRING || width.type() == variant::RECORD) {
+		else if (
+			width.type() == variant::STRING
+			|| width.type() == variant::RECORD
+		) {
 			qWidth = _casaQuantityFromVar(width);
 		}
-		else if (width.size() == 0) {
+		else if (width.type() == variant::BOOLVEC && width.empty()) {
 			intWidth = 1;
 		}
 		else {
