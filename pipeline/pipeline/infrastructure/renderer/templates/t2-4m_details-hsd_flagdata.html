@@ -53,6 +53,18 @@ except Exception, e:
    raise e
 %>
 
+<!-- short description of what the task does -->
+<p>This task flags spectra by several criteria:
+<ol>
+	<li> eliminate spectra with outlier RMS (Baseline RMS)</li>
+	<li> eliminate rapid variation of spectra using deviation from the running mean (Running mean)</li>
+	<li> eliminate spectra with remarkably large RMS than expected (Expected RMS)</li>
+	<li> eliminate spectra with outlier Tsys value</li>
+	<li> by weather (currently disabled)</li>
+	<li> by user defined threshold (currently disabled)</li>
+</ol>
+For 1.-3., the RMSes of spectra before and after baseline fit are obtained using line free channels.
+</p>
 
 <H2>Flag Summaries</H2>
 
