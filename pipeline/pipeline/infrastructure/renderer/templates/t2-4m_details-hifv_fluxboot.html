@@ -77,10 +77,7 @@ $(document).ready(function() {
         % endfor
     </ul>
     
-    
-    
-    % for row in spindex_results[ms]:
-    <table class="table table-bordered table-striped table-condensed"
+<table class="table table-bordered table-striped table-condensed"
 	   summary="Spectral Indices">
 	<caption>Spectral Indices</caption>
         <thead>
@@ -92,7 +89,10 @@ $(document).ready(function() {
 	    </tr>
 
 	</thead>
-	<tbody>
+	<tbody>    
+    
+    % for row in spindex_results[ms]:
+    
 
 		<tr>
 		        <td>${row['source']}</td>
@@ -101,16 +101,13 @@ $(document).ready(function() {
 			<td>${row['SNR']}</td>
 		</tr>
 
-
+    % endfor
 	</tbody>
     </table>
-    % endfor
+
     
     
-    
-    
-    % for row in weblog_results[ms]:
-    <table class="table table-bordered table-striped table-condensed"
+       <table class="table table-bordered table-striped table-condensed"
 	   summary="Fitting data with a power law">
 	<caption>Fitting data with a power law</caption>
         <thead>
@@ -122,7 +119,10 @@ $(document).ready(function() {
 	    </tr>
 
 	</thead>
-	<tbody>
+	<tbody>   
+    
+    % for row in weblog_results[ms]:
+    
 
 	
 		<tr>
@@ -132,9 +132,9 @@ $(document).ready(function() {
 			<td>${row['fitteddata']}</td>
 		</tr>
 
-
+    % endfor
 	</tbody>
     </table>
-    % endfor
+    
 
 %endfor
