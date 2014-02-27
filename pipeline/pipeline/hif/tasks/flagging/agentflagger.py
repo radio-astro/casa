@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os
+import re
 import types
 
 import flaghelper
@@ -312,23 +313,15 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             return []
 
         f = flaghelper.readFile(filename)
-        flagcmds = flaghelper.parseDictionary(f)
-
-        # In using parseDictionary instead of makeDict, flagcmds['command'] 
-        # has changed format and is now an OrderedDict. Convert this 
-        # OrderedDict back to a string.
-        for d in flagcmds.values():
-            d['command'] = dict_to_cmd(d['command'])
-        
+        flagcmds = flaghelper.makeDict(f)
         return [flagcmds[k] for k in sorted(flagcmds.keys())]
 
     def _string_to_dict(self, cmdstring):
-        return flaghelper.parseDictionary([cmdstring])
-
-
-def dict_to_cmd(d):
-    return ' '.join(map(_format_arg_value, d.items()))
-
-def _format_arg_value(arg_val):
-    arg, val = arg_val
-    return '%s=%r' % (arg, val)
+        d = {}
+        for arg in re.split('\s+', cmdstring.strip()):
+            k, v = re.split('=', arg, maxsplit=1)
+            # convert boolean strings to boolean objects
+            v = True if v in ('True', '"True"', "'True'") else v
+            v = False if v in ('False', '"False"', "'False'") else v
+            d[k] = v
+        return d
