@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import os
-import re
 import types
 
 import flaghelper
@@ -123,23 +122,24 @@ class AgentFlagger(basetask.StandardTaskTemplate):
     Inputs = AgentFlaggerInputs
 
     def prepare(self):
+        # collect all the flag commands
+        flagcmds = self._get_flag_commands()
+        # convert commands to agent commands
+        agent_cmds = flaghelper.parseDictionary(flagcmds)
+
+        # get agentflagger tool
         af = casatools.agentflagger
+        # Open the MS and attach it to the tool
         af.open(msname=self.inputs.ms.name);
+        # Select the data
         af.selectdata();
-
-        agentcmds = self._get_flag_commands()
-
-        # Unflag (This is only for testing)
-#         if agentcmds:
-#             LOG.warning('Unflagging all data before processing!')
-#             self._add_agent('mode=unflag')
-
-        for cmd in agentcmds:
-            self._add_agent(cmd)
-
-        # Run all these agents, and get the combined report.
+        # Setup the agent parameters
+        flaghelper.parseAgents(af, agent_cmds, [], True, True, '')
+        # Initialize the agents
         af.init()
-        summary_stats_list = af.run(writeflags=True)
+        # Run the tool
+        summary_stats_list = af.run(writeflags=True, sequential=True)
+        # Destroy the tool and de-attach the MS
         af.done()
 
         # Parse the output summary lists and extract only 'type==summary'
@@ -151,22 +151,17 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             if summary_stats_list[repname]['type'] == 'summary':
                 summary_reps.append(summary_stats_list[repname])
 
-        return AgentFlaggerResults(summary_reps, agentcmds)
+        # parseAgents does not set the summary name, so we have to replace
+        # it with the name extracted from the command
+        for summary in summary_reps:
+            _, agent_num = summary['name'].split('_')
+            agent_num = int(agent_num)
+            summary['name'] = agent_cmds[agent_num]['command']['name'] 
+
+        return AgentFlaggerResults(summary_reps, flagcmds)
 
     def analyse(self, result):
         return result
-
-    def _add_agent(self, cmdstring):
-        agent_cmd = {'apply'      : True,
-                     'sequential' : True}
-        agent_cmd.update(self._string_to_dict(cmdstring))
-
-        # add mode=manual for flags that do not specify the mode, such as the
-        # online flags  
-        if 'mode' not in agent_cmd:
-            agent_cmd['mode'] = 'manual'
-
-        casatools.agentflagger.parseagentparameters(agent_cmd)
 
     def verify_spw(self, spw):
         """
@@ -243,7 +238,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
         # the empty list which will hold the flagging commands
         cmds = []
-
+        
         # flag online?
         if inputs.online:
             if not os.path.exists(inputs.fileonline):
@@ -251,8 +246,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
                             'flagging for %s disabled.' % (inputs.fileonline, 
                                                            inputs.ms.basename))
             else:
-                for cmddict in self._read_flagfile(inputs.fileonline):
-                    cmds.append(cmddict['command'])
+                cmds.extend(self._read_flagfile(inputs.fileonline))
                 cmds.append('mode=summary name=online')
 
         # flag template?
@@ -262,8 +256,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
                             'flagging for %s disabled.' % (inputs.filetemplate, 
                                                            inputs.ms.basename))
             else:
-                for cmddict in self._read_flagfile(inputs.filetemplate):
-                    cmds.append(cmddict['command'])
+                cmds.extend(self._read_flagfile(inputs.filetemplate))
                 cmds.append('mode=summary name=template')
 
         # Flag autocorrelations?
@@ -312,16 +305,4 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             LOG.warning('%s does not exist' % filename)
             return []
 
-        f = flaghelper.readFile(filename)
-        flagcmds = flaghelper.makeDict(f)
-        return [flagcmds[k] for k in sorted(flagcmds.keys())]
-
-    def _string_to_dict(self, cmdstring):
-        d = {}
-        for arg in re.split('\s+', cmdstring.strip()):
-            k, v = re.split('=', arg, maxsplit=1)
-            # convert boolean strings to boolean objects
-            v = True if v in ('True', '"True"', "'True'") else v
-            v = False if v in ('False', '"False"', "'False'") else v
-            d[k] = v
-        return d
+        return flaghelper.readFile(filename)
