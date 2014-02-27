@@ -651,3 +651,41 @@ class PhaseVsUVDetailChart(SpwAntDetailChart):
         super(PhaseVsUVDetailChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='phase', intent=intent, 
                 **plot_args)
+
+
+class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
+    """
+    Create an amplitude vs time plot for each field, spw and antenna, 
+    overplotting by correlation.
+    """
+    def __init__(self, context, result, intent=''):
+        plot_args = {'ydatacolumn' : 'corrected',
+                     'avgtime'     : '',
+                     'avgscan'     : False,
+                     'avgantenna'  : False,
+                     'plotrange'   : [0, 0, 0, 0],
+                     'coloraxis'   : 'corr',
+                     'overwrite'   : True}
+        
+        super(AmpVsTimeDetailChart, self).__init__(
+                context, result, xaxis='time', yaxis='amp', intent=intent, 
+                **plot_args)
+
+
+class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
+    """
+    Create an phase vs time plot for each field, spw and antenna, 
+    overplotting by correlation.
+    """
+    def __init__(self, context, result, intent=''):
+        plot_args = {'ydatacolumn' : 'corrected',
+                     'avgtime'     : '',
+                     'avgscan'     : False,
+                     'avgantenna'  : False,
+                     'plotrange'   : [0, 0, -90, 90],
+                     'coloraxis'   : 'corr',
+                     'overwrite'   : True}
+        
+        super(PhaseVsTimeDetailChart, self).__init__(
+                context, result, xaxis='time', yaxis='phase', intent=intent, 
+                **plot_args)

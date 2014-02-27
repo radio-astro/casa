@@ -2468,6 +2468,18 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                           ['AMPLITUDE'],
                           ApplycalPhaseVsUVPlotRenderer)
 
+        self.create_plots(context, 
+                          result, 
+                          applycal.AmpVsTimeDetailChart, 
+                          ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
+                          ApplycalAmpVsTimePlotRenderer)
+
+        self.create_plots(context, 
+                          result, 
+                          applycal.PhaseVsTimeDetailChart, 
+                          ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
+                          ApplycalPhaseVsTimePlotRenderer)
+
         ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
                     'phase_vs_freq_plots' : phase_vs_freq_summary_plots,
                     'amp_vs_time_plots'   : amp_vs_time_summary_plots,
@@ -2759,6 +2771,30 @@ class ApplycalPhaseVsUVPlotRenderer(GenericPlotsRenderer):
     def _get_display_context(self):
         d = super(ApplycalPhaseVsUVPlotRenderer, self)._get_display_context()
         d['plot_title'] = 'Calibrated phase vs UV distance for %s' % self.ms
+        return d
+
+
+class ApplycalAmpVsTimePlotRenderer(GenericFieldSpwAntPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('amp_vs_time-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(ApplycalAmpVsTimePlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Calibrated phase vs time for %s' % self.ms
+        return d
+
+
+class ApplycalPhaseVsTimePlotRenderer(GenericFieldSpwAntPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(ApplycalPhaseVsTimePlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Calibrated phase vs time for %s' % self.ms
         return d
 
 
