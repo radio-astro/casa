@@ -277,9 +277,20 @@ def plotms(vis=None, plotindex=None,
         #  (iteration, colorization, etc.)
         # (Iteration)
         if (iteraxis==""):
-            iternx = iterny=1
             xselfscale=yselfscale=False
             xsharedaxis = ysharedaxis = False
+        if not rowindex:
+            rowindex = 0
+        if not colindex:
+            colindex = 0
+        if not xselfscale:
+            xselfscale = False
+        if not yselfscale:
+            yselfscale = False
+        if not xsharedaxis:
+            xsharedaxis = False
+        if not ysharedaxis:
+            ysharedaxis = False
         pm.setPlotMSIterate(iteraxis,rowindex,colindex,
                             xselfscale,yselfscale,
                             xsharedaxis,ysharedaxis,False,plotindex);

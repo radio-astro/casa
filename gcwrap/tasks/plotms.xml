@@ -698,6 +698,7 @@ Canvas Parameters
 
 <param type="string" name="legendposition" subparam="true">
     <description>Legend position.</description>
+    <value></value>
     <allowed kind="enum">
     	<value />
         <value>upperRight</value>
