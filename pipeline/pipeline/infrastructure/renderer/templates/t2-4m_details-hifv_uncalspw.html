@@ -13,27 +13,27 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
       
         <ul>
             <li>SPWs that have no calibration (first stage): 
-            % if single_result.flagspw1 == '':
-            <b>None</b>
-            % else:
-            <b>${single_result.flagspw1}</b>
-            % endif
+                % if single_result.flagspw1 == '':
+                    <b>None</b>
+                % else:
+                    <b>${single_result.flagspw1}</b>
+                % endif
             </li>
             
             <li>SPWs that have no calibration (second stage): 
-            % if single_result.flagspw1b == '':
-            <b>None</b>
-            % else:
-            <b>${single_result.flagspw1b} </b>
-            % endif
+                % if single_result.flagspw1b == '':
+                    <b>None</b>
+                % else:
+                    <b>${single_result.flagspw1b} </b>
+                % endif
             </li>
             
             <li>SPWs that have no calibration (after final applycal): 
-            % if single_result.flagspw2 == '':
-            <b>None</b>
-            % else:
-            <b>${single_result.flagspw2}</b>
-            % endif
+                % if single_result.flagspw2 == '':
+                    <b>None</b>
+                % else:
+                    <b>${single_result.flagspw2}</b>
+                % endif
             </li>
             
         </ul>
