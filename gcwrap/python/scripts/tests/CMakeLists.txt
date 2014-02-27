@@ -191,5 +191,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_visstat.py
   test_vpmanager.py
   test_wvrgcal.py
+  selection_syntax.py
   unittests_list.txt
 )
