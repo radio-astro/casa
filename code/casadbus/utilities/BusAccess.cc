@@ -75,7 +75,7 @@ namespace casa {
 	address::address( const std::string &bus_address, bool unique ) {
 		if ( bus_address.size( ) == 0  ) {
 			if ( unique == false )
-				throw AipsError("no bus address supplied");
+				throw std::runtime_error("no bus address supplied");
 			else {
 				name_ = generate_name("dba");
 			}
@@ -149,7 +149,7 @@ namespace casa {
 	    arguments[count++] = strdup("--dbusname");
 	    char *dbus_name = generate_casa_proxy_name(unique_name, dbusname, default_name);
 	    arguments[count++] = strdup(dbus_name);
-	    arguments[count] = '\0';
+	    arguments[count] = 0;
 	    if ( ! fork( ) ) {
 		execvp( args.front( ).c_str( ), (char* const*) arguments );
 		perror( "launch<>(...) child process exec failed" );
@@ -192,7 +192,7 @@ namespace casa {
 				}
 			}
 			if ( objects.size( ) <= 0 ) {
-				throw AipsError("no " + name + "s available");
+				throw std::runtime_error("no " + name + "s available");
 			}
 			cache_time = current_time;
 			cache_input = name;

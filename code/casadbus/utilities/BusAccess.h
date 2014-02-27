@@ -31,7 +31,7 @@
 #include <string>
 #include <cstdio>
 #include <unistd.h>
-#include <casa/Exceptions/Error.h>
+#include <stdexcept>
 
 namespace casa {
     namespace dbus {	
@@ -58,7 +58,7 @@ namespace casa {
 	template<class proxy> proxy *launch( const std::list<std::string> &args=std::list<std::string>( ), bool unique_name=true,
 					     const std::string &name="", int trys=60, unsigned long delay=500000 ) {
 	    char *dbname = launch_casa_proxy( unique_name, name, proxy::dbusName( ), proxy::execArgs(args) );
-	    if ( dbname == 0 ) { throw AipsError("launch failed"); }
+	    if ( dbname == 0 ) { throw  std::runtime_error( "launch failed" ); }
 	    proxy *result = 0;
 	    int count = trys;
 	    while ( count > 0 ) {
