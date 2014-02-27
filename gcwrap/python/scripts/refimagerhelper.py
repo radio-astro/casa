@@ -670,7 +670,7 @@ class ImagerParameters():
                  outlierfile='',
                  imagename='', nchan=1, freqstart='1.0GHz', freqstep='1.0GHz',
                  imsize=[1,1], cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
-                 ftmachine='ft', startmodel='', weighting='natural',
+                 ftmachine='ft', startmodel='', weighting='natural', stokes='I',
 
                  aterm=True,
                  psterm=True,
@@ -706,7 +706,7 @@ class ImagerParameters():
                                  'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                  'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                  'conjbeams':conjbeams, 'computepastep':computepastep,
-                                 'rotatepastep':rotatepastep      }     }
+                                 'rotatepastep':rotatepastep, 'stokes': stokes      }     }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
 
