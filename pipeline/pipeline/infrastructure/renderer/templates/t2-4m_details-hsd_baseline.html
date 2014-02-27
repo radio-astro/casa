@@ -60,6 +60,11 @@ except Exception, e:
    raise e
 %>
 
+<!-- short description of what the task does -->
+<p>This task generates baseline fitting tables and subtracts baseline from spectra. 
+Spectral lines are detected by clustering analysis for each spectral window, 
+and line free channels are used for baseline fitting. </p>
+
 <h2>Line Detection by Clustering Analysis</h2>
 
 % if len(detail) > 0 or len(cover_only) > 0:
