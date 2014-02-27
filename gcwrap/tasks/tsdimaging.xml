@@ -31,13 +31,16 @@ number of image pixel (imsize) and size of the pixel (cell).\n
 The frequency coordinate of image is defined by three parameters,
 the number of channels (nchan), the channel id/frequency/velocity of
 the first channel (start), and channel width (width).There are three
-modes available to define unit of start and width, i.e., \'channel\' (use
-channel indices), \'frequency\' (use frequency unit, e.g., \'GHz\'),
-and \'velocity\' (use velocity unit, e.g., \'km/s\'). By default, nchan,
+modes available to define unit of start and width, i.e., 'channel' (use
+channel indices), 'frequency' (use frequency unit, e.g., 'GHz'),
+and 'velocity' (use velocity unit, e.g., 'km/s'). By default, nchan,
 start, and width are defined so that all selected spectral windows are
 covered with the channel width equal to separation of first two
 channels selected.\n
-Finally, polarizations of image is defined by stokes parameter.\n
+Finally, polarizations of image is defined by stokes parameter or
+polarization.For example, stokes='XXYY' produces an image cube with
+each plane contains the image of one of the polarizations, while
+stokes='I' produces a 'total intensity' or Stokes I image.\n
 
 The task also supports various grid function (convolution kernel) to
 weight spectra. See description below for details of gridfunction
@@ -47,7 +50,7 @@ available.
 
   <input>
     <param type="stringArray" name="infiles"  mustexist="true">
-            <description>a list of names of input MSes (only MS is allowed for this task)</description>
+            <description>a list of names of input SD Measurementsets (only MS is allowed for this task)</description>
             <value></value>
     </param>
 
@@ -185,13 +188,13 @@ available.
     </param>
 
     <param type="intArray" name="imsize">
-            <description>x and y image size in pixels, e.g., [128,128]. Single value: same for both spatial axes ([] = number of pixels to cover whole pointings in MSes)</description>
+            <description>x and y image size in pixels, e.g., [64,64]. Single value: same for both spatial axes ([] = number of pixels to cover whole pointings in MSes)</description>
             <value type="vector">
             </value>
     </param>
 
     <param type="any" name="cell">
-    <description>x and y cell size, (e.g., [\'30arcsec\',\'30arcsec\']. default unit arcmin. ('' = 1/3 of FWHM of primary beam)</description>
+    <description>x and y cell size, (e.g., [\'8arcsec\',\'8arcsec\']. default unit arcmin. ('' = 1/3 of FWHM of primary beam)</description>
     <any type="variant" limittypes="string stringArray doubleArray"/>
     <value type="string"></value>
     </param>
@@ -203,7 +206,7 @@ available.
     </param>
 
     <param type="string" name="ephemsrcname">
-	    <description>ephemeris source name, e.g. \'moon\'</description>
+	    <description>ephemeris source name, e.g. \'mars\'</description>
 	    <value></value>
     </param>
 
@@ -227,7 +230,7 @@ available.
     </param>
 
     <param type="string" name="stokes">
-            <description>stokes or correlation to image, e.g. \'I\', \'XX\'</description>
+            <description>stokes parameters or polarization types to image, e.g. \'I\', \'XX\'</description>
             <value></value>
     </param>
 
@@ -307,7 +310,7 @@ available.
 
   <example>
 Keyword arguments:
-infiles -- a list of names of input MSes
+infiles -- a list of names of input SD Measurementsets
         example: 'm100.PM01.ms'
                  ['m100.PM01.ms','m100.PM03.ms']; multiple MSes
 outfile -- name of output image
@@ -442,7 +445,7 @@ cell -- x and y cell size. default unit arcmin
         default: '' (= 1/3 of FWHM of primary beam)
         example: cell=['0.2arcmin, 0.2arcmin']
                  cell='0.2arcmin' (equivalent to example above)
-phasecenter -- image phase center: direction measure or field id 
+phasecenter -- image phase center: direction measure or field ID
         default: '' (= the center of pointing directions in 
                      POINTING table of infiles)
         example: 6 (field id), 'J2000 13h44m00 -17d02m00',
@@ -452,9 +455,9 @@ ephemsrcname -- ephemeris source name for moving source
         if the source name in the data matches one of the known 
         solar objects by the system, this task automatically set 
         the source name. 
-        example: 'moon' 
+        example: 'mars' 
 pointingcolumn -- pointing data column to use
-        option: 'direction', 'target', 'pointing_offset', 'source_offset', 'encoder' 
+        option: 'direction', 'target', 'pointing_offset', 'source_offset', encoder' 
         default: 'direction'
 restfreq -- specify rest frequency to use for output image
         default: '' (refer input data)
@@ -471,12 +474,12 @@ minweight -- Minimum weight ratio to the median of weight used in
 -----------------
 Gridding Kernel
 -----------------
-The parameter gridfunction sets gridding function for imaging. 
-Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
-Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
-Jinc), where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order 
-Bessel function J_1, and 'PB' (Primary Beam). For 'PB', correct 
-antenna informations should be included in input file. 
+The parameter gridfunction sets gridding function (convolution kernel)
+for imaging. Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate
+Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*Jinc),
+where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order Bessel function
+J_1, and 'PB' (Primary Beam). For 'PB', correct antenna informations
+should be included in input file.
 
 There are four subparameters for gridfunction: convsupport, truncate, 
 gwidth, and jwidth. The convsupport is an integer specifying cut-off 
