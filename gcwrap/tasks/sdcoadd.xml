@@ -82,7 +82,7 @@ antenna -- select an antenna name or ID
         default: 0
         example: 'PM03'
         NOTE this parameter is effective only for MS input
-outfile -- Name of output file
+outfile -- name of output file
         default: '' (&lt;infile&gt;_coadd)
 outform -- format of output file
         options: 'ASCII','SDFITS','MS','ASAP'
