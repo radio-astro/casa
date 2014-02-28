@@ -164,22 +164,7 @@ protected:
  
   /////////////// Internal Functions
 
-  /*
-  CoordinateSystem buildCoordSys(const MDirection& phasecenter, 
-				 const Quantity& cellx, 
-				 const Quantity& celly,
-				 const Int nx, 
-				 const Int ny, 
-				 const String& stokes, 
-				 const Projection& projection, 
-				 const Int nchan,
-				 const Quantity& freqStart, 
-				 const Quantity& freqStep, 
-				 const Vector<Quantity>& restFreq, 
-				 const MFrequency::Types freqFrame);
-  Vector<Int> decideNPolPlanes(const String& stokes);
-  */
-
+  // Choose between different types of FTMs
   void createFTMachine(CountedPtr<FTMachine>& theFT, 
 		       CountedPtr<FTMachine>& theIFT,  
 		       const String& ftname,
@@ -203,8 +188,28 @@ protected:
 		       const Float rotatePAStep    = 5.0,
 		       const Int cache=1000000000,
 		       const Int tile=16);
-  void createIMStore(const String imageName, const CoordinateSystem& cSys,
-		     const Quantity& distance, Int facets, const Bool overwrite);
+
+  // Choose between different types of ImageStore types (single term, multiterm, faceted)
+  CountedPtr<SIImageStore> createIMStore(String imageName, 
+					 CoordinateSystem& cSys,
+					 IPosition imShape, 
+					 const Bool overwrite,
+					 String mappertype="default", 
+					 uInt ntaylorterms=1,
+					 Quantity distance=Quantity(0.0, "m"));
+  
+  // Choose between different types of Mappers (single term, multiterm, imagemosaic, faceted)
+  CountedPtr<SIMapperBase> createSIMapper(String mappertype,  
+					  CountedPtr<SIImageStore> imagestore, //// make this inside !!!!!
+					  CountedPtr<FTMachine> ftmachine,
+					  CountedPtr<FTMachine> iftmachine,
+					  uInt ntaylorterms=1);
+
+  Block<CountedPtr<SIImageStore> > createFacetImageStoreList(
+							     CountedPtr<SIImageStore> imagestore,
+							     Int facets);
+  void setPsfFromOneFacet();
+
   void createVisSet(const Bool writeaccess=False);
   
   void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
@@ -237,23 +242,29 @@ protected:
   /////It associated the ftmachine with a given field
   ////For facetted image distinct  ft machines will associated with each facets and 
   //// Only one facetted image allowed
-  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
-		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, const Bool overwrite=False);
-  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
+  //  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
+  //		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, const Bool overwrite=False);
+
+  void appendToMapperList(String imagename, 
+			  CoordinateSystem& csys, 
+			  IPosition imshape,
 			  CountedPtr<FTMachine>& ftm,
 			  CountedPtr<FTMachine>& iftm,
-		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, 
-			  const Bool overwrite=False);
+		  	  Quantity distance=Quantity(0.0, "m"), 
+			  Int facets=1, 
+			  const Bool overwrite=False,
+			  String mappertype=String("default"),
+			  uInt ntaylorterms=1);
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
-
-  CountedPtr<FTMachine> itsCurrentFTMachine;
-  CoordinateSystem itsCurrentCoordSys, itsMaxCoordSys;
-  IPosition itsCurrentShape, itsMaxShape;
-  CountedPtr<SIImageStore> itsCurrentImages;
   ///if facetting this storage will keep the unsliced version 
   CountedPtr<SIImageStore> unFacettedImStore_p;
+
+
+  CoordinateSystem itsMaxCoordSys;
+  IPosition itsMaxShape;
+
 
   /////////////// All input parameters
 
@@ -281,7 +292,7 @@ protected:
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
   Bool useScratch_p;
-  Record ftmParams_p;
+
 };
 
 

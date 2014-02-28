@@ -40,6 +40,9 @@
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include <synthesis/ImagerObjects/SIMinorCycleController.h>
 
+#include <synthesis/ImagerObjects/SIImageStore.h>
+#include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
@@ -81,6 +84,9 @@ protected:
   Bool setupImagesOnDisk();
   Bool doImagesExist( String imagename );
 
+  CountedPtr<SIImageStore> makeImageStore( String imagename );
+  CountedPtr<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp );
+
   /////////////// Member Objects
 
   CountedPtr<SIImageStore> itsImages;
@@ -92,6 +98,9 @@ protected:
   Vector<String> itsPartImageNames;
   String itsStartingModelName;
   Float itsWeightLimit;
+
+  String itsMapperType;
+  uInt itsNTaylorTerms;
 
 };
 

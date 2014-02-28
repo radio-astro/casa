@@ -67,50 +67,71 @@ class SIImageStore
   IPosition getShape();
   String getName();
 
-  CountedPtr<ImageInterface<Float> > psf();
-  CountedPtr<ImageInterface<Float> > residual();
-  CountedPtr<ImageInterface<Float> > weight();
-  CountedPtr<ImageInterface<Float> > model();
-  CountedPtr<ImageInterface<Float> > image();
-  CountedPtr<ImageInterface<Complex> > forwardGrid();
-  CountedPtr<ImageInterface<Complex> > backwardGrid();
+  virtual String getType(){return "default";}
 
-  void setModelImage( String modelname );
+  virtual CountedPtr<ImageInterface<Float> > psf(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > residual(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
+  virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
+  virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
 
-  Bool hasWeight(){return itsWeightExists;};
+  virtual CountedPtr<ImageInterface<Float> > alpha(){throw(AipsError("No Alpha for 1 term"));};
+  virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
 
-  Bool doImagesExist();
-  Bool doesImageExist(String imagename);
-
+  virtual void setModelImage( String modelname );
+  virtual Bool hasWeight(){return itsWeightExists;};
+  virtual Bool doesImageExist(String imagename);
   void setImageInfo(const Record miscinfo);
 
-  //  void allocateRestoredImage();
-
-  void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
-  void addImages( CountedPtr<SIImageStore> imagestoadd, 
+  virtual void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
+  virtual void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
-  void divideResidualByWeight(const Float weightlimit=C::minfloat);
-  void dividePSFByWeight(const Float weightlimit=C::minfloat);
-  void divideModelByWeight(const Float weightlimit=C::minfloat);
+  virtual void divideResidualByWeight(const Float weightlimit=C::minfloat);
+  virtual void dividePSFByWeight(const Float weightlimit=C::minfloat);
+  virtual void divideModelByWeight(const Float weightlimit=C::minfloat);
 
-  Bool isValid(){return itsValidity;}
-  Bool checkValidity(const Bool psf, const Bool residual, const Bool weight, const Bool model, const Bool restored);
+  virtual Bool isValid(){return itsValidity;}
+  virtual Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
+			     const Bool imodel, const Bool irestored, 
+			     const Bool ialpha=False, const Bool ibeta=False);
 
-  Bool releaseLocks();
+  virtual Bool releaseLocks();
+
+  void getNSubImageStores(const Bool onechan, const Bool onepol, uInt& nSubChans, uInt& nSubPols);
+
+  virtual Double getReferenceFrequency(){return 0.0;}
+
+  virtual uInt getNTaylorTerms(){return 1;};
+
+  GaussianBeam getPSFGaussian();
+
+  virtual void restorePlane();
 
   // Get a SIImageStore of a given facet..the caller has to delete it
   // The images internall will reference back to a given section of the main of this.
   //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
-  SIImageStore * getFacetImageStore(const Int facet, const Int nfacets);
+  virtual CountedPtr<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
+  virtual CountedPtr<SIImageStore> getSubImageStore(const Int chan, const Bool onechan, 
+					    const Int pol, const Bool onepol);
+
+  ///  Matrix<Float> sumWeights; // 2D for image pol/chan
 
 protected:
 // Can make this a utility function elsewhere...
 //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
-  static SubImage<Float>* makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image);
+  SubImage<Float>* makeFacet(const Int facet, const Int nfacets,
+			     ImageInterface<Float>& image);
+  SubImage<Float>* makePlane(const Int chan, const Bool onechan, 
+			     const Int pol, const Bool onepol,
+			     ImageInterface<Float>& image);
+  
   Double memoryBeforeLattice();
   IPosition tileShape();
- 
+
+  void checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label );
   CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, const Bool overwrite);
   ///////////////////// Member Objects
 
@@ -121,14 +142,17 @@ protected:
   // Misc Information to go into the header. 
   Record itsMiscInfo;
 
-  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
-  CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
   Bool itsWeightExists;
 
   //  Bool itsPsfNormed, itsResNormed;
 
   Bool itsValidity;
 
+
+private:
+
+  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
+  CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
 
 };

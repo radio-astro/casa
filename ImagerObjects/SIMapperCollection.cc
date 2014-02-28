@@ -92,10 +92,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /*
   // Allocate Memory and open images.
   void SIMapperCollection::addMapper( String mappertype,  
 				      CountedPtr<SIImageStore> imagestore,
-				      CountedPtr<FTMachine> ftmachine)
+				      CountedPtr<FTMachine> ftmachine,
+				      CountedPtr<FTMachine> iftmachine)
   {
 
     LogIO os( LogOrigin("SIMapperCollection","addMapper",WHERE) );
@@ -103,21 +105,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<SIMapperBase> localMapper=NULL;
     Int nMappers = itsMappers.nelements();
     // Check 'mappertype' for valid types....
-    if( mappertype == "basetype" )
+    if( mappertype == "default" )
       {
-	localMapper = new SIMapperBase( imagestore, ftmachine, nMappers );
+	localMapper = new SIMapperSingle( imagestore, ftmachine, iftmachine, nMappers );
       }
-    else if( mappertype == "default" )
-      {
-	CountedPtr<FTMachine> iftm=ftmachine->cloneFTM();
-	localMapper = new SIMapper( imagestore, ftmachine, iftm, nMappers );
-      }
-    /*
+    
     else if( mappertype == "multiterm" )
       {
-	localMapper = new SIMapperMultiTerm( imagestore, ftmachine, nMappers );
+	localMapper = new SIMapperMultiTerm( imagestore, ftmachine, iftmachine,nMappers, ntaylorterms );
       }
-    */
+    
     else
       {
 	throw ( AipsError("Internal Error : Unrecognized Mapper Type in MapperCollection.addMapper") );
@@ -128,16 +125,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMappers[nMappers] = localMapper;
 
   }
+  */
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::addMapper( CountedPtr<SIMapperBase>& map){
+  void SIMapperCollection::addMapper( CountedPtr<SIMapperBase> map){
     Int nMappers = itsMappers.nelements();
     itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers]=map;
   } 
+
   Int SIMapperCollection::nMappers()
   {
     return itsMappers.nelements();
@@ -161,41 +160,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  void SIMapperCollection::initializeGrid(Int mapperid)
-  {
-    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    itsMappers[mapperid]->initializeGrid();
-  }
-
   //////////////////////////
   //////////////////////////
-  void SIMapperCollection::initializeGrid(const vi::VisBuffer2& vb)
+  void SIMapperCollection::initializeGrid(vi::VisBuffer2& vb, const Bool dopsf)
   {
+    cout << " initGrid : nMappers : " << itsMappers.nelements() << endl;
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
-		  (itsMappers[k])->initializeGrid(vb);
+	    (itsMappers[k])->initializeGrid(vb,dopsf);
 
   	  }
   }
 
   ////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////OLD vi/vb //////////////////////////////////////////////
-  void SIMapperCollection::initializeGrid(const VisBuffer& vb)
+  void SIMapperCollection::initializeGrid(VisBuffer& vb, Bool dopsf)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
-		  (itsMappers[k])->initializeGrid(vb);
+	    (itsMappers[k])->initializeGrid(vb,dopsf);
 
   	  }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  void SIMapperCollection::grid(Int mapperid)
-  {
-    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    itsMappers[mapperid]->grid();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   /////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
-  void SIMapperCollection::grid(VisBuffer& vb, const Bool dopsf, FTMachine::Type col)
+  void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
   {
 	  if(col==FTMachine::CORRECTED){
 		  if(vb.msColumns().correctedData().isNull()){
@@ -242,16 +227,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ///////////////////////////////
   ////////////////////////////////
 
-
-  void SIMapperCollection::finalizeGrid(Int mapperid)
-  {
-    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    itsMappers[mapperid]->finalizeGrid();
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    void SIMapperCollection::finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf)
+    void SIMapperCollection::finalizeGrid(vi::VisBuffer2& vb, const Bool dopsf)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
@@ -261,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////OLD VI/VB////////////////////////////////////////////////
-    void SIMapperCollection::finalizeGrid(const VisBuffer& vb, const Bool dopsf)
+    void SIMapperCollection::finalizeGrid(VisBuffer& vb, Bool dopsf)
         {
       	  for (uInt k=0; k < itsMappers.nelements(); ++k)
       	  {
@@ -271,17 +249,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
 
 
-   ///////////////
-   /////////////////
-  void SIMapperCollection::initializeDegrid(Int mapperid)
-  {
-    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    itsMappers[mapperid]->initializeDegrid();
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::initializeDegrid(const vi::VisBuffer2& vb)
+  void SIMapperCollection::initializeDegrid(vi::VisBuffer2& vb)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
@@ -291,7 +261,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////OLD VI/VB ///////////////////////////////////////////////////
-  void SIMapperCollection::initializeDegrid(const VisBuffer& vb)
+  void SIMapperCollection::initializeDegrid(VisBuffer& vb)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
     	  {
@@ -299,14 +269,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     	  }
     }
-
-  ///////////////////////////
-  /////////////////////////
-  void SIMapperCollection::degrid(Int mapperid)
-  {
-    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    itsMappers[mapperid]->degrid();
-  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +314,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(VisBuffer& vb, const Bool useScratch)
+  void SIMapperCollection::degrid(VisBuffer& vb, Bool useScratch)
     {
 	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	    				(itsMappers[k])->degrid(vb);
@@ -412,13 +374,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  /////////////
-  ///////////////
-  void SIMapperCollection::finalizeDegrid(Int mapperid)
-  {
-    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    itsMappers[mapperid]->finalizeDegrid();
-  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -432,7 +387,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   /////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(const VisBuffer& /*vb*/)
+  void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {

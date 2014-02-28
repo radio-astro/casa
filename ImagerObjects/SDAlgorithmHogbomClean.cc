@@ -153,12 +153,12 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
 
   SDAlgorithmHogbomClean::SDAlgorithmHogbomClean():
-    SDAlgorithmBase(),
-    itsMatResidual(), itsMatModel(), itsMatPsf(),
-    itsMaxPos( IPosition() ),
-    itsPeakResidual(0.0),
-    itsModelFlux(0.0),
-    itsMatMask()
+    SDAlgorithmBase()
+    //    itsMatResidual(), itsMatModel(), itsMatPsf(),
+    //    itsMaxPos( IPosition() ),
+    //    itsPeakResidual(0.0),
+    //    itsModelFlux(0.0),
+    //    itsMatMask()
  {
    itsAlgorithmName=String("Hogbom");
  }
@@ -171,9 +171,9 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
   void SDAlgorithmHogbomClean::initializeDeconvolver( Float &peakresidual, Float &modelflux )
   {
 
-    itsResidual.get( itsMatResidual, True );
-    itsModel.get( itsMatModel, True );
-    itsPsf.get( itsMatPsf, True );
+    itsImages->residual()->get( itsMatResidual, True );
+    itsImages->model()->get( itsMatModel, True );
+    itsImages->psf()->get( itsMatPsf, True );
 
     //    cout << "Residual image : " << itsMatResidual << endl;
     //  cout << "PSF image : " << itsMatPsf << endl;
@@ -192,7 +192,13 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
   }
 
-  void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone)
+
+  void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, 
+					    Int cycleNiter, 
+					    Float cycleThreshold, 
+					    Float &peakresidual, 
+					    Float &modelflux, 
+					    Int &iterdone)
   {
 
     Bool delete_iti, delete_its, delete_itp, delete_itm;
@@ -209,10 +215,18 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     Float thres = cycleThreshold;
 
     IPosition shp = itsMatPsf.shape();
+    /*
     Int xbeg = shp[0]/4;
     Int xend = 3*shp[0]/4;
     Int ybeg = shp[1]/4;
     Int yend = 3*shp[1]/4;
+    */
+    
+    Int xbeg = 0;
+    Int xend = shp[0]-1;
+    Int ybeg = 0;
+    Int yend = shp[1]-1;
+    
 
     Int newNx = shp[0];
     Int newNy = shp[1];
@@ -256,8 +270,8 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
   void SDAlgorithmHogbomClean::finalizeDeconvolver()
   {
-    itsResidual.put( itsMatResidual );
-    itsModel.put( itsMatModel );
+    (itsImages->residual())->put( itsMatResidual );
+    (itsImages->model())->put( itsMatModel );
   }
 
   /*

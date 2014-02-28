@@ -37,7 +37,7 @@
 
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
 #include<synthesis/ImagerObjects/SDAlgorithmHogbomClean.h>
-#include<synthesis/ImagerObjects/SDAlgorithmTest.h>
+#include<synthesis/ImagerObjects/SDAlgorithmMSMFS.h>
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include <synthesis/ImagerObjects/SIMinorCycleController.h>
 

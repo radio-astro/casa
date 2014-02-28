@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIMAPPER_H
-#define SYNTHESIS_SIMAPPER_H
+#ifndef SYNTHESIS_SIMAPPERSINGLE_H
+#define SYNTHESIS_SIMAPPERSINGLE_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -43,26 +43,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
   class ComponentFTMachine;
-  class SkyJones;
 template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-  class SIMapper : public SIMapperBase
+  class SIMapperSingle : public SIMapperBase
 {
  public:
   // Default constructor
 
-  SIMapper( CountedPtr<SIImageStore>& imagestore,
-            CountedPtr<FTMachine>& ftm, CountedPtr<FTMachine>& iftm,
-            Int mapperid);
-  SIMapper(const ComponentList& cl, String& whichMachine, Int mapperid);
-  virtual ~SIMapper();
+  SIMapperSingle( CountedPtr<SIImageStore>& imagestore,
+		  CountedPtr<FTMachine>& ftm, 
+		  CountedPtr<FTMachine>& iftm,
+		  CountedPtr<VPSkyJones>& vp);
+  SIMapperSingle(const ComponentList& cl, 
+		 String& whichMachine,
+		 CountedPtr<VPSkyJones>& vp);
+  virtual ~SIMapperSingle();
 
   ///// Major Cycle Functions
 
   /////////////////////// NEW VI/VB versions
-  void initializeGrid(const vi::VisBuffer2& vb);
+  void initializeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
   void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
   void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
   void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
@@ -70,31 +72,28 @@ template<class T> class ImageInterface;
   void finalizeDegrid();
 
   /////////////////////// OLD VI/VB versions
-  void initializeGrid(const VisBuffer& vb);
-  void grid(const VisBuffer& vb, Bool dopsf, FTMachine::Type col);
-  void finalizeGrid(const VisBuffer& vb, const Bool dopsf);
-  void initializeDegrid(const VisBuffer& vb, const Int row=-1);
+  void initializeGrid(VisBuffer& vb, Bool dopsf);
+  void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
+  void finalizeGrid(VisBuffer& vb, Bool dopsf);
+  void initializeDegrid(VisBuffer& vb, Int row=-1);
   void degrid(VisBuffer& vb);
 
   //////////////the return value is False if no valid record is being returned
   Bool getCLRecord(Record& rec);
   Bool getFTMRecord(Record& rec);
 
+  Bool releaseImageLocks(){return itsImages->releaseLocks();}
+  String getImageName(){return itsImages->getName();};
+  CountedPtr<SIImageStore> imageStore(){return itsImages;};
+
 protected:
-  Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
-  //////////////OLD vb version
-  Bool changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
-  ////////////////////////////////////////////
+
+  CountedPtr<SIImageStore> itsImages;
 
   CountedPtr<FTMachine> ft_p, ift_p; 
-
-  //  CountedPtr<ComponentFTMachine> cft_p;
-  //  ComponentList cl_p;
-
-
   CountedPtr<ComponentFTMachine> cft_p;
-  ComponentList cl_p, clCorrupted_p;
-  SkyJones  *ejgrid_p, *ejdegrid_p;
+  ComponentList cl_p; //, clCorrupted_p;
+
   vi::VisBuffer2 * vb_p;
   VisBuffer ovb_p;
 

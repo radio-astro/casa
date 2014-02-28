@@ -62,7 +62,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
-				       itsWeightLimit(0.1)
+				       itsWeightLimit(0.1),
+				       itsMapperType("default"),
+				       itsNTaylorTerms(1)
   {
     
   }
@@ -97,6 +99,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       else
 	{ itsWeightLimit = 0.1; }
+
+
+      // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
+      if( syncpars.isDefined("mtype") )  // A single string
+	{ itsMapperType = syncpars.asString( RecordFieldId("mtype")); }
+      else
+	{ itsMapperType = "default";}
+
+      if( syncpars.isDefined("ntaylorterms") )  // A single int
+	{ itsNTaylorTerms = syncpars.asuInt( RecordFieldId("ntaylorterms")); }
+      else
+	{ itsNTaylorTerms = 1;}
+
 
       }
     catch(AipsError &x)
@@ -212,7 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool foundFullImage=False;
     try
       {
-	itsImages = new SIImageStore( itsImageName );
+	itsImages = makeImageStore( itsImageName );
 	foundFullImage = True;
       }
     catch(AipsError &x)
@@ -230,7 +245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	try
 	  {
-	    itsPartImages[part] = new SIImageStore( itsPartImageNames[part] );
+	    itsPartImages[part] = makeImageStore ( itsPartImageNames[part] );
 	    foundPartImages |= True;
 	  }
 	catch(AipsError &x)
@@ -298,7 +313,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IPosition tempshape = temppart.shape();
 	    CoordinateSystem tempcsys = temppart.coordinates();
 
-	    itsImages = new SIImageStore( itsImageName, tempcsys, tempshape );
+	    itsImages = makeImageStore ( itsImageName, tempcsys, tempshape );
 	    foundFullImage = True;
 	  }
 
@@ -321,6 +336,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return needToGatherImages;
   }// end of setupImagesOnDisk
 
+
+  CountedPtr<SIImageStore> SynthesisParSync::makeImageStore( String imagename )
+  {
+    if( itsMapperType == "multiterm" )
+      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms );   }
+    else
+      { return new SIImageStore( imagename );   }
+  }
+
+
+  CountedPtr<SIImageStore> SynthesisParSync::makeImageStore( String imagename, 
+							    CoordinateSystem& csys, 
+							    IPosition shp )
+  {
+    if( itsMapperType == "multiterm" )
+      { return new SIImageStoreMultiTerm( imagename, csys, shp, False, itsNTaylorTerms );   }
+    else
+      { return new SIImageStore( imagename, csys, shp, False );   }
+  }
 
 
 
