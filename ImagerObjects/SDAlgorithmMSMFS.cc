@@ -161,6 +161,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     iterdone = itsMTCleaner.mtclean( cycleNiter, 0.0, loopgain, cycleThreshold );
 
+    if( iterdone==-2 ) throw(AipsError("MT-Cleaner error : Non-invertible Hessian "));
+
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
 	Matrix<Float> tempMat;
