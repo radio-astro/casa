@@ -75,6 +75,12 @@ def get_task_description(result_obj):
         LOG.warning(msg)
         return msg
 
+    d = {'description' : _get_task_description_for_class(task_cls),
+         'task_name'   : get_task_name(result_obj, include_stage=False),
+         'stage'       : get_stage_number(result_obj)}
+    return '{stage}. <strong>{task_name}</strong>: {description}'.format(**d)
+
+def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.AgentFlagger:
         return 'Deterministic Flagging'
 
@@ -105,11 +111,10 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.GTypeGaincal:
         return 'G-type gain calibration'
 
-    if task_cls in (hifa.tasks.ALMAImportData, hif.tasks.ImportData):
-        names = []
-        for result in result_obj:
-            names.extend([ms.basename for ms in result.mses])
-        return 'Register %s with pipeline' % utils.commafy(names)
+    if task_cls in (hifa.tasks.ALMAImportData, hif.tasks.ImportData, 
+                    hsd.tasks.SDImportData, hsd.tasks.SDImportData2,
+                    hifv.tasks.importdata.importdata.VLAImportData):
+        return 'Register measurement sets with the pipeline'
 
     if task_cls is hifa.tasks.Linpolcal:
         return 'Linear polarization calibration'
@@ -132,12 +137,6 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Setjy:
         return 'Set calibrator model visibilities'
 
-    if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportData2):
-        names = []
-        for result in result_obj:
-            names.extend([ms.basename for ms in result.mses])
-        return 'Register %s with pipeline' % utils.commafy(names)
-    
     if task_cls is hsd.tasks.SDConvertData:
         return 'Convert Data'
 
@@ -198,12 +197,6 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDConvertData:
         return 'Convert MSs into Scantables'
-    
-    if task_cls is hifv.tasks.importdata.importdata.VLAImportData:
-        names = []
-        for result in result_obj:
-            names.extend([ms.basename for ms in result.mses])
-        return 'VLA Import Data: Register %s with pipeline' % utils.commafy(names)
     
     if task_cls is hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger:
         return 'VLA deterministic flagging'
@@ -267,7 +260,7 @@ def get_task_description(result_obj):
     return ('\'%s\'' % task_cls.__name__)
 
 
-def get_task_name(result_obj):
+def get_task_name(result_obj, include_stage=True):
     if not isinstance(result_obj, collections.Iterable):
         return get_task_name([result_obj, ])
 
@@ -283,7 +276,9 @@ def get_task_name(result_obj):
         LOG.warning(msg)
         return msg
     
-    return casataskdict.classToCASATask.get(task_cls, task_cls.__name__)
+    stage = '%s. ' % get_stage_number(result_obj) if include_stage else ''
+    return '%s%s' % (stage,
+                     casataskdict.classToCASATask.get(task_cls, task_cls.__name__))
 
 
 def get_stage_number(result_obj):
