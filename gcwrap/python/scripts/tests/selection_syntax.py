@@ -69,7 +69,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         """
         return None
 
-    ### field selection syntax test
+    ### field selection syntax test ###
     @skipUnlessHasParam('field')
     def test_field_value_default(self):
         """test_field_value_default: Test default value for field"""
@@ -125,7 +125,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         """test_field_mix_list: Test field selection by name and id"""
         self._default_test()
 
-    ### spw selection syntax test
+    ### spw selection syntax test ###
     @skipUnlessHasParam('spw')
     def test_spw_id_default(self):
         """test_spw_id_default: Test default value for spw"""
@@ -286,13 +286,13 @@ class SelectionSyntaxTest(unittest.TestCase):
     @skipIfNoChannelSelection
     @skipUnlessHasParam('spw')
     def test_spw_value_velocity_frequency(self):
-        """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ2~FREQ3')"""
+        """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ0~FREQ1')"""
         self._default_test()
 
     @skipIfNoChannelSelection
     @skipUnlessHasParam('spw')
     def test_spw_value_velocity_velocity(self):
-        """test_spw_value_velocity_velocity: Test spw selection with channel range ('VEL0~VEL1:VEL0~VEL1')"""
+        """test_spw_value_velocity_velocity: Test spw selection with channel range ('VEL0~VEL1:VEL2~VEL3')"""
         self._default_test()
 
     @skipIfNoChannelSelection
@@ -307,7 +307,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         """test_spw_id_list_channel: Test spw selection with channnel range ('ID0:CH0~CH1,ID1:CH2~CH3')"""
         self._default_test()
         
-    ### timerange selection syntax test
+    ### timerange selection syntax test ###
     @skipUnlessHasParam('timerange')
     def test_timerange_value_default(self):
         """test_timerange_value_default: Test default value for timerange"""
@@ -338,7 +338,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         """test_timerange_value_interval: Test timerange selection by syntax 'T0+dT'"""
         self._default_test()
 
-    ### scan selection syntax test
+    ### scan selection syntax test ###
     @skipUnlessHasParam('scan')
     def test_scan_id_default(self):
         """test_scan_id_default: Test default value for scan"""
@@ -374,7 +374,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         """test_scan_id_exprlist: Test scan selection by id ('EXP0,EXP1')"""
         self._default_test()
 
-    ### pol selection syntax test
+    ### pol selection syntax test ###
     @skipUnlessHasParam('pol')
     def test_pol_id_default(self):
         """test_pol_id_default: Test default value for pol"""
@@ -410,7 +410,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         """test_pol_id_exprlist: Test pol selection by id ('EXP0,EXP1')"""
         self._default_test()
 
-    ### beam selection syntax test
+    ### beam selection syntax test ###
     @skipUnlessHasParam('beam')
     def test_beam_id_default(self):
         """test_beam_id_default: Test default value for beam"""
@@ -450,15 +450,19 @@ class SelectionSyntaxTest(unittest.TestCase):
         """
         This is default test that always fails.
         """
-        func_name = inspect.stack()[1][3]
+        #func_name = inspect.stack()[1][3]
+        func_name = _get_test_name()
         self.fail('You have to implement %s!'%(func_name))
 
-    def _get_test_name(self):
+    def _get_test_name(self, regular_test=True):
         stack = inspect.stack()
         func_name_list = [s[3] for s in stack]
         index = 0
         #print index
-        pattern = '^test_[a-z]+_(id|value|mix)_[a-z]+$'
+        if regular_test:
+            pattern = '^test_[a-z]+_(id|value|mix)_[a-z]+(_[a-z]+)?$'
+        else:
+            pattern = '^test.+$'
         while index < len(func_name_list) \
                 and re.match(pattern, func_name_list[index]) is None:
             index += 1
@@ -503,6 +507,8 @@ class SelectionSyntaxTest(unittest.TestCase):
                     pattern = '^>[^*]+$'
                 elif psubtype == 'interval':
                     pattern = '^[^*]+\+[^*]+$'
+        if channel_selection is not None:
+            pattern = pattern.replace('$', ':.+~.+$')
         return pattern
 
     def run_task(self, **kwargs):
@@ -515,6 +521,7 @@ class SelectionSyntaxTest(unittest.TestCase):
             channel_selection = func_name_elements[4]
         else:
             channel_selection = None
+        casalog.post('%s: channel_selection=%s'%(func_name, channel_selection))
 
         # Test 1: target parameter must be set unless the test is 'default'
         #         otherwise test fails            
@@ -529,7 +536,7 @@ class SelectionSyntaxTest(unittest.TestCase):
                             msg='parameter \'%s\' must be default'%(param))
         else:
             param_value = kwargs[param]
-            pattern = self._get_pattern(ptype, psubtype)
+            pattern = self._get_pattern(ptype, psubtype, channel_selection)
             casalog.post('%s: pattern=\'%s\', param_value=\'%s\''%(func_name, pattern, param_value),
                          priority='DEBUG')
             if pattern is not None:
