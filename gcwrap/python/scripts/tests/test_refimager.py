@@ -16,6 +16,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
      # Interaction ON or OFF
      interactive=False
 
+
      if(testnum==10):  ## Image domain mosaic for single-term
           casalog.post("==================================");
           casalog.post("Test 10 : Image domain mosaic for single-term");

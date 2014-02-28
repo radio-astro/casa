@@ -307,20 +307,23 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             ## Send in Selection parameters for all MSs in the list
             for mss in sorted( (self.allselpars[str(node)]).keys() ):
                 joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node)][mss])+")", node) )
-#                joblist.append( self.PH.runcmd("toolsi.selectdata( **"+str(self.allselpars[str(node)][mss])+")", node) )
-
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
                     nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
-                joblist.append( self.PH.runcmd("toolsi.defineimage( " + str( nimpars[str(fld)] ) + "," + str( ngridpars[str(fld)] )   + ")", node ) )
-#                joblist.append( self.PH.runcmd("toolsi.defineimage( " + str( nimpars[str(fld)] ) + ")", node ) )
-##                joblist.append( self.PH.runcmd("toolsi.defineimage( **" + str( nimpars[str(fld)] ) + ")", node ) )
-            
+
+                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( self.allgridpars[str(fld)] )   + ")", node ) )
+
+            ## Set weighting pars
             joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
 
         self.PH.checkJobs( joblist )
+
+
+#                joblist.append( self.PH.runcmd("toolsi.selectdata( **"+str(self.allselpars[str(node)][mss])+")", node) )
+#                joblist.append( self.PH.runcmd("toolsi.defineimage( " + str( nimpars[str(fld)] ) + ")", node ) )
+##                joblist.append( self.PH.runcmd("toolsi.defineimage( **" + str( nimpars[str(fld)] ) + ")", node ) )
 
 #############################################
 
@@ -603,6 +606,7 @@ class PyParallelImagerHelper():
 
         owd=os.getcwd()
         self.CL.pgc('import os')
+        self.CL.pgc('from numpy import array,int32')
         self.CL.pgc('os.chdir("'+owd+'")')
         os.chdir(owd)
         print "Setting up ", numproc, " engines."
@@ -706,14 +710,14 @@ class ImagerParameters():
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
-                                 'cellsize':cellsize, 'phasecenter':phasecenter, 
+                                 'cellsize':cellsize, 'phasecenter':phasecenter, 'stokes': stokes,
                                  'freqstart':freqstart, 'freqstep':freqstep, 
                                  'ntaylorterms':ntaylorterms, 'restfreq':restfreq , 'facets':facets  }      }
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                  'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                  'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                  'conjbeams':conjbeams, 'computepastep':computepastep,
-                                 'rotatepastep':rotatepastep, 'stokes': stokes,  'mtype':mtype     }     }
+                                 'rotatepastep':rotatepastep, 'mtype':mtype     }     }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
 

@@ -299,11 +299,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
 
 	    // Find an image to open and pick csys,shape from.
-	    String imopen = itsPartImageNames[0]+".residual";
+	    String imopen = itsPartImageNames[0]+".residual"+((itsMapperType=="multiterm")?".tt0":"");
 	    Directory imdir( imopen );
 	    if( ! imdir.exists() )
 	      {
-		imopen = itsPartImageNames[0]+".psf";
+		imopen = itsPartImageNames[0]+".psf"+((itsMapperType=="multiterm")?".tt0":"");
 		Directory imdir2( imopen );
 		if( ! imdir2.exists() )
 		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]));

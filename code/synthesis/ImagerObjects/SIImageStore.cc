@@ -541,17 +541,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(addpsf)
       {
 	LatticeExpr<Float> adderPsf( *(psf()) + *(imagestoadd->psf()) ); 
-	itsPsf->copyData(adderPsf);
+	psf()->copyData(adderPsf);
       }
     if(addresidual)
       {
 	LatticeExpr<Float> adderRes( *(residual()) + *(imagestoadd->residual()) ); 
-	itsResidual->copyData(adderRes);
+	residual()->copyData(adderRes);
       }
     if(addweight)
       {
 	LatticeExpr<Float> adderWeight( *(weight()) + *(imagestoadd->weight()) ); 
-	itsWeight->copyData(adderWeight);
+	weight()->copyData(adderWeight);
       }
     ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
@@ -579,7 +579,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
 	    
 	    LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / ( (*(weight())) + maskinv) );
-	    itsResidual->copyData(ratio);
+	    residual()->copyData(ratio);
 	    //   itsResNormed=True;
 	  }
 	  /*
@@ -614,7 +614,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
 	    
 	    LatticeExpr<Float> ratio( ( (*(psf())) * mask ) / ( (*(weight())) + maskinv) );
-	    itsPsf->copyData(ratio);
+	    psf()->copyData(ratio);
 	    // itsPsfNormed=True;
 	  }
 	  /*	else
@@ -644,7 +644,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
 	
 	LatticeExpr<Float> ratio( ( (*(model())) * mask ) / ( (*(weight())) + maskinv) );
-	itsModel->copyData(ratio);
+	model()->copyData(ratio);
       }    
     // createMask
   }
@@ -681,7 +681,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Fit a Gaussian to the PSF.
 	GaussianBeam beam = getPSFGaussian();
 
-	os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg)" << LogIO::POST; 
+	os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
 	
 	// Initialize restored image
 	image()->set(0.0);
@@ -691,6 +691,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	StokesImageUtil::Convolve( *(image()), beam);
 	// Add residual image
 	image()->copyData( LatticeExpr<Float>( *(image()) + *(residual())  ) );
+	
+	// Set restoring beam into the image
+	ImageInfo ii = image()->imageInfo();
+	ii.setRestoringBeam(beam);
+	image()->setImageInfo(ii);
+
       }
     catch(AipsError &x)
       {

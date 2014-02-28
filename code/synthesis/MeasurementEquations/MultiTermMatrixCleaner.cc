@@ -882,13 +882,14 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
 	      {
                 //(matA_p[scale])(taylor1,taylor2) = (cubeA_p[IND4(taylor1,taylor2,scale,scale)])(itsPositionPeakPsf); // OLD
                 (matA_p[scale])(taylor1,taylor2) = (cubeA_p[IND4(taylor1,taylor2,scale,scale)])(psfpeak_p); // NEW
-		/* Check for exact zeros. Usually indicative of error */
-		if( fabs( (matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = True;
+		/* Check for exact zeros ON MAIN DIAGONAL. Usually indicative of error */
+		if( taylor1==taylor2 &&
+		    fabs( (matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = True;
 	      }
 	      
 	      if(stopnow)
 	      {
-                os << "Multi-Term Hessian has exact zeros. Not proceeding further." << LogIO::WARN << endl;
+                os << "Multi-Term Hessian has exact zeros on its main diagonal. Not proceeding further." << LogIO::WARN << endl;
                 os << "The Matrix [A] is : " << (matA_p[scale]) << LogIO::POST;
 	        return -2;
 	      }

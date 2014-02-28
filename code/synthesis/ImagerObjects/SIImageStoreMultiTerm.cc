@@ -133,10 +133,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     Bool exists=True;
-    for(uInt tix=0;tix<itsNTerms;tix++)
+    for(uInt tix=0;tix<2*itsNTerms-1;tix++) 
       {
-	exists &= ( doesImageExist( itsImageName+String(".residual.tt")+String::toString(tix) ) ||
-		    doesImageExist( itsImageName+String(".psf.tt")+String::toString(tix) ) );
+	if( tix<itsNTerms ) {
+	    exists &= ( doesImageExist( itsImageName+String(".residual.tt")+String::toString(tix) ) ||
+			doesImageExist( itsImageName+String(".psf.tt")+String::toString(tix) ) );
+	  }else {
+	    exists &= ( doesImageExist( itsImageName+String(".psf.tt")+String::toString(tix) ) );
+	  }
       }
 
     // The PSF or Residual images must exist. 
@@ -259,13 +263,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","releaseLocks",WHERE) );
 
-    for(uInt tix=0; tix<itsNTerms; tix++)
+    for(uInt tix=0; tix<2*itsNTerms-1; tix++)
       {
 	if( ! itsPsfs[tix].null() ) itsPsfs[tix]->unlock();
-	if( ! itsModels[tix].null() ) itsModels[tix]->unlock();
-	if( ! itsResiduals[tix].null() ) itsResiduals[tix]->unlock();
-	if( ! itsImages[tix].null() ) itsImages[tix]->unlock();
 	if( ! itsWeights[tix].null() ) itsWeights[tix]->unlock();
+	if( tix < itsNTerms )
+	  {
+	    if( ! itsModels[tix].null() ) itsModels[tix]->unlock();
+	    if( ! itsResiduals[tix].null() ) itsResiduals[tix]->unlock();
+	    if( ! itsImages[tix].null() ) itsImages[tix]->unlock();
+	  }
       }
     
     return True; // do something more intelligent here.
@@ -413,11 +420,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStoreMultiTerm::resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight )
   {
-    for(uInt tix=0;tix<itsNTerms;tix++)
+    for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
 	if( resetpsf ) psf(tix)->set(0.0);
-	if( resetresidual ) residual(tix)->set(0.0);
 	if( resetweight && !itsWeights[tix].null() ) weight(tix)->set(0.0);
+
+	if( tix < itsNTerms ) {
+	    if( resetresidual ) residual(tix)->set(0.0);
+	  }
       }
   }
 
@@ -432,24 +442,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     */
 
-    for(uInt tix=0;tix<itsNTerms;tix++)
+    for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
 	
 	if(addpsf)
 	  {
 	    LatticeExpr<Float> adderPsf( *(psf(tix)) + *(imagestoadd->psf(tix)) ); 
-	    itsPsfs[tix]->copyData(adderPsf);
-	  }
-	if(addresidual)
-	  {
-	    LatticeExpr<Float> adderRes( *(residual(tix)) + *(imagestoadd->residual(tix)) ); 
-	    itsResiduals[tix]->copyData(adderRes);
+	    psf(tix)->copyData(adderPsf);
 	  }
 	if(addweight)
 	  {
 	    LatticeExpr<Float> adderWeight( *(weight(tix)) + *(imagestoadd->weight(tix)) ); 
-	    itsWeights[tix]->copyData(adderWeight);
+	    weight(tix)->copyData(adderWeight);
 	  }
+
+	if(tix < itsNTerms && addresidual)
+	  {
+	    LatticeExpr<Float> adderRes( *(residual(tix)) + *(imagestoadd->residual(tix)) ); 
+	    residual(tix)->copyData(adderRes);
+	  }
+
       }
   }
 
@@ -604,8 +616,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SIImageStoreMultiTerm::createMask(LatticeExpr<Bool> &lemask, 
 					 CountedPtr<ImageInterface<Float> > outimage)
 {
-  //      ImageRegion outreg = outimage->makeMask("mask0",False,True);
-  ImageRegion outreg = ((PagedImage<Float> *)(&*outimage))->makeMask("mask0",False,True);
+  ImageRegion outreg = outimage->makeMask("mask0",False,True);
+  //ImageRegion outreg = ((PagedImage<Float> *)(&*outimage))->makeMask("mask0",False,True);
   LCRegion& outmask=outreg.asMask();
   outmask.copyData(lemask);
   outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
