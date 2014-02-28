@@ -39,7 +39,6 @@
 
 #include <synthesis/ImagerObjects/SIMapper.h>
 #include <synthesis/ImagerObjects/SIMapperSingle.h>
-#include <synthesis/ImagerObjects/SIMapperSingleMos.h>
 #include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
