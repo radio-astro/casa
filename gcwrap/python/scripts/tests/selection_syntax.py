@@ -451,7 +451,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         This is default test that always fails.
         """
         #func_name = inspect.stack()[1][3]
-        func_name = _get_test_name()
+        func_name = self._get_test_name()
         self.fail('You have to implement %s!'%(func_name))
 
     def _get_test_name(self, regular_test=True):

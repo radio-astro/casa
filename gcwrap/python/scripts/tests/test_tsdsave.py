@@ -1751,7 +1751,6 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
 
-    #@unittest.expectedFailure
     def test_spw_id_exact_frequency(self):
         """test_spw_id_exact_frequency: Test spw selection with channel range ('N:FREQ0~FREQ1')"""
         iflist = [2]
@@ -1760,7 +1759,6 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
-        #self._default_test()
 
     @unittest.expectedFailure
     def test_spw_id_exact_velocity(self):
