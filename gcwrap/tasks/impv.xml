@@ -56,7 +56,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
         <param type="any" name="width">
             <any type="variant" limittypes="string int record"/>
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <description>Width of slice for averaging pixels perpendicular to the slice. Must be an odd positive integer or valid quantity. See help for details.</description>
             <value type="int">1</value>
         </param>
         <param type="string" name="unit">
@@ -157,13 +157,14 @@ pa               Position angle of the slice, measured from the direction of pos
                  (eg north through east in an equatorial coordinate system). Must be expressed as a valid angular
                  quantity (eg "40deg", {"value": 40, "unit": "deg"}).
                  Used iff mode="length".
-width            Width, in pixels, for averaging pixels perpendicular to the slice.
-                 This value is determined after rotating the image so the slice lies horizontally.
-                 A value of one means no averaging. A value of 3 means average one pixel on each
+width            Width of slice for averaging pixels perpendicular to the slice which must be an odd positive integer or
+                 valid quantity. The averaging using this value occurs after the image has been rotated so the slice lies horizontally.
+                 An integer value is interpreted as the number of pixels to average.
+                 A value of 1 means no averaging. A value of 3 means average one pixel on each
                  side of the slice and the pixel on the slice. A value of 5 means average 2 pixels
-                 on each side of the slice and the pixel on the slice, etc. Must be either an odd integer >= 1 or
-                 a valid quantity (eg. "4arcsec", qa.quantity("4arcsec")). If a quantity, the value will be adjusted
-                 upwards, if necessary, such that the next highest odd integer number of pixels is used.
+                 on each side of the slice and the pixel on the slice, etc. If a quantity (eg. "4arcsec", qa.quantity("4arcsec"))
+                 is specified, the equivalent number of pixels is calculated, and if necessary, rounded up
+                 to the next odd integer.
 unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
                  measure.
 overwrite        If output file is specified, this parameter controls if an already existing file by the
@@ -200,7 +201,7 @@ if a parameter from one of these sets is specified, a parameter from the other s
 case, the end points of the segment must fail within the input image, and they both must be at least 2 pixels from the
 edge of the input image to facilite rotation (see below).
 
-One may specify a width, which is the number of pixels centered along and perpendicular
+One may specify a width, which represents the number of pixels centered along and perpendicular
 to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which
 case it must be positive and odd. Alternatively, it may be specified as a valid quantity string (eg, "4arcsec") or
 quantity record (eg qa.quantity("4arcsec"). In this case, units must be conformant to the direction axes units (usually
