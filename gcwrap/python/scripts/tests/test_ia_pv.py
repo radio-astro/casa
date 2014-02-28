@@ -221,7 +221,7 @@ class ia_pv_test(unittest.TestCase):
             
             
             # width > 1
-            for i in range(4):
+            for i in range(5):
                 outfile = "test_pv_1_" + str(code) + str(i)
                 if i == 0:
                     width = 3;
@@ -231,6 +231,9 @@ class ia_pv_test(unittest.TestCase):
                     width = "1.1arcmin"
                 elif i == 3:
                     width = qa.quantity("1.2arcmin")
+                elif i == 4:
+                    # width units different from axis units, CAS-5975
+                    width = qa.quantity("72000marcsec")
                 if code == 0:
                     xx = run_ia_pv(
                         imagename=imagename, outfile=outfile, start=[2, 5],

@@ -3297,6 +3297,7 @@ image* image::pv(
 		}
 		pv.setStretch(stretch);
 		pv.setOffsetUnit(unit);
+		_log << _ORIGIN;
 		SPIIF out = pv.generate();
 		image *ret = wantreturn ? new image(out) : 0;
 		return ret;
