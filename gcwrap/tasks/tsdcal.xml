@@ -436,7 +436,7 @@ is and what unit you want to convert. If given fluxunit is different
 from the unit of input data, unit conversion is performed.
 The telescopeparam is used to specify conversion factor. There are three
 ways to specify telescopeparam: 1) set Jy/K conversion factor, 2) set
-telescope diameter, D, and aperture efficiency, eta, separaterly, and
+telescope diameter, D, and aperture efficiency, eta, separately, and
 3) 'FIX' mode (only change the unit without converting spectral data).
 If you give telescopeparam as a list, then if the list has a single float
 it is assumed to be the gain in Jy/K (case 1), if two or more elements

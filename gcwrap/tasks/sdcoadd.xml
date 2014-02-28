@@ -10,14 +10,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdcoadd" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: coadd multiple scantables into one</shortdescription>
+  <shortdescription>Coadd multiple scantables into one</shortdescription>
 
   <description>
-        Coadd multiple scantables into one
+Task sdcoadd performs co-add multiple single dish spectral data given
+by a list of spectral data file names in any of the following formats,
+ASAP, MS2,SDFITS, and ASCII.
+The units of line flux, the units of spectral axis, frame, and doppler
+are assumed to be those of the first one in the infiles.
 
-        Note: only works if the data structures are the same (nif, npol, nchan...)
-        Task Version 2008-01-29 TT
-</description>
+Note that it only works if the data structures are the same (nif, npol,
+nchan...)
+  </description>
 
   <input>
 
@@ -27,18 +31,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="antenna">
-            <description>antenna name or id (only effective for MS input)</description>
+            <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
             <any type="variant" limittype="string int"/>
             <value type="int">0</value>
     </param> 
 
     <param type="string" name="outfile">
-	    <description>output file name</description>
+	    <description>name of output file (See a WARNING in help)</description>
 	    <value></value>
     </param>
 
     <param type="string" name="outform">
-	    <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <shortdescription>output file format [\'ASAP\', \'MS2\', \'ASCII\', or \'SDFITS\'] (See a WARNING in help)</shortdescription>
+            <description>output file format (See a WARNING in help)</description>
 	    <value>ASAP</value>
 	    <allowed kind="enum">
 	    <value>ASCII</value>
@@ -55,7 +60,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite the output file if already exists</description>
+            <shortdescription>overwrite the output file if already exists [True, False] (See a WARNING in help)</shortdescription>
+            <description>overwrite the output file if already exists (See a WARNING in help)</description>
             <value>False</value>
     </param>
 
@@ -68,39 +74,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-  Keyword arguments:
-        infiles -- list of names of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
-        outfile -- Name of output file
-                default: '' (scantable)
-                example:
-        outform -- format of output file
-                options: 'ASCII','SDFITS','MS','ASAP'
-                default: 'ASAP'
-                example: the ASAP format is easiest for further sd
-                         processing; use MS for CASA imaging.
-                         If ASCII, then will append some stuff to
-                         the outfile name
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
-                default: False
-                WARNING: if outform='ASCII', this parameter is ignored 
+------------------
+Keyword arguments
+------------------
+infiles -- list of names of input SD dataset
+antenna -- select an antenna name or ID
+        default: 0
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+outfile -- Name of output file
+        default: '' (&lt;infile&gt;_coadd)
+outform -- format of output file
+        options: 'ASCII','SDFITS','MS','ASAP'
+        default: 'ASAP'
+        example: the ASAP format is easiest for further sd
+                 processing; use MS for CASA imaging.
+                 If ASCII, then will append some stuff to
+                 the outfile name
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+        NOTE this parameter is ignored when outform='ASCII'
 
-
-
-        DESCRIPTION:
-
-        Task sdcoadd performs co-add multiple single dish spectral data given
-        by a list of spectral data file names in any of the following formats,
-        ASAP, MS2,SDFITS, and ASCII.
-        The units of line flux, the units of spectral axis, frame, and doppler
-        are assumed to be those of the first one in the infiles.
-
-        WARNING for the GBT raw SDFITS format data as input:
-        SDtasks are able to handle GBT raw SDFITS format data since the 
-        data filler is available. However, the functionality is not well 
-        tested yet, so that there may be unknown bugs.  
-
+-------
+WARNING
+-------
+For the GBT raw SDFITS format data as input:
+SDtasks are able to handle GBT raw SDFITS format data since the 
+data filler is available. However, the functionality is not well 
+tested yet, so that there may be unknown bugs.  
   </example>
 
 </task>
