@@ -87,7 +87,7 @@ class PlotmsLeaf(object):
         # Truncate over-long field components while keeping them unique by
         # replacing them with the hash of the component  
         if len(fileparts['field']) > 19:
-            fileparts['field'] = str(hash(fileparts['field']))
+            fileparts['field'] = '-%s' % str(hash(fileparts['field']))
         
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
@@ -452,6 +452,7 @@ class AmpVsUVSummaryChart(SpwSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
         
@@ -470,6 +471,7 @@ class PhaseVsUVSummaryChart(SpwSummaryChart):
                      'avgscan'     : False,
                      'avgbaseline' : False,
                      'coloraxis'   : 'corr',
+                     'plotrange'   : [0, 0, -90, 90],
                      'overwrite'   : True}
         
         super(PhaseVsUVSummaryChart, self).__init__(
@@ -486,6 +488,7 @@ class AmpVsTimeSummaryChart(SpwSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'field',
                      'overwrite'   : True}
         
@@ -504,6 +507,7 @@ class PhaseVsTimeSummaryChart(SpwSummaryChart):
                      'avgscan'     : False,
                      'avgbaseline' : False,
                      'coloraxis'   : 'field',
+                     'plotrange'   : [0, 0, -90, 90],
                      'overwrite'   : True}
         
         super(PhaseVsTimeSummaryChart, self).__init__(
@@ -610,7 +614,7 @@ class PhaseVsFrequencyDetailChart(FieldSpwAntDetailChart):
                      'avgtime'     : '1e8',
                      'avgscan'     : True,
                      'avgantenna'  : False,
-                     'plotrange'   : [0, 0, -90, 90],
+                     'plotrange'   : [0, 0, -180, 180],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
         
@@ -628,6 +632,7 @@ class AmpVsUVDetailChart(SpwAntDetailChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
         
@@ -646,6 +651,7 @@ class PhaseVsUVDetailChart(SpwAntDetailChart):
                      'avgscan'     : False,
                      'avgbaseline' : False,
                      'coloraxis'   : 'corr',
+                     'plotrange'   : [0, 0, -180, 180],
                      'overwrite'   : True}
         
         super(PhaseVsUVDetailChart, self).__init__(
@@ -682,7 +688,7 @@ class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgantenna'  : False,
-                     'plotrange'   : [0, 0, -90, 90],
+                     'plotrange'   : [0, 0, -180, 180],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
         
