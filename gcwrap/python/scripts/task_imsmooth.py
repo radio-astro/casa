@@ -72,7 +72,7 @@ import numpy
 from taskinit import *
 
 def imsmooth(
-    imagename, kernel, major, minor, pa, commonbeam, targetres, region,
+    imagename, kernel, major, minor, pa, targetres, region,
     box, chans, stokes, mask, outfile, stretch, overwrite, beam
 ):
     casalog.origin( 'imsmooth' )
@@ -86,7 +86,12 @@ def imsmooth(
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
 
-    if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'box' ) ) ):
+    if (
+        not (
+            kernel.startswith( 'g' ) or  kernel.startswith( 'b' )
+            or kernel.startswith('c')
+        )
+    ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
                       +' type supported at this time.', 'SEVERE' )
         return retValue
@@ -119,22 +124,18 @@ def imsmooth(
         pa=str(pa)+'deg'
         
     try:       
-        if ( kernel.startswith( "gaus" ) ):
+        if ( kernel.startswith("g") or kernel.startswith("c")):
             _myia.open(imagename)
-            if commonbeam:
-                if beam or major or minor or pa:
-                    raise Exception, "You may not specify any of beam, major, minor, or pa when commonbeam=True"
-                if not _myia.restoringbeam():
-                    raise Exception, "Input image " + imagename + " has no beams, so a common beam cannot be determined."
-
+            if kernel.startswith("c"):
                 beam = _myia.commonbeam()
-                if targetres:
-                    # add a small epsilon to avoid convolving with a null beam to reach
-                    # a target resolution that already exists
-                    beam['major'] = qa.mul(beam['major'], 1 + 1e-10)
-                    beam['minor'] = qa.mul(beam['minor'], 1 + 1e-10)
-                else:
-                    casalog.post("Convolving with common beam " + str(beam), 'NORMAL')
+                # add a small epsilon to avoid convolving with a null beam to reach
+                # a target resolution that already exists
+                beam['major'] = qa.mul(beam['major'], 1 + 1e-10)
+                beam['minor'] = qa.mul(beam['minor'], 1 + 1e-10)
+                major = ""
+                minor = ""
+                pa = ""
+                targetres = True
             if (beam and (major or minor or pa)):
                 raise Exception, "You may specify only beam or the set of major/minor/pa"
             if not beam:
@@ -153,7 +154,7 @@ def imsmooth(
             )
             return True
 
-        elif (kernel.startswith( "box" ) ):
+        elif (kernel.startswith( "b" ) ):
             if not major or not minor:
                 raise Exception, "Both major and minor must be specified."
             # BOXCAR KERNEL

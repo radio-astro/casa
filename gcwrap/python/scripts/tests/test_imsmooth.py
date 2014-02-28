@@ -1285,7 +1285,7 @@ class imsmooth_test(unittest.TestCase):
         self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-8)
         
     def test_commonbeam(self):
-        #"""Test commonbeam input parameter in imsmooth"""
+        #"""Test kernel='commonbeam' in imsmooth"""
         myia = self.ia
         imagename = "cb1.im"
         myia.fromshape(imagename, [100, 100, 5])
@@ -1296,24 +1296,14 @@ class imsmooth_test(unittest.TestCase):
         myia.setbrightnessunit("Jy/beam")
         myia.done()
         outfile = "cbout1.im"
-        self.assertFalse(
-            imsmooth(
-                imagename=imagename, major="10arcsec",
-                commonbeam=True, outfile=outfile
-            )           
-        )
-        self.assertFalse(
-            imsmooth(
-                imagename=imagename, commonbeam=True, outfile=outfile
-            )           
-        )
         
         myia.open(imagename)
         myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
         myia.done()
+        """
         self.assertTrue(
             imsmooth(
-                imagename=imagename, commonbeam=True, outfile=outfile,
+                imagename=imagename, kernel='commonbeam', outfile=outfile,
                 targetres=False
             )           
         )
@@ -1324,11 +1314,11 @@ class imsmooth_test(unittest.TestCase):
         self.assertTrue(abs(qa.getvalue(beam['major']) - 6*root2) < 1e-6)
         self.assertTrue(abs(qa.getvalue(beam['minor']) - 3*root2) < 1e-6)
         self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
-        
+        """
         outfile = "cbout2.im"
         self.assertTrue(
             imsmooth(
-                imagename=imagename, commonbeam=True, outfile=outfile,
+                imagename=imagename, kernel='commonbeam', outfile=outfile,
                 targetres=True
             )           
         )
@@ -1346,9 +1336,10 @@ class imsmooth_test(unittest.TestCase):
         myia.setrestoringbeam(major="8arcsec", minor="4arcsec", pa="0deg", channel=1)
         myia.done()
         outfile = "cbout3.im"
+        """
         self.assertTrue(
             imsmooth(
-                imagename=imagename, commonbeam=True, outfile=outfile,
+                imagename=imagename, kernel='commonbeam', outfile=outfile,
                 targetres=False
             )           
         )
@@ -1365,11 +1356,11 @@ class imsmooth_test(unittest.TestCase):
             self.assertTrue(abs(qa.getvalue(beam['minor']) - eminor) < 1e-6)
             self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
         myia.done()
-        
+        """
         outfile = "cbout4.im"
         self.assertTrue(
             imsmooth(
-                imagename=imagename, commonbeam=True, outfile=outfile,
+                imagename=imagename, kernel='commonbeam', outfile=outfile,
                 targetres=True
             )           
         )
