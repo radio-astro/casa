@@ -202,11 +202,11 @@ void PVGenerator::setWidth(const Quantity& q) {
 		! q.isConform(inc),
 		"Nonconformant units specified for quantity"
 	);
-	Double nPixels = (q/inc).getValue();
+	Double nPixels = (q/inc).getValue("");
 	if (nPixels < 1) {
 		nPixels = 1;
 		*_getLog() << LogIO::NORMAL << "Using a width of 1 pixel or "
-			<< inc.getValue() << inc.getUnit() << LogIO::POST;
+			<< inc.getValue(q.getUnit()) << q.getUnit() << LogIO::POST;
 	}
 	else if (near(fmod(nPixels, 2), 1.0)) {
 		nPixels = floor(nPixels + 0.5);
@@ -218,7 +218,7 @@ void PVGenerator::setWidth(const Quantity& q) {
 		}
 		Quantity qq = nPixels*inc;
 		*_getLog() << LogIO::NORMAL << "Rounding width up to next odd number of pixels ("
-			<< nPixels << "), or " << qq.getValue() << qq.getUnit() << LogIO::POST;
+			<< nPixels << "), or " << qq.getValue(q.getUnit()) << q.getUnit() << LogIO::POST;
 	}
 	setWidth((uInt)nPixels);
 }
@@ -515,10 +515,10 @@ SPIIF PVGenerator::generate() const {
 
 void PVGenerator::setOffsetUnit(const String& s) {
 	Quantity q(1, s);
-	if (! q.isConform("rad")) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__);
-		*_getLog() << s << " is not a unit of angular measure" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		! q.isConform("rad"),
+		s + " is not a unit of angular measure"
+	);
 	_unit = s;
 }
 
