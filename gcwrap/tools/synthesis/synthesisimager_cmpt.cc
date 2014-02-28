@@ -348,7 +348,7 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
       if( ! itsImager ) itsImager = new SynthesisImager();
 
     casa::Record recpars = *toRecord( controls );
-    itsImager->executeMajorCycle( recpars );
+    itsImager->executeMajorCycle( recpars, False/*usevb2*/ );
 
   } catch  (AipsError x) {
     RETHROW(x);

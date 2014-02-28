@@ -220,6 +220,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( rec.dataType( id )==TpArrayInt || rec.dataType( id )==TpArrayUInt ) 
 	  { rec.get( id , val ); return String(""); }
+	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
+	  {
+	    Vector<Bool> vec; rec.get( id, vec );
+	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    else{ return String(id + " must be a vector of strings.\n"); }
+	  }
 	else { return String(id + " must be a vector of integers\n"); }
       }
     else{ return String(""); }
@@ -232,6 +238,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( rec.dataType( id )==TpArrayFloat || rec.dataType( id )==TpArrayDouble ) 
 	  { rec.get( id , val ); return String(""); }
+	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
+	  {
+	    Vector<Bool> vec; rec.get( id, vec );
+	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    else{ return String(id + " must be a vector of strings.\n"); }
+	  }
 	else { return String(id + " must be a vector of floats\n"); }
       }
     else{ return String(""); }
@@ -244,7 +256,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( rec.dataType( id )==TpArrayString || rec.dataType( id )==TpArrayChar ) 
 	  { rec.get( id , val ); return String(""); }
-	else { return String(id + " must be a vector of strings\n"); }
+	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
+	  {
+	    Vector<Bool> vec; rec.get( id, vec );
+	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    else{ return String(id + " must be a vector of strings.\n"); }
+	  }
+	else { return String(id + " must be a vector of strings.\n"); 
+	}
       }
     else{ return String(""); }
   }
@@ -617,6 +636,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	err += readVal( inrec, String("overwrite"), overwrite );
 
+	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
+
 	err += verify();
 	
       }
@@ -638,6 +659,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( nchan>1 and nTaylorTerms>1 )
       {err += "Cannot have more than one channel with ntaylorterms>1\n";}
+
+    if( facets < 1 )
+      {err += "Must have at least 1 facet\n"; }
 
     if( ! stokes.matches("I") && ! stokes.matches("Q") && 
 	! stokes.matches("U") && ! stokes.matches("V") && 
@@ -765,12 +789,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Make sure frame conversion is switched off for REST frame data.
     Bool freqFrameValid=(freqFrame != MFrequency::REST);
 
+    //cout << "Rest Freq : " << restFreq << endl;
+
     SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, 
 				  freqStart, freqStep, 0, 
 				  restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
     for (uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
 
+    //    cout << "RF from coordinate : " << mySpectral.restFrequency() << endl;
 
     ////////////////// Stokes Coordinate
    
@@ -910,6 +937,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("computepastep"), computePAStep );
 	err += readVal( inrec, String("rotatepastep"), rotatePAStep );
 
+	// Single or MultiTerm mapper
+	err += readVal( inrec, String("mtype"), mType );
+
 	err += verify();
 	
       }
@@ -958,6 +988,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     conjBeams  = True;
     computePAStep=360.0;
     rotatePAStep=5.0;
+
+    // Mapper type
+    mType = String("default");
     
   }
 
@@ -987,6 +1020,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("conjbeams",conjBeams );
     gridpar.define("computepastep", computePAStep);
     gridpar.define("rotatepastep", rotatePAStep);
+
+    gridpar.define("mtype", mType);
 
     return gridpar;
   }

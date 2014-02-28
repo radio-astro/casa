@@ -9,12 +9,88 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
 
      # Iteration parameters - common to all tests below
      niter=200
-     cycleniter=40
+     cycleniter=100
      threshold=0.001
      loopgain=0.1
 
      # Interaction ON or OFF
      interactive=False
+
+     if(testnum==10):  ## Image domain mosaic for single-term
+          casalog.post("==================================");
+          casalog.post("Test 10 : Image domain mosaic for single-term");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       ntaylorterms=1,mtype='imagemosaic',restfreq=['1.5GHz'],\
+                                       imsize=[200,200], facets=1,\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:00.2 +40.50.15.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+ 
+
+     if(testnum==9):  # MTMFS + Facets
+          casalog.post("==================================");
+          casalog.post("Test 9 : 1 image-field, mfs, nt=1, 2x2 facets ");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
+                                       imsize=[200,200], facets=2,\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:00.2 +40.50.15.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='msmfs',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+     if(testnum==8):  # MTMFS 
+          casalog.post("==================================");
+          casalog.post("Test 8 : 1 image-field, mfs, With ntaylorterms=2 ");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
+                                       imsize=[200,200],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:00.2 +40.50.15.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='msmfs',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+     if(testnum==7): ## Facetted imaging
+          casalog.post("==================================");
+          casalog.post("Test 7 : 1 image-field, mfs, nt=1, 2x2 facets ");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       ntaylorterms=1,mtype='default',restfreq=['1.5GHz'],\
+                                       imsize=[200,200], facets=2,\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:00.2 +40.50.15.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
 
      if(testnum==6):  ## 1 image-field, mfs --- WB AWP
           casalog.post("==================================");
@@ -67,7 +143,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -426,7 +502,7 @@ def checkDataPartitioningCode():
 
 def checkPars():
 
-     params = getparams( testnum=1 )
+     params = getparams( testnum=7 )
      paramList = params[0]
 
      selpars = paramList.getSelPars()
@@ -451,7 +527,7 @@ def checkPars():
 
 
 def testmakeimage():
-     params = getparams( testnum=1 )
+     params = getparams( testnum=7 )
      paramList = params[0]
      impars = (paramList.getImagePars())['0']
 

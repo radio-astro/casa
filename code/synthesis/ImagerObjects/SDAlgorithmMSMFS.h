@@ -1,4 +1,4 @@
-//# SDAlgorithmHogbomClean.h: Definition for SDAlgorithmHogbomClean
+//# SDAlgorithmMSMFS.h: Definition for SDAlgorithmMSMFS
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,11 +26,11 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
-#define SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
+#ifndef SYNTHESIS_SDALGORITHMMSMFS_H
+#define SYNTHESIS_SDALGORITHMMSMFS_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-//#include <synthesis/MeasurementComponents/SkyModel.h>
+#include <synthesis/MeasurementComponents/SkyModel.h>
 #include <casa/Arrays/Matrix.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -40,6 +40,7 @@
 #include <casa/System/PGPlotter.h>
 
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
+#include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -47,44 +48,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SIMinorCycleController;
 
 
-  class SDAlgorithmHogbomClean : public SDAlgorithmBase 
+  class SDAlgorithmMSMFS : public SDAlgorithmBase 
   {
   public:
     
     // Empty constructor
-    SDAlgorithmHogbomClean();
-    virtual  ~SDAlgorithmHogbomClean();
+    SDAlgorithmMSMFS(uInt nTaylorTerms);
+    virtual  ~SDAlgorithmMSMFS();
+    
+    void restore( CountedPtr<SIImageStore> imagestore );
     
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
-    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
-    virtual void finalizeDeconvolver();
-    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
+    void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    void finalizeDeconvolver();
+    void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
     //    virtual void restorePlane();
 
-    /*
-    void findNextComponent( Float loopgain );
-    void updateModel();
-    void updateResidual();
-    */
+    uInt getNTaylorTerms(){ return itsNTerms; };
+    
+    //    void initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim);
 
-    /*
-    SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
-    Float itsComp;
-    */
-    //SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
+    Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
 
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf;
+    //    CountedPtr<SIImageStore> itsImages;
 
-    /*
+    Vector< Array<Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
+
+    /*    
     IPosition itsMaxPos;
     Float itsPeakResidual;
     Float itsModelFlux;
 
     Matrix<Float> itsMatMask;
     */
+
+    uInt itsNTerms;
+
+    MultiTermMatrixCleaner itsMTCleaner;
+
+  private:
+    Bool itsMTCsetup; 
 
   };
 

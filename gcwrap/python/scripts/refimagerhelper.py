@@ -93,6 +93,8 @@ class PySynthesisImager:
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisparsync())
             syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            syncpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            syncpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
             self.PStools[immod].setupparsync(syncpars=syncpars)
 
 #############################################
@@ -211,6 +213,7 @@ class PySynthesisImager:
         # Run minor cycle
         for immod in range(0,self.NF):
              exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
+             print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
              self.IBtool.mergeexecrecord( exrec )
 
 #############################################
@@ -325,6 +328,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisparsync())
             syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            syncpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            syncpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
             partnames = []
             if(self.NN>1):
                 for node in range(0,self.NN):
@@ -669,7 +674,8 @@ class ImagerParameters():
                  msname='',field='',spw='',usescratch=True,readonly=True,
                  outlierfile='',
                  imagename='', nchan=1, freqstart='1.0GHz', freqstep='1.0GHz',
-                 imsize=[1,1], cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
+                 ntaylorterms=1, mtype='default',restfreq=[],
+                 imsize=[1,1], facets=1, cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
                  ftmachine='ft', startmodel='', weighting='natural', stokes='I',
 
                  aterm=True,
@@ -701,14 +707,15 @@ class ImagerParameters():
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cellsize':cellsize, 'phasecenter':phasecenter, 
-                                 'freqstart':freqstart, 'freqstep':freqstep   }      }
+                                 'freqstart':freqstart, 'freqstep':freqstep, 
+                                 'ntaylorterms':ntaylorterms, 'restfreq':restfreq , 'facets':facets  }      }
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                  'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                  'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                  'conjbeams':conjbeams, 'computepastep':computepastep,
-                                 'rotatepastep':rotatepastep, 'stokes': stokes      }     }
+                                 'rotatepastep':rotatepastep, 'stokes': stokes,  'mtype':mtype     }     }
         self.weightpars = {'type':weighting } 
-        self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
+        self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
 
         ## Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.

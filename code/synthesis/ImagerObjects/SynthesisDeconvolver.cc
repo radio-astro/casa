@@ -83,6 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     String algorithm("test");
 
+    uInt nTaylorTerms=1; // Try to remove....
     try
       {
 
@@ -108,6 +109,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if( decpars.isDefined("startmodel") )  // A single string
 	{ itsStartingModelName = decpars.asString( RecordFieldId("startmodel")); }
 
+      if( decpars.isDefined("ntaylorterms") )
+	{ decpars.get( RecordFieldId("ntaylorterms") , nTaylorTerms ); }
+
+
+      // Scale sizes...
+
+
       }
     catch(AipsError &x)
       {
@@ -122,14 +130,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
+	/*
 	if(algorithm==String("test")) 
 	  {
 	    itsDeconvolver = new SDAlgorithmTest(); 
 	  }
-	else if(algorithm==String("hogbom"))
+	
+	  else */ if(algorithm==String("hogbom"))
 	  {
 	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
 	  }
+	  else if(algorithm==String("msmfs"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMSMFS( nTaylorTerms ); 
+	    } 
 	else
 	  {
 	    throw( AipsError("Un-known algorithm : "+algorithm) );
@@ -164,7 +178,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
       //gatherImages();
 
-      itsImages = new SIImageStore( itsImageName );
+      if( itsDeconvolver->getAlgorithmName() == "msmfs" )
+	{  itsImages = new SIImageStoreMultiTerm( itsImageName, itsDeconvolver->getNTaylorTerms() ); }
+      else
+	{  itsImages = new SIImageStore( itsImageName ); }
+
       // If a starting model exists, this will initialize the ImageStore with it. Will do this only once.
       setStartingModel();
  

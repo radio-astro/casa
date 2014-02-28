@@ -198,7 +198,9 @@ public:
   Bool aTermOn, psTermOn,mTermOn,wbAWP,doPointing, doPBCorr, conjBeams;
   String cfCache;
   Float computePAStep, rotatePAStep;
-  
+
+  // Mapper Type.
+  String mType;
 
 };
 

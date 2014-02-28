@@ -66,12 +66,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
 		      CountedPtr<FTMachine>& ftm, CountedPtr<FTMachine>& iftm,
 		      Int mapperid)
-  : SIMapperBase( imagestore, ftm, mapperid ),
+  : SIMapperBase( imagestore, mapperid ),
     vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
     ft_p=ftm;
     ift_p=iftm;
+    cft_p=NULL;
     ejgrid_p=NULL;
     ejdegrid_p=NULL;
     itsImages=imagestore;
@@ -79,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   SIMapper::SIMapper(const ComponentList& cl, String& whichMachine, Int mapperid)
-  : SIMapperBase(NULL, NULL, mapperid),
+  : SIMapperBase(NULL, mapperid),
     vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
   {
     ft_p=NULL;

@@ -329,16 +329,18 @@ casa_add_library( synthesis
  fortran/leakantso.f
  ImagerObjects/SynthesisImager.cc
  ImagerObjects/SIImageStore.cc
+ ImagerObjects/SIImageStoreMultiTerm.cc
  ImagerObjects/SIMapperCollection.cc
  ImagerObjects/SIMapperBase.cc
- ImagerObjects/SIMapper.cc
+ ImagerObjects/SIMapperSingle.cc
+ ImagerObjects/SIMapperMultiTerm.cc
  ImagerObjects/SynthesisIterBot.cc
  ImagerObjects/SIMinorCycleController.cc
  ImagerObjects/SIIterBot.cc
  ImagerObjects/SynthesisDeconvolver.cc
  ImagerObjects/SDAlgorithmBase.cc
  ImagerObjects/SDAlgorithmHogbomClean.cc
- ImagerObjects/SDAlgorithmTest.cc
+ ImagerObjects/SDAlgorithmMSMFS.cc
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisParSync.cc
  ImagerObjects/SynthesisUtilMethods.cc
@@ -628,9 +630,11 @@ install (FILES
 install (FILES
 	ImagerObjects/SynthesisImager.h
 	ImagerObjects/SIImageStore.h
+	ImagerObjects/SIImageStoreMultiTerm.h
 	ImagerObjects/SIMapperCollection.h
 	ImagerObjects/SIMapperBase.h
-	ImagerObjects/SIMapper.h
+	ImagerObjects/SIMapperSingle.h
+	ImagerObjects/SIMapperMultiTerm.h
 	ImagerObjects/SynthesisIterBot.h
 	ImagerObjects/SIMinorCycleController.h
 	ImagerObjects/SIIterBot.h
@@ -640,7 +644,7 @@ install (FILES
 	ImagerObjects/SynthesisUtilMethods.h
 	ImagerObjects/SDAlgorithmBase.h
 	ImagerObjects/SDAlgorithmHogbomClean.h
-	ImagerObjects/SDAlgorithmTest.h
+	ImagerObjects/SDAlgorithmMSMFS.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES

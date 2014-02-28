@@ -55,7 +55,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMinorCycleController::~SIMinorCycleController(){}
 
 
-  bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual){
+  bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual)
+  {
+
+    //    cout << " iters : " << itsCycleIterDone << "   res : " << currentPeakResidual << endl;
+
     if (itsCycleIterDone >= itsCycleNiter ||
         fabs(currentPeakResidual) <= itsCycleThreshold)
       return true;
@@ -78,6 +82,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMinorCycleController::incrementMinorCycleCount(Int itersDonePerStep)
   {
+    if( itersDonePerStep <= 0 )
+      {
+	LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
+	os << LogIO::WARN << "Zero iterations done after " << itsCycleIterDone << LogIO::POST;
+      }
+    
     itsIterDone += itersDonePerStep;
     itsTotalIterDone += itersDonePerStep;
     itsCycleIterDone += itersDonePerStep;

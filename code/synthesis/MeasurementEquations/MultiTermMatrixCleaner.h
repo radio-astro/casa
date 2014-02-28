@@ -89,6 +89,10 @@ public:
   // Output : Hessian matrix
   Bool getinvhessian(Matrix<Double> & invhessian);
 
+  // Output : Peak residual computed from matR_p (residual convolved with PSF).
+  Float getpeakresidual(){return rmaxval_p;}
+
+
 private:
   LogIO os;
 
@@ -128,6 +132,7 @@ private:
   Float userthreshold_p;
   Float prev_max_p;
   Float min_max_p;
+  Float rmaxval_p;
 
   IPosition psfsupport_p;
   IPosition psfpeak_p;
