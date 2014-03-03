@@ -90,12 +90,12 @@ protected:
   //////////////////// Member Functions
   void initializeGridCore2(const vi::VisBuffer2& vb, 
 			   CountedPtr<FTMachine>&  ftm,
-			   ImageInterface<Complex>& complexImage,
-			   Matrix<Float>& sumWeights);
+			   ImageInterface<Complex>& complexImage);
+  //			   Matrix<Float>& sumWeights);
   void initializeGridCore(const VisBuffer& vb, 
 			  CountedPtr<FTMachine>&  ftm,
-			  ImageInterface<Complex>& complexImage,
-			  Matrix<Float>& sumWeights);
+			  ImageInterface<Complex>& complexImage);
+			  //			  Matrix<Float>& sumWeights);
   
   void gridCore2(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col,
 		CountedPtr<FTMachine>&  ftm, Int row);
@@ -107,7 +107,7 @@ protected:
 			CountedPtr<FTMachine>&  ftm,
 			ImageInterface<Float>& targetImage,
 			ImageInterface<Float>& weightImage,
-			Matrix<Float>& sumWeights);
+			Bool fillWeightImage);
   
 
   void initializeDegridCore2(const vi::VisBuffer2& vb, 
@@ -124,6 +124,12 @@ protected:
 		  CountedPtr<ComponentFTMachine>& cftm, ComponentList& cl);
   void degridCore(VisBuffer& vb, CountedPtr<FTMachine>& ftm, 
 		  CountedPtr<ComponentFTMachine>& cftm, ComponentList& cl);
+
+  void addImageMiscInfo(ImageInterface<Float>& target, 
+			CountedPtr<FTMachine>& ftm, 
+			Matrix<Float>& sumwt);
+
+  Bool useWeightImage(CountedPtr<FTMachine>& ftm);
   
   ///////////////////// Member Objects
 
@@ -143,14 +149,14 @@ protected:
 
   void initializeGridCoreMos(const VisBuffer& vb, 
 			  CountedPtr<FTMachine>&  ftm,
-			  ImageInterface<Complex>& complexImage,
-			  Matrix<Float>& sumWeights);
+			     ImageInterface<Complex>& complexImage);
+  //			  Matrix<Float>& sumWeights);
   
   void gridCoreMos(const VisBuffer& vb, Bool dopsf, FTMachine::Type col,
 		   CountedPtr<FTMachine>&  ftm, Int row,
 				 ImageInterface<Float>& targetImage,
 				 ImageInterface<Float>& weightImage,
-				 Matrix<Float>& sumWeights,
+		   //				 Matrix<Float>& sumWeights,
 		   ImageInterface<Complex>& complexImage);
 
   
@@ -158,7 +164,7 @@ protected:
 			   CountedPtr<FTMachine>&  ftm,
 			   ImageInterface<Float>& targetImage,
 			   ImageInterface<Float>& weightImage,
-			   Matrix<Float>& sumWeights,
+			   //			   Matrix<Float>& sumWeights,
 			   ImageInterface<Complex>& compleximage,
 			   VisBuffer& vb);
 				 

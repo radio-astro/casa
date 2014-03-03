@@ -131,6 +131,13 @@ protected:
   Double memoryBeforeLattice();
   IPosition tileShape();
 
+  Matrix<Float> getSumWt(ImageInterface<Float>& target);
+  void setSumWt(ImageInterface<Float>& target, Matrix<Float>& sumwt);
+  Bool getUseWeightImage(ImageInterface<Float>& target);
+
+  void divideImageByWeightVal( ImageInterface<Float>& target );
+
+
   void checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label );
   CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, const Bool overwrite);
   ///////////////////// Member Objects

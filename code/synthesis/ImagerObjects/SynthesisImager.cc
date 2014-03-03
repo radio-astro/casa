@@ -38,6 +38,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
+#include <casa/System/ProgressMeter.h>
 
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
@@ -330,6 +331,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     writeAccess_p=writeAccess_p && !selpars.readonly;
     createVisSet(writeAccess_p);
 
+    /////// Remove this when the new vi/vb is able to get the full freq range.
+    mssFreqSel_p.resize();
+    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
 
       }
     catch(AipsError &x)
@@ -1066,6 +1070,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
        }*/
     
+
+
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1177,8 +1183,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     theIFT = new AWProjectWBFT(static_cast<AWProjectWBFT &>(*theFT));
 
+    //// Send in Freq info.
+    os << "Sending in frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM using OLD vi/vb way. This must go." << LogIO::WARN;
+    theFT->setSpwFreqSelection( mssFreqSel_p );
+    theIFT->setSpwFreqSelection( mssFreqSel_p );
     //    vi_p->getFreqInSpwRange(
-    os << "No frequency selection information has reached the AWP FTM yet" << LogIO::WARN;
 
   }
 
@@ -1287,6 +1296,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	VisBufferAutoPtr vb(rvi_p);
     	rvi_p->originChunks();
     	rvi_p->origin();
+
+	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+	Int cohDone=0;
+
+
     	if(!dopsf)itsMappers.initializeDegrid(*vb);
     	itsMappers.initializeGrid(*vb,dopsf);
     	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
@@ -1302,6 +1317,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
     			}
     			itsMappers.grid(*vb, dopsf);
+			cohDone += vb->nRow();
+			pm.update(Double(cohDone));
     		}
     	}
     	//cerr << "IN SYNTHE_IMA" << endl;

@@ -435,20 +435,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Bool addpsf, Bool addresidual, Bool addweight)
   {
 
-    /*
-    if( itsWeight.null() )
-      {
-	throw( AipsError("Internal Error : Weight image from major cycle is not present. Cannot gather a weighted sum from all nodes") );
-      }
-    */
-
     for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
 	
 	if(addpsf)
 	  {
 	    LatticeExpr<Float> adderPsf( *(psf(tix)) + *(imagestoadd->psf(tix)) ); 
-	    psf(tix)->copyData(adderPsf);
+	    psf(tix)->copyData(adderPsf);	
+	    Matrix<Float> addsumwt = getSumWt( *(imagestoadd->psf(tix)) ) + getSumWt( *(psf(tix)) ) ;
+	    setSumWt( *psf(tix), addsumwt );
 	  }
 	if(addweight)
 	  {
@@ -460,6 +455,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    LatticeExpr<Float> adderRes( *(residual(tix)) + *(imagestoadd->residual(tix)) ); 
 	    residual(tix)->copyData(adderRes);
+	    Matrix<Float> addsumwt = getSumWt( *(imagestoadd->residual(tix)) ) + getSumWt( *(residual(tix)) ) ;
+	    setSumWt( *residual(tix), addsumwt );
 	  }
 
       }
@@ -470,24 +467,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideResidualByWeight",WHERE) );
 
-    /*
-    if( itsWeight.null() )
-      {
-	os << "Weights are 1.0. Not dividing " << itsImageName+String(".residual") << LogIO::POST;
-      }
-    else
-    */
+    // Fill all sumwts by that of the first term.
+    Matrix<Float> sumwt = getSumWt( *residual(0) );
+    for(uInt tix=1;tix<itsNTerms;tix++)
+      { setSumWt( *residual(tix) , sumwt ); }
+
     for(uInt tix=0;tix<itsNTerms;tix++)
       {
-	
-	os << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
-	
-	LatticeExpr<Float> mask( iif( (*(weight(0))) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*(weight(0))) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*(residual(tix))) * mask ) / ( (*(weight(0))) + maskinv) );
-	itsResiduals[tix]->copyData(ratio);
-	
+
+	divideImageByWeightVal( *residual(tix) );
+
+	if( getUseWeightImage( *residual(tix) ) == True )
+	  {
+	    os << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
+	    
+	    LatticeExpr<Float> mask( iif( (*(weight(0))) > weightlimit , 1.0, 0.0 ) );
+	    LatticeExpr<Float> maskinv( iif( (*(weight(0))) > weightlimit , 0.0, 1.0 ) );
+	    
+	    LatticeExpr<Float> ratio( ( (*(residual(tix))) * mask ) / sqrt( (*(weight(0))) + maskinv) );
+	    residual(tix)->copyData(ratio);
+	  }
       }
     // createMask
   }
@@ -496,23 +495,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","dividePSFByWeight",WHERE) );
 
-    /*
-    if( itsWeight.null() )
-      {
-	os << "Weights are 1.0. Not dividing " << itsImageName+String(".psf") << LogIO::POST;
-      }
-    else
-    */
+    // Fill all sumwts by that of the first term.
+    Matrix<Float> sumwt = getSumWt( *psf(0) );
+    for(uInt tix=1;tix<2*itsNTerms-1;tix++)
+      { setSumWt( *psf(tix) , sumwt ); }
+
     for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
+	divideImageByWeightVal( *psf(tix) );
+	
+	/*
+	if( getUseWeightImage( *psf(tix) ) == True )
+	  {
 	    os << "Dividing " << itsImageName+String(".psf.tt")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
 	    //	    cerr << "weight limit " <<  weightlimit << endl;
 	    LatticeExpr<Float> mask( iif( (*(weight(0))) > weightlimit , 1.0, 0.0 ) );
 	    LatticeExpr<Float> maskinv( iif( (*(weight(0))) > weightlimit , 0.0, 1.0 ) );
 	    
-	    LatticeExpr<Float> ratio( ( (*(psf(tix))) * mask ) / ( (*(weight(0))) + maskinv) );
+	    LatticeExpr<Float> ratio( ( (*(psf(tix))) * mask ) / sqrt( (*(weight(0))) + maskinv) );
 	    itsPsfs[tix]->copyData(ratio);
-
+	  }
+	*/
       }
     // createMask
   }
@@ -521,13 +524,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideModelByWeight",WHERE) );
 
-    /*
-    if( itsWeight.null() )
-      {
-	os << "Weights are 1.0. Not dividing " << itsImageName+String(".residual") << LogIO::POST;
-      }
-    else
-    */
     for(uInt tix=0;tix<itsNTerms;tix++)
       {
 	os << "Dividing " << itsImageName+String(".model")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
@@ -535,7 +531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> mask( iif( (*(weight(0))) > weightlimit , 1.0, 0.0 ) );
 	LatticeExpr<Float> maskinv( iif( (*(weight(0))) > weightlimit , 0.0, 1.0 ) );
 	
-	LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) / ( (*(weight(0))) + maskinv) );
+	LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) / sqrt( (*(weight(0))) + maskinv) );
 	itsModels[tix]->copyData(ratio);
       }    
     // createMask

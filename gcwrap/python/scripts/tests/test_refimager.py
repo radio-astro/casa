@@ -97,15 +97,20 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           casalog.post("==================================");
           casalog.post("Test 6 image-field, mfs --- WB AWP");
           casalog.post("==================================");
-          paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='*',\
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
+                                       field='1',spw='1',\
                                        usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
-                                       imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='0.3GHz',\
+                                       imsize=[512,512],\
+                                       cellsize=['25.0arcsec','25.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='awprojectft', startmodel='', weighting='natural',\
-                                       aterm=True, psterm=True, mterm=False, wbawp = True, cfcache = "deleteme.cf",\
-                                       dopointing = False, dopbcorr = True, conjbeams = True, computepastep =360.0, rotatepastep =5.0,\
+                                       ftmachine='awprojectft', 
+#                                       ftmachine='GridFT', 
+                                       startmodel='', weighting='natural',\
+                                       aterm=True, psterm=False, mterm=True, wbawp = False, 
+                                       cfcache = "mytest0.cfcache",\
+                                       dopointing = False, dopbcorr = True, conjbeams = True, 
+                                       computepastep =360.0, rotatepastep =5.0,\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\

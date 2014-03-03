@@ -110,20 +110,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperSingle::initializeGrid(const vi::VisBuffer2& vb, const Bool /*dopsf*/)
   {
     LogIO os( LogOrigin("SIMapperSingle","initializeGrid",WHERE) );
-    Matrix<Float> wgt;
-    initializeGridCore2( vb, ift_p, *(itsImages->backwardGrid()) , wgt );
+    //    Matrix<Float> wgt;
+    initializeGridCore2( vb, ift_p, *(itsImages->backwardGrid()) ); // , wgt );
   }
   /// OLD
   void SIMapperSingle::initializeGrid(VisBuffer&  vb, Bool /*dopsf*/)
   {
     LogIO os( LogOrigin("SIMapperSingle","initializeGrid",WHERE) );
-    Matrix<Float> wgt;
+    //    Matrix<Float> wgt;
     
     if( !itsDoImageMosaic ) {
-      initializeGridCore( vb, ift_p, *(itsImages->backwardGrid()) , wgt );
+      initializeGridCore( vb, ift_p, *(itsImages->backwardGrid()) ); // , wgt );
     }
     else{
-      initializeGridCoreMos( vb, ift_p, *(itsImages->backwardGrid()) , wgt );
+      initializeGridCoreMos( vb, ift_p, *(itsImages->backwardGrid()) ); //, wgt );
     }
 
   }
@@ -151,11 +151,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else
       {
-	Matrix<Float> wgt;
+	//	Matrix<Float> wgt;
 	gridCoreMos( vb, dopsf, col, ift_p, -1,  
 		     *(itsImages->residual()), 
 		     *(itsImages->weight()), 
-		     wgt, 
+		     //		     wgt, 
 		     *(itsImages->backwardGrid())  );
       }
   }
@@ -165,23 +165,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperSingle::finalizeGrid(const vi::VisBuffer2& /* vb */, const Bool dopsf)
   {
       LogIO os( LogOrigin("SIMapperSingle","finalizeGrid",WHERE) );
-      Matrix<Float> wgt;
+
       finalizeGridCore(dopsf,  ift_p, (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ) ,
-		       *(itsImages->weight()) ,   wgt);
+		       (useWeightImage(ift_p))?(*(itsImages->weight())): *(itsImages->psf()),  
+		       useWeightImage(ift_p)  );
   }
   //// OLD VI/VB version
   void SIMapperSingle::finalizeGrid(VisBuffer& vb , Bool dopsf)
     {
       LogIO os( LogOrigin("SIMapperSingle","finalizeGrid",WHERE) );
-      Matrix<Float> wgt;
+      //      Matrix<Float> wgt;
 
       if( !itsDoImageMosaic or dopsf ) {
 	finalizeGridCore(dopsf,  ift_p, (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ) ,
-			 *(itsImages->weight()) ,   wgt); 
+			 (useWeightImage(ift_p))?*(itsImages->weight()): *(itsImages->psf()),  
+		       useWeightImage(ift_p)  );
+	//			 *(itsImages->weight()) ,   wgt); 
       }
       else{
 	finalizeGridCoreMos(dopsf,  ift_p,  *(itsImages->residual())  ,
-			    *(itsImages->weight()) ,   wgt, *(itsImages->backwardGrid()), vb);
+			    *(itsImages->weight()) , *(itsImages->backwardGrid()), vb);
       }
 
     }
