@@ -31,8 +31,10 @@ Mathematics/VectorKernel.cc
 Mathematics/VanVleck.cc
 )
 
-set_target_properties( casa_scimath PROPERTIES SOVERSION ${casa_soversion} )
-set_target_properties( casa_scimath_f PROPERTIES SOVERSION ${casa_soversion} )
+if( NOT NO_SOVERSION )
+    set_target_properties( casa_scimath PROPERTIES SOVERSION ${casa_soversion} )
+    set_target_properties( casa_scimath_f PROPERTIES SOVERSION ${casa_soversion} )
+endif()
 
 if (FFTW3_FOUND)
     target_link_libraries (casa_scimath casa_scimath_f ${FFTW3_LIBRARIES})

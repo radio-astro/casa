@@ -27,7 +27,7 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 4 )
-set( CASA_MINOR_VERSION 3 )
+set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
@@ -341,19 +341,24 @@ endif()
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
 
-set( epochdelta 1385614800 )
-if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
-    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
-                     OUTPUT_VARIABLE __casa_soversion )
-elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
-    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
-                     OUTPUT_VARIABLE __casa_soversion )
+SET(NO_SOVERSION FALSE CACHE BOOL "do not add version information to shared libraries")
+if( NOT NO_SOVERSION )
+    set( epochdelta 1385614800 )
+    if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
+        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
+                         OUTPUT_VARIABLE __casa_soversion )
+    elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
+        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
+                         OUTPUT_VARIABLE __casa_soversion )
+    else( )
+        execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
+                         OUTPUT_VARIABLE __casa_soversion )
+    endif( )
+    set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
+    message( STATUS "Shared object version number ${casa_soversion}" )
 else( )
-    execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
-                     OUTPUT_VARIABLE __casa_soversion )
+    message( STATUS "User disabled shared library versioning" )
 endif( )
-set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
-message( STATUS "shared object version number ${casa_soversion}" )
 
 set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
@@ -732,7 +737,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.234
+           VERSION 1.0.231
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
