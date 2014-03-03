@@ -238,6 +238,7 @@ casa_add_library( synthesis
  MeasurementComponents/EJones.cc
  MeasurementComponents/EPJones.cc
  MeasurementComponents/EVLASwPow.cc
+ MeasurementComponents/FJones.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
@@ -535,6 +536,7 @@ install (FILES
 	MeasurementComponents/EJones.h
 	MeasurementComponents/EPJones.h
 	MeasurementComponents/ExpCache.h
+	MeasurementComponents/FJones.h
 	MeasurementComponents/GSpline.h
 	MeasurementComponents/GlobalFTMachineCallbacks.h
 	MeasurementComponents/GridBoth.h
@@ -751,6 +753,7 @@ casa_add_assay( synthesis MeasurementComponents/test/tEVLAAperture.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tAlgoPClark.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tBeamSquint.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tCalibrater.cc )
+casa_add_assay( synthesis MeasurementComponents/test/tFJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tKJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath2D.cc )
