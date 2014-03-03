@@ -66,8 +66,8 @@ or sdreduce.
     </param>
 
     <param type="string" name="doppler" subparam="true">
-        <shortdescription>doppler convention [\'RADIO\', \'OPTICAL\', \'Z\', \'BETA\', or \'GAMMA\'] (\'\'=current)</shortdescription>
-        <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit</description>
+        <shortdescription>doppler convention [\'RADIO\', \'OPTICAL\', \'Z\', \'BETA\', or \'GAMMA\'] (\'\'=current).</shortdescription>
+        <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit.</description>
         <value></value>
     </param>
 
