@@ -27,12 +27,12 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
 
     <param type="string" name="infile"  mustexist="true">
         <description>name of input SD dataset</description>
-	<value></value>
+        <value></value>
     </param>
 
     <param type="bool" name="splitant">
         <shortdescription>split output file by antenna [True, False]</shortdescription>
-	<description>split output file by antenna (only effective for MS input)</description>
+        <description>split output file by antenna (only effective for MS input)</description>
         <value>False</value>
     </param>
 
@@ -44,7 +44,7 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
 
     <param type="bool" name="getpt">
         <shortdescription>fill DIRECTION column properly [True, False]</shortdescription>
-	<description>fill DIRECTION column properly (True), or reuse POINTING table in original MS (False) (only effective for MS input)</description>
+        <description>fill DIRECTION column properly (True), or reuse POINTING table in original MS (False) (only effective for MS input)</description>
         <value>True</value>
     </param>
 
@@ -59,13 +59,13 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
     </param>
 
     <param type="string" name="timerange">
-	<description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help)</description>
-	<value></value>
+        <description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help)</description>
+        <value></value>
     </param>
 
     <param type="string" name="scan">
-	<description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
-	<value></value>
+        <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="string" name="pol">
@@ -74,8 +74,8 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
     </param>
 
     <param type="string" name="beam">
-	<description>select data by beam IDs, e.g. \'0,1\' (\'\'=all)</description>
-	<value></value>
+        <description>select data by beam IDs, e.g. \'0,1\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="any" name="restfreq">
@@ -85,26 +85,26 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
     </param>
 
     <param type="string" name="outfile">
-	<description>name of output file (See a WARNING in help)</description>
-	<value></value>
+        <description>name of output file (See a WARNING in help)</description>
+        <value></value>
     </param>
 
     <param type="string" name="outform">
-	<shortdescription>output file format [\'ASAP\', \'MS2\', \'ASCII\', or \'SDFITS\']</shortdescription>
-	<description>output file format (See a WARNING in help)</description>
-	<value>ASAP</value>
-	<allowed kind="enum">
-	    <value>ASCII</value>
-	    <value>MS2</value>
-	    <value>SDFITS</value>
-	    <value>ASAP</value>
-	</allowed>
+        <shortdescription>output file format [\'ASAP\', \'MS2\', \'ASCII\', or \'SDFITS\']</shortdescription>
+        <description>output file format (See a WARNING in help)</description>
+        <value>ASAP</value>
+        <allowed kind="enum">
+            <value>ASCII</value>
+            <value>MS2</value>
+            <value>SDFITS</value>
+            <value>ASAP</value>
+        </allowed>
     </param>
 
     <param type="bool" name="overwrite">
         <shortdescription>overwrite the output file if already exists [True, False] </shortdescription>
-	<description>overwrite the output file if already exists</description>
-	<value>False</value>
+        <description>overwrite the output file if already exists</description>
+        <value>False</value>
     </param>
 
     <constraints>
