@@ -37,7 +37,7 @@
 
 #include <synthesis/ImagerObjects/SIMapperBase.h>
 
-#include <synthesis/ImagerObjects/SIMapper.h>
+//#include <synthesis/ImagerObjects/SIMapper.h>
 #include <synthesis/ImagerObjects/SIMapperSingle.h>
 #include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 
