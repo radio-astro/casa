@@ -72,8 +72,8 @@ or sdreduce.
     </param>
 
     <param type="string" name="scan">
-	<description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
-	<value></value>
+        <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="string" name="pol">
@@ -83,7 +83,7 @@ or sdreduce.
 
     <param type="bool" name="timeaverage">
         <shortdescription>average spectra over time [True, False] (see examples in help)</shortdescription>
-	<description>average spectra over time (see examples in help)</description>
+        <description>average spectra over time (see examples in help)</description>
         <value>False</value>
     </param>
 
@@ -91,12 +91,12 @@ or sdreduce.
         <shortdescription>weighting for time averaging [\'tintsys\', \'tsys\', \'tint\', \'var\', or \'median\']</shortdescription>
         <description>weighting for time averaging</description>
         <value>tintsys</value>
-	<allowed kind="enum">
-	    <value>var</value>
-	    <value>tsys</value>
-	    <value>tint</value>
-	    <value>tintsys</value>
-	    <value>median</value>
+        <allowed kind="enum">
+            <value>var</value>
+            <value>tsys</value>
+            <value>tint</value>
+            <value>tintsys</value>
+            <value>median</value>
         </allowed>
     </param>
 
@@ -108,7 +108,7 @@ or sdreduce.
 
     <param type="bool" name="polaverage">
         <shortdescription>average spectra over polarizations [True, False]</shortdescription>
-	<description>average spectra over polarizations</description>
+        <description>average spectra over polarizations</description>
         <value>False</value>
     </param>
 
@@ -116,15 +116,15 @@ or sdreduce.
         <shortdescription>weighting for polarization averaging [\'tsys\' or \'var\']</shortdescription>
         <description>weighting for polarization averaging</description>
         <value>tsys</value>
-	<allowed kind="enum">
-	    <value>var</value>
-	    <value>tsys</value>
+        <allowed kind="enum">
+            <value>var</value>
+            <value>tsys</value>
         </allowed>
     </param>
 
     <param type="string" name="fitfunc">
         <shortdescription>function for fitting [\'gauss\', \'lorentz\']</shortdescription>
-	<description>function for fitting</description>
+        <description>function for fitting</description>
         <value>gauss</value>
         <allowed kind="enum">
             <value>gauss</value>
@@ -136,11 +136,11 @@ or sdreduce.
         <shortdescription>mode for fitting [\'auto\', \'list\', or \'interact\']</shortdescription>
         <description>mode for fitting</description>
         <value>auto</value>
-	<allowed kind="enum">
-	    <value>auto</value>
-	    <value>list</value>
-	    <value>interact</value>
-	</allowed>
+        <allowed kind="enum">
+            <value>auto</value>
+            <value>list</value>
+            <value>interact</value>
+        </allowed>
     </param>
 
     <param type="intArray" name="nfit">
@@ -174,8 +174,8 @@ or sdreduce.
     </param>
 
     <param type="string" name="outfile">
-	<description>name of output file (See a WARNING in help)</description>
-	<value></value>
+        <description>name of output file (See a WARNING in help)</description>
+        <value></value>
     </param>
 
     <param type="bool" name="overwrite">
@@ -186,8 +186,8 @@ or sdreduce.
 
 
     <param type="int" name="plotlevel">
-	    <description>control for plotting of results (see examples in help)</description>
-	    <value>0</value>
+            <description>control for plotting of results (see examples in help)</description>
+            <value>0</value>
     </param>
 
 
@@ -207,24 +207,24 @@ or sdreduce.
                         <default param="telescopeparam"><value type='string'></value></default>
                 </equals>
             </when>
-	    <when param="spw">
-	        <notequals value="">
-		    <default param="restfreq"><value type="string"></value></default>
-		    <default param="frame"><value type="string"></value></default>
-		    <default param="doppler"><value type="string"></value></default>
-		</notequals>
-	    </when>
-	    <when param="timeaverage">
-		<equals type="bool" value="False"/>
-		<equals type="bool" value="True">
-			<default param="tweight"><value type='string'>tintsys</value></default>
-			<default param="scanaverage"><value type='bool'>False</value></default>
+            <when param="spw">
+                <notequals value="">
+                    <default param="restfreq"><value type="string"></value></default>
+                    <default param="frame"><value type="string"></value></default>
+                    <default param="doppler"><value type="string"></value></default>
+                </notequals>
+            </when>
+            <when param="timeaverage">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                        <default param="tweight"><value type='string'>tintsys</value></default>
+                        <default param="scanaverage"><value type='bool'>False</value></default>
                 </equals>
             </when>
-	    <when param="polaverage">
-		<equals type="bool" value="False"/>
-		<equals type="bool" value="True">
-			<default param="pweight"><value type='string'>tsys</value></default>
+            <when param="polaverage">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                        <default param="pweight"><value type='string'>tsys</value></default>
                 </equals>
             </when>
             <when param="fitmode">
@@ -243,9 +243,9 @@ or sdreduce.
   </input>
   <output>
     <param type="any" name="xstat">
-	    <description>RETURN ONLY: a Python dictionary of line statistics</description>
+            <description>RETURN ONLY: a Python dictionary of line statistics</description>
             <any type='variant'/>
-	    <value>{}</value>
+            <value>{}</value>
     </param>
   </output>
 
@@ -349,9 +349,9 @@ fitmode -- mode for fitting
         thresh -- S/N threshold for linefinder. a single channel S/N ratio
                   above which the channel is considered to be a detection.
                 default: 5
-	min_nchan -- minimum number of consecutive channels required to
+        min_nchan -- minimum number of consecutive channels required to
                      pass threshold
-       	        default: 3
+                       default: 3
         avg_limit -- channel averaging for broad lines. a number of
                      consecutive channels not greater than this parameter
                      can be averaged to search for broad lines.
