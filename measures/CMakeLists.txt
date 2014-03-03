@@ -56,7 +56,9 @@ TableMeasures/TableMeasValueDesc.cc
 TableMeasures/TableQuantumDesc.cc
 )
 
-set_target_properties( casa_measures PROPERTIES SOVERSION ${casa_soversion} )
+if( NOT NO_SOVERSION )
+    set_target_properties( casa_measures PROPERTIES SOVERSION ${casa_soversion} )
+endif()
 target_link_libraries (casa_measures casa_tables casa_scimath)
 
 add_subdirectory (apps)

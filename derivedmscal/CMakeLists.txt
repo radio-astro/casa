@@ -10,7 +10,9 @@ DerivedMC/Register.cc
 DerivedMC/UDFMSCal.cc
 )
 
-set_target_properties( casa_derivedmscal PROPERTIES SOVERSION ${casa_soversion} )
+if( NOT NO_SOVERSION )
+    set_target_properties( casa_derivedmscal PROPERTIES SOVERSION ${casa_soversion} )
+endif()
 target_link_libraries (casa_derivedmscal casa_ms)
 
 install (TARGETS casa_derivedmscal
