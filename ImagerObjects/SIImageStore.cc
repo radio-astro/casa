@@ -542,16 +542,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	LatticeExpr<Float> adderPsf( *(psf()) + *(imagestoadd->psf()) ); 
 	psf()->copyData(adderPsf);
+
+	Matrix<Float> addsumwt = getSumWt( *(imagestoadd->psf()) ) + getSumWt( *(psf()) ) ;
+	setSumWt( *psf(), addsumwt );
+	
       }
     if(addresidual)
       {
 	LatticeExpr<Float> adderRes( *(residual()) + *(imagestoadd->residual()) ); 
 	residual()->copyData(adderRes);
+
+	Matrix<Float> addsumwt = getSumWt( *(imagestoadd->residual()) ) + getSumWt( *(residual()) ) ;
+	setSumWt( *residual(), addsumwt );
+	
       }
     if(addweight)
       {
-	LatticeExpr<Float> adderWeight( *(weight()) + *(imagestoadd->weight()) ); 
-	weight()->copyData(adderWeight);
+	if( getUseWeightImage( *(imagestoadd->psf()) ) ) // Access and add weight only if it is needed.
+	  {
+	    LatticeExpr<Float> adderWeight( *(weight()) + *(imagestoadd->weight()) ); 
+	    weight()->copyData(adderWeight);
+	  }
       }
     ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
@@ -561,94 +572,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
 
-    /*
-    if( itsWeight.null() )
+    // Normalize by the sumwt, per plane. 
+    divideImageByWeightVal( *residual() );
+
+    if( getUseWeightImage( *residual() ) == True )
       {
-	os << "Weights are 1.0. Not dividing " << itsImageName+String(".residual") << LogIO::POST;
-      }
-    else
-    */
-      {
-	//	if( itsResNormed==False )
-	  {
-	    os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
-	    
-	    ///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
-	    
-	    LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-	    
-	    LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / ( (*(weight())) + maskinv) );
-	    residual()->copyData(ratio);
-	    //   itsResNormed=True;
-	  }
-	  /*
-	else
-	  {
-	    os << itsImageName+String(".residual") << " is already normalized." << LogIO::POST;
-	  }
-	  */
+	os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	
+	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
+	
+	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / sqrt( (*(weight())) + maskinv ) );
+	residual()->copyData(ratio);
       }
     // createMask
   }
-
+  
   void SIImageStore::dividePSFByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
 
-    /*
-    if( itsWeight.null() )
+    // Normalize by the sumwt, per plane. 
+    divideImageByWeightVal( *psf() );
+
+    /*    
+    if( getUseWeightImage( *psf() ) == True )
       {
-	os << "Weights are 1.0. Not dividing " << itsImageName+String(".psf") << LogIO::POST;
-      }
-    else
-    */
-      {
-	//	if ( itsPsfNormed==False )
-	  {
 	    os << "Dividing " << itsImageName+String(".psf") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 	    
-	    ///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
-	    //	    cerr << "weight limit " <<  weightlimit << endl;
 	    LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
 	    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
 	    
-	    LatticeExpr<Float> ratio( ( (*(psf())) * mask ) / ( (*(weight())) + maskinv) );
+	    LatticeExpr<Float> ratio( ( (*(psf())) * mask ) / sqrt( (*(weight())) + maskinv ) );
 	    psf()->copyData(ratio);
-	    // itsPsfNormed=True;
-	  }
-	  /*	else
-	  {
-	    os << itsImageName+String(".psf") << " is already normalized." << LogIO::POST;
-	  }
-	  */
       }
+    */
     // createMask
   }
 
   void SIImageStore::divideModelByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
-
-    /*
-    if( itsWeight.null() )
-      {
-	os << "Weights are 1.0. Not dividing " << itsImageName+String(".residual") << LogIO::POST;
-      }
-    else
-    */
-      {
-	os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
-	
-	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*(model())) * mask ) / ( (*(weight())) + maskinv) );
-	model()->copyData(ratio);
-      }    
+    
+    os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+    
+    LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
+    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
+    
+    LatticeExpr<Float> ratio( ( (*(model())) * mask ) / sqrt( (*(weight())) + maskinv ) );
+    model()->copyData(ratio);
     // createMask
   }
-
+  
   GaussianBeam SIImageStore::getPSFGaussian()
   {
 
@@ -705,6 +680,69 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+
+  Matrix<Float> SIImageStore::getSumWt(ImageInterface<Float>& target)
+  {
+    Record miscinfo = target.miscInfo();
+    
+    Matrix<Float> sumwt;
+    sumwt.resize();
+    if( miscinfo.isDefined("sumwt") 
+	&& (miscinfo.dataType("sumwt")==TpArrayFloat || miscinfo.dataType("sumwt")==TpArrayDouble  )  ) 
+      { miscinfo.get( "sumwt" , sumwt ); } 
+    else   { sumwt.resize( IPosition(2, target.shape()[2], target.shape()[3] ) ); sumwt = 1.0;  }
+    
+    return sumwt;
+  }
+  
+  void SIImageStore::setSumWt(ImageInterface<Float>& target, Matrix<Float>& sumwt)
+  {
+    Record miscinfo = target.miscInfo();
+    miscinfo.define("sumwt", sumwt);
+    target.setMiscInfo( miscinfo );
+  }
+
+  Bool SIImageStore::getUseWeightImage(ImageInterface<Float>& target)
+  {
+    Record miscinfo = target.miscInfo();
+    Bool useweightimage;
+    if( miscinfo.isDefined("useweightimage") && miscinfo.dataType("useweightimage")==TpBool )
+      { miscinfo.get( "useweightimage", useweightimage );  }
+    else { useweightimage = False; }
+
+    return useweightimage;
+  }
+  
+
+
+  void SIImageStore::divideImageByWeightVal( ImageInterface<Float>& target )
+  {
+
+    Matrix<Float> sumwt = getSumWt( target );
+
+    IPosition imshape = target.shape();
+
+    //    cout << " SumWt  : " << sumwt << " image shape : " << imshape << endl;
+
+    AlwaysAssert( sumwt.shape()[0] == imshape[2] , AipsError ); // polplanes
+    AlwaysAssert( sumwt.shape()[1] == imshape[3] , AipsError ); // chanplanes
+
+    for(Int pol=0; pol<sumwt.shape()[0]; pol++)
+      {
+	for(Int chan=0; chan<sumwt.shape()[1]; chan++)
+	  {
+	    if( sumwt(pol,chan) != 1.0 )
+	      { 
+		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
+		LatticeExpr<Float> le( (*subim)/sumwt(pol,chan) );
+		subim->copyData( le );
+	      }
+	  }
+      }
+
+    sumwt = 1.0; setSumWt( target , sumwt );
+
+  }
 
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

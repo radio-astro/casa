@@ -138,10 +138,10 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
     uInt gridnterms = nterms_p;
     if(dopsf){ gridnterms = 2*nterms_p-1; }
 
-    Matrix<Float> wgt;
+    //    Matrix<Float> wgt;
     for(uInt tix=0; tix<gridnterms; tix++)
       {
-	initializeGridCore( vb, iftms_p[tix], *(itsImages->backwardGrid(tix)) , wgt );
+	initializeGridCore( vb, iftms_p[tix], *(itsImages->backwardGrid(tix)) );// , wgt );
 	//  replace backgrid and wgt by taylor-specific ones.
       }
 
@@ -179,9 +179,12 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
 
     for(uInt tix=0;tix<gridnterms;tix++)
       {
-	Matrix<Float> wgt;
-	finalizeGridCore(dopsf,  iftms_p[tix], (dopsf ? *(itsImages->psf(tix)) : *(itsImages->residual(tix)) ) ,
-			 *(itsImages->weight(tix)) ,   wgt);  //, *(itsImages->backwardGrid(tix))  );
+	//	Matrix<Float> wgt;
+	finalizeGridCore(dopsf,  iftms_p[tix], 
+			 (dopsf ? *(itsImages->psf(tix)) : *(itsImages->residual(tix)) ) ,
+			 (useWeightImage(iftms_p[tix]))?*(itsImages->weight(tix)): *(itsImages->psf(tix)),  
+			 useWeightImage(iftms_p[tix])  );
+	// *(itsImages->weight(tix)) ,   wgt);  
 
 	// replace by taylor dependent images when ready.
       }

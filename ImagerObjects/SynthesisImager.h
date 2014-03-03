@@ -275,6 +275,7 @@ protected:
   // Other Options
   Block<const MeasurementSet *> mss_p;
   vi::FrequencySelections fselections_p;
+  Matrix<Double> mssFreqSel_p;
   CountedPtr<vi::VisibilityIterator2>  vi_p;
   Bool writeAccess_p;
   ////////////////////////////////////Till VisibilityIterator2 works as advertised
