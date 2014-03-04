@@ -89,10 +89,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			raise Exception, 'Visibility data set not found - please verify the name'
 		
 		if (caltable == ""):
-			raise Exception, "Must provide output caltable name in parameter gaintable."            
+			raise Exception, "Must provide output calibration table name in parameter caltable."            
 		
 		if os.path.exists(caltable):
-			raise Exception, "Output gaintable %s already exists - will not overwrite." % caltable
+			raise Exception, "Output caltable %s already exists - will not overwrite." % caltable
 
 		execute_string=  '--ms ' + vis
 
