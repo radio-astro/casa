@@ -3089,6 +3089,7 @@ ms::asdmref(const std::string& abspath)
 	   // from name 0 determine path
 	   Path tmpPath(bDFNames[0]);
 	   tmpPath = Path(tmpPath.dirName()); // remove BLOB name
+	   String binDir(tmpPath.baseName()); // memorize the ASDMBinary dir name
 	   String presentPath(tmpPath.dirName()); // remove ASDMBinary dir name
 	   *itsLog << LogIO::NORMAL << "Present ASDM reference path:\n" 
 		   << presentPath << LogIO::POST;      
@@ -3096,11 +3097,30 @@ ms::asdmref(const std::string& abspath)
 	     retval = presentPath;
 	   }
 	   else{
-	     // modify the bDFNames and write them backy
-	     *itsLog << LogIO::WARN << "Changing of reference path not yet implemented" << LogIO::POST; 
-	     retval = presentPath;
-	     *itsLog << LogIO::NORMAL << "New ASDM reference path:\n" 
-		     << retval << LogIO::POST;      
+	     if(abspath=="/"){
+	       *itsLog << LogIO::SEVERE << "Choosing abspath==\"/\" is not a good idea ..." << LogIO::POST;
+	       retval = presentPath;
+	     }
+	     else{
+	       String absPath(abspath);
+	       if(absPath.lastchar()!='/'){
+		 absPath += "/";
+	       }
+	       if(!File(absPath).isDirectory()){
+		 *itsLog << LogIO::WARN << "\""+absPath+"\" is presently not a valid path ..." << LogIO::POST;
+	       }
+
+	       // modify the bDFNames and write them back
+	       for(uInt i=0; i<bDFNames.size(); i++){
+		 bDFNames[i] = absPath+binDir+"/"+Path(bDFNames[i]).baseName();
+	       }
+	       myASTMan->setBDFNames(bDFNames);
+	       myASTMan->writeIndex();
+
+	       retval = abspath;
+	       *itsLog << LogIO::NORMAL << "New ASDM reference path:\n" 
+		       << retval << LogIO::POST;
+	     }      
 	   }
 	 }
        }

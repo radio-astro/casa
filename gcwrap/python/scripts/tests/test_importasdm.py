@@ -985,6 +985,15 @@ class asdm_import7(test_base):
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(themsname)
+            ms.close()
+            print  myname, ": MS can be opened. Now testing the changing of the asdmref ..."
+            os.system("mv "+myasdmname+" moved_"+myasdmname)
+            ms.open(themsname)
+            ms.asdmref("./moved_"+myasdmname)
+            ms.close()
+            
+            ms.open(themsname)
+            
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
@@ -993,7 +1002,7 @@ class asdm_import7(test_base):
             ms.close()
             print myname, ": OK. Checking tables in detail ..."
     
-            importasdm(asdm=myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
+            importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
 
             if(os.path.exists('reference.ms')):
                 retValue['success'] = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
@@ -1062,7 +1071,8 @@ class asdm_import7(test_base):
                     except:
                         retValue['success'] = False
                         print "ERROR for table ", subtname
-            
+
+        os.system("mv moved_"+myasdmname+" "+myasdmname)
                 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
