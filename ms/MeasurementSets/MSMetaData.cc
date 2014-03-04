@@ -1716,11 +1716,12 @@ void MSMetaData::_getTimesAndInvervals(
 	if (! _scanToTimeRangeMap.empty()) {
 		scanToTimeRangeMap = _scanToTimeRangeMap;
 		scanSpwToAverageIntervalMap = _scanSpwToIntervalMap;
+		return;
 	}
 	scanToTimeRangeMap.clear();
 	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
 	Vector<Int>::const_iterator sIter = scans->begin();
-		Vector<Int>::const_iterator sEnd = scans->end();
+	Vector<Int>::const_iterator sEnd = scans->end();
 
 	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator dIter = dataDescIDs->begin();
