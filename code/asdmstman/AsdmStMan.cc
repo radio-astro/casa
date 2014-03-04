@@ -504,4 +504,25 @@ void AsdmStMan::getBDFNames(Block<String>& bDFNames)
   return;
 }
 
+Bool AsdmStMan::setBDFNames(Block<String>& bDFNames)
+{
+  if(bDFNames.size() == itsBDFNames.size()){
+    itsBDFNames = bDFNames;
+    return True;
+  }
+  else{
+    return False;
+  }
+}
+
+void AsdmStMan::writeIndex(){
+
+  AipsIO aio(fileName() + "asdmindex", ByteIO::New);
+  aio.putstart("AsdmStMan", itsVersion);
+  aio << HostInfo::bigEndian() << itsBDFNames;
+  aio.put(itsIndex);
+  aio.putend();
+
+}
+
 } //# end namespace

@@ -184,6 +184,14 @@ public:
   // access the references to the ASDM BDFs
   void getBDFNames(Block<String>& bDFNames);
 
+  // overwrite the BDFNames (Block needs to have same size as original,
+  // returns False otherwise)
+  Bool setBDFNames(Block<String>& bDFNames);
+
+  // overwrite the index with the information presently stored in the
+  // data manager
+  void writeIndex();
+
 private:
   // Copy constructor cannot be used.
   AsdmStMan (const AsdmStMan& that);
