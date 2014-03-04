@@ -142,13 +142,12 @@ file, '&lt;outfile&gt;_blparam.txt'.
         <value>True</value>
     </param>
 
-    <param type="string" name="fftmethod" subparam="true">
+    <param type="string" name="fftmethod" subparam="true" ignorecase="true">
         <shortdescription>method for automatically set wave numbers of sinusoids [\'fft\']</shortdescription>
         <description>method for automatically set wave numbers of sinusoids</description>
         <value>fft</value>
         <allowed kind="enum">
             <value>fft</value>
-            <value>FFT</value>
         </allowed>
     </param>
 
@@ -195,14 +194,13 @@ file, '&lt;outfile&gt;_blparam.txt'.
         <value>True</value>
     </param>
 
-    <param type="string" name="blformat">
-        <description>format of the text file specified with bloutput [\'\' or \'csv\']</description>
+    <param type="string" name="blformat" ignorecase="true">
+        <shortdescription>format of the text file specified with bloutput [\'\' or \'csv\']</shortdescription>
         <description>format of the text file specified with bloutput</description>
         <value></value>
         <allowed kind="enum">
             <value></value>
             <value>csv</value>
-            <value>CSV</value>
         </allowed>
     </param>
 
