@@ -279,6 +279,43 @@ each IF (spectral window) and beam. Note that, so far, time averaging is
 automatically switched on when polaverage is set to True. This behavior
 is not desirable and will be discarded in future.
 
+--------------------
+FLUX UNIT CONVERSION
+--------------------
+The task is able to convert flux unit between K and Jy. To do that,
+fluxunit and its subparameter telescopeparam must be properly set.
+The fluxunit should be 'Jy' or 'K' depending on what unit input data
+is and what unit you want to convert. If given fluxunit is different
+from the unit of input data, unit conversion is performed.
+The telescopeparam is used to specify conversion factor. There are three
+ways to specify telescopeparam: 1) set Jy/K conversion factor, 2) set
+telescope diameter, D, and aperture efficiency, eta, separately, and
+3) 'FIX' mode (only change the unit without converting spectral data).
+If you give telescopeparam as a list, then if the list has a single float
+it is assumed to be the gain in Jy/K (case 1), if two or more elements
+they are assumed to be telescope diameter (m) and aperture efficiency
+respectively (case 2).
+See the above parameter description as well as note on 'FIX' mode below
+for details.
+  
+There are two special cases that don't need telescopeparam for unit
+conversion. Telescope name is obtained from the data.
+1) ASAP (sd tool) recognizes the conversion factor (actually D and
+   eta) for the "AT" telescopes, namely ATNF MOPRA telescope, until
+   2004.
+2) The task does know D and eta for GBT telescope.
+If you wish to change the fluxunit, by leaving the sub-parameter
+telescopeparam unset (telescopeparam=''), it will use internal telescope
+parameters for flux conversion for the data from AT telescopes and it
+will use an approximate aperture efficiency conversion for the GBT data.
+
+Note that xxx assumes that the fluxunit is set correctly in the data
+already. If not, then set telescopeparam='FIX' and it will set the
+default units to fluxunit without conversion.
+Note also that, if the data in infile is an ms from GBT and the default
+flux unit is missing, this task automatically fixes the default fluxunit
+to 'K' before the conversion.
+
 ------------------
 Keyword arguments
 ------------------
@@ -418,20 +455,6 @@ overwrite -- overwrite the statistics file if already exists
            keys: 'rms','stddev','max','min','max_abscissa',
                  'min_abscissa','sum','median','mean','totint','eqw'
 
-
------------
-DESCRIPTION
------------
-ASAP recognizes the data of the "AT" telescopes, but currently
-does not know about the GBT or any other telescope. This task
-does know about GBT. Telescope name is obtained from the data.
-If you wish to change the fluxunit (see below), and telescopeparam='',
-for the AT telescopes it will use internal telescope parameters for
-flux conversion. For GBT, it will use an approximate aperture
-efficiency conversion.  If you give telescopeparam a list, then
-if the list has a single float it is assumed to be the gain in Jy/K,
-if two or more elements they are assumed to be telescope diameter (m)
-and aperture efficiency respectively.
 
 -------
 WARNING
