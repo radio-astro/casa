@@ -181,6 +181,9 @@ public:
   uInt getAsdmStManVersion() const
     { return itsVersion; }
 
+  // access the references to the ASDM BDFs
+  void getBDFNames(Block<String>& bDFNames);
+
 private:
   // Copy constructor cannot be used.
   AsdmStMan (const AsdmStMan& that);

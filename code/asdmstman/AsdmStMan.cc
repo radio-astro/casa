@@ -498,4 +498,10 @@ void AsdmStMan::getData (uInt rownr, Complex* buf)
   }
 }
 
+void AsdmStMan::getBDFNames(Block<String>& bDFNames)
+{
+  bDFNames = itsBDFNames;
+  return;
+}
+
 } //# end namespace
