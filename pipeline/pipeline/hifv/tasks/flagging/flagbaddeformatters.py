@@ -22,10 +22,12 @@ class FlagBadDeformattersInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 class FlagBadDeformattersResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, jobs=[], result_amp=[], result_phase=[]):
         super(FlagBadDeformattersResults, self).__init__()
 
         self.jobs=jobs
+        self.result_amp=result_amp
+        self.result_phase=result_phase
         
     def __repr__(self):
         s = 'Bad deformatter results:\n'
@@ -51,7 +53,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'calBPtablename' : 'testBPcal.b', # Define the table to run this on
                        'flagreason' : 'bad_deformatters_amp or RFI'} # Define the REASON given for the flags
         
-        bad_deformat_result = self._do_flag_baddeformatters(**method_args)
+        result_amp = self._do_flag_baddeformatters(**method_args)
         
         method_args = {'testq' : 'phase',
                        'tstat' : 'diff',
@@ -64,9 +66,9 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'calBPtablename' : 'testBPcal.b',
                        'flagreason' : 'bad_deformatters_phase or RFI'}
         
-        bad_deformat_result = self._do_flag_baddeformatters(**method_args)
+        result_phase = self._do_flag_baddeformatters(**method_args)
         
-        return bad_deformat_result
+        return FlagBadDeformattersResults(result_amp=result_amp, result_phase=result_phase)
         
     def _do_flag_baddeformatters(self, testq=None, tstat=None, doprintall=True,
                                  testlimit=None, testunder=True, nspwlimit=4,
@@ -273,12 +275,10 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 
                 job = casa_tasks.flagdata(**task_args)
                 
-                self._executor.execute(job)
-                
-                return FlagBadDeformattersResults([job])
+                return flaglist
                 
         #If the flag commands are not executed.
-        return FlagBadDeformattersResults()
+        return []
         
         
     def analyse(self, results):
