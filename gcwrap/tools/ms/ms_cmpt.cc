@@ -289,7 +289,7 @@ bool
 ms::open(const std::string& thems, const bool nomodify, const bool lock)
 {
   try {
-      *itsLog << LogOrigin("ms", "open");
+     *itsLog << LogOrigin("ms", "open");
      const Table::TableOption openOption = nomodify ? Table::Old : Table::Update;
      TableLock tl;
      if (lock) tl = TableLock(TableLock::PermanentLocking);
@@ -3061,6 +3061,60 @@ ms::clipbuffer(const double pixellevel, const double timelevel, const double cha
    return rstat; 
 }
 
+std::string
+ms::asdmref(const std::string& abspath)
+{
+  std::string retval;
+  *itsLog << LogOrigin("ms", "asdmref");
+  try {
+    if(!detached()){
+       // get the data manager of the DATA column
+       TableDesc mSTD(itsMS->actualTableDesc());
+       ColumnDesc myColDesc(mSTD.columnDesc("DATA"));
+       String hcName(myColDesc.dataManagerGroup());
+       DataManager* myDM = itsMS->findDataManager(hcName);
+       String dataManName(myDM->dataManagerName());
+
+       if(dataManName != "AsdmStMan"){
+	 *itsLog << LogIO::NORMAL << "MS does not reference an ASDM." << LogIO::POST;      
+       }
+       else{
+
+	 AsdmStMan* myASTMan = static_cast<AsdmStMan*>(itsMS->findDataManager(hcName));
+	 
+	 Block<String> bDFNames;       
+	 myASTMan->getBDFNames(bDFNames);
+
+	 if(bDFNames.size()!=0){
+	   // from name 0 determine path
+	   Path tmpPath(bDFNames[0]);
+	   tmpPath = Path(tmpPath.dirName()); // remove BLOB name
+	   String presentPath(tmpPath.dirName()); // remove ASDMBinary dir name
+	   *itsLog << LogIO::NORMAL << "Present ASDM reference path:\n" 
+		   << presentPath << LogIO::POST;      
+	   if(abspath == ""){
+	     retval = presentPath;
+	   }
+	   else{
+	     // modify the bDFNames and write them backy
+	     *itsLog << LogIO::WARN << "Changing of reference path not yet implemented" << LogIO::POST; 
+	     retval = presentPath;
+	     *itsLog << LogIO::NORMAL << "New ASDM reference path:\n" 
+		     << retval << LogIO::POST;      
+	   }
+	 }
+       }
+    }
+  } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks(True);
+       RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return retval;
+
+}
+
 bool
 ms::setbufferflags(const ::casac::record& flags)
 {
@@ -3590,7 +3644,7 @@ ms::addephemeris(const int id,
 	Vector<Int> ids = ephid.getColumn();
 	for(uInt i=0; i<ids.size(); i++){
 	  for(uInt j=0; j<fieldids.size(); j++){
-	    if(i==fieldids[j] && ids[i]>=0){ // these are the ids to be overwritten
+	    if((Int)i==fieldids[j] && ids[i]>=0){ // these are the ids to be overwritten
 	      ids[i] = -1; // exclude them from the search
 	    }
 	  }
@@ -3775,8 +3829,6 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
       // if (doingIterations_p == False) 
       // 	niterorigin();
 
-      
-      ::casac::record *retval(0);
       casa::Record rec;
       Int nItems = items.size();
       for (Int i=0; i<nItems; i++) 
@@ -3840,7 +3892,7 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
 		Vector<uInt> rowIds;
 		rowIds = itsVI->rowIds(rowIds);
 		Vector<Int> tmp(rowIds.shape());
-		for (Int ii=0;ii<tmp.nelements(); ii++)
+		for (Int ii=0;ii<(Int)tmp.nelements(); ii++)
 		  tmp(ii)=rowIds(ii);
 		rec.define(item,tmp);
 		break;
