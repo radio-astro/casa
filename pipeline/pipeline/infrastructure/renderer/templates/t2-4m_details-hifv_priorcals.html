@@ -92,6 +92,15 @@ using the CASA task <b>gencal</b>.</p>
 	%for single_result in result:
 	    <p><b>${single_result.antpos_result[0].inputs['caltable']}</b></p>
         %endfor
+        
+        %for single_result in result:
+            % if single_result.antpos_result[0].inputs['offsets'] == []:
+                <b>No antenna position corrections to apply.</b>
+            % else:
+                <b>${single_result.antpos_result[0].inputs['offsets']}</b>
+            % endif
+        %endfor
+        
 </div>
 
 <div class="row-fluid">
