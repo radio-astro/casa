@@ -2437,43 +2437,45 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                                                       applycal.PhaseVsUVSummaryChart, 
                                                       ['AMPLITUDE'])
 
-        # detail plots. Don't need the return dictionary, but make sure a 
-        # renderer is passed so the detail page is written to disk
-        self.create_plots(context, 
-                          result, 
-                          applycal.AmpVsFrequencyDetailChart, 
-                          ['BANDPASS', 'PHASE'],
-                          ApplycalAmpVsFreqPlotRenderer)
-
-        self.create_plots(context, 
-                          result, 
-                          applycal.PhaseVsFrequencyDetailChart, 
-                          ['BANDPASS', 'PHASE'],
-                          ApplycalPhaseVsFreqPlotRenderer)
-
-        self.create_plots(context, 
-                          result, 
-                          applycal.AmpVsUVDetailChart, 
-                          ['AMPLITUDE'],
-                          ApplycalAmpVsUVPlotRenderer)
-
-        self.create_plots(context, 
-                          result, 
-                          applycal.PhaseVsUVDetailChart, 
-                          ['AMPLITUDE'],
-                          ApplycalPhaseVsUVPlotRenderer)
-
-        self.create_plots(context, 
-                          result, 
-                          applycal.AmpVsTimeDetailChart, 
-                          ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
-                          ApplycalAmpVsTimePlotRenderer)
-
-        self.create_plots(context, 
-                          result, 
-                          applycal.PhaseVsTimeDetailChart, 
-                          ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
-                          ApplycalPhaseVsTimePlotRenderer)
+        create_detail_plots = True
+        if create_detail_plots:
+            # detail plots. Don't need the return dictionary, but make sure a
+            # renderer is passed so the detail page is written to disk
+            self.create_plots(context, 
+                              result, 
+                              applycal.AmpVsFrequencyDetailChart, 
+                              ['BANDPASS', 'PHASE'],
+                              ApplycalAmpVsFreqPlotRenderer)
+    
+            self.create_plots(context, 
+                              result, 
+                              applycal.PhaseVsFrequencyDetailChart, 
+                              ['BANDPASS', 'PHASE'],
+                              ApplycalPhaseVsFreqPlotRenderer)
+    
+            self.create_plots(context, 
+                              result, 
+                              applycal.AmpVsUVDetailChart, 
+                              ['AMPLITUDE'],
+                              ApplycalAmpVsUVPlotRenderer)
+    
+            self.create_plots(context, 
+                              result, 
+                              applycal.PhaseVsUVDetailChart, 
+                              ['AMPLITUDE'],
+                              ApplycalPhaseVsUVPlotRenderer)
+    
+            self.create_plots(context, 
+                              result, 
+                              applycal.AmpVsTimeDetailChart, 
+                              ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
+                              ApplycalAmpVsTimePlotRenderer)
+    
+            self.create_plots(context, 
+                              result, 
+                              applycal.PhaseVsTimeDetailChart, 
+                              ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
+                              ApplycalPhaseVsTimePlotRenderer)
 
         ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
                     'phase_vs_freq_plots' : phase_vs_freq_summary_plots,
