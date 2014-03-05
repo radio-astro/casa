@@ -131,12 +131,15 @@ class testgainsPerAntennaChart(object):
 	if ((numAntenna%3)>0):
 	    nplots = nplots + 1
 	
+	nplots=numAntenna
+	
 	for ii in range(nplots):
 	
 	    filename='testgaincal_'+self.yaxis+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -155,7 +158,7 @@ class testgainsPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testgaincal.g',  xaxis='time', yaxis=self.yaxis, poln='', field='', antenna=antPlot, spw='', timerange='',       subplot=311,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,        plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='testgaincal.g',  xaxis='time', yaxis=self.yaxis, poln='', field='', antenna=antPlot, spw='', timerange='',       subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,        plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:

@@ -126,17 +126,20 @@ class DelaysPerAntennaChart(object):
         
         
     
-	nplots=int(numAntenna/3)
+	#nplots=int(numAntenna/3)
 	
-	if ((numAntenna%3)>0):
-	    nplots = nplots + 1
+	#if ((numAntenna%3)>0):
+	#    nplots = nplots + 1
+	    
+	nplots=numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='delay'+str(ii)+'_'+self.suffix+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -147,7 +150,7 @@ class DelaysPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting delays")
-	            casa.plotcal(caltable='delay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='delay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -209,18 +212,20 @@ class semifinalphaseGainPerAntennaChart(object):
         
         
     
-	nplots=int(numAntenna/3)
+	#nplots=int(numAntenna/3)
 	
-	
-	if ((numAntenna%3)>0):
-	    nplots = nplots + 1
+	#if ((numAntenna%3)>0):
+	#    nplots = nplots + 1
+	    
+	nplots=numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='BPinitialgainphase'+str(ii)+'_'+self.suffix+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+            antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -231,7 +236,7 @@ class semifinalphaseGainPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting phase gain solutions")
-	            casa.plotcal(caltable='BPinitialgain.g', xaxis='time', yaxis='phase', poln='', field='', antenna=antPlot, spw='',        timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-180,180], showflags=False,        plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0,  showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='BPinitialgain.g', xaxis='time', yaxis='phase', poln='', field='', antenna=antPlot, spw='',        timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-180,180], showflags=False,        plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0,  showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -325,15 +330,18 @@ class semifinalbpSolAmpPerAntennaChart(object):
         
 	
 	
-	if ((numAntenna%3)>0):
-	    nplots = nplots + 1
+	#if ((numAntenna%3)>0):
+	#    nplots = nplots + 1
+	
+	nplots=numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='BPcal_amp'+str(ii)+'_'+self.suffix+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -343,7 +351,7 @@ class semifinalbpSolAmpPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='BPcal.b', xaxis='freq', yaxis='amp', poln='', field='', antenna=antPlot, spw='',        timerange='',  subplot=311, overplot=False, clearpanel='Auto',  iteration='antenna', plotrange=[0,0,0,ampplotmax], showflags=False,        plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0,  showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='BPcal.b', xaxis='freq', yaxis='amp', poln='', field='', antenna=antPlot, spw='',        timerange='',  subplot=111, overplot=False, clearpanel='Auto',  iteration='antenna', plotrange=[0,0,0,ampplotmax], showflags=False,        plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0,  showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -435,15 +443,18 @@ class semifinalbpSolPhasePerAntennaChart(object):
         
 	
 	
-	if ((numAntenna%3)>0):
-	    nplots = nplots + 1
+	#if ((numAntenna%3)>0):
+	#    nplots = nplots + 1
+	
+	nplots=numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='BPcal_phase'+str(ii)+'_'+self.suffix+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+            antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -453,7 +464,7 @@ class semifinalbpSolPhasePerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='BPcal.b', xaxis='freq', yaxis='phase', poln='', field='', antenna=antPlot, spw='',        timerange='', subplot=311,  overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-phaseplotmax,phaseplotmax],        showflags=False, plotsymbol='o',  plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='BPcal.b', xaxis='freq', yaxis='phase', poln='', field='', antenna=antPlot, spw='',        timerange='', subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-phaseplotmax,phaseplotmax],        showflags=False, plotsymbol='o',  plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:

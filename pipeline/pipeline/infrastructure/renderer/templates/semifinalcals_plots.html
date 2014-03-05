@@ -72,7 +72,7 @@ $(document).ready(function () {
 
 <div class="column-fluid">
 	<ul class="thumbnails">
-	% for plot in sorted(plots, key=lambda p: p.parameters['file']):
+	% for plot in sorted(plots, key=lambda p: int(p.parameters['ant'])):
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"

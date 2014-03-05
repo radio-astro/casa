@@ -128,17 +128,20 @@ class testDelaysPerAntennaChart(object):
         
         LOG.info("Plotting test delays")
     
-	nplots=int(numAntenna/3)
+	#nplots=int(numAntenna/3)
 	
-	if ((numAntenna%3)>0):
-	    nplots = nplots + 1
+	#if ((numAntenna%3)>0):
+	#    nplots = nplots + 1
+	
+	nplots = numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='testdelay'+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -148,7 +151,7 @@ class testDelaysPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testdelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='testdelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -207,6 +210,8 @@ class ampGainPerAntennaChart(object):
     
 	nplots=int(numAntenna/3)
 	
+	
+	
 	with casatools.TableReader('testBPdinitialgain.g') as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
@@ -218,13 +223,16 @@ class ampGainPerAntennaChart(object):
 	
 	if ((numAntenna%3)>0):
 	    nplots = nplots + 1
+	    
+	nplots = numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='testBPdinitialgainamp'+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -234,7 +242,7 @@ class ampGainPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False, plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,showgui=False,figfile=figfile)
+	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False, plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,showgui=False,figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -304,15 +312,19 @@ class phaseGainPerAntennaChart(object):
         plotmax=maxamp
 	
 	
+	
 	if ((numAntenna%3)>0):
 	    nplots = nplots + 1
+	    
+	nplots = numAntenna
 	
 	for ii in range(nplots):
 	
 	    filename='testBPdinitialgainphase'+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -322,7 +334,7 @@ class phaseGainPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -425,12 +437,15 @@ class bpSolAmpPerAntennaChart(object):
 	if ((numAntenna%3)>0):
 	    nplots = nplots + 1
 	
+	nplots=numAntenna
+	
 	for ii in range(nplots):
 	
 	    filename='testBPcal_amp'+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+            antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -440,7 +455,7 @@ class bpSolAmpPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=311,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='testBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -541,12 +556,15 @@ class bpSolPhasePerAntennaChart(object):
 	if ((numAntenna%3)>0):
 	    nplots = nplots + 1
 	
+	nplots = numAntenna
+	
 	for ii in range(nplots):
 	
 	    filename='testBPcal_phase'+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -556,7 +574,7 @@ class bpSolPhasePerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=311,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile)
+	            casa.plotcal(caltable='testBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
