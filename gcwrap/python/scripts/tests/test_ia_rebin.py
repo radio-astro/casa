@@ -141,13 +141,13 @@ class ia_rebin_test(unittest.TestCase):
         outfile = "ab.im"
         self.assertFalse(
             imrebin(
-                imagename=imagename, outfile=outfile, bin=[2,2,1,1],
+                imagename=imagename, outfile=outfile, factor=[2,2,1,1],
                 mask=mymask + ">0", stretch=False, overwrite=True
             )
         )
         self.assertTrue(
             imrebin(
-                imagename=imagename, outfile=outfile, bin=[2,2,1,1],
+                imagename=imagename, outfile=outfile, factor=[2,2,1,1],
                 mask=mymask + ">0", stretch=True, overwrite=True
             )
         )
@@ -180,7 +180,7 @@ class ia_rebin_test(unittest.TestCase):
         self.assertFalse(
             imrebin(
                 imagename=imagename, outfile=outfile,
-                bin=[-100,2], overwrite=True
+                factor=[-100,2], overwrite=True
             )
         )
         
@@ -194,7 +194,7 @@ class ia_rebin_test(unittest.TestCase):
         self.assertTrue(
             imrebin(
                 imagename=imagename, outfile=outfile, overwrite=True,
-                bin=[2,2]
+                factor=[2,2]
             )
         )
         myim2b.open(outfile)
@@ -217,7 +217,7 @@ class ia_rebin_test(unittest.TestCase):
         self.assertTrue(
             imrebin(
                 imagename=imagename, outfile=outfile,
-                bin=[2,2,1]
+                factor=[2,2,1]
             )
         )
         self.assertRaises(
@@ -228,7 +228,7 @@ class ia_rebin_test(unittest.TestCase):
         self.assertFalse(
             imrebin(
                 imagename=imagename, outfile=outfile,
-                bin=[2,2,2]
+                factor=[2,2,2]
             )
         )
         

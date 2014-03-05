@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Output image name.</description>
             <value/>
         </param>
-        <param type="intArray"  name="bin">
+        <param type="intArray"  name="factor">
             <description>Binning factors for each axis</description>
         </param>
         <param type="any" direction="in" name="region">
@@ -91,7 +91,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
-bin              Array of binning factors for each axis, eg [2,3]
+factor           Array of binning factors for each axis, eg [2,3]
 region           Region to use. Do not specify region and box/chans/stokes simultaneously.
                  See help par.region for details.
 box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
@@ -118,7 +118,7 @@ discard the axes from the input image.
 
 EXAMPLE
 
-imrebin(imagename="my.im", outfile="rebinned.im", bin=[2,3])
+imrebin(imagename="my.im", outfile="rebinned.im", factor=[2,3])
 
     </example>
 </task>

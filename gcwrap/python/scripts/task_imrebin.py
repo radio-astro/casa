@@ -1,7 +1,7 @@
 from taskinit import *
 
 def imrebin(
-    imagename, outfile, bin, region, box, chans, stokes, mask,
+    imagename, outfile, factor, region, box, chans, stokes, mask,
     dropdeg, overwrite, stretch
 ):
     casalog.origin('imrebin')
@@ -18,7 +18,7 @@ def imrebin(
                 chans=chans, stokes=stokes, stokescontrol="a", region=region
             )
         outia = myia.rebin(
-            outfile=outfile, bin=bin, region=region, mask=mask, dropdeg=dropdeg,
+            outfile=outfile, bin=factor, region=region, mask=mask, dropdeg=dropdeg,
             overwrite=overwrite, stretch=stretch
         )
         return True
