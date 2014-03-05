@@ -419,6 +419,8 @@ IO/MMapfdIO.h
 IO/MMapIO.h
 IO/RawIO.h
 IO/RegularFileIO.h
+IO/STLIO.h
+IO/STLIO.tcc
 IO/StreamIO.h
 IO/TapeIO.h
 IO/TypeIO.h
