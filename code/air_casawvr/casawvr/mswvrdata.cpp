@@ -21,8 +21,10 @@
 #include <casacore/ms/MeasurementSets/MSProcessor.h>
 #include <casacore/ms/MeasurementSets/MSColumns.h>
 #include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
 
 #include <casa/Arrays/Vector.h>
+#include <casa/Quanta/MVTime.h>
 
 #include "almawvr/arraydata.hpp"
 #include "casawvr_errs.hpp"
@@ -254,14 +256,14 @@ namespace LibAIR {
 
   /** Get the nearest pointing record to each WVR observation
    */
-  void WVRNearestPointing(const casa::MeasurementSet &ms,
+  bool WVRNearestPointing(const casa::MeasurementSet &ms,
 			  const std::vector<double> &time,
 			  std::vector<double> &az,
 			  std::vector<double> &el)
   {
 
     std::vector<double> ptime, paz, pel;
-    bool noPointing = false;
+    bool rval = true;
     try{
       loadPointing(ms,
 		   ptime,
@@ -273,9 +275,7 @@ namespace LibAIR {
 		<< std::endl << "         LibAIR::WVRNearestPointing: " << rE.what() << std::endl;
       std::cout << std::endl << "WARNING: problem while accessing POINTING table:"
 		<< std::endl << "         LibAIR::WVRNearestPointing: " << rE.what() << std::endl;
-      std::cerr << "Will try to continue using constant AZ=0, EL= 60 deg." << std::endl;
-      std::cout << "Will try to continue using constant AZ=0, EL= 60 deg." << std::endl;
-      noPointing = true;
+      rval = false;
     }
 
     size_t wrows=time.size();
@@ -288,23 +288,56 @@ namespace LibAIR {
 
     for (size_t wi=0; wi<wrows; ++wi)
     {
-      if(noPointing){
-	az[wi]=0.;
-	el[wi]=60./180.*3.141592;
-      }
-      else{
-	while(pi<(prows-1) and  ptime[pi]<time[wi])
-	  ++pi;
-	az[wi]=paz[pi];
-	el[wi]=pel[pi];
-      }
+      while(pi<(prows-1) and  ptime[pi]<time[wi])
+	++pi;
+      az[wi]=paz[pi];
+      el[wi]=pel[pi];
     }
+
+    return rval;
+
+  }
+
+  /** Calculate the AZ and EL for each WVR observation based on the field table
+   */
+  void WVRFieldAZEl(const casa::MeasurementSet &ms,
+		       const std::vector<double> &time,
+		       const std::vector<size_t> &fields,
+		       std::vector<double> &az,
+		       std::vector<double> &el)
+  {
+
+    casa::MSDerivedValues msd;
+    casa::MEpoch etime;
+    casa::MDirection azel;
+
+
+    msd.setMeasurementSet(ms);
+    msd.setAntenna(0); // use antenna 0 as reference position
+
+    size_t wrows=time.size();
+    
+    az.resize(wrows);  
+    el.resize(wrows);
+
+    for (size_t wi=0; wi<wrows; ++wi)
+    {
+      etime.set(casa::MVEpoch(casa::Quantity(time[wi], "s")));
+      msd.setEpoch(etime);
+      msd.setFieldCenter(fields[wi]);
+      azel = msd.azel();
+      az[wi]=azel.getAngle().getValue()[0];
+      el[wi]=azel.getAngle().getValue()[1];
+    }
+
+    return;
 
   }
 			  
 
   InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, std::vector<size_t>& sortedI, 
-			       std::set<int>& flaggedantsInMain, double requiredUnflaggedFraction)
+			       std::set<int>& flaggedantsInMain, double requiredUnflaggedFraction,
+			       bool usepointing)
   {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
     AntSet wvrants=WVRAntennas(ms);
@@ -347,11 +380,20 @@ namespace LibAIR {
 		       source,
 		       sortedI); 
 
-    if (times.size() == 0)
+    if (times.size() == 0){
       throw LibAIR::MSInputDataError("Didn't find any WVR data points");
+    }
     
-    WVRNearestPointing(ms, times, az, el);
-      
+    if(usepointing && !WVRNearestPointing(ms, times, az, el)){
+      std::cout << "Could not get antenna pointing information from POINTING table." << std::endl;
+      std::cerr << "Could not get antenna pointing information from POINTING table." << std::endl;
+      usepointing=false;
+    }
+    if(!usepointing){
+      std::cout << "Deriving antenna pointing information from FIELD table ..."	<< std::endl;
+      std::cerr << "Deriving antenna pointing information from FIELD table ..."	<< std::endl;      
+      WVRFieldAZEl(ms, times, fields, az, el);
+    }
 
     std::auto_ptr<InterpArrayData> 
       res(new InterpArrayData(times, 
