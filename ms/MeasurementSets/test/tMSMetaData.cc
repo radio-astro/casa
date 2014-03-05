@@ -35,7 +35,7 @@
 #include <casa/OS/EnvVar.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <casa/Arrays/ArrayIO.h>
+#include <casa/IO/STLIO.h>
 #include <iomanip>
 
 #include <casa/namespace.h>
