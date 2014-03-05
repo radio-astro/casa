@@ -61,7 +61,7 @@ def ifmap_to_spwmap(num_spw, ifmap):
     return spwmap
 %>
 
-<%block name="title">Apply calibration tables</%block>
+<%block name="title">${hr._get_task_description_for_class(result[0].task)}</%block>
 
 <p>This task applies all calibrations registered with the pipeline to their target scantables.<p>
 

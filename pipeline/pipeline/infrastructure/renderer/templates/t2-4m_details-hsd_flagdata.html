@@ -11,7 +11,7 @@ import pipeline.infrastructure.displays as displays
 
 <%block name="header" />
 
-<%block name="title">Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</%block>
+<%block name="title">${hr._get_task_description_for_class(result[0].task)}</%block>
 
 <%
 def get_fraction(flagged, total):
