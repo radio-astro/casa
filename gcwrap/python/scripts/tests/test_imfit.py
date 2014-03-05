@@ -539,79 +539,82 @@ class imfit_test(unittest.TestCase):
     # Test using initial estimates and fixed parameters
     def test_fit_using_estimates(self):
         '''Imfit: Test using estimates'''
-        success = True
         test = 'fit_using_estimates: '
         global msgs
-    
+        box = "121,84,178,135"
         def run_fitcomponents():
             myia = iatool()
             myia.open(convolved_model)
-            res = myia.fitcomponents(estimates=estimates_convolved)
+            res = myia.fitcomponents(estimates=estimates_convolved, box=box)
             print "** image " + convolved_model
             print "*** estimates " + estimates_convolved
             myia.done()
             return res
         def run_imfit():
             default('imfit')
-            return imfit(imagename=convolved_model, estimates=estimates_convolved)
-    
+            return imfit(
+                imagename=convolved_model, box=box,
+                estimates=estimates_convolved
+            )
         for code in [run_fitcomponents, run_imfit]:
             res = code()
     
             clist = res['results']
-            if (not res['converged'][0]):
-                success = False
-                msgs += test + "fit did not converge unexpectedly"
+            self.assertTrue(
+                res['converged'][0],
+                test + "fit did not converge unexpectedly"
+            )
             epsilon = 1e-5
             # I flux test
             got = clist['component0']['flux']['value'][0]
-            expected = 60082.6
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            expected = 60300
+            self.assertTrue(
+                near(got, expected, 0.01),
+                test + "I flux density test failure, got " + str(got) + " expected " + str(expected)
+            )                                                                  
             # Q flux test
             got = clist['component0']['flux']['value'][1]
             expected = 0
-            if (got != expected):
-                success = False
-                msgs += test + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            self.assertTrue(
+                got == expected,
+                test + "Q flux density test failure, got " + str(got) + " expected " + str(expected)
+            )
             # RA test
             shape = clist['component0']['shape']
             got = shape['direction']['m0']['value']
-            expected = 0.000213318
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            expected =  0.00021329
+            self.assertTrue(near(got, expected, 0.01),
+                test + "RA test failure, got " + str(got) + " expected " + str(expected)
+            )
             # Dec test
             got = shape['direction']['m1']['value']
-            expected = 1.939254e-5 
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            expected = 1.93925e-5
+            self.assertTrue(
+                near(got, expected, 0.01),
+                test + "Dec test failure, got " + str(got) + " expected " + str(expected)
+            )
             # Major axis test
             got = shape['majoraxis']['value']
-            expected = 28.21859344 
-            epsilon = 1e-7
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test+ "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            expected =  28.2615
+            epsilon = 0.01
+            self.assertTrue(
+                near(got, expected, epsilon),
+                test+ "Major axis test failure, got " + str(got) + " expected " + str(expected)
+            )
             # Minor axis test
             got = shape['minoraxis']['value']
-            expected = 25.55011520
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            expected = 25.55
+            self.assertTrue(
+                near(got, expected, epsilon),
+                test + "Minor axis test failure, got " + str(got) + " expected " + str(expected)
+            )
             # Position angle test
             got = shape['positionangle']['value']
-            expected = 126.3211050
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
-    
-            # test errors
-
-
-        self.assertTrue(success,msgs)
+            expected = 126.868
+            self.assertTrue(
+                near(got, expected, epsilon),
+                test + "Position angle test failure, got " + str(got) + " expected " + str(expected)
+            )
 
     def test_position_errors(self):
         '''Imfit: Test position errors'''
