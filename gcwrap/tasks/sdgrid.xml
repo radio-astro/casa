@@ -225,7 +225,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         clipminmax -- do min/max cliping if True
                 default: False
         outfile -- output data name
-                default: '' (outfile will be set to infile+'.grid')
+                default: '' (outfile will be set to infile[0]+'.grid')
                 example: 'mydata.asap.grid'
         overwrite -- overwrite option for outfile
                 default: False (not overwrite)

@@ -5,7 +5,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infiles, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
     with sdutil.sdtask_manager(sdgrid_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -25,7 +25,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.__summarize_compiled_inputs()
 
         # create gridder
-        self.gridder = sd.asapgrid(infile=self.infile)
+        self.gridder = sd.asapgrid(infiles=self.infiles)
 
     def parameter_check(self):
         if self.gridfunction.upper() == 'PB':
@@ -65,9 +65,9 @@ class sdgrid_worker(sdutil.sdtask_interface):
             self.gridder.plot()
             
     def __compile(self):
-        # infile
-        if isinstance(self.infile, str):
-            self.infile = [self.infile]
+        # infiles
+        if isinstance(self.infiles, str):
+            self.infiles = [self.infiles]
 
         # scanlist
         self.scans = sdutil._to_list(self.scanlist, int)
@@ -76,7 +76,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.pols = sdutil._to_list(self.pollist, int)
 
         # outfile
-        self.outname = sdutil.get_default_outfile_name(self.infile[0],
+        self.outname = sdutil.get_default_outfile_name(self.infiles[0],
                                                        self.outfile,
                                                        self.suffix)
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outname,
@@ -93,7 +93,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.mapcenter = sdutil.get_map_center(self.center)
 
     def __summarize_raw_inputs(self):
-        params = ['infile', 'antenna', 'scanlist', 'ifno',
+        params = ['infiles', 'antenna', 'scanlist', 'ifno',
                   'pollist', 'gridfunction', 'convsupport',
                   'truncate', 'gwidth', 'jwidth', 'weight',
                   'clipminmax', 'outfile', 'overwrite',
@@ -103,7 +103,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         casalog.post(summary, priority='DEBUG')
 
     def __summarize_compiled_inputs(self):
-        params = ['infile', 'ifno', 'scans', 'pols',
+        params = ['infiles', 'ifno', 'scans', 'pols',
                   'gridfunction', 'convsupport',
                   'truncate', 'gwidth', 'jwidth', 'weight',
                   'clipminmax', 'outname', 'overwrite',

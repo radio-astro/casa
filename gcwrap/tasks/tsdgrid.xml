@@ -10,42 +10,51 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tsdgrid" startup="false" category="single dish" visibility="experimental">
 
-  <shortdescription>SD task: gridding single dish data</shortdescription>
+  <shortdescription>SD gridding task</shortdescription>
 
-  <description>SD task for gridding spectra
-
-        Task Version 2011-12-02 TN
+  <description>
+Task tsdgrid performs spatial gridding according to the user 
+specification of spatial grid, convolution function, etc.
+For grid configuration, the task supplements necessary information 
+by referring input data if any of gridding parameter ('npix', 
+'cell', or 'center') is not specified by the user. If 'center' is 
+default value (empty string), central position of the grid will be 
+set to the center of observed area, i.e. x=0.5*(xmax+xmin), 
+y=0.5*(ymax+ymin). If either 'cell' or 'npix' is set, unspecified 
+one will be calculated from the others. In that case, total extent of 
+the grid will be set to cover all observed position. If neither 'cell' 
+nor 'npix' is set, cell size will be set to 1.0 arcmin and number of 
+pixel will be calculated based on that cell size.
+Currently, only J2000 frame is supported.
   </description>
 
   <input>
+
     <param type="any" name="infiles"  mustexist="true">
-        <description>(list of) input SD dataset</description>
-        <any type="variant" limittype="string stringArray"/>
-        <value type="stringArray">""</value>
+      <description>a list of names of input SD datasets</description>
+      <any type="variant" limittype="string stringArray"/>
+      <value type="stringArray">""</value>
     </param>
 
     <param type="any" name="antenna">
-        <description>antenna name(s) or id(s)</description>
-        <any type="variant" limittype="string int"/>
-        <value type="int">-1</value>
+      <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
+      <any type="variant" limittype="string int"/>
+      <value type="int">-1</value>
     </param>
 
     <param type="string" name="scan">
-        <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
-	<description>Select data by scan numbers ('' = all)</description>
-        <value></value>
+      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+      <value></value>
     </param>
 
     <param type="string" name="spw">
-        <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\'). Note this task only supports IF selction and ignores channel selection.</shortdescription>
-        <description>Select data by IF ids (spectral window) ('' = all). Note this task only supports IF selction and ignores channel selection.</description>
-        <value>-1</value>
+      <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+      <value>-1</value>
     </param>
 
     <param type="string" name="pol">
-        <shortdescription>Select polarization ids (e.g.\'0,1\')</shortdescription>
-        <description>Select data by polarization ids ('' = all)</description>
-        <value></value>
+      <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+      <value></value>
     </param>
 
     <param type="string" name ="gridfunction">
@@ -77,17 +86,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="gwidth" subparam="true">
-            <description>HWHM for gaussian</description>
-            <any type="variant" limittype="string int double"/>
-            <value type="int">-1</value>
+      <description>HWHM for gaussian</description>
+      <any type="variant" limittype="string int double"/>
+      <value type="int">-1</value>
     </param>
 
     <param type="any" name="jwidth" subparam="true">
-            <description>c-parameter for jinc function</description>
-            <any type="variant" limittype="string int double"/>
-            <value type="int">-1</value>
+      <description>c-parameter for jinc function</description>
+      <any type="variant" limittype="string int double"/>
+      <value type="int">-1</value>
     </param>
-   
+
     <param type="string" name="weight">
       <description>weight type</description>
       <value>UNIFORM</value>
@@ -109,12 +118,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="outfile">
-      <description>output image name</description>
+      <description>name of output file</description>
       <value></value>
     </param>
 
     <param type="bool" name="overwrite">
-      <description>overwrite option</description>
+      <description>overwrite the output file if already exists [True, False]</description>
       <value>False</value>
     </param>
 
@@ -179,143 +188,145 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-  Keyword arguments:
-        infiles -- name of input SD dataset. can be list.
-                example: 'testimage.asap' 
-                         ['testimage1.asap','testimage2.asap']
-        antenna -- select data based on antenna name(s) or id(s)
-                default: -1
-                example: 0, 'DV01'
-        scan -- Select data by scan number range
-                default: '' (use all scans)
-                example: '21~24'
-                this selection is in addition to spw and pol
-        spw -- Select data by IF ids (spectral window)
-                default: '-1' (only process IFNO in the first row)
-                example: '15'
-                NOTE this task only supports IF id selction and ignores channel
-                selection.
-                this selection is in addition to scan and pol
-        pol -- Select data by polarization ids
-                default: '' (use all polarizations)
-                example: '1'
-                NOTE selection by the name of correlation (e.g, 'XX') is NOT
-                supported in this task.
-                this selection is in addition to scan and spw
-        gridfunction -- gridding function 
-                options: 'BOX' (Box-car), 'SF' (Spheroidal), 
-                         'GAUSS' (Gaussian), 'PB' (Primary-beam)
-                         'GJINC' (Gaussian*Jinc)
-                default: 'BOX'
-                example: 'SF'
-            &gt;&gt;&gt; gridfunction expandable parameter:
-               convsupport -- convolution support for 'SF' 
-                   default: -1 (use default for each gridfunction)
-                   example: 3
-               truncate -- truncattion radius of convolution kernel.
-                           effective only for 'GAUSS' and 'GJINC'.
-                   default: '-1' (use default for each gridfunction)
-                   example: 3, '20arcsec', '3pixel'
-               gwidth -- HWHM for gaussian. Effective only for 
-                         'GAUSS' and 'GJINC'.
-                   default: '-1' (use default for each gridfunction)
-                   example: 3, '20arcsec', '3pixel'
-               jwidth -- Width of jinc function. Effective only for 
-                         'GJINC'.
-                   default: '-1' (use default for each gridfunction)
-                   example: 3, '20arcsec', '3pixel'
-        weight -- weight type (both lower-case and upper-case are 
-                  acceptable)
-                options: 'UNIFORM',
-                         'TSYS'  (1/Tsys**2 weighted)
-                         'TINT'  (integration time weighted)
-                         'TINTSYS'  (Tint/Tsys**2)
-                default: 'UNIFORM'
-        clipminmax -- do min/max cliping if True
-                default: False
-        outfile -- output data name
-                default: '' (outfile will be set to infile+'.grid')
-                example: 'mydata.asap.grid'
-        overwrite -- overwrite option for outfile
-                default: False (not overwrite)
-                options: True, False
-                example: if True, existing file will be overwritten
-        npix -- x and y image size in pixels, symmetric for single value
-                default: -1 (automatically calculated from cell size and 
-                             the data)
-                example: npix=200 (equivalent to [200,200])
-        cell -- x and y cell size. default unit arcsec
-                default: '' (automatically calculated from npix if it is 
-                             set, otherwise '1.0arcmin')
-                example: cell=['0.2arcmin, 0.2arcmin']
-                         cell='0.2arcmin' (equivalent to example above)
-                         cell=12.0 (interpreted as '12.0arcsec'='0.2arcmin')
-        center -- grid center
-                default: '' (automatically calculated from the data)
-                example: 'J2000 13h44m00 -17d02m00'
-                         ['05:34:48.2', '-05.22.17.7'] (in J2000 frame)
-                         [1.46, -0.09] (interpreted as radian in J2000 frame)
-        plot -- Plot result or not
-                default: False (not plot)
-                example: if True, result will be plotted
+Keyword arguments:
+infiles -- a list of names of input SD datasets. in case input is a 
+           single dataset, its name can be given as a string.
+        example: 'testimage.asap' 
+                 ['testimage1.asap','testimage2.asap']
+antenna -- select an antenna name or ID
+        default: -1
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)
+       NOTE this task only supports IF ID selction and ignores channel
+       selection.
+        default: '-1' (only process IFNO in the first row)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+gridfunction -- gridding function 
+        options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                 'GAUSS' (Gaussian), 'PB' (Primary-beam)
+                 'GJINC' (Gaussian*Jinc)
+        default: 'BOX'
+        example: 'SF'
+    &gt;&gt;&gt; gridfunction expandable parameter:
+        convsupport -- convolution support for 'SF' 
+                default: -1 (use default for each gridfunction)
+                example: 3
+        truncate -- truncattion radius of convolution kernel.
+                    effective only for 'GAUSS' and 'GJINC'.
+                default: '-1' (use default for each gridfunction)
+                example: 3, '20arcsec', '3pixel'
+        gwidth -- HWHM for gaussian. Effective only for 
+                  'GAUSS' and 'GJINC'.
+                default: '-1' (use default for each gridfunction)
+                example: 3, '20arcsec', '3pixel'
+        jwidth -- Width of jinc function. Effective only for 
+                  'GJINC'.
+                default: '-1' (use default for each gridfunction)
+                example: 3, '20arcsec', '3pixel'
+weight -- weight type (both lower-case and upper-case are acceptable)
+        options: 'UNIFORM',
+                 'TSYS'  (1/Tsys**2 weighted)
+                 'TINT'  (integration time weighted)
+                 'TINTSYS'  (Tint/Tsys**2)
+        default: 'UNIFORM'
+clipminmax -- do min/max cliping if True
+        default: False
+outfile -- name of output file
+        default: '' (outfile will be set to infile[0]+'.grid')
+        example: 'mydata.asap.grid'
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+        NOTE this parameter is ignored when outform='ASCII'
+npix -- x and y image size in pixels, symmetric for single value
+        default: -1 (automatically calculated from cell size and 
+                     the data)
+        example: npix=200 (equivalent to [200,200])
+cell -- x and y cell size. default unit arcsec
+        default: '' (automatically calculated from npix if it is 
+                     set, otherwise '1.0arcmin')
+        example: cell=['0.2arcmin, 0.2arcmin']
+                 cell='0.2arcmin' (equivalent to example above)
+                 cell=12.0 (interpreted as '12.0arcsec'='0.2arcmin')
+center -- grid center
+        default: '' (automatically calculated from the data)
+        example: 'J2000 13h44m00 -17d02m00'
+                 ['05:34:48.2', '-05.22.17.7'] (in J2000 frame)
+                 [1.46, -0.09] (interpreted as radian in J2000 frame)
+plot -- Plot result or not
+        default: False (not plot)
+        example: if True, result will be plotted
 
-        DESCRIPTION:
 
-        The tsdgrid task performs spatial gridding according to the user 
-        specification of spatial grid, convolution function, etc.
+DESCRIPTION:
 
-        For grid configuration, the task supplements necessary information 
-        by referring input data if any of gridding parameter ('npix', 
-        'cell', or 'center') is not specified by the user. If 'center' is 
-        default value (empty string), central position of the grid will be 
-        set to the center of observed area, i.e. x=0.5*(xmax+xmin), 
-        y=0.5*(ymax+ymin). If either 'cell' or 'npix' is set, unspecified 
-        one will be calculated from the others. In that case, total extent of 
-        the grid will be set to cover all observed position. If neither 'cell' 
-        nor 'npix' is set, cell size will be set to 1.0 arcmin and number of 
-        pixel will be calculated based on that cell size.
+The tsdgrid task performs spatial gridding according to the user 
+specification of spatial grid, convolution function, etc.
+
+For grid configuration, the task supplements necessary information 
+by referring input data if any of gridding parameter ('npix', 
+'cell', or 'center') is not specified by the user. If 'center' is 
+default value (empty string), central position of the grid will be 
+set to the center of observed area, i.e. x=0.5*(xmax+xmin), 
+y=0.5*(ymax+ymin). If either 'cell' or 'npix' is set, unspecified 
+one will be calculated from the others. In that case, total extent of 
+the grid will be set to cover all observed position. If neither 'cell' 
+nor 'npix' is set, cell size will be set to 1.0 arcmin and number of 
+pixel will be calculated based on that cell size.
  
-        Currently, only J2000 frame is supported.
+Currently, only J2000 frame is supported.
  
-        The parameter gridfunction sets gridding function for imaging. 
-        Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
-        Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
-        Jinc), where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order 
-        Bessel function J_1, and 'PB' (Primary Beam, not implemented yet). 
-        For 'PB', correct antenna informations should be included in input 
-        file. 
-        
-        There are four subparameters for gridfunction: convsupport, truncate, 
-        gwidth, and jwidth. The convsupport is an integer specifying cut-off 
-        radius for 'SF' in units of pixel. By default (convsupport=-1), 
-        the cut-off radius is set to 3 pixels. The truncate is a cut-off 
-        radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
-        string values of numeric plus unit. Allowed units are angular 
-        units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
-        is 'pixel' so that string without unit or numerical values (integer 
-        or float) will be interpreted as radius in pixel. Default value 
-        for truncate, which is used when negative radius is set, is 3*HWHM 
-        for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
-        the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
-        sqrt(log(2)) pixel for 'GAUSS' and 2.52*sqrt(log(2)) pixel for 
-        'GJINC'. The jwidth specifies width of the jinc function (parameter 
-        'c' in the definition above). Default is 1.55 pixel. Both gwidth 
-        jwidth allows integer, float, or string of numeric plus unit. 
-        Default values for gwidth and jwidth are taken from Mangum et al. 
-        (2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
-        the paper, and are written as below using gwidth and jwidth: 
+The parameter gridfunction sets gridding function for imaging. 
+Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
+Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
+Jinc), where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order 
+Bessel function J_1, and 'PB' (Primary Beam, not implemented yet). 
+For 'PB', correct antenna informations should be included in input 
+file. 
 
-           GAUSS: exp[-(|r|/gwidth)**2]
+There are four subparameters for gridfunction: convsupport, truncate, 
+gwidth, and jwidth. The convsupport is an integer specifying cut-off 
+radius for 'SF' in units of pixel. By default (convsupport=-1), 
+the cut-off radius is set to 3 pixels. The truncate is a cut-off 
+radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
+string values of numeric plus unit. Allowed units are angular 
+units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
+is 'pixel' so that string without unit or numerical values (integer 
+or float) will be interpreted as radius in pixel. Default value 
+for truncate, which is used when negative radius is set, is 3*HWHM 
+for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
+the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
+sqrt(log(2)) pixel for 'GAUSS' and 2.52*sqrt(log(2)) pixel for 
+'GJINC'. The jwidth specifies width of the jinc function (parameter 
+'c' in the definition above). Default is 1.55 pixel. Both gwidth 
+jwidth allows integer, float, or string of numeric plus unit. 
+Default values for gwidth and jwidth are taken from Mangum et al. 
+(2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
+the paper, and are written as below using gwidth and jwidth: 
 
-           GJINC: J_1(pi*|r|/jwidth)/(pi*|r|/jwidth) * exp[-(|r|/gwidth)^2]  
+   GAUSS: exp[-(|r|/gwidth)**2]
+
+   GJINC: J_1(pi*|r|/jwidth)/(pi*|r|/jwidth) * exp[-(|r|/gwidth)^2]  
 
 
-        Boolean parameter 'plot' controls whether gridded result is plotted 
-        or not. If True, color map of gridded data will be shown. Pixel 
-        center and observed position are overlayed as blue dot and red dot, 
-        respectively. Currently, channel averaged value will be plotted.
+Boolean parameter 'plot' controls whether gridded result is plotted 
+or not. If True, color map of gridded data will be shown. Pixel 
+center and observed position are overlayed as blue dot and red dot, 
+respectively. Currently, channel averaged value will be plotted.
 
-        Reference: Mangum, et al. 2007, A&amp;A, 474, 679-687 
+Reference: Mangum, et al. 2007, A&amp;A, 474, 679-687 
 
   </example>
 
