@@ -58,7 +58,8 @@ Currently, only J2000 frame is supported.
     </param>
 
     <param type="string" name ="gridfunction">
-      <description>gridding function for imaging ("BOX","SF","PB","GAUSS","GJINC")</description>
+      <shortdescription>gridding function for imaging [\'box\',\'sf\',\'pb\',\'gauss\', or \'gjinc\']</shortdescription>
+      <description>gridding function for imaging</description>
       <value>BOX</value>
       <allowed kind="enum">
         <value>BOX</value>
@@ -98,6 +99,7 @@ Currently, only J2000 frame is supported.
     </param>
 
     <param type="string" name="weight">
+      <shortdescription>weight type [\'uniform\',\'tint\',\'tsys\', or \'tintsys\']</shortdescription>
       <description>weight type</description>
       <value>UNIFORM</value>
       <allowed kind="enum">

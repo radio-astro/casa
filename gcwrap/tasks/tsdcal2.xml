@@ -69,7 +69,7 @@ spectrum is
     </param>
 
     <param type="string" name="calmode">
-      <shortdescription>SD calibration mode ([\'ps\',\'otf\',\'otfraster\',\'tsys\',\'apply\', and their possible combinations])</shortdescription>
+      <shortdescription>SD calibration mode [\'ps\',\'otf\',\'otfraster\',\'tsys\',\'apply\', and their possible combinations]</shortdescription>
       <description>SD calibration mode</description>
       <value>ps</value>
       <allowed kind="enum">
@@ -423,7 +423,7 @@ For example, calmode='ps,apply' means doing sky calibration and
 apply it on-the-fly. In this case, caltable is generated as a 
 temporary plain table and will be deleted at the end.
 Allowed calibration modes in this task is as follows:
-  
+
     ps
         generate sky caltable using 'ps' mode
     otf

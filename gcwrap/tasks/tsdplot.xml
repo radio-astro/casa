@@ -49,7 +49,8 @@ See the cookbook for details of its capability.
     </param>
 
     <param type="string" name="specunit">
-      <description>units for spectral axis (channel,km/s,GHz)</description>
+      <shortdescription>units for spectral axis [\'\',\'channel\',\'km/s\',\'GHz\',\'MHz\',\'kHz\', or \'Hz\']</shortdescription>
+      <description>units for spectral axis</description>
       <value></value>
       <allowed kind="enum">
         <value></value>
@@ -144,6 +145,7 @@ See the cookbook for details of its capability.
     </param>
 
     <param type="string" name="kernel">
+      <shortdescription>type of spectral smoothing [\'hanning\',\'gaussian\', or \'boxcar\']</shortdescription>
       <description>type of spectral smoothing</description>
       <value>none</value>
       <allowed kind="enum">
@@ -160,7 +162,8 @@ See the cookbook for details of its capability.
     </param>
 
     <param type="string" name="plottype">
-      <description>type of plot (spectra, totalpower, azel, pointing, grid)</description>
+      <shortdescription>type of plot [\'spectra\',\'totalpower\',\'azel\',\'pointing\', or \'grid\']</shortdescription>
+      <description>type of plot</description>
       <value>spectra</value>
       <allowed kind="enum">
         <value>pointing</value>

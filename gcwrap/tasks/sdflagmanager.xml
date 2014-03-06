@@ -29,7 +29,8 @@ to save a flagversion at the beginning or after serious editing.
     </param>
 
     <param type="string" name="mode">
-      <description>Operation: list, save, restore, delete, rename</description>
+      <shortdescription>operation mode [\'list\',\'save\',\'restore\',\'delete\', or \'rename\']</shortdescription>
+      <description>operation mode</description>
       <value>list</value>
       <allowed kind="enum">
         <value>list</value>
