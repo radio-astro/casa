@@ -10,38 +10,34 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdlist" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: list summary of single dish data</shortdescription>
+  <shortdescription>list summary of single dish data</shortdescription>
 
   <description>
-        ASAP SD listing task: list summary of the single dish data
-
-        Modified 2014-01-29 SK
-        Modified 2011-06-29 WK
-        Modified 2008-02-01 TT
-        Task Version 2007-03-04 STM
+Task sdlist lists the scan summary of the dataset after importing
+as a scantable into ASAP.  It will optionally output this summary
+as file.
 </description>
 
   <input>
 
     <param type="string" name="infile"  mustexist="true">
-
-    <description>name of input SD dataset</description>
-    <value></value>
+            <description>name of input SD dataset</description>
+            <value></value>
     </param>
 
     <param type="any" name="antenna">
-            <description>antenna name or id (only effective for MS input)</description>
+            <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
             <any type="variant" limittype="string int"/>
             <value type="int">0</value>
     </param> 
 
     <param type="string" name="outfile">
-	    <description>Name of output file for summary list</description>
+	    <description>name of output file (ASCII) for summary list</description>
 	    <value></value>
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite the output file if already exists</description>
+            <description>overwrite the output file if already exists [True, False]</description>
             <value>False</value>
     </param>
 
@@ -50,27 +46,38 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-        Keyword arguments:
-        infile -- name of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
-        outfile -- Name of output file for summary list
-                default: '' (no output file)
-                example: 'mysd_summary.txt'
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
-                default: False
+------------------
+Keyword arguments
+------------------
+infile -- name of input SD dataset
+        default: none - must input file name
+        example: 'mysd.asap'
+        See sdcal for allowed formats.
+antenna -- select an antenna name or id (only effective for MS input)
+        default: 0
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+outfile -- name of output file for summary list
+        default: '' (no output file)
+        example: 'mysd_summary.txt'
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
 
+-----------
+DESCRIPTION
+-----------
+Task sdlist lists the scan summary of the dataset after importing
+as a scantable into ASAP.  It will optionally output this summary
+as file.
 
-        DESCRIPTION:
-
-        Task sdlist lists the scan summary of the dataset after importing
-        as a scantable into ASAP.  It will optionally output this summary
-        as file.
-
-        WARNING for the GBT raw SDFITS format data as input:
-        SDtasks are able to handle GBT raw SDFITS format data since the 
-        data filler is available. However, the functionality is not well 
-        tested yet, so that there may be unknown bugs.  
+-------
+WARNING
+-------
+For the GBT raw SDFITS format data as input:
+SDtasks are able to handle GBT raw SDFITS format data since the 
+data filler is available. However, the functionality is not well 
+tested yet, so that there may be unknown bugs.  
 
   </example>
 
