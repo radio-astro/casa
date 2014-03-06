@@ -9,29 +9,29 @@
 <description>
 </description>
 <input>
-    <param type="stringArray" name="vis" subparam="true">
+    <param type="stringArray" name="vis">
 	<description>List of input visibility data</description>
 	<value></value>
     </param>
 
-    <param type="stringArray" name="session" subparam="true">
+    <param type="stringArray" name="session">
 	<description>List of sessions one per visibility file</description>
 	<value></value>
     </param>
 
-    <param type="string" name="products_dir" subparam="true">
+    <param type="string" name="products_dir">
 	<description>The archived pipeline data products directory</description>
-	<value></value>
+	<value>../products</value>
     </param>
 
-    <param type="bool" name="copytoraw" subparam="true">
-	<description>Copy data products to raw data directory</description>
+    <param type="bool" name="copytoraw">
+	<description>Copy data products fro products to raw data directory</description>
 	<value>False</value>
     </param>
 
-    <param type="string" name="rawdata_dir" subparam="true">
+    <param type="string" name="rawdata_dir">
 	<description>The rawdata directory</description>
-	<value></value>
+	<value>../rawdata</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -59,20 +59,10 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="vis"><value type="stringArray"></value></default>
-		<default param="session"><value type="stringArray"></value></default>
-		<default param="products_dir"><value type="string"></value></default>
-		<default param="copytoraw"><value type="bool">False</value></default>
-		<default param="rawdata_dir"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="vis"><value type="stringArray"></value></default>
-		<default param="session"><value type="stringArray"></value></default>
-		<default param="products_dir"><value type="string"></value></default>
-		<default param="copytoraw"><value type="bool">False</value></default>
-		<default param="rawdata_dir"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -120,11 +110,11 @@ session -- List of sessions one per visibility file.
 products_dir -- Name of the data products directory. Currently not
    used.
    default: '../products'
-   example: products_dir='mypath'
+   example: products_dir='myproductspath'
 
 rawdata_dir -- Name of the rawdata subdirectory. 
    default: '../rawdata'
-   example: rawdata_dir='mypath'
+   example: rawdata_dir='myrawdatapath'
 
 
 --- pipeline task execution modes
