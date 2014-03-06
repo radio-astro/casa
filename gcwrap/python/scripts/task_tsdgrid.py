@@ -24,7 +24,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.__compile()
         self.__summarize_compiled_inputs()
 
-        self.gridder = sd.asapgrid(infiles=self.infiles)
+        self.gridder = sd.asapgrid(infile=self.infiles)
 
     def parameter_check(self):
         self.assert_no_channel_selection_in_spw('warn')
