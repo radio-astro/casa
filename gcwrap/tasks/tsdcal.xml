@@ -82,7 +82,7 @@ for atmospheric optical depth correction.
     </param>
 
     <param type="string" name="calmode">
-	    <shortdescription>SD calibration mode [\'ps\', \'nod\', \'otf\', \'otfraster\', \'fs\', \'quotient\', \'none\']</shortdescription>
+	    <shortdescription>SD calibration mode [\'ps\', \'nod\', \'otf\', \'otfraster\', \'fs\', \'quotient\' or \'none\']</shortdescription>
 	    <description>SD calibration mode</description>
 	    <value>ps</value>
 	    <allowed kind="enum">
@@ -165,8 +165,7 @@ for atmospheric optical depth correction.
     </param>
 
     <param type="bool" name="overwrite">
-            <shortdescription>overwrite the output file if already exists [True, False]</shortdescription>
-            <description>overwrite the output file if already exists</description>
+            <description>overwrite the output file if already exists  [True, False]</description>
             <value>False</value>
     </param>
 
@@ -276,7 +275,7 @@ calmode -- calibration mode
         default: 'ps'
         example: choose mode 'none' if you have
                  already calibrated and want to
-                 correct for atmospheric opacity defined by tau0.
+                 correct for atmospheric opacity defined by tau.
     &gt;&gt;&gt; calmode expandable parameter
          fraction -- edge marker parameter of 'otf' and 'otfraster'.
                      Specify a number of OFF integrations (at each
