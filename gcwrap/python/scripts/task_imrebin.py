@@ -5,6 +5,21 @@ def imrebin(
     dropdeg, overwrite, stretch
 ):
     casalog.origin('imrebin')
+    valid = True
+    # because there is a bug in the tasking layer that allows float
+    # arrays through when the spec is for intArray
+    for x in factor:
+        if x != int(x):
+            valid = False
+            break
+    if not valid:
+        for i in range(len(factor)):
+            factor[i] = int(factor[i])   
+        casalog.post(
+            "factor is not an int array, it will be adjusted to "
+                + str(factor),
+            'WARN'
+        )
     myia = iatool()
     outia = None
     try:
