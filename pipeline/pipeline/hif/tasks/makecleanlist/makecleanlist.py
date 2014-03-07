@@ -176,7 +176,6 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         # read the spw, if none then set default depending on mode
         spw = inputs.spw
    
-        #print 'before', spw
         if spw == '':
             ms = inputs.context.observing_run.get_ms(name=inputs.vis[0])
             spws = ms.get_spectral_windows(science_windows_only=True)
@@ -187,11 +186,9 @@ class MakeCleanList(basetask.StandardTaskTemplate):
 	    spwids = spw.split(',')
             spw = ','.join("'%s'" % (spwid) for spwid in spwids)
             spw = '[%s]' % spw
-        #print 'after', spw, inputs.spw
 
         spwlist = spw.replace('[','').replace(']','')
         spwlist = spwlist[1:-1].split("','")
-        #print 'main', spwlist
 
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
@@ -202,23 +199,29 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         field_intent_list = self.heuristics.field_intent_list(
           intent=inputs.intent, field=inputs.field)
 
+        # get beams for each spw
+        beams = {}
+        for spwspec in spwlist:
+            beams[spwspec] = self.heuristics.beam(spwspec=spwspec)
+
         # cell is a list of form [cellx, celly]. If the list has form [cell]
         # then that means the cell is the same size in x and y. If cell is
         # empty then fill it with a heuristic result
         cell = inputs.cell
         cells = {}
-        beams = {}
+        valid_data = {}
         if cell == []:
             for spwspec in spwlist:
                 # the heuristic cell is always the same for x and y as
                 # the value derives from a single value returned by
                 # imager.advise
-                cells[spwspec], beams[spwspec] = self.heuristics.cell(
+                cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
                   field_intent_list=field_intent_list, spwspec=spwspec)
         else:
             for spwspec in spwlist:
                 cells[spwspec] = cell
-        #print 'cells', cells
+                valid_data[spwspec] = self.heuristics.has_data(
+                  field_intent_list=field_intent_list, spwspec=spwspec)
 
         # if phase center not set then use heuristic code to calculate the
         # centers for each field
@@ -235,7 +238,6 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                     # problem defining center
                     LOG.warn(e)
                     pass
-        #print 'phasecenters', phasecenters
 
         # if imsize not set then use heuristic code to calculate the
         # centers for each field/spwspec
@@ -244,6 +246,9 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         if imsize == []:
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
+                    if not valid_data[spwspec][field_intent]:
+                        continue
+
                     try:
                         field_ids = self.heuristics.field(
                           field_intent[1], field_intent[0])
@@ -259,7 +264,6 @@ class MakeCleanList(basetask.StandardTaskTemplate):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     imsizes[(field_intent[0],spwspec)] = imsize
-        #print 'imsize', imsizes
 
         # construct imagename
         imagename = inputs.imagename
@@ -273,14 +277,14 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                       field=field_intent[0], spwspec=spwspec)
                 else:
                     imagenames[(field_intent,spwspec)] = inputs.imagename
-        #print 'imagenames', imagenames
 
         # now construct the list of imaging command parameter lists that must
         # be run to obtain the required images
         result = MakeCleanListResult()
         for field_intent in field_intent_list:
             for spwspec in spwlist:
-                if imsizes.has_key((field_intent[0],spwspec)):
+                if valid_data[spwspec][field_intent] and \
+                  imsizes.has_key((field_intent[0],spwspec)):
                     LOG.debug (
                       'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
                       % (field_intent[0], field_intent[1], spwspec,
@@ -300,13 +304,7 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                               'nchan':inputs.nchan,
                               'uvrange':inputs.uvrange}
 
-                    #print target
                     result.add_target(target)
-
-                else:
-                    LOG.warn (
-                      'failed to define image for field:%s intent:%s spw:%s'
-                      % (field_intent[0], field_intent[1], spwspec))
 
         return result
 
