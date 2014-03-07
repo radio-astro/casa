@@ -109,6 +109,23 @@ class MakeCleanListHeuristics(object):
                             
         return field_intent_result
 
+    def beam(self, spwspec):
+        # reset state of imager
+        casatools.imager.done()
+
+        # get the spwids in spwspec
+        p=re.compile(r"[ ,]+(\d+)")
+        spwids = p.findall(' %s' % spwspec)
+        spwids = map(int, spwids)
+        spwids = list(set(spwids))
+
+        # find largest beam among spws in spwspec
+        beam = 0.0
+        for spwid in spwids:
+            beam = max(beam, self.beam_radius[spwid])
+
+        return beam
+
     def cell(self, field_intent_list, spwspec, oversample=3.0):
         # reset state of imager
         casatools.imager.done()
@@ -120,12 +137,18 @@ class MakeCleanListHeuristics(object):
         spwids = map(int, spwids)
         spwids = list(set(spwids))
 
+        # find largest beam among spws in spwspec
+        beam = self.beam(spwspec)
+
         # put code in try-block to ensure that imager.done gets
         # called at the end
+        cell = None
+        valid_data = {}
         try:
             cellvs = []
             for field_intent in field_intent_list:
                 # select data to be imaged
+                valid_data[field_intent] = False
                 for vis in self.vislist:
                     ms = self.context.observing_run.get_ms(name=vis)
                     scanids = [scan.id for scan in ms.scans if
@@ -138,15 +161,19 @@ class MakeCleanListHeuristics(object):
                         casatools.imager.selectvis(vis=vis,
                           field=field_intent[0], spw=spwids, scan=scanids,
                           usescratch=False)
+                        # flag to say that imager has some valid data
+                        # to work on
+                        valid_data[field_intent] = True
                     except:
-                        LOG.warning('Vis %s: failed selection on field %s' %
-                          (os.path.basename(vis), field_intent[0]))
-                casatools.imager.weight(type='natural')
+                        pass
 
-                # find largest beam among spws in spwspec
-                beam = 0.0
-                for spwid in spwids:
-                    beam = max(beam, self.beam_radius[spwid])
+                if not valid_data[field_intent]:
+                    # no point carrying on for this field/intent
+                    LOG.debug('No data for SpW %s field %s' %
+                      (spwids, field_intent[0]))
+                    continue
+
+                casatools.imager.weight(type='natural')
 
                 # use imager.advise to get the maximum cell size
                 aipsfieldofview = '%4.1farcsec' % (2.0 * beam)
@@ -158,14 +185,58 @@ class MakeCleanListHeuristics(object):
                 cellvs.append(cellv)
                 LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
                   oversample, field_intent[0], field_intent[1], spwspec, cellv))
-                    
-            cell = '%.3f%s' % (min(cellvs), cellu)
-            LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
+
+            if cellvs:
+                cell = '%.3f%s' % (min(cellvs), cellu)
+                LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
 
         finally:
             casatools.imager.done()
 
-        return [cell], beam
+        return [cell], valid_data
+
+    def has_data(self, field_intent_list, spwspec):
+        # reset state of imager
+        casatools.imager.done()
+
+        # get the spwids in spwspec - imager tool likes these rather than 
+        # a string
+        p=re.compile(r"[ ,]+(\d+)")
+        spwids = p.findall(' %s' % spwspec)
+        spwids = map(int, spwids)
+        spwids = list(set(spwids))
+
+        # put code in try-block to ensure that imager.done gets
+        # called at the end
+        valid_data = {}
+        try:
+            # select data to be imaged
+            for field_intent in field_intent_list:
+                valid_data[field_intent] = False
+                for vis in self.vislist:
+                    ms = self.context.observing_run.get_ms(name=vis)
+                    scanids = [scan.id for scan in ms.scans if
+                      field_intent[1] in scan.intents and 
+                      field_intent[0] in [fld.name for fld in scan.fields]]
+                    scanids = str(scanids)
+                    scanids = scanids.replace('[', '')
+                    scanids = scanids.replace(']', '')
+                    try:
+                        casatools.imager.selectvis(vis=vis,
+                          field=field_intent[0], spw=spwids, scan=scanids,
+                          usescratch=False)
+                        valid_data[field_intent] = True
+                    except:
+                        pass
+
+                if not valid_data[field_intent]:
+                    LOG.debug('No data for SpW %s field %s' %
+                      (spwids, field_intent[0]))
+
+        finally:
+            casatools.imager.done()
+
+        return valid_data
 
     def imagermode(self, intent, field):
         # the field heuristic which decides whether this is a mosaic or not
