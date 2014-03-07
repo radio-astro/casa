@@ -1936,19 +1936,19 @@ image* image::transpose(
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
 		bool overwrite, bool dooff, double offset,
-		bool offsetisfixed, bool stretch, double rms
+		bool fixoffset, bool stretch, double rms
 ) {
 	if (detached()) {
 		return 0;
 	}
-	_log << LogOrigin(_class, __func__);
+	LogOrigin lor(_class, __func__);
+	_log << lor;
 
 	try {
 		ThrowIf(
 			! _image->isFloat(),
 			"This method only supports Float valued images"
 		);
-
 		int num = in_includepix.size();
 		Vector<Float> includepix(num);
 		num = in_excludepix.size();
@@ -1965,10 +1965,8 @@ image* image::transpose(
 		if (mask == "[]") {
 			mask = "";
 		}
-		std::auto_ptr<ImageFitter> fitter;
         SPCIIF image = _image->getImage();
-		ImageFitter::CompListWriteControl writeControl =
-			complist.empty()
+		ImageFitter::CompListWriteControl writeControl = complist.empty()
 			? ImageFitter::NO_WRITE
 			: overwrite
 				? ImageFitter::OVERWRITE
@@ -1985,33 +1983,67 @@ image* image::transpose(
 			sChans = String::toString(chans.toInt());
 		}
 		else {
-			_log
-				<< "Unsupported type for chans. chans must be either an integer or a string"
-				<< LogIO::EXCEPTION;
+			ThrowCc(
+				"Unsupported type for chans. chans must "
+				"be either an integer or a string"
+			);
 		}
 		std::tr1::shared_ptr<Record> regionRecord = _getRegion(region, True);
-		fitter.reset(
-			new ImageFitter(
-				image, "", regionRecord.get(), box, sChans,
-				stokes, mask, includepix, excludepix, residual, model,
-				estimates, newestimates, complist
-			)
+
+		vector<String> msgs;
+		Bool doImages = ! residual.empty() || ! model.empty();
+		if (doImages) {
+			ostringstream os;
+			os << "Ran ia." << __func__ << " on " << image->name();
+			msgs.push_back(os.str());
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("box", box));
+			inputs.push_back(make_pair("region", region));
+			inputs.push_back(make_pair("chans", chans));
+			inputs.push_back(make_pair("stokes", stokes));
+			inputs.push_back(make_pair("mask", vmask));
+			inputs.push_back(make_pair("includepix", in_includepix));
+			inputs.push_back(make_pair("excludepix", in_excludepix));
+			inputs.push_back(make_pair("residual", residual));
+			inputs.push_back(make_pair("model", model));
+			inputs.push_back(make_pair("estimates", estimates));
+			inputs.push_back(make_pair("logfile", logfile));
+			inputs.push_back(make_pair("append", append));
+			inputs.push_back(make_pair("newestimates", newestimates));
+			inputs.push_back(make_pair("complist", complist));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("dooff", dooff));
+			inputs.push_back(make_pair("offset", offset));
+			inputs.push_back(make_pair("fixoffset", fixoffset));
+			inputs.push_back(make_pair("stretch", stretch));
+			inputs.push_back(make_pair("rms", rms));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(os.str());
+		}
+		ImageFitter fitter(
+			image, "", regionRecord.get(), box, sChans,
+			stokes, mask, includepix, excludepix, residual, model,
+			estimates, newestimates, complist
 		);
-		fitter->setWriteControl(writeControl);
-		fitter->setStretch(stretch);
+		fitter.setWriteControl(writeControl);
+		fitter.setStretch(stretch);
 		if (! logfile.empty()) {
-			fitter->setLogfile(logfile);
-			fitter->setLogfileAppend(append);
+			fitter.setLogfile(logfile);
+			fitter.setLogfileAppend(append);
 		}
 		if (dooff) {
-			fitter->setZeroLevelEstimate(offset, offsetisfixed);
+			fitter.setZeroLevelEstimate(offset, fixoffset);
 		}
 		if (rms != 0) {
-			fitter->setRMS(rms);
+			fitter.setRMS(rms);
 		}
-		std::pair<ComponentList, ComponentList> compLists = fitter->fit();
+		if (doImages) {
+			fitter.addHistory(lor, msgs);
+		}
+		std::pair<ComponentList, ComponentList> compLists = fitter.fit();
 		Vector<casa::Quantity> flux;
-		Vector<Bool> converged = fitter->converged();
+		Vector<Bool> converged = fitter.converged();
 		Record returnRecord, convolved, deconvolved;
 		String error;
 
@@ -2036,7 +2068,7 @@ image* image::transpose(
 		returnRecord.define("converged", converged);
 		if (dooff) {
 			vector<Double> zeroSol, zeroErr;
-			fitter->getZeroLevelSolution(zeroSol, zeroErr);
+			fitter.getZeroLevelSolution(zeroSol, zeroErr);
 			returnRecord.define("zerooff", Vector<Double>(zeroSol));
 			returnRecord.define("zeroofferr", Vector<Double>(zeroErr));
 		}

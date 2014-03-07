@@ -114,9 +114,21 @@ def near_abs(first, second, epsilon):
 # @param difference The name of the difference image to write
 def check_image(got, expected):
     myia = iatool()
-    myia.open(got)
+    if not myia.open(got):
+        casalog.post("Cannot find image " + got, 'SEVERE')
+        return False
+    gotunit = myia.brightnessunit()
     gotpix = myia.getchunk()
     myia.open(expected)
+    expunit = myia.brightnessunit()
+    if gotunit != expunit:
+        casalog.post(
+            "Units differ: got '" + gotunit
+            + "' expected '" + expunit + "'",
+            'SEVERE'
+        )
+        myia.done()
+        return False
     exppix = myia.getchunk()
     myia.done()
     return (gotpix - exppix == 0).all()
