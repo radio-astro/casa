@@ -55,6 +55,7 @@ template <class T> ImageTask<T>::ImageTask(
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
 	_logfileSupport(False), _logfileAppend(False), _suppressHistory(False),
+	_dropDegen(False),
 	_verbosity(NORMAL), _logfile(), _newHistory() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
@@ -260,7 +261,6 @@ template <class T> void ImageTask<T>::addHistory(
 	}
 }
 
-
 template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
@@ -310,7 +310,6 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 	outImage->put(values == 0 ? image.get() : *values);
 	if (! _suppressHistory) {
 		ImageHistory<T> history(outImage);
-		history.append(_image);
 		vector<std::pair<String, String> >::const_iterator end = _newHistory.end();
 		vector<std::pair<String, String> >::const_iterator iter = _newHistory.begin();
 		while (iter != end) {

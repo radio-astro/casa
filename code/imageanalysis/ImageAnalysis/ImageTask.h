@@ -83,6 +83,8 @@ public:
     // history of the input image.
     vector<std::pair<String, String> > getHistory() {return _newHistory;}
 
+    void setDropDegen(Bool d) { _dropDegen = d; }
+
 protected:
 
 	// if <src>outname</src> is empty, no image will be written
@@ -172,6 +174,8 @@ protected:
 
     virtual Bool _mustHaveSquareDirectionPixels() const {return False;}
 
+    Bool _getDropDegen() const { return _dropDegen; }
+
 private:
     const SPCIIT _image;
     std::tr1::shared_ptr<LogIO> _log;
@@ -179,7 +183,7 @@ private:
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
-    	_suppressHistory;
+    	_suppressHistory, _dropDegen;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
 	std::tr1::shared_ptr<LogFile> _logfile;

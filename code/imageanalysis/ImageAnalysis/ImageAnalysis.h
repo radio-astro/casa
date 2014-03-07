@@ -332,14 +332,6 @@ class ImageAnalysis
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
-    ImageInterface<Float> * rebin(
-    	const String& outfile,
-        const Vector<Int>& bin, Record& region,
-        const String& mask, const Bool dropdeg,
-        const Bool overwrite=False,
-        const Bool extendMask=False
-    );
-
     ImageInterface<Float>* rotate(
     	const String& outfile,
         const Vector<int>& shape,
@@ -354,13 +346,7 @@ class ImageAnalysis
     );
 
     Bool rename(const String& name, const Bool overwrite = False);
-/*
-    Bool replacemaskedpixels(
-    	const String& pixels, Record& region,
-        const String& mask, const Bool update=False,
-        const Bool list=False, const Bool extendMask=False
-    );
-*/
+
     ImageInterface<Float>* sepconvolve(
     	const String& outfile,
         const Vector<Int>& axes,

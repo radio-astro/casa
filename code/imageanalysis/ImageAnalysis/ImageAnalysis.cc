@@ -92,7 +92,6 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/RebinImage.h>
 #include <images/Regions/RegionManager.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -2939,71 +2938,6 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 	return unlock();
 
-}
-
-ImageInterface<Float>* ImageAnalysis::rebin(
-	const String& outFile, const Vector<Int>& factors,
-	Record& Region, const String& mask, const Bool dropdeg,
-	const Bool overwrite, const Bool extendMask
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	// Validate outfile
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	if (anyTrue(factors <= 0)) {
-		*_log << "Binning factors must be positive" << LogIO::EXCEPTION;
-	}
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	AxesSpecifier axesSpecifier;
-	if (dropdeg)
-		axesSpecifier = AxesSpecifier(False);
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region,
-		mask, _log.get(), False, axesSpecifier, extendMask
-	);
-
-	// Convert binning factors
-	IPosition factors2(subImage.ndim());
-	for (uInt i = 0; i < factors.nelements(); i++) {
-		factors2[i] = max(1, factors[i]);
-	}
-
-	// Create rebinner
-	RebinImage<Float> binIm(subImage, factors2);
-	IPosition outShape = binIm.shape();
-	CoordinateSystem cSysOut = binIm.coordinates();
-
-	// Create the image and mask
-	std::auto_ptr<ImageInterface<Float> > pImOut;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< outShape << LogIO::POST;
-		pImOut.reset(new TempImage<Float> (outShape, cSysOut));
-	} else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		pImOut.reset(new PagedImage<Float> (outShape, cSysOut, outFile));
-	}
-	String maskName("");
-	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
-
-	// Do the work
-	LatticeUtilities::copyDataAndMask(*_log, *pImOut, binIm);
-
-	// Copy miscellaneous things over
-	ImageUtilities::copyMiscellaneous(*pImOut, binIm);
-
-	// Return image
-	return pImOut.release();
 }
 
 ImageInterface<Float>* ImageAnalysis::rotate(

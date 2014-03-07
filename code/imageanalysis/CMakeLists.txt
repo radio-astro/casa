@@ -161,6 +161,8 @@ install (FILES
 	ImageAnalysis/ImagePolProxy.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
+    ImageAnalysis/ImageRebinner.h
+    ImageAnalysis/ImageRebinner.tcc
     ImageAnalysis/ImageRegridder.h
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc
