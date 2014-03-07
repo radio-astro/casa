@@ -489,7 +489,7 @@ class SelectionSyntaxTest(unittest.TestCase):
                 elif psubtype == 'range':
                     pattern = '^[0-9]+~[0-9]+$'
                 elif psubtype == 'list':
-                    pattern = '^[0-9](\,[0-9]+)+$'
+                    pattern = '^[0-9]+(\,[0-9]+)+$'
             elif ptype == 'value':
                 if psubtype == 'exact':
                     pattern = '^[^*]+$'
