@@ -246,14 +246,6 @@ class ImageAnalysis
                      const Vector<Int>& axes, const Vector<Int>& coord, 
                      const Int npts = 0, const String& method = "linear");
 
-    ImageInterface<Float>* hanning(
-    	const String& outfile, Record& region,
-        const String& mask, const Int axis=-10,
-        const Bool drop=True,
-        const bool overwrite=False,
-        const Bool extendMask=True
-    );
-
     Vector<Bool> haslock();
 
     Record histograms(
@@ -568,13 +560,6 @@ class ImageAnalysis
     	ImageRegion* pOldRegionRegion,
     	ImageRegion* pOldMaskRegion
     );
-    // Hanning smooth a vector
-    static void _hanning_smooth (casa::Array<casa::Float>& out,
-                         casa::Array<casa::Bool>& maskOut,
-                         const casa::Vector<casa::Float>& in,
-                         const casa::Array<casa::Bool>& maskIn,
-                         casa::Bool isMasked);
-    
     
 // Make a new image with given CS
     void _make_image(
