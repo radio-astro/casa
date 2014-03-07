@@ -619,10 +619,14 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     # scan
     ####################
-    @unittest.expectedFailure
     def test_scan_id_default(self):
         """test scan selection (scan='')"""
-        self._default_test()
+        outname=self.prefix+self.postfix
+        scan=''
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,scan=scan,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
 
     @unittest.expectedFailure
     def test_scan_id_exact(self):
@@ -689,10 +693,14 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     # pol
     ####################
-    @unittest.expectedFailure
     def test_pol_id_default(self):
-        """test pol selection (pol='1')"""
-        self._default_test()
+        """test pol selection (pol='')"""
+        outname=self.prefix+self.postfix
+        pol=''
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,pol=pol,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
 
     def test_pol_id_exact(self):
         """ test pol selection (pol='1')"""
@@ -753,10 +761,14 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     # field
     ####################
-    @unittest.expectedFailure
     def test_field_value_default(self):
         """test field selection (field='')"""
-        self._default_test()
+        outname=self.prefix+self.postfix
+        field=''
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,field=field,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
 
     @unittest.expectedFailure
     def test_field_id_exact(self):
@@ -844,10 +856,14 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     # spw 
     ####################
-    @unittest.expectedFailure
     def test_spw_id_default(self):
         """test spw selection (spw='')"""
-        self._default_test()
+        outname=self.prefix+self.postfix
+        spw=''
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
 
     def test_spw_id_exact(self):
         """ test spw selection (spw='1')"""
@@ -913,10 +929,14 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal_with_selection(outname, tbsel)
 
 
-    @unittest.expectedFailure
     def test_spw_id_pattern(self):
         """test spw selection (spw='*')"""
-        self._default_test()
+        outname=self.prefix+self.postfix
+        spw='*'
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
 
     @unittest.expectedFailure
     def test_spw_value_frequency(self):
