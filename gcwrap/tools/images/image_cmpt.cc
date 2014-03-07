@@ -11,6 +11,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/fstream.h>
+#include <casa/IO/STLIO.h>
 #include <casa/Logging/LogFilter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
@@ -74,6 +75,7 @@
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
+#include <imageanalysis/ImageAnalysis/ImageRebinner.h>
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
@@ -3356,30 +3358,70 @@ void image::_processDirection(
 
 image* image::rebin(
 	const std::string& outfile, const std::vector<int>& bin,
-	const ::casac::record& region, const ::casac::variant& vmask,
-	const bool dropdeg, const bool overwrite, const bool /* async */,
-	const bool stretch
+	const variant& region, const ::casac::variant& vmask,
+	bool dropdeg, bool overwrite, bool /* async */,
+	bool stretch, bool crop
 ) {
-	_log << _ORIGIN;
-	if (detached()) {
-		throw AipsError("Unable to create image");
-		return 0;
-	}
+	LogOrigin lor(_class, __func__);
+	_log << lor;
+	ThrowIf(
+		detached(), "Unable to create image"
+	);
+	Vector<Int> mybin(bin);
+	ThrowIf(
+		anyTrue(mybin <= 0),
+		"All binning factors must be positive."
+	);
 	try {
-		String outFile(outfile);
-		Vector<Int> factors(bin);
-		std::auto_ptr<Record> Region(toRecord(region));
+		vector<String> msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__;
+			msgs.push_back(os.str());
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("bin", bin));
+			inputs.push_back(make_pair("region", region));
+			inputs.push_back(make_pair("mask", vmask));
+			inputs.push_back(make_pair("dropdeg", dropdeg));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("stretch", stretch));
+			inputs.push_back(make_pair("crop", crop));
+
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(os.str());
+		}
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
-		tr1::shared_ptr<ImageInterface<Float> > pImOut(
-			_image->rebin(
-				outFile, factors, *Region,
-				mask, dropdeg, overwrite, stretch
-			)
-		);
-		return new image(pImOut);
+		if (_image->isFloat()) {
+			SPIIF myfloat = _image->getImage();
+			ImageRebinner<Float> rebinner(
+				myfloat, _getRegion(region, True).get(),
+				mask, outfile, overwrite
+			);
+			rebinner.setFactors(mybin);
+			rebinner.setStretch(stretch);
+			rebinner.setDropDegen(dropdeg);
+			rebinner.addHistory(lor, msgs);
+			rebinner.setCrop(crop);
+			return new image(rebinner.rebin());
+		}
+		else {
+			SPIIC myComplex = _image->getComplexImage();
+			ImageRebinner<Complex> rebinner(
+				myComplex, _getRegion(region, True).get(),
+				mask, outfile, overwrite
+			);
+			rebinner.setFactors(mybin);
+			rebinner.setStretch(stretch);
+			rebinner.setDropDegen(dropdeg);
+			rebinner.addHistory(lor, msgs);
+			rebinner.setCrop(crop);
+			return new image(rebinner.rebin());
+		}
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3472,7 +3514,7 @@ image* image::regrid(
 			)
 		);
 		return new image(pImOut);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

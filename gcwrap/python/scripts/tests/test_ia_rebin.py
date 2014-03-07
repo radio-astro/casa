@@ -232,6 +232,27 @@ class ia_rebin_test(unittest.TestCase):
             )
         )
         
+    def test_crop(self):
+        """Test crop parameter"""
+        myia = self._myia
+        imagename = "xxyy.im"
+        myia.fromshape(imagename, [20, 20, 20])
+        factor = [3,3,3]
+        zz = myia.rebin("", bin=factor, crop=True)
+        self.assertTrue((zz.shape() == [6,6,6]).all())
+        zz = myia.rebin("", bin=factor, crop=False)
+        self.assertTrue((zz.shape() == [7,7,7]).all())
+        myia.done()
+        zz.done()
+        outfile = "outxdkd.im"
+        imrebin(imagename=imagename, outfile=outfile, factor=factor, crop=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [6,6,6]).all())
+        zz.done()
+        imrebin(imagename=imagename, outfile=outfile, factor=factor, crop=False, overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [7,7,7]).all())
+        zz.done()
             
 def suite():
     return [ia_rebin_test]

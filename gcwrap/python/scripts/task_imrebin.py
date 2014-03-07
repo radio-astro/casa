@@ -2,7 +2,7 @@ from taskinit import *
 
 def imrebin(
     imagename, outfile, factor, region, box, chans, stokes, mask,
-    dropdeg, overwrite, stretch
+    dropdeg, overwrite, stretch, crop
 ):
     casalog.origin('imrebin')
     valid = True
@@ -34,7 +34,7 @@ def imrebin(
             )
         outia = myia.rebin(
             outfile=outfile, bin=factor, region=region, mask=mask, dropdeg=dropdeg,
-            overwrite=overwrite, stretch=stretch
+            overwrite=overwrite, stretch=stretch, crop=crop
         )
         return True
     except Exception, instance:

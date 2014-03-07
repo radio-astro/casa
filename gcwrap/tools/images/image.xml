@@ -7392,7 +7392,8 @@ ia.close()
      <description>Binning factors for each axis</description>
      </param>
   
-     <param type="record"  name="region">
+     <param type="any"  name="region">
+     <any type="variant" limittypes="string record"/>
      <description>The region of interest.  See help par.region. Default is whole image.</description>
      <value></value>
      </param>
@@ -7422,16 +7423,41 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
-     
+     <param type="bool" name="crop">
+        <description>Remove pixels from the end of an axis to be rebinned if there are not enough to form an integral bin?</description>
+        <value>false</value>
+     </param>
 </input>
 <returns type="image"/>
 
 <description>
 
-This function rebins the current image by the specified integer binning
-factors for each axis.  The output pixel value is just the average of the
+This application rebins the current image by the specified integer binning
+factors for each axis. It supports both float valued and complex valued images.
+The corresponding output pixel value is the average of the
 input pixel values. The output pixel will be masked bad if there
-were no good input pixels.  You cannot rebin a Stokes axis.
+were no good input pixels.  A polarization axis cannot be rebinned.
+
+The binning factors array must contain at least one element and no more
+elements than the number of input image axes. If the number of elements
+specified is less than the number of image axes, then the remaining axes
+not specified are not rebinned. All specified values must be positive. A
+value of one indicates that no rebinning of the associated axis will occur.
+
+Binning starts from the origin pixel of the bounding box of the selected region or
+the origin pixel of the input image if no region is specified. The value of crop
+is used to determine how to handle cases where there are pixels
+at the end of the axis that do not form a complete bin. If crop=True,
+extra pixels at the end of the axis are discarded. If crop=False, the remaining
+pixels are averaged into the final bin along that axis. Should the length
+of the axis to be rebinned be an integral multiple of the associated binning
+factor, the value of crop is irrelevant. 
+
+A value of dropdeg=True will result in the output image not containing
+axes that are degenerate in the specified region or in the input image if no
+region is specified. Note that, however, the binning
+factors array must still account for degenerate axes, and the binning
+factor associated with a degenerate axis must always be 1.
 
 If {\stfaf outfile} is given, the image is written to the specified
 disk file.  If {\stfaf outfile} is unset, the Image \tool\ is
@@ -7440,10 +7466,6 @@ memory or on disk, depending on its size.  When you destroy the
 on-the-fly Image \tool\ returned by this function (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
-
-Sometimes it is useful to drop axes of length one (degenerate axes). 
-Use the {\stfaf dropdeg} argument if you want to do this.  It will
-discard the axes from the input image.  
 
 </description>
 
@@ -9371,7 +9393,7 @@ ia.twopointcorrelation()   # Output image is virtual
      </param>
   
      <param type="any"  name="region">
-     <any type="variant" limittypes="record string"/>
+     <any type="variant" ypes="record string"/>
      <description>Region of interest.  Default is whole image.</description>
      <value type="string"/>
      </param>
