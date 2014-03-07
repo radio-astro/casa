@@ -1,4 +1,3 @@
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -28,16 +27,10 @@
 #ifndef IMAGES_IMAGEFITTER_H
 #define IMAGES_IMAGEFITTER_H
 
-#include <measures/Measures/Stokes.h>
-#include <lattices/LatticeMath/Fit2D.h>
 #include <components/ComponentModels/ComponentList.h>
+#include <lattices/LatticeMath/Fit2D.h>
+
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-#include <images/Images/SubImage.h>
-
-#include <components/ComponentModels/ComponentType.h>
-#include <casa/namespace.h>
-
-#include <tr1/memory>
 
 namespace casa {
 
@@ -179,6 +172,13 @@ private:
 
 	const static String _class;
 
+	void _fitLoop(
+		Bool& anyConverged, ComponentList& convolvedList,
+		ComponentList& deconvolvedList, SPIIF templateImage,
+		SPIIF residualImage, SPIIF modelImage,
+		LCMask& completePixelMask, String& resultsString
+	);
+
 	vector<OutputDestinationChecker::OutputStruct> _getOutputs();
 
 	vector<Coordinate::Type> _getNecessaryCoordinates() const;
@@ -218,7 +218,7 @@ private:
 
 	String _statisticsToString() const;
 
-	SubImage<Float> _createImageTemplate() const;
+	SPIIF _createImageTemplate() const;
 
 	void _writeCompList(ComponentList& list) const;
 

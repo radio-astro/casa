@@ -1,4 +1,3 @@
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -38,6 +37,7 @@
 #include <images/Images/TempImage.h>
 
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
+#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <imageanalysis/IO/LogFile.h>
@@ -146,10 +146,10 @@ template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
 			}
 		}
 		else {
-			LogIO log;
-			log << LogOrigin("ImageTask", __FUNCTION__) << "File " << filename
-				<< " exists but overwrite is false so it cannot be overwritten"
-				<< LogIO::EXCEPTION;
+			ThrowCc(
+				"File " + filename + " exists but overwrite is false "
+				"so it cannot be overwritten"
+			);
 		}
 	}
 }
@@ -264,7 +264,9 @@ template <class T> void ImageTask<T>::addHistory(
 template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
-    const IPosition *const outShape, const CoordinateSystem *const coordsys
+    const IPosition *const outShape, const CoordinateSystem *const coordsys,
+	const String *const outname, Bool overwrite
+
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
@@ -293,18 +295,22 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
 		dynamic_cast<TempImage<T> *>(outImage.get())->attachMask(*mymask);
 	}
+	String myOutname = outname ? *outname : _outname;
+	if (! outname) {
+		overwrite = _overwrite;
+	}
 	ImageUtilities::copyMiscellaneous(*outImage, image);
-	if (! _getOutname().empty()) {
-		_removeExistingOutfileIfNecessary();
+	if (! myOutname.empty()) {
+		_removeExistingFileIfNecessary(myOutname, overwrite);
 		String emptyMask = "";
 		Record empty;
         PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(
         	SubImageFactory<T>::createImage(
-        		*outImage, _getOutname(), empty, emptyMask,
+        		*outImage, myOutname, empty, emptyMask,
         		False, False, True, False
         	)
         );
-        ThrowIf(tmp == 0, "Failed dynamic cast")
+        ThrowIf(! tmp, "Failed dynamic cast")
 		outImage.reset(tmp);
 	}
 	outImage->put(values == 0 ? image.get() : *values);

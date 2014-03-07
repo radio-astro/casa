@@ -1,18 +1,15 @@
 #ifndef IMAGEANALYSIS_IMAGETASK_H
 #define IMAGEANALYSIS_IMAGETASK_H
 
+#include <casa/Containers/Record.h>
+
 #include <imageanalysis/ImageTypedefs.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
-
-#include <casa/IO/FiledesIO.h>
-
 #include <imageanalysis/IO/OutputDestinationChecker.h>
-#include <casa/namespace.h>
-
-#include <tr1/memory>
+#include <imageanalysis/Regions/CasacRegionManager.h>
 
 namespace casa {
 class LogFile;
+template <class T> class ArrayLattice;
 
 template <class T> class ImageTask {
 
@@ -157,15 +154,17 @@ protected:
 
     virtual inline Bool _supportsMultipleBeams() {return True;}
 
-    // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
+    // If outname != NULL, use the value supplied. If is NULL, use the value of _outname.
+    // Create a TempImage or PagedImage depending if outname/_outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
-    // system
+    // system. overwrite is only used if outname != NULL.
     SPIIT _prepareOutputImage(
     	const ImageInterface<T>& image, const Array<T> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
-    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
+    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0,
+    	const String *const outname=0, Bool overwrite=False
     ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }

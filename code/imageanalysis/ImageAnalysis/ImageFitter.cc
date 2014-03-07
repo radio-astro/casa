@@ -1,40 +1,16 @@
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
-#include <casa/Containers/HashMap.h>
-#include <casa/Containers/HashMapIter.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/OS/Time.h>
 #include <casa/Utilities/Precision.h>
-
+#include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/GaussianShape.h>
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/SpectralModel.h>
-
-#include <imageanalysis/IO/FitterEstimatesFileParser.h>
-#include <imageanalysis/IO/LogFile.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
-#include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
-#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
-#include <images/Images/ImageStatistics.h>
-#include <images/Images/FITSImage.h>
-#include <images/Images/MIRIADImage.h>
-#include <imageanalysis/Regions/CasacRegionManager.h>
-
-#include <images/Regions/WCUnion.h>
-#include <images/Regions/WCBox.h>
 #include <lattices/Lattices/LCPixelSet.h>
 
-#include <components/ComponentModels/SkyComponent.h>
-#include <components/ComponentModels/ComponentShape.h>
-
-#include <components/ComponentModels/GaussianShape.h>
-
-#include <memory>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+#include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
+#include <imageanalysis/IO/FitterEstimatesFileParser.h>
 
 // #define DEBUG cout << __FILE__ << " " << __LINE__ << endl;
 
@@ -85,26 +61,18 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	LogOrigin origin(_class, __FUNCTION__);;
 	*_getLog() << origin;
 	Bool converged;
-	SubImage<Float> templateImage;
-	std::auto_ptr<TempImage<Float> > modelImage, residualImage;
+	SPIIF modelImage, residualImage, templateImage;
 	std::auto_ptr<LCMask> completePixelMask;
 	if (! _residual.empty() || ! _model.empty()) {
-		templateImage = _createImageTemplate();
-		completePixelMask.reset(new LCMask(templateImage.shape()));
 		if (! _residual.empty()) {
-			residualImage.reset(
-				new TempImage<Float>(
-					templateImage.shape(), templateImage.coordinates()
-				)
-			);
+			residualImage = _createImageTemplate();
+			templateImage = residualImage;
 		}
 		if (! _model.empty()) {
-			modelImage.reset(
-				new TempImage<Float>(
-					templateImage.shape(), templateImage.coordinates()
-				)
-			);
+			modelImage = _createImageTemplate();
+			templateImage = modelImage;
 		}
+		completePixelMask.reset(new LCMask(templateImage->shape()));
 	}
 	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
 	Vector<String> models(ngauss, "gaussian");
@@ -114,9 +82,6 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		_fixed.resize(ngauss+1, True);
 		_fixed[ngauss] = _zeroLevelIsFixed ? "l" : "";
 	}
-	Bool fit = True;
-	Bool deconvolve = False;
-	Bool list = True;
 	String errmsg;
 	ImageStatsCalculator myStats(
 		_getImage(), _getRegion(), "", False
@@ -132,8 +97,84 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	ComponentList convolvedList, deconvolvedList;
 	Bool anyConverged = False;
 	Array<Float> residPixels, modelPixels;
+	_fitLoop(
+		anyConverged, convolvedList,
+		deconvolvedList, templateImage,
+		residualImage, modelImage,
+		*completePixelMask, resultsString
+	);
+	if (anyConverged) {
+		_writeCompList(convolvedList);
+	}
+	else {
+		*_getLog() << LogIO::WARN
+			<< "No fits converged. Will not write component list"
+			<< LogIO::POST;
+	}
+	if (residualImage || modelImage) {
+		ArrayLattice<Bool> mask(completePixelMask->get(False));
+		if (residualImage) {
+			try {
+				_prepareOutputImage(
+					*residualImage, 0, &mask,
+					0, 0, &_residual, False
+				);
+
+			}
+			catch (const AipsError& x) {
+				*_getLog() << LogIO::WARN << "Error writing "
+					<< "residual image. The reported error is "
+					<< x.getMesg() << LogIO::POST;
+			}
+		}
+		if (modelImage) {
+			try {
+				_prepareOutputImage(
+					*modelImage, 0, &mask,
+					0, 0, &_model, False
+				);
+			}
+			catch (const AipsError& x) {
+				*_getLog() << LogIO::WARN << "Error writing"
+					<< "model image. The reported error is "
+					<< x.getMesg() << LogIO::POST;
+			}
+		}
+	}
+	FluxRep<Double>::clearAllowedUnits();
+	FluxRep<Float>::clearAllowedUnits();
+	if (converged && ! _newEstimatesFileName.empty()) {
+		_writeNewEstimatesFile();
+	}
+	_writeLogfile(resultsString);
+	std::pair<ComponentList, ComponentList> lists;
+	lists.first = convolvedList;
+	lists.second = deconvolvedList;
+	return lists;
+}
+
+void ImageFitter::_fitLoop(
+	Bool& anyConverged, ComponentList& convolvedList,
+	ComponentList& deconvolvedList, SPIIF templateImage,
+	SPIIF residualImage, SPIIF modelImage,
+	LCMask& completePixelMask, String& resultsString
+) {
+	Bool converged = False;
+	Bool deconvolve = False;
+	Bool fit = True;
+	Bool list = True;
 	Double zeroLevelOffsetSolution, zeroLevelOffsetError;
 	Double zeroLevelOffsetEstimate = _doZeroLevel ? _zeroLevelOffsetEstimate : 0;
+	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
+	Vector<String> models(ngauss, "gaussian");
+	if (_doZeroLevel) {
+		models.resize(ngauss+1, True);
+		models[ngauss] = "level";
+		_fixed.resize(ngauss+1, True);
+		_fixed[ngauss] = _zeroLevelIsFixed ? "l" : "";
+	}
+	String errmsg;
+	LogOrigin origin(getClass(), __func__);
 	for (_curChan=_chanVec[0]; _curChan<=_chanVec[1]; _curChan++) {
 		if (_chanPixNumber >= 0) {
 			_chanPixNumber = _curChan;
@@ -148,13 +189,12 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			_fitsky(
 				fitter, pixels, pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
-				models,
-				fit, deconvolve, list, zeroLevelOffsetEstimate
+				models, fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
 		}
-		catch (const AipsError& err) {
+		catch (const AipsError& x) {
 			*_getLog() << origin << LogIO::WARN << "Fit failed to converge because of exception: "
-				<< err.getMesg() << LogIO::POST;
+				<< x.getMesg() << LogIO::POST;
 			converged = False;
 		}
 		*_getLog() << origin;
@@ -190,29 +230,28 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			_zeroLevelOffsetSolution.push_back(doubleNaN());
 			_zeroLevelOffsetError.push_back(doubleNaN());
 		}
-		if (residualImage.get() != 0 || modelImage.get() != 0) {
-			IPosition arrShape = templateImage.shape();
+		if (residualImage || modelImage) {
+			IPosition arrShape = templateImage->shape();
 			if (! converged) {
 				pixelMask.set(False);
 			}
-			IPosition putLocation(templateImage.ndim(), 0);
-			if (templateImage.coordinates().hasSpectralAxis()) {
-				uInt spectralAxisNumber = templateImage.coordinates().spectralAxisNumber();
+			IPosition putLocation(templateImage->ndim(), 0);
+			if (templateImage->coordinates().hasSpectralAxis()) {
+				uInt spectralAxisNumber = templateImage->coordinates().spectralAxisNumber();
 				arrShape[spectralAxisNumber] = 1;
 				putLocation[spectralAxisNumber] = _curChan - _chanVec[0];
 			}
-			completePixelMask->putSlice(pixelMask, putLocation);
-			if (residualImage.get() != 0) {
+			completePixelMask.putSlice(pixelMask, putLocation);
+			if (residualImage) {
 				if (! converged) {
 					curResidPixels.resize(pixels.shape());
 					curResidPixels.set(0);
 				}
 				residualImage->putSlice(curResidPixels, putLocation);
 			}
-			if (modelImage.get() != 0) {
+			if (modelImage) {
 				if (! converged) {
 					curModelPixels.resize(pixels.shape());
-
 					curModelPixels.set(0);
 				}
 				modelImage->putSlice(curModelPixels, putLocation);
@@ -232,54 +271,6 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		resultsString += currentResultsString;
 		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
 	}
-	if (anyConverged) {
-		_writeCompList(convolvedList);
-	}
-	else {
-		*_getLog() << LogIO::WARN
-			<< "No fits converged. Will not write component list"
-			<< LogIO::POST;
-	}
-	if (residualImage.get() != 0) {
-		try {
-			ImageUtilities::writeImage(
-				residualImage->shape(),
-				residualImage->coordinates(),
-				_residual,
-				residualImage->get(),
-				*_getLog(), completePixelMask->get(False)
-			);
-		}
-		catch (const AipsError& x) {
-			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
-				<< x.getMesg() << LogIO::POST;
-		}
-	}
-	if (modelImage.get() != 0) {
-		try {
-			ImageUtilities::writeImage(
-				modelImage->shape(),
-				modelImage->coordinates(),
-				_model,
-				modelImage->get(),
-				*_getLog(), completePixelMask->get(False)
-			);
-		}
-		catch (const AipsError& x) {
-			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
-				<< x.getMesg() << LogIO::POST;
-		}
-	}
-	FluxRep<Double>::clearAllowedUnits();
-	FluxRep<Float>::clearAllowedUnits();
-	if (converged && ! _newEstimatesFileName.empty()) {
-		_writeNewEstimatesFile();
-	}
-	_writeLogfile(resultsString);
-	std::pair<ComponentList, ComponentList> lists;
-	lists.first = convolvedList;
-	lists.second = deconvolvedList;
-	return lists;
 }
 
 void ImageFitter::setZeroLevelEstimate(
@@ -1337,13 +1328,15 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 	return spec.str();
 }
 
-SubImage<Float> ImageFitter::_createImageTemplate() const {
-	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
-
-	return SubImageFactory<Float>::createSubImage(
-		*imageClone, *_getRegion(), _getMask(), 0,
-		False, AxesSpecifier(), _getStretch()
+SPIIF ImageFitter::_createImageTemplate() const {
+	SPIIF x(
+		SubImageFactory<Float>::createImage(
+			*_getImage(), "", *_getRegion(), _getMask(),
+			False, False, False, _getStretch()
+		)
 	);
+	x->set(0.0);
+	return x;
 }
 
 void ImageFitter::_writeNewEstimatesFile() const {
