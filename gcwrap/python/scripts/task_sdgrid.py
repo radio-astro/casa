@@ -25,7 +25,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.__summarize_compiled_inputs()
 
         # create gridder
-        self.gridder = sd.asapgrid(infiles=self.infiles)
+        self.gridder = sd.asapgrid(infile=self.infiles)
 
     def parameter_check(self):
         if self.gridfunction.upper() == 'PB':
