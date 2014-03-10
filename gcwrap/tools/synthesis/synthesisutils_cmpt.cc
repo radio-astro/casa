@@ -147,9 +147,9 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
-
+/***
  bool 
- synthesisutils::makeimage(const casac::record& impars, const string& msname)
+ synthesisutils::makeimage(const casac::record& impars, const casac::record& selpars, const string& msname)
 {
   bool rstat(0);
 
@@ -162,7 +162,8 @@ synthesisutils::~synthesisutils()
 
       // Construct Coordinate system and make image. 
       MeasurementSet ms;
-      if( msname.length() > 0 && (Directory(msname)).exists() ) { ms = MeasurementSet(msname); }
+      //if( msname.length() > 0 && (Directory(msname)).exists() ) { ms = MeasurementSet(msname); }
+      ms = MeasurementSet(msname);
 
       cout << "Making image : " << pars.imageName << " of shape : " << pars.shp() << endl;
       PagedImage<Float> diskimage( pars.shp(), pars.buildCoordinateSystem(ms), pars.imageName );
@@ -175,6 +176,7 @@ synthesisutils::~synthesisutils()
 
   return rstat;
 }
+***/
 
 
 

@@ -168,6 +168,7 @@ This is used to construct {\tt synthesisutils} tool.
 <!-- ===================================== -->
 <!-- ===================================== -->
 
+<!---
    <method type="function" name="makeimage">
    <shortdescription>Make an empty image</shortdescription>
 
@@ -187,7 +188,7 @@ This is used to construct {\tt synthesisutils} tool.
 </input>
 <returns type="bool"/>
 </method>
-
+-->
 <!-- ===================================== -->
 <!-- ===================================== -->
 

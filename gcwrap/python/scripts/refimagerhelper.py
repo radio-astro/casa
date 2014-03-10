@@ -677,8 +677,11 @@ class ImagerParameters():
     def __init__(self,
                  msname='',field='',spw='',usescratch=True,readonly=True,
                  outlierfile='',
-                 imagename='', nchan=1, freqstart='1.0GHz', freqstep='1.0GHz',
-                 ntaylorterms=1, mtype='default',restfreq=[],
+                 imagename='', mode='mfs', nchan=1, chanstart=0, chanstep=1, 
+                 freqstart='', freqstep='',
+                 velstart='', velstep='', veltype='radio', 
+                 freqframe='LSRK', reffreq='',
+                 ntaylorterms=1, mtype='default',restfreq=[''],
                  imsize=[1,1], facets=1, cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
                  ftmachine='ft', startmodel='', weighting='natural', stokes='I',
 
@@ -711,8 +714,11 @@ class ImagerParameters():
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cellsize':cellsize, 'phasecenter':phasecenter, 'stokes': stokes,
-                                 'freqstart':freqstart, 'freqstep':freqstep, 
-                                 'ntaylorterms':ntaylorterms, 'restfreq':restfreq , 'facets':facets  }      }
+                                 'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
+                                 'freqstart':freqstart, 'freqstep':freqstep,
+                                 'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
+                                 'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
+                                 'freqframe':freqframe, 'reffreq':reffreq, 'facets':facets  }      }
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                  'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                  'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 

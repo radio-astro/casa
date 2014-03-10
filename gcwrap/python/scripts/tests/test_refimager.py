@@ -5,7 +5,7 @@ from refimagerhelper import PySynthesisImager, PyParallelContSynthesisImager,PyP
 
 import commands
 #### Specify parameters.
-def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=False):
+def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parallelcube=False):
 
      # Iteration parameters - common to all tests below
      niter=200
@@ -16,6 +16,86 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
      # Interaction ON or OFF
      interactive=False
 
+     if(testnum==11): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
+          casalog.post("==================================");
+          casalog.post("Test 11 image-field, cube --- Real Imaging with various cube parameter specifications");
+          #casalog.post("==================================");
+
+          testList = {
+                      0:{'imagename':'Cubetest_chandefstdefstep','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                        'desc':'channel, default start and step, LSRK'},
+                      1:{'imagename':'Cubetest_chandefstdefsteptopo','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'TOPO',
+                        'desc':'channel, default start and step, TOPO'},
+                      2:{'imagename':'Cubetest_chandefststep2','spw':'0','chanstart':0,'chanstep':2,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                        'desc':'channel, default start, step=2, LSRK'},
+                      3:{'imagename':'Cubetest_chanst5wd1','spw':'0','chanstart':5,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                        'desc':'channel, start=5, default step, LSRK'},
+                      4:{'imagename':'Cubetest_chanst5wd1spwsel','spw':'0:5~19','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                        'desc':'channel, spw=0:5~19, LSRK'},
+                      5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'40MHz','velstart':'','velstep':'','freqframe':'TOPO',
+                        'desc':'frequency, default freqstart, freqstep=\'40MHz\', TOPO'},
+                      6:{'imagename':'Cubetest_freqst5defwd','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'1.1GHz','freqstep':'','velstart':'','velstep':'','freqframe':'TOPO',
+                        'desc':'frequency, freqstart=\'1.1GHz\', default freqstep, TOPO'},
+                      7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:10~19','chanstart':0,'chanstep':1,
+                        'freqstart':'1.1GHz','freqstep':'','velstart':'','velstep':'','freqframe':'TOPO',
+                        'desc':'frequency, freqstart=\'1.1GHz\', default freqstep, spw=0:10~19, TOPO'},
+                      8:{'imagename':'Cubetest_freqst10wdm','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'1.2GHz','freqstep':'-20MHz','velstart':'','velstep':'','freqframe':'TOPO',
+                        'desc':'frequency, freqstart=\'1.2GHz\', freqstep=\'-20MHz\', spw=0:10~19, TOPO'},
+                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'11991.700km/s','freqframe':'TOPO',
+                        'desc':'frequency, default velstart, freqstep=\'11991.700km/s\', TOPO'},
+                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'','velstep':'-11991.700km/s','freqframe':'TOPO',
+                        'desc':'velocity, default velstart, freqstep=\'-11991.700km/s\', TOPO'},
+                     11:{'imagename':'Cubetest_velst10defwd','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'-59958.5km/s','velstep':'','freqframe':'TOPO',
+                        'desc':'velocity, velstart=\'-59958.5km/s\', default freqstep, TOPO'},
+                     12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'-59976.1km/s','velstep':'','freqframe':'BARY',
+                        'desc':'velocity, velstart=\'-59976.1km/s\', default freqstep, BARY'},
+                     13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','chanstart':0,'chanstep':1,
+                        'freqstart':'','freqstep':'','velstart':'-49962.6km/s','velstep':'','veltype':'optical', 
+                        'freqframe':'LSRK',
+			# identical channel should be selected as for 12
+                        'desc':'velocity, velstart=\'-49962.6km/s\', default freqstep, veltype=optical LSRK'}
+                    }
+
+          casalog.post("Sub-test "+str(testid)+":"+testList[testid]['desc']);
+          casalog.post("==================================");
+          if testList[testid].has_key('veltype'):
+               inveltype=testList[testid]['veltype']
+          else:
+               inveltype='radio'
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
+                                       spw=testList[testid]['spw'],\
+                                       usescratch=True,readonly=True,\
+                                       imagename=testList[testid]['imagename'], mode='cube',\
+                                       nchan=10,\
+                                       chanstart=testList[testid]['chanstart'],\
+                                       chanstep=testList[testid]['chanstep'],\
+                                       freqstart=testList[testid]['freqstart'],\
+                                       freqstep=testList[testid]['freqstep'],\
+                                       velstart=testList[testid]['velstart'],\
+                                       velstep=testList[testid]['velstep'],\
+                                       veltype=inveltype,\
+                                       freqframe=testList[testid]['freqframe'],\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
 
      if(testnum==10):  ## Image domain mosaic for single-term
           casalog.post("==================================");
@@ -24,6 +104,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        ntaylorterms=1,mtype='imagemosaic',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=1,\
@@ -43,6 +124,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
@@ -62,6 +144,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        imsize=[200,200],\
@@ -81,6 +164,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        ntaylorterms=1,mtype='default',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
@@ -100,6 +184,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
                                        field='1',spw='1',\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='0.3GHz',\
                                        imsize=[512,512],\
                                        cellsize=['25.0arcsec','25.0arcsec'],\
@@ -123,6 +208,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           paramList = ImagerParameters(msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,  freqstart='1.0GHz', freqstep='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
@@ -144,6 +230,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        outlierfile='out4.txt',\
+                                       mode='cube',\
                                        imagename='mytest0', nchan=2, freqstart='1.0GHz', freqstep='1.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
@@ -165,6 +252,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        outlierfile='out3.txt',\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
@@ -183,6 +271,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
                                        usescratch=True,readonly=True,\
+                                       mode='cube',\
                                        imagename='mytest0', nchan=10,freqstart='1.0GHz', freqstep='40MHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
@@ -201,6 +290,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
+                                       mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        imsize=[110,110],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
@@ -531,15 +621,29 @@ def checkPars():
 
      synu.done()
 
+def testImageCoordinates( testnum=1, testid=0):
+    
+    multitest=False
+    if testnum==11: multitest=True
+    if multitest and testid==-1: testid=range(14)
+    if type(testid)==int: testid=[testid]
+    for tst in testid:
+      params = getparams( testnum, testid=tst )
+      paramList = params[0]
+      impars=paramList.getImagePars()['0']
+      if os.path.exists(impars['imagename']+'.residual'):
+        os.system('rm -rf '+impars['imagename']+'*')
 
-def testmakeimage():
-     params = getparams( testnum=7 )
-     paramList = params[0]
-     impars = (paramList.getImagePars())['0']
+      doMajor(params)
 
-     os.system('rm -rf ' + impars['imagename'])
-
-     synu = casac.synthesisutils()
-     synu.makeimage( impars , 'DataTest/twopoints_twochan.ms')
-     synu.done()
-
+#def testmakeimage():
+#     params = getparams( testnum=1 )
+#     paramList = params[0]
+#     impars = (paramList.getImagePars())['0']
+#
+#     os.system('rm -rf ' + impars['imagename'])
+#
+#     synu = casac.synthesisutils()
+#     #synu.makeimage( impars , 'DataTest/twopoints_twochan.ms')
+#     synu.makeimage( impars , 'DataTest/point_twospws.ms')
+#     synu.done()
