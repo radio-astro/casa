@@ -425,4 +425,19 @@ def getTileShape(mydict, column='DATA'):
             break
     
     return tsh
+
+def checkwithtaql(taqlstring):
+    os.system('rm -rf mynewtable.tab')
+    tb.create('mynewtable.tab')
+    tb.open('mynewtable.tab',nomodify=False)
+    rval = tb.taql(taqlstring)
+    tb.close()
+    therval = rval.nrows()
+    tmpname = rval.name()
+    rval.close()
+    os.system('rm -rf mynewtable.tab')
+    os.system('rm -rf '+tmpname)
+    print "Found ", therval, " rows in selection."
+    return therval
+
                     

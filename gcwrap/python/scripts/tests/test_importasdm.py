@@ -143,21 +143,6 @@ def verify_asdm(asdmname, withPointing):
     if (not isOK):
         raise Exception
 
-def checkwithtaql(taqlstring):
-    os.system('rm -rf mynewtable.tab')
-    tb.create('mynewtable.tab')
-    tb.open('mynewtable.tab',nomodify=False)
-    rval = tb.taql(taqlstring)
-    tb.close()
-    therval = rval.nrows()
-    tmpname = rval.name()
-    rval.close()
-    os.system('rm -rf mynewtable.tab')
-    os.system('rm -rf '+tmpname)
-    print "Found ", therval, " rows in selection."
-    return therval
-
-
 # Setup for different data importing
 class test_base(unittest.TestCase):
     def setUp_m51(self):
@@ -857,13 +842,13 @@ class asdm_import6(test_base):
             importasdm(asdm=myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
 
             if(os.path.exists('reference.ms')):
-                retValue['success'] = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
                                                     +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
                 if not retValue['success']:
                     print "ERROR: DATA does not agree with reference."
                 else:
                     print "DATA columns agree."
-                retValueTmp = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
                                             +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
                 if not retValueTmp:
                     print "ERROR: FLAG does not agree with reference."
@@ -1005,13 +990,13 @@ class asdm_import7(test_base):
             importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
 
             if(os.path.exists('reference.ms')):
-                retValue['success'] = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
                                                     +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
                 if not retValue['success']:
                     print "ERROR: DATA does not agree with reference."
                 else:
                     print "DATA columns agree."
-                retValueTmp = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
                                             +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
                 if not retValueTmp:
                     print "ERROR: FLAG does not agree with reference."
@@ -1136,13 +1121,13 @@ class asdm_import7(test_base):
             importasdm(asdm=myasdmname, vis='reference.ms', lazy=True, overwrite=True, bdfflags=False)
 
             if(os.path.exists('reference.ms')):
-                retValue['success'] = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
                                                     +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
                 if not retValue['success']:
                     print "ERROR: DATA does not agree with reference."
                 else:
                     print "DATA columns agree."
-                retValueTmp = checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
                                             +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") != 0
                 if not retValueTmp:
                     print "ERROR: FLAG columns do agree with reference but they shouldn't."
