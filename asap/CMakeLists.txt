@@ -37,7 +37,27 @@ if( APPLE )
 	    set( CMAKE_CXX_COMPILER /opt/local/bin/g++-mp-4.4 )
 	endif()
     endif()
+
+    if( EXISTS        /opt/casa/01/bin/llvm-gfortran-4.2 )
+           set( CMAKE_Fortran_COMPILER /opt/casa/01/bin/llvm-gfortran-4.2 )
+    endif( )
+
 endif()
+
+if ( NOT STANDALONE )
+  add_definitions( -DUSE_CASAPY )
+  execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                   COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.dylib\" ) { print \"$d/libgfortran.dylib\"; $found = 1; break; }} break if $found; } break if $found;}"
+                   OUTPUT_VARIABLE _gfortran_lib_path
+                   OUTPUT_STRIP_TRAILING_WHITESPACE )
+  if( NOT _gfortran_lib_path )
+      execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                       COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; $found = 1; break; }} break if $found; } break if $found;}"
+                       OUTPUT_VARIABLE _gfortran_lib_path
+                       OUTPUT_STRIP_TRAILING_WHITESPACE )
+  endif( )
+  message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
+endif ()
 
 
 # project name is ASAP
@@ -353,6 +373,8 @@ else()
          numpy/npy_interrupt.h   # for numpy
       INCLUDES_SUFFIXES python${PYTHONV}
       PREFIX_HINTS 
+         /opt/casa/01/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+         /opt/casa/01/Library/Frameworks/Python.framework/Versions/${PYTHONV}
          ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
          ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
          ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
