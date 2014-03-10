@@ -43,6 +43,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -148,9 +149,17 @@ public:
   Record toRecord();
 
   // Generate Coordinate System 
-  CoordinateSystem buildCoordinateSystem(MeasurementSet& msobj) const;
+  //CoordinateSystem buildCoordinateSystem(MeasurementSet& msobj) const;
+  CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi) const;
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;
+  Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, Double& refPix, String& specmode,
+                   const MEpoch& obsEpoch, const MPosition& obsPosition,
+                   const Vector<Double>& dataChanFreqs, const Vector<Double>& dataFreqRes,
+                   const MFrequency::Types& dataFrame, const Quantity& qrestfreq, 
+                   const Double& freqmin, const Double& freqmax ) const;
+
+  String findSpecMode(const String& mode) const;
 
   // Sky coordinates
   String imageName, stokes, startModel;
@@ -161,10 +170,11 @@ public:
   Int facets;
 
   // Spectral coordinates ( TT : Add other params here  )
-  Int nchan, nTaylorTerms;
-  Quantity freqStart, freqStep, refFreq;
+  Int nchan, nTaylorTerms, chanStart, chanStep;
+  Quantity freqStart, freqStep, refFreq, velStart, velStep;
   MFrequency::Types freqFrame;
   Vector<Quantity> restFreq;
+  String veltype, mode;
 
   Bool overwrite;
 

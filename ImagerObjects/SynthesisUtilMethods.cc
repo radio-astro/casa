@@ -50,8 +50,11 @@
 #include <images/Regions/ImageRegion.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSDopplerUtil.h>
 
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+
+#include <synthesis/MSVis/SubMS.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -617,12 +620,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }//projection
 
 	// Frequency frame stuff. 
+	err += readVal( inrec, String("mode"), mode);
+	err += readVal( inrec, String("chanstart"), chanStart);
+	err += readVal( inrec, String("chanstep"), chanStep);
 	err += readVal( inrec, String("freqstart"), freqStart);
 	err += readVal( inrec, String("freqstep"), freqStep);
 	err += readVal( inrec, String("reffreq"), refFreq); 
+	err += readVal( inrec, String("velstart"), velStart); 
+	err += readVal( inrec, String("velstep"), velStep); 
+	err += readVal( inrec, String("veltype"), veltype); 
 
 	Vector<String> rfreqs(0);
 	err += readVal( inrec, String("restfreq"), rfreqs );
+        // case no restfreq is given: set to  
+
 	restFreq.resize( rfreqs.nelements() );
 	for( uInt fr=0; fr<rfreqs.nelements(); fr++)
 	  {
@@ -705,8 +716,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Spectral coordinates
     nchan=1;
+    mode="mfs";
+    chanStart=0;
+    chanStep=1;
     freqStart=Quantity(0,"Hz");
     freqStep=Quantity(0,"Hz");
+    velStart=Quantity(0,"m/s");
+    velStep=Quantity(0,"m/s");
+    veltype=String("radio");
     restFreq.resize(0);
     refFreq = Quantity(0,"Hz");
     freqFrame=MFrequency::LSRK;
@@ -731,8 +748,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
     impar.define("projection", projection.name() );
 
+    impar.define("mode", mode );
+    impar.define("chanstart", chanStart );
+    impar.define("chanstep", chanStep );
     impar.define("freqstart", QuantityToString( freqStart ));
     impar.define("freqstep", QuantityToString( freqStep ) );
+    impar.define("velstart", QuantityToString( velStart ));
+    impar.define("velstep", QuantityToString( velStep ) );
+    impar.define("veltype", veltype);
     Vector<String> rfs( restFreq.nelements() );
     for(uInt rf=0; rf<restFreq.nelements(); rf++){rfs[rf] = QuantityToString(restFreq[rf]);}
     impar.define("restfreq", rfs);
@@ -752,8 +775,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  CoordinateSystem 
-  SynthesisParamsImage::buildCoordinateSystem(MeasurementSet& msobj) const
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi) const
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
 
@@ -784,18 +806,132 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      xform,
 	      refPixel(0), refPixel(1));
 
+
+    //defining observatory...needed for position on earth
+    // get the first ms for multiple MSes
+    MeasurementSet msobj=rvi->getMeasurementSet();
+    ROMSColumns msc(msobj);
+    String telescop = msc.observation().telescopeName()(0);
+    MEpoch obsEpoch = msc.timeMeas()(0);
+    MPosition obsPosition;
+    if(!(MeasTable::Observatory(obsPosition, telescop)))
+      {
+        os << LogIO::WARN << "Did not get the position of " << telescop
+           << " from data repository" << LogIO::POST;
+        os << LogIO::WARN
+           << "Please contact CASA to add it to the repository."
+           << LogIO::POST;
+        os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+      }
+
+    ObsInfo myobsinfo;
+    myobsinfo.setTelescope(telescop);
+    myobsinfo.setPointingCenter(mvPhaseCenter);
+    myobsinfo.setObsDate(obsEpoch);
+    myobsinfo.setObserver(msc.observation().observer()(0));
+
+    /// Attach obsInfo to the CoordinateSystem
+    ///csys.setObsInfo(myobsinfo);
+
+
     /////////////////// Spectral Coordinate
 
     //Make sure frame conversion is switched off for REST frame data.
     Bool freqFrameValid=(freqFrame != MFrequency::REST);
 
+    // *** get selected spw ids ***
+    Vector<Int> spwids;
+    Vector<Int> nvischan;
+    rvi->allSelectedSpectralWindows(spwids,nvischan);
+    if (spwids.nelements()==0) {
+      Int nspw=msc.spectralWindow().nrow();
+      spwids.resize(nspw);
+      indgen(spwids); 
+    }
+    MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
+
+    Vector<Double> dataChanFreq, dataChanWidth;
+    if (spwids.nelements()==1) {
+      dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
+      dataChanWidth=msc.spectralWindow().chanWidth()(spwids[0]);
+    }
+    else {
+      SubMS thems(msobj);
+      if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth)){
+        os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
+      }
+    }
+    
+    Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
+    if ( qrestfreq.getValue("Hz")==0 ) {
+      Int fld = rvi->fieldId();
+      MSDopplerUtil msdoppler(msobj);
+      Vector<Double> restfreqvec;
+      msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
+      qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
+    }
+    Double refPix;
+    Vector<Double> chanFreq;
+    Vector<Double> chanFreqStep;
+    String specmode;
+
+    Double freqmin=0, freqmax=0;
+    rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+
+    if (!getImFreq(chanFreq, chanFreqStep, refPix, specmode, obsEpoch, 
+      obsPosition, dataChanFreq, dataChanWidth, dataFrame, qrestfreq, freqmin, freqmax))
+      throw(AipsError("Failed to determine channelization parameters"));
+
+    Bool nonLinearFreq(false);
+    String veltype_p=veltype;
+    veltype_p.upcase(); 
+    if (veltype_p.contains("OPTICAL") || veltype_p.matches("Z") || veltype_p.contains("BETA") ||
+        veltype_p.contains("RELATI") || veltype_p.contains("GAMMA")) {
+       nonLinearFreq= true;
+    }
+
+    SpectralCoordinate mySpectral;
+    Double stepf;
+    if (!nonLinearFreq) {
+      Double startf=chanFreq[0];
+      //Double stepf=chanFreqStep[0];
+      if (chanFreq.nelements()==1) {
+        stepf=chanFreqStep[0];
+      }
+      else { 
+        stepf=chanFreq[1]-chanFreq[0];
+      }
+      Double restf=qrestfreq.getValue("Hz");
+      //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
+      // once NOFRAME is implemented do this 
+      //if (mode=="cubedata") {
+      //  mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::NOFRAME : MFrequency::REST, 
+      //	startf, stepf, refPix, restf);
+      //}
+      //else {
+        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
+		startf, stepf, refPix, restf);
+      //}
+    }
+    else { // nonlinear freq coords - use tabular setting
+      // once NOFRAME is implemented do this 
+      //if (mode=="cubedata") { 
+      //  mySpectral = SpectralCoordinate(freqFrameValid ? MFrequnecy::NOFRAME : MFrequency::REST,
+      //             chanFreq, (Double)qrestfreq.getValue("Hz"));
+      //}
+      //else {
+        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
+                 chanFreq, (Double)qrestfreq.getValue("Hz"));
+      //}
+    }
     //cout << "Rest Freq : " << restFreq << endl;
 
-    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, 
-				  freqStart, freqStep, 0, 
-				  restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
     for (uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+
+    if (freqFrameValid) {
+      mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenter);   
+    }
 
     //    cout << "RF from coordinate : " << mySpectral.restFrequency() << endl;
 
@@ -812,8 +948,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     csys.addCoordinate(myRaDec);
     csys.addCoordinate(myStokes);
     csys.addCoordinate(mySpectral);
+    csys.setObsInfo(myobsinfo);
 
     //////////////// Set Observatory info, if MS is provided.
+    // (remove this section after verified...)
+    /***
     if( ! msobj.isNull() )
       {
 	//defining observatory...needed for position on earth
@@ -841,9 +980,170 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	csys.setObsInfo(myobsinfo);
 
       }// if MS is provided.
+      ***/
 
     return csys;
   }
+
+  Bool SynthesisParamsImage::getImFreq(Vector<Double>& chanFreq, Vector<Double>& chanFreqStep, 
+                                       Double& refPix, String& specmode,
+                                       const MEpoch& obsEpoch, const MPosition& obsPosition, 
+                                       const Vector<Double>& dataChanFreq, 
+                                       const Vector<Double>& dataChanWidth,
+                                       const MFrequency::Types& dataFrame, 
+                                       const Quantity& qrestfreq, const Double& freqmin, const Double& freqmax) const
+  {
+
+    String start, step;
+    specmode = findSpecMode(mode);
+    //cerr<<"specmode="<<specmode<<" mode="<<mode<<endl;
+    Bool verbose("true"); // verbose logging messages from calcChanFreqs
+    LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
+    //os<<LogIO::NORMAL<<"getImFreq"<<LogIO::POST;
+    //cerr<<"qrestfreq="<<qrestfreq<<endl;
+    //cerr<<" freqframe="<<MFrequency::showType(freqFrame)<<endl;
+
+    refPix=0.0; 
+    Bool descendingfreq(false);
+
+    if ( mode.contains("cube") ) { 
+      // For the returned chanfreqs and chanwidths from calcChanFreqs()
+      String restfreq=String::toString(qrestfreq.getValue(qrestfreq.getUnit()))+qrestfreq.getUnit();
+      String freqframe=MFrequency::showType(freqFrame);
+
+      if ( specmode=="channel" ) {
+        start = String::toString(chanStart);
+        step = String::toString(chanStep); 
+        // negative step -> descending channel indices 
+        if (step.contains(casa::Regex("^-"))) descendingfreq=true;
+      }
+      else if ( specmode=="frequency" ) {
+        if ( freqStart.getValue("Hz") == 0 ) {
+           start = String::toString( freqmin ) + freqStart.getUnit();
+        }
+        else {
+          start = String::toString( freqStart.getValue(freqStart.getUnit()) )+freqStart.getUnit();  
+        }
+        step = String::toString( freqStep.getValue(freqStep.getUnit()) )+freqStep.getUnit();  
+        // negative freq width -> descending freq ordering
+        if (step.contains(casa::Regex("^-"))) descendingfreq=true;
+      }
+      else if ( specmode=="velocity" ) {
+        // if velStart is empty set start to vel of freqmin or freqmax?
+        // add freq to vel conversion here
+        if ( velStart.getValue(velStart.getUnit()) == 0 && !(velStart.getUnit().contains("m/s")) ) {
+          start = "";
+        }
+        else { 
+          start = String::toString( velStart.getValue(velStart.getUnit()) )+velStart.getUnit();  
+        }
+        step = String::toString( velStep.getValue(velStep.getUnit()) )+velStep.getUnit();  
+        // positive velocity width -> descending freq ordering
+        if (!step.contains(casa::Regex("^-"))) descendingfreq=true;
+      }
+
+      if (step=='0') step="";
+
+      String infreqframe = freqframe;
+      if ( infreqframe=="SOURCE" && mode!="cubesrc") {
+        os << LogIO::SEVERE << "freqframe=\"SOURCE\" is only allowed for mode=\"cubesrc\""
+           << LogIO::EXCEPTION;
+        return false; 
+      }
+      // cubedata mode: input start, step are those of the input data frame
+      if ( mode=="cubedata" ) infreqframe=dataFrame; 
+
+      // *** NOTE *** 
+      // calcChanFreqs alway returns chanFreq in
+      // ascending freq order. 
+      // for step < 0 calcChanFreqs returns chanFreq that 
+      // contains start freq. in its last element of the vector. 
+      //
+      Bool rst=SubMS::calcChanFreqs(os,
+                           chanFreq, 
+                           chanFreqStep,
+                           dataChanFreq,
+                           dataChanWidth,
+                           phaseCenter,
+                           dataFrame,
+                           obsEpoch,
+                           obsPosition,
+                           specmode,
+                           nchan,
+                           start,
+                           step,
+                           restfreq,
+                           infreqframe,
+                           veltype,
+                           verbose 
+                           );
+
+      //cerr<<"chanFreq.nelements()="<<chanFreq.nelements()<<endl;
+      //cerr<<"chanFreq 0="<<chanFreq[0]<<endl;
+      //cerr<<"chanFreq last="<<chanFreq[chanFreq.nelements()-1]<<endl;
+      if (!rst) {
+        os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
+           << LogIO::EXCEPTION;
+        return False;
+      }
+      if (descendingfreq) {
+        // reverse the freq vector if necessary so the first element can be
+        // used to set spectralCoordinates in all the cases.
+        //
+        // also do for chanFreqStep..
+        std::vector<Double> stlchanfreq;
+        chanFreq.tovector(stlchanfreq);
+        std::reverse(stlchanfreq.begin(),stlchanfreq.end());
+        chanFreq=stlchanfreq;
+        chanFreqStep=-chanFreqStep;
+      }
+    }
+    else if ( mode=="mfs" ) {
+      chanFreq.resize(1);
+      chanFreqStep.resize(1);
+      chanFreqStep[0] = freqmax - freqmin;
+      Double freqmean = (freqmin + freqmax)/2;
+      if (refFreq.getValue("Hz")==0) {
+        chanFreq[0] = freqmean;
+        refPix = 0.0;
+      }
+      else { 
+        chanFreq[0] = refFreq.getValue("Hz"); 
+        refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
+      }
+    }
+    else {
+       // unrecognized mode, error
+       os << LogIO::SEVERE << "mode="<<mode<<" is unrecognized."
+          << LogIO::EXCEPTION;
+       return False;
+    }
+
+    return True;
+
+  }//getImFreq
+
+  String SynthesisParamsImage::findSpecMode(const String& mode) const
+  {
+    String specmode;
+    specmode="channel";
+    if ( mode.contains("cube") ) {
+      // if velstart or velstep is defined -> specmode='vel'
+      // else if freqstart or freqstep is defined -> specmode='freq'
+      // velocity: assume unset if velStart => 0.0 with no unit
+      //           assume unset if velStep => 0.0 with/wiout unit
+      if ( !(velStart.getValue()==0.0 and velStart.getUnit()=="" ) ||
+           !( velStep.getValue()==0.0)) { 
+        specmode="velocity";
+      }
+      else if ( !(freqStart.getValue()==0.0 and freqStart.getUnit()=="") ||
+                !(freqStep.getValue()==0.0)) {
+        specmode="frequency";
+      }
+    }
+    return specmode;
+  }
+
 
   Vector<Int> SynthesisParamsImage::decideNPolPlanes(const String& stokes) const
   {

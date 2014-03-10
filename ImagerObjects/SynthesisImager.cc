@@ -461,8 +461,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   << "] ) to imager list " 
 	   << LogIO::POST;
 
-	MeasurementSet tms(*mss_p[0]);
-	csys = impars.buildCoordinateSystem( tms );
+	//MeasurementSet tms(*mss_p[0]);
+	//csys = impars.buildCoordinateSystem( tms );
+	csys = impars.buildCoordinateSystem( rvi_p );
+
 	IPosition imshape = impars.shp();
 
 	if( (itsMappers.nMappers()==0) || 
