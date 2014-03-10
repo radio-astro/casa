@@ -179,6 +179,9 @@ foreach (module ${_modules})
         if (${module} STREQUAL scimath_f OR ${module} STREQUAL fits OR ${module} STREQUAL mirlib OR ${module} STREQUAL coordinates)
             set_target_properties(casa_${module} PROPERTIES LINK_FLAGS -single_module)
         endif (${module} STREQUAL scimath_f OR ${module} STREQUAL fits OR ${module} STREQUAL mirlib OR ${module} STREQUAL coordinates)
+        #
+        # CAS-6021
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_GLIBCXX_DEBUG -U_GLIBCXX_DEBUG_PEDANTIC")
     endif (APPLE)
 endforeach (module)
 

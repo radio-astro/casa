@@ -43,7 +43,6 @@ endif()
 # project name is ASAP
 project( ASAP )
 
-
 #
 # build type and their flags 
 #
@@ -135,7 +134,12 @@ endif()
 # set flags for cpp compiler
 set( CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} )
 
-
+#
+# CAS-6021
+if ( APPLE )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_GLIBCXX_DEBUG -U_GLIBCXX_DEBUG_PEDANTIC" )
+endif ( APPLE )
+  
 #
 # casacore definitions
 #

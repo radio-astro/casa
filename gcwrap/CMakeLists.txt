@@ -996,6 +996,13 @@ set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 # Detecting QT4 takes a bit of time, but does not seem possible to skip.
 # If doing so, then "include( ${QT_USE_FILE} )" does not work (because QT_USE_FILE is not cached?).
 
+#
+# CAS-6021
+# Note: this must be done AFTER Qt is set up to prevent Qt options from overriding these options.
+# See http://stackoverflow.com/questions/10085945/cmake-cflags-cxxflags-modification
+if ( APPLE )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_GLIBCXX_DEBUG -U_GLIBCXX_DEBUG_PEDANTIC" )
+endif ( APPLE )
 
 # QWT (requires Qt)
 casa_find( QWT
