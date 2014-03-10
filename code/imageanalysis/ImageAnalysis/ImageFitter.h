@@ -200,7 +200,7 @@ private:
 	String _resultsHeader() const;
 
 	// summarize the results in a nicely formatted string
-	String _resultsToString();
+	String _resultsToString(uInt nPixels);
 
 	//summarize the size details in a nicely formatted string
 	String _sizeToString(const uInt compNumber);

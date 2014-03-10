@@ -216,10 +216,11 @@ void ImageFitter::_fitLoop(
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
 				models, fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
+
 		}
 		catch (const AipsError& x) {
-			*_getLog() << origin << LogIO::WARN << "Fit failed to converge because of exception: "
-				<< x.getMesg() << LogIO::POST;
+			*_getLog() << origin << LogIO::WARN << "Fit failed to converge "
+				<< "because of exception: " << x.getMesg() << LogIO::POST;
 			converged = False;
 		}
 		*_getLog() << origin;
@@ -292,7 +293,7 @@ void ImageFitter::_fitLoop(
 			_curConvolvedList.toRecord(errmsg, estimatesRecord);
 			*_getLog() << origin;
 		}
-		String currentResultsString = _resultsToString();
+		String currentResultsString = _resultsToString(fitter.numberPoints());
 		resultsString += currentResultsString;
 		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
 	}
@@ -563,16 +564,16 @@ String ImageFitter::_resultsHeader() const {
 	return summary.str();
 }
 
-String ImageFitter::_resultsToString() {
+String ImageFitter::_resultsToString(uInt nPixels) {
 	ostringstream summary;
 	summary << "*** Details of fit for channel number " << _curChan << endl;
-
+	summary << "Number of pixels used in fit: " << nPixels <<  endl;
 	uInt relChan = _curChan - _chanVec[0];
 	if (_fitConverged[relChan]) {
 		if (_noBeam) {
 			*_getLog() << LogIO::WARN << "Flux density not reported because "
-					<< "there is no clean beam in image header so these quantities cannot "
-					<< "be calculated" << LogIO::POST;
+				<< "there is no clean beam in image header so these quantities cannot "
+				<< "be calculated" << LogIO::POST;
 		}
 		summary << _statisticsToString() << endl;
 		if (_doZeroLevel) {
@@ -611,10 +612,10 @@ String ImageFitter::_statisticsToString() const {
 	_getStandardDeviations(inputStdDev, residStdDev);
 	_getRMSs(inputRMS, residRMS);
 	String unit = _fluxDensities[0].getUnit();
-	stats << "       --- Standard deviation of input image " << inputStdDev << " " << unit << endl;
-	stats << "       --- Standard deviation of residual image " << residStdDev << " " << unit << endl;
-	stats << "       --- RMS of input image " << inputRMS << " " << unit << endl;
-	stats << "       --- RMS of residual image " << residRMS << " " << unit << endl;
+	stats << "       --- Standard deviation of input image: " << inputStdDev << " " << unit << endl;
+	stats << "       --- Standard deviation of residual image: " << residStdDev << " " << unit << endl;
+	stats << "       --- RMS of input image: " << inputRMS << " " << unit << endl;
+	stats << "       --- RMS of residual image: " << residRMS << " " << unit << endl;
 	return stats.str();
 }
 
