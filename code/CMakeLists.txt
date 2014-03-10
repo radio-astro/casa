@@ -168,9 +168,15 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;}; if ( -e \"$d/libgfortran.a\" and !$found ) { print \"$d/libgfortran.a \"; $found = 1; break;}break if $found;}break if $found;} break if $found; }"
+                     COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break; }} break if $found; } break if $found;}"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
+    if( NOT _gfortran_lib_path )
+        execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                         COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; $found = 1; break; }} break if $found; } break if $found;}"
+                         OUTPUT_VARIABLE _gfortran_lib_path
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+    endif( )
 
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
@@ -526,7 +532,7 @@ endif()
 message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (second)" )
 message ( STATUS "casa_packages=${casa_packages} (second)" )
 
-set( boost_components regex program_options filesystem thread serialization)
+set( boost_components regex program_options filesystem thread serialization system)
 find_package( Boost REQUIRED ${boost_components} )
 
 message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")

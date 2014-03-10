@@ -889,7 +889,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 		Quantity minor = _minorAxes[i];
 		Quantity pa = _positionAngles[i];
 		std::tr1::shared_ptr<GaussianShape> gaussShape(
-			static_cast<const GaussianShape *>(
+			static_cast<GaussianShape *>(
 				_curDeconvolvedList.getShape(i)->clone()
 			)
 		);
