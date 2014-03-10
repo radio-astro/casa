@@ -96,12 +96,12 @@ template<class T> image* _decimate(
 ) const;
 
 
-template <class T> image* _hanning(
+template <class T> static image* _hanning(
 	SPCIIT image, std::tr1::shared_ptr<const casa::Record> region,
 	const casa::String& mask, const std::string& outfile, bool overwrite,
 	bool stretch, int axis, bool drop,
-	casa::ImageDecimatorData::Function dFunction, const casa::LogOrigin& lor,
-	const std::vector<casa::String> msgs
+	casa::ImageDecimatorData::Function dFunction,
+	const std::vector<casac::variant> values
 );
 
 static casa::String _inputsString(

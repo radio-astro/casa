@@ -91,7 +91,8 @@
 #include <tr1/memory>
 
 #include <stdcasa/cboost_foreach.h>
-
+#include <boost/assign/std/vector.hpp>
+using namespace boost::assign;
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __func__, WHERE)
@@ -1989,45 +1990,37 @@ image* image::transpose(
 			);
 		}
 		std::tr1::shared_ptr<Record> regionRecord = _getRegion(region, True);
-
 		vector<String> msgs;
 		Bool doImages = ! residual.empty() || ! model.empty();
-		if (doImages) {
-			ostringstream os;
-			os << "Ran ia." << __func__ << " on " << image->name();
-			msgs.push_back(os.str());
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("box", box));
-			inputs.push_back(make_pair("region", region));
-			inputs.push_back(make_pair("chans", chans));
-			inputs.push_back(make_pair("stokes", stokes));
-			inputs.push_back(make_pair("mask", vmask));
-			inputs.push_back(make_pair("includepix", in_includepix));
-			inputs.push_back(make_pair("excludepix", in_excludepix));
-			inputs.push_back(make_pair("residual", residual));
-			inputs.push_back(make_pair("model", model));
-			inputs.push_back(make_pair("estimates", estimates));
-			inputs.push_back(make_pair("logfile", logfile));
-			inputs.push_back(make_pair("append", append));
-			inputs.push_back(make_pair("newestimates", newestimates));
-			inputs.push_back(make_pair("complist", complist));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("dooff", dooff));
-			inputs.push_back(make_pair("offset", offset));
-			inputs.push_back(make_pair("fixoffset", fixoffset));
-			inputs.push_back(make_pair("stretch", stretch));
-			inputs.push_back(make_pair("rms", rms));
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(os.str());
-		}
+
 		ImageFitter fitter(
 			image, "", regionRecord.get(), box, sChans,
-			stokes, mask, includepix, excludepix, residual, model,
-			estimates, newestimates, complist
+			stokes, mask, estimates, newestimates, complist
 		);
+		if (includepix.size() == 1) {
+			fitter.setIncludePixelRange(
+				std::make_pair<Float, Float>(includepix[0],includepix[0])
+			);
+		}
+		else if (includepix.size() == 2) {
+			fitter.setIncludePixelRange(
+				std::make_pair<Float, Float>(includepix[0],includepix[1])
+			);
+		}
+		if (excludepix.size() == 1) {
+			fitter.setExcludePixelRange(
+				std::make_pair<Float, Float>(excludepix[0],excludepix[0])
+			);
+		}
+		else if (excludepix.size() == 2) {
+			fitter.setExcludePixelRange(
+				std::make_pair<Float, Float>(excludepix[0],excludepix[1])
+			);
+		}
 		fitter.setWriteControl(writeControl);
 		fitter.setStretch(stretch);
+		fitter.setModel(model);
+		fitter.setResidual(residual);
 		if (! logfile.empty()) {
 			fitter.setLogfile(logfile);
 			fitter.setLogfileAppend(append);
@@ -2039,7 +2032,17 @@ image* image::transpose(
 			fitter.setRMS(rms);
 		}
 		if (doImages) {
-			fitter.addHistory(lor, msgs);
+			std::vector<String> names;
+			names += "box", "region", "chans", "stokes", "mask", "includepix",
+				"excludepix", "residual", "model", "estimates", "logfile",
+				"append", "newestimates", "complist", "dooff", "offset",
+				"fixoffset", "stretch", "rms";
+			std::vector<variant> values;
+			values += box, region, chans, stokes, vmask, in_includepix, in_excludepix,
+				residual, model, estimates, logfile, append, newestimates, complist,
+				dooff, offset, fixoffset, stretch, rms;
+			String fname = String("ia.") + String(__func__);
+			fitter.addHistory(lor, fname, names, values);
 		}
 		std::pair<ComponentList, ComponentList> compLists = fitter.fit();
 		Vector<casa::Quantity> flux;
@@ -2384,6 +2387,7 @@ image* image::hanning(
                 );
             }
         }
+        /*
 		vector<String> msgs;
 		{
 			ostringstream os;
@@ -2402,12 +2406,15 @@ image* image::hanning(
 			os << "ia." << __func__ << _inputsString(inputs);
 			msgs.push_back(os.str());
 		}
+		*/
+		vector<variant> values;
+		values += outfile, region, vmask, axis, drop, overwrite, stretch, dmethod;
 		if (_image->isFloat()) {
 			SPCIIF image = _image->getImage();
 			return _hanning(
 				image, myregion, mask, outfile,
 				overwrite, stretch, axis, drop,
-				dFunction, lor, msgs
+				dFunction, values
 			);
 		}
 		else {
@@ -2415,7 +2422,7 @@ image* image::hanning(
 			return _hanning(
 				image, myregion, mask, outfile,
 				overwrite, stretch, axis, drop,
-				dFunction, lor, msgs
+				dFunction, values
 			);
 		}
 	}
@@ -2430,8 +2437,8 @@ template <class T> image* image::_hanning(
 	SPCIIT myimage, std::tr1::shared_ptr<const Record> region,
 	const String& mask, const string& outfile, bool overwrite,
 	bool stretch, int axis, bool drop,
-	ImageDecimatorData::Function dFunction, const LogOrigin& lor,
-	const vector<String> msgs
+	ImageDecimatorData::Function dFunction,
+	const std::vector<casac::variant> values
 ) {
 	ImageHanningSmoother<T> smoother(
 		myimage, region.get(), mask, outfile, overwrite
@@ -2442,7 +2449,13 @@ template <class T> image* image::_hanning(
 	if (drop) {
 		smoother.setDecimationFunction(dFunction);
 	}
-	smoother.addHistory(lor, msgs);
+	vector<String> names;
+	names += "outfile", "region", "mask", "axis",
+		"drop", "overwrite", "stretch", "dmethod";
+	smoother.addHistory(
+		LogOrigin(_class, __func__), "ia.hanning",
+		names, values
+	);
 	return new image(smoother.smooth());
 }
 
