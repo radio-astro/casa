@@ -22,7 +22,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGES_IMAGEFITTER_H
 #define IMAGES_IMAGEFITTER_H
@@ -71,7 +70,7 @@ public:
 		OVERWRITE
 	};
 
-	// constructor approprate for API calls.
+	// constructor appropriate for API calls.
 	// Parameters:
 	// <ul>
 	// <li>imagename - the name of the input image in which to fit the models</li>
@@ -95,14 +94,11 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-			const SPCIIF image, const String& region,
+		const SPCIIF image, const String& region,
 		const Record *const &regionRec,
 		const String& box="",
 		const String& chanInp="", const String& stokes="",
 		const String& maskInp="",
-		const Vector<Float>& includepix = Vector<Float>(0),
-		const Vector<Float>& excludepix = Vector<Float>(0),
-		const String& residualInp="", const String& modelInp="",
 		const String& estiamtesFilename="",
 		const String& newEstimatesInp="", const String& compListName=""
 	);
@@ -145,14 +141,28 @@ public:
 	// set rms level for calculating uncertainties. If not positive, an exception is thrown.
 	void setRMS(Double rms);
 
+	void setIncludePixelRange(const std::pair<Float, Float>& r) {
+		_includePixelRange.reset(new std::pair<Float, Float>(r));
+	}
+
+	void setExcludePixelRange(const std::pair<Float, Float>& r) {
+		_excludePixelRange.reset(new std::pair<Float, Float>(r));
+	}
+
+	// set the output model image name
+	void setModel(const String& m) { _model = m; }
+
+	// set the output residual image name
+	void setResidual(const String& r) { _residual = r; }
+
 protected:
     virtual inline Bool _supportsMultipleRegions() {return True;}
-
 
 private:
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
-	Vector<Float> _includePixelRange, _excludePixelRange;
+	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
+	//Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
 	Vector<String> _fixed, _deconvolvedMessages;
 	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;

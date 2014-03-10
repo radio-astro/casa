@@ -7,6 +7,10 @@
 #include <imageanalysis/IO/OutputDestinationChecker.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 
+namespace casac {
+class variant;
+}
+
 namespace casa {
 class LogFile;
 template <class T> class ArrayLattice;
@@ -71,6 +75,13 @@ public:
     void addHistory(const LogOrigin& origin, const String& msg) const;
 
     void addHistory(const LogOrigin& origin, const vector<String>& msgs) const;
+
+    // This adds standard history messages regarding the task that was run and
+    // input parameters used. The vectors must have the same length
+    void addHistory(
+    	const LogOrigin& origin, const String& taskname,
+    	const vector<String>& paramNames, const vector<casac::variant>& paramValues
+    ) const;
 
     // suppress writing the history on _prepareOutputImage() call. Useful for
     // not writing history to intermediate image products.

@@ -49,7 +49,7 @@ template<class T> void ImageInputProcessor::process(
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
 	const vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
 ) {
-	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+	LogOrigin origin("ImageInputProcessor", __func__);
     *_log << origin;
     ThrowIf(
     	imagename.empty(),
@@ -100,7 +100,7 @@ template<class T> void ImageInputProcessor::_process(
     const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
     Bool verbose
 ) {
-	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+	LogOrigin origin("ImageInputProcessor", __func__);
     *_log << origin;
     if (outputStruct != 0) {
         OutputDestinationChecker::checkOutputs(outputStruct, *_log);

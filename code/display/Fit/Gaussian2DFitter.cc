@@ -74,14 +74,24 @@ namespace casa {
 		estimateFile = estimatesFileName;
 		residualImageFile = residualImage;
 		int includeCount = include.size();
-		includePixs.resize( includeCount );
-		for ( int i = 0; i < includeCount; i++ ) {
-			includePixs[i] = include[i];
+		if (includeCount == 1) {
+			includePixs.reset(new std::pair<Float, Float>(include[0], include[0]));
+		}
+		else if (includeCount == 2) {
+			includePixs.reset(new std::pair<Float, Float>(include[0], include[1]));
+		}
+		else {
+			includePixs.reset();
 		}
 		int excludeCount = exclude.size();
-		excludePixs.resize( excludeCount );
-		for ( int i = 0; i < excludeCount; i++ ) {
-			excludePixs[i] = exclude[i];
+		if (excludeCount == 1) {
+			excludePixs.reset(new std::pair<Float, Float>(exclude[0], exclude[0]));
+		}
+		else if (excludeCount == 2) {
+			excludePixs.reset(new std::pair<Float, Float>(exclude[0], exclude[1]));
+		}
+		else {
+			excludePixs.reset();
 		}
 	}
 
@@ -93,11 +103,18 @@ namespace casa {
 		successfulFit = true;
 		String channelStr = String::toString(channelNumber);
 
-		ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
-		                   excludePixs, residualImageFile, "", estimateFile);
+		ImageFitter fitter(
+			image, "", NULL, pixelBox, channelStr, "", "",
+			residualImageFile, "", estimateFile
+		);
 		String logFile = getLogFilePath().toStdString();
 		fitter.setLogfile( logFile );
-
+		if (includePixs) {
+			fitter.setIncludePixelRange(*includePixs);
+		}
+		if (excludePixs) {
+			fitter.setExcludePixelRange(*excludePixs);
+		}
 		// do the fit
 		try {
             std::pair<ComponentList, ComponentList> componentLists = fitter.fit();

@@ -71,24 +71,41 @@ Int main(Int argc, char *argv[]) {
 	Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
 	Vector<Float> includePixelRange(includePixParts.nelements());
 	Vector<Float> excludePixelRange(excludePixParts.nelements());
-	for (uInt i = 0; i < includePixelRange.nelements(); i++) {
-		includePixelRange[i] = String::toFloat(includePixParts[i]);
-	}
-	for (uInt i = 0; i < excludePixelRange.nelements(); i++) {
-		excludePixelRange[i] = String::toFloat(excludePixParts[i]);
-	}
+
 	ImageInterface<Float> *image;
 	ImageUtilities::openImage(image, imagename);
 	SPCIIF sImage(image);
 	ImageFitter imFitter(
-		sImage, region, 0, box, chans, stokes, mask, includePixelRange,
-		excludePixelRange, residual, model, estimatesFilename,
-		newEstimatesFileName
+		sImage, region, 0, box, chans, stokes, mask,
+		estimatesFilename, newEstimatesFileName
 	);
+	if (includePixelRange.nelements() == 1) {
+		imFitter.setIncludePixelRange(
+			std::make_pair<Float, Float> (includePixelRange[0], includePixelRange[0])
+		);
+	}
+	else if (includePixelRange.nelements() == 2) {
+		imFitter.setIncludePixelRange(
+			std::make_pair<Float, Float> (includePixelRange[0], includePixelRange[1])
+		);
+
+	}
+	if (excludePixelRange.nelements() == 1) {
+		imFitter.setExcludePixelRange(
+			std::make_pair<Float, Float> (excludePixelRange[0], excludePixelRange[0])
+		);
+	}
+	else if (excludePixelRange.nelements() == 2) {
+		imFitter.setExcludePixelRange(
+			std::make_pair<Float, Float> (excludePixelRange[0], excludePixelRange[1])
+		);
+	}
     if(! logfile.empty()) {
     	imFitter.setLogfile(logfile);
     	imFitter.setLogfileAppend(append);
     }
+    imFitter.setModel(model);
+    imFitter.setResidual(residual);
     imFitter.fit();
 
     return 0;

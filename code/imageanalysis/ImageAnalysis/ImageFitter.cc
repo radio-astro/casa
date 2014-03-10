@@ -1,5 +1,31 @@
+//# Copyright (C) 1998,1999,2000,2001,2003
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This program is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU General Public License as published by the Free
+//# Software Foundation; either version 2 of the License, or (at your option)
+//# any later version.
+//#
+//# This program is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with this program; if not, write to the Free Software Foundation, Inc.,
+//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
+#include <casa/IO/STLIO.h>
 #include <casa/Utilities/Precision.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
@@ -19,23 +45,20 @@ namespace casa {
 const String ImageFitter::_class = "ImageFitter";
 
 ImageFitter::ImageFitter(
-		const SPCIIF image, const String& region,
-	const Record *const &regionRec,
-	const String& box,
+	const SPCIIF image, const String& region,
+	const Record *const &regionRec, const String& box,
 	const String& chanInp, const String& stokes,
-	const String& maskInp, const Vector<Float>& includepix,
-	const Vector<Float>& excludepix, const String& residualInp,
-	const String& modelInp, const String& estimatesFilename,
+	const String& maskInp, const String& estimatesFilename,
 	const String& newEstimatesInp, const String& compListName
 ) : ImageTask<Float>(
 		image, region, regionRec, box,
 		chanInp, stokes,
 		maskInp, "", False
-	), _regionString(region), _residual(residualInp),_model(modelInp),
+	), _regionString(region), _residual(),_model(),
 	_estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 	_compListName(compListName), _bUnit(image->units().getName()),
-	_includePixelRange(includepix),
-	_excludePixelRange(excludepix), _estimates(), _fixed(0),
+	_includePixelRange(),
+	_excludePixelRange(), _estimates(), _fixed(0),
 	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
 	_fitConverged(0), _peakIntensities(), _rms(0),
@@ -58,17 +81,19 @@ ImageFitter::ImageFitter(
 ImageFitter::~ImageFitter() {}
 
 std::pair<ComponentList, ComponentList> ImageFitter::fit() {
-	LogOrigin origin(_class, __FUNCTION__);;
+	LogOrigin origin(_class, __func__);;
 	*_getLog() << origin;
 	Bool converged;
 	SPIIF modelImage, residualImage, templateImage;
 	std::auto_ptr<LCMask> completePixelMask;
-	if (! _residual.empty() || ! _model.empty()) {
-		if (! _residual.empty()) {
+	Bool doResid = ! _residual.empty();
+	Bool doModel = ! _model.empty();
+	if (doResid || doModel) {
+		if (doResid) {
 			residualImage = _createImageTemplate();
 			templateImage = residualImage;
 		}
-		if (! _model.empty()) {
+		if (doModel) {
 			modelImage = _createImageTemplate();
 			templateImage = modelImage;
 		}
@@ -117,7 +142,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			try {
 				_prepareOutputImage(
 					*residualImage, 0, &mask,
-					0, 0, &_residual, False
+					0, 0, &_residual, True
 				);
 
 			}
@@ -131,7 +156,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			try {
 				_prepareOutputImage(
 					*modelImage, 0, &mask,
-					0, 0, &_model, False
+					0, 0, &_model, True
 				);
 			}
 			catch (const AipsError& x) {
@@ -302,52 +327,44 @@ void ImageFitter::setRMS(Double rms) {
 }
 
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
-    *_getLog() << LogOrigin(_class, __FUNCTION__);
-	Bool doInclude = (_includePixelRange.nelements() > 0);
-	Bool doExclude = (_excludePixelRange.nelements() > 0);
+    *_getLog() << LogOrigin(_class, __func__);
 	ThrowIf(
-		doInclude && doExclude,
+		_includePixelRange && _excludePixelRange,
 		"You cannot give both an include and an exclude pixel range"
 	);
-	if (!doInclude && !doExclude) {
+	if (! _includePixelRange && ! _excludePixelRange) {
 		*_getLog() << LogIO::NORMAL << "Selecting all pixel values because neither "
 			<< "includepix nor excludepix was specified" << LogIO::POST;
 		return;
 	}
-	if (doInclude) {
-		if (_includePixelRange.nelements() == 1) {
-			fitter.setIncludeRange(
-				-abs(_includePixelRange(0)), abs(_includePixelRange(0))
-			);
-			*_getLog() << LogIO::NORMAL << "Selecting pixels from "
-				<< -abs(_includePixelRange(0)) << " to " << abs(_includePixelRange(0))
-				<< LogIO::POST;
+
+	else if (_includePixelRange) {
+		Float *first = &_includePixelRange->first;
+		Float *second = &_includePixelRange->second;
+		if (near(*first, *second)) {
+			*first = -abs(*first);
+			*second = -(*first);
 		}
-		else if (_includePixelRange.nelements() > 1) {
-			fitter.setIncludeRange(
-				_includePixelRange(0), _includePixelRange(1)
-			);
-			*_getLog() << LogIO::NORMAL << "Selecting pixels from "
-				<< _includePixelRange(0) << " to " << _includePixelRange(1)
-				<< LogIO::POST;
-		}
+		fitter.setIncludeRange(
+			*first, *second
+		);
+		*_getLog() << LogIO::NORMAL << "Selecting pixels from "
+			<< *first << " to " << *second
+			<< LogIO::POST;
 	}
     else {
-		if (_excludePixelRange.nelements() == 1) {
-			fitter.setExcludeRange(
-				-abs(_excludePixelRange(0)), abs(_excludePixelRange(0))
-			);
-			*_getLog() << LogIO::NORMAL << "Excluding pixels from "
-				<< -abs(_excludePixelRange(0)) << " to " << abs(_excludePixelRange(0))
-				<< LogIO::POST;
+    	Float *first = &_excludePixelRange->first;
+    	Float *second = &_excludePixelRange->second;
+    	if (near(*first, *second)) {
+    		*first = -abs(*first);
+    		*second = -(*first);
 		}
-           else if (_excludePixelRange.nelements() > 1) {
-			fitter.setExcludeRange(
-				_excludePixelRange(0), _excludePixelRange(1)
-			);
-			*_getLog() << LogIO::NORMAL << "Excluding pixels from "
-				<< _excludePixelRange(0) << " to " << _excludePixelRange(1)
-				<< LogIO::POST;
+    	fitter.setExcludeRange(
+			*first, *second
+    	);
+    	*_getLog() << LogIO::NORMAL << "Excluding pixels from "
+    		<< *first << " to " << *second
+    		<< LogIO::POST;
 		}
 	}
 }
@@ -378,9 +395,9 @@ Double ImageFitter::_getStatistic(const String& type, const uInt index, const Re
 }
 
 vector<OutputDestinationChecker::OutputStruct> ImageFitter::_getOutputs() {
-	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
+	/*
+	LogOrigin logOrigin("ImageFitter", __func__);
 	*_getLog() << logOrigin;
-
 	OutputDestinationChecker::OutputStruct residualIm;
 	residualIm.label = "residual image";
 	residualIm.outputFile = &_residual;
@@ -391,15 +408,18 @@ vector<OutputDestinationChecker::OutputStruct> ImageFitter::_getOutputs() {
 	modelIm.outputFile = &_model;
 	modelIm.required = False;
 	modelIm.replaceable = True;
+	*/
 	OutputDestinationChecker::OutputStruct newEstFile;
 	newEstFile.label = "new estiamtes file";
 	newEstFile.outputFile = &_newEstimatesFileName;
 	newEstFile.required = False;
 	newEstFile.replaceable = True;
 
-	vector<OutputDestinationChecker::OutputStruct> outputs(3);
+	vector<OutputDestinationChecker::OutputStruct> outputs(1);
+	/*
 	outputs[0] = residualIm;
 	outputs[1] = modelIm;
+	*/
 	outputs[2] = newEstFile;
 
 	return outputs;
@@ -416,7 +436,7 @@ CasacRegionManager::StokesControl ImageFitter::_getStokesControl() const {
 }
 
 void ImageFitter::_finishConstruction(const String& estimatesFilename) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 	_setSupportsLogfile(True);
 	// <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
@@ -522,8 +542,20 @@ String ImageFitter::_resultsHeader() const {
 	summary << "       --- channel:             " << chansoss.str() << endl;
 	summary << "       --- stokes:              " << _getStokes() << endl;
 	summary << "       --- mask:                " << _getMask() << endl;
-	summary << "       --- include pixel range: " << _includePixelRange << endl;
-	summary << "       --- exclude pixel range: " << _excludePixelRange << endl;
+	summary << "       --- include pixel range: [";
+	if (_includePixelRange) {
+		ostringstream os;
+		os << *_includePixelRange;
+		summary << os.str();
+	}
+	summary << "]" << endl;
+	summary << "       --- exclude pixel range: [";
+	if (_excludePixelRange) {
+			ostringstream os;
+			os << *_excludePixelRange;
+			summary << os.str();
+		}
+		summary << "]" << endl;
 	if (! _estimatesString.empty()) {
 		summary << "       --- initial estimates:   Peak, X, Y, a, b, PA" << endl;
 		summary << "                                " << _estimatesString << endl;
@@ -595,8 +627,14 @@ void ImageFitter::_setFluxes() {
 	_majorAxes.resize(ncomps);
 	_minorAxes.resize(ncomps);
 	Vector<Quantity> fluxQuant;
+
 	Double rmsPeak = ! near(_rms, 0.0) ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(rmsPeak, _bUnit);
+	if (_rms <= 0) {
+		*_getLog() << LogIO::WARN << "Image rms value not supplied, using "
+			<< "value from residual image of " << rmsPeakError
+			<< " for calculating errors" << LogIO::POST;
+	}
 	Quantity resArea = _getImage()->coordinates().directionCoordinate().getPixelArea();
 	if (
 		_bUnit.contains("/beam")
@@ -1385,7 +1423,7 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 		{
 			File file(_compListName);
 			if (file.exists()) {
-				LogOrigin logOrigin(_class, __FUNCTION__);
+				LogOrigin logOrigin(_class, __func__);
 				*_getLog() << logOrigin;
 				*_getLog() << LogIO::WARN << "Requested persistent component list " << _compListName
 						<< " already exists and user does not wish to overwrite it so "
@@ -1419,7 +1457,7 @@ void ImageFitter::_fitsky(
 	const Bool fitIt, const Bool deconvolveIt, const Bool list,
 	const Double zeroLevelEstimate
 ) {
-	LogOrigin origin(_class, __FUNCTION__);
+	LogOrigin origin(_class, __func__);
 	*_getLog() << origin;
 	String error;
 	Vector<SkyComponent> estimate;
@@ -1588,7 +1626,7 @@ void ImageFitter::_fitsky(
 	Array<Float> sigma;
 	// residMask constant so do not recalculate out_pixelmask
 	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 
 	if (status == Fit2D::OK) {
 		*_getLog() << LogIO::NORMAL << "Fitter was able to find a solution in "
@@ -1657,7 +1695,7 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 
 	// Return the initial fit guess as either the model, an auto guess,
 	// or some combination.
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 	Vector<Double> parameters;
 	if (model == Fit2D::GAUSSIAN || model == Fit2D::DISK) {
 		//
@@ -1860,13 +1898,12 @@ void ImageFitter::_encodeSkyComponentError(
 	}
 	else {
 		pS->setRefDirectionError(
-				errors(2) == 0 ? qzero : wParameters.getMajor(),
-				errors(1) == 0 ? qzero : wParameters.getMinor()
-			);
+			errors(2) == 0 ? qzero : wParameters.getMajor(),
+			errors(1) == 0 ? qzero : wParameters.getMinor()
+		);
 	}
 }
 
-}
 
 
 

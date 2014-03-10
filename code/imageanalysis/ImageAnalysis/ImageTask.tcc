@@ -39,8 +39,8 @@
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
-
 #include <imageanalysis/IO/LogFile.h>
+#include <stdcasa/variant.h>
 
 namespace casa {
 
@@ -259,6 +259,40 @@ template <class T> void ImageTask<T>::addHistory(
 		x.second = m;
 		_newHistory.push_back(x);
 	}
+}
+
+template <class T> void ImageTask<T>::addHistory(
+    const LogOrigin& origin, const String& taskname,
+    const vector<String>& paramNames, const vector<casac::variant>& paramValues
+) const {
+	ThrowIf(
+		paramNames.size() != paramValues.size(),
+		"paramNames and paramValues must have the same number of elements"
+	);
+	std::pair<String, String> x;
+	x.first = origin.fullName();
+	x.second = "Ran " + taskname + " on " + _image->name();
+	_newHistory.push_back(x);
+	vector<std::pair<String, casac::variant> > inputs;
+	vector<String>::const_iterator begin = paramNames.begin();
+	vector<String>::const_iterator name = begin;
+	vector<casac::variant>::const_iterator value = paramValues.begin();
+	vector<String>::const_iterator end = paramNames.end();
+	String out = taskname + "(";
+	String quote;
+	while (name != end) {
+		if (name != begin) {
+			out += ", ";
+		}
+		quote = value->type() == casac::variant::STRING ? "'" : "";
+		out += *name + "=" + quote;
+		out += value->toString();
+		out += quote;
+		name++;
+		value++;
+	}
+	x.second = out + ")";
+	_newHistory.push_back(x);
 }
 
 template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
