@@ -2951,11 +2951,12 @@ void fillMain(int		rowNum,
     weight[i] = vmsData_p->v_exposure.at(i) * effectiveBwPerDD_m[filteredDD[i]];
     if (vmsData_p->v_antennaId1[i] != vmsData_p->v_antennaId2[i])
       weight[i] *= 2.0;
+    correctedWeight[i] = weight[i];
     
     if (weight[i] == 0.0) weight[i] = 1.0;
     sigma[i] = 1.0 / sqrt(weight[i]);
 
-    correctedWeight[i] = correctedSigma[i] = 1.0;
+    correctedSigma[i] = sigma[i]; 
   }
 
   // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
