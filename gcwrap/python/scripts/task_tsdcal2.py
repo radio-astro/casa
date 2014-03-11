@@ -9,7 +9,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdcal2(infile, calmode, fraction, noff, width, elongated, tsysiflist, applytable, interp, ifmap, scan, field, spw, pol, outfile, overwrite):
+def tsdcal2(infile, calmode, fraction, noff, width, elongated, tsysiflist, applytable, interp, ifmap, field, spw, scan, pol, outfile, overwrite):
     with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 
         worker.initialize()
         worker.execute()

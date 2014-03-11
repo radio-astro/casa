@@ -79,11 +79,6 @@ See the cookbook for details of its capability.
       <value></value>
     </param>
 
-    <param type="string" name="scan">
-      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
-      <value></value>
-    </param>
-
     <param type="string" name="field">
       <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
       <value></value>
@@ -91,6 +86,11 @@ See the cookbook for details of its capability.
 
     <param type="string" name="spw">
       <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="scan">
+      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
       <value></value>
     </param>
 
@@ -443,10 +443,6 @@ doppler -- doppler convention (effective only when spw is in
            velocity unit)
         options: 'RADIO', 'OPTICAL', 'Z', 'BETA', or 'GAMMA'
         default: '' (keep current doppler setting in data)
-scan -- select data by scan numbers
-        default: '' (use all scans)
-        example: scan='21~23' (scan IDs 21,22,23)
-        this selection is in addition to the other selections to data
 field -- select data by field IDs and names
         default: '' (use all fields)
         example: field='3C2*' (all names starting with 3C2)
@@ -460,6 +456,10 @@ spw -- select data by IF IDs (spectral windows)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
                  spw='115GHz' (IFs that overlaps 115Hz; all channels)
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
         this selection is in addition to the other selections to data
 pol -- select data by polarization IDs
         default: '' (use all polarizations)

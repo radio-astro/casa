@@ -67,11 +67,6 @@ use IN0, IN1, etc. as variable names in varnames.
       <value type='string'/>
     </param>
 
-    <param type="string" name="scan">
-      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
-      <value></value>
-    </param>
-
     <param type="string" name="field">
       <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
       <value></value>
@@ -79,6 +74,11 @@ use IN0, IN1, etc. as variable names in varnames.
 
     <param type="string" name="spw">
       <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="scan">
+      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
       <value></value>
     </param>
 
@@ -170,10 +170,6 @@ fluxunit -- units for line flux
                           telescopeparam=[0.743] gain in Jy/K
                           telescopeparam='FIX' to change default fluxunit
                           see description below
-scan -- select data by scan numbers
-        default: '' (use all scans)
-        example: scan='21~23' (scan IDs 21,22,23)
-        this selection is in addition to the other selections to data
 field -- select data by field IDs and names
         default: '' (use all fields)
         example: field='3C2*' (all names starting with 3C2)
@@ -187,6 +183,10 @@ spw -- select data by IF IDs (spectral windows)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
                  spw='115GHz' (IFs that overlaps 115Hz; all channels)
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
         this selection is in addition to the other selections to data
 pol -- select data by polarization IDs
         default: '' (use all polarizations)

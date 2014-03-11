@@ -7,7 +7,8 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdplot(infile, antenna, fluxunit, telescopeparam, specunit, restfreq, frame, doppler, scan, field, spw, pol, beam, timeaverage, tweight, scanaverage, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+def tsdplot(infile, antenna, fluxunit, telescopeparam, specunit, restfreq, frame,
+            doppler, field, spw, scan, pol, beam, timeaverage, tweight, scanaverage, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
