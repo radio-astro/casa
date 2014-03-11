@@ -272,6 +272,27 @@ class test_base(unittest.TestCase):
         self.unflag_ms()        
         default(flagdata)
         
+    def setUp_tbuff(self):
+        '''Small ALMA MS with low-amp points to be flagged with tbuff parameter'''
+        datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
+        
+        self.vis = 'uid___A002_X72c4aa_X8f5_scan21_spw18_field2_corrXX.ms'
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + datapath + self.vis + ' ' + self.vis)
+
+        # Copy the online flags file
+        self.online = 'uid___A002_X72c4aa_X8f5_online.txt'
+        self.user = 'uid___A002_X72c4aa_X8f5_user.txt'
+        os.system('cp -r ' + datapath + self.online + ' ' + self.online)
+        os.system('cp -r ' + datapath + self.user + ' ' + self.user)
+        
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()        
+        default(flagdata)
+        
     def unflag_ms(self):
         aflocal.open(self.vis)
         aflocal.selectdata()
@@ -2844,6 +2865,59 @@ class test_float_column(test_base):
         
         self.assertTrue(filecmp.cmp(filename, 'outfakefield.txt', 1), 'Files should be equal')
 
+
+class test_tbuff(test_base):
+    '''Test flagdata in list mode and time buffer padding'''
+    def setUp(self):
+        self.setUp_tbuff()
+        
+    def tearDown(self):
+        os.system('rm -rf '+self.online)
+        os.system('rm -rf '+self.user)
+    
+    def test_double_tbuff(self):
+        '''flagdata: Apply a tbuff in the online flags'''
+        
+        # Apply the sub-set of online flags
+        # uid___A002_X72c4aa_X8f5_online.txt contains the DV04&&* flag
+        flagdata(self.vis, flagbackup=False,mode='list',inpfile=self.online, tbuff=0.0)
+        flags_before = flagdata(self.vis, mode='summary', basecnt=True)
+        
+        # Unflag and apply a tbuff=0.504s
+        flagdata(self.vis, flagbackup=False,mode='unflag')
+        flagdata(self.vis, flagbackup=False,mode='list',inpfile=self.online, tbuff=0.504)
+        flags_after = flagdata(self.vis, mode='summary', basecnt=True)
+        
+        self.assertEqual(flags_before['flagged'], flags_after['flagged']/2)
+
+    def test_list_tbuff(self):
+        '''flagdata: Apply a tbuff list in two files'''
+        
+        # Apply the sub-set of online flags and user flags
+        # uid___A002_X72c4aa_X8f5_online.txt contains the DV04&&* flag
+        # uid___A002_X72c4aa_X8f5_user.txt contains the DV10 flag
+        flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.user,self.online])
+        
+        # Only the DV04 baselines are flagged, not the DV10 (except for DV04&DV10)
+        flags1 = flagdata(self.vis, mode='summary', basecnt=True)
+        self.assertEqual(flags1['antenna']['DV04']['flagged'],29) # DV04&&*
+        self.assertEqual(flags1['antenna']['DV10']['flagged'],1) # DV04&DV10
+
+        # Unflag and apply tbuff=[0.504]. It should increase only the DV10 flags from user flags
+        flagdata(self.vis, flagbackup=False,mode='unflag')
+        flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.user,self.online], tbuff=[0.504])
+        flags2 = flagdata(self.vis, mode='summary', basecnt=True)
+        self.assertEqual(flags2['antenna']['DV04']['flagged'],29) 
+        self.assertEqual(flags2['antenna']['DV10']['flagged'],29) 
+         
+        # Unflag and apply tbuff=[0.504,0.504]. It should increase the DV04 and DV10 flags
+        flagdata(self.vis, flagbackup=False,mode='unflag')
+        flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.online,self.user], tbuff=[0.504,0.504])
+        flags3 = flagdata(self.vis, mode='summary', basecnt=True)
+        self.assertEqual(flags3['antenna']['DV04']['flagged'],58) 
+        self.assertEqual(flags3['antenna']['DV10']['flagged'],30) 
+        
+
 # Cleanup class 
 class cleanup(test_base):
     
@@ -2862,6 +2936,7 @@ class cleanup(test_base):
         os.system('rm -rf fourrows*')
         os.system('rm -rf SDFloatColumn*')
         os.system('rm -rf *weight*ms*')
+        os.system('rm -rf uid___A002_X72c4aa_X8f5_scan21_spw18*')
 
     def test_runTest(self):
         '''flagdata: Cleanup'''
@@ -2888,4 +2963,5 @@ def suite():
             test_newcal,
             test_weight_spectrum,
             test_float_column,
+            test_tbuff,
             cleanup]
