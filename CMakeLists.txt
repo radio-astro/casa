@@ -33,6 +33,7 @@ casa_add_library( synthesis
   TransformMachines/AWConvFuncEPJones.cc
   TransformMachines/AWProjectFT.cc
   TransformMachines/AWProjectWBFT.cc
+  TransformMachines/AWProjectWBFTNew.cc
   TransformMachines/AWVisResampler.cc
   TransformMachines/BeamCalc.cc
   TransformMachines/BeamCalcParams.cc
@@ -708,6 +709,7 @@ install (FILES
         TransformMachines/AWConvFuncEPJones.h
         TransformMachines/AWProjectFT.h
         TransformMachines/AWProjectWBFT.h
+        TransformMachines/AWProjectWBFTNew.h
 	TransformMachines/AWVisResampler.h
 	TransformMachines/AzElAperture.h
 	TransformMachines/EVLAAperture.h
