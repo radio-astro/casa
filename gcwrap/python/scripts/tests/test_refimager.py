@@ -16,7 +16,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      # Interaction ON or OFF
      interactive=False
 
-     if(testnum==11): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
+     if(testnum==13): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
           casalog.post("==================================");
           casalog.post("Test 11 image-field, cube --- Real Imaging with various cube parameter specifications");
           #casalog.post("==================================");
@@ -91,6 +91,57 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+
+     if(testnum==12):  ## 1 image-field, mfs --- WB AWP ( multi term )
+          casalog.post("==================================");
+          casalog.post("Test 12 image-field, mfs --- WB AWP( multi term )");
+          casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
+                                       field='1',scan='1~35',
+                                       spw='*',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='1.0GHz',\
+                                       imsize=[512,512],\
+                                       cellsize=['25.0arcsec','25.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
+                                       ftmachine='awprojectft', 
+                                       startmodel='', weighting='natural',\
+                                       aterm=True, psterm=False, mterm=True,\
+                                       wbawp = True, 
+                                       cfcache = "perm.wb.nt2.mytest0.cfcache",\
+                                       dopointing = False, dopbcorr = True, conjbeams = True, 
+                                       computepastep =360.0, rotatepastep =5.0,\
+                                       algo='msmfs',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+     if(testnum==11):  ## 1 image-field, mfs --- WB AWP ( single term )
+          casalog.post("==================================");
+          casalog.post("Test 11 image-field, mfs --- WB AWP (single term)");
+          casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
+                                       field='1',scan='1~35',
+                                       spw='*',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='1.0GHz',\
+                                       imsize=[512,512],\
+                                       cellsize=['25.0arcsec','25.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='awprojectft', 
+                                       startmodel='', weighting='natural',\
+                                       aterm=True, psterm=False, mterm=True,\
+                                       wbawp = True, 
+                                       cfcache = "perm.wb.mytest0.cfcache",\
+                                       dopointing = False, dopbcorr = True, conjbeams = True, 
+                                       computepastep =360.0, rotatepastep =5.0,\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -177,12 +228,13 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive)
 
 
-     if(testnum==6):  ## 1 image-field, mfs --- WB AWP
+     if(testnum==6):  ## 1 image-field, mfs --- Narrow-band AWP
           casalog.post("==================================");
           casalog.post("Test 6 image-field, mfs --- WB AWP");
           casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',spw='1',\
+                                       field='1',scan='1~35',
+                                       spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='0.3GHz',\
@@ -190,10 +242,10 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cellsize=['25.0arcsec','25.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='awprojectft', 
-#                                       ftmachine='GridFT', 
                                        startmodel='', weighting='natural',\
-                                       aterm=True, psterm=False, mterm=True, wbawp = False, 
-                                       cfcache = "mytest0.cfcache",\
+                                       aterm=True, psterm=False, mterm=True,\
+                                       wbawp = False, 
+                                       cfcache = "perm.mytest0.cfcache",\
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
                                        algo='hogbom',\
@@ -446,12 +498,19 @@ def doMinor( params = [None,"",False,False,False] , doplot=True ):
 def doRestore( params = [None,"",False,False,False] ):
 
     pminor=params[3]
-    
     imager = PySynthesisImager(params[0]) 
+    imager.initializeDeconvolvers()
+    imager.restoreImages()
+    imager.deleteTools()
 
+########################################
+def doSetjy( params = [None,"",False,False,False] ):
+
+    pminor=params[3]
+    imager = PySynthesisImager(params[0]) 
     imager.initializeDeconvolvers()
 
-    imager.restoreImages()
+    imager.predictModel()
 
     imager.deleteTools()
 
@@ -624,7 +683,7 @@ def checkPars():
 def testImageCoordinates( testnum=1, testid=0):
     
     multitest=False
-    if testnum==11: multitest=True
+    if testnum==13: multitest=True
     if multitest and testid==-1: testid=range(14)
     if type(testid)==int: testid=[testid]
     for tst in testid:

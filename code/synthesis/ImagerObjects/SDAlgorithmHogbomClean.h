@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     //SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
 
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf;
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
 
     /*
     IPosition itsMaxPos;

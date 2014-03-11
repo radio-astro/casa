@@ -155,6 +155,7 @@ class SynthesisImager
   void makePSF(const Bool useViVB2=False);
 
   void predictModel(const Bool useViVb2=False);
+  void predictCalModel(const Bool useViVb2=False);
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 

@@ -94,6 +94,7 @@ class PySynthesisImager:
             self.PStools.append(casac.synthesisparsync())
             syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
             syncpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            syncpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
             syncpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
             self.PStools[immod].setupparsync(syncpars=syncpars)
 
@@ -183,6 +184,7 @@ class PySynthesisImager:
 
     def runMajorCycle(self):
         for immod in range(0,self.NF):
+            self.PStools[immod].dividemodelbyweight()
             self.PStools[immod].scattermodel() 
 
         self.runMajorCycleCore()
@@ -193,8 +195,12 @@ class PySynthesisImager:
         for immod in range(0,self.NF):
             self.PStools[immod].gatherresidual() 
             self.PStools[immod].divideresidualbyweight()
+            self.PStools[immod].multiplymodelbyweight()
 
-
+#############################################
+    def predictModel(self):
+        self.SItool.predictcalmodel();
+        
 #############################################
 ## Overloaded for parallel runs
     def makePSFCore(self):
@@ -213,7 +219,7 @@ class PySynthesisImager:
         # Run minor cycle
         for immod in range(0,self.NF):
              exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
-             print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
+             #print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
              self.IBtool.mergeexecrecord( exrec )
 
 #############################################
@@ -309,11 +315,13 @@ class PyParallelContSynthesisImager(PySynthesisImager):
                 joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node)][mss])+")", node) )
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
+            ngridpars = copy.deepcopy(self.allgridpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
                     nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
 
-                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( self.allgridpars[str(fld)] )   + ")", node ) )
+                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
 
             ## Set weighting pars
             joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
@@ -332,6 +340,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             self.PStools.append(casac.synthesisparsync())
             syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
             syncpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            syncpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
             syncpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
             partnames = []
             if(self.NN>1):
@@ -367,6 +376,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################
+    def predictModel(self):
+        joblist=[]
+        for node in range(0,self.PH.NN):
+             joblist.append( self.PH.runcmd("toolsi.predictcalmodel()",node) )
+        self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################
 # Parallelize both the major and minor cycle for Cube imaging
@@ -450,6 +464,12 @@ class PyParallelCubeSynthesisImager():
         joblist=[]
         for node in range(0,self.NN):
             joblist.append( self.PH.runcmd("imager.runMajorCycle()", node) )
+        self.PH.checkJobs( joblist )
+
+    def predictModel(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.predictcalmodel()", node) )
         self.PH.checkJobs( joblist )
 
     def restoreImages(self):
@@ -675,7 +695,7 @@ class PyParallelImagerHelper():
 class ImagerParameters():
 
     def __init__(self,
-                 msname='',field='',spw='',usescratch=True,readonly=True,
+                 msname='',field='',spw='',scan='',usescratch=True,readonly=True,
                  outlierfile='',
                  imagename='', mode='mfs', nchan=1, chanstart=0, chanstep=1, 
                  freqstart='', freqstep='',
@@ -695,6 +715,7 @@ class ImagerParameters():
                  conjbeams = True,
                  computepastep =360.0,
                  rotatepastep =5.0,
+                 weightlimit=0.01,
 
                  algo='test',
                  niter=0, cycleniter=0, cyclefactor=1.0,
@@ -704,7 +725,8 @@ class ImagerParameters():
 
         ## Selection params. For multiple MSs, all are lists.
         ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
-        self.allselpars = {'msname':msname, 'field':field, 'spw':spw, 'usescratch':usescratch, 'readonly':readonly}
+        self.allselpars = {'msname':msname, 'field':field, 'spw':spw, 'scan':scan,
+                           'usescratch':usescratch, 'readonly':readonly}
 
         ## Imaging/deconvolution parameters
         ## The outermost dictionary index is image field. 
@@ -723,7 +745,7 @@ class ImagerParameters():
                                  'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                  'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                  'conjbeams':conjbeams, 'computepastep':computepastep,
-                                 'rotatepastep':rotatepastep, 'mtype':mtype     }     }
+                                 'rotatepastep':rotatepastep, 'mtype':mtype, 'weightlimit':weightlimit    }     }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
 

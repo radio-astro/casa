@@ -639,10 +639,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     }
-  //////////////////////
-  //////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager::predictCalModel(const Bool useViVb2){
+    LogIO os( LogOrigin("SynthesisImager","predictCalibratorModel ",WHERE) );
+    predictModel( useViVb2 );
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(const Bool useViVb2){
-	  LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+	  LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
 
 	      if(useViVb2){
 	      	vi_p->originChunks();
@@ -688,8 +693,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  //////////////////
-  ////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Bool SynthesisImager::weight(const String& type, const String& rmode,
                    const Quantity& noise, const Double robust,
                    const Quantity& fieldofview,

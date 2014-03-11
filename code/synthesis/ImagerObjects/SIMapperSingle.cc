@@ -174,12 +174,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperSingle::finalizeGrid(VisBuffer& vb , Bool dopsf)
     {
       LogIO os( LogOrigin("SIMapperSingle","finalizeGrid",WHERE) );
-      //      Matrix<Float> wgt;
 
-      if( !itsDoImageMosaic or dopsf ) {
+      if( !itsDoImageMosaic || dopsf ) {
+	Bool fillWeight = useWeightImage(ift_p) & ( !itsImages->hasSensitivity() ) ;
 	finalizeGridCore(dopsf,  ift_p, (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ) ,
-			 (useWeightImage(ift_p))?*(itsImages->weight()): *(itsImages->psf()),  
-		       useWeightImage(ift_p)  );
+			 (fillWeight)?*(itsImages->weight()): *(itsImages->psf()),  
+			 (fillWeight) );
 	//			 *(itsImages->weight()) ,   wgt); 
       }
       else{

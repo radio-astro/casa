@@ -83,10 +83,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     queryDesiredShape(onechan, onepol);
     uInt nSubChans, nSubPols;
     imagestore->getNSubImageStores(onechan,onepol,nSubChans,nSubPols);
+
+    Bool usemask=True; // This should be a parameter...
+
     // Init the model image here.
-    if( ! imagestore->checkValidity(True/*psf*/, True/*res*/,False/*wgt*/,True/*model*/,False/*image*/ ) ) 
+    if( ! imagestore->checkValidity(True/*psf*/, True/*res*/,usemask/*wgt*/,True/*model*/,
+				    False/*image*/, usemask/*mask*/ ) ) 
       { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
-    ///    imagestore->model();
 
     os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
@@ -112,6 +115,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Float modelflux=0.0;
 	    Int iterdone=0;
 	    //	Bool converged=False;
+
+	    // Or, call this from outside... in SynthesisImager.....
+	    itsMaskHandler.makeAutoMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    
 	    initializeDeconvolver( peakresidual, modelflux );
 	    
@@ -120,8 +126,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	    while ( ! checkStop( loopcontrols,  peakresidual ) )
 	      {
-		// Optionally, fiddle with maskhandler for autoboxing.... 
-		// mask = maskhandler->makeAutoBox();
 		
 		takeOneStep( loopcontrols.getLoopGain(), 
 			     loopcontrols.getCycleNiter(), 
@@ -327,13 +331,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					  Float& maxAbs,
 					  IPosition& posMaxAbs)
   {
-    
     posMaxAbs = IPosition(lattice.shape().nelements(), 0);
     maxAbs=0.0;
-    
     Float minVal;
     IPosition posmin(lattice.shape().nelements(), 0);
     minMax(minVal, maxAbs, posmin, posMaxAbs, lattice);
+    //cout << "min " << minVal << "  " << maxAbs << "   " << max(lattice) << endl;
+    if(abs(minVal) > abs(maxAbs)){
+      maxAbs=abs(minVal);
+      posMaxAbs=posmin;
+    }
+    return True;
+  }
+
+  Bool SDAlgorithmBase::findMaxAbsMask(const Matrix<Float>& lattice,
+				       const Matrix<Float>& mask,
+					  Float& maxAbs,
+					  IPosition& posMaxAbs)
+  {
+
+    //cout << "maxabsmask shapes : " << lattice.shape() << " " << mask.shape() << endl;
+
+    posMaxAbs = IPosition(lattice.shape().nelements(), 0);
+    maxAbs=0.0;
+    Float minVal;
+    IPosition posmin(lattice.shape().nelements(), 0);
+    minMaxMasked(minVal, maxAbs, posmin, posMaxAbs, lattice,mask);
     //cout << "min " << minVal << "  " << maxAbs << "   " << max(lattice) << endl;
     if(abs(minVal) > abs(maxAbs)){
       maxAbs=abs(minVal);

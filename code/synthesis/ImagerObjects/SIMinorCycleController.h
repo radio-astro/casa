@@ -123,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Status Reporting Variables */
     Int   itsIterDone; // Iterations done during this set of cycles
     Int   itsCycleIterDone; // Iterations done on this subimage
-
+   Int   itsIterDiff; // Difference between latest and previous count, to catch zero increments.
 
     /* Useful only for reporting */
     Int   itsTotalIterDone; // Total iterations done by deconvolver

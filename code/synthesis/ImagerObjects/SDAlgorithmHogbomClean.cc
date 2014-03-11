@@ -170,13 +170,11 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
   void SDAlgorithmHogbomClean::initializeDeconvolver( Float &peakresidual, Float &modelflux )
   {
+    LogIO os( LogOrigin("SDAlgorithmHogbomClean","initializeDeconvolver",WHERE) );
 
     itsImages->residual()->get( itsMatResidual, True );
     itsImages->model()->get( itsMatModel, True );
     itsImages->psf()->get( itsMatPsf, True );
-
-    //    cout << "Residual image : " << itsMatResidual << endl;
-    //  cout << "PSF image : " << itsMatPsf << endl;
 
     findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
     itsModelFlux = sum( itsMatModel );
@@ -184,9 +182,15 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     peakresidual = itsPeakResidual;
     modelflux = itsModelFlux;
 
-    //cout << "HOG: Set mask to 1" << endl;
-    itsMatMask.resize( itsMatPsf.shape() );
-    itsMatMask.set(1.0);
+    itsImages->mask()->get( itsMatMask, True );
+    //    cout << "Mask in SDAlHog : " << sum( itsMatMask ) << " pixels " << endl;
+
+    if( sum( itsMatMask )==0 ) 
+      {
+	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
+	itsMatMask = 1.0; 
+      }
+
 
     //cout << "Image Shapes : " << itsMatResidual.shape() << endl;
 
@@ -262,7 +266,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     
     
     /////////////////
-    findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
+    findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     peakresidual = itsPeakResidual;
 
     modelflux = sum( itsMatModel ); // Performance hog ?

@@ -338,6 +338,22 @@ bool synthesisimager::setweighting(const std::string& type,
     return rstat;
   }
 
+  bool synthesisimager::predictcalmodel()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->predictCalModel();
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
 
 bool synthesisimager::executemajorcycle(const casac::record& controls)
 {
