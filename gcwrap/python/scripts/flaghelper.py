@@ -291,8 +291,6 @@ def readAndParse(inputlist, tbuff=None):
      {'mode':'shadow'}]
     
     '''      
-    print 'Begin timing'
-    print time.time()
     if not isinstance(inputlist, list):
         casalog.post('Error opening list of flag commands ' + inputlist,'ERROR')
         raise       
@@ -371,12 +369,11 @@ def readAndParse(inputlist, tbuff=None):
             applyTimeBufferList(parsedlist, mytbuff)
             
         listofdict = listofdict + parsedlist
-
-    print 'End timing'
-    print time.time()
                             
     return listofdict
 
+# USe readAndParse to apply tbuff, which is slightly faster. For
+# small files, the difference is not noticeable.
 def readParseTbuff(inputlist, tbuff=None):
     '''Read in a list of flag commands and parse them into a dictionary.
        The flag commands can be from a list of files or from a list of flag commands.
@@ -403,10 +400,7 @@ def readParseTbuff(inputlist, tbuff=None):
     [{'mode':'manual','spw':'0','autocorr':True},
      {'mode':'shadow'}]
     
-    '''  
-    print 'Begin timing'
-    print time.time()
-    
+    '''      
     if not isinstance(inputlist, list):
         casalog.post('Error opening list of flag commands ' + inputlist,'ERROR')
         raise       
@@ -493,9 +487,6 @@ def readParseTbuff(inputlist, tbuff=None):
             parsedlist.append(parsed)
                                
         listofdict = listofdict + parsedlist
-
-    print 'End timing'
-    print time.time()
                             
     return listofdict
 
@@ -542,7 +533,7 @@ def applyTimeBuffer(cmddict, tbuff):
 
 def applyTimeBufferList(alist, tbuff):
     ''' Apply in-place a time buffer to ALL timerange parameters of a
-        dictionary with several flag commands. It will do the following:
+        list of dictionaries with several flag commands. It will do the following:
         
         alist --> list of dictionaries with flag commands.
               Ex: [{'antenna':'DV01', 'timerange':'2013/11/15/10:25:30.516~2013/11/15/10:25:32.454'},
@@ -1903,7 +1894,7 @@ def parseXML(sdmfile, mytbuff):
     rowlist = xmlants.getElementsByTagName('row')
     for rownode in rowlist:
         rowname = rownode.getElementsByTagName('name')
-        ant = str(rowname[0].childNodes[0].nodeValue)
+        ant = str(rowname[0].childNodes[0].nodeValue).strip()
         rowid = rownode.getElementsByTagName('antennaId')
         # CAS-4532: remove spaces between content and tags
         antid = str(rowid[0].childNodes[0].nodeValue).strip()
@@ -1926,7 +1917,7 @@ def parseXML(sdmfile, mytbuff):
             # SMC: 6/3/2012 ALMA SDM does not have name
             if rownode.getElementsByTagName('name'):
                 rowname = rownode.getElementsByTagName('name')
-                spw = str(rowname[0].childNodes[0].nodeValue)
+                spw = str(rowname[0].childNodes[0].nodeValue).strip()
                 spwdict[spwid]['name'] = spw
             else:
                 spwmode = -1
@@ -1965,7 +1956,7 @@ def parseXML(sdmfile, mytbuff):
     for fid in range(nrows):
         rownode = rowlist[fid]
         rowfid = rownode.getElementsByTagName('flagId')
-        fidstr = str(rowfid[0].childNodes[0].nodeValue)
+        fidstr = str(rowfid[0].childNodes[0].nodeValue).strip()
         flagdict[fid] = {}
         flagdict[fid]['id'] = fidstr
         rowid = rownode.getElementsByTagName('antennaId')
