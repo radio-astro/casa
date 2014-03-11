@@ -58,8 +58,6 @@
 #include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
-#include <synthesis/TransformMachines/AWProjectWBFT.h>
-
 #include <sys/types.h>
 #include <unistd.h>
 using namespace std;
@@ -108,9 +106,11 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
   CountedPtr<FTMachine> SIMapperMultiTerm::getNewFTM(const CountedPtr<FTMachine>& ftm)
   {
 
+    /*
     if( ftm->name()=="AWProjectWBFT")
       { return new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*ftm)); }
     else
+    */
       {
 	return ftm->cloneFTM();
       }

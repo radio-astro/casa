@@ -83,6 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIImageStore::SIImageStore(String imagename, 
 			     CoordinateSystem &imcoordsys, 
 			     IPosition imshape, const Bool /*overwrite*/)
+  // TODO : Add parameter to indicate weight image shape. 
   {
     LogIO os( LogOrigin("SIImageStore","Open new Images",WHERE) );
 
@@ -115,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsImageName = imagename;
 
-    // The PSF or Residual images must exist. 
+    // The PSF or Residual images must exist. ( TODO : and weight )
     if( doesImageExist(itsImageName+String(".residual")) || doesImageExist(itsImageName+String(".psf")) )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
@@ -210,6 +211,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	imPtr=new PagedImage<Float> (itsImageShape, itsCoordSys, imagenamefull);
 	// initialize to zeros...
 	imPtr->set(0.0);
+
+	// TODO : Add special case for itsWeightShape ?  A flag inputted to openImage to trigger this...
+
       }
     else
       {
@@ -434,6 +438,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( !itsWeight.null() && itsWeight->shape() == itsImageShape ) { return itsWeight; }
     checkRef( itsWeight, "weight" );
     itsWeight = openImage( itsImageName+String(".weight") , False );
+
+    /// TODO :  itsWeight's shape should reflect what type of weight image it is....
 
     return itsWeight;
   }

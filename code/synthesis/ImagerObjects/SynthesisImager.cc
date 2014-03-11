@@ -72,7 +72,7 @@
 
 #include <synthesis/TransformMachines/AWProjectFT.h>
 //#include <synthesis/TransformMachines/ProtoVR.h>
-#include <synthesis/TransformMachines/AWProjectWBFT.h>
+#include <synthesis/TransformMachines/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
@@ -1167,7 +1167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Re-sampler objects.  
     //
     Float pbLimit_l=1e-3;
-    theFT = new AWProjectWBFT(wprojPlane, cache/2, 
+    theFT = new AWProjectWBFTNew(wprojPlane, cache/2, 
 			      cfCacheObj, awConvFunc, 
 			      visResampler,
 			      /*True */doPointing, doPBCorr, 
@@ -1175,8 +1175,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      useDoublePrec);
 
     Quantity rotateOTF(rotatePAStep,"deg");
-    static_cast<AWProjectWBFT &>(*theFT).setObservatoryLocation(mLocation_p);
-    static_cast<AWProjectWBFT &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
+    static_cast<AWProjectWBFTNew &>(*theFT).setObservatoryLocation(mLocation_p);
+    static_cast<AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
 
     // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
     // 			       cfCacheObj, awConvFunc, 
@@ -1188,7 +1188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
     // static_cast<AWProjectWBFT &>(*theIFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
 
-    theIFT = new AWProjectWBFT(static_cast<AWProjectWBFT &>(*theFT));
+    theIFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &>(*theFT));
 
     //// Send in Freq info.
     os << "Sending in frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM using OLD vi/vb way. This must go." << LogIO::WARN;
