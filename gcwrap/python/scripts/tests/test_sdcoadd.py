@@ -72,6 +72,7 @@ class sdcoadd_unittest_base:
                             % key)
             testval = self._to_list(testdict[key])
             refval = self._to_list(refdict[key])
+            casalog.post('%s: testval=%s, refval=%s'%(key,testval,refval))
             self.assertTrue(len(testval)==len(refval),"Number of elemnets differs.")
             for i in range(len(testval)):
                 if isinstance(refval[i],str):
@@ -479,6 +480,23 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
                   stlist[i]
             self._compareDictVal(after[i],before[i])
 
+    def _get_ids(self, infiles):
+        id_dict = {}
+        id_keys = ['SCANNO', 'FREQ_ID', 'FOCUS_ID', 'MOLECULE_ID']
+        for f in infiles:
+            tb.open(f)
+            id_dict[f] = dict([(k,tb.getcol(k)) for k in id_keys])
+            tb.close()
+        return id_dict
+
+    def _compare_ids(self, out, ref):
+        for f in out.keys():
+            for k in out[f].keys():
+                casalog.post('%s before sdcoadd: %s = %s'%(f,k,ref[f][k]))
+                casalog.post('%s after sdcoadd: %s = %s'%(f,k,out[f][k]))
+                self.assertTrue(all(out[f][k]==ref[f][k]),
+                                    msg='%s of %s may be modified by sdcoadd'%(k,f))
+            
     # Actual tests
     def testMT( self ):
         """Storage Test MT: sdcoadd on storage='memory' and insitu=T"""
@@ -492,6 +510,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         # Backup units and coords of input scantable before run.
         initval = self._get_uclist(infiles)
+        id_ref = self._get_ids(infiles)
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = True
@@ -509,6 +528,9 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord(infiles,initval)
 
+        id_out = self._get_ids(infiles)
+        self._compare_ids(id_out, id_ref)
+
     def testMF( self ):
         """Storage Test MF: sdcoadd on storage='memory' and insitu=F"""
         tid = "MF"
@@ -521,6 +543,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         # Backup units and coords of input scantable before run.
         initval = self._get_uclist(infiles)
+        id_ref = self._get_ids(infiles)
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = False
@@ -538,6 +561,9 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord(infiles,initval)
 
+        id_out = self._get_ids(infiles)
+        self._compare_ids(id_out, id_ref)
+
     def testDT( self ):
         """Storage Test DT: sdcoadd on storage='disk' and insitu=T"""
         tid = "DT"
@@ -550,6 +576,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         # Backup units and coords of input scantable before run.
         initval = self._get_uclist(infiles)
+        id_ref = self._get_ids(infiles)
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = True
@@ -567,6 +594,9 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord(infiles,initval)
 
+        id_out = self._get_ids(infiles)
+        self._compare_ids(id_out, id_ref)
+
     def testDF( self ):
         """Storage Test DF: sdcoadd on storage='disk' and insitu=F"""
         tid = "DF"
@@ -579,6 +609,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         # Backup units and coords of input scantable before run.
         initval = self._get_uclist(infiles)
+        id_ref = self._get_ids(infiles)
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = False
@@ -595,6 +626,9 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord(infiles,initval)
+
+        id_out = self._get_ids(infiles)
+        self._compare_ids(id_out, id_ref)
 
 def suite():
     return [sdcoadd_basicTest, sdcoadd_mergeTest, sdcoadd_storageTest]
