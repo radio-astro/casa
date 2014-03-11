@@ -217,5 +217,5 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 			return False
 	
 	except Exception, instance:
-		casalog.post("Error ...", 'SEVERE')
+		casalog.post("Error: "+str(instance), 'SEVERE')
 		raise Exception, instance
