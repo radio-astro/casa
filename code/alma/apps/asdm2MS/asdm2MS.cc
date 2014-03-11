@@ -1942,8 +1942,10 @@ void fillField(ASDM* ds_p, bool considerEphemeris) {
  * given :
  * @parameter ds_p a pointer to the ASDM dataset.
  */
-void fillSpectralWindow(ASDM* ds_p) {
+void fillSpectralWindow(ASDM* ds_p, map<unsigned int, double>& effectiveBwPerSpwId_m) {
   LOGENTER("fillSpectralWindow");
+
+  effectiveBwPerSpwId_m.clear();
 
   try {
     SpectralWindowTable& spwT = ds_p->getSpectralWindow();      
@@ -2079,6 +2081,8 @@ void fillSpectralWindow(ASDM* ds_p) {
       }
       //effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
       effectiveBw1D = DConverter::toVectorD<Frequency>(effectiveBwArray);
+
+      effectiveBwPerSpwId_m[r->getSpectralWindowId().getTagValue()] = effectiveBw1D.at(0);
       
       
       /* Processing the resolutionXXX
@@ -2885,6 +2889,7 @@ void fillMain(int		rowNum,
 	      SDMBinData&	sdmBinData,
 	      const VMSData*	vmsData_p,
 	      UvwCoords&	uvwCoords,
+	      std::map<unsigned int, double>& effectiveBwPerDD_m,
 	      bool		complexData,
 	      bool              mute) {
   
@@ -2936,6 +2941,22 @@ void fillMain(int		rowNum,
     uvw[k++] = vv_uvw[iUvw](1);
     uvw[k++] = vv_uvw[iUvw](2);
   } 
+
+  vector<double> weight(vmsData_p->v_time.size());
+  vector<double> correctedWeight(vmsData_p->v_time.size());
+
+  vector<double> sigma(vmsData_p->v_time.size());
+  vector<double> correctedSigma(vmsData_p->v_time.size());
+  for (unsigned int i = 0; i < weight.size(); i++) {
+    weight[i] = vmsData_p->v_exposure.at(i) * effectiveBwPerDD_m[filteredDD[i]];
+    if (vmsData_p->v_antennaId1[i] != vmsData_p->v_antennaId2[i])
+      weight[i] *= 2.0;
+    
+    if (weight[i] == 0.0) weight[i] = 1.0;
+    sigma[i] = 1.0 / sqrt(weight[i]);
+
+    correctedWeight[i] = correctedSigma[i] = 1.0;
+  }
 
   // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
   // int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
@@ -3070,7 +3091,9 @@ void fillMain(int		rowNum,
 					 uvw,
 					 filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
 					 uncorrectedData,
-					 (vector<unsigned int>&)vmsData_p->v_flag);
+					 (vector<unsigned int>&)vmsData_p->v_flag,
+					 weight,
+					 sigma);
     }
   }
 
@@ -3095,7 +3118,9 @@ void fillMain(int		rowNum,
 				       correctedUvw,
 				       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
 				       correctedData,
-				       correctedFlag);
+				       correctedFlag,
+				       correctedWeight,
+				       correctedSigma);
     }
   }
   if (debug) cout << "fillMain : exiting" << endl;
@@ -3153,6 +3178,7 @@ void calcUVW(MainRow* r_p,
  * !!!!! One must be carefull to the fact that fillState must have been called before fillMain. During the execution of fillState , the global vector<int> msStateID
  * is filled and will be used by fillMain.
  */ 
+#if 0
 void fillMain_mt(MainRow*	r_p,
 		 const VMSData* vmsData_p,
 		 casa::Double*&   puvw,
@@ -3374,6 +3400,7 @@ void fillMain_mt(MainRow*	r_p,
   }
   if (debug) cout << "fillMain_mt : exiting" << endl;
 }
+#endif
 
 void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
   LOGENTER("fillSysPower_aux");
@@ -4475,7 +4502,8 @@ int main(int argc, char *argv[]) {
   //
   // Process the SpectralWindow table.
   //
-  fillSpectralWindow(ds);
+  map<unsigned int, double> effectiveBwPerSpwId_m;
+  fillSpectralWindow(ds, effectiveBwPerSpwId_m);
 
   //
   // Process the Polarization table
@@ -4588,6 +4616,8 @@ int main(int argc, char *argv[]) {
   //
   // Process the DataDescription table.
   //
+
+  std::map<unsigned int, double> effectiveBwPerDD_m;
   try {
     DataDescriptionTable& ddT = ds->getDataDescription();
     DataDescriptionRow* r = 0;
@@ -4609,6 +4639,8 @@ int main(int argc, char *argv[]) {
 						       polarizationIdx2Idx.at(r->getPolOrHoloId().getTagValue()));
       }
       dataDescriptionIdx2Idx.push_back(ddIdx); 
+
+      effectiveBwPerDD_m[ddIdx] = effectiveBwPerSpwId_m[r->getSpectralWindowId().getTagValue()];
     }
     if (nDataDescription) {
       infostream.str("");
@@ -5935,7 +5967,14 @@ int main(int argc, char *argv[]) {
             // }
           }//end of doparallel
           else {
-	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	    fillMain(i,
+		     v[i],
+		     sdmBinData,
+		     vmsDataPtr,
+		     uvwCoords,
+		     effectiveBwPerDD_m,
+		     complexData,
+		     mute);
           }
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << mainRowIndex[i] << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
@@ -5983,7 +6022,7 @@ int main(int argc, char *argv[]) {
 	      // }//end of doparallel
             }
             else {
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData,  mute);
             }
 
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
@@ -6013,7 +6052,7 @@ int main(int argc, char *argv[]) {
               // }
             }//end of doparallel
             else {
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData, mute);
             }
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	    info(infostream.str());
