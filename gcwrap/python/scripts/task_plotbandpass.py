@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.37 2013/12/06 15:43:14 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.39 2014/03/11 17:58:33 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.37 2013/12/06 15:43:14 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.39 2014/03/11 17:58:33 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1732,7 +1732,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (debug):
                 print "scans to plot for spw %d: %s" % (myspw, scansToPlotPerSpw[myspw])
             if (scansToPlotPerSpw[myspw] == []):
-                indexDelete = np.where(spwsToPlot==myspw)[0][0]
+                indexDelete = np.where(spwsToPlot==myspw)[0]
                 if (len(indexDelete) > 0):
                     indexDelete = [0]
                     spwsToPlot = np.delete(spwsToPlot, indexDelete)
@@ -5734,6 +5734,8 @@ def frequencyRangeForSpws(mymsmd, spwlist):
     allfreqs = []
     for spw in spwlist:
         allfreqs += list(mymsmd.chanfreqs(spw))
+    if (len(allfreqs) == 0):
+        return(0,0)
     return(np.min(allfreqs)*1e-9, np.max(allfreqs)*1e-9)
 
 def buildSpwString(overlaySpws, overlayBasebands, spwsToPlot, ispw, originalSpw,
