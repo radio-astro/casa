@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.39 2014/03/11 17:58:33 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.40 2014/03/11 18:57:02 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.39 2014/03/11 17:58:33 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.40 2014/03/11 18:57:02 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -602,7 +602,7 @@ def DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type
                 pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1])+' dashed',
                         color='k', size=mysize, transform=pb.gca().transAxes)
             else:
-                pb.text(x0+0.02*xrange, y0-0.03*subplotRows, corrTypeToString(corr_type[1]),
+                pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1]), # removed +0.02*xrange on 11-Mar-2014
                         color='k', size=mysize, transform=pb.gca().transAxes)
                 pdesc = pb.plot([x0-0.1], [y0-0.03*subplotRows], '%sk'%ampmarkstyle2,
                                 markersize=markersize, scalex=False,scaley=False, transform=pb.gca().transAxes,markeredgewidth=markeredgewidth)
@@ -2934,7 +2934,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                           mytime, scansToPlot, scansForUniqueTimes,
                                           myprint=debugSloppyMatch
                                           )):
-                              doneOverlayTime = True  # 08-Nov-2012
+                              if (overlayAntennas == False or xant==antennasToPlot[-1]):  # 11-Mar-2014
+                                  doneOverlayTime = True  # 08-Nov-2012
                               if (debug):
                                   print "###### set doneOverlayTime = %s" % (str(doneOverlayTime))
           
@@ -2966,11 +2967,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                        overlayTimes, overlayAntennas, xant, 
                                                        antennasToPlot, overlaySpws, baseband,
                                                        showBasebandNumber, basebandDict)
-                              if (xant == firstUnflaggedAntennaToPlot or overlayAntennas==False):
+                              if (xctr == firstUnflaggedAntennaToPlot or overlayAntennas==False): # changed xant->xctr on 11-mar-2014
                                   DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
                                                                        channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
                                                                        ampmarkstyle,markersize,ampmarkstyle2,gamp_std)
-                      else:
+                      else:  # not overlaying times
                           print "Skip %s (%s) all data flagged" % (antstring, titleString)
                           if (myinput == 'b'):
                               redisplay = False # This prevents infinite loop when htting 'b' on first screen when ant0 flagged. 2013-03-08
