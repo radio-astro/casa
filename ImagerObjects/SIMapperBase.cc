@@ -170,7 +170,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ftm->finalizeToSky();
       ftm->correlationToStokes(   ftm->getImage( sumWeights, False )  , targetImage , dopsf );
 
-      if( fillWeightImage) { ftm->getWeightImage( weightImage, sumWeights ); }
+      if( fillWeightImage) 
+	{ 
+	  ftm->getWeightImage( weightImage, sumWeights ); 
+	  addImageMiscInfo( weightImage, ftm, sumWeights );      
+	}
 
       addImageMiscInfo( targetImage, ftm, sumWeights );      
 

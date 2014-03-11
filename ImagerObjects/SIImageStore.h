@@ -58,7 +58,8 @@ class SIImageStore
   //images are similar.  the Pointers are taken over by CountedPtr...and will be deleted when reference 
   //count goes to 0
   SIImageStore(ImageInterface<Float>* modelim, ImageInterface<Float>* residim,
-	       ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, ImageInterface<Float>* restoredim);
+	       ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, 
+	       ImageInterface<Float>* restoredim, ImageInterface<Float>* maskim);
     
 
   virtual ~SIImageStore();
@@ -74,6 +75,7 @@ class SIImageStore
   virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
   virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
   virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0);
   virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
   virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
 
@@ -81,7 +83,6 @@ class SIImageStore
   virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
 
   virtual void setModelImage( String modelname );
-  virtual Bool hasWeight(){return itsWeightExists;};
   virtual Bool doesImageExist(String imagename);
   void setImageInfo(const Record miscinfo);
 
@@ -90,12 +91,14 @@ class SIImageStore
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
   virtual void divideResidualByWeight(const Float weightlimit=C::minfloat);
-  virtual void dividePSFByWeight(const Float weightlimit=C::minfloat);
+  //  virtual void divideSensitivityPatternByWeight();
+  virtual void dividePSFByWeight();
   virtual void divideModelByWeight(const Float weightlimit=C::minfloat);
+  virtual void multiplyModelByWeight(const Float weightlimit=C::minfloat);
 
   virtual Bool isValid(){return itsValidity;}
   virtual Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
-			     const Bool imodel, const Bool irestored, 
+			     const Bool imodel, const Bool irestored, const Bool imask=False,
 			     const Bool ialpha=False, const Bool ibeta=False);
 
   virtual Bool releaseLocks();
@@ -119,6 +122,11 @@ class SIImageStore
 
   ///  Matrix<Float> sumWeights; // 2D for image pol/chan
 
+  Bool getUseWeightImage(ImageInterface<Float>& target);
+
+  virtual Bool hasSensitivity(){return !itsWeight.null();}
+  virtual Bool hasMask(){return !itsMask.null(); }
+
 protected:
 // Can make this a utility function elsewhere...
 //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
@@ -133,9 +141,11 @@ protected:
 
   Matrix<Float> getSumWt(ImageInterface<Float>& target);
   void setSumWt(ImageInterface<Float>& target, Matrix<Float>& sumwt);
-  Bool getUseWeightImage(ImageInterface<Float>& target);
+  //  Bool getUseWeightImage(ImageInterface<Float>& target);
+  void setUseWeightImage(ImageInterface<Float>& target, Bool useweightimage);
+  void addSumWts(ImageInterface<Float>& target, ImageInterface<Float>& toadd);
 
-  void divideImageByWeightVal( ImageInterface<Float>& target );
+  Bool divideImageByWeightVal( ImageInterface<Float>& target );
 
 
   void checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label );
@@ -149,12 +159,13 @@ protected:
   // Misc Information to go into the header. 
   Record itsMiscInfo;
 
-  Bool itsWeightExists;
+  //  Bool itsWeightExists;
 
   //  Bool itsPsfNormed, itsResNormed;
 
   Bool itsValidity;
 
+  CountedPtr<ImageInterface<Float> > itsMask; // mutliterm shares this...
 
 private:
 

@@ -58,6 +58,7 @@
 #include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
+#include <synthesis/TransformMachines/AWProjectWBFT.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -81,9 +82,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     for(uInt tix=0; tix<2*nterms_p-1; tix++)
       {
-	if( tix < nterms_p ) 
-	  { ftms_p[tix] = getNewFTM( ftm ); }
+	if( tix < nterms_p ) { 
+	    ftms_p[tix] = getNewFTM( ftm ); 
+	    ftms_p[tix]->setMiscInfo(tix); 
+	  }
 	iftms_p[tix] = getNewFTM( iftm );
+	iftms_p[tix]->setMiscInfo(tix);
       }
     
     itsImages=imagestore;
@@ -103,7 +107,14 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
 
   CountedPtr<FTMachine> SIMapperMultiTerm::getNewFTM(const CountedPtr<FTMachine>& ftm)
   {
-    return ftm->cloneFTM();
+
+    if( ftm->name()=="AWProjectWBFT")
+      { return new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*ftm)); }
+    else
+      {
+	return ftm->cloneFTM();
+      }
+
 
     /*
     FTMachine* newftm = ftm->cloneFTM();
@@ -138,12 +149,14 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
     uInt gridnterms = nterms_p;
     if(dopsf){ gridnterms = 2*nterms_p-1; }
 
-    //    Matrix<Float> wgt;
-    for(uInt tix=0; tix<gridnterms; tix++)
+    if( !itsDoImageMosaic )
       {
-	initializeGridCore( vb, iftms_p[tix], *(itsImages->backwardGrid(tix)) );// , wgt );
-	//  replace backgrid and wgt by taylor-specific ones.
+	for(uInt tix=0; tix<gridnterms; tix++)
+	  {
+	    initializeGridCore( vb, iftms_p[tix], *(itsImages->backwardGrid(tix)) );// , wgt );
+	  }
       }
+    else{throw(AipsError("Image domain mosaics for multi-term imaging not supported yet."));}
 
     ovb_p.assign(vb, False);
     
@@ -157,15 +170,20 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
     uInt gridnterms = nterms_p;
     if(dopsf){ gridnterms = 2*nterms_p-1; }
 
-    gridCore( vb, dopsf, col, iftms_p[0], -1 );
-
-    for(uInt tix=1;tix<gridnterms;tix++)
+    if( !itsDoImageMosaic )
       {
-	modifyVisWeights(vb,tix);
-	gridCore( vb, dopsf, col, iftms_p[tix], -1 );
-	restoreImagingWeights(vb);
+	
+	gridCore( vb, dopsf, col, iftms_p[0], -1 );
+	
+	for(uInt tix=1;tix<gridnterms;tix++)
+	  {
+	    modifyVisWeights(vb,tix);
+	    gridCore( vb, dopsf, col, iftms_p[tix], -1 );
+	    restoreImagingWeights(vb);
+	  }
       }
-
+    else{throw(AipsError("Image domain mosaics for multi-term imaging not supported yet."));}
+     
    }
 
 
@@ -177,17 +195,19 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
     uInt gridnterms = nterms_p;
     if(dopsf){ gridnterms = 2*nterms_p-1; }
 
-    for(uInt tix=0;tix<gridnterms;tix++)
+    if( !itsDoImageMosaic || dopsf )
       {
-	//	Matrix<Float> wgt;
-	finalizeGridCore(dopsf,  iftms_p[tix], 
-			 (dopsf ? *(itsImages->psf(tix)) : *(itsImages->residual(tix)) ) ,
-			 (useWeightImage(iftms_p[tix]))?*(itsImages->weight(tix)): *(itsImages->psf(tix)),  
-			 useWeightImage(iftms_p[tix])  );
-	// *(itsImages->weight(tix)) ,   wgt);  
-
-	// replace by taylor dependent images when ready.
+	Bool fillWeight = useWeightImage(iftms_p[0]) & ( !itsImages->hasSensitivity() ) ;
+	for(uInt tix=0;tix<gridnterms;tix++)
+	  {
+	    finalizeGridCore(dopsf,  iftms_p[tix], 
+			     (dopsf ? *(itsImages->psf(tix)) : *(itsImages->residual(tix)) ) ,
+			     (fillWeight)?*(itsImages->weight(tix)): *(itsImages->psf(tix)),  
+			     fillWeight  );
+	    // *(itsImages->weight(tix)) ,   wgt);  
+	  }
       }
+    else{throw(AipsError("Image domain mosaics for multi-term imaging not supported yet."));}
 
     }
 
@@ -195,13 +215,17 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
   //////////////////OLD vi/vb version
   void SIMapperMultiTerm::initializeDegrid(VisBuffer& vb, Int /*row*/)
   {
-	  LogIO os( LogOrigin("SIMapperMultiTerm", "initializeDegrid",WHERE) );
-
-	  for (uInt tix=0; tix<nterms_p; tix++)
-	    {
-	      initializeDegridCore( vb, ftms_p[tix], *(itsImages->model(tix)) , *(itsImages->forwardGrid(tix)) );
-	      // replace image grids by multiterm ones....
-	    }
+    LogIO os( LogOrigin("SIMapperMultiTerm", "initializeDegrid",WHERE) );
+    
+    if( !itsDoImageMosaic )
+      {
+	for (uInt tix=0; tix<nterms_p; tix++)
+	  {
+	    initializeDegridCore( vb, ftms_p[tix], *(itsImages->model(tix)) , *(itsImages->forwardGrid(tix)) );
+	    // replace image grids by multiterm ones....
+	  }
+      }
+    else{throw(AipsError("Image domain mosaics for multi-term imaging not supported yet."));}
 
   }
 
@@ -211,24 +235,29 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
 
       CountedPtr<ComponentFTMachine> cft;
       ComponentList cl;
-      degridCore( vb, ftms_p[0], cft, cl );
-
-      // Save the model visibilities in a local cube
-      modviscube_p.assign( vb.modelVisCube() );
-    
-      for(uInt tix=1;tix<nterms_p;tix++) // Only nterms.... not 2nterms-1
+      
+      if( !itsDoImageMosaic )
 	{
-	  // Reset the model visibilities to zero
-	  vb.setModelVisCube(Complex(0.0,0.0));
-	  // De-grid the model onto the modelviscube (other Taylor terms)
-	  degridCore( vb, ftms_p[tix], cft, cl );
-	  // Multiply visibilities by taylor-weights
-	  modifyModelVis(vb,tix); 
-	  // Accumulate model visibilities across Taylor terms
-	  modviscube_p += vb.modelVisCube();
-	}
-      // Set the vb.modelviscube to what has been accumulated
-      vb.setModelVisCube(modviscube_p);
+	  degridCore( vb, ftms_p[0], cft, cl );
+	  
+	  // Save the model visibilities in a local cube
+	  modviscube_p.assign( vb.modelVisCube() );
+	  
+	  for(uInt tix=1;tix<nterms_p;tix++) // Only nterms.... not 2nterms-1
+	    {
+	      // Reset the model visibilities to zero
+	      vb.setModelVisCube(Complex(0.0,0.0));
+	      // De-grid the model onto the modelviscube (other Taylor terms)
+	      degridCore( vb, ftms_p[tix], cft, cl );
+	      // Multiply visibilities by taylor-weights
+	      modifyModelVis(vb,tix); 
+	      // Accumulate model visibilities across Taylor terms
+	      modviscube_p += vb.modelVisCube();
+	    }
+	  // Set the vb.modelviscube to what has been accumulated
+	  vb.setModelVisCube(modviscube_p);
+      }
+    else{throw(AipsError("Image domain mosaics for multi-term imaging not supported yet."));}
       
     }
 

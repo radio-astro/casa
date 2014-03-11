@@ -69,6 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=NULL;
     itsWeight=NULL;
     itsImage=NULL;
+    itsMask=NULL;
 
     itsImageShape=IPosition();
     itsImageName=String("");
@@ -90,6 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=NULL;
     itsWeight=NULL;
     itsImage=NULL;
+    itsMask=NULL;
 
     itsImageName = imagename;
     itsImageShape = imshape;
@@ -106,8 +108,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsPsf=NULL;
     itsModel=NULL;
     itsResidual=NULL;
-    itsWeight=NULL;   itsWeightExists=False;
+    itsWeight=NULL;   
     itsImage=NULL;
+    itsMask=NULL;
     itsMiscInfo=Record();
 
     itsImageName = imagename;
@@ -136,13 +139,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     ImageInterface<Float>* residim,
 			     ImageInterface<Float>* psfim, 
 			     ImageInterface<Float>* weightim, 
-			     ImageInterface<Float>* restoredim)
+			     ImageInterface<Float>* restoredim,
+			     ImageInterface<Float>* maskim
+			     )
   {
     itsPsf=psfim;
     itsModel=modelim;
     itsResidual=residim;
     itsWeight=weightim;
     itsImage=restoredim;
+    itsMask=maskim;
 
     itsImageShape=psfim->shape();
     itsCoordSys = psfim->coordinates();
@@ -151,7 +157,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImageName = String("reference");  // This is what the access functions use to guard against allocs...
 	
     itsValidity=((!itsPsf.null()) &&   (!itsResidual.null()) && (!itsWeight.null()));
-    itsWeightExists = !itsWeight.null();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +169,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float>* facetResidual=itsResidual.null()?NULL:makeFacet(facet, nfacets, *itsResidual);
     SubImage<Float>* facetWeight=itsWeight.null()?NULL:makeFacet(facet, nfacets, *itsWeight);
     SubImage<Float>* facetImage=itsImage.null()?NULL:makeFacet(facet, nfacets, *itsImage);
-    return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage);
+    SubImage<Float>* facetMask=itsMask.null()?NULL:makeFacet(facet, nfacets, *itsMask);
+    return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage, facetMask);
 
   }
 
@@ -187,7 +193,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float>* subResidual=itsResidual.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsResidual);
     SubImage<Float>* subWeight=itsWeight.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsWeight);
     SubImage<Float>* subImage=itsImage.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsImage);
-    return new SIImageStore(subModel, subResidual, subPSF, subWeight, subImage);
+    SubImage<Float>* subMask=itsMask.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsMask);
+    return new SIImageStore(subModel, subResidual, subPSF, subWeight, subImage, subMask);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +208,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( overwrite || !Table::isWritable( imagenamefull ) )
       {
 	imPtr=new PagedImage<Float> (itsImageShape, itsCoordSys, imagenamefull);
+	// initialize to zeros...
+	imPtr->set(0.0);
       }
     else
       {
@@ -235,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Check if images that are asked-for are ready and all have the same shape.
   Bool SIImageStore::checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
-				   const Bool imodel, const Bool irestored, 
+				   const Bool imodel, const Bool irestored,const Bool imask, 
 				   const Bool /*ialpha*/, const Bool /*ibeta*/)
   {
 
@@ -254,6 +263,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { model(); valid = valid & ( !itsModel.null() && itsModel->shape()==itsImageShape); }
     if(irestored==True)
       { image(); valid = valid & ( !itsImage.null() && itsImage->shape()==itsImageShape); }
+    if(imask==True)
+      { mask(); valid = valid & ( !itsMask.null() && itsMask->shape()==itsImageShape); }
 
       }
     catch(AipsError &x)
@@ -351,6 +362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( ! itsResidual.null() ) itsResidual->unlock();
     if( ! itsImage.null() ) itsImage->unlock();
     if( ! itsWeight.null() ) itsWeight->unlock();
+    if( ! itsMask.null() ) itsMask->unlock();
 
     return True; // do something more intelligent here.
   }
@@ -423,12 +435,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     checkRef( itsWeight, "weight" );
     itsWeight = openImage( itsImageName+String(".weight") , False );
 
-    /*  /// TODO : Do something here, to support absence of weight image when they contain a single number ! 
-    if( itsWeight.null() )
-      {
-	throw( AipsError("Internal error : Weight Image does not exist. Please check with SIImageStore.hasWeight() before accessing the weight image. If not present, treat it as a scalar = 1.0") );
-      }
-    */
     return itsWeight;
   }
   CountedPtr<ImageInterface<Float> > SIImageStore::model(uInt /*nterm*/)
@@ -457,6 +463,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImage = openImage( itsImageName+String(".image") , False );
     itsImage->setUnits("Jy/beam");
     return itsImage;
+  }
+  CountedPtr<ImageInterface<Float> > SIImageStore::mask(uInt /*nterm*/)
+  {
+    if( !itsMask.null() && itsMask->shape() == itsImageShape ) { return itsMask; }
+    checkRef( itsMask, "mask" );
+    itsMask = openImage( itsImageName+String(".mask") , False );
+    //    cout << itsImageName << " has mask of shape : " << itsMask->shape() << endl;
+    return itsMask;
   }
   CountedPtr<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
 	  if(!itsForwardGrid.null() && (itsForwardGrid->shape() == itsImageShape))
@@ -531,20 +545,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Bool addpsf, Bool addresidual, Bool addweight)
   {
 
-    /*
-    if( itsWeight.null() )
-      {
-	throw( AipsError("Internal Error : Weight image from major cycle is not present. Cannot gather a weighted sum from all nodes") );
-      }
-    */
-
     if(addpsf)
       {
 	LatticeExpr<Float> adderPsf( *(psf()) + *(imagestoadd->psf()) ); 
 	psf()->copyData(adderPsf);
 
-	Matrix<Float> addsumwt = getSumWt( *(imagestoadd->psf()) ) + getSumWt( *(psf()) ) ;
-	setSumWt( *psf(), addsumwt );
+	addSumWts( *psf(), *(imagestoadd->psf()) );
 	
       }
     if(addresidual)
@@ -552,8 +558,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> adderRes( *(residual()) + *(imagestoadd->residual()) ); 
 	residual()->copyData(adderRes);
 
-	Matrix<Float> addsumwt = getSumWt( *(imagestoadd->residual()) ) + getSumWt( *(residual()) ) ;
-	setSumWt( *residual(), addsumwt );
+	addSumWts( *residual(), *(imagestoadd->residual()) );
 	
       }
     if(addweight)
@@ -562,10 +567,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    LatticeExpr<Float> adderWeight( *(weight()) + *(imagestoadd->weight()) ); 
 	    weight()->copyData(adderWeight);
+	    
+	    addSumWts( *weight(), *(imagestoadd->weight()) );
+	
 	  }
       }
     ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
+
+  void SIImageStore::addSumWts(ImageInterface<Float>& target, ImageInterface<Float>& toadd)
+  {
+    Matrix<Float> addsumwt = getSumWt( target ) + getSumWt( toadd ) ;
+    setSumWt( target , addsumwt );
+    Bool useweightimage = getUseWeightImage( toadd );
+    setUseWeightImage( target, useweightimage );  // last one will override. Ok since all must be same.
+
+    cout << "in addSumWts, useweightimage : " << getUseWeightImage( target ) << endl;
+  }
+
 
   // Make another for the PSF too.
   void SIImageStore::divideResidualByWeight(Float weightlimit)
@@ -573,10 +592,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
 
     // Normalize by the sumwt, per plane. 
-    divideImageByWeightVal( *residual() );
+    Bool didNorm = divideImageByWeightVal( *residual() );
+    Bool useweightimage = getUseWeightImage( *residual() );
 
-    if( getUseWeightImage( *residual() ) == True )
+    //    cout << "SIIM div residual by weight : useweightimage : " << useweightimage << endl;
+
+    if( useweightimage == True )
       {
+	divideImageByWeightVal( *weight() ); // no-op if already normalized, with sumwt set to 1.0
+	
 	os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 	
 	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
@@ -585,15 +609,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / sqrt( (*(weight())) + maskinv ) );
 	residual()->copyData(ratio);
       }
+    
+    // If no normalization happened, print a warning. The user must check if it's right or not.
+    // Or... later if we get a gridder that does pre-norms, this warning can go. 
+    if( (didNorm | useweightimage) != True ) 
+      os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
+
     // createMask
   }
   
-  void SIImageStore::dividePSFByWeight(Float weightlimit)
+  void SIImageStore::dividePSFByWeight()
   {
     LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
 
     // Normalize by the sumwt, per plane. 
     divideImageByWeightVal( *psf() );
+
+    divideImageByWeightVal( *weight() ); // no-op if already normalized, with sumwt set to 1.0
 
     /*    
     if( getUseWeightImage( *psf() ) == True )
@@ -610,17 +642,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // createMask
   }
 
+  /*
+  void SIImageStore::divideSensitivityPatternByWeight()
+  {
+    LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
+
+    if( getUseWeightImage( *psf() ) == True )// i.e. only when needed.
+      {
+	// Normalize by the sumwt, per plane. 
+	divideImageByWeightVal( *weight() );
+      }
+
+  }
+  */
+
   void SIImageStore::divideModelByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
-    
-    os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
-    
-    LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-    
-    LatticeExpr<Float> ratio( ( (*(model())) * mask ) / sqrt( (*(weight())) + maskinv ) );
-    model()->copyData(ratio);
+
+    if( !itsResidual.null() // information exists on whether weight image is needed or not
+	&& getUseWeightImage( *residual() ) == True // only when needed
+	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+      {
+        os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	
+	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
+	
+	LatticeExpr<Float> ratio( ( (*(model())) * mask ) / sqrt( (*(weight())) + maskinv ) );
+	model()->copyData(ratio);
+      }
+    // createMask
+  }
+  
+  void SIImageStore::multiplyModelByWeight(Float weightlimit)
+  {
+    LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
+
+    //cout << "In multiplymodelbyweight : model, usewt, weight " << itsModel.null() << " " << getUseWeightImage( *residual() ) << " " << doesWeightExist() << endl;
+
+    if( //!itsModel.null() // anything to do ? 
+	//&& 
+	getUseWeightImage( *residual() ) == True // only when needed
+	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+      {
+        os << "Multiplying " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	
+	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
+	
+	LatticeExpr<Float> ratio( ( (*(model())) * mask ) * sqrt( (*(weight())) + maskinv ) );
+	model()->copyData(ratio);
+      }
     // createMask
   }
   
@@ -712,10 +785,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return useweightimage;
   }
+
+  void SIImageStore::setUseWeightImage(ImageInterface<Float>& target, Bool useweightimage)
+  {
+    Record miscinfo = target.miscInfo();
+    miscinfo.define("useweightimage", useweightimage);
+    target.setMiscInfo( miscinfo );
+  }
   
 
 
-  void SIImageStore::divideImageByWeightVal( ImageInterface<Float>& target )
+  Bool SIImageStore::divideImageByWeightVal( ImageInterface<Float>& target )
   {
 
     Matrix<Float> sumwt = getSumWt( target );
@@ -727,6 +807,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert( sumwt.shape()[0] == imshape[2] , AipsError ); // polplanes
     AlwaysAssert( sumwt.shape()[1] == imshape[3] , AipsError ); // chanplanes
 
+    Bool div=False; // flag to signal if division actually happened, or weights are all 1.0
+
     for(Int pol=0; pol<sumwt.shape()[0]; pol++)
       {
 	for(Int chan=0; chan<sumwt.shape()[1]; chan++)
@@ -736,12 +818,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
 		LatticeExpr<Float> le( (*subim)/sumwt(pol,chan) );
 		subim->copyData( le );
+		div=True;
 	      }
 	  }
       }
 
+    //    if( div==True ) cout << "Div image by sumwt : " << sumwt << endl;
+    //    else cout << "Already normalized" << endl;
+
     sumwt = 1.0; setSumWt( target , sumwt );
 
+    return div;
   }
 
 

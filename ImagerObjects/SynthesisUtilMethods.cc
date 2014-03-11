@@ -104,6 +104,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		onems.define("spw", spw+":"+ (((Bool)part)?("10~19"):("0~9"))  );
 	      }
+	    if(msname.matches("DataTest/reg_mawproject.ms"))
+	      {
+		onems.define("scan", (((Bool)part)?("1~17"):("18~35"))  );
+	      }
 	    onepart.defineRecord( RecordFieldId("ms"+String::toString(msid)) , onems );
 	  }// end ms loop
 	//-------------------------------------------------

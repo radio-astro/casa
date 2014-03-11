@@ -122,7 +122,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of setupParSync
 
 
-  void SynthesisParSync::gatherImages(Bool dopsf, Bool doresidual)
+  void SynthesisParSync::gatherImages(Bool dopsf) //, Bool doresidual)
   {
 
     Bool needToGatherImages = setupImagesOnDisk();
@@ -130,17 +130,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( needToGatherImages )
       {
 	LogIO os( LogOrigin("SynthesisParSync", "gatherImages",WHERE) );
-	
-	os << "Gather "<< (doresidual?"residual":"") << ( (dopsf&&doresidual)?",":"")  << (dopsf?"psf, weight":"") << " images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
-	
+
 	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
+	Bool doresidual = !dopsf;
+        Bool doweight = dopsf || ( doresidual && ! itsImages->hasSensitivity() );
+        //	Bool doweight = dopsf || ( doresidual && itsImages->getUseWeightImage(*(itsPartImages[0]->residual())) );
+	
+	os << "Gather "<< (doresidual?"residual":"") << ( (dopsf&&doresidual)?",":"")  
+	   << (dopsf?"psf":"") << ( (dopsf&&doweight)?",":"")  
+	   << (doweight?"weight":"")<< " images : " << itsPartImageNames 
+	   << " onto :" << itsImageName << LogIO::POST;
 	
 	// Add intelligence to modify all only the first time, but later, only residual;
-	itsImages->resetImages( /*psf*/dopsf, /*residual*/doresidual, /*weight*/dopsf ); 
+	itsImages->resetImages( /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight ); 
 	
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
-	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/dopsf );
+	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight );
 	  }
 
       }// end of image gathering.
@@ -152,8 +158,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SynthesisParSync::scatterModel()
   {
-
-    divideModelByWeight(); // This is currently a no-op
 
     LogIO os( LogOrigin("SynthesisParSync", "scatterModel",WHERE) );
 
@@ -175,7 +179,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisParSync::divideResidualByWeight()
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideResidualByWeight",WHERE) );
-
+    
+    //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
     itsImages->divideResidualByWeight( itsWeightLimit );
 
   }
@@ -184,17 +189,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParSync", "dividePSFByWeight",WHERE) );
 
-    itsImages->dividePSFByWeight( itsWeightLimit );
+    itsImages->dividePSFByWeight();
+    //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
 
   }
+
 
   void SynthesisParSync::divideModelByWeight()
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideModelByWeight",WHERE) );
+    if( itsImages.null() ) 
+      {
+	os << LogIO::WARN << "No imagestore yet. Do something to fix the starting model case...." << LogIO::POST;
+	return;
+      }
+    itsImages->divideModelByWeight( itsWeightLimit );
+  }
 
-    /// This is a no-op here.... Need a way to activate this only for A-Projection.
-    ///    itsImages->divideModelByWeight( itsWeightLimit );
-
+  void SynthesisParSync::multiplyModelByWeight()
+  {
+    //    LogIO os( LogOrigin("SynthesisParSync", "multiplyModelByWeight",WHERE) );
+    itsImages->multiplyModelByWeight( itsWeightLimit );
   }
 
 

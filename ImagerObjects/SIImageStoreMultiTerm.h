@@ -61,6 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Block<CountedPtr<ImageInterface<Float> > >psfims, 
 			Block<CountedPtr<ImageInterface<Float> > >weightims, 
 			Block<CountedPtr<ImageInterface<Float> > >restoredims,
+			CountedPtr<ImageInterface<Float> > newmask,
 			CountedPtr<ImageInterface<Float> > newalpha,
 			CountedPtr<ImageInterface<Float> > newbeta);
   
@@ -73,6 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
   virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
   virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
+  ///   virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0); // take from base class.
   virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
   virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
 
@@ -88,11 +90,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
   void divideResidualByWeight(const Float weightlimit=C::minfloat);
-  void dividePSFByWeight(const Float weightlimit=C::minfloat);
+  void dividePSFByWeight();
+  void divideSensitivityPatternByWeight();
   void divideModelByWeight(const Float weightlimit=C::minfloat);
 
   Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
-		     const Bool imodel, const Bool irestored, const Bool ialpha=False, const Bool ibeta=False);
+		     const Bool imodel, const Bool irestored, const Bool imask=False, 
+		     const Bool ialpha=False, const Bool ibeta=False);
 
   Bool releaseLocks();
 
@@ -105,6 +109,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
   CountedPtr<SIImageStore> getSubImageStore(const Int chan, const Bool onechan, 
 					    const Int pol, const Bool onepol);
+
+  virtual Bool hasSensitivity(){return itsWeights.nelements()>0 && !itsWeights[0].null();}
 
 protected:
 

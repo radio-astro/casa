@@ -212,6 +212,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       itsLoopController.setCycleControls(minorCycleControlRec);
+      //   maskHandler.makeAutoMask( itsImages );
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
       returnRecord = itsLoopController.getCycleExecutionRecord();
 

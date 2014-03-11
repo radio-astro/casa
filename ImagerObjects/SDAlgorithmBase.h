@@ -89,10 +89,9 @@ protected:
 
   // Non virtual. Implemented only in the base class.
   Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  //  void partitionImages( CountedPtr<SIImageStore> &imagestore );
-  //  virtual void initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim);
   Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
-  //  virtual GaussianBeam getPSFGaussian();
+  Bool findMaxAbsMask(const Matrix<Float>& lattice,const Matrix<Float>& lattice,
+		      Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name
   String itsAlgorithmName;
@@ -101,13 +100,13 @@ protected:
 
   //    Vector<Slicer> itsDecSlices;
   //   SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
+  
+  IPosition itsMaxPos;
+  Float itsPeakResidual;
+  Float itsModelFlux;
 
-    IPosition itsMaxPos;
-    Float itsPeakResidual;
-    Float itsModelFlux;
-
-    Array<Float> itsMatMask;
-
+  SDMaskHandler itsMaskHandler;
+  //  Array<Float> itsMatMask;
 
 };
 
