@@ -144,7 +144,7 @@ def _parse_field(task_arg, fields=[]):
     field_name.setParseAction(get_ids_for_matching)        
     
     # the complete expression
-    atomExpr = field_id('fields') | field_name('fields')
+    atomExpr = field_name('fields') | field_id('fields')
 
     results = set()
     for atom in pyparsing.commaSeparatedList.parseString(str(task_arg)):
