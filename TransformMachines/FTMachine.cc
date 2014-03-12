@@ -515,7 +515,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Double maxVF=max(visFreq);
       Double minIF=min(imageFreq_p);
       Double maxIF=max(imageFreq_p);
-      if( (minIF > maxVF) ||   (maxIF < minVF)){
+      if( ((minIF-fabs(imageFreq_p[1]-imageFreq_p[0])/2.0) > maxVF) ||   
+	  ((maxIF+fabs(imageFreq_p[1]-imageFreq_p[0])/2.0) < minVF)){
 	//This function should not have been called with image 
 	//being out of bound of data...but still
 	interpVisFreq_p.resize(imageFreq_p.nelements());
@@ -1370,6 +1371,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       anymatchChan= (anymatchChan || matchthis);
       anyTopo=anyTopo || ((MFrequency::castType(vb.msColumns().spectralWindow().measFreqRef()(selectedSpw_p[k]))==MFrequency::TOPO) && freqFrameValid_p);
     }
+    
     // if TOPO and valid frame things may match later but not now  thus we'll go 
     // through the data 
     // hoping the user made the right choice
