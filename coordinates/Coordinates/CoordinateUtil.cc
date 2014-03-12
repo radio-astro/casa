@@ -919,35 +919,6 @@ Bool CoordinateUtil::makeFrequencyMachine(LogIO& os, MFrequency::Convert& machin
    return ok;
 }
 
-
-Bool CoordinateUtil::isSky (LogIO& os, const CoordinateSystem& csys) {
-    const uInt nPixelAxes = csys.nPixelAxes();
-
-    if (nPixelAxes != 2) {
-        os << "The CoordinateSystem is not two dimensional. It has " 
-            << nPixelAxes << " dimensions" << LogIO::EXCEPTION;
-    }  
-    Bool xIsLong = True;
-    Int dirCoordinate = csys.findCoordinate(Coordinate::DIRECTION);
-    if (dirCoordinate==-1) {
-        os << "There is no DirectionCoordinate (sky) in this CoordinateSystem" << LogIO::EXCEPTION;
-    }
-    Vector<Int> dirPixelAxes = csys.pixelAxes(dirCoordinate);
-    if (dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1) {
-        os << "The pixel axes for the DirectionCoordinate have been removed" << LogIO::EXCEPTION;
-    }
- 
-    // Which axis is longitude and which is latitude
-
-    if(dirPixelAxes(0)==0 && dirPixelAxes(1)==1) {
-        xIsLong = True;
-    } else {
-        xIsLong = False;
-    }
-    return xIsLong;
-} 
-
-
 Bool CoordinateUtil::holdsSky (Bool& holdsOneSkyAxis, const CoordinateSystem& csys, Vector<Int> pixelAxes)
 {
    AlwaysAssert(pixelAxes.nelements()==2, AipsError);

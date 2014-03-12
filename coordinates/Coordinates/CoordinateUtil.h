@@ -404,12 +404,6 @@ static Bool dropRemovedAxes (
 // Returns False and an error message if it can't find the sky.
    static Bool findSky(String& errorMessage, Int& dirCoord, Vector<Int>& pixelAxes,
                        Vector<Int>& worldAxes, const CoordinateSystem& cSys);
-//
-
-// Does the CoordinateSystem hold just the sky ?  Exception if not.
-// Returns True if CS pixel axis 0 is the longitude and 1 latitude  
-// else returns False
-   static Bool isSky (LogIO& os, const CoordinateSystem& cSys);
 
 // Do the specified axes hold the sky ?  Returns False if no DirectionCoordinate
 // or if only one axis of the DirectionCoordinate is held or the specified
