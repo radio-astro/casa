@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -380,6 +381,472 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
                         (str(merged["FREQ_IDS"]), str(refFID)))
 
 
+class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
+    """
+    Test capabilities of sd.merge() with freq_tol='1MHz'.
+
+    The list of tests:
+    test_freqtol00: check if same freq[0], increment, and nchan is merged
+    test_freqtol01: check if different freq[0] (within 1MHz) is merged
+    test_freqtol02: check if different freq[0] (equal to 1MHz) is merged
+    test_freqtol03: check if different freq[0] (out of 1MHz) is NOT merged
+    test_freqtol04: check if different increment (within 1MHz) is merged
+    test_freqtol05: check if different increment (equal to 1MHz) is merged
+    test_freqtol06: check if different increment (out of 1MHz) is NOT merged
+    test_freqtol07: check if different refval/refpix but same freq[0] is merged
+    test_freqtol08: check if different nchan merges FREQUENCIES and FREQ_ID but does NOT IFNO
+    test_freqtol10: check if different BASEFRAME causes exception
+    test_freqtol11: check if different FRAME doesn't affect the process
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcoadd/'
+    # Input and output names
+    # orions_calSave_21if03.asap: nROW=4, IF=[0,3], scan=[21], MOL=[0], FOC=[0]
+    # orions_calSave_23.asap: nROW=8, IF=[0-3], scan=[23], MOL=[0], FOC=[0]
+    # orions_calSave_2327.asap: nROW=16, IF=[0-7], scan=[23,27], MOL=[0], FOC=[0]
+    inlist = ['orions_calSave_23.asap','orions_calSave_21if03.asap']
+    outfile = "sdcoadd_out.asap"
+    freqtol = '1kHz'
+    within_tol = 0.99e3
+    equal_tol = 1.0e3
+    outof_tol = 1.01e3
+    
+    def setUp( self ):
+        default(sdcoadd)
+        self._copy_inputs()
+
+    def tearDown( self ):
+        for thefile in self.inlist + [self.outfile]:
+            if (os.path.exists(thefile)):
+                shutil.rmtree(thefile)
+
+    def _copy_inputs( self ):
+        # copy input scantables
+        for infile in self.inlist:
+            if os.path.exists(infile):
+                shutil.rmtree(infile)
+            shutil.copytree(self.datapath+infile, infile)
+
+    def _verify(self, outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos):
+        # outfile must exist
+        self.assertTrue(os.path.exists(self.outfile),msg="No output written")
+        
+        # test nrow of outfile MAIN
+        tb.open(outfile)
+        main_nrow = tb.nrows()
+        freqids = tb.getcol('FREQ_ID')
+        ifnos = tb.getcol('IFNO')
+        tb.close()
+        self.assertEqual(expected_main_nrow, main_nrow,
+                         msg='number of MAIN rows differ')
+
+        # test nrow of outfile HISTORY
+        hist_nrow = self._nrow(outfile, 'HISTORY')
+        self.assertTrue(hist_nrow >= expected_hist_nrow,
+                        msg="nHIST = %d (expected: >= %d)" % (hist_nrow, expected_hist_nrow))        
+        
+        # test nrow of outfile FREQUENCIES
+        freq_nrow = self._nrow(outfile, 'FREQUENCIES')
+        self.assertEqual(expected_freq_nrow, freq_nrow,
+                         msg='number of FREQUENCIES rows differ')
+        
+        # test FREQ_ID entries
+        self.assertEqual(main_nrow, len(expected_freqids),
+                         msg='invalid expected value for FREQ_ID')
+        self.assertTrue(all(freqids == numpy.array(expected_freqids)),
+                            msg='FREQ_ID entries differ')
+        
+        # test IFNO entries
+        casalog.post('ifnos (actual)  =%s'%(ifnos.tolist()))
+        casalog.post('ifnos (expected)=%s'%(expected_ifnos))
+        self.assertEqual(main_nrow, len(expected_ifnos),
+                         msg='invalid expected value for IFNO')
+        self.assertTrue(all(ifnos == numpy.array(expected_ifnos)),
+                            msg='IFNO entries differ')
+        
+
+    def _nrow(self, tables, subtable=None):
+        nrow = 0
+        if subtable is None:
+            if isinstance(tables, str):
+                tb.open(tables)
+                nrow = tb.nrows()
+                tb.close()
+            else:
+                for t in tables:
+                    nrow += self._nrow(t)
+        else:
+            if isinstance(tables, str):
+                nrow = self._nrow(os.path.join(tables, subtable))
+            else:
+                for t in tables:
+                    nrow += self._nrow(t, subtable)
+        return nrow
+        
+    def test_freqtol00( self ):
+        """test_freqtol00: check if same freq[0], increment, and nchan is merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according to FREQ_ID
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+
+        # expected nrows for outfile HISTORY (must be evaluated before
+        # running sdcoadd)
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol01( self ):
+        """test_freqtol01: different freq[0] (within 1MHz) is merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift REFVAL by an amount within tolerance
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        refval = tb.getcell('REFVAL', 1)
+        refval += self.within_tol
+        tb.putcell('REFVAL', 1, refval)
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol02(self):
+        """test_freqtol02: check if different freq[0] (equal to 1MHz) is merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift REFVAL by an amount equal to tolerance
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        refval = tb.getcell('REFVAL', 1)
+        refval += self.equal_tol
+        tb.putcell('REFVAL', 1, refval)
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol03(self):
+        """test_freqtol03: check if different freq[0] (out of 1MHz) is NOT merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift REFVAL by an amount out of tolerance
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        refval = tb.getcell('REFVAL', 1)
+        refval += self.outof_tol
+        tb.putcell('REFVAL', 1, refval)
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 5
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol04(self):
+        """test_freqtol04: check if different increment (within 1MHz) is merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift INCREMENT by an amount within tolerance
+        # 3. change REFPIX to 0.0 for FREQUENCIES rows that are supposed
+        #    to be merged
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        increment = tb.getcell('INCREMENT', 1)
+        increment += self.within_tol
+        tb.putcell('INCREMENT', 1, increment)
+        tb.putcell('REFPIX', 1, 0.0)
+        tb.close()
+        tb.open(os.path.join(infiles[0], 'FREQUENCIES'), nomodify=False)
+        tb.putcell('REFPIX', 3, 0.0)
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol05(self):
+        """test_freqtol05: check if different increment (equal to 1MHz) is merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift INCREMENT by an amount equal to tolerance
+        # 3. change REFPIX to 0.0 for FREQUENCIES rows that are supposed
+        #    to be merged
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        increment = tb.getcell('INCREMENT', 1)
+        increment += self.equal_tol
+        tb.putcell('INCREMENT', 1, increment)
+        tb.putcell('REFPIX', 1, 0.0)
+        tb.close()
+        tb.open(os.path.join(infiles[0], 'FREQUENCIES'), nomodify=False)
+        tb.putcell('REFPIX', 3, 0.0)
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol06(self):
+        """test_freqtol06: check if different increment (out of 1MHz) is NOT merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift INCREMENT by an amount out of tolerance
+        # 3. change REFPIX to 0.0 for FREQUENCIES rows (including
+        #    self.inlist[0]) that are supposed to be merged
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        increment = tb.getcell('INCREMENT', 1)
+        increment += self.outof_tol
+        tb.putcell('INCREMENT', 1, increment)
+        tb.putcell('REFPIX', 1, 0.0)
+        tb.close()
+        tb.open(os.path.join(infiles[0], 'FREQUENCIES'), nomodify=False)
+        tb.putcell('REFPIX', 3, 0.0)
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 5
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol07(self):
+        """test_freqtol07: check if different refval/refpix but same freq[0] is merged"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. shift REFPIX and REFVAL
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        increment = tb.getcell('INCREMENT', 1)
+        npix = 10.0
+        refpix = tb.getcell('REFPIX', 1)
+        refval = tb.getcell('REFVAL', 1)
+        refval += npix * increment
+        refpix += npix
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol08(self):
+        """test_freqtol08: check if different nchan merges FREQUENCIES and FREQ_ID but does NOT IFNO"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. change nchan of target FREQ_ID
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tsel = tb.query('IFNO==1')
+        sp = tsel.getcol('SPECTRA')
+        fl = tsel.getcol('FLAGTRA')
+        tsel.putcol('SPECTRA', sp[:10,:])
+        tsel.putcol('FLAGTRA', fl[:10,:])
+        tsel.close()
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+    
+    def test_freqtol10(self):
+        """test_freqtol10: check if different BASEFRAME causes exception"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. change BASEFRAME
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        tb.putkeyword('BASEFRAME', 'TOPO')
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        try:
+            result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        except RuntimeError, e:
+            self.assertNotEqual(str(e).find('BASEFRAME is not identical'), -1,
+                             msg='Unexpected exception is thrown: \'%s\''%(str(e)))
+        except Exception, e:
+            self.fail('Unexpected exception is thrown: \'%s\''%(str(e)))
+            
+    
+    def test_freqtol11(self):
+        """test_freqtol11: check if different FRAME doesn't affect the process"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according tao FREQ_ID
+        # 2. change FRAME
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'FREQUENCIES'), nomodify=False)
+        tb.putkeyword('FRAME', 'TOPO')
+        tb.close()
+
+        # expected nrows for outfile HISTORY 
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+        # additional check: check FRAME of outfile FREQUENCIES
+        tb.open(os.path.join(infiles[0], 'FREQUENCIES'))
+        frame_ref = tb.getkeyword('FRAME')
+        tb.close()
+        tb.open(os.path.join(self.outfile, 'FREQUENCIES'))
+        frame_out = tb.getkeyword('FRAME')
+        tb.close()
+        self.assertEqual(frame_ref, frame_out,
+                         msg='FRAME of outfile FREQUENCIES must %s (%s is given)'%(frame_ref, frame_out))
+    
+        
 class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdcoadd. Test scantable sotrage and insitu
@@ -631,4 +1098,5 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._compare_ids(id_out, id_ref)
 
 def suite():
-    return [sdcoadd_basicTest, sdcoadd_mergeTest, sdcoadd_storageTest]
+    return [sdcoadd_basicTest, sdcoadd_mergeTest, sdcoadd_storageTest,
+            sdcoadd_freqtolTest]

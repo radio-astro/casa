@@ -4,7 +4,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdcoadd(infiles, antenna, outfile, outform, overwrite):
+def sdcoadd(infiles, antenna, freqtol, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdcoadd_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -35,7 +35,7 @@ class sdcoadd_worker(sdutil.sdtask_template):
         pass
 
     def merge(self):
-        self.scan = sd.merge(self.scanlist)
+        self.scan = sd.merge(self.scanlist, freq_tol=self.freqtol)
         casalog.post( "Coadded %s" % self.infiles )
 
         # total row
