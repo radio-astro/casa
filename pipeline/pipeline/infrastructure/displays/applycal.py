@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import collections
 import os
+import string
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
@@ -76,11 +77,17 @@ class PlotmsLeaf(object):
             'vis'      : os.path.basename(self._vis),
             'x'        : self._xaxis,
             'y'        : self._yaxis,
-            'spw'      : '' if self._spw == '' else 'spw%0.2d-' % int(self._spw),
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
             'field'    : '' if self._field == '' else '-%s' % filenamer.sanitize(self._field.replace(',','_')),
             'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
         }
+
+        if self._spw == '':
+            fileparts['spw'] = ''
+        else:
+            # format spws for filename sorting
+            spws = ['%0.2d' % int(spw) for spw in string.split(str(self._spw), ',')]
+            fileparts['spw'] = 'spw%s-' % '_'.join(spws)
 
         # some filesystems have limits on the length of the filenames. Mosaics
         # can exceed this limit due to including the names of all the field.
