@@ -383,16 +383,16 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
 
 class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
     """
-    Test capabilities of sd.merge() with freq_tol='1MHz'.
+    Test capabilities of sd.merge() with freq_tol='1kHz'.
 
     The list of tests:
     test_freqtol00: check if same freq[0], increment, and nchan is merged
-    test_freqtol01: check if different freq[0] (within 1MHz) is merged
-    test_freqtol02: check if different freq[0] (equal to 1MHz) is merged
-    test_freqtol03: check if different freq[0] (out of 1MHz) is NOT merged
-    test_freqtol04: check if different increment (within 1MHz) is merged
-    test_freqtol05: check if different increment (equal to 1MHz) is merged
-    test_freqtol06: check if different increment (out of 1MHz) is NOT merged
+    test_freqtol01: check if different freq[0] (within 1kHz) is merged
+    test_freqtol02: check if different freq[0] (equal to 1kHz) is merged
+    test_freqtol03: check if different freq[0] (out of 1kHz) is NOT merged
+    test_freqtol04: check if different increment (within 1kHz) is merged
+    test_freqtol05: check if different increment (equal to 1kHz) is merged
+    test_freqtol06: check if different increment (out of 1kHz) is NOT merged
     test_freqtol07: check if different refval/refpix but same freq[0] is merged
     test_freqtol08: check if different nchan merges FREQUENCIES and FREQ_ID but does NOT IFNO
     test_freqtol10: check if different BASEFRAME causes exception
@@ -510,7 +510,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
 
     def test_freqtol01( self ):
-        """test_freqtol01: different freq[0] (within 1MHz) is merged"""
+        """test_freqtol01: different freq[0] (within 1kHz) is merged"""
         infiles = self.inlist
         
         # edit self.inlist[1] so that it suites with testing purpose
@@ -541,7 +541,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
 
     def test_freqtol02(self):
-        """test_freqtol02: check if different freq[0] (equal to 1MHz) is merged"""
+        """test_freqtol02: check if different freq[0] (equal to 1kHz) is merged"""
         infiles = self.inlist
         
         # edit self.inlist[1] so that it suites with testing purpose
@@ -572,7 +572,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
 
     def test_freqtol03(self):
-        """test_freqtol03: check if different freq[0] (out of 1MHz) is NOT merged"""
+        """test_freqtol03: check if different freq[0] (out of 1kHz) is NOT merged"""
         infiles = self.inlist
         
         # edit self.inlist[1] so that it suites with testing purpose
@@ -603,7 +603,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
 
     def test_freqtol04(self):
-        """test_freqtol04: check if different increment (within 1MHz) is merged"""
+        """test_freqtol04: check if different increment (within 1kHz) is merged"""
         infiles = self.inlist
         
         # edit self.inlist[1] so that it suites with testing purpose
@@ -640,7 +640,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
 
     def test_freqtol05(self):
-        """test_freqtol05: check if different increment (equal to 1MHz) is merged"""
+        """test_freqtol05: check if different increment (equal to 1kHz) is merged"""
         infiles = self.inlist
         
         # edit self.inlist[1] so that it suites with testing purpose
@@ -677,7 +677,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
 
     def test_freqtol06(self):
-        """test_freqtol06: check if different increment (out of 1MHz) is NOT merged"""
+        """test_freqtol06: check if different increment (out of 1kHz) is NOT merged"""
         infiles = self.inlist
         
         # edit self.inlist[1] so that it suites with testing purpose
