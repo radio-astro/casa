@@ -168,7 +168,13 @@ function set_CASA_3RD_PARTY_DIRECTORY {
             if [ "$OS_VERSION" = "10" ]; then
                 result="/opt/casa/darwin${OS_VERSION}-64b"
             else
-                result="/opt/casa/darwin${OS_VERSION}"
+                if [ -d /opt/casa/01/ ]; then
+                    result=/opt/casa/01/
+                elif [ -d "/opt/casa/darwin${OS_VERSION}" ]; then
+                    result="/opt/casa/darwin${OS_VERSION}"
+                else
+                    result="CASA 3rd party directory is unknown."
+                fi
             fi
         else
             # Probably running from an app.  Not sure though...
