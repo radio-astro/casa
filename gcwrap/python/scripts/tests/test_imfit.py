@@ -632,44 +632,30 @@ class imfit_test(unittest.TestCase):
         '''Imfit: Test position errors'''
         success = True
         test = 'test_position_errors: '
-        global msgs
-    
+        box = "122, 85, 177, 138"
         def run_fitcomponents():
             myia = iatool()
             myia.open(convolved_model)
-            res = myia.fitcomponents()
+            res = myia.fitcomponents(box=box)
             myia.done()
             return res
         def run_imfit():
             default('imfit')
-            return imfit(imagename=convolved_model)
+            return imfit(imagename=convolved_model, box=box)
     
         for code in [run_fitcomponents, run_imfit]:
             res = code()
             clist = res['results']
-            shape = clist['component0']['shape']
+            error = clist['component0']['shape']['direction']['error']
 
-            if (not res['converged'][0]):
-                success = False
-                msgs += test + "fit did not converge unexpectedly"
-            epsilon = 1e-5
-
-            got = shape['direction']['error']['latitude']['value']
-            expected = 1.0511699866407922e-07
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "Dec error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            self.assertTrue(res['converged'][0])
+            got = error['latitude']['value']
+            self.assertTrue(abs(got) < 1e-6)
     
-            got = shape['direction']['error']['longitude']['value']
-            expected = 8.8704046316191542e-08
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += test + "RA error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            got = error['longitude']['value']
+            self.assertTrue(abs(got) < 1e-6)
 
         self.assertTrue(success,msgs)
-
-
-
     
     # test writing, appending, and overwriting log files
     def test_logfile(self):
@@ -962,20 +948,19 @@ class imfit_test(unittest.TestCase):
         self.assertTrue(success,msgs)
 
     def test_CAS_2633(self):
+        """bug fix: imfit always returns 1000 MHz as image frequency"""
         method = "test_CAS_2633"
         test = "test_CAS_2633"
-
-        global msgs
-        success = True
+        box = "120, 90, 175, 130"
         def run_fitcomponents():
             myia = iatool()
             myia.open(jyperbeamkms)
-            res = myia.fitcomponents()
+            res = myia.fitcomponents(box=box)
             myia.done()
             return res
         def run_imfit():
             default('imfit')
-            return imfit(imagename=jyperbeamkms)
+            return imfit(imagename=jyperbeamkms, box=box)
     
         for i in [0 ,1]:
             if (i == 0):
@@ -986,19 +971,12 @@ class imfit_test(unittest.TestCase):
                 method += test + "imfit: "
             res = code()
             clist = res['results']
-            if (not res['converged'][0]):
-                success = False
-                msgs += method + "fit did not converge unexpectedly"
+            self.assertTrue(res['converged'][0])
             epsilon = 1e-7
             # ref freq test
             got = clist['component0']['spectrum']['frequency']['m0']['value']
             expected = 1.415
-            if (not near(got, expected, epsilon)):
-                success = False
-                msgs += method + "frequency test failure, got " + str(got) + " expected " + str(expected) + "\n"
-
-
-        self.assertTrue(success,msgs)
+            self.assertTrue(near(got, expected, epsilon))
 
     def test_CAS_2595(self):
         """ Test CAS-2595 feature addition: write component list table"""

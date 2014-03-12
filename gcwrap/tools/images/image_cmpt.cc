@@ -3522,8 +3522,7 @@ image* image::regrid(
 		regridder.setForceRegrid(forceRegrid);
 		regridder.setSpecAsVelocity(specAsVelocity);
 		regridder.setStretch(stretch);
-		tr1::shared_ptr<ImageInterface<Float> > x(regridder.regrid(True));
-		return new image(x);
+		return new image(regridder.regrid());
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
