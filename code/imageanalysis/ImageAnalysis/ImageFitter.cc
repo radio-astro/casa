@@ -85,7 +85,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	*_getLog() << origin;
 	Bool converged;
 	SPIIF modelImage, residualImage, templateImage;
-	std::auto_ptr<LCMask> completePixelMask;
+	//std::auto_ptr<LCMask> completePixelMask;
 	Bool doResid = ! _residual.empty();
 	Bool doModel = ! _model.empty();
 	if (doResid || doModel) {
@@ -97,7 +97,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			modelImage = _createImageTemplate();
 			templateImage = modelImage;
 		}
-		completePixelMask.reset(new LCMask(templateImage->shape()));
+		//completePixelMask.reset(new LCMask(templateImage->shape()));
 	}
 	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
 	Vector<String> models(ngauss, "gaussian");
@@ -123,10 +123,9 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	Bool anyConverged = False;
 	Array<Float> residPixels, modelPixels;
 	_fitLoop(
-		anyConverged, convolvedList,
-		deconvolvedList, templateImage,
-		residualImage, modelImage,
-		*completePixelMask, resultsString
+		anyConverged, convolvedList, deconvolvedList,
+		templateImage, residualImage, modelImage,
+		/* *completePixelMask, */ resultsString
 	);
 	if (anyConverged) {
 		_writeCompList(convolvedList);
@@ -137,14 +136,13 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			<< LogIO::POST;
 	}
 	if (residualImage || modelImage) {
-		ArrayLattice<Bool> mask(completePixelMask->get(False));
+		//ArrayLattice<Bool> mask(completePixelMask->get(False));
 		if (residualImage) {
 			try {
 				_prepareOutputImage(
-					*residualImage, 0, &mask,
+					*residualImage, 0, 0,
 					0, 0, &_residual, True
 				);
-
 			}
 			catch (const AipsError& x) {
 				*_getLog() << LogIO::WARN << "Error writing "
@@ -155,7 +153,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		if (modelImage) {
 			try {
 				_prepareOutputImage(
-					*modelImage, 0, &mask,
+					*modelImage, 0, 0,
 					0, 0, &_model, True
 				);
 			}
@@ -182,7 +180,7 @@ void ImageFitter::_fitLoop(
 	Bool& anyConverged, ComponentList& convolvedList,
 	ComponentList& deconvolvedList, SPIIF templateImage,
 	SPIIF residualImage, SPIIF modelImage,
-	LCMask& completePixelMask, String& resultsString
+	/*LCMask& completePixelMask, */ String& resultsString
 ) {
 	Bool converged = False;
 	Bool deconvolve = False;
@@ -192,6 +190,12 @@ void ImageFitter::_fitLoop(
 	Double zeroLevelOffsetEstimate = _doZeroLevel ? _zeroLevelOffsetEstimate : 0;
 	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
 	Vector<String> models(ngauss, "gaussian");
+	IPosition planeShape(_getImage()->ndim(), 1);
+	ImageMetaData md(_getImage());
+	Vector<Int> dirShape = md.directionShape();
+	Vector<Int> dirAxisNumbers = _getImage()->coordinates().directionAxesNumbers();
+	planeShape[dirAxisNumbers[0]] = dirShape[0];
+	planeShape[dirAxisNumbers[1]] = dirShape[1];
 	if (_doZeroLevel) {
 		models.resize(ngauss+1, True);
 		models[ngauss] = "level";
@@ -200,13 +204,21 @@ void ImageFitter::_fitLoop(
 	}
 	String errmsg;
 	LogOrigin origin(getClass(), __func__);
+	std::pair<Int, Int> pixelOffsets;
+	const CoordinateSystem csys = _getImage()->coordinates();
+	Bool hasSpectralAxis = csys.hasSpectralAxis();
+	uInt spectralAxisNumber = csys.spectralAxisNumber();
+	Bool outputImages = residualImage || modelImage;
+	std::tr1::shared_ptr<ArrayLattice<Bool> > initMask;
+	std::tr1::shared_ptr<TempImage<Float> > tImage;
+	IPosition location(_getImage()->ndim(), 0);
 	for (_curChan=_chanVec[0]; _curChan<=_chanVec[1]; _curChan++) {
 		if (_chanPixNumber >= 0) {
 			_chanPixNumber = _curChan;
 		}
 		Fit2D fitter(*_getLog());
 		_setIncludeExclude(fitter);
-		Array<Float> pixels, curResidPixels, curModelPixels;
+		Array<Float> pixels;
 		Array<Bool> pixelMask;
 		_curConvolvedList = ComponentList();
 		_curDeconvolvedList = ComponentList();
@@ -214,9 +226,9 @@ void ImageFitter::_fitLoop(
 			_fitsky(
 				fitter, pixels, pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
-				models, fit, deconvolve, list, zeroLevelOffsetEstimate
+				pixelOffsets, models, fit, deconvolve, list,
+				zeroLevelOffsetEstimate
 			);
-
 		}
 		catch (const AipsError& x) {
 			*_getLog() << origin << LogIO::WARN << "Fit failed to converge "
@@ -225,62 +237,35 @@ void ImageFitter::_fitLoop(
 		}
 		*_getLog() << origin;
 		anyConverged |= converged;
+
 		if (converged) {
-			convolvedList.addList(_curConvolvedList);
-			deconvolvedList.addList(_curDeconvolvedList);
-			if (_doZeroLevel) {
-				_zeroLevelOffsetSolution.push_back(
-					zeroLevelOffsetSolution
-				);
-				_zeroLevelOffsetError.push_back(
-					zeroLevelOffsetError
-				);
-				zeroLevelOffsetEstimate = zeroLevelOffsetSolution;
-			}
-			fitter.residual(curResidPixels, curModelPixels, pixels);
-			// coordinates arean't important, just need the stats for a masked lattice.
-			TempImage<Float> residPlane(
-				curResidPixels.shape(), CoordinateUtil::defaultCoords2D()
+			_doConverged(
+				convolvedList, deconvolvedList,
+				zeroLevelOffsetEstimate, pixelOffsets,
+				residualImage, modelImage, tImage,
+				initMask, zeroLevelOffsetSolution,
+				zeroLevelOffsetError, hasSpectralAxis,
+				spectralAxisNumber, outputImages, planeShape,
+				pixels, pixelMask, fitter, templateImage
 			);
-			residPlane.put(curResidPixels);
-			LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
-			residPlane.attachMask(lcResidMask);
-			LatticeStatistics<Float> lStats(*residPlane.cloneML(), False);
-			Array<Double> stat;
-			lStats.getStatistic(stat, LatticeStatistics<Float>::RMS, True);
-			_residStats.define("rms", stat[0]);
-			lStats.getStatistic(stat, LatticeStatistics<Float>::SIGMA, True);
-			_residStats.define("sigma", stat[0]);
 		}
-		else if (_doZeroLevel) {
-			_zeroLevelOffsetSolution.push_back(doubleNaN());
-			_zeroLevelOffsetError.push_back(doubleNaN());
-		}
-		if (residualImage || modelImage) {
-			IPosition arrShape = templateImage->shape();
-			if (! converged) {
-				pixelMask.set(False);
+		else {
+			if (_doZeroLevel) {
+				_zeroLevelOffsetSolution.push_back(doubleNaN());
+				_zeroLevelOffsetError.push_back(doubleNaN());
 			}
-			IPosition putLocation(templateImage->ndim(), 0);
-			if (templateImage->coordinates().hasSpectralAxis()) {
-				uInt spectralAxisNumber = templateImage->coordinates().spectralAxisNumber();
-				arrShape[spectralAxisNumber] = 1;
-				putLocation[spectralAxisNumber] = _curChan - _chanVec[0];
-			}
-			completePixelMask.putSlice(pixelMask, putLocation);
-			if (residualImage) {
-				if (! converged) {
-					curResidPixels.resize(pixels.shape());
-					curResidPixels.set(0);
+			if (outputImages) {
+				if (hasSpectralAxis) {
+					location[spectralAxisNumber] = _curChan - _chanVec[0];
 				}
-				residualImage->putSlice(curResidPixels, putLocation);
-			}
-			if (modelImage) {
-				if (! converged) {
-					curModelPixels.resize(pixels.shape());
-					curModelPixels.set(0);
+				Array<Float> x(templateImage->shape());
+				x.set(0);
+				if (residualImage) {
+					residualImage->putSlice(x, location);
 				}
-				modelImage->putSlice(curModelPixels, putLocation);
+				if (modelImage) {
+					modelImage->putSlice(x, location);
+				}
 			}
 		}
 		_fitDone = True;
@@ -297,6 +282,102 @@ void ImageFitter::_fitLoop(
 		resultsString += currentResultsString;
 		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
 	}
+}
+
+void ImageFitter::_doConverged(
+	ComponentList& convolvedList, ComponentList& deconvolvedList,
+	Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
+	SPIIF& residualImage, SPIIF& modelImage,
+	std::tr1::shared_ptr<TempImage<Float> >& tImage,
+	std::tr1::shared_ptr<ArrayLattice<Bool> >& initMask,
+	Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
+	Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages,
+	const IPosition& planeShape, const Array<Float>& pixels,
+	const Array<Bool>& pixelMask, const Fit2D& fitter, SPIIF templateImage
+) {
+	convolvedList.addList(_curConvolvedList);
+	deconvolvedList.addList(_curDeconvolvedList);
+	if (_doZeroLevel) {
+		_zeroLevelOffsetSolution.push_back(
+			zeroLevelOffsetSolution
+		);
+		_zeroLevelOffsetError.push_back(
+			zeroLevelOffsetError
+		);
+		zeroLevelOffsetEstimate = zeroLevelOffsetSolution;
+	}
+	IPosition location(_getImage()->ndim(), 0);
+	if (hasSpectralAxis) {
+		location[spectralAxisNumber] = _curChan;
+	}
+	Array<Float> data = outputImages
+		? _getImage()->getSlice(location, planeShape, True)
+		: pixels;
+	if (! outputImages) {
+		pixelOffsets.first = 0;
+		pixelOffsets.second = 0;
+	}
+	Array<Float> curResidPixels, curModelPixels;
+	fitter.residual(
+		curResidPixels, curModelPixels, data,
+		pixelOffsets.first, pixelOffsets.second
+	);
+	std::tr1::shared_ptr<TempImage<Float> > fittedResid;
+	if (outputImages) {
+		if (hasSpectralAxis) {
+			location[spectralAxisNumber] = _curChan - _chanVec[0];
+		}
+		Array<Bool> myMask(templateImage->shape(), True);
+		//completePixelMask.putSlice(pixelMask, location);
+		residualImage->putSlice(curResidPixels, location);
+		if (modelImage) {
+			modelImage->putSlice(curModelPixels, location);
+		}
+		fittedResid = std::tr1::dynamic_pointer_cast<TempImage<Float> >(
+			SubImageFactory<Float>::createImage(
+				*residualImage, "", *_getRegion(), _getMask(),
+				False, False, False, False
+			)
+		);
+		ThrowIf(! fittedResid, "Dynamic cast failed");
+		if (! fittedResid->hasPixelMask()) {
+			fittedResid->attachMask(
+				ArrayLattice<Bool>(
+					Array<Bool>(fittedResid->shape(), True)
+				)
+			);
+		}
+	}
+	else {
+		if (! tImage) {
+			// coordinates arean't important, just need the stats for a masked lattice.
+			tImage.reset(
+				new TempImage<Float>(
+					curResidPixels.shape(), CoordinateUtil::defaultCoords2D()
+				)
+			);
+			initMask.reset(
+				new ArrayLattice<Bool>(
+					Array<Bool>(curResidPixels.shape(), True)
+				)
+			);
+			tImage->attachMask(*initMask);
+		}
+		fittedResid = tImage;
+		fittedResid->put(curResidPixels);
+	}
+	Lattice<Bool> *fittedResidPixelMask = &(fittedResid->pixelMask());
+	LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
+	fittedResidPixelMask = &lcResidMask;
+	//fittedResid->attachMask(lcResidMask);
+	std::auto_ptr<MaskedLattice<Float> > maskedLattice(fittedResid->cloneML());
+	LatticeStatistics<Float> lStats(*maskedLattice, False);
+	Array<Double> stat;
+	lStats.getStatistic(stat, LatticeStatistics<Float>::RMS, True);
+	_residStats.define("rms", stat[0]);
+	lStats.getStatistic(stat, LatticeStatistics<Float>::SIGMA, True);
+	_residStats.define("sigma", stat[0]);
+	lStats.getStatistic(stat, LatticeStatistics<Float>::NPTS, True);
 }
 
 void ImageFitter::setZeroLevelEstimate(
@@ -395,34 +476,14 @@ Double ImageFitter::_getStatistic(const String& type, const uInt index, const Re
 	return statVec[index];
 }
 
-vector<OutputDestinationChecker::OutputStruct> ImageFitter::_getOutputs() {
-	/*
-	LogOrigin logOrigin("ImageFitter", __func__);
-	*_getLog() << logOrigin;
-	OutputDestinationChecker::OutputStruct residualIm;
-	residualIm.label = "residual image";
-	residualIm.outputFile = &_residual;
-	residualIm.required = False;
-	residualIm.replaceable = True;
-	OutputDestinationChecker::OutputStruct modelIm;
-	modelIm.label = "model image";
-	modelIm.outputFile = &_model;
-	modelIm.required = False;
-	modelIm.replaceable = True;
-	*/
+vector<OutputDestinationChecker::OutputStruct> ImageFitter::_getOutputStruct() {
 	OutputDestinationChecker::OutputStruct newEstFile;
-	newEstFile.label = "new estiamtes file";
+	newEstFile.label = "new estimates file";
 	newEstFile.outputFile = &_newEstimatesFileName;
 	newEstFile.required = False;
 	newEstFile.replaceable = True;
-
 	vector<OutputDestinationChecker::OutputStruct> outputs(1);
-	/*
-	outputs[0] = residualIm;
-	outputs[1] = modelIm;
-	*/
-	outputs[2] = newEstFile;
-
+	outputs[0] = newEstFile;
 	return outputs;
 }
 
@@ -1368,10 +1429,17 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 }
 
 SPIIF ImageFitter::_createImageTemplate() const {
+	/*
 	SPIIF x(
 		SubImageFactory<Float>::createImage(
 			*_getImage(), "", *_getRegion(), _getMask(),
 			False, False, False, _getStretch()
+		)
+	);*/
+	SPIIF x(
+		SubImageFactory<Float>::createImage(
+			*_getImage(), "", Record(), "",
+			False, False, False, False
 		)
 	);
 	x->set(0.0);
@@ -1446,14 +1514,13 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 	}
 }
 
-
 // TODO From here until the end of the file is code extracted directly
 // from ImageAnalysis. It is in great need of attention.
 
 void ImageFitter::_fitsky(
 	Fit2D& fitter, Array<Float>& pixels, Array<Bool>& pixelMask,
 	Bool& converged, Double& zeroLevelOffsetSolution,
-   	Double& zeroLevelOffsetError,
+   	Double& zeroLevelOffsetError, std::pair<Int, Int>& pixelOffsets,
 	const Vector<String>& models,
 	const Bool fitIt, const Bool deconvolveIt, const Bool list,
 	const Double zeroLevelEstimate
@@ -1472,36 +1539,37 @@ void ImageFitter::_fitsky(
 	const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
 	const uInt nMasks = _fixed.nelements();
 	const uInt nEstimates = estimate.nelements();
-	if (nModels == 0) {
-		*_getLog() << "You have not specified any models" << LogIO::EXCEPTION;
-	}
-	if (nGauss > 1 && estimate.nelements() < nGauss) {
-		*_getLog() << "You must specify one estimate for each model component"
-			<< LogIO::EXCEPTION;
-	}
-	if (!fitIt && nModels > 1) {
-		*_getLog() << "Parameter estimates are only available for a single Gaussian model"
-			<< LogIO::EXCEPTION;
-	}
-	SubImage<Float> subImageTmp;
-	{
-		std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
-		subImageTmp = SubImageFactory<Float>::createSubImage(
-			*imageClone, *_getRegion(), _getMask(),
-			(list ? _getLog().get() : 0), False,
-			AxesSpecifier(True), _getStretch()
-		);
-	}
+	ThrowIf(
+		nModels == 0,
+		"No models have been specified"
+	);
+	ThrowIf(
+		nGauss > 1 && estimate.nelements() < nGauss,
+		"An estimate must be specified for each model component"
+	);
+	ThrowIf(
+		! fitIt && nModels > 1,
+		"Parameter estimates are only available for a single Gaussian model"
+	);
+	SPIIF subImageTmp(
+		SubImageFactory<Float>::createImage(
+			*_getImage(), "", *_getRegion(), _getMask(),
+			False, False, False, _getStretch()
+		)
+	);
+	Vector<Double> imRefPix = _getImage()->coordinates().directionCoordinate().referencePixel();
+	Vector<Double> subRefPix = subImageTmp->coordinates().directionCoordinate().referencePixel();
+	pixelOffsets.first = (int)floor(subRefPix[0] - imRefPix[0] + 0.5);
+	pixelOffsets.second = (int)floor(subRefPix[1] - imRefPix[1] + 0.5);
 	SubImage<Float> allAxesSubImage;
 	{
-		IPosition imShape = subImageTmp.shape();
+		IPosition imShape = subImageTmp->shape();
 		IPosition startPos(imShape.nelements(), 0);
 		// Pass in an IPosition here to the constructor
 		// this will subtract 1 from each element of the IPosition imShape
 		IPosition endPos(imShape - 1);
 		IPosition stride(imShape.nelements(), 1);
-		//const CoordinateSystem& imcsys = pImage_p->coordinates();
-		const CoordinateSystem& imcsys = subImageTmp.coordinates();
+		const CoordinateSystem& imcsys = subImageTmp->coordinates();
 		if (imcsys.hasSpectralAxis()) {
 			uInt spectralAxisNumber = imcsys.spectralAxisNumber();
 			startPos[spectralAxisNumber] = _curChan - _chanVec[0];
@@ -1515,7 +1583,7 @@ void ImageFitter::_fitsky(
 		Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 		// CAS-1966, CAS-2633 keep degenerate axes
 		allAxesSubImage = SubImage<Float>(
-			subImageTmp, slice, False, AxesSpecifier(True)
+			*subImageTmp, slice, False, AxesSpecifier(True)
 		);
 	}
 	// for some things we don't want the degenerate axes,
@@ -1526,7 +1594,7 @@ void ImageFitter::_fitsky(
 
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
-	Bool xIsLong = CoordinateUtil::isSky(*_getLog(), cSys);
+	Bool xIsLong = cSys.isDirectionAbscissaLongitude();
 	pixels = subImage.get(True);
 	pixelMask = subImage.getMask(True).copy();
 
@@ -1623,9 +1691,7 @@ void ImageFitter::_fitsky(
 		}
 		fitter.addModel(modelType, parameters, parameterMask);
 	}
-	// Do fit
 	Array<Float> sigma;
-	// residMask constant so do not recalculate out_pixelmask
 	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
 	*_getLog() << LogOrigin(_class, __func__);
 
@@ -1642,7 +1708,7 @@ void ImageFitter::_fitsky(
 	Vector<SkyComponent> result(_doZeroLevel ? nModels - 1 : nModels);
 	Double facToJy;
 	uInt j = 0;
-	for (uInt i = 0; i < models.nelements(); i++) {
+	for (uInt i = 0; i < nModels; i++) {
 		if (fitter.type(i) == Fit2D::LEVEL) {
 			zeroLevelOffsetSolution = fitter.availableSolution(i)[0];
 			zeroLevelOffsetError = fitter.availableErrors(i)[0];
@@ -1653,11 +1719,10 @@ void ImageFitter::_fitsky(
 			);
 			Vector<Double> solution = fitter.availableSolution(i);
 			Vector<Double> errors = fitter.availableErrors(i);
-			if (anyLT(errors, 0.0)) {
-				throw AipsError(
-					"At least one calculated error is less than zero"
-				);
-			}
+			ThrowIf(
+				anyLT(errors, 0.0),
+				"At least one calculated error is less than zero"
+			);
 			result(j) = ImageUtilities::encodeSkyComponent(
 				*_getLog(), facToJy, allAxesSubImage, modelType,
 				solution, stokes, xIsLong, deconvolveIt,
@@ -1674,9 +1739,12 @@ void ImageFitter::_fitsky(
 			    );
             }
             catch (const AipsError& x) {
-                *_getLog() << "POTENTIAL DEFECT: Fitter converged but exception caught in post processing. "
-                    << "This may be a bug. Conact us with the image and the input parameters "
-                    << "you used and we will have a look." << LogIO::EXCEPTION;
+                ThrowCc(
+                	"POTENTIAL DEFECT: Fitter converged but exception caught in post processing. "
+                    "This may be a bug. Contact us with the image and the input parameters "
+                    "you used and we will have a look. The exception message was "
+                	+ x.getMesg()
+                );
             }
 			_curConvolvedList.add(result(j));
 			if (_getImage()->imageInfo().hasBeam()) {

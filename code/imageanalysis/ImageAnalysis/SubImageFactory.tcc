@@ -71,7 +71,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     				myos = new LogIO();
     				localLogMgr.reset(myos);
     			}
-    			*myos << LogOrigin("SubImage", __FUNCTION__);
+    			*myos << LogOrigin("SubImage", __func__);
     			*myos << "Input mask specification is incorrect: "
     				<< x.getMesg() << LogIO::EXCEPTION;
     		}
@@ -98,7 +98,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 				myos = new LogIO();
 				localLogMgr.reset(myos);
 			}
-			*myos << LogOrigin("SubImage", __FUNCTION__);
+			*myos << LogOrigin("SubImage", __func__);
 			*myos << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
 		}
 	}
@@ -166,22 +166,21 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     return mySubim;
 }
 
-template<class T> ImageInterface<T>* SubImageFactory<T>::createImage(
+template<class T> SPIIT SubImageFactory<T>::createImage(
 	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
 	const String& mask, Bool dropDegenerateAxes,
 	Bool overwrite, Bool list, Bool extendMask
 ) {
 	LogIO log;
-	log << LogOrigin("SubImageFactory", __FUNCTION__);
+	log << LogOrigin("SubImageFactory", __func__);
 	// Copy a portion of the image
 	// Verify output file
 	if (!overwrite && !outfile.empty()) {
 		NewFile validfile;
 		String errmsg;
 		ThrowIf(
-			!validfile.valueOK(outfile, errmsg),
-			errmsg
+			! validfile.valueOK(outfile, errmsg), errmsg
 		);
 	}
 	TempImage<T> newImage(
@@ -198,35 +197,34 @@ template<class T> ImageInterface<T>* SubImageFactory<T>::createImage(
 	ImageUtilities::copyMiscellaneous(newImage, image);
 	newImage.put(image.get());
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	std::auto_ptr<ImageInterface<T> >outImage(
-		new SubImage<T>(
-			SubImageFactory<T>::createSubImage(
-				newImage, region, mask, list ? &log : 0,
-				True, axesSpecifier, extendMask
-			)
-		)
+	SubImage<T> x = SubImageFactory<T>::createSubImage(
+		newImage, region, mask, list ? &log : 0,
+		True, axesSpecifier, extendMask
 	);
+	SPIIT outImage;
 	if (outfile.empty()) {
-		return outImage.release();
+		outImage.reset(
+			new TempImage<T>(x.shape(), x.coordinates())
+		);
 	}
-	// Make the output image
-	if (list) {
-		log << LogIO::NORMAL << "Creating image '" << outfile
-			<< "' of shape " << outImage->shape() << LogIO::POST;
+	else {
+		outImage.reset(
+			new PagedImage<T>(
+				x.shape(), x.coordinates(), outfile
+			)
+		);
+		if (list) {
+			log << LogIO::NORMAL << "Creating image '" << outfile
+				<< "' of shape " << outImage->shape() << LogIO::POST;
+		}
 	}
-	PagedImage<T> pagedImage(
-		outImage->shape(),
-		outImage->coordinates(), outfile
-	);
-	ImageUtilities::copyMiscellaneous(pagedImage, *outImage);
-	// Make output mask if required
-	if (outImage->isMasked()) {
-		cout << "making mask " << endl;
+	if (x.isMasked() || x.hasPixelMask()) {
 		String maskName("");
-		ImageMaskAttacher::makeMask(pagedImage, maskName, False, True, log, list);
+		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
 	}
-	LatticeUtilities::copyDataAndMask(log, pagedImage, *outImage);
-	return new PagedImage<T>(pagedImage);
+	ImageUtilities::copyMiscellaneous(*outImage, x);
+	LatticeUtilities::copyDataAndMask(log, *outImage, x);
+	return outImage;
 }
 
 } //# NAMESPACE CASA - END

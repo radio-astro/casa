@@ -87,11 +87,9 @@ template<class T> SPIIT ImageRebinner<T>::rebin() const {
 		}
 		if (anyTrue(mods > 0)) {
 			LCBox box(IPosition(ndim, 0), trc, shape);
-			subImage.reset(
-				SubImageFactory<T>::createImage(
-					*subImage, "", box.toRecord(""),
-					"", False, False, False, False
-				)
+			subImage = 	SubImageFactory<T>::createImage(
+				*subImage, "", box.toRecord(""),
+				"", False, False, False, False
 			);
 		}
 	}

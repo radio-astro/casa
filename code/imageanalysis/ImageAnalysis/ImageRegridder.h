@@ -93,11 +93,8 @@ public:
 	// destructor
 	~ImageRegridder();
 
-	// perform the regrid. If <src>wantReturn</src> is True, return a pointer to the
-	// collapsed image. The returned pointer is created via new(); it is the caller's
-	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
-	// a NULL pointer is returned and pointer deletion is performed internally.
-	SPIIF regrid(Bool wantReturn) const;
+	// perform the regrid.
+	SPIIF regrid() const;
 
 	// regrid the spectral axis in velocity space rather than frequency space?
 	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
@@ -162,9 +159,7 @@ private:
 		const std::set<Coordinate::Type>& coordsToRegrid
 	) const;
 
-	void _decimateStokes(
-		std::tr1::shared_ptr<ImageInterface<Float> >& workIm
-	) const;
+	SPIIF _decimateStokes(SPIIF workIm) const;
 
 	static Bool _doRectanglesIntersect(
 		const Vector<std::pair<Double, Double> >& corners0,

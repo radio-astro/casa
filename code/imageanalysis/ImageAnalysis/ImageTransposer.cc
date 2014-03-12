@@ -94,7 +94,7 @@ ImageTransposer::ImageTransposer(
 	_order = _getOrder(order);
 }
 
-ImageInterface<Float>* ImageTransposer::transpose() const {
+SPIIF ImageTransposer::transpose() const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	// get the image data
 	Array<Float> dataCopy = _getImage()->get();
@@ -120,7 +120,7 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	std::auto_ptr<ImageInterface<Float> > output(
+	SPIIF output(
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
 
@@ -143,12 +143,12 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	ImageUtilities::copyMiscellaneous(*output, *_getImage());
 	if (! _getOutname().empty()) {
 		Record empty;
-		output.reset(SubImageFactory<Float>::createImage(
+		output = SubImageFactory<Float>::createImage(
 			*output, _getOutname(), empty, "",
 			False, False, True, False
-		));
+		);
 	}
-	return output.release();
+	return output;
 }
 
 ImageTransposer::~ImageTransposer() {}

@@ -29,43 +29,25 @@
 // PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
 
 //# put includes here
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <lattices/LatticeMath/Fit2D.h>
-#include <casa/Quanta.h>
-#include <measures/Measures/Stokes.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/ImageInterface.h>
-#include <components/ComponentModels/ComponentType.h>
-#include <casa/Arrays/AxesSpecifier.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <measures/Measures/Stokes.h>
+
+#include <casa/Quanta/Quantum.h>
 
 #include <imageanalysis/ImageTypedefs.h>
 
-#include <memory>
-#include <tr1/memory>
+namespace std {
+template<class T> class auto_ptr;
+}
 
 namespace casa {
 
-class DirectionCoordinate;
-class LogIO;
-class SkyComponent;
-class Record;
-class Fit2D;
-class ImageRegion;
-class ComponentList;
-template<class T> class Array;
-template<class T> class Block;
-template<class T> class PtrBlock; 
-template<class T> class Flux;
-template<class T> class ImageStatistics;
-template<class T> class ImageHistograms;
-template<class T> class MaskedArray;
-template<class T> class Quantum;
-template<class T> class SubLattice;
-template<class T> class SubImage;
-template<class T> class Vector;
+class CoordinateSystem;
 class ImageMomentsProgressMonitor;
+class ImageRegion;
+class LatticeExprNode;
+class LELImageCoord;
+class RecordInterface;
+
+template<class T> class ImageHistograms;
 
 // <summary>
 // Image analysis and handling tool
@@ -87,10 +69,9 @@ class ImageAnalysis
 
     ImageAnalysis();
 
-    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image);
+    ImageAnalysis(SPIIF image);
 
-    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> > image);
-
+    ImageAnalysis(SPIIC image);
 
     virtual ~ImageAnalysis();
 
@@ -104,7 +85,7 @@ class ImageAnalysis
     	const Bool overwrite = False
     );
 
-    std::tr1::shared_ptr<ImageInterface<Float> > imageconcat(const String& outfile, 
+    SPIIF imageconcat(const String& outfile,
                                         const Vector<String>& infiles, 
                                         const Int axis, 
                                         const Bool relax = False, 
@@ -154,14 +135,14 @@ class ImageAnalysis
     	const String& name, const Bool asdefault = True
     );
 
-    tr1::shared_ptr<ImageInterface<Float> > continuumsub(const String& outline,
+    SPIIF continuumsub(const String& outline,
                                          const String& outcont, Record& region,
                                          const Vector<int>& channels, 
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    std::tr1::shared_ptr<ImageInterface<Float> > convolve2d(
+    SPIIF convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
             const Quantity& minor, const Quantity& pa,
@@ -485,7 +466,7 @@ class ImageAnalysis
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
     // misc from inimage.   Returns T if image made, F if not
-    static tr1::shared_ptr<ImageInterface<Float> >	makeExternalImage (
+    static SPIIF makeExternalImage (
     	const String& fileName,
     	const CoordinateSystem& cSys,
     	const IPosition& shape,
@@ -527,8 +508,8 @@ class ImageAnalysis
     		 const Int& whichQuality=0,
     		 const String& restValue="");
     
-    std::tr1::shared_ptr<ImageInterface<Float> > _imageFloat;
-    std::tr1::shared_ptr<ImageInterface<Complex> > _imageComplex;
+    SPIIF _imageFloat;
+    SPIIC _imageComplex;
 
     std::auto_ptr<LogIO> _log;
 
@@ -549,7 +530,7 @@ class ImageAnalysis
                        const casa::IPosition& shape) const;
     
     // Convert types
-    casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
+    //casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
    
     // Delete private ImageStatistics and ImageHistograms objects
     bool deleteHist();
@@ -609,7 +590,7 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
-    tr1::shared_ptr<ImageInterface<Float> > _fitpolynomial(
+    SPIIF _fitpolynomial(
     	const String& residfile,
     	const String& fitfile,
     	const String& sigmafile,
@@ -639,7 +620,7 @@ class ImageAnalysis
     template<class T> static void _destruct(ImageInterface<T>& image);
 
     template<class T> Bool _setrestoringbeam(
-    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	SPIIT image,
     	const Quantity& major, const Quantity& minor,
     	const Quantity& pa, const Record& rec,
     	const bool deleteIt, const bool log,
@@ -652,7 +633,7 @@ class ImageAnalysis
     	const Bool pixelorder, const Bool verbose
     );
 
-    template<class T> std::tr1::shared_ptr<ImageInterface<T> > _imagecalc(
+    template<class T> SPIIT _imagecalc(
     	const LatticeExprNode& node, const IPosition& shape,
     	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
     	const String& outfile,
@@ -660,12 +641,12 @@ class ImageAnalysis
     );
 
     template<class T> void _calc(
-    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	SPIIT image,
     	const LatticeExprNode& node
     );
 
     template<class T> Bool _calcmask(
-    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	SPIIT image,
     	const LatticeExprNode& node,
     	const String& name, const Bool makedefault
     );

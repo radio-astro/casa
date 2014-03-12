@@ -78,9 +78,7 @@ ImageRegridder::ImageRegridder(
 
 ImageRegridder::~ImageRegridder() {}
 
-SPIIF ImageRegridder::regrid(
-	Bool wantReturn
-) const {
+SPIIF ImageRegridder::regrid() const {
 	Bool regridByVel = False;
 	if (
 		_specAsVelocity && _getImage()->coordinates().hasSpectralAxis()
@@ -99,21 +97,13 @@ SPIIF ImageRegridder::regrid(
 			}
 		}
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > workIm;
-	if (regridByVel) {
-		workIm = _regridByVelocity();
-	}
-	else {
-		workIm = _regrid();
-	}
-	SPIIF outImage = _prepareOutputImage(*workIm);
-	if (! wantReturn) {
-		outImage.reset();
-	}
-    return outImage;
+	std::tr1::shared_ptr<ImageInterface<Float> > workIm = regridByVel
+		? _regridByVelocity()
+		: _regrid();
+	return _prepareOutputImage(*workIm);
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
+SPIIF ImageRegridder::_regrid() const {
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	std::tr1::shared_ptr<SubImage<Float> > subImage(
 		new SubImage<Float>(
@@ -143,9 +133,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 			<< LogIO::EXCEPTION;
 	}
 	_checkOutputShape(*subImage, coordsToRegrid);
-	std::tr1::shared_ptr<ImageInterface<Float> > workIm(
-		new TempImage<Float>(_kludgedShape, csys)
-	);
+	SPIIF workIm(new TempImage<Float>(_kludgedShape, csys));
 	workIm->set(0.0);
 	ImageUtilities::copyMiscellaneous(*workIm, *subImage);
 	String maskName("");
@@ -164,7 +152,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 		_forceRegrid
 	);
 	if (! _outputStokes.empty()) {
-		_decimateStokes(workIm);
+		workIm = _decimateStokes(workIm);
 	}
 	ThrowIf(
 		workIm->hasPixelMask() && ! anyTrue(workIm->pixelMask().get()),
@@ -207,49 +195,47 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	return workIm;
 }
 
-void ImageRegridder::_decimateStokes(
-	std::tr1::shared_ptr<ImageInterface<Float> >& workIm
-) const {
+SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 	ImageMetaData md(workIm);
-	if (_outputStokes.size() < md.nStokes()) {
-		CasacRegionManager rm(workIm->coordinates());
-		String diagnostics;
-		uInt nSelectedChannels = 0;
-		if (_outputStokes.size() == 1) {
-			String stokes = _outputStokes[0];
+	if (_outputStokes.size() >= md.nStokes()) {
+		return workIm;
+	}
+	CasacRegionManager rm(workIm->coordinates());
+	String diagnostics;
+	uInt nSelectedChannels = 0;
+	if (_outputStokes.size() == 1) {
+		String stokes = _outputStokes[0];
+		Record region = rm.fromBCS(
+			diagnostics, nSelectedChannels, stokes,
+			"", CasacRegionManager::USE_FIRST_STOKES,
+			"", workIm->shape()
+		).toRecord("");
+		return SubImageFactory<Float>::createImage(
+			*workIm, "", region, "", False, False, False, False
+		);
+	}
+	else {
+		// Only include the wanted stokes
+		std::tr1::shared_ptr<ImageConcat<Float> > concat(
+			new ImageConcat<Float>(
+				workIm->coordinates().polarizationAxisNumber(False)
+			)
+		);
+		foreach_(String stokes, _outputStokes) {
 			Record region = rm.fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				"", CasacRegionManager::USE_FIRST_STOKES,
 				"", workIm->shape()
 			).toRecord("");
-			workIm.reset(SubImageFactory<Float>::createImage(
-				*workIm, "", region, "", False, False, False, False
-			));
-		}
-		else {
-			// Only include the wanted stokes
-			std::tr1::shared_ptr<ImageConcat<Float> > concat(
-				new ImageConcat<Float>(
-					workIm->coordinates().polarizationAxisNumber(False)
-				)
+			concat->setImage(
+				*SubImageFactory<Float>::createImage(
+					*workIm, "", region, "", False, False, False, False
+				), True
 			);
-			foreach_(String stokes, _outputStokes) {
-				Record region = rm.fromBCS(
-					diagnostics, nSelectedChannels, stokes,
-					"", CasacRegionManager::USE_FIRST_STOKES,
-					"", workIm->shape()
-				).toRecord("");
-				concat->setImage(
-					*SubImageFactory<Float>::createImage(
-						*workIm, "", region, "", False, False, False, False
-					), True
-				);
-			}
-			workIm = concat;
 		}
+		return concat;
 	}
 }
-
 
 void ImageRegridder::_checkOutputShape(
 	const SubImage<Float>& subImage,

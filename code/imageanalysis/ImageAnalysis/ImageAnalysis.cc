@@ -101,7 +101,6 @@
 #include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
-#include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
 #include <lattices/Lattices/LatticeAddNoise.h>
 #include <lattices/Lattices/LatticeExprNode.h>
@@ -146,13 +145,13 @@ ImageAnalysis::ImageAnalysis() :
 
 }
 
-ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image) :
+ImageAnalysis::ImageAnalysis(SPIIF image) :
 	_imageFloat(image),_imageComplex(), _log(new LogIO()), _histograms(0),
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
 
 
-ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> > image) :
+ImageAnalysis::ImageAnalysis(SPIIC image) :
 	_imageFloat(),_imageComplex(image), _log(new LogIO()), _histograms(0),
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
@@ -362,7 +361,7 @@ void ImageAnalysis::imagecalc(
 	makeRegionBlock(tempRegs, Record(), *_log);
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
+SPIIF ImageAnalysis::imageconcat(
 	const String& outfile,
 	const Vector<String>& inFiles, const Int axis, const Bool relax,
 	const Bool tempclose, const Bool overwrite
@@ -888,7 +887,7 @@ Bool ImageAnalysis::calcmask(
 	return res;
 }
 
-tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
+SPIIF ImageAnalysis::continuumsub(
 	const String& outline, const String& outcont,
 	Record& region, const Vector<Int>& channels, const String& pol,
 	const Int in_fitorder, const Bool overwrite
@@ -906,7 +905,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	Bool ledropdeg = False;
 	Bool leoverwrite = False;
 	Bool lelist = False;
-	std::tr1::shared_ptr<ImageInterface<Float> > subim(
+	SPIIF subim(
 		SubImageFactory<Float>::createImage(
 			*_imageFloat, leoutfile, region, lemask,
 			ledropdeg, leoverwrite, lelist, False
@@ -992,7 +991,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 			<< "own risk." << LogIO::POST;
 	}
 	ImageAnalysis ia(subim);
-	tr1::shared_ptr<ImageInterface<Float> > rstat = ia._fitpolynomial(
+	SPIIF rstat = ia._fitpolynomial(
 		outline, outcont, sigmafile, spectralPixelAxis,
 		fitorder, fitregion, mask, overwrite
 	);
@@ -1003,7 +1002,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	return rstat;
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::convolve2d(
+SPIIF ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
 	const String& kernel, const Quantity& majorKernel,
 	const Quantity& minorKernel,
@@ -1047,7 +1046,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::convolve2d(
 
 	// Create output image and mask
 	IPosition outShape = subImage.shape();
-	std::tr1::shared_ptr<ImageInterface<Float> > pImOut;
+	SPIIF pImOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
@@ -1408,7 +1407,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
-tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
+SPIIF ImageAnalysis::_fitpolynomial(
 	const String& residFile, const String& fitFile,
 	const String& sigmaFile, const Int axis, const Int order,
 	Record& Region, const String& mask, const Bool overwrite
@@ -1468,7 +1467,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 		  ? pAxis
 		  : subImage.ndim() - 1;
 	// Create output residual image with no mask
-	tr1::shared_ptr<ImageInterface<Float> > pResid, pFit;
+	SPIIF pResid, pFit;
     pResid = makeExternalImage(
                             residFile, cSys, imageShape, subImage,
                                             *_log, overwrite, True, False
@@ -2254,17 +2253,17 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	Record r;
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
-        std::tr1::shared_ptr<ImageInterface<Float> >  x;
+        SPIIF  x;
 		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
 					<< "so converting to a CASA temporary paged image named "
 					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
-            x.reset( SubImageFactory<Float>::createImage(
+            x = SubImageFactory<Float>::createImage(
             	*_imageFloat, tmpImageName, r, "", False,
             	False, True, False
-            ));
+            );
             x.reset(
             	SubImageFactory<Float>::createSubImage(
             		*x, Region, mask, _log.get(),
@@ -3591,7 +3590,7 @@ SPIIF ImageAnalysis::makeExternalImage(
 	const IPosition& shape, const ImageInterface<Float>& inImage,
 	LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask
 ) {
-	tr1::shared_ptr<ImageInterface<Float> > image;
+	SPIIF image;
 	if (fileName.empty()) {
 		if (allowTemp) {
 			os << LogIO::NORMAL << "Creating (Temp)Image '" << " of shape "

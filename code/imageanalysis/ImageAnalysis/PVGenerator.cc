@@ -181,8 +181,8 @@ void PVGenerator::setEndpoints(
 	*_getLog() << LogIO::NORMAL << "Setting pixel end points "
 		<< sPixel << ", " << ePixel << LogIO::POST;
 	setEndpoints(
-		make_pair(sPixel[0], sPixel[1]),
-		make_pair(ePixel[0], ePixel[1])
+		std::make_pair(sPixel[0], sPixel[1]),
+		std::make_pair(ePixel[0], ePixel[1])
 	);
 }
 

@@ -82,7 +82,7 @@ public:
 	~ImageTransposer();
 
 	// transpose the axes and write the output image. Returns the associated PagedImage object.
-	ImageInterface<Float>* transpose() const;
+	SPIIF transpose() const;
 
 	inline String getClass() const {
 		return _class;

@@ -186,10 +186,10 @@ private:
 		Bool& anyConverged, ComponentList& convolvedList,
 		ComponentList& deconvolvedList, SPIIF templateImage,
 		SPIIF residualImage, SPIIF modelImage,
-		LCMask& completePixelMask, String& resultsString
+		/*LCMask& completePixelMask, */ String& resultsString
 	);
 
-	vector<OutputDestinationChecker::OutputStruct> _getOutputs();
+	vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
 	vector<Coordinate::Type> _getNecessaryCoordinates() const;
 
@@ -241,8 +241,8 @@ private:
 	    Array<Bool>& pixelMask, Bool& converged,
 	    Double& zeroLevelOffsetSolution,
 	    Double& zeroLevelOffsetError,
-		const Vector<String>& models,
-		const Bool fitIt,
+	    std::pair<Int, Int>& pixelOffsets,
+		const Vector<String>& models, const Bool fitIt,
 		const Bool deconvolveIt, const Bool list,
 		const Double zeroLevelEstimate
 	);
@@ -265,6 +265,19 @@ private:
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong
 	) const;
+
+
+	void _doConverged(
+		ComponentList& convolvedList, ComponentList& deconvolvedList,
+		Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
+		SPIIF& residualImage, SPIIF& modelImage,
+		std::tr1::shared_ptr<TempImage<Float> >& tImage,
+		std::tr1::shared_ptr<ArrayLattice<Bool> >& initMask,
+		Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
+		Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages, const IPosition& planeShape,
+		const Array<Float>& pixels, const Array<Bool>& pixelMask, const Fit2D& fitter,
+		SPIIF templateImage
+	);
 
 };
 }

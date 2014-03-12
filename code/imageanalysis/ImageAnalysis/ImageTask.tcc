@@ -300,11 +300,10 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ArrayLattice<Bool> *const mask,
     const IPosition *const outShape, const CoordinateSystem *const coordsys,
 	const String *const outname, Bool overwrite
-
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-    SPIIT outImage(
+	std::tr1::shared_ptr<TempImage<T> > tmpImage(
 		new TempImage<T>(
 			TiledShape(oShape), csys
 		)
@@ -327,26 +326,23 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 		mymask.reset(new ArrayLattice<Bool>(maskArray));
 	}
 	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
-		dynamic_cast<TempImage<T> *>(outImage.get())->attachMask(*mymask);
+		tmpImage->attachMask(*mymask);
 	}
 	String myOutname = outname ? *outname : _outname;
 	if (! outname) {
 		overwrite = _overwrite;
 	}
-	ImageUtilities::copyMiscellaneous(*outImage, image);
+	SPIIT outImage = tmpImage;
 	if (! myOutname.empty()) {
 		_removeExistingFileIfNecessary(myOutname, overwrite);
 		String emptyMask = "";
 		Record empty;
-        PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(
-        	SubImageFactory<T>::createImage(
-        		*outImage, myOutname, empty, emptyMask,
-        		False, False, True, False
-        	)
+        outImage = SubImageFactory<T>::createImage(
+        	*tmpImage, myOutname, empty, emptyMask,
+        	False, False, True, False
         );
-        ThrowIf(! tmp, "Failed dynamic cast")
-		outImage.reset(tmp);
 	}
+	ImageUtilities::copyMiscellaneous(*outImage, image);
 	outImage->put(values == 0 ? image.get() : *values);
 	if (! _suppressHistory) {
 		ImageHistory<T> history(outImage);
