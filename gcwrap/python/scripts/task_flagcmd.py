@@ -105,22 +105,22 @@ def flagcmd(
             mslocal2.open(vis)
             timd = mslocal2.range(['time'])
             mslocal2.close()
-    
-            ms_startmjds = timd['time'][0]
-            ms_endmjds = timd['time'][1]
-            t = qa.quantity(ms_startmjds, 's')
-            t1sdata = t['value']
-            ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
-            ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
-            t0 = qa.totime(ms_startdate + '/00:00:00.00')
-            t0d = qa.convert(t0, 'd')
-            t0s = qa.convert(t0, 's')
-            t = qa.quantity(ms_endmjds, 's')
-            t2sdata = t['value']
-            ms_endtime = qa.time(t, form='ymd', prec=9)[0]
-            # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-            casalog.post('MS spans timerange ' + ms_starttime + ' to '
-                         + ms_endtime)
+            if timd.__len__() != 0:
+                ms_startmjds = timd['time'][0]
+                ms_endmjds = timd['time'][1]
+                t = qa.quantity(ms_startmjds, 's')
+                t1sdata = t['value']
+                ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
+                ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
+                t0 = qa.totime(ms_startdate + '/00:00:00.00')
+                t0d = qa.convert(t0, 'd')
+                t0s = qa.convert(t0, 's')
+                t = qa.quantity(ms_endmjds, 's')
+                t2sdata = t['value']
+                ms_endtime = qa.time(t, form='ymd', prec=9)[0]
+                # NOTE: could also use values from OBSERVATION table col TIME_RANGE
+                casalog.post('MS spans timerange ' + ms_starttime + ' to '
+                             + ms_endtime)
     
             myflagcmd = {}
             cmdlist = []
