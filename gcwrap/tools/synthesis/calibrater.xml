@@ -1318,6 +1318,28 @@ cb.close()
 </example>
 </method>
 
+<method type="function" name="initweights">
+   <shortdescription>Initialize sigmas and weights according to
+   bandwidth and integration time</shortdescription>
+
+<returns type="bool"/>
+
+<description>
+
+This function initializes the MS SIGMA and WEIGHT columns according
+to bandwidth and integration time.
+
+</description>
+
+<example>
+
+cb.open('ngc5921.ms')
+cb.initweights()
+cb.close()
+
+</example>
+</method>
+
 
 
 <method type="function" name="fluxscale">
