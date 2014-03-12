@@ -168,6 +168,9 @@ class Calibrater
   //  deposit in the MODEL_DATA column
   Bool corrupt();
 
+  // Initialize sigma/weight according to bandwidth/exposure
+  Bool initWeights();
+
   // Solve for a given calibration component
   Bool solve();
 
