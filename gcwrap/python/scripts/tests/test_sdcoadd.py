@@ -779,6 +779,33 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
     
+    def test_freqtol09( self ):
+        """test_freqtol09: check if same freq[0], increment, and nchan is merged (order of infiles is reversed)"""
+        # reverse an order of infiles
+        infiles = self.inlist[::-1]
+        
+        # edit self.inlist[0] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according to FREQ_ID
+        tb.open(infiles[0], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.close()
+
+        # expected nrows for outfile HISTORY (must be evaluated before
+        # running sdcoadd)
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 0, 0, 2, 2, 3, 3, 1, 1]
+        expected_ifnos = [0, 0, 1, 1, 0, 0, 2, 2, 3, 3, 1, 1]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
     def test_freqtol10(self):
         """test_freqtol10: check if different BASEFRAME causes exception"""
         infiles = self.inlist
