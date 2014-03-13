@@ -905,11 +905,9 @@ SPIIF ImageAnalysis::continuumsub(
 	Bool ledropdeg = False;
 	Bool leoverwrite = False;
 	Bool lelist = False;
-	SPIIF subim(
-		SubImageFactory<Float>::createImage(
-			*_imageFloat, leoutfile, region, lemask,
-			ledropdeg, leoverwrite, lelist, False
-		)
+	SPIIF subim = SubImageFactory<Float>::createImage(
+		*_imageFloat, leoutfile, region, lemask,
+		ledropdeg, leoverwrite, lelist, False
 	);
 	ThrowIf(
 		!subim,

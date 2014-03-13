@@ -224,7 +224,8 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, x);
 	LatticeUtilities::copyDataAndMask(log, *outImage, x);
-	return outImage;
+    outImage->flush();
+    return outImage;
 }
 
 } //# NAMESPACE CASA - END
