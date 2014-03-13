@@ -441,3 +441,32 @@ def checkwithtaql(taqlstring):
     return therval
 
                     
+def compmsmainnumcol(vis1, vis2, tolerance, colname1='DATA', colname2="DATA"):
+    print "Comparing column "+colname1+" of MS "+vis1
+    print "     with column "+colname2+" of MS "+vis2
+    print "Discrepant row search ..."
+    rval = False
+    try:
+        discrepantrows = checkwithtaql("select from [select from "+vis1+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "+vis2+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1."+colname1+",t2."+colname2+", "+str(tolerance)+")))")
+        if discrepantrows==0:
+            print "The two columns agree."
+            rval = True
+    except Exception, instance:
+        print "Error: "+str(instance)
+
+    return rval
+
+def compmsmainboolcol(vis1, vis2, colname1='FLAG', colname2='FLAG'):
+    print "Comparing column "+colname1+" of MS "+vis1
+    print "     with column "+colname2+" of MS "+vis2
+    print "Discrepant row search ..."
+    rval = False
+    try:
+        discrepantrows = checkwithtaql("select from [select from "+vis1+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "+vis2+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1."+colname1+"==t2."+colname2+"))")
+        if discrepantrows==0:
+            print "The two columns agree."
+            rval = True
+    except Exception, instance:
+        print "Error: "+str(instance)
+
+    return rval
