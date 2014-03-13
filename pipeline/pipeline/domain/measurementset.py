@@ -143,13 +143,11 @@ def _parse_field(task_arg, fields=[]):
         
     field_name.setParseAction(get_ids_for_matching)        
     
-    # the complete expression
-    atomExpr = field_name('fields') | field_id('fields')
-
     results = set()
     for atom in pyparsing.commaSeparatedList.parseString(str(task_arg)):
-        x = atomExpr.parseString(atom)
-        results.update(x.asList())
+        for parser in [field_name('fields'), field_id('fields')]:
+            for match in parser.searchString(atom):
+                results.update(match.asList())
     
     return sorted(list(results))
 
@@ -341,11 +339,22 @@ class MeasurementSet(object):
             
             if not requested_ids <= present_ids:
                 missing_ids = requested_ids - present_ids
-                msg = ('Field IDs %s not found in %s (search term=\'%s\')'
-                       % (','.join([str(i) for i in missing_ids]), 
-                          self.basename, task_arg))
-                LOG.error(msg)
-                raise ValueError()
+                
+                # purely numerical field names (eg. field.name='123') will 
+                # return two matches, one for the ID and one for the name. 
+                # In this situation we expect fewer matched IDs than requested
+                # IDs. Remove names from the missing IDs before complaining:
+                missing_ids = set([str(i) for i in missing_ids])
+                names = set([f.name for f in self.fields])
+
+                still_missing = missing_ids - names
+
+                if still_missing:
+                    msg = ('Field IDs %s not found in %s (search term=\'%s\')'
+                           % (','.join(still_missing), 
+                              self.basename, task_arg))
+                    LOG.error(msg)
+                    raise ValueError()
             pool = [f for f in pool if f.id in requested_ids]
         
         if field_id is not None:
