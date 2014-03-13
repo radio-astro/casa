@@ -430,7 +430,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
 
-    def _verify(self, outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos):
+    def _verify(self, outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos, expected_molids=None):
         # outfile must exist
         self.assertTrue(os.path.exists(self.outfile),msg="No output written")
         
@@ -439,6 +439,7 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         main_nrow = tb.nrows()
         freqids = tb.getcol('FREQ_ID')
         ifnos = tb.getcol('IFNO')
+        molids = tb.getcol('MOLECULE_ID')
         tb.close()
         self.assertEqual(expected_main_nrow, main_nrow,
                          msg='number of MAIN rows differ')
@@ -460,12 +461,17 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
                             msg='FREQ_ID entries differ')
         
         # test IFNO entries
-        casalog.post('ifnos (actual)  =%s'%(ifnos.tolist()))
-        casalog.post('ifnos (expected)=%s'%(expected_ifnos))
         self.assertEqual(main_nrow, len(expected_ifnos),
                          msg='invalid expected value for IFNO')
         self.assertTrue(all(ifnos == numpy.array(expected_ifnos)),
                             msg='IFNO entries differ')
+
+        # test MOLECULE_ID entries if necessary
+        if expected_molids is not None:
+            self.assertEqual(main_nrow, len(expected_molids),
+                             msg='invalid expected value for MOLECULE_ID')
+            self.assertTrue(all(molids == numpy.array(expected_molids)),
+                            msg='MOLECULE_ID entries differ')
         
 
     def _nrow(self, tables, subtable=None):
@@ -969,6 +975,71 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
         expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos)
+
+    def test_freqtol15( self ):
+        """test_freqtol15: check if single MOLECULE_ID is assigned to each IFNO when there are two MOLECULE_ID's that refers different rest frequencies"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according to FREQ_ID
+        # 2. renumber MOLECULE_ID and ID in MOLECULES table
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.putcol('MOLECULE_ID', numpy.ones(tb.nrows()))
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'MOLECULES'), nomodify=False)
+        tb.putcell('ID', 0, 1)
+        tb.putcell('RESTFREQUENCY', 0, [1.0e11])
+        tb.close()
+
+        # expected nrows for outfile HISTORY (must be evaluated before
+        # running sdcoadd)
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_molids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos, expected_molids)
+
+    def test_freqtol16( self ):
+        """test_freqtol16: check if single MOLECULE_ID is assigned to each IFNO when there are two MOLECULE_ID's that refers same rest frequency"""
+        infiles = self.inlist
+        
+        # edit self.inlist[1] so that it suites with testing purpose
+        # 1. renumber IFNO in second tables according to FREQ_ID
+        # 2. renumber MOLECULE_ID and ID in MOLECULES table
+        tb.open(infiles[1], nomodify=False)
+        freqids = tb.getcol('FREQ_ID')
+        tb.putcol('IFNO', freqids)
+        tb.putcol('MOLECULE_ID', numpy.ones(tb.nrows()))
+        tb.close()
+        tb.open(os.path.join(infiles[1], 'MOLECULES'), nomodify=False)
+        tb.putcell('ID', 0, 1)
+        tb.close()
+
+        # expected nrows for outfile HISTORY (must be evaluated before
+        # running sdcoadd)
+        expected_hist_nrow = self._nrow(infiles, 'HISTORY')
+
+        # run sdcoadd
+        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        self.assertEqual(result,None)
+
+        # verification
+        expected_main_nrow = self._nrow(infiles)
+        expected_freq_nrow = 4
+        expected_freqids = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
+        expected_molids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos, expected_molids)
 
         
 class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
