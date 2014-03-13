@@ -394,12 +394,21 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
     test_freqtol05: check if different increment (equal to 1kHz) is merged
     test_freqtol06: check if different increment (out of 1kHz) is NOT merged
     test_freqtol07: check if different refval/refpix but same freq[0] is merged
-    test_freqtol08: check if different nchan merges FREQUENCIES and FREQ_ID but does NOT IFNO
+    test_freqtol08: check if different nchan merges FREQUENCIES and FREQ_ID
+                    but does NOT IFNO
     test_freqtol10: check if different BASEFRAME causes exception
     test_freqtol11: check if different FRAME doesn't affect the process
-    test_freqtol12: check if any small shift within double accuracy is not allowed by default
-    test_freqtol13: check if exactly same FREQUENCIES entries are merged by default
+    test_freqtol12: check if any small shift within double accuracy is not
+                    allowed by default
+    test_freqtol13: check if exactly same FREQUENCIES entries are merged
+                    by default
     test_freqtol14: check if numeric tolerance value works as expected
+    test_freqtol15: check if single MOLECULE_ID is assigned to each IFNO when
+                    there are two MOLECULE_ID's that refers different rest
+                    frequencies
+    test_freqtol16: check if single MOLECULE_ID is assigned to each IFNO when
+                    there are two MOLECULE_ID's that refers same rest frequency
+    test_freqtol17: fail if invalid value is given
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcoadd/'
@@ -1040,6 +1049,21 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         expected_ifnos = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 3, 3]
         expected_molids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self._verify(self.outfile, expected_main_nrow, expected_hist_nrow, expected_freq_nrow, expected_freqids, expected_ifnos, expected_molids)
+
+    def test_freqtol17(self):
+        """test_freqtol17: fail if invalid value is given"""
+        infiles = self.inlist
+        
+        # run sdcoadd
+        try:
+            result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol='None')
+        except RuntimeError, e:
+            self.assertNotEqual(str(e).find('Failed to convert freqTol string to quantity'), -1,
+                             msg='Unexpected exception is thrown: \'%s\''%(str(e)))
+        except Exception, e:
+            self.fail('Unexpected exception is thrown: \'%s\''%(str(e)))
+            
+    
 
         
 class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
