@@ -152,7 +152,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 10 image-field, mfs --- WB AWP");
           casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',scan='1~35',
+                                       field='1',scan='0~35',
                                        spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
