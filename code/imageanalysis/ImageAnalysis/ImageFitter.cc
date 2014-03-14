@@ -61,10 +61,10 @@ ImageFitter::ImageFitter(
 	_excludePixelRange(), _estimates(), _fixed(0),
 	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
-	_fitConverged(0), _peakIntensities(), _rms(0),
-	_writeControl(NO_WRITE), _zeroLevelOffsetEstimate(0),
+	_fitConverged(0), _peakIntensities(), _rms(-1),
+	_writeControl(ImageFitterResults::NO_WRITE), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0),
-	_stokesPixNumber(-1), _chanPixNumber(-1) {
+	_stokesPixNumber(-1), _chanPixNumber(-1), _results(image, _getLog()) {
 	if (
 		stokes.empty() && image->coordinates().hasPolarizationCoordinate()
 		&& regionRec == 0 && region.empty()
@@ -117,7 +117,14 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	allowFluxUnits[1] = "K.rad2";
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
-	String resultsString = _resultsHeader();
+	_results.setStokes(_getStokes());
+	String resultsString = _results.resultsHeader(
+		_getChans(), _chanVec, _regionString,
+		_getMask(), _includePixelRange, _excludePixelRange,
+		_estimatesString
+	);
+
+	//String resultsString = _resultsHeader();
 	*_getLog() << LogIO::NORMAL << resultsString << LogIO::POST;
 	ComponentList convolvedList, deconvolvedList;
 	Bool anyConverged = False;
@@ -128,7 +135,11 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		/* *completePixelMask, */ resultsString
 	);
 	if (anyConverged) {
-		_writeCompList(convolvedList);
+		_results.writeCompList(
+			convolvedList, _compListName,
+			_writeControl
+		);
+		//_writeCompList(convolvedList);
 	}
 	else {
 		*_getLog() << LogIO::WARN
@@ -167,7 +178,13 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	FluxRep<Double>::clearAllowedUnits();
 	FluxRep<Float>::clearAllowedUnits();
 	if (converged && ! _newEstimatesFileName.empty()) {
-		_writeNewEstimatesFile();
+		_results.setConvolvedList(_curConvolvedList);
+		_results.setPeakIntensities(_peakIntensities);
+		_results.setMajorAxes(_majorAxes);
+		_results.setMinorAxes(_minorAxes);
+		_results.setPositionAngles(_positionAngles);
+		_results.writeNewEstimatesFile(_newEstimatesFileName);
+		//_writeNewEstimatesFile();
 	}
 	_writeLogfile(resultsString);
 	std::pair<ComponentList, ComponentList> lists;
@@ -278,6 +295,15 @@ void ImageFitter::_fitLoop(
 			_curConvolvedList.toRecord(errmsg, estimatesRecord);
 			*_getLog() << origin;
 		}
+		_results.setConvolvedList(_curConvolvedList);
+		_results.setFixed(_fixed);
+		_results.setFluxDensities(_fluxDensities);
+		_results.setFluxDensityErrors(_fluxDensityErrors);
+		_results.setMajorAxes(_majorAxes);
+		_results.setMinorAxes(_minorAxes);
+		_results.setPeakIntensities(_peakIntensities);
+		_results.setPeakIntensityErrors(_peakIntensityErrors);
+		_results.setPositionAngles(_positionAngles);
 		String currentResultsString = _resultsToString(fitter.numberPoints());
 		resultsString += currentResultsString;
 		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
@@ -415,11 +441,8 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 		"You cannot give both an include and an exclude pixel range"
 	);
 	if (! _includePixelRange && ! _excludePixelRange) {
-		*_getLog() << LogIO::NORMAL << "Selecting all pixel values because neither "
-			<< "includepix nor excludepix was specified" << LogIO::POST;
 		return;
 	}
-
 	else if (_includePixelRange) {
 		Float *first = &_includePixelRange->first;
 		Float *second = &_includePixelRange->second;
@@ -582,6 +605,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	}
 }
 
+/*
 String ImageFitter::_resultsHeader() const {
 	ostringstream summary;
 	ostringstream chansoss;
@@ -624,8 +648,9 @@ String ImageFitter::_resultsHeader() const {
 	}
 	return summary.str();
 }
+*/
 
-String ImageFitter::_resultsToString(uInt nPixels) {
+String ImageFitter::_resultsToString(uInt nPixels) const {
 	ostringstream summary;
 	summary << "*** Details of fit for channel number " << _curChan << endl;
 	summary << "Number of pixels used in fit: " << nPixels <<  endl;
@@ -651,7 +676,8 @@ String ImageFitter::_resultsToString(uInt nPixels) {
 			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
 			summary << _curConvolvedList.component(i).positionToString(&(_getImage()->coordinates())) << endl;
 			summary << _sizeToString(i) << endl;
-			summary << _fluxToString(i) << endl;
+			summary << _results.fluxToString(i, _chanPixNumber, _stokesPixNumber, ! _noBeam) << endl;
+			//summary << _fluxToString(i) << endl;
 			summary << _spectrumToString(i) << endl;
 		}
 	}
@@ -690,7 +716,7 @@ void ImageFitter::_setFluxes() {
 	_minorAxes.resize(ncomps);
 	Vector<Quantity> fluxQuant;
 
-	Double rmsPeak = ! near(_rms, 0.0) ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
+	Double rmsPeak = _rms > 0 ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(rmsPeak, _bUnit);
 	if (_rms <= 0) {
 		*_getLog() << LogIO::WARN << "Image rms value not supplied, using "
@@ -815,7 +841,8 @@ void ImageFitter::_setSizes() {
 	_majorAxisErrors.resize(ncomps);
 	_minorAxisErrors.resize(ncomps);
 	_positionAngleErrors.resize(ncomps);
-	Double rmsPeak = ! near(_rms, 0.0) ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
+	Double rmsPeak = _rms > 0 ? _rms
+		: Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(rmsPeak, _bUnit);
 	Quantity xBeam;
 	Quantity yBeam;
@@ -1105,7 +1132,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 	}
 }
 
-String ImageFitter::_sizeToString(const uInt compNumber) {
+String ImageFitter::_sizeToString(const uInt compNumber) const {
 	ostringstream size;
 	const ComponentShape* compShape = _curConvolvedList.getShape(compNumber);
 	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
@@ -1269,24 +1296,16 @@ String ImageFitter::_sizeToString(const uInt compNumber) {
 	return size.str();
 }
 
+/*
 String ImageFitter::_fluxToString(uInt compNumber) const {
-	Vector<String> unitPrefix(8);
-	unitPrefix[0] = "T";
-	unitPrefix[1] = "G";
-	unitPrefix[2] = "M";
-	unitPrefix[3] = "k";
-	unitPrefix[4] = "";
-	unitPrefix[5] = "m";
-	unitPrefix[6] = "u";
-	unitPrefix[7] = "n";
-
+	vector<String> unitPrefix = ImageFitterResults::unitPrefixes(False);
 	ostringstream fluxes;
 	Quantity fluxDensity = _fluxDensities[compNumber];
 	Quantity fluxDensityError = _fluxDensityErrors[compNumber];
 	Vector<String> polarization = _curConvolvedList.getStokes(compNumber);
 	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
-	    	? Quantity(1.0, "beam")
-	    	: Quantity(1.0, "pixel");
+	    ? Quantity(1.0, "beam")
+	    : Quantity(1.0, "pixel");
 
 	String baseUnit = "Jy";
 	Bool hasTemperatureUnits = fluxDensity.isConform("K*rad2");
@@ -1390,18 +1409,10 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	fluxes << "       --- Polarization: " << _getStokes() << endl;
 	return fluxes.str();
 }
+*/
 
 String ImageFitter::_spectrumToString(uInt compNumber) const {
-	Vector<String> unitPrefix(9);
-	unitPrefix[0] = "T";
-	unitPrefix[1] = "G";
-	unitPrefix[2] = "M";
-	unitPrefix[3] = "k";
-	unitPrefix[4] = "";
-	unitPrefix[5] = "c";
-	unitPrefix[6] = "m";
-	unitPrefix[7] = "u";
-	unitPrefix[8] = "n";
+	vector<String> unitPrefix = ImageFitterResults::unitPrefixes(True);
 	ostringstream spec;
 	const SpectralModel& spectrum = _curConvolvedList.component(compNumber).spectrum();
 	Quantity frequency = spectrum.refFrequency().get("MHz");
@@ -1429,13 +1440,6 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 }
 
 SPIIF ImageFitter::_createImageTemplate() const {
-	/*
-	SPIIF x(
-		SubImageFactory<Float>::createImage(
-			*_getImage(), "", *_getRegion(), _getMask(),
-			False, False, False, _getStretch()
-		)
-	);*/
 	SPIIF x(
 		SubImageFactory<Float>::createImage(
 			*_getImage(), "", Record(), "",
@@ -1446,12 +1450,14 @@ SPIIF ImageFitter::_createImageTemplate() const {
 	return x;
 }
 
+/*
 void ImageFitter::_writeNewEstimatesFile() const {
 	ostringstream out;
 	uInt ndim = _getImage()->ndim();
-	Vector<Int> dirAxesNumbers = _getImage()->coordinates().directionAxesNumbers();
+	const CoordinateSystem csys = _getImage()->coordinates();
+	Vector<Int> dirAxesNumbers = csys.directionAxesNumbers();
 	Vector<Double> world(ndim,0), pixel(ndim,0);
-	_getImage()->coordinates().toWorld(world, pixel);
+	csys.toWorld(world, pixel);
 
 	uInt n = _curConvolvedList.nelements();
 	for (uInt i=0; i<n; i++) {
@@ -1460,7 +1466,7 @@ void ImageFitter::_writeNewEstimatesFile() const {
 		Quantity longitude = mdir.getValue().getLong("rad");
 		world[dirAxesNumbers[0]] = longitude.getValue();
 		world[dirAxesNumbers[1]] = lat.getValue();
-		if (_getImage()->coordinates().toPixel(pixel, world)) {
+		if (csys.toPixel(pixel, world)) {
 			out << _peakIntensities[i].getValue() << ", "
 					<< pixel[0] << ", " << pixel[1] << ", "
 					<< _majorAxes[i] << ", " << _minorAxes[i] << ", "
@@ -1482,7 +1488,8 @@ void ImageFitter::_writeNewEstimatesFile() const {
 		<< _newEstimatesFileName << " with new estimates file"
 		<< LogIO::POST;
 }
-
+*/
+/*
 void ImageFitter::_writeCompList(ComponentList& list) const {
 	if (! _compListName.empty()) {
 		switch (_writeControl) {
@@ -1513,6 +1520,7 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 		}
 	}
 }
+*/
 
 // TODO From here until the end of the file is code extracted directly
 // from ImageAnalysis. It is in great need of attention.

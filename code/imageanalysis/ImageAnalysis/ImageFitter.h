@@ -26,10 +26,12 @@
 #ifndef IMAGES_IMAGEFITTER_H
 #define IMAGES_IMAGEFITTER_H
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
 #include <components/ComponentModels/ComponentList.h>
 #include <lattices/LatticeMath/Fit2D.h>
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <imageanalysis/IO/ImageFitterResults.h>
 
 namespace casa {
 
@@ -64,11 +66,13 @@ class ImageFitter : public ImageTask<Float> {
 	// </example>
 
 public:
+	/*
 	enum CompListWriteControl {
 		NO_WRITE,
 		WRITE_NO_REPLACE,
 		OVERWRITE
 	};
+	*/
 
 	// constructor appropriate for API calls.
 	// Parameters:
@@ -112,7 +116,7 @@ public:
 	// the two lists will be the same.
 	std::pair<ComponentList, ComponentList> fit();
 
-	void setWriteControl(CompListWriteControl x) { _writeControl = x; }
+	void setWriteControl(ImageFitterResults::CompListWriteControl x) { _writeControl = x; }
 
 	inline String getClass() const {return _class;}
 
@@ -173,12 +177,13 @@ private:
 	Record _residStats, inputStats;
 	Double _rms;
 	String _kludgedStokes;
-	CompListWriteControl _writeControl;
+	ImageFitterResults::CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;
 	uInt _curChan;
 	Double _zeroLevelOffsetEstimate;
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
 	Int _stokesPixNumber, _chanPixNumber;
+	ImageFitterResults _results;
 
 	const static String _class;
 
@@ -197,20 +202,20 @@ private:
 
 	void _finishConstruction(const String& estimatesFilename);
 
-	String _resultsHeader() const;
+	//String _resultsHeader() const;
 
 	// summarize the results in a nicely formatted string
-	String _resultsToString(uInt nPixels);
+	String _resultsToString(uInt nPixels) const;
 
 	//summarize the size details in a nicely formatted string
-	String _sizeToString(const uInt compNumber);
+	String _sizeToString(const uInt compNumber) const;
 
-	String _fluxToString(uInt compNumber) const;
+	//String _fluxToString(uInt compNumber) const;
 
 	String _spectrumToString(uInt compNumber) const;
 
 	// Write the estimates file using this fit.
-	void _writeNewEstimatesFile() const;
+	//void _writeNewEstimatesFile() const;
 
 	// Set the flux densities and peak intensities of the fitted components.
 	void _setFluxes();

@@ -65,6 +65,7 @@ ImageAnalysis/SpectralFitter.cc
 IO/RegionTextParser.cc
 IO/AsciiAnnotationFileLine.cc
 IO/FitterEstimatesFileParser.cc
+IO/ImageFitterResults.cc
 IO/ImageProfileFitterResults.cc
 IO/LogFile.cc
 IO/OutputDestinationChecker.cc
@@ -101,6 +102,7 @@ install (FILES
 	IO/FitterEstimatesFileParser.h
 	IO/LogFile.h
     IO/OutputDestinationChecker.h
+    IO/ImageFitterResults.h
     IO/ImageProfileFitterResults.h
 	IO/ProfileFitterEstimatesFileParser.h
 	IO/RegionTextParser.h
