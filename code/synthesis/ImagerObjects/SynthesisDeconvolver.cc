@@ -178,10 +178,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
       //gatherImages();
 
+      /*
       if( itsDeconvolver->getAlgorithmName() == "msmfs" )
 	{  itsImages = new SIImageStoreMultiTerm( itsImageName, itsDeconvolver->getNTaylorTerms() ); }
       else
 	{  itsImages = new SIImageStore( itsImageName ); }
+      */
+
+      itsImages = makeImageStore( itsImageName );
 
       // If a starting model exists, this will initialize the ImageStore with it. Will do this only once.
       setStartingModel();
@@ -233,10 +237,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( itsImages.null() )
       {
-	itsImages = new SIImageStore( itsImageName );
+	itsImages = makeImageStore( itsImageName );
       }
 
     itsDeconvolver->restore(itsImages);
+
+  }
+
+  // Restore Image.
+  void SynthesisDeconvolver::pbcor()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","pbcor",WHERE) );
+
+    if( itsImages.null() )
+      {
+	itsImages = makeImageStore( itsImageName );
+      }
+
+    itsDeconvolver->pbcor(itsImages);
 
   }
 
@@ -246,6 +264,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////    Internal Functions start here.  These are not visible to the tool layer.
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  CountedPtr<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
+  {
+    if( itsDeconvolver->getAlgorithmName() == "msmfs" )
+      {  return new SIImageStoreMultiTerm( itsImageName, itsDeconvolver->getNTaylorTerms() ); }
+    else
+      {  return new SIImageStore( itsImageName ); }
+  }
 
 
   // #############################################

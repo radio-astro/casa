@@ -89,14 +89,15 @@ class PySynthesisImager:
 
 #############################################
     ## Overloaded by ParallelCont
-    def initializeParallelSync(self):
+    def initializeNormalizers(self):
         for immod in range(0,self.NF):
-            self.PStools.append(casac.synthesisparsync())
-            syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            syncpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            syncpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            syncpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
-            self.PStools[immod].setupparsync(syncpars=syncpars)
+            self.PStools.append(casac.synthesisnormalizer())
+            normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
+            normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
+            normpars['facets'] = self.allgridpars[str(immod)]['facets']
+            self.PStools[immod].setupnormalizer(normpars=normpars)
 
 #############################################
 
@@ -125,7 +126,7 @@ class PySynthesisImager:
          for immod in range(0,len(self.SDtools)):
               self.SDtools[immod].done()
 
-    def deleteParSyncs(self):
+    def deleteNormalizers(self):
          for immod in range(0,len(self.PStools)):
             self.PStools[immod].done()
 
@@ -151,7 +152,7 @@ class PySynthesisImager:
     def deleteTools(self):
          self.deleteImagers()
          self.deleteDeconvolvers()
-         self.deleteParSyncs()
+         self.deleteNormalizers()
          self.deleteIterBot()
          self.initDefaults()
          self.deleteCluster()
@@ -335,19 +336,20 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
 #############################################
 
-    def initializeParallelSync(self):
+    def initializeNormalizers(self):
         for immod in range(0,self.NF):
-            self.PStools.append(casac.synthesisparsync())
-            syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            syncpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            syncpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            syncpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
+            self.PStools.append(casac.synthesisnormalizer())
+            normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
+            normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
+            normpars['facets'] = self.allgridpars[str(immod)]['facets']
             partnames = []
             if(self.NN>1):
                 for node in range(0,self.NN):
                     partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
-                syncpars['partimagenames'] = partnames
-            self.PStools[immod].setupparsync(syncpars=syncpars)
+                normpars['partimagenames'] = partnames
+            self.PStools[immod].setupnormalizer(normpars=normpars)
 
 
 #############################################
@@ -436,10 +438,10 @@ class PyParallelCubeSynthesisImager():
             joblist.append( self.PH.runcmd("imager.initializeDeconvolvers()", node) )
         self.PH.checkJobs( joblist )
 
-    def initializeParallelSync(self):
+    def initializeNormalizers(self):
         joblist=[]
         for node in range(0,self.NN):
-            joblist.append( self.PH.runcmd("imager.initializeParallelSync()", node) )
+            joblist.append( self.PH.runcmd("imager.initializeNormalizers()", node) )
         self.PH.checkJobs( joblist )
 
     def initializeIterationControl(self):
@@ -740,12 +742,13 @@ class ImagerParameters():
                                  'freqstart':freqstart, 'freqstep':freqstep,
                                  'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
-                                 'freqframe':freqframe, 'reffreq':reffreq, 'facets':facets  }      }
+                                 'freqframe':freqframe, 'reffreq':reffreq  }      }
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
-                                 'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
-                                 'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
-                                 'conjbeams':conjbeams, 'computepastep':computepastep,
-                                 'rotatepastep':rotatepastep, 'mtype':mtype, 'weightlimit':weightlimit    }     }
+                                   'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
+                                   'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
+                                   'conjbeams':conjbeams, 'computepastep':computepastep,
+                                   'rotatepastep':rotatepastep, 'mtype':mtype, 'weightlimit':weightlimit,
+                                   'facets':facets   }     }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
 

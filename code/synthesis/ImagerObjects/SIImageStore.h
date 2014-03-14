@@ -52,14 +52,18 @@ class SIImageStore
   SIImageStore(String imagename);
   SIImageStore(String imagename, 
 	       CoordinateSystem &imcoordsys, 
-	       IPosition imshape, const Bool overwrite=False);
+	       IPosition imshape, 
+	       const Int nfacets=1, 
+	       const Bool overwrite=False,
+	       const Bool useweightimage=False);
   // Contructor by image objects necessary for facetted imaging (subimages 
   //can be passed in as residual and model etc). The caller has to make sure the 
   //images are similar.  the Pointers are taken over by CountedPtr...and will be deleted when reference 
   //count goes to 0
   SIImageStore(ImageInterface<Float>* modelim, ImageInterface<Float>* residim,
 	       ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, 
-	       ImageInterface<Float>* restoredim, ImageInterface<Float>* maskim);
+	       ImageInterface<Float>* restoredim, ImageInterface<Float>* maskim,
+	       ImageInterface<Float>* sumwtim);
     
 
   virtual ~SIImageStore();
@@ -78,6 +82,7 @@ class SIImageStore
   virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0);
   virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
   virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > sumwt(uInt term=0);
 
   virtual CountedPtr<ImageInterface<Float> > alpha(){throw(AipsError("No Alpha for 1 term"));};
   virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
@@ -96,10 +101,10 @@ class SIImageStore
   virtual void divideModelByWeight(const Float weightlimit=C::minfloat);
   virtual void multiplyModelByWeight(const Float weightlimit=C::minfloat);
 
-  virtual Bool isValid(){return itsValidity;}
+  //  virtual Bool isValid(){return itsValidity;}
   virtual Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 			     const Bool imodel, const Bool irestored, const Bool imask=False,
-			     const Bool ialpha=False, const Bool ibeta=False);
+			     const Bool isumwt=True, const Bool ialpha=False, const Bool ibeta=False);
 
   virtual Bool releaseLocks();
 
@@ -111,7 +116,8 @@ class SIImageStore
 
   GaussianBeam getPSFGaussian();
 
-  virtual void restorePlane();
+  virtual GaussianBeam restorePlane();
+  virtual void pbcorPlane();
 
   // Get a SIImageStore of a given facet..the caller has to delete it
   // The images internall will reference back to a given section of the main of this.
@@ -149,12 +155,16 @@ protected:
 
 
   void checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label );
-  CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, const Bool overwrite);
+  CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, 
+					       const Bool overwrite, 
+					       const Bool dosumwt=False);
   ///////////////////// Member Objects
 
   IPosition itsImageShape;
   String itsImageName;
   CoordinateSystem itsCoordSys;
+  Int itsNFacets;
+  Bool itsUseWeight;
 
   // Misc Information to go into the header. 
   Record itsMiscInfo;
@@ -169,7 +179,7 @@ protected:
 
 private:
 
-  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
+  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
 

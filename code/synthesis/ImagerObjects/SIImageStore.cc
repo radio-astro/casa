@@ -71,18 +71,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImage=NULL;
     itsMask=NULL;
 
+    itsSumWt=NULL;
+    itsNFacets=1;
+    itsUseWeight=False;
+
     itsImageShape=IPosition();
     itsImageName=String("");
     itsCoordSys=CoordinateSystem();
     itsMiscInfo=Record();
 
-    itsValidity = False;
+    //    itsValidity = False;
 
   }
 
   SIImageStore::SIImageStore(String imagename, 
 			     CoordinateSystem &imcoordsys, 
-			     IPosition imshape, const Bool /*overwrite*/)
+			     IPosition imshape, 
+			     const Int nfacets, 
+			     const Bool /*overwrite*/,
+			     const Bool useweightimage)
   // TODO : Add parameter to indicate weight image shape. 
   {
     LogIO os( LogOrigin("SIImageStore","Open new Images",WHERE) );
@@ -93,6 +100,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeight=NULL;
     itsImage=NULL;
     itsMask=NULL;
+
+    itsSumWt=NULL;
+    itsNFacets=nfacets;
+    itsUseWeight=useweightimage;
 
     itsImageName = imagename;
     itsImageShape = imshape;
@@ -114,10 +125,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask=NULL;
     itsMiscInfo=Record();
 
+    itsSumWt=NULL;
+    itsNFacets=1;
+
     itsImageName = imagename;
 
     // The PSF or Residual images must exist. ( TODO : and weight )
-    if( doesImageExist(itsImageName+String(".residual")) || doesImageExist(itsImageName+String(".psf")) )
+    if( doesImageExist(itsImageName+String(".residual")) || 
+	doesImageExist(itsImageName+String(".psf"))  )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
 	if( doesImageExist(itsImageName+String(".psf")) )
@@ -130,7 +145,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else
       {
-	throw( AipsError( "PSF or Residual Images do not exist. Please create one of them." ) );
+	throw( AipsError( "PSF or Residual Image (or sumwt) do not exist. Please create one of them." ) );
+      }
+    
+    if( doesImageExist(itsImageName+String(".sumwt"))  )
+      {
+	CountedPtr<ImageInterface<Float> > imptr;
+	imptr = new PagedImage<Float> (itsImageName+String(".sumwt"));
+	itsNFacets = imptr->shape()[0];
+	itsUseWeight = getUseWeightImage( *imptr );
+	if( itsUseWeight && ! doesImageExist(itsImageName+String(".weight")) )
+	  {
+	    throw(AipsError("Internal error : Sumwt has a useweightimage=True but the weight image does not exist."));
+	  }
+      }
+    else
+      {
+	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
   }
 
@@ -141,8 +172,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     ImageInterface<Float>* psfim, 
 			     ImageInterface<Float>* weightim, 
 			     ImageInterface<Float>* restoredim,
-			     ImageInterface<Float>* maskim
-			     )
+			     ImageInterface<Float>* maskim,
+			     ImageInterface<Float>* sumwtim  )
   {
     itsPsf=psfim;
     itsModel=modelim;
@@ -151,13 +182,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImage=restoredim;
     itsMask=maskim;
 
+    AlwaysAssert( sumwtim != NULL , AipsError );
+    AlwaysAssert( psfim != NULL , AipsError );
+
+    itsSumWt=sumwtim;
+    itsNFacets=sumwtim->shape()[0];
+    itsUseWeight=getUseWeightImage( *sumwtim );
+
     itsImageShape=psfim->shape();
     itsCoordSys = psfim->coordinates();
     itsMiscInfo = psfim->miscInfo();
 
     itsImageName = String("reference");  // This is what the access functions use to guard against allocs...
+
+    //    cout << " In ref imstore, hasSensitivity : " << hasSensitivity() << endl;
 	
-    itsValidity=((!itsPsf.null()) &&   (!itsResidual.null()) && (!itsWeight.null()));
+    //    itsValidity=((!itsPsf.null()) &&   (!itsResidual.null()) && (!itsWeight.null()));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +211,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float>* facetWeight=itsWeight.null()?NULL:makeFacet(facet, nfacets, *itsWeight);
     SubImage<Float>* facetImage=itsImage.null()?NULL:makeFacet(facet, nfacets, *itsImage);
     SubImage<Float>* facetMask=itsMask.null()?NULL:makeFacet(facet, nfacets, *itsMask);
-    return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage, facetMask);
+    SubImage<Float>* facetSumWt=itsSumWt.null()?NULL:makeFacet(facet, nfacets, *itsSumWt);
+    return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage, facetMask,facetSumWt);
 
   }
 
@@ -195,24 +236,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float>* subWeight=itsWeight.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsWeight);
     SubImage<Float>* subImage=itsImage.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsImage);
     SubImage<Float>* subMask=itsMask.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsMask);
-    return new SIImageStore(subModel, subResidual, subPSF, subWeight, subImage, subMask);
+    SubImage<Float>* subSumWt=itsSumWt.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsSumWt);
+    return new SIImageStore(subModel, subResidual, subPSF, subWeight, subImage, subMask, subSumWt);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //// Either read an image from disk, or construct one. 
   CountedPtr<ImageInterface<Float> > SIImageStore::openImage(const String imagenamefull, 
-							     const Bool overwrite)
+							     const Bool overwrite, const Bool dosumwt)
   {
 
     CountedPtr<ImageInterface<Float> > imPtr;
 
+    IPosition useShape( itsImageShape );
+
+    if( dosumwt ) // change shape to sumwt image shape.
+      {
+	useShape[0] = itsNFacets;
+	useShape[1] = itsNFacets;
+      }
+    
     if( overwrite || !Table::isWritable( imagenamefull ) )
       {
-	imPtr=new PagedImage<Float> (itsImageShape, itsCoordSys, imagenamefull);
+	imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
 	// initialize to zeros...
 	imPtr->set(0.0);
 
 	// TODO : Add special case for itsWeightShape ?  A flag inputted to openImage to trigger this...
+
+	cout << "made  " << imagenamefull << " of shape : " << useShape << endl;
 
       }
     else
@@ -225,16 +277,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	    catch (AipsError &x){
 	      cerr << "Writable table exists, but cannot open. Overwriting." << endl;
-	      imPtr=new PagedImage<Float> (itsImageShape, itsCoordSys, imagenamefull);
+	      imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
 	    }
 	  }
 	else
 	  {
 	    cerr << "Table " << imagenamefull << " is not writeable. Creating temp image." << endl;
-	    imPtr=new TempImage<Float> (itsImageShape, itsCoordSys);
+	    imPtr=new TempImage<Float> (useShape, itsCoordSys);
 	  }
       }
-    
+
     return imPtr;
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +301,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Check if images that are asked-for are ready and all have the same shape.
   Bool SIImageStore::checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 				   const Bool imodel, const Bool irestored,const Bool imask, 
-				   const Bool /*ialpha*/, const Bool /*ibeta*/)
+				   const Bool isumwt, const Bool /*ialpha*/, const Bool /*ibeta*/)
   {
 
     Bool valid = True;
@@ -257,18 +309,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
-    if(ipsf==True)
-      { psf(); valid = valid & ( !itsPsf.null() && itsPsf->shape()==itsImageShape ); }
-    if(iresidual==True)
-      { residual(); valid = valid & ( !itsResidual.null()&& itsResidual->shape()==itsImageShape ); }
-    if(iweight==True)
-      { weight(); valid = valid & ( !itsWeight.null()&& itsWeight->shape()==itsImageShape ); }
-    if(imodel==True)
-      { model(); valid = valid & ( !itsModel.null() && itsModel->shape()==itsImageShape); }
-    if(irestored==True)
-      { image(); valid = valid & ( !itsImage.null() && itsImage->shape()==itsImageShape); }
-    if(imask==True)
-      { mask(); valid = valid & ( !itsMask.null() && itsMask->shape()==itsImageShape); }
+	if(isumwt==True) { 
+	    IPosition useShape(itsImageShape);
+	    useShape[0]=itsNFacets; useShape[1]=itsNFacets;
+	    sumwt(); valid = valid & ( !itsSumWt.null()&& itsSumWt->shape()==useShape ); 
+	  }
+	// add a check for if sumwt has useweightimage=true, then weight() needs to exist too.....
+	
+	if(ipsf==True)
+	  { psf(); valid = valid & ( !itsPsf.null() && itsPsf->shape()==itsImageShape ); }
+	if(iresidual==True)
+	  { residual(); valid = valid & ( !itsResidual.null()&& itsResidual->shape()==itsImageShape ); }
+	if(iweight==True)
+	  { weight(); valid = valid & ( !itsWeight.null()&& itsWeight->shape()==itsImageShape ); }
+	if(imodel==True)
+	  { model(); valid = valid & ( !itsModel.null() && itsModel->shape()==itsImageShape); }
+	if(irestored==True)
+	  { image(); valid = valid & ( !itsImage.null() && itsImage->shape()==itsImageShape); }
+	if(imask==True)
+	  { mask(); valid = valid & ( !itsMask.null() && itsMask->shape()==itsImageShape); }
 
       }
     catch(AipsError &x)
@@ -325,10 +384,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","makePlane") );
 
-    uInt nx = itsImageShape[0];
-    uInt ny = itsImageShape[1];
-    uInt npol = itsImageShape[2];
-    uInt nchan = itsImageShape[3];
+    IPosition imshape = image.shape();
+    uInt nx = imshape[0];
+    uInt ny = imshape[1];
+    uInt npol = imshape[2];
+    uInt nchan = imshape[3];
 
     //    uInt nSubImages = ( (onechan)?itsImageShape[3]:1 ) * ( (onepol)?itsImageShape[2]:1 ) ;
     uInt polstep = (onepol)?1:npol;
@@ -367,6 +427,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( ! itsImage.null() ) itsImage->unlock();
     if( ! itsWeight.null() ) itsWeight->unlock();
     if( ! itsMask.null() ) itsMask->unlock();
+    if( ! itsSumWt.null() ) itsSumWt->unlock();
 
     return True; // do something more intelligent here.
   }
@@ -438,11 +499,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( !itsWeight.null() && itsWeight->shape() == itsImageShape ) { return itsWeight; }
     checkRef( itsWeight, "weight" );
     itsWeight = openImage( itsImageName+String(".weight") , False );
-
-    /// TODO :  itsWeight's shape should reflect what type of weight image it is....
-
     return itsWeight;
   }
+
+  CountedPtr<ImageInterface<Float> > SIImageStore::sumwt(uInt /*nterm*/)
+  {
+
+    IPosition useShape( itsImageShape );
+    useShape[0] = itsNFacets;
+    useShape[1] = itsNFacets;
+
+    if( !itsSumWt.null() && itsSumWt->shape() == useShape ) { return itsSumWt; }
+    checkRef( itsSumWt, "sumwt" );
+    itsSumWt = openImage( itsImageName+String(".sumwt") , False, True/*dosumwt*/ ); 
+
+    setUseWeightImage( *itsSumWt , itsUseWeight); // Sets a flag in the SumWt image. 
+    // if( itsUseWeight ){ 
+      //      weight(); // Since it needs the weight image, make it. 
+    //} 
+
+    return itsSumWt;
+  }
+
   CountedPtr<ImageInterface<Float> > SIImageStore::model(uInt /*nterm*/)
   {
     if( !itsModel.null() && itsModel->shape() == itsImageShape ) { return itsModel; }
@@ -545,6 +623,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( resetpsf ) psf()->set(0.0);
     if( resetresidual ) residual()->set(0.0);
     if( resetweight && !itsWeight.null() ) weight()->set(0.0);
+    if( resetweight ) sumwt()->set(0.0);
   }
 
   void SIImageStore::addImages( CountedPtr<SIImageStore> imagestoadd,
@@ -556,7 +635,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> adderPsf( *(psf()) + *(imagestoadd->psf()) ); 
 	psf()->copyData(adderPsf);
 
-	addSumWts( *psf(), *(imagestoadd->psf()) );
+	//	addSumWts( *psf(), *(imagestoadd->psf()) );
+	//	setUseWeightImage( *psf(),  getUseWeightImage(*(imagestoadd->psf()) ) );
 	
       }
     if(addresidual)
@@ -564,19 +644,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> adderRes( *(residual()) + *(imagestoadd->residual()) ); 
 	residual()->copyData(adderRes);
 
-	addSumWts( *residual(), *(imagestoadd->residual()) );
+	//	addSumWts( *residual(), *(imagestoadd->residual()) );
+	//	setUseWeightImage( *residual(),  getUseWeightImage(*(imagestoadd->residual()) ) );
 	
       }
     if(addweight)
       {
-	if( getUseWeightImage( *(imagestoadd->psf()) ) ) // Access and add weight only if it is needed.
+	if( itsUseWeight ) // getUseWeightImage( *(imagestoadd->psf()) ) ) // Access and add weight only if it is needed.
 	  {
 	    LatticeExpr<Float> adderWeight( *(weight()) + *(imagestoadd->weight()) ); 
 	    weight()->copyData(adderWeight);
 	    
-	    addSumWts( *weight(), *(imagestoadd->weight()) );
-	
+	    //addSumWts( *weight(), *(imagestoadd->weight()) );
+	    //	    setUseWeightImage( *weight(),  getUseWeightImage(*(imagestoadd->weight()) ) );
 	  }
+
+	LatticeExpr<Float> adderSumWt( *(sumwt()) + *(imagestoadd->sumwt()) ); 
+	sumwt()->copyData(adderSumWt);
+	setUseWeightImage( *sumwt(),  getUseWeightImage(*(imagestoadd->sumwt()) ) );
+
       }
     ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
@@ -599,13 +685,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Normalize by the sumwt, per plane. 
     Bool didNorm = divideImageByWeightVal( *residual() );
-    Bool useweightimage = getUseWeightImage( *residual() );
+    Bool useweightimage = itsUseWeight; //getUseWeightImage( *residual() );
 
     //    cout << "SIIM div residual by weight : useweightimage : " << useweightimage << endl;
 
     if( useweightimage == True )
       {
-	divideImageByWeightVal( *weight() ); // no-op if already normalized, with sumwt set to 1.0
+	//	divideImageByWeightVal( *weight() ); // Assume already normalized by PSF making.
 	
 	os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 	
@@ -630,8 +716,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Normalize by the sumwt, per plane. 
     divideImageByWeightVal( *psf() );
-
-    divideImageByWeightVal( *weight() ); // no-op if already normalized, with sumwt set to 1.0
+    if( itsUseWeight ) { divideImageByWeightVal( *weight() ); }
+    ///    if( getUseWeightImage( *psf() ) ) { divideImageByWeightVal( *weight() ); }
 
     /*    
     if( getUseWeightImage( *psf() ) == True )
@@ -667,7 +753,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
 
     if( !itsResidual.null() // information exists on whether weight image is needed or not
-	&& getUseWeightImage( *residual() ) == True // only when needed
+	//	&& getUseWeightImage( *residual() ) == True // only when needed
+	&& itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
         os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
@@ -689,7 +776,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( //!itsModel.null() // anything to do ? 
 	//&& 
-	getUseWeightImage( *residual() ) == True // only when needed
+       //	getUseWeightImage( *residual() ) == True // only when needed
+	itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
         os << "Multiplying " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
@@ -724,7 +812,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return beam;
   }
 
-  void SIImageStore::restorePlane()
+  GaussianBeam SIImageStore::restorePlane()
   {
 
     LogIO os( LogOrigin("SIImageStore","restorePlane",WHERE) );
@@ -748,9 +836,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	// Set restoring beam into the image
 	ImageInfo ii = image()->imageInfo();
-	ii.setRestoringBeam(beam);
+	//ii.setRestoringBeam(beam);
+	ii.setBeams(beam);
 	image()->setImageInfo(ii);
 
+	return beam;
       }
     catch(AipsError &x)
       {
@@ -759,6 +849,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SIImageStore::pbcorPlane()
+  {
+
+    LogIO os( LogOrigin("SIImageStore","pbcorPlane",WHERE) );
+    //     << ". Optionally, PB-correct too." << LogIO::POST;
+
+  }
 
   Matrix<Float> SIImageStore::getSumWt(ImageInterface<Float>& target)
   {
@@ -804,35 +901,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SIImageStore::divideImageByWeightVal( ImageInterface<Float>& target )
   {
 
-    Matrix<Float> sumwt = getSumWt( target );
+    //    Matrix<Float> lsumwt = getSumWt( target );
+
+    Array<Float> lsumwt;
+    sumwt()->get( lsumwt , True ); // For MT, this will always pick the zeroth sumwt, which it should.
 
     IPosition imshape = target.shape();
 
     //    cout << " SumWt  : " << sumwt << " image shape : " << imshape << endl;
 
-    AlwaysAssert( sumwt.shape()[0] == imshape[2] , AipsError ); // polplanes
-    AlwaysAssert( sumwt.shape()[1] == imshape[3] , AipsError ); // chanplanes
+    AlwaysAssert( lsumwt.shape()[2] == imshape[2] , AipsError ); // polplanes
+    AlwaysAssert( lsumwt.shape()[3] == imshape[3] , AipsError ); // chanplanes
 
     Bool div=False; // flag to signal if division actually happened, or weights are all 1.0
 
-    for(Int pol=0; pol<sumwt.shape()[0]; pol++)
+    for(Int pol=0; pol<lsumwt.shape()[2]; pol++)
       {
-	for(Int chan=0; chan<sumwt.shape()[1]; chan++)
+	for(Int chan=0; chan<lsumwt.shape()[3]; chan++)
 	  {
-	    if( sumwt(pol,chan) != 1.0 )
+	    IPosition pos(2,pol,chan);
+	    if( lsumwt(pos) != 1.0 )
 	      { 
 		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
-		LatticeExpr<Float> le( (*subim)/sumwt(pol,chan) );
+		LatticeExpr<Float> le( (*subim)/lsumwt(pos) );
 		subim->copyData( le );
 		div=True;
 	      }
 	  }
       }
 
-    //    if( div==True ) cout << "Div image by sumwt : " << sumwt << endl;
+    //    if( div==True ) cout << "Div image by sumwt : " << lsumwt << endl;
     //    else cout << "Already normalized" << endl;
 
-    sumwt = 1.0; setSumWt( target , sumwt );
+    //    lsumwt = 1.0; setSumWt( target , lsumwt );
 
     return div;
   }

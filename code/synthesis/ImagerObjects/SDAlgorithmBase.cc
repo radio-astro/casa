@@ -178,6 +178,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imagestore->getNSubImageStores(onechan,onepol,nSubChans,nSubPols);
 
     if( ! imagestore->checkValidity(True/*psf*/, True/*res*/,False/*wgt*/,True/*model*/,True/*image*/,
+				    True/*mask*/,True/*sumwt*/,
+				    True/*alpha*/, True/*beta*/) ) // alpha,beta will be ignored for single-term.
+      { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
+
+    // Init the restored image here.
+    //    imagestore->image();
+    //    imagestore->model();
+
+    ImageInfo ii = (imagestore->image())->imageInfo();
+    ImageBeamSet beamset;
+    beamset.resize( nSubChans, nSubPols );
+    for( uInt chanid=0; chanid<nSubChans;chanid++)
+      {
+	for( uInt polid=0; polid<nSubPols; polid++)
+	  {
+	    itsImages = imagestore->getSubImageStore( chanid, onechan, polid, onepol );
+	    GaussianBeam beam = itsImages->restorePlane();
+	    beamset.setBeam( chanid, polid, beam );
+	  }
+      }
+    ii.setBeams( beamset );
+    (imagestore->image())->setImageInfo(ii);
+
+  }
+
+ 
+  void SDAlgorithmBase::pbcor(CountedPtr<SIImageStore> imagestore )
+  {
+
+    LogIO os( LogOrigin("SDAlgorithmBase","pbcor",WHERE) );
+
+    Bool onechan=False, onepol=False;
+    queryDesiredShape(onechan, onepol);
+    uInt nSubChans, nSubPols;
+    imagestore->getNSubImageStores(onechan,onepol,nSubChans,nSubPols);
+
+    if( ! imagestore->checkValidity(False/*psf*/, False/*res*/,True/*wgt*/,False/*model*/,True/*image*/,
+				    False/*mask*/,False/*sumwt*/,
 				    True/*alpha*/, True/*beta*/) ) // alpha,beta will be ignored for single-term.
       { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
 
@@ -190,29 +228,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for( uInt polid=0; polid<nSubPols; polid++)
 	  {
 	    itsImages = imagestore->getSubImageStore( chanid, onechan, polid, onepol );
-	    itsImages->restorePlane();
+	    itsImages->pbcorPlane();
 	  }
       }
-
-    /*
-    // Make a list of Slicers if it doesn't already exist. This is to allow standalone restoration
-    if(itsDecSlices.nelements()==0)
-      {
-	partitionImages( imagestore );
-      }
-    
-    os << "Restore all planes for " << imagestore->getName() << LogIO::POST;
-
-    for( uInt subimageid=0; subimageid<itsDecSlices.nelements(); subimageid++)
-      {
-	// Assign current subimages.
-	initializeSubImages( imagestore, subimageid );
-	itsImage = SubImage<Float>( *(imagestore->image()), itsDecSlices[subimageid], True );
-
-	restorePlane();
-
-      }
-    */
 
   }
   

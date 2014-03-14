@@ -167,7 +167,6 @@ public:
   Vector<Quantity> cellsize;
   Projection projection;
   MDirection phaseCenter;
-  Int facets;
 
   // Spectral coordinates ( TT : Add other params here  )
   Int nchan, nTaylorTerms, chanStart, chanStep;
@@ -198,6 +197,9 @@ public:
   Int wprojplanes;
   Bool useDoublePrec, useAutoCorr; 
   Float padding;
+
+  // Facets for gridding.
+  Int facets;
 
   // Moving phase center ? 
   Quantity distance;

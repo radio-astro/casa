@@ -55,12 +55,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIImageStoreMultiTerm();
   SIImageStoreMultiTerm(String imagename, uInt ntaylorterms=1);
   SIImageStoreMultiTerm(String imagename, CoordinateSystem &imcoordsys, 
-			IPosition imshape, const Bool overwrite=False, uInt ntaylorterms=1);
+			IPosition imshape, const int nfacets, 
+			const Bool overwrite=False, uInt ntaylorterms=1,Bool useweightimage=False);
   SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
 			Block<CountedPtr<ImageInterface<Float> > >residims,
 			Block<CountedPtr<ImageInterface<Float> > >psfims, 
 			Block<CountedPtr<ImageInterface<Float> > >weightims, 
 			Block<CountedPtr<ImageInterface<Float> > >restoredims,
+			Block<CountedPtr<ImageInterface<Float> > >sumwtims, 
 			CountedPtr<ImageInterface<Float> > newmask,
 			CountedPtr<ImageInterface<Float> > newalpha,
 			CountedPtr<ImageInterface<Float> > newbeta);
@@ -74,6 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
   virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
   virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > sumwt(uInt term=0);
   ///   virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0); // take from base class.
   virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
   virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
@@ -93,10 +96,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void dividePSFByWeight();
   void divideSensitivityPatternByWeight();
   void divideModelByWeight(const Float weightlimit=C::minfloat);
+  void multiplyModelByWeight(const Float weightlimit=C::minfloat);
 
   Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 		     const Bool imodel, const Bool irestored, const Bool imask=False, 
-		     const Bool ialpha=False, const Bool ibeta=False);
+		     const Bool isumwt=True, const Bool ialpha=False, const Bool ibeta=False);
 
   Bool releaseLocks();
 
@@ -104,7 +108,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   uInt getNTaylorTerms(){return itsNTerms;};
 
-  void restorePlane();
+  GaussianBeam restorePlane();
+  void pbcorPlane();
 
   CountedPtr<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
   CountedPtr<SIImageStore> getSubImageStore(const Int chan, const Bool onechan, 
@@ -120,7 +125,7 @@ private:
 
   uInt itsNTerms;
 
-  Block<CountedPtr<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages;
+  Block<CountedPtr<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts;
   Block<CountedPtr<ImageInterface<Complex> > > itsForwardGrids, itsBackwardGrids;
   CountedPtr<ImageInterface<Float> > itsAlpha, itsBeta;
 

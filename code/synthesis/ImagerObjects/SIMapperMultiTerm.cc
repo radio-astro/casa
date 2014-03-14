@@ -197,11 +197,14 @@ SIMapperMultiTerm::~SIMapperMultiTerm()
 
     if( !itsDoImageMosaic || dopsf )
       {
-	Bool fillWeight = useWeightImage(iftms_p[0]) & ( !itsImages->hasSensitivity() ) ;
+	//	Bool fillWeight = useWeightImage(iftms_p[0]) & ( !itsImages->hasSensitivity() ) ;
+	Bool fillWeight = (itsImages->getUseWeightImage( *(itsImages->sumwt(0))  )) & dopsf;
+//& ( !itsImages->hasSensitivity() ) ;
 	for(uInt tix=0;tix<gridnterms;tix++)
 	  {
 	    finalizeGridCore(dopsf,  iftms_p[tix], 
 			     (dopsf ? *(itsImages->psf(tix)) : *(itsImages->residual(tix)) ) ,
+			     *(itsImages->sumwt(tix)),
 			     (fillWeight)?*(itsImages->weight(tix)): *(itsImages->psf(tix)),  
 			     fillWeight  );
 	    // *(itsImages->weight(tix)) ,   wgt);  

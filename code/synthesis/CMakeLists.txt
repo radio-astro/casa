@@ -344,7 +344,7 @@ casa_add_library( synthesis
  ImagerObjects/SDAlgorithmHogbomClean.cc
  ImagerObjects/SDAlgorithmMSMFS.cc
  ImagerObjects/SDMaskHandler.cc
- ImagerObjects/SynthesisParSync.cc
+ ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
   )
 
@@ -643,7 +643,7 @@ install (FILES
 	ImagerObjects/SIIterBot.h
 	ImagerObjects/SynthesisDeconvolver.h
 	ImagerObjects/SDMaskHandler.h
-	ImagerObjects/SynthesisParSync.h
+	ImagerObjects/SynthesisNormalizer.h
 	ImagerObjects/SynthesisUtilMethods.h
 	ImagerObjects/SDAlgorithmBase.h
 	ImagerObjects/SDAlgorithmHogbomClean.h

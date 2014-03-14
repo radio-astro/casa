@@ -197,7 +197,9 @@ protected:
 					 const Bool overwrite,
 					 String mappertype="default", 
 					 uInt ntaylorterms=1,
-					 Quantity distance=Quantity(0.0, "m"));
+					 Quantity distance=Quantity(0.0, "m"),
+					 uInt facets=1,
+					 Bool useweightimage=False);
   
   // Choose between different types of Mappers (single term, multiterm, imagemosaic, faceted)
   CountedPtr<SIMapperBase> createSIMapper(String mappertype,  
@@ -210,6 +212,7 @@ protected:
 							     CountedPtr<SIImageStore> imagestore,
 							     Int facets);
   void setPsfFromOneFacet();
+  Bool toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype);
 
   void createVisSet(const Bool writeaccess=False);
   

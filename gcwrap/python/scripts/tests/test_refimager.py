@@ -103,12 +103,12 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 12 image-field, mfs --- WB AWP( multi term )");
           casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',scan='1~35',
+                                       field='*',scan='',
                                        spw='*',\
                                        usescratch=True,readonly=True,\
                                        imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='1.0GHz',\
                                        imsize=[512,512],\
-                                       cellsize=['25.0arcsec','25.0arcsec'],\
+                                       cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        ftmachine='awprojectft', 
@@ -128,12 +128,12 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 11 image-field, mfs --- WB AWP (single term)");
           casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',scan='1~35',
+                                       field='1',scan='',
                                        spw='*',\
                                        usescratch=True,readonly=True,\
                                        imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='1.0GHz',\
                                        imsize=[512,512],\
-                                       cellsize=['25.0arcsec','25.0arcsec'],\
+                                       cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='awprojectft', 
                                        startmodel='', weighting='natural',\
@@ -147,20 +147,46 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
 
-
-     if(testnum==10):  ## Image domain mosaic for single-term
+     if(testnum==10):  ## 1 image-field, mfs --- Narrow-band AWP
           casalog.post("==================================");
-          casalog.post("Test 10 : Image domain mosaic for single-term");
+          casalog.post("Test 10 image-field, mfs --- WB AWP");
           casalog.post("==================================");
-          
-          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
+                                       field='1',scan='1~35',
+                                       spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='0.3GHz',\
+                                       imsize=[512,512],\
+                                       cellsize=['10.0arcsec','10.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='awprojectft', 
+                                       startmodel='', weighting='natural',\
+                                       aterm=True, psterm=False, mterm=True,\
+                                       wbawp = False, 
+                                       cfcache = "perm.mytest0.cfcache",\
+                                       dopointing = False, dopbcorr = True, conjbeams = True, 
+                                       computepastep =360.0, rotatepastep =5.0,\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+     if(testnum==9):  ## Image domain mosaic for single-term (narrow band )
+          casalog.post("==================================");
+          casalog.post("Test 9 : Image domain mosaic for single-term");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',\
+                                       field='',spw='1',scan='',\
+                                       usescratch=True,readonly=True,\
+                                       mode='mfs',\
+                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='4.0GHz',\
                                        ntaylorterms=1,mtype='imagemosaic',restfreq=['1.5GHz'],\
-                                       imsize=[200,200], facets=1,\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:00.2 +40.50.15.50",\
+                                       imsize=[512,512],\
+                                       cellsize=['10.0arcsec','10.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
@@ -168,9 +194,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive)
  
 
-     if(testnum==9):  # MTMFS + Facets
+     if(testnum==8):  # MTMFS + Facets
           casalog.post("==================================");
-          casalog.post("Test 9 : 1 image-field, mfs, nt=1, 2x2 facets ");
+          casalog.post("Test 8 : 1 image-field, mfs, nt=1, 2x2 facets ");
           casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
@@ -188,9 +214,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive)
 
 
-     if(testnum==8):  # MTMFS 
+     if(testnum==7):  # MTMFS 
           casalog.post("==================================");
-          casalog.post("Test 8 : 1 image-field, mfs, With ntaylorterms=2 ");
+          casalog.post("Test 7 : 1 image-field, mfs, With ntaylorterms=2 ");
           casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
@@ -208,9 +234,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive)
 
 
-     if(testnum==7): ## Facetted imaging
+     if(testnum==6): ## Facetted imaging
           casalog.post("==================================");
-          casalog.post("Test 7 : 1 image-field, mfs, nt=1, 2x2 facets ");
+          casalog.post("Test 6 : 1 image-field, mfs, nt=1, 2x2 facets ");
           casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
@@ -227,31 +253,6 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
 
-
-     if(testnum==6):  ## 1 image-field, mfs --- Narrow-band AWP
-          casalog.post("==================================");
-          casalog.post("Test 6 image-field, mfs --- WB AWP");
-          casalog.post("==================================");
-          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',scan='1~35',
-                                       spw='1',\
-                                       usescratch=True,readonly=True,\
-                                       mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='0.3GHz',\
-                                       imsize=[512,512],\
-                                       cellsize=['25.0arcsec','25.0arcsec'],\
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='awprojectft', 
-                                       startmodel='', weighting='natural',\
-                                       aterm=True, psterm=False, mterm=True,\
-                                       wbawp = False, 
-                                       cfcache = "perm.mytest0.cfcache",\
-                                       dopointing = False, dopbcorr = True, conjbeams = True, 
-                                       computepastep =360.0, rotatepastep =5.0,\
-                                       algo='hogbom',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
 
      if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
           casalog.post("==================================");
@@ -404,7 +405,7 @@ def doClean( params = [None,"",False,False,False] , doplot=True ):
     ### Set up Imagers, Deconvolvers, IterControl, and ParallelSync.
     imager.initializeImagers()
     imager.initializeDeconvolvers()
-    imager.initializeParallelSync()
+    imager.initializeNormalizers()
     imager.initializeIterationControl()
 
     ### Run it.
@@ -444,12 +445,12 @@ def doMajor( params = [None,"",False,False,False] , doplot=True , tomake='both')
 
     ### Set up Imagers and ParallelSync.
     imager.initializeImagers()
-    imager.initializeParallelSync()
+    imager.initializeNormalizers()
 
     ### Run it.
     if tomake=='both' or tomake=='psf':
          imager.makePSF()
-    if tomake=='both' or tomake=='residual':
+    if tomake=='both':
          imager.runMajorCycle()
 
     imager.deleteTools()
@@ -540,9 +541,9 @@ def toolTestMajorCycle( testnum=1 ):
      SItool = casac.synthesisimager()
      SItool.initializemajorcycle( params.getSelPars(), params.getImagePars(), params.getGridPars() )
 
-     PStool = casac.synthesisparsync()
-     syncpars = {'imagename':params.getImagePars()['0']['imagename']}
-     PStool.setupparsync( syncpars )
+     PStool = casac.synthesisnormalizer()
+     normpars = {'imagename':params.getImagePars()['0']['imagename']}
+     PStool.setupnormalizer( normpars )
 
      PStool.scattermodel()
      SItool.makepsf()
@@ -584,9 +585,9 @@ def toolTestMajorCycle2( testnum=1 ):
      PStools = []
      nfld = len( allimagepars.keys() )
      for fld in range(0, nfld ):
-          PStool.append(casac.synthesisparsync())
-          syncpars = {'imagename':allimagepars[ (allimagepars.keys())[fld] ]['imagename']}
-          PStool.setupparsync( syncpars )
+          PStool.append(casac.synthesisnormalizer())
+          normpars = {'imagename':allimagepars[ (allimagepars.keys())[fld] ]['imagename']}
+          PStool.setupnormalizer( normpars )
 
      for fld in range(0, nfld):
           PStool[fld].scattermodel()
