@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os
+import string
 import types
 
 import flaghelper
@@ -305,4 +306,9 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             LOG.warning('%s does not exist' % filename)
             return []
 
-        return flaghelper.readFile(filename)
+        # strip out comments and empty lines to leave the real commands.
+        # This is so we can compare the number of valid commands to the number
+        # of commands specified in the file and complain if they differ
+        return [cmd for cmd in flaghelper.readFile(filename) 
+                if not cmd.strip().startswith('#')
+                and not all(c in string.whitespace for c in cmd)]
