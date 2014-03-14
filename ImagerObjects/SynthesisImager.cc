@@ -400,7 +400,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   impars.freqStart=freqStart;
   impars.freqStep=freqStep;
   impars.restFreq=restFreq;
-  impars.facets=facets;
   impars.nTaylorTerms=nTaylorTerms;
   impars.refFreq=refFreq;
   impars.projection=projection;
@@ -416,6 +415,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   gridpars.trackSource=trackSource;
   gridpars.trackDir=trackDir;
   gridpars.padding=padding;
+  gridpars.facets=facets;
   gridpars.useAutoCorr=useAutocorr;
   gridpars.useDoublePrec=useDoublePrec;
   gridpars.wprojplanes=wprojplanes;
@@ -483,7 +483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     try
       {
-	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.facets, gridpars.wprojplanes,
+	createFTMachine(ftm, iftm, gridpars.ftmachine, gridpars.facets, gridpars.wprojplanes,
 			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
 			gridpars.convFunc,
 			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
@@ -501,7 +501,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	appendToMapperList(impars.imageName,  csys,  impars.shp(),
 			   ftm, iftm,
-			   gridpars.distance, impars.facets, impars.overwrite,
+			   gridpars.distance, gridpars.facets, impars.overwrite,
 			   gridpars.mType, impars.nTaylorTerms);
 	imageDefined_p=True;
       }
@@ -828,7 +828,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  const Bool overwrite,
 							  String mappertype,
 							  uInt ntaylorterms,
-							  Quantity distance)
+							  Quantity distance,
+							  uInt facets,
+							  Bool useweightimage)
   {
     LogIO os( LogOrigin("SynthesisImager","createIMStore",WHERE) );
 
@@ -839,12 +841,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if( mappertype=="default" || mappertype=="imagemosaic" )
 	  {
-	    imstor=new SIImageStore(imageName, cSys, imShape, overwrite);
+	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, useweightimage);
 	  }
 	else if (mappertype == "multiterm" )
 	  {
 	    cout << "Making multiterm IS with nterms : " << ntaylorterms << endl;
-	    imstor=new SIImageStoreMultiTerm(imageName, cSys, imShape, overwrite, ntaylorterms);
+	    imstor=new SIImageStoreMultiTerm(imageName, cSys, imShape, facets, overwrite, ntaylorterms, useweightimage);
 	  }
 	else
 	  {
@@ -972,6 +974,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    sub.copyData(onepsf);
 	  }
       }
+
+      cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
+
   }
   
   
@@ -987,13 +992,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   uInt ntaylorterms  )
     {
       LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
-
+      //---------------------------------------------
+      // Some checks..
       if(facets > 1 && itsMappers.nMappers() > 0)
 	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
+      
+      AlwaysAssert( ( ( ! (ftm->name()=="MosaicFT" && mappertype=="imagemosaic") )  && 
+      		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
+		    AipsError );
+      //---------------------------------------------
 
       // Create the ImageStore object
       CountedPtr<SIImageStore> imstor;
-      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance);
+      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, toUseWeightImage(iftm,mappertype) );
 
       // Create the Mappers
       if( facets<2 ) // One facet. Just add the above imagestore to the mapper list.
@@ -1003,7 +1014,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else // This field is facetted. Make a list of reference imstores, and add all to the mapper list.
 	{
 	  // First, make sure that full images have been allocated before trying to make references.....
-	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/ ) ) 
+	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
 	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
 
 	  // Make and connect the list.
@@ -1020,6 +1031,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
   /////////////////////////
+  Bool SynthesisImager::toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype)
+  {
+    if( (ftm->name() == "GridFT" || ftm->name() == "WProjectFT")&&(mappertype!="imagemosaic") )  
+      { return False; }
+    else
+      { return True; }
+  }
   
   // Make the FT-Machine and related objects (cfcache, etc.)
   void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
@@ -1191,7 +1209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     theIFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &>(*theFT));
 
     //// Send in Freq info.
-    os << "Sending in frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM using OLD vi/vb way. This must go." << LogIO::WARN;
+    os << "Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
     theFT->setSpwFreqSelection( mssFreqSel_p );
     theIFT->setSpwFreqSelection( mssFreqSel_p );
     //    vi_p->getFreqInSpwRange(

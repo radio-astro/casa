@@ -1,4 +1,4 @@
-//# SynthesisParSync.h: Gather and Scatter operations for parallel major cycles.
+//# SynthesisNormalizer.h: Gather and Scatter operations for parallel major cycles.
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -51,18 +51,18 @@ template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-class SynthesisParSync 
+class SynthesisNormalizer 
 {
  public:
   // Default constructor
 
-  SynthesisParSync();
-  ~SynthesisParSync();
+  SynthesisNormalizer();
+  ~SynthesisNormalizer();
 
   // Copy constructor and assignment operator
 
   // make all pure-inputs const
-  void setupParSync(Record syncpars);
+  void setupNormalizer(Record normpars);
 
   // Gather all part images to the 'full' one
   void gatherImages(Bool dopsf=True); //, Bool doresidual=True);
@@ -86,7 +86,7 @@ protected:
   Bool doImagesExist( String imagename );
 
   CountedPtr<SIImageStore> makeImageStore( String imagename );
-  CountedPtr<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp );
+  CountedPtr<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp, Bool useweightimage );
 
   /////////////// Member Objects
 

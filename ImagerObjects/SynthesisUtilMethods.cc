@@ -106,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }
 	    if(msname.matches("DataTest/reg_mawproject.ms"))
 	      {
-		onems.define("scan", (((Bool)part)?("1~17"):("18~35"))  );
+		onems.define("scan", (((Bool)part)?("0~17"):("18~35"))  );
 	      }
 	    onepart.defineRecord( RecordFieldId("ms"+String::toString(msid)) , onems );
 	  }// end ms loop
@@ -597,9 +597,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	////nchan
 	err += readVal( inrec, String("nchan"), nchan);
-	
-	//// facets	
-	err += readVal( inrec, String("facets"), facets);
 
 	/// phaseCenter (as a string) . // Add INT support later.
 	err += readVal( inrec, String("phasecenter"), phaseCenter );
@@ -675,9 +672,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( nchan>1 and nTaylorTerms>1 )
       {err += "Cannot have more than one channel with ntaylorterms>1\n";}
 
-    if( facets < 1 )
-      {err += "Must have at least 1 facet\n"; }
-
     if( ! stokes.matches("I") && ! stokes.matches("Q") && 
 	! stokes.matches("U") && ! stokes.matches("V") && 
 	! stokes.matches("RR") && ! stokes.matches("LL") && 
@@ -712,7 +706,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imsize.resize(2); imsize.set(100);
     cellsize.resize(2); cellsize.set( Quantity(1.0,"arcsec") );
     stokes="I";
-    facets=1;
     phaseCenter=MDirection();
     projection=Projection::SIN;
     startModel=String("");
@@ -748,7 +741,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("stokes", stokes);
     impar.define("nchan", nchan);
     impar.define("ntaylorterms", nTaylorTerms);
-    impar.define("facets", facets);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
     impar.define("projection", projection.name() );
 
@@ -1223,6 +1215,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("usedoubleprec"), useDoublePrec );
 	err += readVal( inrec, String("wprojplanes"), wprojplanes );
 	err += readVal( inrec, String("convfunc"), convFunc );
+	
+	// facets	
+	err += readVal( inrec, String("facets"), facets);
 
 	// Track moving source ?
 	err += readVal( inrec, String("distance"), distance );
@@ -1262,7 +1257,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Check for valid FTMachine type.
     // Valid other params per FTM type, etc... ( check about nterms>1 )
- 
+
+    if( ftmachine=="mosaicft" && mType=="imagemosaic"  || 
+	ftmachine=="awprojectft" && mType=="imagemosaic" )
+      {  err +=  "Cannot use " + ftmachine + " with " + mType + " because it is a redundant choice for mosaicing. In the future, we may support the combination to signal the use of single-pointing sized image grids during gridding and iFT, and only accumulating it on the large mosaic image. For now, please set either mappertype='default' to get mosaic gridding  or ftmachine='ft' or 'wprojectft' to get image domain mosaics. \n"; }
+
+    if( facets < 1 )
+      {err += "Must have at least 1 facet\n"; }
+
+    if( ftmachine=="awprojectft" && facets>1 )
+      {err += "The awprojectft gridder supports A- and W-Projection. Instead of using facets>1 to deal with the W-term, please set the number of wprojplanes to a value > 1 to trigger the combined AW-Projection algorithm. \n";  } // Also, the way the AWP cfcache is managed, even if all facets share a common one so that they reuse convolution functions, the first facet's gridder writes out the avgPB and all others see that it's there and don't compute their own. As a result, the code will run, but the first facet's weight image will be duplicated for all facets.  If needed, this must be fixed in the way the AWP gridder manages its cfcache. But, since the AWP gridder supports joint A and W projection, facet support may never be needed in the first place... 
+
+    if( ftmachine=="mosaicft" && facets>1 )
+      { err += "The combination of mosaicft gridding with multiple facets is not supported. Please use the awprojectft gridder instead, and set wprojplanes to a value > 1 to trigger AW-Projection. \n"; }
+
     return err;
   }
 
@@ -1275,6 +1283,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     useDoublePrec=True; 
     wprojplanes=1; 
     convFunc="SF"; 
+    
+    // facets
+    facets=1;
 
     // Moving phase center ?
     distance=Quantity(0,"m");
@@ -1309,6 +1320,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("usedoubleprec", useDoublePrec);
     gridpar.define("wprojplanes", wprojplanes);
     gridpar.define("convfunc", convFunc);
+
+    gridpar.define("facets", facets);
 
     gridpar.define("distance", QuantityToString(distance));
     gridpar.define("tracksource", trackSource);

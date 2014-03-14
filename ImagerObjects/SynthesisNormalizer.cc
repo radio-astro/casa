@@ -1,4 +1,4 @@
-//# SynthesisParSync.cc: Implementation of Gather/Scatter for parallel major cycles
+//# SynthesisNormalizer.cc: Implementation of Gather/Scatter for parallel major cycles
 //# Copyright (C) 1997-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -49,7 +49,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 
-#include <synthesis/ImagerObjects/SynthesisParSync.h>
+#include <synthesis/ImagerObjects/SynthesisNormalizer.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -57,7 +57,7 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SynthesisParSync::SynthesisParSync() : 
+  SynthesisNormalizer::SynthesisNormalizer() : 
 				       itsImages(CountedPtr<SIImageStore>()),
 				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
@@ -70,51 +70,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsFacetImageStores.resize(0);
   }
   
-  SynthesisParSync::~SynthesisParSync() 
+  SynthesisNormalizer::~SynthesisNormalizer() 
   {
-    LogIO os( LogOrigin("SynthesisParSync","descructor",WHERE) );
-    os << "SynthesisParSync destroyed" << LogIO::POST;
+    LogIO os( LogOrigin("SynthesisNormalizer","descructor",WHERE) );
+    os << "SynthesisNormalizer destroyed" << LogIO::POST;
   }
   
   
-  void SynthesisParSync::setupParSync(Record syncpars)
+  void SynthesisNormalizer::setupNormalizer(Record normpars)
   {
-    LogIO os( LogOrigin("SynthesisParSync","setupParSync",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer","setupNormalizer",WHERE) );
 
     try
       {
 
-      if( syncpars.isDefined("imagename") )  // A single string
-	{ itsImageName = syncpars.asString( RecordFieldId("imagename")); }
+      if( normpars.isDefined("imagename") )  // A single string
+	{ itsImageName = normpars.asString( RecordFieldId("imagename")); }
       else
 	{throw( AipsError("imagename not specified")); }
 
-      if( syncpars.isDefined("partimagenames") )  // A vector of strings
-	{ syncpars.get( RecordFieldId("partimagenames") , itsPartImageNames ); }
+      if( normpars.isDefined("partimagenames") )  // A vector of strings
+	{ normpars.get( RecordFieldId("partimagenames") , itsPartImageNames ); }
       else
 	{ itsPartImageNames.resize(0); }
 
-      if( syncpars.isDefined("weightlimit") )
+      if( normpars.isDefined("weightlimit") )
 	{
-	  syncpars.get( RecordFieldId("weightlimit") , itsWeightLimit );
+	  normpars.get( RecordFieldId("weightlimit") , itsWeightLimit );
 	}
       else
 	{ itsWeightLimit = 0.1; }
 
 
       // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
-      if( syncpars.isDefined("mtype") )  // A single string
-	{ itsMapperType = syncpars.asString( RecordFieldId("mtype")); }
+      if( normpars.isDefined("mtype") )  // A single string
+	{ itsMapperType = normpars.asString( RecordFieldId("mtype")); }
       else
 	{ itsMapperType = "default";}
 
-      if( syncpars.isDefined("ntaylorterms") )  // A single int
-	{ itsNTaylorTerms = syncpars.asuInt( RecordFieldId("ntaylorterms")); }
+      if( normpars.isDefined("ntaylorterms") )  // A single int
+	{ itsNTaylorTerms = normpars.asuInt( RecordFieldId("ntaylorterms")); }
       else
 	{ itsNTaylorTerms = 1;}
 
-      if( syncpars.isDefined("facets") )  // A single int
-	{ itsNFacets = syncpars.asuInt( RecordFieldId("facets")); }
+      if( normpars.isDefined("facets") )  // A single int
+	{ itsNFacets = normpars.asuInt( RecordFieldId("facets")); }
       else
 	{ itsNFacets = 1;}
 
@@ -128,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of setupParSync
 
 
-  void SynthesisParSync::gatherImages(Bool dopsf) //, Bool doresidual)
+  void SynthesisNormalizer::gatherImages(Bool dopsf) //, Bool doresidual)
   {
 
     //    cout << " partimagenames :" << itsPartImageNames << endl;
@@ -137,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( needToGatherImages )
       {
-	LogIO os( LogOrigin("SynthesisParSync", "gatherImages",WHERE) );
+	LogIO os( LogOrigin("SynthesisNormalizer", "gatherImages",WHERE) );
 
 	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
 	Bool doresidual = !dopsf;
@@ -164,10 +164,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end of gatherImages
 
-  void SynthesisParSync::scatterModel()
+  void SynthesisNormalizer::scatterModel()
   {
 
-    LogIO os( LogOrigin("SynthesisParSync", "scatterModel",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer", "scatterModel",WHERE) );
 
     if( itsPartImages.nelements() > 0 )
       {
@@ -184,9 +184,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   
 
-  void SynthesisParSync::divideResidualByWeight()
+  void SynthesisNormalizer::divideResidualByWeight()
   {
-    LogIO os( LogOrigin("SynthesisParSync", "divideResidualByWeight",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer", "divideResidualByWeight",WHERE) );
     
     //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
 
@@ -200,9 +200,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
   
-  void SynthesisParSync::dividePSFByWeight()
+  void SynthesisNormalizer::dividePSFByWeight()
   {
-    LogIO os( LogOrigin("SynthesisParSync", "dividePSFByWeight",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer", "dividePSFByWeight",WHERE) );
     
     if( itsNFacets==1) {
       itsImages->dividePSFByWeight();
@@ -216,9 +216,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  void SynthesisParSync::divideModelByWeight()
+  void SynthesisNormalizer::divideModelByWeight()
   {
-    LogIO os( LogOrigin("SynthesisParSync", "divideModelByWeight",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer", "divideModelByWeight",WHERE) );
     if( itsImages.null() ) 
       {
 	os << LogIO::WARN << "No imagestore yet. Do something to fix the starting model case...." << LogIO::POST;
@@ -233,9 +233,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
  }
 
-  void SynthesisParSync::multiplyModelByWeight()
+  void SynthesisNormalizer::multiplyModelByWeight()
   {
-    //    LogIO os( LogOrigin("SynthesisParSync", "multiplyModelByWeight",WHERE) );
+    //    LogIO os( LogOrigin("SynthesisNormalizer", "multiplyModelByWeight",WHERE) );
     if( itsNFacets==1) {
       itsImages->multiplyModelByWeight( itsWeightLimit );
     }
@@ -246,15 +246,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  }
 
 
-  CountedPtr<SIImageStore> SynthesisParSync::getImageStore()
+  CountedPtr<SIImageStore> SynthesisNormalizer::getImageStore()
   {
-    LogIO os( LogOrigin("SynthesisParSync", "getImageStore", WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer", "getImageStore", WHERE) );
     return itsImages;
   }
 
-  void SynthesisParSync::setImageStore( SIImageStore* imstore )
+  void SynthesisNormalizer::setImageStore( SIImageStore* imstore )
   {
-    LogIO os( LogOrigin("SynthesisParSync", "setImageStore", WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer", "setImageStore", WHERE) );
     itsImages = imstore;
   }
 
@@ -265,9 +265,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  Bool SynthesisParSync::setupImagesOnDisk() 
+  Bool SynthesisNormalizer::setupImagesOnDisk() 
   {
-    LogIO os( LogOrigin("SynthesisParSync","setupImagesOnDisk",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer","setupImagesOnDisk",WHERE) );
 
     Bool needToGatherImages=False;
 
@@ -361,7 +361,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IPosition tempshape = temppart.shape();
 	    CoordinateSystem tempcsys = temppart.coordinates();
 
-	    itsImages = makeImageStore ( itsImageName, tempcsys, tempshape );
+	    Bool useweightimage = itsPartImages[0]->getUseWeightImage( *(itsPartImages[0]->sumwt()) );
+
+	    itsImages = makeImageStore ( itsImageName, tempcsys, tempshape, useweightimage );
 	    foundFullImage = True;
 	  }
 
@@ -410,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }// end of setupImagesOnDisk
 
 
-  CountedPtr<SIImageStore> SynthesisParSync::makeImageStore( String imagename )
+  CountedPtr<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename )
   {
     if( itsMapperType == "multiterm" )
       { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms );   }
@@ -419,14 +421,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  CountedPtr<SIImageStore> SynthesisParSync::makeImageStore( String imagename, 
+  CountedPtr<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename, 
 							    CoordinateSystem& csys, 
-                                                             IPosition shp )
+								IPosition shp, Bool useweightimage )
   {
     if( itsMapperType == "multiterm" )
-      { return new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms );   }
+      { return new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms, useweightimage );   }
     else
-      { return new SIImageStore( imagename, csys, shp, itsNFacets, False );   }
+      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
   }
 
 

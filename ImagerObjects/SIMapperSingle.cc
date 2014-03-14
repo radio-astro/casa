@@ -154,6 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	Matrix<Float> wgt;
 	gridCoreMos( vb, dopsf, col, ift_p, -1,  
 		     *(itsImages->residual()), 
+		     *(itsImages->sumwt()),
 		     *(itsImages->weight()), 
 		     //		     wgt, 
 		     *(itsImages->backwardGrid())  );
@@ -167,6 +168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LogIO os( LogOrigin("SIMapperSingle","finalizeGrid",WHERE) );
 
       finalizeGridCore(dopsf,  ift_p, (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ) ,
+			 *(itsImages->sumwt()),
 		       (useWeightImage(ift_p))?(*(itsImages->weight())): *(itsImages->psf()),  
 		       useWeightImage(ift_p)  );
   }
@@ -175,15 +177,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       LogIO os( LogOrigin("SIMapperSingle","finalizeGrid",WHERE) );
 
-      if( !itsDoImageMosaic || dopsf ) {
-	Bool fillWeight = useWeightImage(ift_p) & ( !itsImages->hasSensitivity() ) ;
+      if( !itsDoImageMosaic ){ // || dopsf ) {
+	//	Bool fillWeight = useWeightImage(ift_p) & ( !itsImages->hasSensitivity() ) ;
+	Bool fillWeight = (itsImages->getUseWeightImage( *(itsImages->sumwt())  )) & dopsf; // only first time when making psf.
+//( !itsImages->hasSensitivity() ) ;
+//	cout << "In finalizeGrid : fillWeight : " << fillWeight << "  getusewt : " << itsImages->getUseWeightImage( *(itsImages->sumwt()) ) << endl;
+
 	finalizeGridCore(dopsf,  ift_p, (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ) ,
+			 *(itsImages->sumwt()),
 			 (fillWeight)?*(itsImages->weight()): *(itsImages->psf()),  
 			 (fillWeight) );
 	//			 *(itsImages->weight()) ,   wgt); 
       }
       else{
 	finalizeGridCoreMos(dopsf,  ift_p,  *(itsImages->residual())  ,
+			    *(itsImages->sumwt()), 
 			    *(itsImages->weight()) , *(itsImages->backwardGrid()), vb);
       }
 

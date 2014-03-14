@@ -158,6 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperBase::finalizeGridCore(const Bool dopsf, 
 				      CountedPtr<FTMachine>&  ftm,
 				      ImageInterface<Float>& targetImage,
+				      ImageInterface<Float>& sumwtImage,
 				      ImageInterface<Float>& weightImage,
 				      Bool fillWeightImage){
     try   {
@@ -173,10 +174,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if( fillWeightImage) 
 	{ 
 	  ftm->getWeightImage( weightImage, sumWeights ); 
-	  addImageMiscInfo( weightImage, ftm, sumWeights );      
+	  //	  addImageMiscInfo( weightImage, ftm); //, sumWeights );      
 	}
 
-      addImageMiscInfo( targetImage, ftm, sumWeights );      
+      //      addImageMiscInfo( targetImage, ftm); // , sumWeights );      
+
+      //      cout << " Sumwt shapes : " << sumwtImage.shape() << " " << sumWeights.shape() << endl;
+      AlwaysAssert( (sumwtImage.shape()[2] == sumWeights.shape()[0] ) && 
+      		    (sumwtImage.shape()[3] == sumWeights.shape()[1] ) , AipsError );
+
+      sumwtImage.put( sumWeights.reform(sumwtImage.shape()) );
+
+      //      cout << "Sumwt in finalizeGrid : " << sumwtImage.get() << endl;
 
     } catch(AipsError &x){
       throw(AipsError("finalizeGridCore : "+x.getMesg()));
@@ -272,12 +281,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void SIMapperBase::addImageMiscInfo(ImageInterface<Float>& target, 
-				      CountedPtr<FTMachine>& ftm, 
-				      Matrix<Float>& sumwt)
+				      CountedPtr<FTMachine>& ftm) 
+  //				      Matrix<Float>& sumwt)
   {
     Record miscinfo = target.miscInfo();
 
-    miscinfo.define("sumwt", sumwt);
+    //    miscinfo.define("sumwt", sumwt);
     miscinfo.define("useweightimage", useWeightImage(ftm));
 
     target.setMiscInfo( miscinfo );
@@ -323,6 +332,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperBase::gridCoreMos(const VisBuffer& vb, Bool dopsf, FTMachine::Type col,
 				 CountedPtr<FTMachine>&  ftm, Int /*dummyrow*/, 
 				 ImageInterface<Float>& targetImage,
+				 ImageInterface<Float>& sumwtImage,
 				 ImageInterface<Float>& weightImage,
 				 //				 Matrix<Float>& sumWeights,
 				 ImageInterface<Complex>& complexImage)
@@ -338,16 +348,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //First ft machine change should be indicative
       //anyways right now we are allowing only 1 ftmachine for GridBoth
       Bool IFTChanged=ftm->changed(vb);
+
+      cout << "gridCoreMos : internalChanges : " << internalChanges << "  firstchange : " << firstOneChanges << endl;
       
-      Matrix<Float> wgt;
-      
-      if(internalChanges) {
+      if(internalChanges || firstOneChanges) {
 	// Yes there are changes: go row by row.
 	for (Int row=0; row<nRow; row++) {
 	  if(IFTChanged||ejgrid_p->changed(vb,row)) {
 	    // Need to apply the SkyJones from the previous row
 	    // and finish off before starting with this row
-	    finalizeGridCoreMos(dopsf, ftm, targetImage, weightImage, complexImage, ovb_p);
+	    finalizeGridCoreMos(dopsf, ftm, targetImage, sumwtImage, weightImage, complexImage, ovb_p);
 	    initializeGridCoreMos(vb,ftm,complexImage);
 	  }
 	  //ftm->put(vb, row, dopsf, col);
@@ -376,6 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperBase::finalizeGridCoreMos(const Bool dopsf,
 					 CountedPtr<FTMachine>&  ftm,
 					 ImageInterface<Float>& targetImage,
+					 ImageInterface<Float>& sumwtImage,
 					 ImageInterface<Float>& weightImage,
 					 ImageInterface<Complex>& complexImage,
 					 VisBuffer& vb)
@@ -383,7 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try   {
       
       if(ejgrid_p.null()) throw(AipsError("Internal error : null ejgrid..."));
-      if(dopsf) throw(AipsError("Internal error : call non-mosaic finalizeGridCore for psf"));
+      //      if(dopsf) throw(AipsError("Internal error : call non-mosaic finalizeGridCore for psf"));
       
       // Actually do the transform. Update weights as we do so.
       ftm->finalizeToSky();
@@ -405,6 +416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       
       //if(ejgrid_p != NULL && !dopsf)
+      if( dopsf )
       {
 	TempImage<Float> temp(weightImage.shape(), weightImage.coordinates());
 	ftm->getWeightImage(temp, sumWeights);
@@ -413,8 +425,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	weightImage.copyData(addToWgt);
       }
       
-      addImageMiscInfo( targetImage, ftm, sumWeights );      
-      
+      //      addImageMiscInfo( targetImage, ftm); //, sumWeights );      
+
+      //      cout << " Sumwt shapes : " << sumwtImage.shape() << " " << sumWeights.shape() << endl;
+      AlwaysAssert( (sumwtImage.shape()[2] == sumWeights.shape()[0] ) && 
+      		    (sumwtImage.shape()[3] == sumWeights.shape()[1] ) , AipsError );
+
+      //      sumwtImage.put( sumWeights.reform(sumwtImage.shape()) );
+
+      if( dopsf )
+      {
+	TempImage<Float> temp(sumwtImage.shape(), sumwtImage.coordinates());
+	temp.put( sumWeights.reform(sumwtImage.shape()) );
+	LatticeExpr<Float> addToWgt( sumwtImage + temp );
+	sumwtImage.copyData(addToWgt);
+      }
+
+      cout << "In finalizeGridCoreMos : sumwt : " << sumwtImage.get() << endl;
+
     } catch(AipsError &x){
       throw(AipsError("finalizeGridCoreMos : "+x.getMesg()));
     }
@@ -551,6 +579,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(ej->changedBuffer(vb,0,row2temp)) {
 	internalRow=True;
       }
+      //      cout << "change : firstrow : " << firstRow << " internal : " << internalRow << "  vb field : " << vb.fieldId() << endl;
       return (firstRow || internalRow) ;
       
     } catch(AipsError &x){

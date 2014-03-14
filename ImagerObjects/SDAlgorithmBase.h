@@ -70,6 +70,7 @@ public:
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( CountedPtr<SIImageStore> imagestore );
+  virtual void pbcor( CountedPtr<SIImageStore> imagestore );
 
   virtual String getAlgorithmName(){return itsAlgorithmName;};
 

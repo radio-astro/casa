@@ -106,6 +106,7 @@ protected:
   void finalizeGridCore(const Bool dopsf,
 			CountedPtr<FTMachine>&  ftm,
 			ImageInterface<Float>& targetImage,
+			ImageInterface<Float>& sumwtImage,
 			ImageInterface<Float>& weightImage,
 			Bool fillWeightImage);
   
@@ -126,8 +127,8 @@ protected:
 		  CountedPtr<ComponentFTMachine>& cftm, ComponentList& cl);
 
   void addImageMiscInfo(ImageInterface<Float>& target, 
-			CountedPtr<FTMachine>& ftm, 
-			Matrix<Float>& sumwt);
+			CountedPtr<FTMachine>& ftm);
+  //			Matrix<Float>& sumwt);
 
   Bool useWeightImage(CountedPtr<FTMachine>& ftm);
   
@@ -154,8 +155,9 @@ protected:
   
   void gridCoreMos(const VisBuffer& vb, Bool dopsf, FTMachine::Type col,
 		   CountedPtr<FTMachine>&  ftm, Int row,
-				 ImageInterface<Float>& targetImage,
-				 ImageInterface<Float>& weightImage,
+		   ImageInterface<Float>& targetImage,
+		   ImageInterface<Float>& sumwtImage,
+		   ImageInterface<Float>& weightImage,
 		   //				 Matrix<Float>& sumWeights,
 		   ImageInterface<Complex>& complexImage);
 
@@ -163,6 +165,7 @@ protected:
   void finalizeGridCoreMos(const Bool dopsf,
 			   CountedPtr<FTMachine>&  ftm,
 			   ImageInterface<Float>& targetImage,
+			   ImageInterface<Float>& sumwtImage,
 			   ImageInterface<Float>& weightImage,
 			   //			   Matrix<Float>& sumWeights,
 			   ImageInterface<Complex>& compleximage,
