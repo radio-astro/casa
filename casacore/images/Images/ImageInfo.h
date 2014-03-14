@@ -222,7 +222,8 @@ public:
    // to ensure the values of <src>channel</src> and <src>stokes</src> are consistent with
    // the size of the beam array
    // Additional consistency checks are done when this object is added via
-   // ImageInterface<T>::setImageInfo().
+   // ImageInterface<T>::setImageInfo(). If no beam set has been set yet, you must call
+   // setAllBeams() or setBeams() before calling setBeam().
    void setBeam(
    	Int channel, Int stokes, const Quantity& major,
    	const Quantity& minor, const Quantity& pa
