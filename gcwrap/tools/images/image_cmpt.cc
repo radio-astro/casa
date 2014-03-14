@@ -1,7 +1,7 @@
-#include <iostream>
-#include <memory>
-#include <sys/wait.h>
 #include <image_cmpt.h>
+
+#include <iostream>
+#include <sys/wait.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>
@@ -1967,11 +1967,11 @@ image* image::transpose(
 			mask = "";
 		}
         SPCIIF image = _image->getImage();
-		ImageFitter::CompListWriteControl writeControl = complist.empty()
-			? ImageFitter::NO_WRITE
+		ImageFitterResults::CompListWriteControl writeControl = complist.empty()
+			? ImageFitterResults::NO_WRITE
 			: overwrite
-				? ImageFitter::OVERWRITE
-				: ImageFitter::WRITE_NO_REPLACE;
+				? ImageFitterResults::OVERWRITE
+				: ImageFitterResults::WRITE_NO_REPLACE;
 		String sChans;
 		if (chans.type() == variant::BOOLVEC) {
 			// for some reason which eludes me, the default variant type is boolvec
@@ -2028,7 +2028,7 @@ image* image::transpose(
 		if (dooff) {
 			fitter.setZeroLevelEstimate(offset, fixoffset);
 		}
-		if (rms != 0) {
+		if (rms > 0) {
 			fitter.setRMS(rms);
 		}
 		if (doImages) {
