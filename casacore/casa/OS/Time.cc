@@ -407,6 +407,16 @@ uInt Time::seconds() {
   return (uInt)((min-(int)min)*60.0);
 }
 
+double Time::dseconds() {
+  // return seconds after the minute [0,59]
+  double hour,min;
+
+  hour= mJulianDayfrac*24.0;
+  min= (hour-(int)hour)*60.0;
+
+  return ((min-(int)min)*60.0);
+}
+
 uInt Time::minutes() {
   // return minutes after the hour [0,59]
   double hour;
