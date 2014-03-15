@@ -49,10 +49,12 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <measures/Measures/MeasTable.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
-
+#include <tables/Tables/Table.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 #include <synthesis/MSVis/SubMS.h>
 
@@ -73,7 +75,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "SynthesisUtilMethods destroyed" << LogIO::POST;
   }
   
-
   // Data partitioning rules for CONTINUUM imaging
   //  ALL members are strings ONLY.
   Record SynthesisUtilMethods::continuumDataPartition(Record &selpars, const Int npart)
@@ -81,42 +82,145 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisUtilMethods","continuumDataPartition",WHERE) );
 
     Record onepart, allparts;
+    Vector<Vector<String> > timeSelPerPart;
+    timeSelPerPart.resize(selpars.nfields());
 
     // Duplicate the entire input record npart times, with a specific partition id.
     // Modify each sub-record according to partition id.
-    for( Int part=0; part < npart; part++)
+    for (uInt msID=0;msID<selpars.nfields();msID++)
       {
+	Record thisMS= selpars.subRecord(RecordFieldId("ms"+String::toString(msID)));
+	String msName = thisMS.asString("msname");
+	timeSelPerPart[msID].resize(npart,True);
+	//
+	// Make a selected MS and extract the time-column information
+	//
+	MeasurementSet ms(msName), selectedMS(ms);
+	MSInterface msI(ms);	MSSelection msSelObj; 
+	msSelObj.reset(msI,MSSelection::PARSE_NOW,
+		       thisMS.asString("timestr"),
+		       thisMS.asString("antenna"),
+		       thisMS.asString("field"),
+		       thisMS.asString("spw"),
+		       thisMS.asString("uvdist"),
+		       thisMS.asString("taql"),
+		       "",//thisMS.asString("poln"),
+		       thisMS.asString("scan"),
+		       "",//thisMS.asString("array"),
+		       thisMS.asString("state"),
+		       thisMS.asString("obs")//observation
+		       );
+	msSelObj.getSelectedMS(selectedMS);
 
-	onepart.assign(selpars);
+	//--------------------------------------------------------------------
+	// Use the selectedMS to generate time selection strings per part
+	//
+	Double Tint;
+	ROMSMainColumns mainCols(selectedMS);
+	Int nRows=selectedMS.nrow(), dRows=nRows/npart;
+	Int rowBeg=0, rowEnd=0;
+	rowEnd = rowBeg + dRows;
 
-	//-------------------------------------------------
-	// WARNING : This is special-case code for two specific datasets
-	for ( uInt msid=0; msid<selpars.nfields(); msid++)
+	MVTime mvInt=mainCols.intervalQuant()(0);
+	Time intT(mvInt.getTime());
+	Tint = intT.modifiedJulianDay();
+
+	Int partNo=0;
+	while(rowEnd < nRows)
 	  {
-	    Record onems = onepart.subRecord( RecordFieldId("ms"+String::toString(msid)) );
-	    String msname = onems.asString("msname");
-	    String spw = onems.asString("spw");
-	    if(msname.matches("DataTest/twopoints_twochan.ms"))
-	      {
-		onems.define("spw", spw+":"+String::toString(part));
-	      }
-	    if(msname.matches("DataTest/point_twospws.ms"))
-	      {
-		onems.define("spw", spw+":"+ (((Bool)part)?("10~19"):("0~9"))  );
-	      }
-	    if(msname.matches("DataTest/reg_mawproject.ms"))
-	      {
-		onems.define("scan", (((Bool)part)?("0~17"):("18~35"))  );
-	      }
-	    onepart.defineRecord( RecordFieldId("ms"+String::toString(msid)) , onems );
-	  }// end ms loop
-	//-------------------------------------------------
+	    MVTime mvt0=mainCols.timeQuant()(rowBeg), mvt1=mainCols.timeQuant()(rowEnd);
+	    Time t0(mvt0.getTime()), t1(mvt1.getTime());
+	    Double mjdRef=t1.modifiedJulianDay(),
+	      mjdT0=t1.modifiedJulianDay();
 
-	allparts.defineRecord( RecordFieldId(String::toString(part)), onepart );
+	    while((fabs(mjdT0 - mjdRef) <= Tint) && (rowEnd < nRows))
+	      {
+		rowEnd++;
+		MVTime mvt=mainCols.timeQuant()(rowEnd);
+		Time tt(mvt.getTime());
+		mjdT0=tt.modifiedJulianDay();
+	      }
+	    rowEnd--;
+	    MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
+	    Time tB(mvtB.getTime()), tE(mvtE.getTime());
+	    timeSelPerPart[msID][partNo] = SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE);
+	    // cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
+	    // 	 << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	    // 	 << endl;	    
 
-      }// end partition loop
+	    partNo++;
+	    rowBeg = rowEnd+1;
+	    rowEnd = min(rowBeg + dRows, nRows-1);
+	    if (rowEnd == nRows-1) break;
+	  }
 
+	MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
+	Time tB(mvtB.getTime()), tE(mvtE.getTime());
+	timeSelPerPart[msID][partNo] = SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE);
+	// cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
+	//      << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	//      << endl;	    
+      }
+    //
+    // The time selection strings for all parts of the current
+    // msID are in timeSelPerPart.  
+    //--------------------------------------------------------------------
+    //
+    // Now reverse the order of parts and ME loops. Create a Record
+    // per part, get the MS for thisPart.  Put the associated time
+    // selection string in it.  Add the thisMS to thisPart Record.
+    // Finally add thisPart Record to the allparts Record.
+    //
+    for(Int iPart=0; iPart<npart; iPart++)
+      {
+	Record thisPart;
+	thisPart.assign(selpars);
+	for (uInt msID=0; msID<selpars.nfields(); msID++)	  
+	  {
+	    Record thisMS = thisPart.subRecord(RecordFieldId("ms"+String::toString(msID)));
+
+	    thisMS.define("timestr",timeSelPerPart[msID][iPart]);
+	    thisPart.defineRecord(RecordFieldId("ms"+String::toString(msID)) , thisMS);
+	  }
+	allparts.defineRecord(RecordFieldId(String::toString(iPart)), thisPart);
+      }
+    //    cerr << allparts << endl;
     return allparts;
+
+    // for( Int part=0; part < npart; part++)
+    //   {
+
+    // 	onepart.assign(selpars);
+
+
+    // 	//-------------------------------------------------
+    // 	// WARNING : This is special-case code for two specific datasets
+    // 	for ( uInt msid=0; msid<selpars.nfields(); msid++)
+    // 	  {
+    // 	    Record onems = onepart.subRecord( RecordFieldId("ms"+String::toString(msid)) );
+    // 	    String msname = onems.asString("msname");
+    // 	    String spw = onems.asString("spw");
+    // 	    if(msname.matches("DataTest/twopoints_twochan.ms"))
+    // 	      {
+    // 		onems.define("spw", spw+":"+String::toString(part));
+    // 	      }
+    // 	    if(msname.matches("DataTest/point_twospws.ms"))
+    // 	      {
+    // 		onems.define("spw", spw+":"+ (((Bool)part)?("10~19"):("0~9"))  );
+    // 	      }
+    // 	    if(msname.matches("DataTest/reg_mawproject.ms"))
+    // 	      {
+    // 		onems.define("scan", (((Bool)part)?("1~17"):("18~35"))  );
+    // 	      }
+    // 	    onepart.defineRecord( RecordFieldId("ms"+String::toString(msid)) , onems );
+    // 	  }// end ms loop
+    // 	//-------------------------------------------------
+
+    // 	allparts.defineRecord( RecordFieldId(String::toString(part)), onepart );
+
+    //   }// end partition loop
+
+    // return allparts;
   }
 
   // Data partitioning rules for CUBE imaging
