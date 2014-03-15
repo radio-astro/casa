@@ -238,6 +238,17 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             times.update([row.get('TIME')])
         times = np.sort(list(times))
 
+        # times in gain table sometimes show jitter - presumably
+        # resulting from different flagging for different antenna/spw.
+        # Ignore time differences smaller than 5sec.
+        filtered_times = []
+        last_time = 0.0
+        for timestamp in times:
+            if timestamp - last_time > 5.0:
+                filtered_times.append(timestamp)
+                last_time = timestamp
+        times = filtered_times
+
         # make gain image for each spwid
         for spwid in spwids:
             data = np.zeros([antenna_ids[-1]+1, len(times)])
@@ -252,8 +263,8 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
                     caltime = row.get('TIME')
                     gainflag = row.get('FLAG')[0][0]
                     if not gainflag:
-                        data[ant, caltime==times] = np.abs(gain)
-                        flag[ant, caltime==times] = 0
+                        data[ant, np.abs(times-caltime) < 5] = np.abs(gain)
+                        flag[ant, np.abs(times-caltime) < 5] = 0
 
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
               units='id', data=np.arange(antenna_ids[-1]+1)),
