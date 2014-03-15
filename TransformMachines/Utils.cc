@@ -1090,8 +1090,11 @@ namespace casa{
       String::toString(time.month()) + "/" +
       String::toString(time.dayOfMonth()) + "/" +
       String::toString(time.hours()) + ":" +
-      String::toString(time.minutes()) + ":" +
-      String::toString(time.seconds());
+      String::toString(time.minutes()) + ":";
+    ostringstream fsec;
+    fsec << setprecision(2) << time.dseconds();
+    tStr = tStr + String(fsec.str());
+    //      String::toString(time.dseconds());
     return tStr;
   }
 
