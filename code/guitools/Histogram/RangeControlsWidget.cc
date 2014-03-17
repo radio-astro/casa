@@ -129,14 +129,24 @@ void RangeControlsWidget::clearRange(){
 }
 
 pair<double,double> RangeControlsWidget::getMinMaxValues() const {
-	QString minValueStr = ui.minLineEdit->text();
-	QString maxValueStr = ui.maxLineEdit->text();
-	double minValue = minValueStr.toDouble();
-	double maxValue = maxValueStr.toDouble();
-	if ( minValue > maxValue ){
-		double tmp = minValue;
-		minValue = maxValue;
-		maxValue = tmp;
+	double minValue = 0;
+	double maxValue = 0;
+	if ( ! ui.percentileCheckBox->isChecked() ){
+		QString minValueStr = ui.minLineEdit->text();
+		QString maxValueStr = ui.maxLineEdit->text();
+		minValue = minValueStr.toDouble();
+		maxValue = maxValueStr.toDouble();
+		if ( minValue > maxValue ){
+			double tmp = minValue;
+			minValue = maxValue;
+			maxValue = tmp;
+		}
+	}
+	else {
+		if ( percentCalculator != NULL ){
+			minValue = percentCalculator->getRangeMin();
+			maxValue = percentCalculator->getRangeMax();
+		}
 	}
 	pair<double,double> maxMinValues(minValue,maxValue);
 	return maxMinValues;
