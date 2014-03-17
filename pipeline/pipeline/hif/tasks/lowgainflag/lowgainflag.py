@@ -238,8 +238,10 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             times.update([row.get('TIME')])
         times = np.sort(list(times))
 
-        # times in gain table sometimes show jitter - presumably
-        # resulting from different flagging for different antenna/spw.
+        # times in gain table sometimes show jitter - either perhaps
+        # resulting from different flagging for different antenna/spw,
+        # or from out of sync timing in raw data (a problem now cured
+        # I'm told, Mar-2014).
         # Ignore time differences smaller than 5sec.
         filtered_times = []
         last_time = 0.0
