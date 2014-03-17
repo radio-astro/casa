@@ -123,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       initializeGridCore( vb, ift_p, *(itsImages->backwardGrid()) ); // , wgt );
     }
     else{
-      initializeGridCoreMos( vb, ift_p, *(itsImages->backwardGrid()) ); //, wgt );
+      initializeGridCoreMos( vb, ift_p, *(itsImages->backwardGrid()) , True/*firstaccess*/); //, wgt );
     }
 
   }
@@ -153,7 +153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	//	Matrix<Float> wgt;
 	gridCoreMos( vb, dopsf, col, ift_p, -1,  
-		     *(itsImages->residual()), 
+		     (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ),
+		     //		     *(itsImages->residual()), 
 		     *(itsImages->sumwt()),
 		     *(itsImages->weight()), 
 		     //		     wgt, 
@@ -190,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//			 *(itsImages->weight()) ,   wgt); 
       }
       else{
-	finalizeGridCoreMos(dopsf,  ift_p,  *(itsImages->residual())  ,
+	finalizeGridCoreMos(dopsf,  ift_p, (dopsf ? *(itsImages->psf()) : *(itsImages->residual()) ) ,
 			    *(itsImages->sumwt()), 
 			    *(itsImages->weight()) , *(itsImages->backwardGrid()), vb);
       }

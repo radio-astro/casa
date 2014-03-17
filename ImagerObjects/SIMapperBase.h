@@ -147,10 +147,12 @@ protected:
   ComponentList clCorrupted_p;
   CountedPtr<VPSkyJones> ejgrid_p, ejdegrid_p;
   VisBuffer ovb_p;
+  Bool firstaccess_p;
 
   void initializeGridCoreMos(const VisBuffer& vb, 
 			  CountedPtr<FTMachine>&  ftm,
-			     ImageInterface<Complex>& complexImage);
+			     ImageInterface<Complex>& complexImage,
+			     Bool firstaccess=False);
   //			  Matrix<Float>& sumWeights);
   
   void gridCoreMos(const VisBuffer& vb, Bool dopsf, FTMachine::Type col,
