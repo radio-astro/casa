@@ -1571,7 +1571,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
     vi.origin();
     time1=vb.time()(0);  // first time in this chunk
-    thisscan=vb.observationId()(0);
+    thisobs=vb.observationId()(0);
     thisscan=vb.scan()(0);
     thisfld=vb.fieldId();
     thisspw=vb.spectralWindow();
@@ -1614,6 +1614,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 	time=vb.time()(0);
 	cout  << "                 " << "vb=" << iter << " ";
 	cout << "ar=" << vb.arrayId() << " ";
+	cout << "ob=" << vb.observationId()(0) << " ";
 	cout << "sc=" << vb.scan()(0) << " ";
 	if (!combfld()) cout << "fl=" << vb.fieldId() << " ";
 	if (!combspw()) cout << "sp=" << vb.spectralWindow() << " ";
