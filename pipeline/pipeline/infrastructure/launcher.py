@@ -4,7 +4,6 @@ from a saved context state.
 """
 from __future__ import absolute_import
 import datetime
-import errno
 import os
 try:
     import cPickle as pickle
@@ -18,6 +17,7 @@ from . import callibrary
 from . import imagelibrary
 from . import logging
 from . import project
+from . import utils
 
 LOG = logging.get_logger(__name__)
 
@@ -123,21 +123,10 @@ class Context(object):
         import pipeline.domain as domain
         self.observing_run = domain.ObservingRun()
 
-        try:
-            LOG.trace('Creating report directory \'%s\'' % self.report_dir)
-            os.makedirs(self.report_dir)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST:
-                pass
-            else: raise
+        LOG.trace('Creating report directory \'%s\'' % self.report_dir)
+        utils.mkdir_p(self.report_dir)
 
-        try:
-            LOG.trace('Setting products directory to \'%s\'' % self.products_dir)
-            #os.makedirs(self.products_dir)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST:
-                pass
-            else: raise
+        LOG.trace('Setting products directory to \'%s\'' % self.products_dir)
 
         LOG.trace('Pipeline stage counter set to {0}'.format(self.stage))
         LOG.todo('Add OUS registration task. Hard-coding log type to MOUS')

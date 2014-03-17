@@ -691,23 +691,27 @@ class Results(api.Results):
 
 class ResultsProxy(object):
     def __init__(self, context):
-        self._output_dir = os.path.join(context.output_dir, context.name)
-        self._report_dir = context.report_dir
+        self._context = context
 
     def write(self, result):
         '''
         Write the pickled result to disk.
         '''
-        pickle_name = 'result-stage%s.pickle' % result.stage_number
-        path = os.path.join(self._output_dir, pickle_name)
-        self._path = path
-        
         # adopt the result's UUID protecting against repeated addition to the
         # context
         self.uuid = result.uuid
         
         self._write_stage_logs(result)
+
+        # only store the basename to allow for relocation between save and
+        # restore
+        self._basename = 'result-stage%s.pickle' % result.stage_number        
+        path = os.path.join(self._context.output_dir,
+                            self._context.name,
+                            'saved_state',
+                            self._basename)
         
+        utils.mkdir_p(os.path.dirname(path))        
         with open(path, 'wb') as outfile:
             pickle.dump(result, outfile, -1)
 
@@ -715,7 +719,11 @@ class ResultsProxy(object):
         '''
         Read the pickle from disk, returning the unpickled object.
         '''
-        with open(self._path) as infile:
+        path = os.path.join(self._context.output_dir,
+                            self._context.name, 
+                            'saved_state',
+                            self._basename)
+        with open(path) as infile:
             return pickle.load(infile)
 
     def _write_stage_logs(self, result):
@@ -727,7 +735,7 @@ class ResultsProxy(object):
         if not hasattr(result, 'casalog'):
             return
 
-        stage_dir = os.path.join(self._report_dir,
+        stage_dir = os.path.join(self._context.report_dir,
                                  'stage%s' % result.stage_number)
         if not os.path.exists(stage_dir):                
             os.makedirs(stage_dir)

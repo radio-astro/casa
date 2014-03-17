@@ -4,6 +4,7 @@ import contextlib
 import copy
 import datetime
 import decimal
+import errno
 import functools
 import inspect
 import itertools
@@ -500,3 +501,15 @@ def get_num_caltable_polarizations(caltable):
         raise ValueError('Got %s polarisations from %s' % (len(col_pols), col_shapes))
 
     return int(col_pols.pop())
+
+def mkdir_p(path):
+    """
+    Emulate mkdir -p functionality.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else: 
+            raise
