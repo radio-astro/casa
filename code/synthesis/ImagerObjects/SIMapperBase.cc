@@ -313,7 +313,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   void SIMapperBase::initializeGridCoreMos(const VisBuffer& vb, 
 					   CountedPtr<FTMachine>&  ftm,
-					   ImageInterface<Complex>& complexImage)
+					   ImageInterface<Complex>& complexImage,
+					   Bool firstaccess)
   //					   Matrix<Float>& sumWeights)
   {
     try   {
@@ -323,7 +324,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       dirDep= dirDep || ((ftm->name()) == "MosaicFT");
       ovb_p.assign(vb, False);
       ovb_p.updateCoordInfo(&vb, dirDep);
-      
+
+      firstaccess_p = firstaccess;
+
     } catch(AipsError &x){
       throw(AipsError("initGridCoreMos : "+x.getMesg()));
     }
@@ -349,9 +352,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //anyways right now we are allowing only 1 ftmachine for GridBoth
       Bool IFTChanged=ftm->changed(vb);
 
-      cout << "gridCoreMos : internalChanges : " << internalChanges << "  firstchange : " << firstOneChanges << endl;
+      //      cout << "gridCoreMos : internalChanges : " << internalChanges << "  firstchange : " << firstOneChanges << endl;
       
-      if(internalChanges || firstOneChanges) {
+      if(internalChanges) {
 	// Yes there are changes: go row by row.
 	for (Int row=0; row<nRow; row++) {
 	  if(IFTChanged||ejgrid_p->changed(vb,row)) {
@@ -368,7 +371,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
 	// }
 	//IMPORTANT:We need to finalize here by checking that we are not at the begining of the iteration
-	//finalizeGrid(vb_p, dopsf);
+	if( !firstaccess_p )
+	  {
+	    finalizeGridCoreMos(dopsf, ftm, targetImage, sumwtImage, weightImage, complexImage, ovb_p);
+	  }
 	initializeGridCoreMos(vb,ftm,complexImage);
 	///ftm->put(vb, -1, dopsf, col);
 	gridCore( vb, dopsf, col, ftm, -1 );
@@ -403,45 +409,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Matrix<Float> sumWeights;
       //get the image in itsImage->backwardGrid() which ift is holding by reference
       ftm->getImage(sumWeights, False);
+
+      // Note we apply the state of the previously saved visbuffer vb_p
+      // We might have to carry over the row for internal changes
+      if( !dopsf ) // Don't multiply the PSF by all the PBs.....
+	{
+	  ejgrid_p->apply(complexImage,complexImage, ovb_p, -1, False);
+	}
+      TempImage<Float> temp(targetImage.shape(), targetImage.coordinates());
+      ftm->correlationToStokes( complexImage, temp, False);
+      LatticeExpr<Float> addToRes( targetImage + temp );
+      targetImage.copyData(addToRes);
       
-      ////if(ejgrid_p != NULL)
-      {
-	// Note we apply the state of the previously saved visbuffer vb_p
-	// We might have to carry over the row for internal changes
-	ejgrid_p->apply(complexImage,complexImage, ovb_p, -1, False);
-	TempImage<Float> temp(targetImage.shape(), targetImage.coordinates());
-	ftm->correlationToStokes( complexImage, temp, False);
-	LatticeExpr<Float> addToRes( targetImage + temp );
-	targetImage.copyData(addToRes);
-      }
-      
-      //if(ejgrid_p != NULL && !dopsf)
-      if( dopsf )
+      if( dopsf ) // and weight image and sumwt image ( first time only )
       {
 	TempImage<Float> temp(weightImage.shape(), weightImage.coordinates());
 	ftm->getWeightImage(temp, sumWeights);
 	ejgrid_p->applySquare(temp, temp, vb, -1);
 	LatticeExpr<Float> addToWgt( weightImage + temp );
 	weightImage.copyData(addToWgt);
-      }
       
-      //      addImageMiscInfo( targetImage, ftm); //, sumWeights );      
+	AlwaysAssert( (sumwtImage.shape()[2] == sumWeights.shape()[0] ) && 
+		      (sumwtImage.shape()[3] == sumWeights.shape()[1] ) , AipsError );
+	
+	TempImage<Float> temp2(sumwtImage.shape(), sumwtImage.coordinates());
+	temp2.put( sumWeights.reform(sumwtImage.shape()) );
+	LatticeExpr<Float> addToWgt2( sumwtImage + temp2 );
+	sumwtImage.copyData(addToWgt2);
 
-      //      cout << " Sumwt shapes : " << sumwtImage.shape() << " " << sumWeights.shape() << endl;
-      AlwaysAssert( (sumwtImage.shape()[2] == sumWeights.shape()[0] ) && 
-      		    (sumwtImage.shape()[3] == sumWeights.shape()[1] ) , AipsError );
-
-      //      sumwtImage.put( sumWeights.reform(sumwtImage.shape()) );
-
-      if( dopsf )
-      {
-	TempImage<Float> temp(sumwtImage.shape(), sumwtImage.coordinates());
-	temp.put( sumWeights.reform(sumwtImage.shape()) );
-	LatticeExpr<Float> addToWgt( sumwtImage + temp );
-	sumwtImage.copyData(addToWgt);
+	//cout << "In finalizeGridCoreMos : sumwt : " << sumwtImage.get() << endl;
       }
 
-      cout << "In finalizeGridCoreMos : sumwt : " << sumwtImage.get() << endl;
 
     } catch(AipsError &x){
       throw(AipsError("finalizeGridCoreMos : "+x.getMesg()));

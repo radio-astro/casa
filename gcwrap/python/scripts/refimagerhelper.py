@@ -620,7 +620,7 @@ class PyParallelImagerHelper():
         if((self.clusterdef != '') and os.path.exists(self.clusterdef)):
             self.sc=simple_cluster()
             if(self.sc.get_status()==None):
-                self.sc.init_cluster(self.clusterdef,'aatest')
+                self.sc.init_cluster(self.clusterdef, 'cluster_project')
                 
         self.CL=simple_cluster.getCluster()._cluster
         numproc=len(self.CL.get_engines())

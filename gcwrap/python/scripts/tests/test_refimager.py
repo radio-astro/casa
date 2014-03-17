@@ -152,7 +152,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 10 image-field, mfs --- WB AWP");
           casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',scan='0~35',
+                                       field='1',scan='',
                                        spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
@@ -359,7 +359,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      ### Make a cluster def file if a parallel test is to run.
      if parallelmajor==True or parallelminor==True or parallelcube==True:
         clusterdef = 'cfgfile.txt'
-        defstr = 'vega, 2,'+os.getcwd() +'/aatest'
+        defstr = 'vega, 2,'+os.getcwd() #+'/aatest'
+        ####defstr = defstr + '\ntara, 2,'+os.getcwd() +'/aatest'
         # remove file first
         if os.path.exists(clusterdef):
             os.system('rm -f '+ clusterdef)
