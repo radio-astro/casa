@@ -1,17 +1,18 @@
 from __future__ import absolute_import
 
+import collections
 import os.path
 import numpy as np
+import types
 
 import pipeline.infrastructure.casatools as casatools
 
 def channel_ranges(channels):
     """
     Given a list of channels will return a list of 
-    contiguous ranges that describe them.
+    ranges that describe them.
     """
     channels.sort()
-
     range = [channels[0], channels[0]]
 
     for i,chan in enumerate(channels):
@@ -22,6 +23,70 @@ def channel_ranges(channels):
 
     # get here if last channel reached
     return [range]        
+
+def consolidate_flagcmd_channels(flagcmds):
+    """Method to consolidate multiple flagcmds that specify a single
+       channel into fewer flagcmds with channel ranges."""
+
+    consolidated_flagcmds = []
+    flagcmd_dict = collections.defaultdict(set)
+    flagcmd_coords_dict = {}
+
+    # find FlagCmd objects that can/cannot be consolidated
+    for flagcmd in flagcmds:
+        flagchannels = None
+        if flagcmd.axisnames is not None:
+            for k,name in enumerate(flagcmd.axisnames):
+                if name.upper()=='CHANNELS':
+                    flagchannels = [flagcmd.flagcoords[k]]
+                    # need remaining flagcoords in dict key
+                    truncated_flagcoords = list(flagcmd.flagcoords)
+                    truncated_flagcoords[k] = None
+
+        if flagchannels is not None:
+            ftuple = (
+              flagcmd.filename,
+              flagcmd.rulename,
+              flagcmd.ruleaxis,
+              flagcmd.spw,
+              flagcmd.antenna,
+              flagcmd.intent,
+              flagcmd.pol,
+              tuple(flagcmd.axisnames),
+              tuple(truncated_flagcoords),
+              flagcmd.channel_axis,
+              flagcmd.reason,
+              flagcmd.extendfields)
+            flagcmd_dict[ftuple].update(flagchannels)
+            flagcmd_coords_dict[ftuple] = list(flagcmd.flagcoords)
+        else:
+            consolidated_flagcmds.append(flagcmd)
+
+    # add consolidated flagcmds
+    for ftuple in flagcmd_dict.keys():
+        flagchannels = list(flagcmd_dict[ftuple])
+        flagchannels.sort()
+
+        flagcoords = flagcmd_coords_dict[ftuple]
+        for k,name in enumerate(list(ftuple[7])):
+            if name.upper()=='CHANNELS':
+                flagcoords[k] = flagchannels
+
+        consolidated_flagcmds.append(FlagCmd(
+          filename=ftuple[0],
+          rulename=ftuple[1],
+          ruleaxis=ftuple[2],
+          spw=ftuple[3],
+          antenna=ftuple[4],
+          intent=ftuple[5],
+          pol=ftuple[6],
+          axisnames=list(ftuple[7]),
+          flagcoords=flagcoords,
+          channel_axis=ftuple[9],
+          reason=ftuple[10],
+          extendfields=ftuple[11]))
+
+    return consolidated_flagcmds
 
 def median_and_mad(data):
     """
@@ -40,69 +105,32 @@ class FlagCmd(object):
     Create a flagcmd.
         Added detailed docs here.
     """
-    def __init__(self, filename, rulename, spw, antenna=None, axisnames=None,
-      flagcoords=None, intent=None, pol=None, ruleaxis=None,
-      flagchannels=None, channel_axis=None, reason=None,
+
+    def __init__(self, filename=None, rulename=None, ruleaxis=None, spw=None,
+      antenna=None, intent=None, pol=None, axisnames=None,
+      flagcoords=None, channel_axis=None, reason=None,
       extendfields=None):
-#        print 'FlagCmd intent %s spw%s antenna%s axisnames%s flagcoords%s pol%s flagchannels%s reason%s' % (
-#          intent, spw, antenna, axisnames, flagcoords, pol, flagchannels,
-#          reason)
+#        print 'FlagCmd intent%s spw%s antenna%s axisnames%s flagcoords%s pol%s reason%s' % (
+#          intent, spw, antenna, axisnames, flagcoords, pol, reason)
 
         self.filename = filename
         self.rulename = rulename
-        self.intent = intent
-        self.spw = spw
-        self.pol = pol
         self.ruleaxis = ruleaxis
-        self.flagchannels = flagchannels
+        self.spw = spw
+        self.antenna = antenna
+        self.intent = intent
+        self.pol = pol
         self.axisnames = axisnames
         self.flagcoords = flagcoords
+        self.channel_axis = channel_axis
         self.reason = reason
-
-        # decode the flagcoords
-        self.antenna = None
-        self.flag_time = None
-        if axisnames is not None:
-            self.axisnames = []
-            for k,name in enumerate(axisnames):
-                self.axisnames.append(name.upper())
-                if name.upper()=='ANTENNA1':
-                    self.antenna = flagcoords[k]
-                elif name.upper()=='TIME':
-                    self.flag_time = flagcoords[k]
-        else:
-            self.antenna = antenna
+        self.extendfields = extendfields
 
         # construct the corresponding flag command
         flagcmd = ""
 
         if intent is not None:
             flagcmd += " intent='%s'" % intent
-
-        if spw is not None:
-            flagcmd += " spw='%s'" % spw
-
-        if flagchannels is not None:
-            ranges = channel_ranges(flagchannels)
-
-            if channel_axis is None:
-                # just set the ranges of channels directly
-                rangestrs = []
-                for trange in ranges:
-                    rangestrs.append('%s~%s' % (trange[0], trange[1]))
-            else:
-                # convert the channel ranges to use the axis values
-                # and units
-                rangestrs = []
-                channel_width = channel_axis.channel_width
-                for trange in ranges:
-                    axrange = [
-                      channel_axis.data[trange[0]]-channel_width/2,
-                      channel_axis.data[trange[1]]+channel_width/2]
-                    rangestrs.append('%s~%s%s' % (axrange[0],
-                      axrange[1], channel_axis.units))
-
-            flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(rangestrs)
 
         if pol is not None:
             flagcmd += " correlation='%s'" % pol
@@ -112,12 +140,61 @@ class FlagCmd(object):
         if self.antenna is not None:
             flagcmd += " antenna='%s'" % (self.antenna)
 
-        if self.flag_time is not None:
-            start = casatools.quanta.quantity(self.flag_time - 0.5, 's')
-            start = casatools.quanta.time(start, form=['ymd'])
-            end = casatools.quanta.quantity(self.flag_time + 0.5, 's')
-            end = casatools.quanta.time(end, form=['ymd'])
-            flagcmd += " timerange='%s~%s'" % (start[0], end[0])
+        if spw is not None:
+            flagcmd += " spw='%s'" % spw
+
+        # decode axisnames/flagcoords
+        if axisnames is not None:
+            for k,name in enumerate(axisnames):
+                if name.upper()=='CHANNELS':
+                    flagchannels = flagcoords[k]
+                    if not isinstance(flagchannels, types.ListType):
+                        flagchannels = [flagchannels]
+
+                    ranges = channel_ranges(flagchannels)
+
+                    if channel_axis is None:
+                        # just set the ranges of channels directly
+                        rangestrs = []
+                        for trange in ranges:
+                            rangestrs.append('%s~%s' % (trange[0], trange[1]))
+                    else:
+                        # convert the channel ranges to use the axis values
+                        # and units
+                        rangestrs = []
+                        channel_width = channel_axis.channel_width
+                        for trange in ranges:
+                            axrange = [
+                            channel_axis.data[trange[0]]-channel_width/2,
+                            channel_axis.data[trange[1]]+channel_width/2]
+                            rangestrs.append('%s~%s%s' % (axrange[0],
+                              axrange[1], channel_axis.units))
+
+                    flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(rangestrs)
+
+            # antenna/baseline flags
+            for k,name in enumerate(axisnames):
+                if 'ANTENNA' in name.upper():
+                    if antenna is None or antenna==flagcoords[k]:
+                        antenna = flagcoords[k]
+                    else:
+                        antenna = '%s&%s' % (antenna, flagcoords[k])
+                elif name.upper()=='BASELINE':
+                    antenna = flagcoords[k]
+            if antenna is not None:
+                flagcmd += " antenna='%s'" % (antenna)
+
+            flag_time = None
+            for k,name in enumerate(axisnames):
+                if name.upper()=='TIME':
+                    flag_time = flagcoords[k]
+
+            if flag_time is not None:
+                start = casatools.quanta.quantity(flag_time - 0.5, 's')
+                start = casatools.quanta.time(start, form=['ymd'])
+                end = casatools.quanta.quantity(flag_time + 0.5, 's')
+                end = casatools.quanta.time(end, form=['ymd'])
+                flagcmd += " timerange='%s~%s'" % (start[0], end[0])
 
         flagcmd = flagcmd.strip()
 
@@ -132,8 +209,24 @@ class FlagCmd(object):
                         break
             flagcmd = ' '. join(specifiers)
 
-        self.flagcmd = flagcmd
 #        print 'flagcmd', flagcmd
+        self.flagcmd = flagcmd
+
+    @property
+    def flagchannels(self):
+        """Return list of channels flagged.
+        """
+        result = np.array([], np.int)
+        # decode axisnames/flagcoords
+        if self.axisnames is not None:
+            for k,name in enumerate(self.axisnames):
+                if name.upper()=='CHANNELS':
+                    flagchannels = self.flagcoords[k]
+                    if not isinstance(flagchannels, types.ListType):
+                        flagchannels = [flagchannels]
+                    result = np.array(flagchannels)
+                    break
+        return result
 
     def match(self, spectrum):
         """Return True if the FlagCmd operates on this SpectrumResult.
@@ -144,9 +237,9 @@ class FlagCmd(object):
             match = match and (self.spw == spectrum.spw)
         if self.antenna is not None:
             match = match and (self.antenna == spectrum.ant[0])
-        if self.flag_time is not None:
-            match = match and (self.flag_time > spectrum.time-0.5 and
-              self.flag_time < spectrum.time + 0.5)
+#        if self.flag_time is not None:
+#            match = match and (self.flag_time > spectrum.time-0.5 and
+#              self.flag_time < spectrum.time + 0.5)
         if self.pol is not None:
             match = match and (self.pol == spectrum.pol)
         return match
@@ -157,13 +250,18 @@ class FlagCmd(object):
         match = True
         match = match and (self.filename == image.filename)
         if self.spw is not None:
-            match = match and (self.spw == image.spw)
+            # spw may contain a channel spec, if so remove it
+            spw = str(self.spw)
+            spw = spw.split(':')[0]
+            match = match and (spw == str(image.spw))
         if self.antenna is not None:
-            match = match and ('ANTENNA' in str(self.axisnames))
-        if self.flag_time is not None:
-            match = match and ('TIME' in self.axisnames)
+            match = match and (('ANTENNA' in str(self.axisnames)) or 
+              ('BASELINE' in str(self.axisnames)))
+#        if self.flag_time is not None:
+#            match = match and ('TIME' in self.axisnames)
         if self.pol is not None:
             match = match and (self.pol == image.pol)
+
         return match
 
     def __repr__(self):
@@ -175,4 +273,3 @@ class FlagCmd(object):
         s = 'FlagCmd: filename-%s flagcmd-%s' % (basename, self.flagcmd)
 
         return s
-
