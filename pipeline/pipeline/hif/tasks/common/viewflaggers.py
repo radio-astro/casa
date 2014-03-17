@@ -148,17 +148,22 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         rules - Rules to be applied.
         """
 
-        # Get the attributes
-        data = matrix.data
-        flag = matrix.flag
-        nodata = matrix.nodata
+        # Get the attributes - ensure all arrays are numpy arrays
+        # as some subsequent processing depends on numpy array indexing
+        data = np.array(matrix.data)
+        flag = np.array(matrix.flag)
+        nodata = np.array(matrix.nodata)
         xtitle = matrix.axes[0].name
-        xdata = matrix.axes[0].data
+        xdata = np.array(matrix.axes[0].data)
         ytitle = matrix.axes[1].name
-        ydata = matrix.axes[1].data 
+        ydata = np.array(matrix.axes[1].data) 
         spw = matrix.spw
         table = matrix.filename
         pol = matrix.pol
+        antenna = matrix.ant
+        if antenna is not None:
+            # deal with antenna id not name
+            antenna = antenna[0]
 
         # Initialize flags
         newflags = []
@@ -370,7 +375,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                     newflags.append(arrayflaggerbase.FlagCmd(
                                       reason='stage%s' % self.inputs.context.stage,
                                       filename=table, rulename=rulename,
-                                      spw=spw, axisnames=[xtitle,ytitle],
+                                      spw=spw, antenna=antenna, 
+                                      axisnames=[xtitle,ytitle],
                                       flagcoords=flagcoord, pol=pol))
 
                                 # Flag the view
@@ -448,6 +454,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     else:           
                         raise NameError, 'bad rule: %s' % rule
+
+        # consolidate flagcmds that specify individual channels into fewer
+        # flagcmds that specify ranges
+        newflags = arrayflaggerbase.consolidate_flagcmd_channels(newflags)
 
         return newflags
 
@@ -578,12 +588,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         rules - Rules to be applied.
         """
 
-        # Get the attributes
-        data = vector.data
-        flag = vector.flag
-        nodata = vector.nodata
+        # Get the attributes - ensure all arrays are numpy arrays
+        # as some subsequent processing depends on numpy array indexing
+        data = np.array(vector.data)
+        flag = np.array(vector.flag)
+        nodata = np.array(vector.nodata)
         xtitle = vector.axis.name
-        xdata = vector.axis.data
+        xdata = np.array(vector.axis.data)
         spw = vector.spw
         pol = vector.pol
         antenna = vector.ant
@@ -644,6 +655,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                           channels < left_edge,
                           channels > (nchannels-1-right_edge))]
 
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
                         if len(channels_flagged) > 0:
                             # Add new flag command to flag data underlying the
                             # view.
@@ -651,8 +664,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table,
                               rulename=rulename, spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords,
-                              flagchannels=channels_flagged))
+                              flagcoords=flagcoords))
 
                 elif rulename == 'min abs':
                     limit = rule['limit']
@@ -669,6 +681,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         channels = np.arange(nchannels)
                         channels_flagged = channels[flag_chan]
 
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
                         if len(channels_flagged) > 0:
                             # Add new flag command to flag data underlying the
                             # view.
@@ -677,7 +692,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
-                              flagchannels=channels_flagged,
                               channel_axis=vector.axis,
                               intent=intent))
 
@@ -699,6 +713,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         channels = np.arange(nchannels)
                         channels_flagged = channels[flag_chan]
 
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
                         if len(channels_flagged) > 0:
                             # Add new flag command to flag data underlying the
                             # view.
@@ -707,7 +724,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
-                              flagchannels=channels_flagged,
                               channel_axis=vector.axis,
                               intent=intent))
 
@@ -731,6 +747,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     channels = np.arange(nchannels)
                     channels_flagged = channels[flag_chan]
 
+                    axisnames = ['channels']
+                    flagcoords = [list(channels_flagged)]
+
                     if len(channels_flagged) > 0:
                         # Add new flag command to flag data underlying the
                         # view.
@@ -738,7 +757,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                           reason='stage%s' % self.inputs.context.stage,
                           filename=table, rulename=rulename,
                           spw=spw, pol=pol, antenna=antenna,
-                          flagchannels=channels_flagged))
+                          axisnames=axisnames, flagcoords=flagcoords))
 
                 elif rulename == 'sharps':
                     limit = rule['limit']
@@ -761,6 +780,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         channels = np.arange(nchannels)
                         channels_flagged = channels[flag_chan]
 
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
                         if len(channels_flagged) > 0:
                             # Add new flag command to flag data underlying the
                             # view.
@@ -768,8 +790,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords,
-                              flagchannels=channels_flagged))
+                              flagcoords=flagcoords))
 
                 elif rulename == 'sharps2':
                     limit = rule['limit']
@@ -822,6 +843,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         channels = np.arange(nchannels)
                         channels_flagged = channels[flag_chan]
 
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
                         if len(channels_flagged) > 0:
                             # Add new flag command to flag data underlying the
                             # view.
@@ -830,8 +854,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               filename=table,
                               rulename=rulename,
                               spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords, 
-                              flagchannels=channels_flagged))
+                              flagcoords=flagcoords))
 
                 elif rulename == 'diffmad':
                     limit = rule['limit']
@@ -867,14 +890,16 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         channels = np.arange(nchannels)
                         channels_flagged = channels[flag_chan]
 
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
                         if len(channels_flagged) > 0:
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
-                              spw=spw, pol=pol, antenna=antenna,
-                              flagchannels=channels_flagged))
+                              spw=spw, pol=pol, antenna=antenna))
 
                 elif rulename == 'tmf':
                     frac_limit = rule['frac_limit']
@@ -895,6 +920,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             channels = np.arange(nchannels)
                             channels_flagged = channels[newflag]
 
+                            axisnames = ['channels']
+                            flagcoords = [list(channels_flagged)]
+
                             if len(channels_flagged) > 0:
                                 # Add new flag command to flag data underlying the
                                 # view.
@@ -902,7 +930,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                                   reason='stage%s' % self.inputs.context.stage,
                                   filename=table, rulename=rulename,
                                   spw=spw, pol=pol, antenna=antenna,
-                                  flagchannels=channels_flagged))
+                                  axisnames=axisnames, flagcoords=flagcoords))
 
                 else:           
                     raise NameError, 'bad rule: %s' % rule
