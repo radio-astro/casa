@@ -208,9 +208,9 @@ class ImageTest:
         if (a['converged']):
             origName = self.imTool.name()
             self.imTool.open(residual)
-            resid = self.imTool.getchunk()
-            residshape = resid.shape
-            resid = resid.reshape(residshape[0], residshape[1])
+            resid = self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
+            #residshape = resid.shape
+            #resid = resid.reshape(residshape[0], residshape[1])
             self.imTool.open(origName)
         else:
             resid = pylab.array([])
