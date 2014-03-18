@@ -332,7 +332,7 @@ class MeasurementSet(object):
              objects
         """
         pool = self.fields
-        print pool
+        #print pool
 
         if task_arg is not None:
             requested_ids = set(_parse_field(task_arg, self.fields))
