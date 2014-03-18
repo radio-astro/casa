@@ -6,6 +6,7 @@ from __main__ import default
 from tasks import fluxscale
 from taskinit import *
 import unittest
+import exceptions
 
 
 ''' Python unit tests for the fluxscale task
@@ -174,6 +175,33 @@ class fluxscale1_test(unittest.TestCase):
 
         # Compare the calibration table with a reference
         #self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
+
+    def test_antennaselwithtime(self):
+        '''Fluxscale test 1.5: empy selection case: antenna with time selection test'''
+        # Input
+        gtable = self.gtable
+
+        # Output
+        outtable = self.msfile + '.antsel.fcal'
+
+        # This time selection deselect all the data for the reference source and would raise an exception.
+        try:
+          thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
+                  transfer='1445*', antenna='!24', timerange='>1995/04/13/09:38:00', incremental=True)
+        except exceptions.RuntimeError, instance:
+          print "Expected exception raised:",instance
+
+    def test_antennaselwithscan(self):
+        '''Fluxscale test 1.6: antenna selection with scan selection test'''
+        # Input
+        gtable = self.gtable
+
+        # Output
+        outtable = self.msfile + '.antsel.fcal'
+
+        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
+                  transfer='1445*', antenna='!24', scan='1~5', incremental=True)
+        self.assertTrue(os.path.exists(outtable))
 
 
 class fluxscale2_test(unittest.TestCase):

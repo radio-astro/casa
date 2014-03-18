@@ -74,6 +74,17 @@
 			<description>antennas to include/exclude</description>
 			<value></value>
 		</param>
+
+		<param type="string" name="timerange" subparam="true">
+			<description>sub selection by timerange</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="scan" subparam="true">
+			<description>sub selection by scan</description>
+			<value></value>
+		</param>
+                
 		<param type="bool" name="incremental">
 			<description>incremental caltable</description>
 			<value>False</value>
@@ -88,14 +99,22 @@
                         <description>display some statistics of flux scaling</description>
                         <value>False</value>
                 </param>
+        <constraints>
+            <when  param="antenna"> 
+              <notequals value="">
+                  <default param="timerange"><value type="string"></value></default>
+                  <default param="scan"><value type="string"></value></default>
+              </notequals> 
+            </when>
+        </constraints>
 	</input>
-    <output>
-    <param type="any" name="fluxd">
-    	<description>Dictionary containing the transfer fluxes and their errors.</description>
-	<any type="variant"/>
-	<value>{}</value>
-    </param>
-    </output>
+        <output>
+            <param type="any" name="fluxd">
+    	    <description>Dictionary containing the transfer fluxes and their errors.</description>
+	    <any type="variant"/>
+	    <value>{}</value>
+        </param>
+        </output>
 <returns type="void"/>
 
 <example>
@@ -140,7 +159,21 @@
        effects are separately accounted for when solving for the gain
        solution supplied to fluxscale, e.g., gain curves, 
        opacity, etc.  The fluxscale results can also be degraded
-       by poor pointing during the observation.
+       by poor pointing during the observation. The parameters, gainthreshold
+       and antenna (and timerange/scan) can be used to control the data to be used
+       in the flux derivation in such cases. The gainthreshold parameter sets the range of 
+       the input gain to be used in terms of the percentage deviation from 
+       their median values (per field, per spectral window). When the antenna
+       parameter is specified, the sub-parameters timerange and scan are also
+       available to fine tune the data selection for the flux derivation. 
+       These parameters uses the general CASA data selection (msselection) syntax.
+       And these are 'AND' operations except when the antenna selection is specified
+       with a negation (e.g. antenna="!6"). In that case, timerange and scan applied
+       to only those antennas appear in the antenna parameter. So, for example,
+       timerange='>02:35:00' with antenna='!6,24', will include the data with time greater than
+       02:35:00 for antenna ID 6 and 24 but for other antennas the timerange selection is not
+       applied.
+       
 
        Keyword arguments:
        vis -- Name of input visibility file
@@ -201,8 +234,22 @@
        antenna --- Antenna selection to be included in the fluxscale determination.
                General ms selection syntax is accepted such as antenna id (given as a string)
                and antenna name.
-               default: '' (=All antennas wil be used)
-               example: antenna='!23' (exclude antenna id, 23)  
+               default: '' (=All antennas will be used)
+               example: antenna='!23' (exclude antenna id, 23) 
+      
+         * Following sub-parameters are available when the antenna parameter is specified
+         timerange --- Select time range using the msselection syntax.
+               If the negation (e.g. '!23') is used in the antenna selection, it will apply
+               the time range selection only to the negated antenna(s). Otherwise, the selection
+               is global (i.e. applied to all antenna and to both reference and transfer fields.)
+               default: '' (all timerange)
+               example: timerange=">0:58:00"
+         scan --- Select scan(s) using the msselection syntax. As in the case of the timerange parameter
+               the selection will be applied to only the negated antenna(s) if the antenna parameter
+               is used with the negation ("!").  
+               default: '' (all scans)
+               example: '2~5' 
+
        incremental -- Create an incremental caltable containing only gain correction 
                factors ( flux density= 1/(gain correction factor)**2)
                default: False; (older behavior = create flux-scaled gain table)
@@ -237,7 +284,7 @@
                            'freq': (center) spw frequencies 
                            'spwID': list of spw IDs,
                            'spwName': list of spw names}, where fieldIdstr and spwIdstr
-                are field Id and spw Id in string type, repectively.
+                are field Id and spw Id in string type, respectively.
 
        
  </example>

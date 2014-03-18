@@ -752,6 +752,8 @@ casac::record* calibrater::fluxscale(
 		      const std::vector<int>& refspwmap,
                       const float gainthreshold,
                       const std::string& antenna,
+                      const std::string& timerange,
+                      const std::string& scan,
                       const bool incremental,
                       const int fitorder,
                       const bool display)
@@ -796,6 +798,8 @@ casac::record* calibrater::fluxscale(
 			     append,
                              gainthreshold, 
                              antenna,
+                             timerange,
+                             scan,
 			     oFluxD,
 			     tranidx,
 			     oListFile,

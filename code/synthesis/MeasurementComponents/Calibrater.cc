@@ -1831,6 +1831,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Bool& append,
                            const Float& inGainThres,
                            const String& antSel,
+                           const String& timerangeSel,
+                           const String& scanSel,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   Vector<Int>& tranidx,
 			   const String& oListFile,
@@ -1855,8 +1857,8 @@ void Calibrater::fluxscale(const String& infile,
     tranidx=getFieldIdx(tranFields);
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,oFluxScaleFactor,
-    oListFile,incremental,fitorder,display);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,timerangeSel,
+      scanSel,oFluxScaleFactor,oListFile,incremental,fitorder,display);
 
 }
 
@@ -1868,6 +1870,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Bool& append,
                            const Float& inGainThres,
                            const String& antSel,
+                           const String& timerangeSel,
+                           const String& scanSel,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   const String& oListFile,
                            const Bool& incremental,
@@ -1940,8 +1944,8 @@ void Calibrater::fluxscale(const String& infile,
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
       //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
-      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,oFluxScaleFactor,
-        oListFile,incremental,fitorder,display);
+      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,
+        timerangeSel,scanSel,oFluxScaleFactor, oListFile,incremental,fitorder,display);
 //        oListFile);
      
       // If no outfile specified, use infile (overwrite!)

@@ -22,6 +22,7 @@ class ss_setjy_helper:
         currently used per execution. For flux observation done in a long time span
         may need to run multiple setjy with selections by time range (or scans). 
 	"""
+        print "Calling setSolarObjectJY"
 	#retval = True 
         output = {}
 	cleanupcomps = True # leave generated cl files 
@@ -106,6 +107,7 @@ class ss_setjy_helper:
 	inparams={}
         validfids = [] # keep track of valid fid that has data (after selection) 
         # if same source name ....need handle this...
+        print "fieldids=",fieldids
 	for fid in fieldids:
 	  sel['field']=str(fid)
 	  myms.open(self.vis)
@@ -129,6 +131,8 @@ class ss_setjy_helper:
           # old setjy (Butler-JPL-Horizons 2010) seems to be using
           # time in FIELD... but here is first selected time in main table
           tc = trange['time'][0] #in sec.
+          print "for field=",fid, "trange0 = ",tc
+          self._casalog.post("field=%s trange0=%s" % (fid,tc), 'DEBUG1')
 	  if inparams[srcnames[fid]].has_key('mjd'):
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
