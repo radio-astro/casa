@@ -57,7 +57,6 @@ if os.fork( ) == 0 :
         except:
             break
         time.sleep(3)
-    os.killpg(ppid, signal.SIGTERM)
     time.sleep(6)
     os.killpg(ppid, signal.SIGKILL)
     sys.exit(1)
