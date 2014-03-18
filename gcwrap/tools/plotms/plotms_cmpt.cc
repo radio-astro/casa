@@ -358,7 +358,7 @@ void plotms::setColorAxis(const string&  coloraxis, const bool updateImmediately
 void plotms::setSymbol(const string& symbolshape, const int symbolsize,
                        const string& symbolcolor, const string& symbolfill,
                        const bool symboloutline, const bool updateImmediately,
-                       const int plotIndex)
+                       const int plotIndex, int dataIndex)
 {
     launchApp();
     Record params;
@@ -370,6 +370,7 @@ void plotms::setSymbol(const string& symbolshape, const int symbolsize,
     params.define(PlotMSDBusApp::PARAM_SYMBOLOUTLINE, symboloutline);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    params.define(PlotMSDBusApp::PARAM_DATA_INDEX, dataIndex );
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
         PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
@@ -378,7 +379,7 @@ void plotms::setFlaggedSymbol(
     const string& flaggedsymbolshape, const int flaggedsymbolsize,
     const string& flaggedsymbolcolor, const string& flaggedsymbolfill,
     const bool flaggedsymboloutline, const bool updateImmediately,
-    const int plotIndex)
+    const int plotIndex, int dataIndex)
 {
     launchApp();
     Record params;
@@ -390,6 +391,7 @@ void plotms::setFlaggedSymbol(
     params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLOUTLINE, flaggedsymboloutline);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    params.define(PlotMSDBusApp::PARAM_DATA_INDEX, dataIndex );
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
         PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
@@ -472,7 +474,7 @@ string plotms::getYAxisLabel(const int plotIndex)
 
 
 
-void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
+/*void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
                    const bool updateImmediately, const int plotIndex) 
 {
     setPlotAxes(xAxis, xDataColumn, "", "", updateImmediately, plotIndex); 
@@ -483,27 +485,37 @@ void plotms::setPlotYAxis(const string& yAxis, const string& yDataColumn,
                    const bool updateImmediately, const int plotIndex) 
 {
     setPlotAxes("", "", yAxis, yDataColumn, updateImmediately, plotIndex); 
-}
-
-
-
+}*/
 
 
 void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
-        const string& xDataColumn, const string& yDataColumn,
-        const bool updateImmediately, const int plotIndex) {
+        const string& xDataColumn, const string& yDataColumn, const string& yAxisLocation,
+        const bool updateImmediately, const int plotIndex, const int dataIndex) {
     launchApp();
     string xdc = xDataColumn, ydc = yDataColumn;
     if(xdc == "residual") xdc = "corrected-model";
     if(ydc == "residual") ydc = "corrected-model";
     Record params;
-    if(!xAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
-    if(!xdc.empty())
+    if(!xAxis.empty()){
+    	params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
+    }
+    if(!xdc.empty()){
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_X, xdc);
-    if(!yAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
-    if(!ydc.empty())
+    }
+    if(!yAxis.empty()){
+    	params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
+    }
+    if(!ydc.empty()){
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_Y, ydc);
+    }
+    if (!yAxisLocation.empty()){
+    	params.define(PlotMSDBusApp::PARAM_AXIS_Y_LOCATION, yAxisLocation);
+    }
+
     if(params.nfields() == 0) return;
+    params.define( PlotMSDBusApp::PARAM_DATA_INDEX, dataIndex );
+
+
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),

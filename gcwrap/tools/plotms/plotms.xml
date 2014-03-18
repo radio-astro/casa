@@ -934,83 +934,10 @@ Plot Axes Parameters Methods
 
 
 
-<method type="function" name="setPlotXAxis">
-  <keyword>setPlotXAxis</keyword>
-  
-  <shortdescription>Sets the plot x axis to the given.</shortdescription>
-  
-  <description>
-Sets the x plot axis and data column, as Strings.  If updateImmediately is
-true, this change takes effect immediately IF the plotms window is currently
-shown; otherwise it will only be applied next time update() and/or show() is
-called.
-  </description>
-  
-  <input>
-    <param type="string" name="xAxis">
-      <description>name of the axis choice for x (blank to keep current)</description>
-    </param>
-    
-    <param type="string" name="xDataColumn">
-      <description>name of the data column to use for the x axis, if applicable (blank to keep current)</description>
-      <value />
-    </param>
-    
-    <param type="bool" name="updateImmediately">
-      <description>whether to apply this change immediately, IF the window is currently shown</description>
-      <value>true</value>
-    </param>
-    
-    <param type="int" name="plotIndex">
-      <description>the index of the plot to apply this change</description>
-      <value>0</value>
-    </param>
-  </input>
-  
-  <example />
-  
-  <returns />
-</method>
 
-<method type="function" name="setPlotYAxis">
-  <keyword>setPlotYAxis</keyword>
-  
-  <shortdescription>Sets the plot y axis to the given.</shortdescription>
-  
-  <description>
-Sets the y plot axis and data column, as Strings.  If updateImmediately is
-true, this change takes effect immediately IF the plotms window is currently
-shown; otherwise it will only be applied next time update() and/or show() is
-called.
-  </description>
-  
-  <input>
-    <param type="string" name="yAxis">
-      <description>name of the axis choice for y (blank to keep current)</description>
-    </param>
-    
-    <param type="string" name="yDataColumn">
-      <description>name of the data column to use for the y axis, if applicable (blank to keep current)</description>
-      <value />
-    </param>
-    
-    <param type="bool" name="updateImmediately">
-      <description>whether to apply this change immediately, IF the window is currently shown      </description>
-      <value>true</value>
-    </param>
-    
-    <param type="int" name="plotIndex">
-      <description>the index of the plot to apply this change</description>
-      <value>0</value>
-    </param>
-  </input>
-  
-  <example />
-  
-  <returns />
-</method>
 
 <method type="function" name="setPlotAxes">
+
   <keyword>setPlotAxes</keyword>
   
   <shortdescription>Sets the plot axes to the given.</shortdescription>
@@ -1043,6 +970,11 @@ called.
       <value />
     </param>
     
+     <param type="string" name="yAxisLocation">
+      <description>The whether to plot the y-data against a left or right axis (blank for default)</description>
+      <value />
+    </param>
+    
     <param type="bool" name="updateImmediately">
       <description>whether to apply this change immediately, IF the window is currently shown</description>
       <value>true</value>
@@ -1052,12 +984,21 @@ called.
       <description>the index of the plot to apply this change</description>
       <value>0</value>
     </param>
+    
+    <param type="int" name="dataIndex">
+      <description>When overplotting data, the index of the data being overplotted.</description>
+      <value>0</value>
+    </param>
+    
+    
   </input>
   
   <example />
   
   <returns />
 </method>
+
+
 
 <method type="function" name="getPlotXAxis">
   <keyword>getPlotXAxis</keyword>
@@ -1342,6 +1283,10 @@ and outline.
       <description>the index of the plot to apply this change</description>
       <value>0</value>
     </param>
+    <param type="int" name="dataIndex">
+      <description>the index of the data in an overplot to apply this change</description>
+      <value>0</value>
+    </param>
   </input>
   <example />
   <returns />
@@ -1385,6 +1330,11 @@ and outline.
       <description>the index of the plot to apply this change</description>
       <value>0</value>
     </param>
+    <param type="int" name="dataIndex">
+      <description>the index of the data in an overplot plot to apply this change</description>
+      <value>0</value>
+    </param>
+    
   </input>
   <example />
   <returns />
