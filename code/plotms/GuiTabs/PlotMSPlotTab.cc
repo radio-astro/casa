@@ -72,7 +72,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     
     // Create the plot for this tab.
     plotIndex = itsPlotManager_.numPlots();
-
+   
     itsPlotManager_.addOverPlot();
     plotsChanged(itsPlotManager_, plotIndex);
 }
@@ -124,8 +124,9 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
 	(void)updateFlag;
+
     if(&p == itsCurrentParameters_ && itsCurrentPlot_ != NULL){
-        setupForPlot(/*itsCurrentPlot_*/);
+        setupForPlot();
     }
 }
 
@@ -141,6 +142,7 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager,
         itsCurrentParameters_ = NULL;
     }
     else {
+
     	if ( itsCurrentPlot_ == NULL ){
     		if ( index < 0 ){
     			index = plotIndex;
@@ -149,10 +151,9 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager,
     		if ( 0 <= index && index < plotCount ){
     			itsCurrentPlot_ = const_cast<PlotMSPlot*>(manager.plot(index));
     		}
-
     	}
     	if ( show && !closing ){
-    		setupForPlot();
+        	setupForPlot();
         }
     }
 }
@@ -166,12 +167,17 @@ PlotMSPlot* PlotMSPlotTab::currentPlot() const {
 PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     PlotMSPlotParameters params(itsPlotter_->getPlotFactory());
     if(itsCurrentParameters_ != NULL){
-    	params = *itsCurrentParameters_;
+    	  PMS_PP_Display* currParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
+    	  PlotSymbolPtr currSymbol = currParams->unflaggedSymbol();
+    	  params = *itsCurrentParameters_;
     }
 
     foreach(PlotMSPlotSubtab* tab, itsSubtabs_){
     	tab->getValue(params);
     }
+
+    PMS_PP_Display* currParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
+    PlotSymbolPtr currSymbol = currParams->unflaggedSymbol();
     return params;
 }
 
@@ -226,6 +232,7 @@ void PlotMSPlotTab::plot( bool forceReload ) {
 		//
 		// note as of Aug 2010: .casheReady() seems to return false even if cache was cancelled.
         bool paramsChanged = params != *itsCurrentParameters_;
+
         bool cancelledCache = !itsCurrentPlot_->cache().cacheReady();
         if (forceReload)    {
 			forceReloadCounter_++;   
@@ -254,6 +261,7 @@ void PlotMSPlotTab::plot( bool forceReload ) {
                     }
                     itsPlotter_->getAnnotator().clearAll();
                 }
+
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
@@ -531,6 +539,7 @@ void  PlotMSPlotTab::insertTransformations (int index){
 // Private //
 
 void PlotMSPlotTab::setupForPlot() {
+
     tabWidget->setEnabled(itsCurrentPlot_ != NULL);
     
     if(itsCurrentParameters_ != NULL){
@@ -538,14 +547,19 @@ void PlotMSPlotTab::setupForPlot() {
     }
     itsCurrentParameters_ = NULL;
     
-    if(itsCurrentPlot_ == NULL) return;
+    if(itsCurrentPlot_ == NULL){
+    	return;
+    }
     bool oldupdate = itsUpdateFlag_;
     itsUpdateFlag_ = false;
     
     PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
-    
+   
+    PMS_PP_Display* displayParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
+    PlotSymbolPtr displaySymbol = displayParams->unflaggedSymbol();
+
     insertData(0);
     insertAxes(1);
     insertIterate(2);

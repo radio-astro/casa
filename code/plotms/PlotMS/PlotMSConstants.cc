@@ -238,6 +238,7 @@ PlotSymbolPtr PMS::DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory) {
     static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::AUTOSCALING);
     symbol->setSize(2, 2);
     symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
+    symbol->setColor( "#0000FF");
     symbol->setAreaFill("#0000FF");
     return factory->symbol(*symbol);
 }

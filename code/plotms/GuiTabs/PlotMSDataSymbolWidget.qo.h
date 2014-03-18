@@ -46,8 +46,9 @@ public:
     PlotMSDataSymbolWidget(PlotMSPlotter *parent = 0);
     ~PlotMSDataSymbolWidget();
     void getValue(PMS_PP_Display* d, int index );
+    void setValue( const PMS_PP_Display* d, int );
     void setLabelDefaults( QMap<QLabel*,QString>& map );
-    void update( const PMS_PP_Display* d, const PMS_PP_Display* d2, int index );
+    void update( const PMS_PP_Display* d, int index );
 
 signals:
 	void highlightWidgetText( QLabel* source, bool highlight);

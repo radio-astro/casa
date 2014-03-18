@@ -162,11 +162,16 @@ void PMS_PP_MSData::fromRecord(const Record& record)
 	if (valuesChanged) updated();
 }
 
+PMS_PP_MSData& PMS_PP_MSData::operator=(const PMS_PP_MSData& other){
+	return assign( &other);
+}
 
-
-PlotMSPlotParameters::Group& PMS_PP_MSData::operator=(const Group& other)
-{
+PMS_PP_MSData& PMS_PP_MSData::operator=(const Group& other){
 	const PMS_PP_MSData* o = dynamic_cast<const PMS_PP_MSData*>(&other);
+	return assign( o );
+}
+
+PMS_PP_MSData& PMS_PP_MSData::assign(const PMS_PP_MSData* o){
 	if (o != NULL && *this != *o)
 	{
 		itsFilename_ = o->itsFilename_;
@@ -280,10 +285,17 @@ void PMS_PP_Cache::fromRecord(const Record& record)
 	if (valuesChanged) updated();
 }
 
+PMS_PP_Cache& PMS_PP_Cache::operator=(const PMS_PP_Cache& other){
+	return assign(&other);
+}
 
-PlotMSPlotParameters::Group& PMS_PP_Cache::operator=(const Group& other)
-{
+
+PMS_PP_Cache& PMS_PP_Cache::operator=(const Group& other){
 	const PMS_PP_Cache* o = dynamic_cast<const PMS_PP_Cache*>(&other);
+	return assign( o );
+}
+
+PMS_PP_Cache& PMS_PP_Cache::assign(const PMS_PP_Cache* o){
 	if (o != NULL && *this != *o)
 	{
 		itsXAxes_ = o->itsXAxes_;
@@ -573,10 +585,16 @@ void PMS_PP_Axes::fromRecord(const Record& record)
 	if (valuesChanged) updated();
 }
 
+PMS_PP_Axes& PMS_PP_Axes::operator=(const PMS_PP_Axes& other){
+	return assign( &other );
+}
 
-PlotMSPlotParameters::Group& PMS_PP_Axes::operator=(const Group& other)
-{
+PMS_PP_Axes& PMS_PP_Axes::operator=(const Group& other){
 	const PMS_PP_Axes* o = dynamic_cast<const PMS_PP_Axes*>(&other);
+	return assign( o );
+}
+
+PMS_PP_Axes& PMS_PP_Axes::assign(const PMS_PP_Axes* o){
 	if (o != NULL && *this != *o)
 	{
 		itsXAxes_ = o->itsXAxes_;
@@ -870,10 +888,16 @@ void PMS_PP_Canvas::fromRecord(const Record& record)
 	if (valuesChanged) updated();
 }
 
+PMS_PP_Canvas& PMS_PP_Canvas::operator=(const PMS_PP_Canvas& other ){
+	return assign( &other );
+}
 
-PlotMSPlotParameters::Group& PMS_PP_Canvas::operator=(const Group& other)
-{
+PMS_PP_Canvas& PMS_PP_Canvas::operator=(const Group& other){
 	const PMS_PP_Canvas* o = dynamic_cast<const PMS_PP_Canvas*>(&other);
+	return assign( o );
+}
+
+PMS_PP_Canvas& PMS_PP_Canvas::assign(const PMS_PP_Canvas* o ){
 	if (o != NULL && *this != *o)
 	{
 		itsXLabels_ = o->itsXLabels_;
@@ -965,6 +989,34 @@ void PMS_PP_Canvas::showLegend(const bool& show,
 		itsLegendsPos_[index] = pos;
 		updated();
 	}
+}
+
+
+void PMS_PP_Canvas::showLegend( const bool& show, const String& pos,
+		unsigned int index){
+	PlotCanvas::LegendPosition position = PlotCanvas::INT_URIGHT;
+	if ( pos == "upperLeft"){
+		position = PlotCanvas::INT_ULEFT;
+	}
+	else if ( pos == "lowerRight"){
+		position = PlotCanvas::INT_LRIGHT;
+	}
+	else if ( pos == "lowerLeft"){
+		position = PlotCanvas::INT_LLEFT;
+	}
+	else if ( pos == "exteriorRight"){
+		position = PlotCanvas::EXT_RIGHT;
+	}
+	else if ( pos == "exteriorLeft" ){
+		position = PlotCanvas::EXT_LEFT;
+	}
+	else if ( pos == "exteriorTop" ){
+		position = PlotCanvas::EXT_TOP;
+	}
+	else if ( pos == "exteriorBottom" ){
+		position = PlotCanvas::EXT_BOTTOM;
+	}
+	showLegend( show, position, index );
 }
 
 void PMS_PP_Canvas::showGrid(const bool& showMajor, const bool& showMinor,
@@ -1113,9 +1165,16 @@ void PMS_PP_Display::fromRecord(const Record& record)
 	if (valuesChanged) updated();
 }
 
+PMS_PP_Display& PMS_PP_Display::operator=(const PMS_PP_Display& other){
+	return assign(&other);
+}
 
-PlotMSPlotParameters::Group& PMS_PP_Display::operator=(const Group& other){
+PMS_PP_Display& PMS_PP_Display::operator=(const Group& other){
 	const PMS_PP_Display* o = dynamic_cast<const PMS_PP_Display*>(&other);
+	return assign( o );
+}
+
+PMS_PP_Display& PMS_PP_Display::assign( const PMS_PP_Display* o ){
 	if (o != NULL && *this != *o){
 		itsUnflaggedSymbols_.resize(o->itsUnflaggedSymbols_.size());
 		for (unsigned int i = 0; i < itsUnflaggedSymbols_.size(); i++){
@@ -1145,6 +1204,12 @@ bool PMS_PP_Display::operator==(const Group& other) const
 				*itsUnflaggedSymbols_[i] != *o->itsUnflaggedSymbols_[i]){
 			return false;
 		}
+		else if ( itsUnflaggedSymbols_[i].null() && !o->itsUnflaggedSymbols_[i].null()){
+			return false;
+		}
+		else if ( !itsUnflaggedSymbols_[i].null() && o->itsUnflaggedSymbols_[i].null()){
+			return false;
+		}
 	}
 	if (itsFlaggedSymbols_.size() != o->itsFlaggedSymbols_.size()) return false;
 	for (unsigned int i = 0; i < itsFlaggedSymbols_.size(); i++){
@@ -1161,10 +1226,14 @@ bool PMS_PP_Display::operator==(const Group& other) const
 	}
 	if (itsTitleFormats_ != o->itsTitleFormats_) return false;
 	if (itsColorizeFlags_.size() != o->itsColorizeFlags_.size() || itsColorizeAxes_.size() != o->itsColorizeAxes_.size() || itsColorizeFlags_.size() != itsColorizeAxes_.size()) return false;
-	for (unsigned int i = 0; i < itsColorizeFlags_.size(); i++) if (itsColorizeFlags_[i] != o->itsColorizeFlags_[i] || (itsColorizeFlags_[i] && itsColorizeAxes_[i] != o->itsColorizeAxes_[i])) return false;
-
+	for (unsigned int i = 0; i < itsColorizeFlags_.size(); i++){
+		if (itsColorizeFlags_[i] != o->itsColorizeFlags_[i] ||
+				(itsColorizeFlags_[i] && itsColorizeAxes_[i] != o->itsColorizeAxes_[i])){
+			return false;
+		}
+	}
 	return true;
-    		}
+}
 
 
 void PMS_PP_Display::setDefaults()
@@ -1189,6 +1258,7 @@ void PMS_PP_Display::setColorize(const bool& colorize, const PMS::Axis& axis,
 }
 
 void PMS_PP_Display::setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index) {
+	bool changed = false;
 	if (index >= itsUnflaggedSymbols_.size()){
 		itsUnflaggedSymbols_.resize (index + 1);
 		itsUnflaggedSymbols_[index] = PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
@@ -1197,11 +1267,17 @@ void PMS_PP_Display::setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned i
 	if (itsUnflaggedSymbols_[index] != value) {
 		Record newValueRecord = value->toRecord();
 		itsUnflaggedSymbols_[index]->fromRecord( newValueRecord );
+		changed = true;
+	}
+
+
+	if ( changed ){
 		updated();
 	}
 }
 
 void PMS_PP_Display::setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index ) {
+	bool changed = false;
 	if (index >= itsFlaggedSymbols_.size()){
 		itsFlaggedSymbols_.resize (index + 1);
 		itsFlaggedSymbols_[index] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
@@ -1209,6 +1285,9 @@ void PMS_PP_Display::setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int
 	if (itsFlaggedSymbols_[index] != value) {
 		Record valueRecord = value->toRecord();
 		itsFlaggedSymbols_[index]->fromRecord( valueRecord );
+		changed = true;
+	}
+	if ( changed ){
 		updated();
 	}
 }
@@ -1273,8 +1352,16 @@ void PMS_PP_Iteration::fromRecord(const Record& record)
 	}
 }
 
-PlotMSPlotParameters::Group& PMS_PP_Iteration::operator=(const Group& other){
+PMS_PP_Iteration& PMS_PP_Iteration::operator=(const PMS_PP_Iteration& other){
+	return assign( &other );
+}
+
+PMS_PP_Iteration& PMS_PP_Iteration::operator=(const Group& other){
 	const PMS_PP_Iteration* o = dynamic_cast<const PMS_PP_Iteration*>(&other);
+	return assign( o );
+}
+
+PMS_PP_Iteration& PMS_PP_Iteration::assign(const PMS_PP_Iteration* o){
 	if (o != NULL && *this != *o){
 		itsIterParam_ = o->itsIterParam_;
 		updated();

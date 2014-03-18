@@ -46,7 +46,7 @@ namespace casa {
 		  slicePlot( this, true ) {
 		ui.setupUi(this);
 
-		setWindowTitle( "1D Slice Tool");
+		setWindowTitle( "Spatial Profile Tool");
 
 		connect( &slicePlot, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(markPositionChanged(int,int,float)));
 		connect( &slicePlot, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT( markVisibilityChanged(int,bool)));

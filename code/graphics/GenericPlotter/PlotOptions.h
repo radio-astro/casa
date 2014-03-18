@@ -457,6 +457,8 @@ public:
     // Constructor.
     PlotSymbol();
     
+    //PlotSymbol(const PlotSymbol& copy);
+
     // Destructor.
     virtual ~PlotSymbol();
     
@@ -560,7 +562,6 @@ public:
     virtual void fromRecord(const Record& record);
     // </group>
     
-    
     // OPERATORS //
     
     // Assigns the value of the given PlotSymbol to this one.
@@ -588,6 +589,7 @@ protected:
 
 private:
     const String DEFAULT_COLOR;
+    String currentColor;
 };
 typedef CountedPtr<PlotSymbol> PlotSymbolPtr;
 

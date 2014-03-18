@@ -254,7 +254,7 @@ private:
     int forceReloadCounter_;
     
     // Sets up the GUI to display the parameters for the given plot.
-    void setupForPlot(/*PlotMSPlot* plot*/);
+    void setupForPlot();
     
     // Returns the axes the user has selected to load or release, depending on
     // the load flag. 

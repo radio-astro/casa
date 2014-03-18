@@ -52,6 +52,7 @@ const String PlotMSDBusApp::APP_LOGFILTER_SWITCH = "--logfilter";
 const String PlotMSDBusApp::PARAM_AVERAGING = "averaging";
 const String PlotMSDBusApp::PARAM_AXIS_X = "xAxis";
 const String PlotMSDBusApp::PARAM_AXIS_Y = "yAxis";
+const String PlotMSDBusApp::PARAM_AXIS_Y_LOCATION = "yAxisLocation";
 const String PlotMSDBusApp::PARAM_GRIDROWS = "gridRows";
 const String PlotMSDBusApp::PARAM_GRIDCOLS = "gridCols";
 const String PlotMSDBusApp::PARAM_SHOWLEGEND = "showLegend";
@@ -59,6 +60,7 @@ const String PlotMSDBusApp::PARAM_LEGENDPOSITION = "legendPosition";
 const String PlotMSDBusApp::PARAM_CLEARSELECTIONS = "clearSelections";
 const String PlotMSDBusApp::PARAM_DATACOLUMN_X = "xDataColumn";
 const String PlotMSDBusApp::PARAM_DATACOLUMN_Y = "yDataColumn";
+const String PlotMSDBusApp::PARAM_DATA_INDEX = "overplotDataIndex";
 const String PlotMSDBusApp::PARAM_FILENAME = "filename";
 const String PlotMSDBusApp::PARAM_FLAGGING = "flagging";
 const String PlotMSDBusApp::PARAM_HEIGHT = "height";
@@ -230,7 +232,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     const String& /*callerName*/, bool isAsync) {
 
     // Common parameters: plot index.
-    int index = -1;
+    int index = 0;
     bool indexSet = parameters.isDefined(PARAM_PLOTINDEX) &&
                     (parameters.dataType(PARAM_PLOTINDEX) == TpInt ||
                      parameters.dataType(PARAM_PLOTINDEX) == TpUInt);
@@ -474,27 +476,41 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         
         bool ok;
         PMS::Axis a;
+        int dataIndex = 0;
+        if ( parameters.isDefined( PARAM_DATA_INDEX) &&
+        		parameters.dataType( PARAM_DATA_INDEX) == TpInt){
+        	dataIndex = parameters.asInt( PARAM_DATA_INDEX );
+        }
+
         if(parameters.isDefined(PARAM_AXIS_X) &&
            parameters.dataType(PARAM_AXIS_X) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_X), &ok);
-            if(ok) ppcache->setXAxis(a);
+            if(ok){
+            	ppcache->setXAxis(a, dataIndex );
+            }
         }
         if(parameters.isDefined(PARAM_AXIS_Y) &&
            parameters.dataType(PARAM_AXIS_Y) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_Y), &ok);
-            if(ok) ppcache->setYAxis(a);
+            if(ok) {
+            	ppcache->setYAxis(a, dataIndex);
+            }
         }
         
         PMS::DataColumn dc;
         if(parameters.isDefined(PARAM_DATACOLUMN_X) &&
            parameters.dataType(PARAM_DATACOLUMN_X) == TpString) {
             dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_X), &ok);
-            if(ok) ppcache->setXDataColumn(dc);
+            if(ok){
+            	ppcache->setXDataColumn(dc, dataIndex );
+            }
         }
         if(parameters.isDefined(PARAM_DATACOLUMN_Y) &&
            parameters.dataType(PARAM_DATACOLUMN_Y) == TpString) {
             dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_Y), &ok);
-            if(ok) ppcache->setYDataColumn(dc);
+            if(ok){
+            	ppcache->setYDataColumn(dc, dataIndex);
+            }
         }
 
 
@@ -533,6 +549,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
               ppcan->setYLabelFormat(f);
         }
 
+        if (parameters.isDefined( PARAM_AXIS_Y_LOCATION ) &&
+        		parameters.dataType( PARAM_AXIS_Y_LOCATION) == TpString){
+        	String axisLocation = parameters.asString( PARAM_AXIS_Y_LOCATION );
+        	if ( axisLocation.size() > 0 ){
+        		ppaxes->setYAxis( axisLocation, dataIndex );
+        	}
+        }
 
         if (parameters.isDefined(PARAM_XAUTORANGE)  &&
             parameters.dataType(PARAM_XAUTORANGE)==TpBool)         {
@@ -551,7 +574,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 if (xmax>xmin)       
                     minmax = prange_t(xmin, xmax);
               }
-              ppaxes->setXRange(!wantauto, minmax);
+              ppaxes->setXRange(!wantauto, minmax, dataIndex);
         }
 
 
@@ -572,7 +595,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 if (ymax>ymin)   
                     minmax = prange_t(ymin, ymax);
               }
-              ppaxes->setYRange(!wantauto, minmax);
+              ppaxes->setYRange(!wantauto, minmax, dataIndex);
         }
 
         if(parameters.isDefined(PARAM_SYMBOL) &&
@@ -585,7 +608,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             bool outline = parameters.asBool(PARAM_SYMBOLOUTLINE);
             PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
                         		fill, outline );
-            ppdisp->setUnflaggedSymbol(ps);
+            ppdisp->setUnflaggedSymbol(ps, dataIndex);
         }
 
         if(parameters.isDefined(PARAM_FLAGGEDSYMBOL) &&
@@ -598,13 +621,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             bool outline = parameters.asBool(PARAM_FLAGGEDSYMBOLOUTLINE);
             PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
             		fill, outline );
-            ppdisp->setFlaggedSymbol(ps);
+            ppdisp->setFlaggedSymbol(ps, dataIndex);
         }
         
         if(parameters.isDefined(PARAM_COLORIZE) &&
            parameters.dataType(PARAM_COLORIZE) == TpBool)   {
             bool want = parameters.asBool(PARAM_COLORIZE);
-            ppdisp->setColorize(want);
+            ppdisp->setColorize(want, dataIndex);
         }
 
         if(parameters.isDefined(PARAM_COLORAXIS) &&
@@ -683,12 +706,12 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         if (parameters.isDefined( PARAM_SHOWLEGEND) &&
         		parameters.dataType(PARAM_SHOWLEGEND) == TpBool ){
         	bool showLegend = parameters.asBool( PARAM_SHOWLEGEND);
-        	String legendPosition = "upperright";
+        	String legendPosition = "upperRight";
         	if ( parameters.isDefined( PARAM_LEGENDPOSITION ) &&
         			parameters.dataType( PARAM_LEGENDPOSITION ) ){
         		legendPosition = parameters.asString( PARAM_LEGENDPOSITION );
         	}
-        	ppcan->showLegend( showLegend, index );
+        	ppcan->showLegend( showLegend, legendPosition, index );
         }
 
         if(updateImmediately && itsPlotms_.guiShown()) {
@@ -873,6 +896,7 @@ bool PlotMSDBusApp::update() {
     for(unsigned int i = 0; i < n; i++) {
         p = itsPlotms_.getPlotManager().plotParameters(i);
         if(p == NULL) continue;
+
         if(*p != itsPlotParams_[i]) {
             p->holdNotification(this);
             *p = itsPlotParams_[i];
@@ -893,6 +917,7 @@ bool PlotMSDBusApp::update() {
     		}
     	}
     }
+
     return successfulUpdate;
 }
 

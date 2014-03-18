@@ -41,7 +41,7 @@ namespace casa {
 //////////////////////////////////
 
 PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
-        PlotMSPlotSubtab(tab, parent), itsPDisplay_(parent->getPlotFactory()) {
+        PlotMSPlotSubtab(tab, parent) {
     setupUi(this);
 
     makeDataSymbol();
@@ -63,13 +63,13 @@ void PlotMSDisplayTab::updateMultipleAxisSupport(){
 
 void PlotMSDisplayTab::makeDataSymbol(){
 	PlotMSDataSymbolWidget* dataSymbol = new PlotMSDataSymbolWidget(itsPlotter_);
+	dataSymbol->setLabelDefaults( itsLabelDefaults_ );
 	connect( dataSymbol, SIGNAL(highlightWidgetText(QLabel*,bool)),
 	    		this, SLOT(updateText(QLabel*, bool)));
-
+	connect( dataSymbol, SIGNAL(symbolChanged()), this, SIGNAL(changed()));
 	dataSymbols.append( dataSymbol );
 	updateMultipleAxisSupport();
 }
-
 
 void PlotMSDisplayTab::changeSymbolViewed(){
 	QLayout* yLayout = symbolFrame->layout();
@@ -133,19 +133,21 @@ void PlotMSDisplayTab::getValue(PlotMSPlotParameters& params) const {
         params.setGroup<PMS_PP_Display>();
         d = params.typedGroup<PMS_PP_Display>();
     }
-        
-    *d = itsPDisplay_;
 
-    int dataSymbolCount = dataSymbols.size();
-    for ( int i = 0; i < dataSymbolCount; i++ ){
-    	dataSymbols[i]->getValue( d, i );
+    int dataCount = dataSymbols.size();
+    for ( int i = 0; i < dataCount; i++ ){
+    	dataSymbols[i]->getValue(d, i);
     }
 }
 
 void PlotMSDisplayTab::setValue(const PlotMSPlotParameters& params) {
     const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
     if(d == NULL) return; // shouldn't happen
-    itsPDisplay_ = *d;
+    
+    int dataCount = dataSymbols.size();
+    for ( int i = 0; i < dataCount; i++ ){
+    	dataSymbols[i]->setValue( /*&itsPDisplay_*/d, i );
+    }
 }
 
 void PlotMSDisplayTab::updateText( QLabel* source, bool highlight ){
@@ -154,16 +156,14 @@ void PlotMSDisplayTab::updateText( QLabel* source, bool highlight ){
 
 void PlotMSDisplayTab::update(const PlotMSPlot& plot) {    
     const PlotMSPlotParameters& params = plot.parameters();
-    PlotMSPlotParameters newParams(params);
-    getValue(newParams);
-    
-    const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>(),
-                        *d2 = newParams.typedGroup<PMS_PP_Display>();
-    if(d == NULL || d2 == NULL) return; // shouldn't happen
-    
+    const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+    if ( d == NULL ){
+    	return;
+    }
+
     int dataSymbolCount = dataSymbols.size();
     for ( int i = 0; i < dataSymbolCount; i++ ){
-    	dataSymbols[i]->update( d, d2, i );
+    	dataSymbols[i]->update( d, i );
     }
 }
 

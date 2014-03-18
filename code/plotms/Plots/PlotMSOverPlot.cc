@@ -1006,12 +1006,13 @@ void PlotMSOverPlot::recalculateIteration( ) {
 	setColors();
 	itsTCLParams_.updateDisplay = true;
 
-	attachToCanvases();
-	updatePlots();
 	//Update display should come before update canvas so that the
 	//legend items get the correct color.
 	updateDisplay();
 	updateCanvas();
+
+	attachToCanvases();
+	updatePlots();
 
 	releaseDrawing();
 	logPoints();

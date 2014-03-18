@@ -77,14 +77,12 @@ private slots:
 	void updateText( QLabel* source, bool highlight );
 	void changeSymbolViewed();
 
+
 private:
 	void makeDataSymbol();
 	void updateMultipleAxisSupport();
     
     QList<PlotMSDataSymbolWidget*> dataSymbols;
-    
-    // Display parameters.
-    PMS_PP_Display itsPDisplay_;
     
 
 };

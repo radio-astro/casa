@@ -71,10 +71,33 @@ void PlotMSDataSymbolWidget::symbolColorizeChanged(){
 
 void PlotMSDataSymbolWidget::getValue(PMS_PP_Display* d, int index ){
 	if ( d != NULL ){
-		d->setUnflaggedSymbol(itsSymbolWidget_->getSymbol(), index);
+		PlotSymbolPtr symbol = itsSymbolWidget_->getSymbol();
+		d->setUnflaggedSymbol(symbol, index);
 		d->setFlaggedSymbol(itsMaskedSymbolWidget_->getSymbol(), index);
 		d->setColorize(ui.colorize->isChecked(),
 	            PMS::axis(ui.colorizeChooser->currentText().toStdString()), index);
+	}
+}
+
+
+
+void PlotMSDataSymbolWidget::setValue( const PMS_PP_Display* d, int index){
+	if ( d != NULL ){
+		blockSignals( true );
+		PlotSymbolPtr unflagged = d->unflaggedSymbol( index );
+		itsSymbolWidget_->setSymbol(unflagged);
+		itsMaskedSymbolWidget_->setSymbol(d->flaggedSymbol(index));
+		ui.colorize->setChecked( d->colorizeFlag(index));
+		String colorizeAxis = PMS::axis(d->colorizeAxis(index));
+		QString colorizeAxisStr( colorizeAxis.c_str());
+		int choiceCount = ui.colorizeChooser->count();
+		for ( int i = 0; i < choiceCount; i++ ){
+			if ( ui.colorizeChooser->itemText( i ) == colorizeAxisStr ){
+				ui.colorizeChooser->setCurrentIndex( i );
+				break;
+			}
+		}
+		blockSignals( false );
 	}
 }
 
@@ -84,21 +107,34 @@ void PlotMSDataSymbolWidget::setLabelDefaults( QMap<QLabel*,QString>& map ){
 	map.insert(ui.colorizeLabel, ui.colorizeLabel->text());
 }
 
-void PlotMSDataSymbolWidget::update( const PMS_PP_Display* d, const PMS_PP_Display* d2, int index ){
+void PlotMSDataSymbolWidget::update( const PMS_PP_Display* d, int index ){
 	bool unflaggedChanged = false;
-	if ( d->unflaggedSymbol(index) != d2->unflaggedSymbol(index)){
+	PlotSymbolPtr widgetSymbol = itsSymbolWidget_->getSymbol();
+	PlotSymbolPtr paramSymbol = d->unflaggedSymbol(index);
+	if ( *widgetSymbol != *paramSymbol ){
 		unflaggedChanged = true;
 	}
+
 	bool flaggedChanged = false;
-	if ( d->flaggedSymbol(index) != d2->flaggedSymbol(index)){
+	if ( *(d->flaggedSymbol(index)) != *(itsMaskedSymbolWidget_->getSymbol())){
 		flaggedChanged = true;
 	}
 	emit highlightWidgetText(ui.unflaggedLabel, unflaggedChanged );
 	emit highlightWidgetText(ui.flaggedLabel, flaggedChanged );
-	emit highlightWidgetText(ui.colorizeLabel,
-            d->colorizeFlag(index) != d2->colorizeFlag(index) ||
-            (d->colorizeFlag(index) &&
-             d->colorizeAxis(index)!= d2->colorizeAxis(index)));
+
+	bool colorizedChanged = false;
+	bool colorizingParam = d->colorizeFlag( index );
+	if ( colorizingParam != ui.colorize->isChecked() ){
+		colorizedChanged = true;
+	}
+	else if ( colorizingParam ){
+		QString colorAxisStr = ui.colorizeChooser->currentText();
+		String paramColorAxisStr = PMS::axis(d->colorizeAxis(index));
+		if ( colorAxisStr.toStdString() != paramColorAxisStr.c_str()){
+			colorizedChanged = true;
+		}
+	}
+	emit highlightWidgetText(ui.colorizeLabel, colorizedChanged );
 
 }
 

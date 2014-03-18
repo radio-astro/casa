@@ -69,6 +69,7 @@ public:
     static const String PARAM_AVERAGING; // Record (see PlotMSAveraging)
     static const String PARAM_AXIS_X; // String
     static const String PARAM_AXIS_Y; // String
+    static const String PARAM_AXIS_Y_LOCATION;
     static const String PARAM_GRIDROWS; //int
     static const String PARAM_GRIDCOLS; //int
     static const String PARAM_CLEARSELECTIONS; // bool
@@ -93,6 +94,7 @@ public:
     static const String PARAM_COLORIZE;      // bool
     static const String PARAM_COLORAXIS;     // string
     static const String PARAM_CANVASTITLE;    // string
+    static const String PARAM_DATA_INDEX;    //int
     static const String PARAM_XAXISLABEL;    // string
     static const String PARAM_YAXISLABEL;    // string
     static const String PARAM_SHOWMAJORGRID;  // bool

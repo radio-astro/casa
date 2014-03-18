@@ -89,6 +89,7 @@ void PlotMSAction::setUpClientCommunication( BackgroundThread* thread, int index
 bool PlotMSAction::initiateWork( BackgroundThread* thread ){
 	//We either tell the client to run it as a thread or we run it
 	//directly ourself.
+	bool operationCompleted = true;
 	if ( useThreading ){
 		client->doThreadedOperation( threadController );
 	}
@@ -97,7 +98,7 @@ bool PlotMSAction::initiateWork( BackgroundThread* thread ){
 			client->setOperationCompleted( true );
 		}
 		thread->run();
-		bool operationCompleted = thread->getResult();
+		operationCompleted = thread->getResult();
 		if ( client != NULL ){
 			client->setOperationCompleted( operationCompleted );
 		}	
@@ -112,7 +113,7 @@ bool PlotMSAction::initiateWork( BackgroundThread* thread ){
 		}
 
 	}
-	return true;
+	return operationCompleted;
 }
 
 bool PlotMSAction::loadParameters(){

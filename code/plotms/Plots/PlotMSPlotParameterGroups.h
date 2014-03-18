@@ -146,8 +146,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator, operator=(). */
+	PMS_PP_MSData& operator=(const PMS_PP_MSData& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_MSData & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -201,6 +204,9 @@ public:
 	}
 
 private:
+	//Does the work of the operator=()s.
+	PMS_PP_MSData& assign(const PMS_PP_MSData* other);
+
 	/* Parameters' values */
 	PlotMSSelection itsSelection_;
 	String itsFilename_;
@@ -261,8 +267,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator=().*/
+	PMS_PP_Cache& operator=(const PMS_PP_Cache& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Cache & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -335,6 +344,7 @@ public:
 	}
 
 
+
 	const vector<PMS::DataColumn> &xDataColumns() const {
 		return itsXData_;
 	}
@@ -389,6 +399,9 @@ public:
 	void resize( int count );
 
 private:
+	//Does the work for the operator=()s.
+	PMS_PP_Cache& assign(const PMS_PP_Cache* o);
+
 	/* Parameters' values */
 	vector<PMS::Axis> itsXAxes_;
 	vector<PMS::Axis> itsYAxes_;
@@ -450,8 +463,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator, operator= */
+	PMS_PP_Axes& operator=(const PMS_PP_Axes& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Axes & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -535,6 +551,15 @@ public:
 			updated();
 		}
 	}
+
+	void setYAxis( String& value, unsigned int index = 0 ){
+		PlotAxis axisLocation = Y_LEFT;
+		if ( value == "right"){
+			axisLocation = Y_RIGHT;
+		}
+		setYAxis( axisLocation, index );
+	}
+
 
 
 	const vector<bool> &xRangesSet() const {
@@ -637,6 +662,10 @@ public:
 	void resize( int count );
 
 private:
+
+	//Does the work for operator=()s.
+	PMS_PP_Axes& assign(const PMS_PP_Axes* o);
+
 	/* Parameters' values */
 	vector<PlotAxis> itsXAxes_;
 	vector<PlotAxis> itsYAxes_;
@@ -704,7 +733,10 @@ public:
 	}
 
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Canvas& operator= (const Group & other);
+
+	/* Overrides the actual operator=(). */
+	PMS_PP_Canvas& operator=(const PMS_PP_Canvas& other );
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -723,6 +755,8 @@ public:
 	void showLegend (const bool & show,
 			const PlotCanvas::LegendPosition & pos,
 			unsigned int index = 0);
+
+	void showLegend( const bool& show, const String& pos, unsigned int index=0);
 
 	void showGridMajor (const bool & show, const PlotLinePtr & line,
 			unsigned int index = 0) {
@@ -1001,6 +1035,10 @@ public:
 
 
 private:
+
+	//Does the work for the operator=()s.
+	PMS_PP_Canvas& assign(const PMS_PP_Canvas* o );
+
 	/* Parameters' values */
 	vector<PlotMSLabelFormat> itsXLabels_;
 	vector<PlotMSLabelFormat> itsYLabels_;
@@ -1077,7 +1115,10 @@ public:
 	}
 
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Display & operator= (const Group & other);
+
+	/*  Overrides the actual assignment operator=() */
+	PMS_PP_Display& operator=(const PMS_PP_Display& other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -1203,6 +1244,11 @@ public:
 
 
 private:
+
+	/* Does the work for both versions of operator=() */
+	PMS_PP_Display& assign( const PMS_PP_Display* o );
+
+
 	/* Parameters' values */
 	vector<PlotSymbolPtr> itsUnflaggedSymbols_;
 	vector<PlotSymbolPtr> itsFlaggedSymbols_;
@@ -1267,8 +1313,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real operator=().  */
+	PMS_PP_Iteration& operator=(const PMS_PP_Iteration& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Iteration & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -1374,6 +1423,10 @@ public:
 			}
 		}
 private:
+
+	//Does the work for the operator=()s.
+	PMS_PP_Iteration& assign(const PMS_PP_Iteration* o);
+
 	/* Parameters' values */
 	PlotMSIterParam itsIterParam_;
 	void setDefaults();
