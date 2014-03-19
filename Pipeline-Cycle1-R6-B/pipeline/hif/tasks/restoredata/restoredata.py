@@ -26,22 +26,21 @@ results = task.execute(dry_run=False)
 results.accept(context)
 """
 from __future__ import absolute_import
-import os
-import tarfile
-import shutil
-import fnmatch
-import types
-import string
-import shutil
 import glob
+import os
+import re
+import shutil
+import string
+import tarfile
+import tempfile
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from .. import importdata
 from .. import applycal
+from .. import importdata
 
 from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.callibrary as callibrary
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -50,62 +49,62 @@ LOG = infrastructure.get_logger(__name__)
 class RestoreDataInputs(basetask.StandardInputs):
     """
     RestoreDataInputs manages the inputs for the RestoreData task.
-	
+        
     .. py:attribute:: context
 
-	the (:class:`~pipeline.infrastructure.launcher.Context`) holding all
-	pipeline state
+        the (:class:`~pipeline.infrastructure.launcher.Context`) holding all
+        pipeline state
 
     .. py:attribute:: products_dir
-	
-	the directory containing the archived pipeline flagging and calibration
-	data products. Data products will be unpacked from this directory
-	into rawdata_dir. Support for this parameter is not yet implemented.
+        
+        the directory containing the archived pipeline flagging and calibration
+        data products. Data products will be unpacked from this directory
+        into rawdata_dir. Support for this parameter is not yet implemented.
 
     .. py:attribute:: rawdata_dir
-	
-	the directory containing the raw data ASDM(s) and the pipeline
-	flagging and calibration data products.
+        
+        the directory containing the raw data ASDM(s) and the pipeline
+        flagging and calibration data products.
 
     .. py:attribute:: output_dir
-	
-	the working directory where the restored data will be written
+        
+        the working directory where the restored data will be written
 
     .. py:attribute:: session
-	
-	a string or list of strings containing the sessions(s) one for
-	each vis.
+        
+        a string or list of strings containing the sessions(s) one for
+        each vis.
 
     .. py:attribute:: vis
 
-	a string or list of strings containing the ASDM(s) to be restored.
-     """	
+        a string or list of strings containing the ASDM(s) to be restored.
+     """        
 
     def __init__(self, context, copytoraw=None, products_dir=None,
         rawdata_dir=None, output_dir=None, session=None, vis=None):
 
-	"""
-	Initialise the Inputs, initialising any property values to those given
-	here.
-		
-	:param context: the pipeline Context state object
-	:type context: :class:`~pipeline.infrastructure.launcher.Context`
-	:param copytoraw: copy the required data products from products_dir to
-	 rawdata_dir
-	:param products_dir: the directory of archived pipeline products
-	:type products_dir: string
-	:param rawdata_dir: the raw data directory for ASDM(s) and products
-	:type products_dir: string
-	:param output_dir: the working directory for the restored data
-	:type output_dir: string
-	:param session: the  parent session of each vis
-	:type session: a string or list of strings
-	:param vis: the ASDMs(s) for which data is to be restored
-	:type vis: a string or list of strings
-	"""		
+        """
+        Initialise the Inputs, initialising any property values to those given
+        here.
+                
+        :param context: the pipeline Context state object
+        :type context: :class:`~pipeline.infrastructure.launcher.Context`
+        :param copytoraw: copy the required data products from products_dir to
+         rawdata_dir
+        :param products_dir: the directory of archived pipeline products
+        :type products_dir: string
+        :param rawdata_dir: the raw data directory for ASDM(s) and products
+        :type products_dir: string
+        :param output_dir: the working directory for the restored data
+        :type output_dir: string
+        :param session: the  parent session of each vis
+        :type session: a string or list of strings
+        :param vis: the ASDMs(s) for which data is to be restored
+        :type vis: a string or list of strings
+        """                
 
-	# set the properties to the values given as input arguments
-	self._init_properties(vars())
+        # set the properties to the values given as input arguments
+        self._init_properties(vars())
 
     # Session information  may come from the user or the pipeline processing
     # request.
@@ -139,7 +138,7 @@ class RestoreDataInputs(basetask.StandardInputs):
     def rawdata_dir(self):
         if self._rawdata_dir is None:
             self._rawdata_dir = os.path.abspath('../rawdata')
-	elif not self._rawdata_dir:
+        elif not self._rawdata_dir:
             self._rawdata_dir = os.path.abspath('../rawdata')
         return self._rawdata_dir
 
@@ -149,12 +148,12 @@ class RestoreDataInputs(basetask.StandardInputs):
 
     @property
     def session(self):
-	if self._session is None:
-	    self._session = []
-	return self._session
+        if self._session is None:
+            self._session = []
+        return self._session
 
     @session.setter
-    def session (self, value):
+    def session(self, value):
         self._session = value
 
     # MandatoryPipelineInputs raises an exception if vis has not been
@@ -174,12 +173,12 @@ class RestoreDataInputs(basetask.StandardInputs):
 
 class RestoreDataResults(basetask.Results):
     def __init__(self, importdata_results=None, applycal_results=None):
-	"""
-	Initialise the results objects.
-	"""
+        """
+        Initialise the results objects.
+        """
         super(RestoreDataResults, self).__init__()
-	self.importdata_results = importdata_results
-	self.applycal_results = applycal_results
+        self.importdata_results = importdata_results
+        self.applycal_results = applycal_results
         self.mses=[]
 
     def merge_with_context(self, context):
@@ -192,7 +191,7 @@ class RestoreDataResults(basetask.Results):
             if type(self.applycal_results) is types.ListType:
                 for result in self.applycal_results:
                     result.merge_with_context(context)
-	    else:
+            else:
                 self.applycal_results.merge_with_context(context)
 
     def __repr__(self):
@@ -204,7 +203,7 @@ class RestoreData(basetask.StandardTaskTemplate):
     """
     RestoreData is the base class for restoring flagged and calibrated
     data produced during a previous pipeline run and archived on disk.
-	
+        
     - Imports the selected ASDMs from rawdata
     - Imports the flagversions for the selected ASDMs from ../rawdata
     - Imports the calibration data for the selected ASDMs from ../rawdata
@@ -227,164 +226,197 @@ class RestoreData(basetask.StandardTaskTemplate):
         Prepare and execute an export data job appropriate to the
         task inputs.
         """
-	# Create a local alias for inputs, so we're not saying
-	# 'self.inputs' everywhere
-	inputs = self.inputs
+        # Create a local alias for inputs, so we're not saying
+        # 'self.inputs' everywhere
+        inputs = self.inputs
 
-	# Force inputs.vis and inputs.session to be a list.
-	sessionlist = inputs.session
-	if type(sessionlist) is types.StringType:
-	    sesionlist = [sessionlist,]
-	tmpvislist = inputs.vis
-	if type(tmpvislist) is types.StringType:
-	    tmpvislist = [tmpvislist,]
-	vislist = []
-	for vis in tmpvislist:
-	    if os.path.dirname(vis) == '':
-	        vislist.append(os.path.join(inputs.rawdata_dir, vis))
-	    else:
-	        vislist.append(vis)
+        # Force inputs.vis and inputs.session to be a list.
+        sessionlist = inputs.session
+        if type(sessionlist) is types.StringType:
+            sessionlist = [sessionlist,]
+        tmpvislist = inputs.vis
+        if type(tmpvislist) is types.StringType:
+            tmpvislist = [tmpvislist,]
+        vislist = []
+        for vis in tmpvislist:
+            if os.path.dirname(vis) == '':
+                vislist.append(os.path.join(inputs.rawdata_dir, vis))
+            else:
+                vislist.append(vis)
 
-	# Download ASDMs
-	#   Download ASDMs from the archive or products_dir to rawdata_dir.
-	#   TBD: Currently assumed done somehow
+        # Download ASDMs
+        #   Download ASDMs from the archive or products_dir to rawdata_dir.
+        #   TBD: Currently assumed done somehow
 
-	# Download flag versions
-	#   Download from the archive or products_dir to rawdata_dir.
-	if inputs.copytoraw:
-	    inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
-	        '*.flagversions.tar.gz'))
-	    for flagfile in inflagfiles:
-	        LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
-	        shutil.copy (flagfile, os.path.join(inputs.rawdata_dir,
-		    os.path.basename(flagfile)))
+        # Download flag versions
+        #   Download from the archive or products_dir to rawdata_dir.
+        if inputs.copytoraw:
+            inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
+                '*.flagversions.tar.gz'))
+            for flagfile in inflagfiles:
+                LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
+                shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
+                    os.path.basename(flagfile)))
 
-	# Download calibration tables
-	#   Download calibration files from the archive or products_dir to
-	# rawdata_dir.
-	if inputs.copytoraw:
-	    incaltables = glob.glob(os.path.join(inputs.products_dir, \
-	        '*.caltables.tar.gz'))
-	    for caltable in incaltables:
-	        LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
-	        shutil.copy (caltable, os.path.join(inputs.rawdata_dir,
-		    os.path.basename(caltable)))
+        # Download calibration tables
+        #   Download calibration files from the archive or products_dir to
+        # rawdata_dir.
+        if inputs.copytoraw:
+            incaltables = glob.glob(os.path.join(inputs.products_dir, \
+                '*.caltables.tar.gz'))
+            for caltable in incaltables:
+                LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
+                shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
+                    os.path.basename(caltable)))
 
-	# Download calibration apply lists
-	#   Download from the archive or products_dir to rawdata_dir.
-	#   TBD: Currently assumed done somehow
-	if inputs.copytoraw:
-	    inapplycals = glob.glob(os.path.join(inputs.products_dir, \
-	        '*.calapply.txt'))
-	    for applycal in inapplycals:
-	        LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
-	        shutil.copy (applycal, os.path.join(inputs.rawdata_dir,
-		    os.path.basename(applycal)))
+        # Download calibration apply lists
+        #   Download from the archive or products_dir to rawdata_dir.
+        #   TBD: Currently assumed done somehow
+        if inputs.copytoraw:
+            inapplycals = glob.glob(os.path.join(inputs.products_dir, \
+                '*.calapply.txt'))
+            for applycal in inapplycals:
+                LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
+                shutil.copy(applycal, os.path.join(inputs.rawdata_dir,
+                    os.path.basename(applycal)))
 
-	# Convert ASDMS assumed to be on disk in rawdata_dir. After this step
-	# has been completed the MS and MS.flagversions directories will exist
-	# and MS,flagversions will contain a copy of the original MS flags,
-	# Flags.Original.
-	#    TBD: Add error handling
-	import_results = self._do_importasdm(sessionlist=sessionlist,
-	    vislist=vislist)
-	
-	# Restore final MS.flagversions and flags
-	flag_version_name = 'Pipeline_Final'
-	flag_version_list = self._do_restore_flags( \
-	    flag_version_name=flag_version_name)
+        # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
+        # has been completed the MS and MS.flagversions directories will exist
+        # and MS,flagversions will contain a copy of the original MS flags,
+        # Flags.Original.
+        #    TBD: Add error handling
+        import_results = self._do_importasdm(sessionlist=sessionlist,
+            vislist=vislist)
+        
+        # Restore final MS.flagversions and flags
+        flag_version_name = 'Pipeline_Final'
+        flag_version_list = self._do_restore_flags( \
+            flag_version_name=flag_version_name)
 
-	# Get the session list and the visibility files associated with
-	# each session.
-	session_names, session_vislists= self._get_sessions()
+        # Get the session list and the visibility files associated with
+        # each session.
+        session_names, session_vislists= self._get_sessions()
 
-	# Restore calibration tables
-	self._do_restore_caltables(session_names=session_names,
-	    session_vislists=session_vislists)
+        # Restore calibration tables
+        self._do_restore_caltables(session_names=session_names,
+            session_vislists=session_vislists)
 
-	# Import calibration apply lists
-	self._do_restore_calstate()
+        # Import calibration apply lists
+        self._do_restore_calstate()
 
-	# Apply the calibrations.
-	apply_results = self._do_applycal()
+        # Apply the calibrations.
+        apply_results = self._do_applycal()
 
-	# Return the results object, which will be used for the weblog
-	return RestoreDataResults(import_results, apply_results)
+        # Return the results object, which will be used for the weblog
+        return RestoreDataResults(import_results, apply_results)
 
     def analyse(self, results):
-	"""
-	Analyse the results of the export data operation.
-		
-	This method does not perform any analysis, so the results object is
-	returned exactly as-is, with no data massaging or results items
-	added.
-		
-	:rtype: :class:~`ExportDataResults`		
-	"""
-	return results
+        """
+        Analyse the results of the export data operation.
+                
+        This method does not perform any analysis, so the results object is
+        returned exactly as-is, with no data massaging or results items
+        added.
+                
+        :rtype: :class:~`ExportDataResults`                
+        """
+        return results
 
-    def _do_importasdm (self, sessionlist, vislist):
-	inputs = self.inputs
+    def _do_importasdm(self, sessionlist, vislist):
+        inputs = self.inputs
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
-	    vis=vislist, session=sessionlist, save_flagonline=False)
-	importdata_task = importdata.ImportData(importdata_inputs)
-	return self._executor.execute(importdata_task, merge=True)
+            vis=vislist, session=sessionlist, save_flagonline=False)
+        importdata_task = importdata.ImportData(importdata_inputs)
+        return self._executor.execute(importdata_task, merge=True)
 
     def  _do_restore_flags(self, flag_version_name='Pipeline_Final'):
-	inputs = self.inputs
-	flagversionlist = []
+        inputs = self.inputs
+        flagversionlist = []
 
         # Loop over MS list in working directory
-	for ms in inputs.context.observing_run.measurement_sets:
+        for ms in inputs.context.observing_run.measurement_sets:
 
-	    # Remove imported MS.flagversions from working directory
-	    flagversion = ms.basename + '.flagversions'
-	    flagversionpath = os.path.join (inputs.output_dir, flagversion)
-	    if os.path.exists(flagversionpath):
-	        LOG.info('Removing default flagversion for %s' % (ms.basename))
-	        if not self._executor._dry_run:
-	            shutil.rmtree (flagversionpath)
+            # Remove imported MS.flagversions from working directory
+            flagversion = ms.basename + '.flagversions'
+            flagversionpath = os.path.join(inputs.output_dir, flagversion)
+            if os.path.exists(flagversionpath):
+                LOG.info('Removing default flagversion for %s' % (ms.basename))
+                if not self._executor._dry_run:
+                    shutil.rmtree(flagversionpath)
 
-	    # Untar MS.flagversions file in rawdata_dir to output_dir
-	    tarfilename = os.path.join (inputs.rawdata_dir,
-	        ms.basename + '.flagversions.tar.gz')
-	    LOG.info('Extracting %s' % (flagversion))
-	    LOG.info('    From %s' % (tarfilename))
-	    LOG.info('    Into %s' % (inputs.output_dir))
-	    tar = tarfile.open(tarfilename, 'r:gz')
-	    if not self._executor._dry_run:
-		tar.extractall (path=inputs.output_dir)
-	    tar.close()
+            # Untar MS.flagversions file in rawdata_dir to output_dir
+            tarfilename = os.path.join(inputs.rawdata_dir,
+                ms.basename + '.flagversions.tar.gz')
+            LOG.info('Extracting %s' % flagversion)
+            LOG.info('    From %s' % tarfilename)
+            LOG.info('    Into %s' % inputs.output_dir)
+            with tarfile.open(tarfilename, 'r:gz') as tar:
+                if not self._executor._dry_run:
+                    tar.extractall(path=inputs.output_dir)
 
-	    # Restore final flags version using flagmanager
-	    LOG.info('Restoring final flags for %s from flag version %s' % \
-		     (ms.basename, flag_version_name))
-	    if not self._executor._dry_run:
-		task = casa_tasks.flagmanager(vis=ms.name, mode='restore',
-		    versionname=flag_version_name)
-	        self._executor.execute (task)
+            # Restore final flags version using flagmanager
+            LOG.info('Restoring final flags for %s from flag version %s' % \
+                     (ms.basename, flag_version_name))
+            if not self._executor._dry_run:
+                task = casa_tasks.flagmanager(vis=ms.name, 
+                                              mode='restore',
+                                              versionname=flag_version_name)
+                self._executor.execute(task)
 
-	    flagversionlist.append(flagversionpath)
+            flagversionlist.append(flagversionpath)
 
-	return flagversionlist
+        return flagversionlist
 
     def _do_restore_calstate(self):
-	inputs = self.inputs
+        inputs = self.inputs
 
         # Loop over MS list in working directory
-	append = False
-	for ms in inputs.context.observing_run.measurement_sets:
-	    applyfile_name = os.path.join (inputs.rawdata_dir,
-	        ms.basename + '.calapply.txt')
-	    LOG.info('Restoring calibration state for %s from  %s' % \
-	        (ms.basename, applyfile_name))
-	    if not self._executor._dry_run:
-		inputs.context.callibrary.import_state(applyfile_name,
-		    append=append)
-	    append = True
+        append = False
+        for ms in inputs.context.observing_run.measurement_sets:
+            applyfile_name = os.path.join(inputs.rawdata_dir,
+                                          ms.basename + '.calapply.txt')
+            LOG.info('Restoring calibration state for %s from %s'
+                     '' % (ms.basename, applyfile_name))
+
+            if not self._executor._dry_run:
+                # Write converted calstate to a temporary file and use this
+                # for the import. the temporary file will automatically be
+                # deleted once out of scope
+                with tempfile.NamedTemporaryFile() as tmpfile:
+                    LOG.trace('Writing converted calstate to %s'
+                              '' % tmpfile.name)
+                    converted = self._convert_calstate_paths(applyfile_name)
+                    tmpfile.write(converted)
+                    tmpfile.flush()
+                    
+                    inputs.context.callibrary.import_state(tmpfile.name,
+                                                           append=append)
+            append = True
+
+    def _convert_calstate_paths(self, applyfile):
+        """
+        Convert paths in the exported calstate to point to the new output
+        directory.
+        
+        Returns the converted commands as a list of strings
+        """
+
+        # regex to match unix paths
+        unix_path = re.compile('((?:\\/[\\w\\.\\-]+)+)', 
+                               re.IGNORECASE|re.DOTALL)
+
+        # define a function that replaces directory names with our new output
+        # directory
+        def repfn(matchobj):
+            basename = os.path.basename(matchobj.group(0))
+            return os.path.join(self.inputs.output_dir, basename)
+        
+        # search-and-replace directory names in the exported calstate file
+        with open(applyfile, 'r') as f:
+            return unix_path.sub(repfn, f.read())
 
     def _do_restore_caltables(self, session_names=None, session_vislists=None):
-	inputs = self.inputs
+        inputs = self.inputs
 
         # Determine the OUS uid
         ps = inputs.context.project_structure
@@ -394,108 +426,106 @@ class RestoreData(basetask.StandardTaskTemplate):
             ousid = ''
         else:
             ousid = ps.ousstatus_entity_id.translate( \
-	        string.maketrans(':/', '__')) + '.'
+                string.maketrans(':/', '__')) + '.'
 
         # Loop over sessions
-	for index, session in enumerate(session_names):
+        for index, session in enumerate(session_names):
 
             # Get the visibility list for that session.
-	    vislist = session_vislists[index]
+            vislist = session_vislists[index]
 
-	    # Open the tarfile and get the names
-	    if ousid == '':
-	        tarfilename = glob.glob(os.path.join (inputs.rawdata_dir, '*' + session +
-	            '.caltables.tar.gz'))[0]
-	    else:
-	        tarfilename = os.path.join (inputs.rawdata_dir, ousid + session +
-	            '.caltables.tar.gz')
-	    tar = tarfile.open(tarfilename, 'r:gz')
-	    tarmembers = tar.getmembers()
+            # Open the tarfile and get the names
+            if ousid == '':
+                tarfilename = glob.glob(os.path.join(inputs.rawdata_dir, '*' + session +
+                    '.caltables.tar.gz'))[0]
+            else:
+                tarfilename = os.path.join(inputs.rawdata_dir, 
+                                           ousid + session + '.caltables.tar.gz')
 
-	    # Loop over the visibilities associated with that session
-	    for vis in vislist:
-	        LOG.info('Restoring caltables for %s' % \
-                    (os.path.basename(vis)))
-	        LOG.info('    From  %s' % (tarfilename))
-		extractlist = []
-		for member in tarmembers:
-		    if member.name.startswith(os.path.basename(vis)):
-		        extractlist.append(member)
-		        if member.name.endswith('.tbl/'):
-	                    LOG.info('    Extracting caltable  %s' % (member.name))
-		if not self._executor._dry_run:
-		    if len(extractlist) == len(tarmembers):
-		        tar.extractall(path=inputs.output_dir)
-		    else:
-		        tar.extractall(path=inputs.output_dir,
-			    members=extractlist)
-
-	    tar.close()
+            with tarfile.open(tarfilename, 'r:gz') as tar:
+                tarmembers = tar.getmembers()
+    
+                # Loop over the visibilities associated with that session
+                for vis in vislist:
+                    LOG.info('Restoring caltables for %s from %s'
+                             '' % (os.path.basename(vis), tarfilename))
+                    extractlist = []
+                    for member in tarmembers:
+                        if member.name.startswith(os.path.basename(vis)):
+                            extractlist.append(member)
+                            if member.name.endswith('.tbl/'):
+                                LOG.info('    Extracting caltable %s' % member.name)
+                    if not self._executor._dry_run:
+                        if len(extractlist) == len(tarmembers):
+                            tar.extractall(path=inputs.output_dir)
+                        else:
+                            tar.extractall(path=inputs.output_dir,
+                                           members=extractlist)
        
-    def _do_applycal (self):
-	inputs = self.inputs
+    def _do_applycal(self):
+        inputs = self.inputs
         applycal_inputs = applycal.Applycal.Inputs(inputs.context)
-	applycal_task = applycal.Applycal(applycal_inputs)
-	return self._executor.execute(applycal_task, merge=True)
+        applycal_task = applycal.Applycal(applycal_inputs)
+        return self._executor.execute(applycal_task, merge=True)
 
-    def _get_sessions (self, sessions=[], vis=[]):
+    def _get_sessions(self, sessions=[], vis=[]):
 
         """
-	Return a list of sessions where each element of the list contains
-	the  vis files associated with that session. If sessions is
-	undefined the context is searched for session information
-	"""
+        Return a list of sessions where each element of the list contains
+        the  vis files associated with that session. If sessions is
+        undefined the context is searched for session information
+        """
 
-	inputs = self.inputs
+        inputs = self.inputs
 
-	# Get the MS list from the context by default.
-	if len(vis) == 0:
-	    wkvis = []
-	    for ms in inputs.context.observing_run.measurement_sets:
-	        wkvis.append(ms.name)
-	else:
-	    wkvis = vis
+        # Get the MS list from the context by default.
+        if len(vis) == 0:
+            wkvis = []
+            for ms in inputs.context.observing_run.measurement_sets:
+                wkvis.append(ms.name)
+        else:
+            wkvis = vis
 
-	# If the input session list is empty determine the sessions from 
-	# the context.
-	if len(sessions) == 0:
-	    wksessions = [] 
-	    for visname in wkvis:
-	        session = inputs.context.observing_run.get_ms(name=visname).session
-		wksessions.append(session)
-	else:
-	    wksessions = sessions
+        # If the input session list is empty determine the sessions from 
+        # the context.
+        if len(sessions) == 0:
+            wksessions = [] 
+            for visname in wkvis:
+                session = inputs.context.observing_run.get_ms(name=visname).session
+                wksessions.append(session)
+        else:
+            wksessions = sessions
 
-	# Determine the number of unique sessions.
-	session_seqno = 0; session_dict = {}
-	for i in range(len(wksessions)): 
-	    if wksessions[i] not in session_dict:
-	        session_dict[wksessions[i]] = session_seqno
-		session_seqno = session_seqno + 1
+        # Determine the number of unique sessions.
+        session_seqno = 0; session_dict = {}
+        for i in range(len(wksessions)): 
+            if wksessions[i] not in session_dict:
+                session_dict[wksessions[i]] = session_seqno
+                session_seqno = session_seqno + 1
 
-	# Initialize the output session names and visibility file lists
-	session_names = []
-	session_vis_list = []
-	for key, value in sorted(session_dict.iteritems(), \
-	    key=lambda(k,v): (v,k)):
-	    session_names.append(key)
-	    session_vis_list.append([])
+        # Initialize the output session names and visibility file lists
+        session_names = []
+        session_vis_list = []
+        for key, _ in sorted(session_dict.iteritems(), 
+                             key=lambda(k,v): (v,k)):
+            session_names.append(key)
+            session_vis_list.append([])
 
-	# Assign the visibility files to the correct session
-	for j in range(len(wkvis)): 
-	    # Match the session names if possible 
-	    if j < len(wksessions):
-		for i in range(len(session_names)):
-		    if wksessions[j] == session_names[i]:
-		         session_vis_list[i].append(wkvis[j])
-	    # Assign to the last session
-	    else:
-		session_vis_list[len(session_names)-1].append(wkvis[j])
+        # Assign the visibility files to the correct session
+        for j in range(len(wkvis)): 
+            # Match the session names if possible 
+            if j < len(wksessions):
+                for i in range(len(session_names)):
+                    if wksessions[j] == session_names[i]:
+                        session_vis_list[i].append(wkvis[j])
+            # Assign to the last session
+            else:
+                session_vis_list[len(session_names)-1].append(wkvis[j])
 
-	# Log the sessions
-	for i in range(len(session_vis_list)):
-	    LOG.info('Visibility list for session %s is %s' % \
-	    (session_names[i], session_vis_list[i]))
-	        
-	return session_names, session_vis_list
+        # Log the sessions
+        for i in range(len(session_vis_list)):
+            LOG.info('Visibility list for session %s is %s' % \
+            (session_names[i], session_vis_list[i]))
+                
+        return session_names, session_vis_list
 
