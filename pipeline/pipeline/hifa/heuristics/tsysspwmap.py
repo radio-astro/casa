@@ -169,8 +169,8 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
 
     if trim :
         LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
-        return trimSpwmap(applyCalSpwMap)
+        return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
     else :
         LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
-        return applyCalSpwMap
+        return spwWithoutMatch, applyCalSpwMap
 
