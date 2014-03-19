@@ -1939,7 +1939,22 @@ namespace casa {
 	asdmFieldId_p.define(irow, tR->getFieldId());
       }
       else{
-	os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	if(sId == tR2->getSourceId()){ // if also the Source ID agrees, we really have a duplication
+	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	  return False;
+	}
+	fieldName = fieldName+"_B";
+	tR->setFieldName(fieldName);
+	tR2 = tT.add(tR);
+	if(tR2 == tR){ // adding this row caused a new tag to be defined
+	  os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << endl
+	     << "   appended \"_B\" to field name for second occurrence. New field name: " << fieldName << LogIO::POST;
+	  asdmFieldId_p.define(irow, tR->getFieldId());
+	}
+	else{
+	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	  return False;
+	} 
       }
     } // end loop over MS field table
 
