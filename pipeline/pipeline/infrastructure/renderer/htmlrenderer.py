@@ -374,6 +374,17 @@ class T1_1Renderer(RendererBase):
     """
     output_file = 't1-1.html'
     template = 't1-1.html'
+    
+    
+    # named tuple holding values for each row in the main summary table
+    TableRow = collections.namedtuple(
+                'Tablerow', 
+                'ms href filesize ' 
+                'receivers '
+                'num_antennas beamsize_min beamsize_max '
+                'time_start time_end time_on_source '
+                'baseline_min baseline_max baseline_rms')
+    
 
     @staticmethod
     def get_display_context(context):
@@ -398,6 +409,58 @@ class T1_1Renderer(RendererBase):
         qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
 
         out_fmt = '%Y-%m-%d %H:%M:%S'
+        
+        
+        #Observation Summary (formerly the T1-2 page)
+        ms_summary_rows = []
+        for ms in context.observing_run.measurement_sets:
+            href = os.path.join('t2-1.html?ms=%s' % ms.basename)
+
+            num_antennas = len(ms.antennas)
+            # times should be passed as Python datetimes
+            time_start = utils.get_epoch_as_datetime(ms.start_time)
+            time_start = utils.format_datetime(time_start)
+            time_end = utils.get_epoch_as_datetime(ms.end_time)
+            time_end = utils.format_datetime(time_end)
+
+            target_scans = [s for s in ms.scans if 'TARGET' in s.intents]
+            time_on_source = utils.total_time_on_source(target_scans)
+            time_on_source = utils.format_timedelta(time_on_source)
+           
+            baseline_min = ms.antenna_array.min_baseline.length
+            baseline_max = ms.antenna_array.max_baseline.length
+            
+            # compile a list of primitive numbers representing the baseline 
+            # lengths in metres..
+            bls = [bl.length.to_units(measures.DistanceUnits.METRE)
+                   for bl in ms.antenna_array.baselines]
+            # .. so that we can calculate the RMS baseline length with 
+            # consistent units
+            baseline_rms = math.sqrt(sum(bl**2 for bl in bls)/len(bls))
+            baseline_rms = measures.Distance(baseline_rms,
+                                             units=measures.DistanceUnits.METRE)
+ 
+            science_spws = ms.get_spectral_windows(science_windows_only=True)
+            receivers = sorted(set(spw.band for spw in science_spws))
+
+            row = T1_1Renderer.TableRow(ms=ms.basename,
+                                        href=href,
+                                        filesize=ms.filesize,
+                                        receivers=receivers,                           
+                                        num_antennas=num_antennas,
+                                        beamsize_min='TODO',
+                                        beamsize_max='TODO',
+                                        time_start=time_start,
+                                        time_end=time_end,
+                                        time_on_source=time_on_source,
+                                        baseline_min=baseline_min,
+                                        baseline_max=baseline_max,
+                                        baseline_rms=baseline_rms)
+        
+            ms_summary_rows.append(row)
+        
+        
+        
         return {'pcontext'          : context,
                 'casa_version'      : casadef.casa_version,
                 'casa_revision'     : casadef.subversion_revision,
@@ -414,7 +477,8 @@ class T1_1Renderer(RendererBase):
                 'ous_uid'           : context.project_structure.ous_entity_id,
                 'ppr_uid'           : None,
                 'observers'         : observers,
-                'qa2adapter'        : qa2results}
+                'qa2adapter'        : qa2results,
+                'ms_summary_rows'   : ms_summary_rows}
 
 
 class T1_2Renderer(RendererBase):

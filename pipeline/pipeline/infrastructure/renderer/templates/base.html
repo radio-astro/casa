@@ -53,9 +53,6 @@ ${pcontext.project_summary.proposal_code} -
 				% endif				
 				<li class="${'active' if self.attr.navbar_active == 'Home' else ''}"><a href="t1-1.html"><i class="icon-home"></i> Home</a></li>
 				% if pcontext.logtype != 'GOUS':
-				<li class="${'active' if self.attr.navbar_active == 'Observation Summary' else ''}"><a href="t1-2.html">Observation Summary</a></li>
-				% endif
-				% if pcontext.logtype != 'GOUS':
 				<li class="${'active' if self.attr.navbar_active == 'By Topic' else ''}"><a href="#" class="disabled">By Topic</a></li>
 				% endif
 				<li class="${'active' if self.attr.navbar_active == 'By Task' else ''}"><a href="t1-4.html">By Task</a></li>

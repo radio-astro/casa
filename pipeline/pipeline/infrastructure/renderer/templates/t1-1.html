@@ -1,5 +1,11 @@
 <%!
 navbar_active='Home'
+
+import datetime
+import pipeline.domain.measures as measures
+import pipeline.infrastructure.utils as utils
+
+
 %>
 <%inherit file="base.html"/>
 
@@ -18,26 +24,8 @@ navbar_active='Home'
 			<tbody>
 		% if project_id is not None:
 				<tr>
-					<th>Project Title</th>
+					<th>Project</th>
 					<td>${project_uids}</td>
-				</tr>
-		% endif
-		% if ous_uid != 'unknown':
-				<tr>
-					<th>OUS Status Entity id</th>
-					<td>${ous_uid}</td>
-				</tr>
-		% endif
-		% if schedblock_id is not None:
-				<tr>
-					<th>SchedBlock UID</th>
-					<td>${schedblock_uids}</td>
-				</tr>
-		% endif
-		% if execblock_id is not None:
-				<tr>
-					<th>ExecBlock UID</th>
-					<td>${execblock_uids}</td>
 				</tr>
 		% endif
 		% if observer is not None:
@@ -46,21 +34,32 @@ navbar_active='Home'
 					<td>${observers}</td>
 				</tr>
 		% endif
+		
+		% if ous_uid != 'unknown':
+				<tr>
+					<th>OUS Status Entity id</th>
+					<td>${ous_uid}</td>
+				</tr>
+		% endif
 				<tr>
 					<th>Observation Start</th>
-					<td>${obs_start}</td>
+					<td>${obs_start} &nbsp; UTC</td>
 				</tr>
 				<tr>
 					<th>Observation End</th>
-					<td>${obs_end}</td>
+					<td>${obs_end} &nbsp; UTC</td>
 				</tr>
+		
+
 			</tbody>
 		</table>
 	</div>
 
-	<div class="span6">		
-		<h2>Quality Assessment</h2>
-		
+
+
+	<div class="span6">
+		<h2>Pipeline Summary</h2>
+
 		<table class="table table-condensed">
 			<thead>
 				<tr>
@@ -71,51 +70,58 @@ navbar_active='Home'
 				</tr>
 			</thead>
 			<tbody>
-				<tr>
-					<td>Total</td>
-					<td></td>
-					<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
-					<td><span class="badge">N/A</span></td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
-</div>
-
-<div class="row-fluid">
-	<div class="span6">
-		<h2>Pipeline Execution Summary</h2>
-
-		<table class="table table-condensed">
-			<thead>
-				<tr>
-					<th class="span5"></th>
-					<th class="span7"></th>
-				</tr>
-			</thead>
-			<tbody>
 		% if ppr_uid is not None:
 				<tr>
 					<th>PPR ID</th>
-					<td></td>					
+					<td></td>
+					<td></td>
+					<td></td>
 				</tr>
 		% endif
 				<tr>
 					<th>Pipeline Version</th>
 					<td>${pipeline_revision}</td>					
+					<td></td>
+					<td></td>
 				</tr>
 				<tr>
 					<th>CASA Version</th>
 					<td>${casa_version} r${casa_revision}</td>					
+					<td></td>
+					<td></td>
 				</tr>
 				<tr>
 					<th>Pipeline Start</th>
-					<td>${exec_start}</td>					
+					<td>${exec_start} &nbsp; UTC</td>
+					<td></td>
+					<td></td>
 				</tr>
 				<tr>
 					<th>Execution Duration</th>
-					<td>${exec_duration}</td>					
+					<td>${exec_duration}</td>
+					<td></td>
+					<td></td>
 				</tr>
+				<tr>
+					<th>QA Total</th>
+					<td></td>
+					<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
+					<td><span class="badge">N/A</span></td>
+				</tr>
+				% for section in qa2adapter.sections.values():
+				<tr>
+					<td>&nbsp;&nbsp;&nbsp;&nbsp;<a href="${section.url}">${section.description}</a></td>
+                                        <td></td>
+					<td><div class="progress" style="margin-bottom:0px;">
+					      <div class="bar" style="width:0%;">
+					        <span class="text-center"></span>
+					      </div>
+					    </div>
+					</td>
+					<td><span class="badge">N/A</span></td>
+
+				</tr>
+				% endfor
 			</tbody>
 		</table>								
 <!-- 
@@ -129,31 +135,49 @@ navbar_active='Home'
 		% endif
  -->
 	</div>
+
+
+
+<h2>Measurement Sets</h2>
+
+
+<table class="table table-bordered table-striped table-condensed" 
+	   summary="Measurement Set Summaries">
 	
-	<div class="span6">		
-		<h2>QA2 Summary by Topic</h2>
-		
-		<table class="table table-condensed">
-			<thead>
-				<tr>
-					<th class="span3"></th>
-					<th class="span6"></th>
-					<th class="span2"></th>
-					<th class="span1"></th>
-				</tr>
-			</thead>
-			<tbody>
-				% for section in qa2adapter.sections.values():
-				<tr>
-					<td><a href="${section.url}">${section.description}</a></td>
-					<td></td>
-					<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
-					<td><span class="badge">N/A</span></td>
-				</tr>
-				% endfor
-			</tbody>
-		</table>
-	</div>
-	
-</div>
-	
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2">Measurement Set</th>
+            <th scope="col" rowspan="2">Receivers</th>
+            <th scope="col" rowspan="2">Num Antennas</th>
+            <th scope="col" colspan="3">Time (UTC)</th>
+			<!-- break heading divider for subcolumns -->
+            <th scope="col" colspan="3">Baseline Length</th>
+            <th scope="col" rowspan="2">Size</th>
+        </tr>
+        <tr>
+            <th scope="col">Start</th>
+            <th scope="col">End</th>
+            <th scope="col">On Source</th>
+            <th scope="col">Min</th>
+            <th scope="col">Max</th>
+            <th scope="col">RMS</th>
+        </tr>
+    </thead>
+	<tbody>
+		% for row in ms_summary_rows:
+		<tr>
+		  <td><a href="${row.href}">${row.ms}</a></td>
+		  <td>${utils.commafy(row.receivers)}</td>
+		  <td>${row.num_antennas}</td>
+		  <td>${row.time_start}</td>
+		  <td>${row.time_end}</td>
+		  <td>${row.time_on_source}</td>
+		  <td>${str(row.baseline_min)}</td>
+		  <td>${str(row.baseline_max)}</td>
+		  <td>${str(row.baseline_rms)}</td>
+		  <td>${str(row.filesize)}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+
