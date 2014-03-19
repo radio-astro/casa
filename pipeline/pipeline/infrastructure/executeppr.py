@@ -38,7 +38,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 
     try:
         # Decode the processing request
-        info, structure, relativePath, intentsDict, asdmList, commandsList = \
+        info, structure, relativePath, intentsDict, asdmList, procedureName, commandsList = \
             _getFirstRequest (pprXmlFile)
 
 	# Set the directories
@@ -154,9 +154,10 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     # Paths for all these ASDM should be the same
     #     Add check for this ?
 
-
     # Beginning execution
     casatools.post_to_log ("\nStarting procedure execution ...\n", 
+        echo_to_screen=echo_to_screen)
+    casatools.post_to_log ("Procedure name: " + procedureName + "\n", 
         echo_to_screen=echo_to_screen)
 
     # Loop over the commands
@@ -286,7 +287,7 @@ def _getFirstRequest (pprXmlFile):
     #print 'Intents dictionary: ', intentsDict
 
     # Get the commands list
-    numCommands, commandsList  = _getCommands (pprObject=pprObject,
+    procedureName, numCommands, commandsList  = _getCommands (pprObject=pprObject,
         requestId=0, numRequests=numRequests) 
     #print 'Number of commands: ', numCommands
     #print 'Commands list: ', commandsList
@@ -311,7 +312,7 @@ def _getFirstRequest (pprXmlFile):
     #print 'Number of Asdms: ', numAsdms
     #print 'ASDM list: ', asdmList
 
-    return info, structure, relativePath, intentsDict, asdmList, commandsList
+    return info, structure, relativePath, intentsDict, asdmList, procedureName, commandsList
 
 # Give the path to the pipeline processing request XML file return the pipeline
 # processing request object.
@@ -512,6 +513,10 @@ def _getCommands (pprObject, requestId, numRequests):
     else:
         ppr_cmds = pprObject.SciPipeRequest.ProcessingRequests.ProcessingRequest[requestId].ProcessingProcedure
 
+    try:
+        procedureName = ppr_cmds.ProcedureTitle 
+    except Exception, e:
+        procedureName = "Undefined"
     commandsList = []
     numCommands = 0
 
@@ -533,7 +538,7 @@ def _getCommands (pprObject, requestId, numRequests):
 	    except Exception, e:
 	        search = 0
 
-    return numCommands, commandsList
+    return procedureName, numCommands, commandsList
 
 # Given the pipeline processing request object return the number of scheduling
 # block sets.
