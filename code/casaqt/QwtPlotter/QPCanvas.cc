@@ -71,7 +71,7 @@ const String QPCanvas::DRAW_NAME = "drawItems";
 
 
 bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
-		double widgetHeight,int externalAxisWidth, int /*externalAxisHeight*/,
+		double widgetHeight, int externalAxisWidth, int externalAxisHeight,
 		int rowIndex, int colIndex, QRect /*imageRect*/ ){
 	PlotAreaFillPtr originalBackground = background();
 	setBackground(*paf);
@@ -79,28 +79,17 @@ bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidt
 	//Decide the print rectangle inside the image rectangle.
 	QRect printGeom;
 
-	/*if ( isVisible() ){
-		QRect geom = geometry();
-		double widthRatio = 1;
-		double heightRatio = 1;
-		printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
-	                          (int)((geom.y() * heightRatio) + 0.5),
-	                          (int)((geom.width() * widthRatio) + 0.5),
-	                          (int)((geom.height() * heightRatio) + 0.5));
-		printGeom &= imageRect;
+	int widthMultiplier = colIndex;
+	if ( colIndex >= 1 && commonY && externalAxisWidth > 0 ){
+		widthMultiplier = colIndex - 1;
 	}
-	else {*/
-		//Note we have to get the position and size differently in scripting mode,
-		//because paint calls do not update the widget when it is hidden.
-		int widthMultiplier = colIndex;
-		if ( colIndex >= 1 && commonY ){
-			widthMultiplier = colIndex - 1;
-		}
-		int xPosition = static_cast<int>(widthMultiplier * widgetWidth + externalAxisWidth);
-		int yPosition = static_cast<int>(rowIndex * widgetHeight);
-		printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
+	int heightMultiplier = rowIndex;
+
+	int xPosition = static_cast<int>(widthMultiplier * widgetWidth + externalAxisWidth);
+	int yPosition = static_cast<int>(heightMultiplier * widgetHeight + externalAxisHeight );
+	printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
 			static_cast<int>(widgetHeight));
-	//}
+
 
 	QColor titleColor = asQwtPlot().title().color();
 
@@ -144,7 +133,8 @@ bool QPCanvas::print( QPrinter& printer ){
 		 continuePrinting = false;
 	 }
 	 else {
-		 print(printer);
+
+		 asQwtPlot().print(printer);
 
 	        // For bug where title color changes after a print.
 		 QwtText title = asQwtPlot().title();
@@ -476,8 +466,9 @@ void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
 
 	QwtPlot::Axis plotAxis = QPOptions::axis( axis );
     m_canvas.setAxisTitle(plotAxis, actualTitle.c_str());
-    enableAxis( plotAxis, true );
-
+    if ( title.length() > 0 ){
+    	enableAxis( plotAxis, true );
+    }
 }
 
 PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
@@ -548,7 +539,9 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
                            QPOptions::rasterMap(*vals));
         delete vals;
     }
+
     enableAxis( QPOptions::axis(axis), true );
+
     if(v.first != v.second) setAxisRange(axis, v.first, v.second);
     else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
 }
@@ -563,6 +556,7 @@ prange_t QPCanvas::axisRange(PlotAxis axis) const {
     return prange_t(div->lowerBound(), div->upperBound());
 #endif
 }
+
 
 
 

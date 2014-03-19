@@ -328,26 +328,15 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	baseFileName = baseFileName.substr(0, periodIndex );
     }
 
-    PlotMSParameters params = itsParent_->getParameters();
-    int rowCount = params.getRowCount();
-    int colCount = params.getColCount();
-    int gridSize = rowCount * colCount;
     for ( int i = 0; i < pageCount; i++ ){
     	if ( i > 0 ){
     		//Remove the last '.' from the storage location.
     		String pageStr = String::toString( i+1 );
     		exportFormat.location = baseFileName + pageStr + suffix;
     	}
-    	if( gridSize == 1 ){
-    		exportSuccess = canv[0]->exportToFile(exportFormat);
-    		break;
-    	}
-    	else if ( gridSize > 1){
-    		exportSuccess = itsParent_->exportToFormat( exportFormat );
-    	}
+    	exportSuccess = itsParent_->exportToFormat( exportFormat );
 
     	nextIter();
-
     }
 
     //Restore the current page

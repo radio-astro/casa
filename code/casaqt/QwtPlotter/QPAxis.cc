@@ -58,34 +58,9 @@ const String QPAxis::CLASS_NAME = "QPAxis";
 const String QPAxis::DRAW_NAME = "drawItems";
 
 
+bool QPAxis::print( QPrinter& /*printer*/ ){
 
-
-
-bool QPAxis::print( QPrinter& printer ){
-	 // Set orientation.
-	 bool continuePrinting = true;
-	 //printer.setOrientation(width() >= height() ?
-	  //                    QPrinter::Landscape : QPrinter::Portrait);
-
-	 PlotOperationPtr op = operationExport();
-	 bool wasCanceled = false;
-	 if(!op.null()){
-		 wasCanceled |= op->cancelRequested();
-	 }
-	 if(wasCanceled){
-		 continuePrinting = false;
-	 }
-	 else {
-		 print(printer);
-
-		 if(!op.null()){
-			 wasCanceled |= op->cancelRequested();
-		 }
-		 if(wasCanceled){
-			 continuePrinting = false;
-		 }
-	 }
-	 return continuePrinting;
+	 return false;
 }
 
 const QPalette& QPAxis::palette() const {
@@ -102,33 +77,20 @@ bool QPAxis::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
 	PlotAreaFillPtr originalBackground = background();
 	setBackground(*paf);
 
-	//double widthRatio = imageRect.width() / widgetWidth;
-	//double heightRatio = imageRect.height() / widgetHeight;
 	QRect printGeom;
-	/*if ( isVisible() ){
-		double widthRatio = 1;
-		double heightRatio = 1;
-		QRect geom = geometry();
-		printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
-	                          (int)((geom.y() * heightRatio) + 0.5),
-	                          (int)((geom.width() * widthRatio) + 0.5),
-	                          (int)((geom.height() * heightRatio) + 0.5));
-		printGeom &= imageRect;
-	}
-	else {*/
-		if ( isVertical()){
-			int xPosition = 0;
-			int yPosition = static_cast<int>(rowIndex * widgetHeight);
-			printGeom = QRect( xPosition, yPosition, axisWidth,
+
+	if ( isVertical()){
+		int xPosition = static_cast<int>(colIndex * widgetWidth );
+		int yPosition = static_cast<int>(rowIndex * widgetHeight + axisHeight);
+		printGeom = QRect( xPosition, yPosition, axisWidth,
 					static_cast<int>(widgetHeight));
-		}
-		else {
-			int xPosition = static_cast<int>(colIndex * widgetWidth + axisWidth);
-			int yPosition = static_cast<int>(rowIndex * widgetHeight);
-			printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
+	}
+	else {
+		int xPosition = static_cast<int>(colIndex * widgetWidth + axisWidth);
+		int yPosition = static_cast<int>(rowIndex * widgetHeight);
+		printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
 								axisHeight);
-		}
-	//}
+	}
 
 	PlotOperationPtr op = operationExport();
 	bool wasCanceled = false;
@@ -215,8 +177,11 @@ QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot) : 
     
     QSizePolicy sizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
     const int AXIS_SMALL_SIDE = 50;
+
+
     //Make the external axis we will be using
     if ( plotAxis  == Y_LEFT ){
+
     	axisWidget = new ExternalAxisWidgetLeft( this, associatedPlot );
     	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
     	setFixedWidth( AXIS_SMALL_SIDE );
@@ -229,6 +194,7 @@ QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot) : 
     	setMinimumHeight( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == Y_RIGHT ){
+
     	axisWidget = new ExternalAxisWidgetRight( this, associatedPlot );
     	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
     	setFixedWidth( AXIS_SMALL_SIDE );
@@ -365,11 +331,7 @@ PlotAxisBitset  QPAxis::shownAxes() const {
 
 
 void QPAxis::showAxes(PlotAxisBitset /*axes*/) {
-    /*bool show;
-    for(int i = 0; i < QwtPlot::axisCnt;  i++) {
-    show = axes & QPOptions::axis(QwtPlot::Axis(i));
-        m_canvas.enableAxis(QwtPlot::Axis(i), show);
-    }*/
+
 }
 
 

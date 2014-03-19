@@ -634,7 +634,7 @@ void PlotMSOverPlot::clearCanvasProperties( int row, int col){
 }
 
 void PlotMSOverPlot::setCanvasProperties (int row, int col,
-		PMS_PP_Cache* cacheParams, PMS_PP_Axes* axesParams,//PlotAxis cx, PlotAxis cy, PMS::Axis x, PMS::Axis y,
+		PMS_PP_Cache* cacheParams, PMS_PP_Axes* axesParams,
 		bool set, PMS_PP_Canvas *canv, uInt rows, uInt cols,
 	    PMS_PP_Iteration *iter, uInt iteration) {
 
@@ -643,11 +643,29 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		return;
 	}
 
+
+
+	// Show/hide axes
+	canvas->showAllAxes(false);
+	//ShowX and showY determine whether axes are visible at
+	//all.  For visible axes, there is the option of sharing
+	//them (common) or for each plot to manage its own.
+	bool commonX = iter->isCommonAxisX();
+	bool commonY = iter->isCommonAxisY();
+	canvas->setCommonAxes( commonX, commonY );
+	bool showX = set && canv->xAxisShown();
+	bool showY = set && canv->yAxisShown();
+	PlotAxis cx = axesParams->xAxis();
+	canvas->showAxis(cx, showX);
+	int yAxisCount = axesParams->numYAxes();
+	for ( int i = 0; i < yAxisCount; i++ ){
+		PlotAxis cy = axesParams->yAxis( i );
+		canvas->showAxis(cy, showY);
+	}
+
 	// Set axes scales
 	PMS::Axis x = cacheParams->xAxis();
-	PlotAxis cx = axesParams->xAxis();
 	canvas->setAxisScale(cx, PMS::axisScale(x));
-	int yAxisCount = axesParams->numYAxes();
 	for ( int i = 0; i < yAxisCount; i++ ){
 		PMS::Axis y = cacheParams->yAxis( i );
 		PlotAxis cy = axesParams->yAxis( i );
@@ -666,12 +684,15 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		canvas->setAxisReferenceValue(cy, yref, yrefval);
 	}
 
+
+
 	// Set axes labels
 	canvas->clearAxesLabels();
 	String yLabelLeft;
 	String yLabelRight;
 	if(set) {
-		canvas->setAxisLabel(cx, canv->xLabelFormat().getLabel(x, xref, xrefval));
+		String xLabelSingle = canv->xLabelFormat().getLabel(x, xref, xrefval);
+		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
 		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
 		canvas->setAxisFont(cx, xFont);
@@ -708,6 +729,9 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		}
 	}
 
+
+
+
 	// Custom axes ranges
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
@@ -722,21 +746,6 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		}
 	}
 
-	// Show/hide axes
-	canvas->showAllAxes(false);
-	//ShowX and showY determine whether axes are visible at
-	//all.  For visible axes, there is the option of sharing
-	//them (common) or for each plot to manage its own.
-	bool commonX = iter->isCommonAxisX();
-	bool commonY = iter->isCommonAxisY();
-	canvas->setCommonAxes( commonX, commonY );
-	bool showX = set && canv->xAxisShown();
-	bool showY = set && canv->yAxisShown();
-	canvas->showAxis(cx, showX);
-	for ( int i = 0; i < yAxisCount; i++ ){
-		PlotAxis cy = axesParams->yAxis( i );
-		canvas->showAxis(cy, showY);
-	}
 
 	// Legend
 	canvas->showLegend(set && canv->legendShown(),

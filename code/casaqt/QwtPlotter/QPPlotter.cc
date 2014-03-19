@@ -569,7 +569,6 @@ void QPPlotter::setupCanvasFrame() {
         		if ( associatedCanvas != NULL ){
 
         			QPLayeredCanvas& associatedPlot = associatedCanvas->asQwtPlot();
-        			//axis->setPlot( &associatedPlot );
         			QPAxis* axis = new QPAxis( axisLocationY, this, &associatedPlot);
         			associatedCanvas->addAxisListener( axis );
 

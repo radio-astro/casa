@@ -123,18 +123,32 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axisScale );
 	const QList<double> axisTicks = scaleDiv->ticks( axisScale );
 	int originalTickCount = axisTicks.size();
-	int tickIncrement = getTickIncrement( originalTickCount );
+	if ( originalTickCount > 0 ){
+		int tickIncrement = getTickIncrement( originalTickCount );
 
-	//Now figure out the yIncrement, how far apart the ticks should be.
-	double tickDistance = getTickDistance( axisScale );
-	double yIncrement = getTickIncrement( tickDistance, axisScale );
-	for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
-		//Sometimes the automatic tick system puts uneven number of ticks in.
-		//Definitely weird - but that is why the incrementCount;
-		int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
-		double tickPosition = startPixelY + incrementCount * yIncrement;
-		int tickIndex = originalTickCount - i - 1;
-		drawTick( painter, tickPosition, axisTicks[tickIndex], tickLength);
+		//Now figure out the yIncrement, how far apart the ticks should be.
+		double tickDistance = getTickDistance( axisScale );
+		double yIncrement = getTickIncrement( tickDistance, axisScale );
+		for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
+			//Sometimes the automatic tick system puts uneven number of ticks in.
+			//Definitely weird - but that is why the incrementCount;
+			int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
+			double tickPosition = startPixelY + incrementCount * yIncrement;
+			int tickIndex = originalTickCount - i - 1;
+			drawTick( painter, tickPosition, axisTicks[tickIndex], tickLength);
+		}
+	}
+	else {
+		double lowerBound = scaleDiv->lowerBound();
+		double upperBound = scaleDiv->upperBound();
+		int tickCount = 10;
+		double tickDistance = (upperBound - lowerBound) / tickCount;
+		double pixelDistance = (getCanvasHeight()*1.0) / tickCount;
+		for ( int i = 0; i < tickCount; i++ ){
+			double tickPosition = startPixelY + pixelDistance*i;
+			double tickValue = upperBound - i * tickDistance;
+			drawTick( painter, tickPosition, tickValue, tickLength );
+		}
 	}
 }
 
