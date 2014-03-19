@@ -91,7 +91,7 @@ class Tsyscal(basetask.StandardTaskTemplate):
 
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
-        spwmap = tsysspwmap(ms=inputs.ms, tsystable=gencal_args['caltable'],
+        nospwmap, spwmap = tsysspwmap(ms=inputs.ms, tsystable=gencal_args['caltable'],
                             tsysChanTol=inputs.chantol)
 
         callist = []
