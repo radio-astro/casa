@@ -38,7 +38,7 @@ import pipeline.infrastructure.utils as utils
 		% if ous_uid != 'unknown':
 				<tr>
 					<th>OUS Status Entity id</th>
-					<td>${ous_uid}</td>
+					<td>${ousstatus_entity_id}</td>
 				</tr>
 		% endif
 				<tr>
@@ -155,7 +155,7 @@ import pipeline.infrastructure.utils as utils
 		    
 		<thead>
 		    <tr>
-			<th scope="col" rowspan="2">Measurement Set</th>
+			<th scope="col" rowspan="2">Meas. Set <i>(Click for overview)</i></th>
 			<th scope="col" rowspan="2">Receivers</th>
 			<th scope="col" rowspan="2">Num Antennas</th>
 			<th scope="col" colspan="3">Time (UTC)</th>

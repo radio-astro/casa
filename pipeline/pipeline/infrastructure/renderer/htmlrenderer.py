@@ -475,6 +475,7 @@ class T1_1Renderer(RendererBase):
                 'schedblock_uids'   : schedblock_uids,
                 'execblock_uids'    : execblock_uids,
                 'ous_uid'           : context.project_structure.ous_entity_id,
+                'ousstatus_entity_id'     : context.project_structure.ousstatus_entity_id,
                 'ppr_uid'           : None,
                 'observers'         : observers,
                 'qa2adapter'        : qa2results,
