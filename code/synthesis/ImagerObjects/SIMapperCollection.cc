@@ -50,6 +50,7 @@
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
+#include <images/Regions/WCBox.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -418,6 +419,96 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  void SIMapperCollection::checkOverlappingModels(String action)
+  {
+    if(nMappers()==1) return;
+
+    AlwaysAssert( action=="blank" || action=="restore" , AipsError );
+
+    Int nmodels = nMappers();
+
+    for (Int model=0;model<(nmodels-1); ++model) 
+      {
+	// Connect to one image for aux info.
+	SubImage<Float> modelimage( *(((itsMappers[model])->imageStore())->model()), True );
+
+	uInt nTaylor0 = ((itsMappers[model])->imageStore())->getNTaylorTerms();
+
+	CoordinateSystem cs0=modelimage.coordinates();
+	IPosition iblc0(modelimage.shape().nelements(),0);
+	IPosition itrc0(modelimage.shape());
+	itrc0=itrc0-Int(1);
+	LCBox lbox0(iblc0, itrc0, modelimage.shape());
+	ImageRegion imagreg0(WCBox(lbox0, cs0));
+
+	for (Int nextmodel=model+1; nextmodel < nmodels; ++nextmodel)
+	  {
+	    SubImage<Float> nextmodelimage( *(((itsMappers[nextmodel])->imageStore())->model()) , True);
+
+	    uInt nTaylor1 = ((itsMappers[nextmodel])->imageStore())->getNTaylorTerms();
+	    
+	    CoordinateSystem cs=nextmodelimage.coordinates();
+	    IPosition iblc(nextmodelimage.shape().nelements(),0);
+	    IPosition itrc(nextmodelimage.shape());
+	    itrc=itrc-Int(1);
+	    LCBox lbox(iblc, itrc, nextmodelimage.shape());
+	    ImageRegion imagreg(WCBox(lbox, cs));
+	    
+	    try{
+
+	      if( action.matches("blank") )
+		{
+		  LatticeRegion latReg=imagreg.toLatticeRegion(modelimage.coordinates(), modelimage.shape());
+
+		  for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
+		    { // loop for taylor term
+		      SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
+		      SubImage<Float> partToMask(modelim, imagreg, True);
+		      ArrayLattice<Bool> pixmask(latReg.get());
+		      LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
+		      partToMask.copyData(myexpr);
+		    }
+
+
+		}
+	      else // "restore"
+		{
+		LatticeRegion latReg0=imagreg0.toLatticeRegion(nextmodelimage.coordinates(), nextmodelimage.shape());
+		LatticeRegion latReg=imagreg.toLatticeRegion(modelimage.coordinates(), modelimage.shape());
+		ArrayLattice<Bool> pixmask(latReg.get());
+
+		
+		for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
+		  {// loop for taylor term
+		    SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
+		    SubImage<Float> nextmodelim( *(((itsMappers[nextmodel])->imageStore())->model(taylor)), True );
+
+		    SubImage<Float> partToMerge(nextmodelim, imagreg0, True);
+		    SubImage<Float> partToUnmask(modelim, imagreg, True);
+		    LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
+		    partToUnmask.copyData(myexpr0);
+		  }
+		
+		}
+	    }
+	    catch(AipsError &x){
+	      //	      cout << "Hmm.... in here : "<< x.getMesg() << endl;
+	      //no overlap you think ?
+	      /*
+		os << LogIO::WARN
+		<< "no overlap or failure of copying the clean components"
+		<< x.getMesg()
+		<< LogIO::POST;
+	*/
+	      continue;
+	    }
+	  }
+      }
+  }
+
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } //# NAMESPACE CASA - END

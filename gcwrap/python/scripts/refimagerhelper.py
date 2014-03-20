@@ -757,10 +757,12 @@ class ImagerParameters():
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
-        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel','freqstart','freqstep']
-        self.outgridparlist = ['ftmachine']
+        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel',
+                             'freqstart','freqstep',
+                             'ntaylorterms','restfreq']
+        self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
-        self.outdecparlist=['algo','startmodel']
+        self.outdecparlist=['algo','startmodel','ntaylorterms']
 
 
     def getSelPars(self):
@@ -884,6 +886,8 @@ class ImagerParameters():
             self.alldecpars[ modelid ][ 'id' ] = immod+1  ## Try to eliminate.
 
 
+        print self.allimpars
+
         for immod in self.allimpars.keys() :
             synu = casac.synthesisutils()
             self.allimpars[immod] = synu.checkimageparams( self.allimpars[immod] )
@@ -956,38 +960,88 @@ class ImagerParameters():
             returnlist.append( {'impars':tempimpar,'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
 
         ## Extra parsing for a few parameters.
-        ## imsize
-        try:
-            for fld in range(0, len( returnlist ) ):
-                if returnlist[ fld ]['impars'].has_key('imsize'):
-                    imsize_e = eval( returnlist[ fld ]['impars']['imsize'] )
-                    returnlist[ fld ]['impars']['imsize'] = imsize_e
-        except:
-            print 'Cannot evaluate outlier field parameter "imsize"'
-        ## nchan
-        try:
-            for fld in range(0, len( returnlist ) ):
-                if returnlist[ fld ]['impars'].has_key('nchan'):
-                    nchan_e = eval( returnlist[ fld ]['impars']['nchan'] )
-                    returnlist[ fld ]['impars']['nchan'] = nchan_e
-        except:
-            print 'Cannot evaluate outlier field parameter "nchan"'
-        ## cellsize
-        try:
-            for fld in range(0, len( returnlist ) ):
-                if returnlist[ fld ]['impars'].has_key('cellsize'):
-                    tcell =  returnlist[ fld ]['impars']['cellsize']
-                    tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
-                    tcells = tcell.split(',')
-                    cellsize_e = []
-                    for cell in tcells:
-                        cellsize_e.append( cell )
-                    returnlist[ fld ]['impars']['cellsize'] = cellsize_e
-        except:
-            print 'Cannot evaluate outlier field parameter "cellsize"'
+        returnlist = self.evalToTarget( returnlist, 'impars', 'imsize', 'intvec' )
+        returnlist = self.evalToTarget( returnlist, 'impars', 'nchan', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'impars', 'cellsize', 'strvec' )
+        returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'impars', 'restfreq', 'strvec' )
 
+        ## Extra parsing for a few parameters.
+        ## imsize
+#        try:
+#            for fld in range(0, len( returnlist ) ):
+#                if returnlist[ fld ]['impars'].has_key('imsize'):
+#                    imsize_e = eval( returnlist[ fld ]['impars']['imsize'] )
+#                    returnlist[ fld ]['impars']['imsize'] = imsize_e
+#        except:
+#            print 'Cannot evaluate outlier field parameter "imsize"'
+#        ## nchan
+#        try:
+#            for fld in range(0, len( returnlist ) ):
+#                if returnlist[ fld ]['impars'].has_key('nchan'):
+#                    nchan_e = eval( returnlist[ fld ]['impars']['nchan'] )
+#                    returnlist[ fld ]['impars']['nchan'] = nchan_e
+#        except:
+#            print 'Cannot evaluate outlier field parameter "nchan"'
+#        ## cellsize
+#        try:
+#            for fld in range(0, len( returnlist ) ):
+#                if returnlist[ fld ]['impars'].has_key('cellsize'):
+#                    tcell =  returnlist[ fld ]['impars']['cellsize']
+#                    tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
+#                    tcells = tcell.split(',')
+#                    cellsize_e = []
+#                    for cell in tcells:
+#                        cellsize_e.append( cell )
+#                    returnlist[ fld ]['impars']['cellsize'] = cellsize_e
+#        except:
+#            print 'Cannot evaluate outlier field parameter "cellsize"'
+#        ## ntaylorterms (like nchan)
+#        try:
+#            for fld in range(0, len( returnlist ) ):
+#                if returnlist[ fld ]['impars'].has_key('ntaylorterms'):
+#                    nterms_e = eval( returnlist[ fld ]['impars']['ntaylorterms'] )
+#                    returnlist[ fld ]['impars']['ntaylorterms'] = nterms_e
+#        except:
+#            print 'Cannot evaluate outlier field parameter "ntaylorterms"'
+#        ## restfreq (like cellsize)
+#        try:
+#            for fld in range(0, len( returnlist ) ):
+#                if returnlist[ fld ]['impars'].has_key('restfreq'):
+#                    tcell =  returnlist[ fld ]['impars']['restfreq']
+#                    tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
+#                    tcells = tcell.split(',')
+#                    restfreq_e = []
+#                    for cell in tcells:
+#                        restfreq_e.append( cell )
+#                    returnlist[ fld ]['impars']['restfreq'] = restfreq_e
+#        except:
+#            print 'Cannot evaluate outlier field parameter "restfreq"'
+#
         #print returnlist
         return returnlist, errs
+
+
+    def evalToTarget(self, globalpars, subparkey, parname, dtype='int' ):
+        try:
+            for fld in range(0, len( globalpars ) ):
+                if globalpars[ fld ][subparkey].has_key(parname):
+                    if dtype=='int' or dtype=='intvec':
+                        val_e = eval( globalpars[ fld ][subparkey][parname] )
+                    if dtype=='strvec':
+                        tcell =  globalpars[ fld ][subparkey][parname]
+                        tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
+                        tcells = tcell.split(',')
+                        val_e = []
+                        for cell in tcells:
+                            val_e.append( cell )
+
+                    globalpars[ fld ][subparkey][parname] = val_e
+        except:
+            print 'Cannot evaluate outlier field parameter "' + parname + '"'
+
+        return globalpars
 
 
     def printParameters(self):

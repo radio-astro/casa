@@ -589,7 +589,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=1;tix<2*itsNTerms-1;tix++)
       { setSumWt( *psf(tix) , sumwt ); }
     
-    Bool useweightimage = getUseWeightImage( *psf() ) ;
+    //    Bool useweightimage = getUseWeightImage( *psf() ) ;
     
     for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
@@ -694,6 +694,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   << beam.getMajor(Unit("arcmin")) << " arcmin, " 
 	   << beam.getMinor(Unit("arcmin"))<< " arcmin, " 
 	   << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	os << "With " << itsNTerms << " Taylor coefficient(s), spectral index " 
+	   << ((itsNTerms>2)?String("and curvature"):String("")) << " will "
+	   << ((itsNTerms>1)?String(""):String("not")) << " be computed." << LogIO::POST;
 
 	/*	
 	// Compute principal solution ( if it hasn't already been done to this ImageStore......  )
@@ -722,30 +725,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //image()->setImageInfo(ii); // no use.... its a reference subimage.
 	  }	
 	
-	// Calculate alpha and beta
-	LatticeExprNode leMaxRes = max( *( residual(0) ) );
-	Float maxres = leMaxRes.getFloat();
-	Float specthreshold = maxres/10.0;  //////////// do something better here..... 
-
-      os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
-      LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
-      LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
-
-      /////// Calculate alpha
-      LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
-      alpha()->copyData(alphacalc);
-
-      // Set the restoring beam for alpha
-      alpha()->setImageInfo(ii);
-      //alpha()->table().unmarkForDelete();
-
-      // Make a mask for the alpha image
-      LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
-
-      //      createMask( lemask, (alpha()) );
-
-      return beam;
-      
+	if( itsNTerms > 1)
+	  {
+	    // Calculate alpha and beta
+	    LatticeExprNode leMaxRes = max( *( residual(0) ) );
+	    Float maxres = leMaxRes.getFloat();
+	    Float specthreshold = maxres/10.0;  //////////// do something better here..... 
+	    
+	    os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
+	    LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
+	    LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
+	    
+	    /////// Calculate alpha
+	    LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
+	    alpha()->copyData(alphacalc);
+	    
+	    // Set the restoring beam for alpha
+	    alpha()->setImageInfo(ii);
+	    //alpha()->table().unmarkForDelete();
+	    
+	    // Make a mask for the alpha image
+	    LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
+	    
+	    //      createMask( lemask, (alpha()) );
+	  }
+	return beam;
+	
       }
     catch(AipsError &x)
       {

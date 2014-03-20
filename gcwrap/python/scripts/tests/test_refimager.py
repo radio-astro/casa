@@ -16,6 +16,73 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      # Interaction ON or OFF
      interactive=False
 
+
+     if(testnum==16):  ## 2 image-fields, mfs - one with nterms 1 and one with nterms 2
+          casalog.post("==================================");
+          casalog.post("Test 16 image-fields, mfs (one with nterms=1. one with nterms=2).");
+          casalog.post("==================================");
+          
+          write_file('out16.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nntaylorterms=2\nmtype=multiterm\nrestfreq=[1.5GHz]\nalgo=msmfs')
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out16.txt',\
+                                       mode='mfs',\
+                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+     
+     if(testnum==15):  ## 2 image-fields, mfs, Overlapping models. Both multi-term
+          casalog.post("==================================");
+          casalog.post("Test 15 two overlapping image-fields, mfs, both multi term");
+          casalog.post("==================================");
+          
+          write_file('out15.txt', 'imagename=mytest1\nnchan=1\nimsize=[200,200]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:59:02.426 +40.51.14.559\n')
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out15.txt',\
+                                       mode='mfs',\
+                                       ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
+                                       algo='msmfs',\
+                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:58:39.580 +40.55.55.931",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+     if(testnum==14):  ## 2 image-fields, mfs, Overlapping models. Single term
+          casalog.post("==================================");
+          casalog.post("Test 14 two overlapping image-fields, mfs, single term");
+          casalog.post("==================================");
+          
+          write_file('out14.txt', 'imagename=mytest1\nnchan=1\nimsize=[200,200]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:59:02.426 +40.51.14.559')
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out14.txt',\
+                                       mode='mfs',\
+                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:58:39.580 +40.55.55.931",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
      if(testnum==13): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
           casalog.post("==================================");
           casalog.post("Test 11 image-field, cube --- Real Imaging with various cube parameter specifications");
@@ -295,6 +362,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive)
 
 
+     
      if(testnum==3):  ## 2 image-fields, mfs --- Real Imaging.
           casalog.post("==================================");
           casalog.post("Test 3 image-fields, mfs --- Real Imaging.");
@@ -359,8 +427,10 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      ### Make a cluster def file if a parallel test is to run.
      if parallelmajor==True or parallelminor==True or parallelcube==True:
         clusterdef = 'cfgfile.txt'
-        defstr = 'vega, 2,'+os.getcwd() #+'/aatest'
-        ####defstr = defstr + '\ntara, 2,'+os.getcwd() +'/aatest'
+        defstr = ''
+        defstr = defstr + 'vega, 2,'+os.getcwd() #+'/aatest'
+#        defstr = defstr + '\n'
+#        defstr = defstr + 'tara, 2,'+os.getcwd() # +'/aatest'
         # remove file first
         if os.path.exists(clusterdef):
             os.system('rm -f '+ clusterdef)

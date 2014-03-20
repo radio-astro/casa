@@ -1294,6 +1294,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
+    itsMappers.checkOverlappingModels("blank");
+
     if(useViVb2){
     	vi_p->originChunks();
     	vi_p->origin();
@@ -1352,6 +1354,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	itsMappers.finalizeGrid(*vb, dopsf);
 
     }
+
+    itsMappers.checkOverlappingModels("restore");
+
   }// end runMajorCycle
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
