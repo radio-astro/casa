@@ -96,6 +96,8 @@ class SIMapperCollection
   CountedPtr<SIImageStore> imageStore(const Int id=0);
   Bool releaseImageLocks();
 
+  void checkOverlappingModels(String action); // action='blank' or 'restore'
+
 protected:
 
   ///////////////////// Member Objects

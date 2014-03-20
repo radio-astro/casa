@@ -110,7 +110,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{ itsStartingModelName = decpars.asString( RecordFieldId("startmodel")); }
 
       if( decpars.isDefined("ntaylorterms") )
-	{ decpars.get( RecordFieldId("ntaylorterms") , nTaylorTerms ); }
+	{ nTaylorTerms = decpars.asInt( RecordFieldId("ntaylorterms") );}
+      //	{ Int nt; decpars.get( RecordFieldId("ntaylorterms") , nt ); nTaylorTerms=nt;}
 
 
       // Scale sizes...
@@ -267,9 +268,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
   {
     if( itsDeconvolver->getAlgorithmName() == "msmfs" )
-      {  return new SIImageStoreMultiTerm( itsImageName, itsDeconvolver->getNTaylorTerms() ); }
+      {  return new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms() ); }
     else
-      {  return new SIImageStore( itsImageName ); }
+      {  return new SIImageStore( imagename ); }
   }
 
 

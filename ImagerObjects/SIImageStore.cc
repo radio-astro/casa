@@ -264,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// TODO : Add special case for itsWeightShape ?  A flag inputted to openImage to trigger this...
 
-	cout << "made  " << imagenamefull << " of shape : " << useShape << endl;
+	//	cout << "made  " << imagenamefull << " of shape : " << useShape << endl;
 
       }
     else
