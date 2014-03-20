@@ -23,9 +23,8 @@ LOG = infrastructure.get_logger(__name__)
 class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
 
     def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, 
-      flagcmdfile=None, flag_nmedian=None, fnm_limit=None,
-      niter=None):
+      intent=None, spw=None, refant=None, flag_nmedian=None,
+      fnm_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -103,7 +102,6 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
           vis=inputs.vis, table=inputs.vis, inpfile=[])
-#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
@@ -249,7 +247,7 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             if timestamp - last_time > 5.0:
                 filtered_times.append(timestamp)
                 last_time = timestamp
-        times = filtered_times
+        times = np.array(filtered_times)
 
         # make gain image for each spwid
         for spwid in spwids:
