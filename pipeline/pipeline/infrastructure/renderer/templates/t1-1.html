@@ -70,14 +70,14 @@ import pipeline.infrastructure.utils as utils
 				</tr>
 			</thead>
 			<tbody>
-		% if ppr_uid is not None:
+				% if ppr_uid is not None:
 				<tr>
 					<th>PPR ID</th>
 					<td></td>
 					<td></td>
 					<td></td>
 				</tr>
-		% endif
+				% endif
 				<tr>
 					<th>Pipeline Version</th>
 					<td>${pipeline_revision}</td>					
@@ -103,6 +103,13 @@ import pipeline.infrastructure.utils as utils
 					<td></td>
 				</tr>
 				<tr>
+					<th></th>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+<!--				
+				<tr>
 					<th>QA Total</th>
 					<td></td>
 					<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
@@ -122,6 +129,7 @@ import pipeline.infrastructure.utils as utils
 
 				</tr>
 				% endfor
+-->
 			</tbody>
 		</table>								
 <!-- 
@@ -136,48 +144,51 @@ import pipeline.infrastructure.utils as utils
  -->
 	</div>
 
+</div>
 
 
-<h2>Measurement Sets</h2>
+
+		<h2>Measurement Sets</h2>
+
+	    <table class="table table-bordered table-striped table-condensed" 
+		    summary="Measurement Set Summaries">
+		    
+		<thead>
+		    <tr>
+			<th scope="col" rowspan="2">Measurement Set</th>
+			<th scope="col" rowspan="2">Receivers</th>
+			<th scope="col" rowspan="2">Num Antennas</th>
+			<th scope="col" colspan="3">Time (UTC)</th>
+				    <!-- break heading divider for subcolumns -->
+			<th scope="col" colspan="3">Baseline Length</th>
+			<th scope="col" rowspan="2">Size</th>
+		    </tr>
+		    <tr>
+			<th scope="col">Start</th>
+			<th scope="col">End</th>
+			<th scope="col">On Source</th>
+			<th scope="col">Min</th>
+			<th scope="col">Max</th>
+			<th scope="col">RMS</th>
+		    </tr>
+		</thead>
+		    <tbody>
+			    % for row in ms_summary_rows:
+			    <tr>
+			    <td><a href="${row.href}">${row.ms}</a></td>
+			    <td>${utils.commafy(row.receivers)}</td>
+			    <td>${row.num_antennas}</td>
+			    <td>${row.time_start}</td>
+			    <td>${row.time_end}</td>
+			    <td>${row.time_on_source}</td>
+			    <td>${str(row.baseline_min)}</td>
+			    <td>${str(row.baseline_max)}</td>
+			    <td>${str(row.baseline_rms)}</td>
+			    <td>${str(row.filesize)}</td>
+			    </tr>
+			    % endfor
+		    </tbody>
+	    </table>
 
 
-<table class="table table-bordered table-striped table-condensed" 
-	   summary="Measurement Set Summaries">
-	
-    <thead>
-        <tr>
-            <th scope="col" rowspan="2">Measurement Set</th>
-            <th scope="col" rowspan="2">Receivers</th>
-            <th scope="col" rowspan="2">Num Antennas</th>
-            <th scope="col" colspan="3">Time (UTC)</th>
-			<!-- break heading divider for subcolumns -->
-            <th scope="col" colspan="3">Baseline Length</th>
-            <th scope="col" rowspan="2">Size</th>
-        </tr>
-        <tr>
-            <th scope="col">Start</th>
-            <th scope="col">End</th>
-            <th scope="col">On Source</th>
-            <th scope="col">Min</th>
-            <th scope="col">Max</th>
-            <th scope="col">RMS</th>
-        </tr>
-    </thead>
-	<tbody>
-		% for row in ms_summary_rows:
-		<tr>
-		  <td><a href="${row.href}">${row.ms}</a></td>
-		  <td>${utils.commafy(row.receivers)}</td>
-		  <td>${row.num_antennas}</td>
-		  <td>${row.time_start}</td>
-		  <td>${row.time_end}</td>
-		  <td>${row.time_on_source}</td>
-		  <td>${str(row.baseline_min)}</td>
-		  <td>${str(row.baseline_max)}</td>
-		  <td>${str(row.baseline_rms)}</td>
-		  <td>${str(row.filesize)}</td>
-		</tr>
-		% endfor
-	</tbody>
-</table>
 
