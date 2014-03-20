@@ -46,6 +46,7 @@ qt4_wrap_cpp( outfiles_qoh
   Feather/Preferences.qo.h
   Feather/PreferencesColor.qo.h
   Feather/OverWriteFileDialog.qo.h
+  Feather/AboutDialog.qo.h
   Histogram/BinPlotWidget.qo.h
   Histogram/ImageLoader.qo.h
   Histogram/ColorPreferences.qo.h
@@ -68,6 +69,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Feather/Preferences.ui
   Feather/PreferencesColor.ui
   Feather/OverWriteFileDialog.ui
+  Feather/AboutDialog.ui
   Histogram/BinPlotWidget.ui
   Histogram/ImageLoader.ui
   Histogram/ColorPreferences.ui
@@ -110,6 +112,7 @@ casa_add_library( guitools
   Feather/FeatheredData.cc
   Feather/FeatherThread.cc
   Feather/OverWriteFileDialog.cc
+  Feather/AboutDialog.cc
   Histogram/ColorPreferences.cc
   Histogram/HistogramMain.cc
   Histogram/BinPlotWidget.cc

@@ -397,6 +397,8 @@
    <addaction name="separator"/>
    <addaction name="actionRectangleZoom"/>
    <addaction name="actionDiameterSelector"/>
+   <addaction name="separator"/>
+   <addaction name="actionHelp"/>
   </widget>
   <action name="actionImageFiles">
    <property name="icon">
@@ -456,6 +458,18 @@
    </property>
    <property name="toolTip">
     <string>Press to set dish diameter selection mode with the left mouse button (shift+left mouse in zoom mode).</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/help.png</normaloff>:/images/help.png</iconset>
+   </property>
+   <property name="text">
+    <string>Feather Information</string>
+   </property>
+   <property name="toolTip">
+    <string>Information about Feather.</string>
    </property>
   </action>
  </widget>

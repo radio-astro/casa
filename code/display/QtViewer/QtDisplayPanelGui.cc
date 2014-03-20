@@ -62,6 +62,7 @@
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
 #include <display/Clean/CleanGui.qo.h>
+#include <display/QtViewer/AboutDialog.qo.h>
 #include <display/DisplayErrors.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <display/DisplayDatas/LatticeAsRaster.h>
@@ -217,6 +218,7 @@ QtDisplayPanelGui::QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *p
 				adjust_channel_animator(true), adjust_image_animator(true),
 				histogrammer( NULL ), colorHistogram( NULL ),
 				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
+				aboutDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
 				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
@@ -237,7 +239,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				/*controlling_dd(0),*/ preferences(0), animationHolder( NULL ),
 				adjust_channel_animator(true), adjust_image_animator(true),
 				histogrammer( NULL ), colorHistogram( NULL ),
-				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
+				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),aboutDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
 				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
@@ -377,6 +379,8 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	cleanAct_ = tlMenu_->addAction( "Interactive Clean..." );
 
 	vwMenu_       = menuBar()->addMenu("&View");
+	helpMenu_     = menuBar()->addMenu("&Help");
+	aboutAct_ = helpMenu_->addAction( "About..");
 	// (populated after creation of toolbars/dockwidgets).
 
 	mainToolBar_  = addToolBar("Main Toolbar");
@@ -569,6 +573,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	zoomOutAct_->setIcon(QIcon(":/icons/Zoom2_Out.png"));
 	dpCloseAct_->setIcon(QIcon(":/icons/File_Close.png"));
 	dpQuitAct_ ->setIcon(QIcon(":/icons/File_Quit.png"));
+	aboutAct_->setIcon(QIcon(":/icons/about.png"));
 
 	ddOpenAct_ ->setToolTip("Open Data...");
 	ddRegBtn_  ->setToolTip(/*"[Un]register Data"*/"Manage Images");
@@ -590,6 +595,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	zoomInAct_ ->setToolTip("Zoom In");
 	zoomOutAct_->setToolTip("Zoom Out");
 	dpQuitAct_ ->setToolTip("Close All Windows and Exit");
+	aboutAct_->setToolTip("Information about the Viewer");
 
 
 	ddRegBtn_  ->setPopupMode(QToolButton::InstantPopup);
@@ -627,6 +633,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
 	connect(manageImagesAct_, SIGNAL(triggered()), SLOT(showImageManager()));
+	connect(aboutAct_, SIGNAL(triggered()), SLOT(showAboutDialog()));
 
 	if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
 
@@ -1209,6 +1216,7 @@ QtDisplayPanelGui::~QtDisplayPanelGui() {
 	delete imageManagerDialog;
 	imageManagerDialog = NULL;
 	delete displayDataHolder;
+
 }
 
 int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
@@ -3316,6 +3324,14 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 			connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));
 		}
 	}
+
+void QtDisplayPanelGui::showAboutDialog(){
+	if ( aboutDialog == NULL ){
+		aboutDialog = new AboutDialog( this );
+	}
+	aboutDialog->showNormal();
+	aboutDialog->raise();
+}
 
 
 void QtDisplayPanelGui::showImageManager() {
