@@ -1,14 +1,13 @@
 from __future__ import absolute_import
 
-import collections
 import numpy as np 
 import os
-import re
+import types
 
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 from pipeline.hif.tasks.common import commoncalinputs
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
 from .resultobjects import LowgainflagResults
@@ -24,9 +23,8 @@ LOG = infrastructure.get_logger(__name__)
 class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
 
     def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, flagcmdfile=None,
-      flag_nmedian=None, fnm_limit=None,
-      niter=None):
+      intent=None, spw=None, refant=None, flag_nmedian=None,
+      fnm_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -36,8 +34,19 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
 
     @property
     def intent(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('intent')
+
         if self._intent is None:
-            return 'BANDPASS'
+            # default to the intent that would be used for bandpass
+            # calibration
+            bp_inputs = bandpass.PhcorBandpass.Inputs(
+              context=self.context,
+              vis=self.vis,
+              intent=None)
+            value = bp_inputs.intent
+            return value
+
         return self._intent
 
     @intent.setter
@@ -47,32 +56,32 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
     # flag 
     @property
     def flag_nmedian(self):
-        if self._flag_nmedian is None:
-            return True
         return self._flag_nmedian
 
     @flag_nmedian.setter
     def flag_nmedian(self, value):
+        if value is None:
+            value = True
         self._flag_nmedian = value
 
     @property
     def fnm_limit(self):
-        if self._fnm_limit is None:
-            return 0.5
         return self._fnm_limit
 
     @fnm_limit.setter
     def fnm_limit(self, value):
+        if value is None:
+            value = 0.5
         self._fnm_limit = value
 
     @property
     def niter(self):
-        if self._niter is None:
-            return 1
         return self._niter
 
     @niter.setter
     def niter(self, value):
+        if value is None:
+            value = 1
         self._niter = value
 
 
@@ -93,7 +102,6 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
           vis=inputs.vis, table=inputs.vis, inpfile=[])
-#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
@@ -116,8 +124,14 @@ class Lowgainflag(basetask.StandardTaskTemplate):
           extendfields=['field', 'timerange'])
         flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
 
-	# Execute it to flag the data view
+        # Execute it to flag the data view
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_after = self._executor.execute(summary_job)
+        
+        result.summaries = [stats_before, stats_after]
 
         return result
 
@@ -156,7 +170,8 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         bpcal_inputs = bandpass.PhcorBandpass.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw, 
-          refant=inputs.refant)
+          refant=inputs.refant, maxchannels=0,
+	  solint='inf,7.8125MHz')
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
         bpcal = self._executor.execute(bpcal_task, merge=True)
 
@@ -164,8 +179,8 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         gpcal_inputs = gaincal.GTypeGaincal.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant, calmode='p', minsnr=2.0,
-          solint='int', gaintype='G')
+          refant=inputs.refant,
+          calmode='p', minsnr=2.0, solint='int', gaintype='G')
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=True)
 
@@ -173,8 +188,8 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         gacal_inputs = gaincal.GTypeGaincal.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant, calmode='a', minsnr=2.0,
-          solint='inf', gaintype='T')
+          refant=inputs.refant,
+          calmode='a', minsnr=2.0, solint='inf', gaintype='T')
         gacal_task = gaincal.GTypeGaincal(gacal_inputs)
         gacal = self._executor.execute(gacal_task, merge=True)
 
@@ -221,6 +236,19 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             times.update([row.get('TIME')])
         times = np.sort(list(times))
 
+        # times in gain table sometimes show jitter - either perhaps
+        # resulting from different flagging for different antenna/spw,
+        # or from out of sync timing in raw data (a problem now cured
+        # I'm told, Mar-2014).
+        # Ignore time differences smaller than 5sec.
+        filtered_times = []
+        last_time = 0.0
+        for timestamp in times:
+            if timestamp - last_time > 5.0:
+                filtered_times.append(timestamp)
+                last_time = timestamp
+        times = np.array(filtered_times)
+
         # make gain image for each spwid
         for spwid in spwids:
             data = np.zeros([antenna_ids[-1]+1, len(times)])
@@ -229,12 +257,14 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             for row in gtable.rows:
                 if row.get('SPECTRAL_WINDOW_ID') == spwid:
                     gain = row.get('CPARAM')[0][0]
+#                    print 'GETTING SNR'
+#                    gain = row.get('SNR')[0][0]
                     ant = row.get('ANTENNA1')
                     caltime = row.get('TIME')
                     gainflag = row.get('FLAG')[0][0]
                     if not gainflag:
-                        data[ant, caltime==times] = np.abs(gain)
-                        flag[ant, caltime==times] = 0
+                        data[ant, np.abs(times-caltime) < 5] = np.abs(gain)
+                        flag[ant, np.abs(times-caltime) < 5] = 0
 
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
               units='id', data=np.arange(antenna_ids[-1]+1)),
@@ -242,9 +272,9 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
               data=times)]
 
             viewresult = commonresultobjects.ImageResult(filename=
-              os.path.basename(table), data=data, flag=flag,
+              os.path.basename(table), intent=self.inputs.intent,
+              data=data, flag=flag,
               axes=axes, datatype='gain amplitude', spw=spwid)
-#              intent=intent)
           
             # add the view results and their children results to the
             # class result structure
