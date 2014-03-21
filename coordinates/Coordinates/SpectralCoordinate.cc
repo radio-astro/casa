@@ -1841,6 +1841,8 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 			      worldAxisUnits()(0)).getBaseValue();
     Double RefPix = referencePixel()(0) + offset;
 
+    Double linTrans = linearTransform()(0,0); // always one-dimensional
+
     MDoppler::Types VelPreference = opticalVelDef ? MDoppler::OPTICAL : MDoppler::RADIO;
 
     // Determine possible changes to RefFreq etc. and check if we are linear in the preferred quantity.
@@ -1894,13 +1896,13 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 
       // frequencies
       Double actual = fx; // value in Hz
-      Double linear = RefFreq + FreqInc*(pixel(i)-(RefPix-offset)); // also in Hz
+      Double linear = RefFreq + FreqInc*(linTrans*pixel(i)-(RefPix-offset)); // also in Hz
       gridSpacing = FreqInc;      
 
       if(preferWavelength){ // check if we are linear in wavelength
 	if(actual>0. && RefFreq>0. && (RefFreq+FreqInc)>0.){
 	  actual = C::c/actual;
-	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(pixel(i) - (RefPix-offset));
+	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(linTrans*pixel(i) - (RefPix-offset));
 	  gridSpacing = -(C::c/(RefFreq+FreqInc) - C::c/RefFreq);
 	}
 	else{
@@ -1913,7 +1915,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	  Double refVelocity = -C::c * (1.0 - Restfreq / RefFreq);
 	  Double velocityIncrement = -C::c * (1.0 - Restfreq / (RefFreq + FreqInc)) - refVelocity;
 	  actual = -C::c * (1.0 - Restfreq / actual); 
-	  linear = refVelocity + velocityIncrement * (pixel(i) - (RefPix-offset));
+	  linear = refVelocity + velocityIncrement * (linTrans*pixel(i) - (RefPix-offset));
 	  gridSpacing = -velocityIncrement;
 	}
 	else{
