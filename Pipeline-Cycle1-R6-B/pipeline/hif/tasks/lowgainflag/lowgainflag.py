@@ -23,9 +23,8 @@ LOG = infrastructure.get_logger(__name__)
 class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
 
     def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, 
-      flagcmdfile=None, flag_nmedian=None, fnm_limit=None,
-      niter=None):
+      intent=None, spw=None, refant=None, flag_nmedian=None,
+      fnm_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -103,7 +102,6 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
           vis=inputs.vis, table=inputs.vis, inpfile=[])
-#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
@@ -238,6 +236,19 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             times.update([row.get('TIME')])
         times = np.sort(list(times))
 
+        # times in gain table sometimes show jitter - either perhaps
+        # resulting from different flagging for different antenna/spw,
+        # or from out of sync timing in raw data (a problem now cured
+        # I'm told, Mar-2014).
+        # Ignore time differences smaller than 5sec.
+        filtered_times = []
+        last_time = 0.0
+        for timestamp in times:
+            if timestamp - last_time > 5.0:
+                filtered_times.append(timestamp)
+                last_time = timestamp
+        times = np.array(filtered_times)
+
         # make gain image for each spwid
         for spwid in spwids:
             data = np.zeros([antenna_ids[-1]+1, len(times)])
@@ -252,8 +263,8 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
                     caltime = row.get('TIME')
                     gainflag = row.get('FLAG')[0][0]
                     if not gainflag:
-                        data[ant, caltime==times] = np.abs(gain)
-                        flag[ant, caltime==times] = 0
+                        data[ant, np.abs(times-caltime) < 5] = np.abs(gain)
+                        flag[ant, np.abs(times-caltime) < 5] = 0
 
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
               units='id', data=np.arange(antenna_ids[-1]+1)),
