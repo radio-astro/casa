@@ -27,6 +27,7 @@
 #include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <QDebug>
 #include <QKeyEvent>
 
@@ -45,6 +46,8 @@ namespace casa {
 		plotWidget->hideMaximumRange();
 		layout->addWidget( plotWidget );
 		ui.plotWidgetHolder->setLayout( layout );
+		spectralIndex = -1;
+		channelIndex = 0;
 
 		connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
 		connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
@@ -74,7 +77,17 @@ namespace casa {
 
 
 	void PixelRangeDialog::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
-		plotWidget->setImage( img );
+		plotWidget->setImage( img, true );
+		spectralIndex = -1;
+
+		if ( img.get() != NULL ){
+			DisplayCoordinateSystem displayCoords = img->coordinates();
+			if ( displayCoords.hasSpectralAxis()){
+				spectralIndex = displayCoords.spectralAxisNumber();
+				setChannelValue( channelIndex );
+			}
+		}
+
 	}
 
 	void PixelRangeDialog::setImageMode( bool imageMode ){
@@ -95,8 +108,9 @@ namespace casa {
 	}
 
 	void PixelRangeDialog::setChannelValue( int channel ){
+		channelIndex = channel;
 		plotWidget->setChannelValue( channel );
-		plotWidget->channelRangeChanged( channel, channel, false, true );
+		plotWidget->channelRangeChanged( channel, channel, false, true, spectralIndex );
 	}
 
 

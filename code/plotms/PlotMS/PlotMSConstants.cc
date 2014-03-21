@@ -75,8 +75,41 @@ PMS::AxisType PMS::axisType(Axis axis) {
 
 PMS::AxisUnit PMS::axisUnit(Axis axis) {
     switch(axis) {
-    case TIME: return UDATETIME;
     
+    case TIME:
+    //case TIME_INTERVAL:
+       	return UDATETIME;
+    /*case FREQUENCY:
+       	return HERTZ;
+    case VELOCITY:
+       	return METERS_PER_SECOND;
+    case UVDIST:
+    case UVDIST_L:
+    case U:
+    case V:
+    case W:
+    case UWAVE:
+    case VWAVE:
+    case WWAVE:
+       	return METERS;
+*/
+   /*
+       case AMP:
+       case PHASE:
+       case REAL:
+       case IMAG:
+       case WTxAMP:
+
+       		      AZ0,EL0,HA0,PA0,
+       		      ANTENNA,AZIMUTH,ELEVATION,
+       		      PARANG,
+       		      GAMP,GPHASE,GREAL,GIMAG,
+       		      DELAY,SWP,TSYS,OPAC,*/
+  /*  case RADIAL_VELOCITY:
+       	return KILOMETERS_PER_SECOND;
+
+    case RHO:
+       	return KILOMETERS;*/
     default: return UNONE;
     }
 }
@@ -217,7 +250,10 @@ const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_REFVALUE()) + " (from " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_REFVALUE()) + ")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE());
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE());/* +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT())+" (" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT())+")" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());*/
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
 const PlotCanvas::LegendPosition PMS::DEFAULT_LEGENDPOSITION =

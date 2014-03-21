@@ -91,7 +91,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img );
+    bool setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img, bool waitOnHistogram = false );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -142,7 +142,7 @@ public slots:
 	void toPing( const QString& filtPath, int width, int height );
 
 	//The channel has changed value.
-	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic );
+	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic, int specIndex=-1 );
 
 	//Histogramming an image versus a region.
 	void imageModeSelected( bool enabled );
@@ -205,7 +205,7 @@ private:
 	void resetAxisTitles();
 	void resetPlotTitle();
 	void reset();
-	bool resetImage();
+	bool resetImage( bool waitOnHistogram = false );
 	void resetRegion();
 	void resetRectangleMarker();
 	void defineCurveLine( int id, const QColor& lineColor );
@@ -229,6 +229,10 @@ private:
     bool displayPlotTitle;
     bool displayAxisTitles;
     bool multiColored;
+    bool allChannels;
+    int spectralIndex;
+    int minChannel;
+    int maxChannel;
 
     QColor curveColor;
     QColor selectionColor;

@@ -502,7 +502,9 @@ namespace casa {
 				unitStr = unit.getName().c_str();
 			}
 			ui.unitsLabel->setText( unitStr );
-			pixelRangeDialog.setImage( this->image );
+			if ( pixelRangeDialog.isVisible() ){
+				pixelRangeDialog.setImage( this->image );
+			}
 			updateFrame();
 			setImageFunctionalityEnabled( enableFunctionality );
 		}

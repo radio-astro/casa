@@ -241,58 +241,6 @@ private:
 };
  */
 
-// Rob's AxisUnit stuff, not currently used.
-/*
-enum AxisUnitEnum {Angle,         // Not Dimensionless because it can
-                              // include degrees, mas, radians, etc.
-           Dimensionless,     // Things that you'd have to stretch to
-                              // tack a unit onto.
-           FluxDensity,       // (m, u)Jy
-           Freq,          // VisSet.h typedefs Frequency to Double.
-           Intensity,         // Jy/beam, Jy/sq. arcsec, etc.
-           Time,
-           Velocity,
-                   Wavelengths};      // (u, v, w) distances.
-
-class AxisUnit
-{
-public:
-  AxisUnitEnum operator[](const String& quant);
-
-  // You want the AxisUnit, you go through this.  Call like AxisUnit::lookup().['time'].
-  static AxisUnit& lookup();
-  
-private:
-  // Default constructor.  Because it is private, instantiation of AxisUnits is suppressed.
-  AxisUnit();
-
-  // There can only be one AxisUnit, so there is no copy constructor or
-  // assignment operator.
-
-  // Destructor
-  ~AxisUnit() {}
-
-  typedef std::map<String, AxisUnitEnum> S2UMap;
-  S2UMap quant2u;
-};
-  
-class AxisUnitException: public AipsError {
-public:
-  //
-  // Creates an AxisUnitException and initializes the error message from
-  // the parameter
-  // <group>
-  AxisUnitException(const Char *str) : AipsError(str, AipsError::INVALID_ARGUMENT) {}
-  AxisUnitException(const String &str) : AipsError(str,
-                           AipsError::INVALID_ARGUMENT) {}
-  
-  // </group>
-
-  // Destructor which does nothing.
-  ~AxisUnitException() throw() {}
-};
- */
-
 }
 
 #endif /* PLOTMS_H_ */

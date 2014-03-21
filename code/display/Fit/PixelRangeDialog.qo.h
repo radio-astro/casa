@@ -71,6 +71,8 @@ namespace casa {
 		Ui::PixelRangeDialogClass ui;
 		BinPlotWidget* plotWidget;
 		int channelCount;
+		int spectralIndex;
+		int channelIndex;
 
 	};
 
