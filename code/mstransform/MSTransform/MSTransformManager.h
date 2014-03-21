@@ -1051,6 +1051,7 @@ protected:
 	String polarizationSelection_p;
 	String scanIntentSelection_p;
 	String observationSelection_p;
+	String taqlSelection_p;
 
 	// Input-Output index maps
 	map<uInt,uInt> inputOutputObservationIndexMap_p;

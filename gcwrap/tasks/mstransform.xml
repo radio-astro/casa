@@ -49,10 +49,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
     to define the applicable error propagation formulas.
 
-    NOTE: when splitting the MS, any flagged data will be considered in
-          the output. This is similar to the 'keepflags=True' parameter
-          of split.
-
 </description>
 
 <input>
@@ -185,7 +181,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Make real a virtual MODEL column.</description>
             <value>False</value>
         </param>
-        
+
+    <param type="bool" name="keepflags">
+        <description>Keep *completely flagged rows* or drop them from the output.</description>
+        <value>True</value>
+    </param>
+                
     <param type="bool" name="usewtspectrum">
         <description>Create a WEIGHT_SPECTRUM column in the output MS.</description>
         <value>False</value>
@@ -524,11 +525,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         column.
             default: False
 
+	
+    keepflags -- Keep completely flagged rows in the output or drop them. This has no
+                 effect on averaging or on partially flagged rows. All of the channels 
+                 and correlations of a row must be flagged for it to be droppable, and a 
+                 row must be well defined to be keepable. Regardless of this parameter, 
+                 flagged data is never included in averaging calculations.
+        default: True
+		
+	
     usewtspectrum -- Create a WEIGHT_SPECTRUM column in the output MS. When set to True,
                      a WEIGHT_SPECTRUM column will be created using the input WEIGHT column,
                      such that each channel in the WEIGHT_SPECTRUM will get WEIGHT/nChannels.
         default: False
 
+	
 --- SPW combination parameters ---
     combinespws -- Combine the input spws into a new output spw.
         default: False
@@ -543,6 +554,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                            ------------------------------------------------------------------
                                  SUM(contributionFraction_i*inputWeightSpectrum_i)
 
+	
 --- Channel averaging parameters ---
     chanaverage -- Average data in channels. 
         default: False
@@ -630,6 +642,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         veltype -- Definition of velocity (as used in mode).
             default: 'radio'
 
+	
 --- Time averaging parameters ---
     timeaverage -- Average data in time.
         default: False

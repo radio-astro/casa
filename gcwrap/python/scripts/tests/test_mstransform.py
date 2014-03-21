@@ -2,6 +2,7 @@ import shutil
 import unittest
 import os
 import numpy
+import exceptions
 from tasks import *
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
@@ -465,7 +466,7 @@ class test_Regridms3(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
-        os.system('rm -rf cvel31.*ms')
+        os.system('rm -rf cvel31*.*ms')
 
     def test_regrid3_1(self):
         '''mstransform 12: Check that output columns are the same when using mstransform'''
@@ -925,6 +926,7 @@ class test_Columns(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
+        os.system('rm -rf ngc5921Jy.ms')
         
     def test_col1(self):
           """mstransform: try to make real a non-existing virtual MODEL column"""
@@ -2168,6 +2170,47 @@ class test_spw_poln(test_base):
         self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
+
+class testFlags(test_base):
+    '''Test the keepflags parameter'''
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_split_keepflags_false(self):
+        '''mstransform: split them and do not keep flags in output MS'''
+        self.outputms = 'donotkeepflags.ms'
+        
+        # Unflag and flag spw=4
+        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='4'"])
+        
+        # Split scan=31 out
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='corrected', scan='31', keepflags=False)
+        
+        msmdt = msmdtool()
+        msmdt.open(self.outputms)
+        spws = msmdt.spwsforscan(31)
+        msmdt.close()
+        self.assertEqual(spws.size, 15)
+        
+    def test_select_dropped_spw(self):
+        '''mstransform: keepflags=False and select flagged spw. Expect error.'''        
+        self.outputms = 'donotkeepflags_spw15.ms'
+        
+        # Unflag and flag spw=15
+        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='15'"])
+    
+        try:
+            mstransform(self.vis, outputvis=self.outputms, datacolumn='data', spw='>14', keepflags=False)
+        except exceptions.RuntimeError, instance:
+            print 'Expected Error: %s'%instance
+        
+        print 'Expected Error!'
+        
+
 # Cleanup class
 class Cleanup(test_base):
 
@@ -2177,6 +2220,7 @@ class Cleanup(test_base):
         os.system('rm -rf comb*.*ms* reg*.*ms hann*.*ms favg*.*ms')
         os.system('rm -rf split*.*ms')
         os.system('rm -rf 3c84scan1*ms* test.mms')
+        os.system('rm -rf donotkeepflags*')
 
     def test_runTest(self):
         '''mstransform: Cleanup'''
@@ -2206,4 +2250,5 @@ def suite():
             test_float_column,
             test_spw_poln,
             test_regridms_spw_with_different_number_of_channels,
+            testFlags,
             Cleanup]

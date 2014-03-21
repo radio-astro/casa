@@ -25,13 +25,16 @@ def dump_args(func):
 
 '''
 In order to call MSTHelper from another task, a few things are needed:
-See examples in task_partition.py or task_hanningsmooth2.py
+See examples in task_partition.py, task_split2 or task_hanningsmooth2.py
 
  *  to process another task on a MMS, it is assumed that the task
     has data selection parameters (or at least spw and scan).
     
- *  ddistart must be a hidden parameter in the XML interface of the task.
- 
+ * MSTHelper relies on a few parameters to create an MMS. If your task interface
+   does not have them, create the following as hidden sub-parameters in the XML
+   interface of the task:
+   createmms, separationaxis, numsubms, ddistart
+     
  *  MSTHelper will override the ParallelTaskHelper methods:
     initialize(), generateJobs() and postExecution()
     
@@ -83,7 +86,7 @@ class MSTHelper(ParallelTaskHelper):
         # start parameter for DDI in main table of each sub-MS
         # It should be a counter of spw IDs starting at 0
         self.__ddistart = self.__origpars['ddistart']
-        
+                
 #    @dump_args
     def setupIO(self):
         '''Validate input and output parameters'''
@@ -295,6 +298,9 @@ class MSTHelper(ParallelTaskHelper):
             elif self._arg['separationaxis'].lower() == 'spw':
                 self._createSPWSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'both':
+                self._createDefaultSeparationCommands()
+            else:
+                # Use a default
                 self._createDefaultSeparationCommands()
         else:
             # TODO: REVIEW this later. ScanList does not exist!
@@ -1025,6 +1031,7 @@ def mstransform(
              feed,
              datacolumn,
              realmodelcol,
+             keepflags,
              usewtspectrum,
              combinespws,        # spw combination --> cvel
              chanaverage,        # channel averaging --> split
@@ -1108,12 +1115,17 @@ def mstransform(
     try:
                     
         # Gather all the parameters in a dictionary.
-        
         config = {}
+        
+        if keepflags:
+            taqlstr = ''
+        else:
+            taqlstr = "NOT (FLAG_ROW OR ALL(FLAG))"
+        
         config = mth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
-                    feed=feed)
+                    feed=feed, taql=taqlstr)
         
         # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
@@ -1141,10 +1153,14 @@ def mstransform(
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
             
+        # Only parse chanaverage parameters if chanbin > 1
+        if chanaverage and isinstance(chanbin, int) and chanbin <= 1:
+            raise Exception, 'Parameter chanbin must be > 1 to do channel averaging'
+            
         if chanaverage:
             casalog.post('Parse channel averaging parameters')
             config['chanaverage'] = True
-            # chanbin can be an int or a list of int that will apply one to each spw
+            # chanbin can be an int or a list of int that will apply to each spw
             mth.validateChanBin()
             config['chanbin'] = chanbin
             config['useweights'] = useweights
@@ -1177,13 +1193,18 @@ def mstransform(
                 config['phasecenter'] = phasecenter
             config['veltype'] = veltype
             
+        # Only parse timeaverage parameters when timebin > 0s
+        if timeaverage:
+            tb = qa.convert(qa.quantity(timebin), 's')['value']
+            if not tb > 0:
+                raise Exception, "Parameter timebin must be > '0s' to do time averaging"
+                       
         if timeaverage:
             casalog.post('Parse time averaging parameters')
             config['timeaverage'] = True
             config['timebin'] = timebin
             config['timespan'] = timespan
             config['maxuvwdistance'] = maxuvwdistance
-#            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         
