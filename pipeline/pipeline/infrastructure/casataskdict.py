@@ -47,7 +47,7 @@ CasaTaskDict = {
                    'hifa_wvrgcal'      : 'Wvrgcal',
                    'hifa_wvrgcalflag'  : 'Wvrgcalflag',
                    'hifv_importdata'  : 'VLAImportData',
-                   'hifv_flagdata'    : 'FlagDeterVLA',
+                   'hifv_flagdata'    : 'VLAAgentFlagger',
                    'hifv_setmodel'    : 'SetModel',
                    'hifv_vlasetjy'    : 'VLASetjy',
                    'hifv_priorcals'   : 'Priorcals',

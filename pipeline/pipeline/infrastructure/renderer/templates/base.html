@@ -48,8 +48,8 @@ ${pcontext.project_summary.proposal_code} -
 		<div class="nav-collapse collapse">
 			<ul class="nav">
 			
-			        <a class="brand" href="#"><img style="position:absolute; TOP:0px; LEFT:-15px; HEIGHT:40px; WIDTH:29px"  src="${self.attr.rsc_path}resources/img/almalogo.gif"></a>
-			        <a class="brand" href="#">ALMA</a>
+			        <a class="brand" href="#"><img style="position:absolute; TOP:0px; LEFT:-15px; HEIGHT:40px; WIDTH:29px"  src="${self.attr.rsc_path}resources/img/${pcontext.project_summary.telescope.lower()}logo.gif"></a>
+			        <a class="brand" href="#">${pcontext.project_summary.telescope}</a>
 			        <li class="divider-vertical"></li>
 				% if pcontext.project_summary.proposal_code != '':
 				<a class="brand" href="#">${pcontext.project_summary.proposal_code}</a>
