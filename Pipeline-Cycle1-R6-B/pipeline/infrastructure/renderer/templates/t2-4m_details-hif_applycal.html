@@ -1,10 +1,13 @@
 <%!
+rsc_path = ""
+import cgi
 import os
 import string
 import types
 
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.utils as utils
 
 agent_description = {
 	'before'   : 'Before',
@@ -37,12 +40,54 @@ def get_template_agents(agents):
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
-	$(".fancybox").fancybox();
+    // return a function that sets the SPW text field to the given spw
+    var createSelectSetter = function(val, element_id) {
+    	return function() {
+    		var vals = val.toString().split(',');
+    		// trigger a change event, otherwise the filters are not changed
+            $(element_id).select2("val", vals).trigger("change");
+        };
+    };
+    
+    // create a callback function for each overview plot that will select the
+    // appropriate spw once the page has loaded
+    $(".thumbnail a").each(function (i, v) {
+        var o = $(v);
+        var spw = o.data("spw");
+        var field = o.data("field");
+		if (typeof field === 'undefined') {
+	        o.data("callback", createSelectSetter(spw, "#select-spw"));
+		} else {
+	        o.data("callback", [createSelectSetter(spw, "#select-spw"),
+	                            createSelectSetter(field, "#select-field")]);
+		}
+    });
+
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        }
+    });
+	
 	$('.caltable_popover').popover({
 		  template: '<div class="popover gaintable_popover"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
 	});
+
+    // fix the thumbnail margins for plots on the n>1 row
+    UTILS.fixThumbnailMargins();
 });
 </script>
 
@@ -87,6 +132,7 @@ def space_comma(s):
 <%block name="title">Apply calibration tables</%block>
 
 <p>This task applies all calibrations registered with the pipeline to their target measurement sets.<p>
+
 
 <h2>Applied calibrations</h2>
 <table class="table table-bordered table-striped table-condensed"
@@ -188,3 +234,205 @@ def space_comma(s):
 %endfor
 	</tbody>
 </table>
+
+
+% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
+<h2>Plots</h2>
+
+%if amp_vs_freq_plots:
+	<h3>Calibrated amplitude vs frequency</h3>
+
+	% for ms in amp_vs_freq_plots:
+	    <h4>
+	    	${ms}
+		</h4>
+		% for intent in amp_vs_freq_plots[ms]:
+		    <ul class="thumbnails">
+		        % for plot in amp_vs_freq_plots[ms][intent]:
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       rel="amp_vs_freq-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs frequency plot for baseband ${plot.parameters['baseband']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+								<h4>
+									Baseband ${plot.parameters['baseband']}
+								</h4>
+								
+		                        <p>Calibrated amplitude vs frequency for ${intent} calibrator 
+		                        ${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
+		                        baseband ${plot.parameters['baseband']}, all antennas and correlations, 
+		                        colored by antenna.
+		                        </p>
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+		    </ul>
+		% endfor
+	%endfor
+%endif
+
+%if phase_vs_freq_plots:
+	<h3>Calibrated phase vs frequency</h3>
+
+	% for ms in phase_vs_freq_plots:
+	    <h4>
+			${ms}
+		</h4>
+		% for intent in phase_vs_freq_plots[ms]:
+		    <ul class="thumbnails">
+		        % for plot in phase_vs_freq_plots[ms][intent]:
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       rel="phase_vs_freq-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs frequency plot for baseband ${plot.parameters['baseband']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+								<h4>
+									Baseband ${plot.parameters['baseband']}
+								</h4>
+								
+		                        <p>Calibrated amplitude vs frequency for ${intent} calibrator 
+		                        ${utils.commafy(utils.safe_split(plot.parameters['field']))}, 
+		                        baseband ${plot.parameters['baseband']}, all antennas and correlations,
+		                        colored by antenna.
+		                        </p>
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+		    </ul>
+		% endfor
+	%endfor
+%endif
+
+
+%if amp_vs_uv_plots:
+	<h3>Calibrated amplitude vs UV distance</h3>
+
+	% for ms in amp_vs_uv_plots:
+	    <h4>
+	    	${ms}
+		</h4>
+		    <ul class="thumbnails">
+		        % for plot in amp_vs_uv_plots[ms]:
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       rel="amp_vs_uv-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+								<h4>
+									Spectral Window ${plot.parameters['spw']}
+								</h4>
+								
+		                        <p>Calibrated phase vs UV distance for amplitude calibrator ${plot.parameters['field']} spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by correlation.
+		                        </p>
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+		    </ul>
+	%endfor
+%endif
+
+%if amp_vs_time_plots:
+	<h3>Calibrated amplitude vs time</h3>
+
+	% for ms in amp_vs_time_plots:
+	    <h4>
+	        ${ms}
+		</h4>
+		    <ul class="thumbnails">
+		        % for plot in amp_vs_time_plots[ms]:
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       rel="amp_vs_time-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+								<h4>
+					               Spectral Window ${plot.parameters['spw']}
+								</h4>
+								
+		                        <p>Calibrated amplitude vs time for all fields, spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by field.
+		                        </p>
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+		    </ul>
+	%endfor
+%endif
+
+%if phase_vs_time_plots:
+	<h3>Calibrated phase vs time</h3>
+
+	% for ms in phase_vs_time_plots:
+	    <h4>
+	        ${ms}
+		</h4>
+		    <ul class="thumbnails">
+		        % for plot in phase_vs_time_plots[ms]:
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       rel="phase_vs_time-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+								<h4>
+									Spectral Window ${plot.parameters['spw']}
+								</h4>
+								
+		                        <p>Calibrated phase vs time for all fields, spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by field.
+		                        </p>
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+		    </ul>
+	%endfor
+%endif
+
+%endif
