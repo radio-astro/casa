@@ -177,21 +177,28 @@ import pipeline.infrastructure.utils as utils
 		</thead>
 		    <tbody>
 			    % for row in ms_summary_rows:
-			    <tr>
-			    <td>${row.project_id}</td>
-			    <td>${row.schedblock_id}</td>
-			    <td>${row.session}</td>
-			    <td>${row.execblock_id} / <a href="${row.href}">${row.ms}</a></td>
-			    <td>${utils.commafy(row.receivers)}</td>
-			    <td>${row.num_antennas}</td>
-			    <td>${row.time_start}</td>
-			    <td>${row.time_end}</td>
-			    <td>${row.time_on_source}</td>
-			    <td>${str(row.baseline_min)}</td>
-			    <td>${str(row.baseline_max)}</td>
-			    <td>${str(row.baseline_rms)}</td>
-			    <td>${str(row.filesize)}</td>
-			    </tr>
+			        <tr>
+<!--
+				    % if pcontext.project_summary.proposal_code != '':
+					<td>${pcontext.project_summary.proposal_code}</td>
+				    % else:
+					<td></td>
+			            % endif
+-->				
+				    <td>${row.project_id}</td>
+				    <td>${row.schedblock_id}</td>
+				    <td>${row.session}</td>
+				    <td>${row.execblock_id} / <a href="${row.href}">${row.ms}</a></td>
+				    <td>${utils.commafy(row.receivers)}</td>
+				    <td>${row.num_antennas}</td>
+				    <td>${row.time_start}</td>
+				    <td>${row.time_end}</td>
+				    <td>${row.time_on_source}</td>
+				    <td>${str(row.baseline_min)}</td>
+				    <td>${str(row.baseline_max)}</td>
+				    <td>${str(row.baseline_rms)}</td>
+				    <td>${str(row.filesize)}</td>
+				</tr>
 			    % endfor
 		    </tbody>
 	    </table>
