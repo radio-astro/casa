@@ -133,5 +133,25 @@
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hif_makecleanlist</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intent</Keyword>
+                <Value xmlns="">PHASE,BANDPASS,AMPLITUDE</Value>
+                <Keyword xmlns="">imsize</Keyword>
+                <Value xmlns="">[512]</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_cleanlist</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    
 
 </ProcessingProcedure>
