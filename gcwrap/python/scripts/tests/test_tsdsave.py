@@ -1547,18 +1547,40 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         u_org = s.get_unit()
         s_org.set_unit('GHz')
         s.set_unit('GHz')
-        sel = sd.selector()
-        sel.set_ifs(iflist)
-        s_org.set_selection(sel)
-        f_org = s_org._getabcissa(0)
-        f = s._getabcissa(0)
-        s_org.set_selection()
+        if type(channelrange[0]) is not list:
+            channelrange = [channelrange for i in xrange(len(iflist))]
+        for (ifno,chrange) in zip(iflist,channelrange):
+            sel = sd.selector()
+            sel.set_ifs(ifno)
+            s_org.set_selection(sel)
+            s.set_selection(sel)
+            f_org = s_org._getabcissa(0)
+            f = s._getabcissa(0)
+            s.set_selection()
+            s_org.set_selection()
+            casalog.post('left edge expected: %s, actual: %s'%(f_org[chrange[0]],f[0]))
+            casalog.post('right edge expected: %s, actual: %s'%(f_org[chrange[1]],f[-1]))
+            self.assertEqual(f_org[chrange[0]], f[0])
+            self.assertEqual(f_org[chrange[1]], f[-1])
         s_org.set_unit(u_org_org)
         s.set_unit(u_org)
-        casalog.post('left edge expected: %s, actual: %s'%(f_org[channelrange[0]],f[0]))
-        casalog.post('right edge expected: %s, actual: %s'%(f_org[channelrange[1]],f[-1]))
-        self.assertEqual(f_org[channelrange[0]], f[0])
-        self.assertEqual(f_org[channelrange[1]], f[-1])
+
+    def __exec_exception_test(self, spw):
+        # raise exception
+        test_name = inspect.stack()[1][3]
+        outfile = '.'.join([self.prefix, test_name])
+        #spw = ':0~100;200~400'
+
+        try:
+            tsdsave(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            self.assertTrue(isinstance(e, SyntaxError),
+                            msg='Unexpected exception was thrown: %s'%(str(e)))
+            pos = str(e).find('tsdsave doesn\'t support multiple channel range selection for spw.')
+            self.assertNotEqual(pos, -1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     ### field selection syntax test ###
     def test_field_value_default(self):
@@ -1746,10 +1768,11 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         """test_spw_id_default_frequency: Test spw selection with channel range (':FREQ0~FREQ1')"""
         self._default_test()
 
-    @unittest.expectedFailure
     def test_spw_id_default_list(self):
         """test_spw_id_default_list: Test spw selection with multiple channel range (':CH0~CH1;CH2~CH3')"""
-        self._default_test()
+        # raise exception
+        spw = ':0~100;200~400'
+        self.__exec_exception_test(spw)
 
     def test_spw_id_exact_channel(self):
         """test_spw_id_exact_channel: Test spw selection with channel range ('N:CH0~CH1')"""
@@ -1769,15 +1792,20 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
 
-    @unittest.expectedFailure
     def test_spw_id_exact_velocity(self):
         """test_spw_id_exact_velocity: Test spw selection with channel range ('N:VEL0~VEL1')"""
-        self._default_test()
+        iflist = [1]
+        channelrange = [200,400]
+        spw = '1:958.7~1085.0km/s'
+        expected_nrow = 16
 
-    @unittest.expectedFailure
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
     def test_spw_id_exact_list(self):
         """test_spw_id_exact_list: Test spw selection with channel range ('N:CH0~CH1;CH2~CH3')"""
-        self._default_test()
+        # raise exception
+        spw = '2:0~100;200~400'
+        self.__exec_exception_test(spw)
 
     @unittest.expectedFailure
     def test_spw_id_pattern_channel(self):
@@ -1794,10 +1822,11 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         """test_spw_id_pattern_frequency: Test spw selection with channel range ('*:VEL0~VEL1')"""
         self._default_test()
 
-    @unittest.expectedFailure
     def test_spw_id_pattern_list(self):
         """test_spw_id_pattern_list: Test spw selection with channel range ('*:CH0~CH1;CH2~CH3')"""
-        self._default_test()
+        # raise exception
+        spw = '*:0~100;200~400'
+        self.__exec_exception_test(spw)
 
     @unittest.expectedFailure
     def test_spw_value_frequency_channel(self):
@@ -1814,11 +1843,12 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         """test_spw_value_frequency_velocity: Test spw selection with channel range ('FREQ0~FREQ1:VEL0~VEL1')"""
         self._default_test()
 
-    @unittest.expectedFailure
     def test_spw_value_frequency_list(self):
         """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
-        self._default_test()
-
+        # raise exception
+        spw = '114~115GHz:0~100;200~400'
+        self.__exec_exception_test(spw)
+        
     @unittest.expectedFailure
     def test_spw_value_velocity_channel(self):
         """test_spw_value_velocity_channel: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1')"""
@@ -1834,15 +1864,20 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         """test_spw_value_velocity_velocity: Test spw selection with channel range ('VEL0~VEL1:VEL2~VEL3')"""
         self._default_test()
 
-    @unittest.expectedFailure
     def test_spw_value_velocity_list(self):
         """test_spw_value_velocity_list: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1;CH2~CH3')"""
-        self._default_test()
+        # raise exception
+        spw = '-100~100km/s:0~100;200~400'
+        self.__exec_exception_test(spw)
 
-    @unittest.expectedFailure
     def test_spw_id_list_channel(self):
         """test_spw_id_list_channel: Test spw selection with channnel range ('ID0:CH0~CH1,ID1:CH2~CH3')"""
-        self._default_test()
+        iflist = [1,2]
+        channelrange = [200,400]
+        spw = '1:200~400,2:200~400'
+        expected_nrow = 32
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
 
     ### timerange selection syntax test ###
     def test_timerange_value_default(self):
@@ -2140,22 +2175,6 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow, regular_test=False)
 
-    def test_spw_id_exact_exception(self):
-        """test_spw_id_exact_exception: Test multiple channel range for one spw (causes error)"""
-        test_name = inspect.stack()[0][3]
-        outfile = '.'.join([self.prefix, test_name])
-        spw = '2:0~100;200~400'
-
-        try:
-            tsdsave(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            self.assertTrue(isinstance(e, SyntaxError),
-                            msg='Unexpected exception was thrown: %s'%(str(e)))
-            pos = str(e).find('tsdsave doesn\'t support multiple channel range selection for spw.')
-            self.assertNotEqual(pos, -1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 class sdsave_scanrate(unittest.TestCase,tsdsave_unittest_base):
     """
