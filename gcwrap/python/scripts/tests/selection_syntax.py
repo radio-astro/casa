@@ -508,7 +508,10 @@ class SelectionSyntaxTest(unittest.TestCase):
                 elif psubtype == 'interval':
                     pattern = '^[^*]+\+[^*]+$'
         if channel_selection is not None:
-            pattern = pattern.replace('$', ':.+~.+$')
+            if psubtype == 'list':
+                pattern = pattern.replace('[0-9]','.')
+            else:
+                pattern = pattern.replace('$', ':.+~.+$')
         return pattern
 
     def run_task(self, **kwargs):
