@@ -1753,10 +1753,14 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
 
     ### spw (channel) selection syntax test ###
-    @unittest.expectedFailure
     def test_spw_id_default_channel(self):
         """test_spw_id_default_channel: Test spw selection with channel range (':CH0~CH1')"""
-        self._default_test()
+        iflist = [0,1,2,3]
+        channelrange = [0,100]
+        spw = ':0~100'
+        expected_nrow = 64
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
 
     @unittest.expectedFailure
     def test_spw_id_default_frequency(self):
@@ -1807,15 +1811,23 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
         spw = '2:0~100;200~400'
         self.__exec_exception_test(spw)
 
-    @unittest.expectedFailure
     def test_spw_id_pattern_channel(self):
         """test_spw_id_pattern_channel: Test spw selection with channel range ('*:CH0~CH1')"""
-        self._default_test()
+        iflist = [0,1,2,3]
+        channelrange = [0,100]
+        spw = '*:0~100'
+        expected_nrow = 64
 
-    @unittest.expectedFailure
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
     def test_spw_id_pattern_frequency(self):
         """test_spw_id_pattern_frequency: Test spw selection with channel range ('*:FREQ0~FREQ1')"""
-        self._default_test()
+        iflist = [0]
+        channelrange = [0,1919]
+        spw = '*:114~115GHz'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
 
     @unittest.expectedFailure
     def test_spw_id_pattern_velocity(self):
