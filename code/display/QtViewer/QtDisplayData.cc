@@ -251,6 +251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayData *regrid_to = 0;
 		invertColorMap = false;
+		logScaleColorMap = 0;
 		std::string method = "";
 
 		if(dataType=="lel") {
@@ -1196,8 +1197,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void QtDisplayData::setInvertColorMap( bool invert ) {
+	void QtDisplayData::setHistogramColorProperties( bool invert, int logScale ) {
 		invertColorMap = invert;
+		logScaleColorMap = logScale;
 		setColormap_(clrMapName_, true);
 	}
 
@@ -1391,6 +1393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		clrMap->setInvertFlags( invertColorMap, invertColorMap, invertColorMap );
+		clrMap->setLogScale( logScaleColorMap );
 
 		// clrmap is ok to use.
 
