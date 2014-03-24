@@ -155,7 +155,10 @@ import pipeline.infrastructure.utils as utils
 		    
 		<thead>
 		    <tr>
-			<th scope="col" rowspan="2">Meas. Set <i>(Click for overview)</i></th>
+		        <th scope="col" rowspan="2">Project ID</th>
+		        <th scope="col" rowspan="2">Sched. Block</th>
+		        <th scope="col" rowspan="2">Session</th>
+			<th scope="col" rowspan="2">Exec. Block / Meas. Set <i>(Click for overview)</i></th>
 			<th scope="col" rowspan="2">Receivers</th>
 			<th scope="col" rowspan="2">Num Antennas</th>
 			<th scope="col" colspan="3">Time (UTC)</th>
@@ -175,7 +178,10 @@ import pipeline.infrastructure.utils as utils
 		    <tbody>
 			    % for row in ms_summary_rows:
 			    <tr>
-			    <td><a href="${row.href}">${row.ms}</a></td>
+			    <td>${row.project_id}</td>
+			    <td>${row.schedblock_id}</td>
+			    <td>${row.session}</td>
+			    <td>${row.execblock_id} / <a href="${row.href}">${row.ms}</a></td>
 			    <td>${utils.commafy(row.receivers)}</td>
 			    <td>${row.num_antennas}</td>
 			    <td>${row.time_start}</td>

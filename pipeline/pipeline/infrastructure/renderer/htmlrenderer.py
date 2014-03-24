@@ -379,7 +379,8 @@ class T1_1Renderer(RendererBase):
     # named tuple holding values for each row in the main summary table
     TableRow = collections.namedtuple(
                 'Tablerow', 
-                'ms href filesize ' 
+                'project_id schedblock_id session '
+                'execblock_id ms href filesize ' 
                 'receivers '
                 'num_antennas beamsize_min beamsize_max '
                 'time_start time_end time_on_source '
@@ -443,7 +444,11 @@ class T1_1Renderer(RendererBase):
             science_spws = ms.get_spectral_windows(science_windows_only=True)
             receivers = sorted(set(spw.band for spw in science_spws))
 
-            row = T1_1Renderer.TableRow(ms=ms.basename,
+            row = T1_1Renderer.TableRow(project_id=ms.project_id,
+                                        schedblock_id=ms.schedblock_id,
+                                        session=ms.session,
+                                        execblock_id=ms.execblock_id,
+                                        ms=ms.basename,
                                         href=href,
                                         filesize=ms.filesize,
                                         receivers=receivers,                           
