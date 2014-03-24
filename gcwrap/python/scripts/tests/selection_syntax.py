@@ -474,7 +474,7 @@ class SelectionSyntaxTest(unittest.TestCase):
             self.fail('Failed to get test name')
 
     def _get_pattern(self, ptype, psubtype, channel_selection=None):
-        pattern = None
+        pattern = '.+$'
         # selection string mixed with id and string
         if psubtype == 'exprlist':
             pattern = '^.+(\,.+)+$'
@@ -510,7 +510,7 @@ class SelectionSyntaxTest(unittest.TestCase):
         if channel_selection is not None:
             if psubtype == 'list':
                 pattern = pattern.replace('[0-9]','.')
-            else:
+            elif psubtype != 'default':
                 pattern = pattern.replace('$', ':.+~.+$')
         return pattern
 
@@ -528,13 +528,13 @@ class SelectionSyntaxTest(unittest.TestCase):
 
         # Test 1: target parameter must be set unless the test is 'default'
         #         otherwise test fails            
-        if psubtype != 'default':
+        if psubtype != 'default' or channel_selection is not None:
             self.assertIn(param, kwargs.keys(),
                           msg='parameter \'%s\' must be specified'%(param))
 
         # Test 2: appropriate value must be set for target parameter
         #         otherwise test fails
-        if psubtype == 'default':
+        if psubtype == 'default' and channel_selection is None:
             self.assertTrue((param not in kwargs.keys()) or len(kwargs[param]) == 0,
                             msg='parameter \'%s\' must be default'%(param))
         else:
