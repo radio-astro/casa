@@ -112,16 +112,17 @@ const MDirection& ComponentShape::refDirection() const {
 }
 
 void 
-ComponentShape::setRefDirectionError(const Quantum<Double>& newRefDirErrLat, 
-				     const Quantum<Double>& newRefDirErrLong) {
-  if (badError(newRefDirErrLat) || badError(newRefDirErrLong)) {
-    LogIO logErr(LogOrigin("ComponentShape", "setRefDirectionError"));
-    logErr << "The errors must be non-negative angular quantities."
-	   << LogIO::EXCEPTION;
-  }
-  itsDirErrLat = newRefDirErrLat;
-  itsDirErrLong = newRefDirErrLong;
-  DebugAssert(ComponentShape::ok(), AipsError);
+ComponentShape::setRefDirectionError(
+	const Quantum<Double>& newRefDirErrLat,
+	const Quantum<Double>& newRefDirErrLong
+) {
+	ThrowIf(
+		badError(newRefDirErrLat) || badError(newRefDirErrLong),
+		"The errors must be non-negative angular quantities"
+	);
+	itsDirErrLat = newRefDirErrLat;
+	itsDirErrLong = newRefDirErrLong;
+	DebugAssert(ComponentShape::ok(), AipsError);
 }
 
 const Quantum<Double>& ComponentShape::refDirectionErrorLat() const {

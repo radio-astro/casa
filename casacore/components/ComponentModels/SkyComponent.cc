@@ -25,6 +25,7 @@
 //#
 //# $Id: SkyComponent.cc 21292 2012-11-28 14:58:19Z gervandiepen $
 
+#include <casa/Quanta/QMath.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
@@ -222,7 +223,8 @@ Bool SkyComponent::ok() const {
   return True;
 }
 
-String SkyComponent::summarize(const CoordinateSystem *const &coordinates) const {
+String SkyComponent::summarize(
+	const CoordinateSystem *const &coordinates, Bool longErrOnGreatCircle) const {
         ostringstream ldpar; 
         if (shape().type()==ComponentType::LDISK) {
           ldpar << " (limb-darkening exponent: "<<optionalParameters()(0) <<" )"<<endl; 
@@ -235,12 +237,14 @@ String SkyComponent::summarize(const CoordinateSystem *const &coordinates) const
 	myFlux.value(fluxValue);
 	summary << "Flux density: " << fluxValue << " +/- " << myFlux.errors() << endl;
 	summary << "Spectral model: " << spectrum().ident() << endl;
-	summary << "Position: " <<  positionToString(coordinates) << endl;
+	summary << "Position: " <<  positionToString(coordinates, longErrOnGreatCircle) << endl;
 	summary << "Size: " << endl << shape().sizeToString() << endl;
 	return summary.str();
 }
 
-String SkyComponent::positionToString(const CoordinateSystem *const &coordinates) const {
+String SkyComponent::positionToString(
+	const CoordinateSystem *const &coordinates ,Bool longErrOnGreatCircle
+) const {
 	// FIXME essentially cut and paste of Gareth's python code. Needs work.
 	ostringstream position;
 	MDirection mdir = shape().refDirection();
@@ -257,28 +261,10 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 	Quantity dra = shape().refDirectionErrorLong();
 	dra.convert("rad");
 
-	// choose a unified error for both axes
-	Double delta = 0;
-	if ( dra.getValue() == 0 && ddec.getValue() == 0 ) {
-		delta = 0;
-	}
-	else if ( dra.getValue() == 0 ) {
-		delta = fabs(ddec.getValue());
-	}
-	else if ( ddec.getValue() == 0 ) {
-		delta = fabs(dra.getValue());
-	}
-	else {
-		delta = sqrt(
-			dra.getValue()*dra.getValue()
-			+ ddec.getValue()*ddec.getValue()
-		);
-	}
-
 	// Add error estimates to ra/dec strings if an error is given (either >0)
 
 	uInt precision = 1;
-	if ( delta != 0 ) {
+	if ( dra.getValue() != 0 || ddec.getValue() != 0 ) {
 		dra.convert("s");
 		ddec.convert("arcsec");
 		Double drasec  = roundDouble(dra.getValue());
@@ -296,9 +282,12 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 		position << " (fixed)" << endl;
 	}
 	else {
+		Quantity timeError = longErrOnGreatCircle ? dra/cos(lat) : dra;
 		position << " +/- " << std::fixed
-			<< setprecision(precision) << dra << " ("
-			<< dra.getValue("arcsec") << " arcsec)" << endl;
+			<< setprecision(precision) << timeError << " ("
+			<< dra.getValue("arcsec") << " arcsec"
+			<< (longErrOnGreatCircle ? " along great circle" : "")
+			<< ")" << endl;
 	}
 	position << "       --- dec: " << dec;
 	if (ddec.getValue() == 0) {
@@ -319,9 +308,9 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 		if (dirCoord.toPixel(pixel, world)) {
 			Vector<Double> increment = dirCoord.increment();
 			Double raPixErr = dra.getValue() == 0
-				? 0 :abs(dra.getValue("rad")/increment[0]);
+				? 0 : abs(dra.getValue(units[dirAxes[0]])/increment[0]);
 			Double decPixErr = ddec.getValue() == 0
-				? 0 :abs(ddec.getValue("rad")/increment[1]);
+				? 0 : abs(ddec.getValue(units[dirAxes[1]])/increment[1]);
 			Vector<Double> raPix(2), decPix(2);
 			raPix.set(roundDouble(raPixErr));
 			decPix.set(roundDouble(decPixErr));
