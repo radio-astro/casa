@@ -10,6 +10,11 @@ import unittest
 #import listing
 import numpy
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
 import asap as sd
 from tsdaverage import tsdaverage
 from sdstat import sdstat
@@ -25,6 +30,8 @@ class sdaverage_unittest_base:
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdsmooth/'
+    sddatapath = os.environ.get('CASAPATH').split()[0] + \
+                 '/data/regression/unittest/singledish/'
     taskname = "sdaverage"
 
     def _checkfile( self, name ):
@@ -1603,7 +1610,598 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
         self._comp_stat(outstat, refedge)
 
 
+class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
+                                  sdaverage_avetest_base,unittest.TestCase):
+    """
+    Test selection syntax in averaging.
+    Selection parameters to test are:
+    field, spw (no channel selection), scan, pol
+    """
+    rawfile = 'sd_analytic_type2-1.asap'
+    prefix = sdaverage_unittest_base.taskname+'TestSel'
+    ref_save = ((5.5,),(1.5,),(3.5,),(10,0.1),(20,-0.1),(20,0.1),(30,-0.1))
+    ref_tave = ((5.5,),(2.5,),(15,0.1),(25,-0.1))
+    ref_pave = ((5.5,),(2.5,),(20.,))
+    
+    @property
+    def task(self):
+        return tsdaverage
+    
+    @property
+    def spw_channel_selection(self):
+        return False
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
+
+        default(tsdaverage)
+        self.refdata = None
+        self.scanaverage = False
+        self.timeaverage = False
+        self.polaverage = False
+        self.outname = self.prefix+self.postfix
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    ####################
+    # Additional tests
+    ####################
+    #N/A
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='', timeaverage)"""
+        scan = ''
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_scan_id_exact(self):
+        """test scan selection (scan='19', scanaverage)"""
+        scan = '19'
+        mode = 'scanaverage'
+        ref_idx = [0]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_scan_id_lt(self):
+        """test scan selection (scan='<17', scanaverage)"""
+        scan = '<17'
+        mode = 'scanaverage'
+        ref_idx = [1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_scan_id_gt(self):
+        """test scan selection (scan='>18', scanaverage)"""
+        scan = '>18'
+        mode = 'scanaverage'
+        ref_idx = [0]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_scan_id_range(self):
+        """test scan selection (scan='17~18', polaverage)"""
+        scan = '17~18'
+        mode = 'polaverag'
+        ref_idx = [2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_scan_id_list(self):
+        """test scan selection (scan='15,16', timeaverage)"""
+        scan = '15,16'
+        mode = 'timeaverage'
+        ref_idx = [1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_scan_id_exprlist(self):
+        """test scan selection (scan='19,<17', scanaverage)"""
+        scan = '19,<17'
+        mode = 'scanaverage'
+        ref_idx = [0,1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, scan=scan, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='', timeaverage)"""
+        pol = ''
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_pol_id_exact(self):
+        """test pol selection (pol='0', timeaverage)"""
+        pol = '0'
+        mode = 'timeaverage'
+        ref_idx = [1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_pol_id_lt(self):
+        """test pol selection (pol='<1', timeaverage)"""
+        pol = '<1'
+        mode = 'timeaverage'
+        ref_idx = [1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_pol_id_gt(self):
+        """test pol selection (pol='>0', timeaverage)"""
+        pol = '>0'
+        mode = 'timeaverage'
+        ref_idx = [0,3]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_pol_id_range(self):
+        """test pol selection (pol='0~1', timeaverage)"""
+        pol = '0~1'
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_pol_id_list(self):
+        """test pol selection (pol='0,1', timeaverage)"""
+        pol = '0,1'
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='0,>0', timeaverage)"""
+        pol = '0,>0'
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile, pol=pol, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='', timeaverage)"""
+        field = ''
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_id_exact(self):
+        """test field selection (field='9', scanaverage)"""
+        field = '9'
+        mode = 'scanaverage'
+        ref_idx = [0]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_id_lt(self):
+        """test field selection (field='<7', scanaverage)"""
+        field = '<7'
+        mode = 'scanaverage'
+        ref_idx = [1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_id_gt(self):
+        """test field selection (field='>8', scanaverage)"""
+        field = '>8'
+        mode = 'scanaverage'
+        ref_idx = [0]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_id_range(self):
+        """test field selection (field='7~8', polaverage)"""
+        field = '7~8'
+        mode = 'polaverage'
+        ref_idx = [2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_id_list(self):
+        """test field selection (field='5,6', scanaverage)"""
+        field = '5,6'
+        mode = 'scanaverage'
+        ref_idx = [1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_id_exprlist(self):
+        """test field selection (field='<7,9', timeaverage)"""
+        field = '<7,9'
+        mode = 'timeaverage'
+        ref_idx = [0,1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_value_exact(self):
+        """test field selection (field='3C273', polaverage)"""
+        field = '3C273'
+        mode = 'polaverage'
+        ref_idx = [2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_value_pattern(self):
+        """test field selection (field='M*', timeaverage)"""
+        field = 'M*'
+        mode = 'timeaverage'
+        ref_idx = [0,1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_value_list(self):
+        """test field selection (field='M100,M30', timeaverage)"""
+        field = 'M100,M30'
+        mode = 'timeaverage'
+        ref_idx = [0,1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_field_mix_exprlist(self):
+        """test field selection (field='M100,>8', timeaverage)"""
+        field = 'M100,>8'
+        mode = 'timeaverage'
+        ref_idx = [0,1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,field=field, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='', timeaverage)"""
+        spw = ''
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_exact(self):
+        """test spw selection (spw='23', timeaverage)"""
+        spw = '23'
+        mode = 'timeaverage'
+        ref_idx = [1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_lt(self):
+        """test spw selection (spw='<22', scanaverage)"""
+        spw = '<22'
+        mode = 'scanaverage'
+        ref_idx = [0]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_gt(self):
+        """test spw selection (spw='>24', polaverage)"""
+        spw = '>24'
+        mode = 'polaverage'
+        ref_idx = [2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_range(self):
+        """test spw selection (spw='21~23', scanaverage)"""
+        spw = '21~23'
+        mode = 'scanaverage'
+        ref_idx = [0,1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_list(self):
+        """test spw selection (spw='23,21', timeaverage)"""
+        spw = '23,21'
+        mode = 'timeaverage'
+        ref_idx = [0,1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_exprlist(self):
+        """test spw selection (spw='>24,23', polaverage)"""
+        spw = '>24,23'
+        mode = 'polaverage'
+        ref_idx = [1,2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*', timeaverage)"""
+        spw = '*'
+        mode = 'timeaverage'
+        ref_idx = []
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300.4~300.5GHz', polaverage)"""
+        spw = '300.4~300.5GHz'
+        mode = 'polaverage'
+        ref_idx = [2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-500~-450km/s', polaverage)"""
+        spw = '-500~-450km/s'
+        mode = 'polaverage'
+        ref_idx = [2]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='23,450~500km/s', timeaverage)"""
+        spw = '23,450~500km/s'
+        mode = 'timeaverage'
+        ref_idx = [0,1]
+        self._set_average_mode(mode)
+        self.res=self.run_task(infile=self.rawfile,spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,outfile=self.outname,outform='ASAP')
+        self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
+
+    ####################
+    # Helper functions
+    ####################
+    def _set_average_mode(self, avemode):
+        shortmode = avemode[0].upper()
+        if shortmode not in ['S', 'T', 'P']:
+            self.fail("Internal Error: Invalid average mode.")
+        self.scanaverage = (shortmode == 'S')
+        self.timeaverage = (shortmode != 'P')
+        self.polaverage = (shortmode == 'P')
+        self.kernel = ''
+        if shortmode == 'S': self.refdata = self.ref_save
+        elif shortmode == 'T': self.refdata = self.ref_tave
+        else: self.refdata = self.ref_pave
+
+    def _compare_with_polynomial(self, name, ref_data, ref_idx=[], precision = 1.e-6):
+        self._checkfile( name )
+        sout = sd.scantable(name,average=False)
+        nrow = sout.nrow()
+        if len(ref_idx) == 0:
+            ref_idx = range(nrow)
+
+        self.assertEqual(nrow,len(ref_idx),"The rows in output table differs from the expected value.")
+        for irow in range(nrow):
+            y = sout._getspectrum(irow)
+            x = numpy.array( range(len(y)) )
+            # analytic solution
+            coeff = ref_data[ ref_idx[irow] ]
+            yana = self._create_plynomial_array(coeff, x)
+            # compare
+            rdiff = self._get_array_relative_diff(y,yana)
+            rdiff_max = max(abs(rdiff))
+            self.assertTrue(rdiff_max < precision, "Maximum relative difference %f > %f" % (rdiff_max, precision))
+                
+            
+    def _create_plynomial_array(self, coeff, x):
+        """ Create an array from a list of polynomial coefficients and x-array"""
+        xarr = numpy.array(x)
+        yarr = numpy.zeros(len(xarr))
+        for idim in range(len(coeff)):
+            ai = coeff[idim]
+            yarr += ai*xarr**idim
+        return yarr
+        
+    def _get_array_relative_diff(self, data, ref):
+        """ Return an array of relative difference of elements in two arrays"""
+        almostzero = 1.e-6
+        data_arr = numpy.array(data)
+        ref_arr = numpy.array(ref)
+        ref_mod = numpy.array([refval if abs(refval) > almostzero else almostzero for refval in ref_arr])
+        return (data_arr-ref_arr)/ref_mod
+
+# class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
+#                                      sdaverage_avetest_base,unittest.TestCase):
+#     """
+#     Test selection syntax in smoothing.
+#     Selection parameters to test are:
+#     field, spw (no channel selection), scan, pol
+#     """
+#     rawfile = 'sd_analytic_type1-3.bl.asap'
+#     prefix = sdaverage_unittest_base.taskname+'TestSel'
+    
+#     @property
+#     def task(self):
+#         return tsdaverage
+    
+#     @property
+#     def spw_channel_selection(self):
+#         return False
+
+#     def setUp(self):
+#         self.res=None
+#         if (not os.path.exists(self.rawfile)):
+#             shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
+
+#         default(tsdaverage)
+
+#     def tearDown(self):
+#         if (os.path.exists(self.rawfile)):
+#             shutil.rmtree(self.rawfile)
+#         os.system( 'rm -rf '+self.prefix+'*' )
+
+#     ####################
+#     # Additional tests
+#     ####################
+#     #N/A
+
+#     ####################
+#     # scan
+#     ####################
+#     def test_scan_id_default(self):
+#         """test scan selection (scan='')"""
+
+#     def test_scan_id_exact(self):
+#         """test scan selection (scan='')"""
+
+#     def test_scan_id_lt(self):
+#         """test scan selection (scan='')"""
+
+#     def test_scan_id_gt(self):
+#         """test scan selection (scan='')"""
+
+#     def test_scan_id_range(self):
+#         """test scan selection (scan='')"""
+
+#     def test_scan_id_list(self):
+#         """test scan selection (scan='')"""
+
+#     def test_scan_id_exprlist(self):
+#         """test scan selection (scan='')"""
+
+#     ####################
+#     # pol
+#     ####################
+#     def test_pol_id_default(self):
+#         """test pol selection (pol='')"""
+
+#     def test_pol_id_exact(self):
+#         """test pol selection (pol='')"""
+
+#     def test_pol_id_lt(self):
+#         """test pol selection (pol='')"""
+
+#     def test_pol_id_gt(self):
+#         """test pol selection (pol='')"""
+
+#     def test_pol_id_range(self):
+#         """test pol selection (pol='')"""
+
+#     def test_pol_id_list(self):
+#         """test pol selection (pol='')"""
+
+#     def test_pol_id_exprlist(self):
+#         """test pol selection (pol='')"""
+
+#     ####################
+#     # field
+#     ####################
+#     def test_field_value_default(self):
+#         """test field selection (field='')"""
+
+#     def test_field_id_exact(self):
+#         """test field selection (field='')"""
+
+#     def test_field_id_lt(self):
+#         """test field selection (field='')"""
+
+#     def test_field_id_gt(self):
+#         """test field selection (field='')"""
+
+#     def test_field_id_range(self):
+#         """test field selection (field='')"""
+
+#     def test_field_id_list(self):
+#         """test field selection (field='')"""
+
+#     def test_field_id_exprlist(self):
+#         """test field selection (field='')"""
+
+#     def test_field_value_exact(self):
+#         """test field selection (field='')"""
+
+#     def test_field_value_pattern(self):
+#         """test field selection (field='')"""
+
+#     def test_field_value_list(self):
+#         """test field selection (field='')"""
+
+#     def test_field_mix_exprlist(self):
+#         """test field selection (field='')"""
+
+#     ####################
+#     # spw 
+#     ####################
+#     def test_spw_id_default(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_exact(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_lt(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_gt(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_range(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_list(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_exprlist(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_id_pattern(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_value_frequency(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_value_velocity(self):
+#         """test spw selection (spw='')"""
+
+#     def test_spw_mix_exprlist(self):
+#         """test spw selection (spw='')"""
+
+#     ####################
+#     # Helper functions
+#     ####################
+
+
 def suite():
     return [sdaverage_badinputs, sdaverage_smoothTest, sdaverage_storageTest,
             sdaverage_test6, sdaverage_test7, sdaverage_test8, sdaverage_test9,
-            sdaverage_test_flag]
+            sdaverage_test_flag, sdaverage_avetest_selection]
