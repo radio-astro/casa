@@ -18,6 +18,7 @@ import zipfile
 import casadef
 import mako
 import mako.lookup as lookup
+import numpy as np
 
 import pipeline as pipeline
 import pipeline.domain.measures as measures
@@ -98,6 +99,9 @@ def _get_task_description_for_class(task_cls):
 
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
+
+#    if task_cls is hif.tasks.Flagchans:
+#        return 'Flag channels in raw data'
 
     if task_cls in (hifa.tasks.FlagDeterALMA, hifa.tasks.ALMAAgentFlagger):
         return 'ALMA deterministic flagging'
@@ -2346,6 +2350,52 @@ class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
         return filename
 
 
+class T2_4MDetailsFlagchansRenderer(T2_4MDetailsDefaultRenderer):
+    '''
+    Renders detailed HTML output for the Tsysflag task.
+    '''
+    def __init__(self, template='t2-4m_details-hif_flagchans.html',
+            always_rerender=False):
+        super(T2_4MDetailsFlagchansRenderer, self).__init__(template,
+                always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsFlagchansRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        htmlreports = self.get_htmlreports(context, results)
+        
+        ctx.update({'htmlreports' : htmlreports})
+        return ctx
+
+    def get_htmlreports(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = {}
+        for result in results:
+            if not hasattr(result, 'flagcmdfile'):
+                continue
+
+            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
+            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+            table_basename = os.path.basename(result.table)
+            htmlreports[table_basename] = (flagcmd_relpath,)
+
+        return htmlreports
+
+    def write_flagcmd_to_disk(self, weblog_dir, result):
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        reason = result.reason
+        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        return filename
+
+
 class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hif_importdata.html', 
                  always_rerender=False):
@@ -3886,8 +3936,45 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
         # There is only ever one CleanListResult in the ResultsList as it
         # operates over multiple measurement sets, so we can set the result to
         # the first item in the list
+
+        # Get results info
+        info_dict = {}
+
+        if results[0]:
+            cresults = results[0].results
+
+            for r in cresults:
+                if r.empty():
+                    continue
+                if not r.iterations:
+                    continue
+
+                maxiter = max(r.iterations.keys())
+
+                with casatools.ImageReader(r.iterations[maxiter]['image']) as image:
+                   info = image.miscinfo()
+                   spw = pol = field = None
+                   if info.has_key('spw'): 
+                       spw = info['spw']
+                   if info.has_key('field'):
+                       field = '%s(%s)' % (info['field'], r.intent)
+
+                   coordsys = image.coordsys()
+                   coord_names = np.array(coordsys.names())
+                   coord_refs = coordsys.referencevalue(format='s')
+                   pol = coord_refs['string'][coord_names=='Stokes'][0]
+
+                   stats = image.statistics(robust=False)
+                   info_dict[(field,spw,pol,'max')] = stats.get('max')[0]
+                   info_dict[(field,spw,pol,'beam')] = image.restoringbeam()
+
+                with casatools.ImageReader(r.iterations[maxiter]['residual']) as residual:
+                   stats = image.statistics(robust=False)
+                   info_dict[(field,spw,pol,'rms')] = stats.get('rms')[0]
+
+        # Make the plots
         plotter = clean.CleanSummary(context, results[0])
-        plots = plotter.plot()
+        plots = plotter.plot()        
 
         fields = sorted(set([p.parameters['field'] for p in plots]))
         spws = sorted(set([p.parameters['spw'] for p in plots]))
@@ -3914,6 +4001,7 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
                     'iterations' : iterations,
                     'plots'      : plots,
                     'plots_dict' : plots_dict,
+                    'info_dict'  : info_dict,
                     'dirname'    : weblog_dir})
 
 #         import pprint
@@ -5374,6 +5462,7 @@ renderer_map = {
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
+#        hif.tasks.Flagchans      : T2_4MDetailsFlagchansRenderer(),
         hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
