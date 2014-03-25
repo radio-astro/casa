@@ -45,6 +45,11 @@ template<class T> void ImageDecimator<T>::setAxis(uInt n) {
 }
 
 template<class T> SPIIT ImageDecimator<T>::decimate() const {
+	ThrowIf(
+		_factor > this->_getImage()->shape()[_axis],
+		"The value of factor cannot be greater than the "
+		"number of pixels along the specified axis"
+	);
 	LogOrigin lor = LogOrigin(getClass(), __func__);
 	*this->_getLog() << lor;
 	SPIIT clone(this->_getImage()->cloneII());

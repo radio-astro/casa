@@ -114,7 +114,7 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 	String& specification, const String& firstStokes, const uInt nStokes,
 	const StokesControl stokesControl
 ) const {
-	LogOrigin origin("CasacRegionManager", __FUNCTION__);
+	LogOrigin origin("CasacRegionManager", __func__);
 	//const LogIO *myLog = _getLog();
 	*_getLog() << origin;
 
@@ -236,7 +236,7 @@ Bool CasacRegionManager::_supports2DBox(Bool except) const {
 		}
 	}
 	if (except && ! ok) {
-		*_getLog() << LogOrigin("CasacRegionManager", __FUNCTION__)
+		*_getLog() << LogOrigin("CasacRegionManager", __func__)
 			<< "This image does not have a 2-D direction or linear coordinate";
 	}
 	return ok;
@@ -270,17 +270,17 @@ Record CasacRegionManager::fromBCS(
 	const String& box, const IPosition& imShape, const String& imageName,
 	Bool verbose
 ) {
-	LogOrigin origin("CasacRegionManager", __FUNCTION__);
+	LogOrigin origin("CasacRegionManager", __func__);
 	Record regionRecord;
 	if (! box.empty()) {
-		if (regionPtr != 0 || ! regionName.empty()) {
-			*_getLog()
-				<< "box, regionPtr, and/or regionName cannot be simultaneously specified"
-				<< LogIO::EXCEPTION;
-		}
-		if (box.freq(",") % 4 != 3) {
-			*_getLog() << "box not specified correctly" << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			regionPtr != 0 || ! regionName.empty(),
+			"box, regionPtr, and/or regionName cannot be simultaneously specified"
+		);
+		ThrowIf(
+			box.freq(",") % 4 != 3,
+			 "box not specified correctly"
+		);
 		regionRecord = fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				chans, stokesControl, box, imShape
@@ -540,7 +540,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 		const vector<uInt>& chanEndPts, const vector<uInt>& polEndPts,
 		const IPosition imShape
 ) const {
-	LogOrigin origin("CasacRegionManager", __FUNCTION__);
+	LogOrigin origin("CasacRegionManager", __func__);
 	*_getLog() << origin;
 	Vector<Double> blc(imShape.nelements(), 0);
 	Vector<Double> trc(imShape.nelements(), 0);
@@ -850,6 +850,13 @@ vector<uInt> CasacRegionManager::_initSpectralRanges(
 		nSelectedChannels = 0;
 		return ranges;
 	}
+	uInt specNum = getcoordsys().spectralAxisNumber();
+	ThrowIf(
+		specNum >= imShape.size(),
+		"Spectral axis number " + String::toString(specNum)
+		+ " must be less than number of shape dimensions "
+		+ String::toString(imShape.size())
+	);
 	uInt nChannels = imShape[getcoordsys().spectralAxisNumber()];
 	ranges.push_back(0);
 	ranges.push_back(nChannels - 1);
@@ -874,7 +881,7 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 	String specification, uInt& nSelectedChannels,
 	const IPosition& imShape
 ) const {
-	LogOrigin origin("CasacRegionManager", __FUNCTION__);
+	LogOrigin origin("CasacRegionManager", __func__);
 	*_getLog() << origin;
 	specification.trim();
 	String x = specification;
@@ -962,14 +969,13 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
 		iter!=end; iter++
 	) {
 		AnnotationBase::Keyword key = iter->first;
-		if (
+		ThrowIf(
 			key != AnnotationBase::FRAME && key != AnnotationBase::RANGE
-			&& key != AnnotationBase::VELTYPE && key != AnnotationBase::RESTFREQ
-		) {
-			*_getLog() << "Non-frequency related keyword '"
-				<< AnnotationBase::keywordToString(key)
-				<< "' found." << LogIO::EXCEPTION;
-		}
+			&& key != AnnotationBase::VELTYPE && key != AnnotationBase::RESTFREQ,
+			"Non-frequency related keyword '"
+			+ AnnotationBase::keywordToString(key)
+			+ "' found."
+		);
 	}
 	// Parameters OK. We need to modify the input string so we can construct an AnnRegion
 	// from which to get the spectral range information
@@ -977,11 +983,11 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
 	RegionTextParser parser(csys, imShape, regSpec);
 	vector<uInt> range(2);
 
-	if (parser.getLines().empty()) {
-		*_getLog() << "The specified spectral range " << specification
-			<< " does not intersect the image spectral range."
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		parser.getLines().empty(),
+		"The specified spectral range " + specification
+		+ " does not intersect the image spectral range."
+	);
 	const AnnRegion *reg = dynamic_cast<const AnnRegion*>(
 		parser.getLines()[0].getAnnotationBase()
 	);
@@ -1018,10 +1024,10 @@ vector<uInt> CasacRegionManager::_spectralRangesFromTraditionalFormat(
 		else if(parts[i].matches(regexRange)) {
 			// a range of channels
 			Vector<String> values = stringToVector(parts[i], '~');
-			if (values.size() != 2) {
-				*_getLog() << "Incorrect specification for channel range "
-					<< parts[i] << LogIO::EXCEPTION;
-			}
+			ThrowIf(
+				values.size() != 2,
+				"Incorrect specification for channel range " + parts[i]
+			);
 			values[0].trim();
 			values[1].trim();
 			for(uInt j=0; j < 2; j++) {

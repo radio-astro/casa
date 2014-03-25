@@ -64,6 +64,8 @@ protected:
 
     inline Bool _supportsMultipleBeams() {return False;}
 
+    virtual inline Bool _supportsMultipleRegions() {return True;}
+
 private:
 	uInt _axis, _factor;
 	ImageDecimatorData::Function _function;
