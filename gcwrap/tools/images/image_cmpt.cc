@@ -1122,6 +1122,14 @@ image* image::decimate(
 		"Tool is not attached to an image"
 	);
 	try {
+		ThrowIf(
+			axis < 0,
+			"The value of axis cannot be negative"
+		);
+		ThrowIf(
+			factor < 0,
+			"The value of factor cannot be negative"
+		);
 		String mymethod = method;
 		mymethod.downcase();
 		ImageDecimatorData::Function f;
