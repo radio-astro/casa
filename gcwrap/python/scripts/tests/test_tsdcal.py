@@ -556,13 +556,34 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     Data is taken from OrionS_rawACSmod and created by the following
     script:
     scan = sd.scantable('OrionS_rawACSmod', average=False)
-    sel.set_cycles([0,4])
-    scan.save('selection.asap')
-    sdcal(infile='selecttion.asap', calmode='ps',outfile='selection.cal.asap')
+    sel=sd.selector(cycles=[0, 4])
+    scan.set_selection(sel)
+    scan.save('selection.mod.asap')
+    tb.open('selection.mod.asap', nomodify=False)
+    # modify SCANNO --> [30, 31, 32, 33]
+    scanmap = {21: 30, 22: 30, 23: 31, 24: 31, 25: 32, 26: 32, 27: 33, 28: 33}
+    scancol = tb.getcol('SCANNO')
+    for irow in range(len(scancol)): scancol[irow] = scanmap[ scancol[irow] ]
+    tb.putcol('SCANNO', scancol)
+    # modify FIELD and SOURCE NAME
+    for sno in [30, 31, 32, 33]:
+        subtb = tb.query('SCANNO==%d' % sno)
+        newname = 'ptg%d' % (sno % 10)
+        srccol = subtb.getcol('SRCNAME')
+        newsrc = [ name+newname for name in srccol ]
+        subtb.putcol('SRCNAME', newsrc)
+        fldcol = subtb.getcol('FIELDNAME')
+        newfld = [ name.replace('0', '1').replace('2','3') for name in fldcol ]
+        subtb.putcol('FIELDNAME', newfld)
+        subtb.flush()
+        subtb.close()
+    tb.flush()
+    tb.close()
+    sdcal(infile='selection.mod.asap', calmode='ps',outfile='selection.mod.cal.asap')
     """
     # Input and output names
-    rawfile='selection.asap'
-    reffile='selection.cal.asap'
+    rawfile='selection.mod.asap'
+    reffile='selection.mod.cal.asap'
     prefix=sdcal_unittest_base.taskname+'TestSel'
     calmode='ps'
     field_prefix = 'OrionS__'
@@ -603,15 +624,15 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal(outname)
 
     def test_mixed_selection(self):
-        """ test field, spw, scan and pol selection (field='2,3', spw='14', scan='27,28', pol='1')"""
+        """ test field, spw, scan and pol selection (field='3', spw='14,15', scan='33', pol='1')"""
         outname=self.prefix+self.postfix
-        field = '2,3'
-        spw = '14'
-        scan='27, 28'
+        field = '3'
+        spw = '14,15'
+        scan='33'
         pol='1'
         self.res=tsdcal(infile=self.rawfile,field=field,spw=spw,scan=scan,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
         tbsel = {'FIELDNAME': [self.field_prefix+str(3)],
-                 'IFNO': [14], 'SCANNO': [28], 'POLNO': [1]}
+                 'IFNO': [14,15], 'SCANNO': [33], 'POLNO': [1]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -628,64 +649,62 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
 
-    @unittest.expectedFailure
     def test_scan_id_exact(self):
-        """ test scan selection (scan='1')"""
-        self._default_test()
-#         outname=self.prefix+self.postfix
-#         scan = '1'
-#         self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'SCANNO': [1]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
+        """ test scan selection (scan='31')"""
+        outname=self.prefix+self.postfix
+        scan = '31'
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'SCANNO': [31]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     def test_scan_id_lt(self):
-        """ test scan selection (scan='<23')"""
+        """ test scan selection (scan='<31')"""
         outname=self.prefix+self.postfix
-        scan = '<23'
+        scan = '<31'
         self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [22]}
+        tbsel = {'SCANNO': [30]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_scan_id_gt(self):
-        """ test scan selection (scan='>26')"""
+        """ test scan selection (scan='>31')"""
         outname=self.prefix+self.postfix
-        scan = '>26'
+        scan = '>31'
         self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [28]}
+        tbsel = {'SCANNO': [32,33]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_scan_id_range(self):
-        """ test scan selection (scan='23~26')"""
+        """ test scan selection (scan='31~32')"""
         outname=self.prefix+self.postfix
-        scan = '23~26'
+        scan = '31~32'
         self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [24,26]}
+        tbsel = {'SCANNO': [31,32]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_scan_id_list(self):
-        """ test scan selection (scan='21,22')"""
+        """ test scan selection (scan='30,32')"""
         outname=self.prefix+self.postfix
-        scan = '21,22'
+        scan = '30,32'
         self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [22]}
+        tbsel = {'SCANNO': [30,32]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_scan_id_exprlist(self):
-        """ test scan selection (scan='<23, 25~26, 27, 28')"""
+        """ test scan selection (scan='<32, 33')"""
         outname=self.prefix+self.postfix
-        scan = '<23, 25~26, 27, 28'
+        scan = '<32, 33'
         self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [22, 26, 28]}
+        tbsel = {'SCANNO': [30,31,33]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -706,7 +725,6 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test pol selection (pol='1')"""
         outname=self.prefix+self.postfix
         pol = '1'
-        #self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
         tbsel = {'POLNO': [1]}
         self.assertEqual(self.res,None,
@@ -753,10 +771,15 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_pol_id_exprlist(self):
-        """test pol selection (pol='')"""
-        self._default_test()
+        """test pol selection (pol='0,>0')"""
+        outname=self.prefix+self.postfix
+        pol = '0,>0'
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     ####################
     # field
@@ -770,17 +793,15 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
 
-    @unittest.expectedFailure
     def test_field_id_exact(self):
         """ test field selection (field='1')"""
-        self._default_test()
-#         outname=self.prefix+self.postfix
-#         field = '1'
-#         self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'IFNO': [1]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
+        outname=self.prefix+self.postfix
+        field = '1'
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'FIELDNAME': [self.field_prefix+str(1)]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_lt(self):
         """ test field selection (field='<2')"""
@@ -803,35 +824,46 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_range(self):
-        """ test field selection (field='2~3')"""
+        """ test field selection (field='1~3')"""
         outname=self.prefix+self.postfix
-        field = '2~3'
+        field = '1~3'
         self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'FIELDNAME': [self.field_prefix+str(3)]}
+        tbsel = {'FIELDNAME': [self.field_prefix+str(1),self.field_prefix+str(3)]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_list(self):
-        """ test field selection (field='0,1')"""
+        """ test field selection (field='1,3')"""
         outname=self.prefix+self.postfix
-        field = '0,1'
+        field = '1,3'
         self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        fieldid = [1]
+        fieldid = [1,3]
         tbsel = {'FIELDNAME': [self.field_prefix+str(idx) for idx in fieldid]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_field_id_exprlist(self):
-        """ test field selection (field='')"""
-        self._default_test()
+        """ test field selection (field='<2,3')"""
+        outname=self.prefix+self.postfix
+        field = '<2,3'
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
+        fieldid = [1,3]
+        tbsel = {'FIELDNAME': [self.field_prefix+str(idx) for idx in fieldid]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_field_value_exact(self):
-        """ test field selection (field='')"""
-        self._default_test()
+        """ test field selection (field='OrionSptg1')"""
+        outname=self.prefix+self.postfix
+        field = 'OrionSptg1'
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'SRCNAME': ['OrionSptg1']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     def test_field_value_pattern(self):
         """ test field selection (field='Ori*')"""
@@ -843,15 +875,25 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_field_value_list(self):
-        """ test field selection (field='')"""
-        self._default_test()
+        """ test field selection (field='OrionSptg1,OrionSptg3')"""
+        outname=self.prefix+self.postfix
+        field = 'OrionSptg1,OrionSptg3'
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'SRCNAME': ['OrionSptg1', 'OrionSptg3']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_field_mix_exprlist(self):
-        """ test field selection (field='')"""
-        self._default_test()
+        """ test field selection (field='OrionSptg0,>2')"""
+        outname=self.prefix+self.postfix
+        field = 'OrionSptg0,>2'
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'SCANNO': [30,32,33]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     ####################
     # spw 
@@ -938,20 +980,35 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
 
-    @unittest.expectedFailure
     def test_spw_value_frequency(self):
-        """test spw selection (spw='Hz')"""
-        self._default_test()
+        """test spw selection (spw='44.0~44.2GHz')"""
+        outname=self.prefix+self.postfix
+        spw = '44.0~44.2GHz'
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'IFNO': [2,3]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_spw_value_velocity(self):
-        """test spw selection (spw='km/s')"""
-        self._default_test()
+        """test spw selection (spw='-10~10km/s')"""
+        outname=self.prefix+self.postfix
+        spw = '-10~10km/s'
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'IFNO': [0,12]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='')"""
-        self._default_test()
+        """test spw selection (spw='0,1300~3700km/s')"""
+        outname=self.prefix+self.postfix
+        spw = '0,1300~3700km/s'
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
+        tbsel = {'IFNO': [0,1,15]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     ####################
     # Helper functions
