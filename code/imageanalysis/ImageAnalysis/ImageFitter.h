@@ -143,7 +143,7 @@ public:
 	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
 
 	// set rms level for calculating uncertainties. If not positive, an exception is thrown.
-	void setRMS(Double rms);
+	void setRMS(const Quantity& rms);
 
 	void setIncludePixelRange(const std::pair<Float, Float>& r) {
 		_includePixelRange.reset(new std::pair<Float, Float>(r));
@@ -159,6 +159,17 @@ public:
 	// set the output residual image name
 	void setResidual(const String& r) { _residual = r; }
 
+	// set noise correlation beam FWHM
+	void setNoiseFWHM(const Quantity& q);
+
+	// in pixel widths
+	void setNoiseFWHM(Double d);
+
+	// clear noise FWHM, if the image has no beam, use the uncorrelated noise equations.
+	// If the image has a beam(s) use the correlated noise equations with theta_N =
+	// the geometric mean of the beam major and minor axes.
+	void clearNoiseFWHM();
+
 protected:
     virtual inline Bool _supportsMultipleRegions() {return True;}
 
@@ -166,10 +177,9 @@ private:
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
 	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
-	//Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
 	Vector<String> _fixed, _deconvolvedMessages;
-	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
+	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed, _correlatedNoise, _useBeamForNoise;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
@@ -184,6 +194,7 @@ private:
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
 	Int _stokesPixNumber, _chanPixNumber;
 	ImageFitterResults _results;
+	std::auto_ptr<Quantity> _noiseFWHM;
 
 	const static String _class;
 
@@ -218,10 +229,10 @@ private:
 	//void _writeNewEstimatesFile() const;
 
 	// Set the flux densities and peak intensities of the fitted components.
-	void _setFluxes();
+	//void _setFluxes();
 
 	// Set the convolved sizes of the fitted components.
-	void _setSizes();
+	//void _setSizes();
 
 	void _setDeconvolvedSizes();
 
@@ -247,9 +258,9 @@ private:
 	    Double& zeroLevelOffsetSolution,
 	    Double& zeroLevelOffsetError,
 	    std::pair<Int, Int>& pixelOffsets,
-		const Vector<String>& models, const Bool fitIt,
-		const Bool deconvolveIt, const Bool list,
-		const Double zeroLevelEstimate
+		const Vector<String>& models, Bool fitIt,
+		Bool deconvolveIt,
+		Double zeroLevelEstimate
 	);
 
 	Vector<Double> _singleParameterEstimate(
@@ -271,7 +282,6 @@ private:
 		Stokes::StokesTypes stokes, Bool xIsLong
 	) const;
 
-
 	void _doConverged(
 		ComponentList& convolvedList, ComponentList& deconvolvedList,
 		Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
@@ -283,6 +293,18 @@ private:
 		const Array<Float>& pixels, const Array<Bool>& pixelMask, const Fit2D& fitter,
 		SPIIF templateImage
 	);
+
+	Quantity _pixelWidth() const;
+
+	void _calculateErrors();
+
+	Double _getRMS() const;
+
+	Double _correlatedOverallSNR(
+		uInt comp, Double a, Double b, Double signalToNoise
+	) const;
+
+	GaussianBeam _getCurrentBeam() const;
 
 };
 }

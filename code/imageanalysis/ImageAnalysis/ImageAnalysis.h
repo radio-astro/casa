@@ -124,7 +124,7 @@ class ImageAnalysis
 
     Record* boundingbox(const Record& region) const;
 
-    String brightnessunit();
+    String brightnessunit() const;
 
     void calc(const String& pixels);
 
