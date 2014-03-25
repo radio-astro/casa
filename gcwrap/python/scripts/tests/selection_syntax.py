@@ -164,6 +164,7 @@ class SelectionSyntaxTest(unittest.TestCase):
     @skipUnlessHasParam('spw')
     def test_spw_id_pattern(self):
         """test_spw_id_pattern: Test spw selection by wildcard"""
+        self._default_test()
 
     @skipUnlessHasParam('spw')
     def test_spw_value_frequency(self):
