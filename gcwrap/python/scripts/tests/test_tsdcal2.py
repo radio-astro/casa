@@ -1106,7 +1106,7 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     
 
 def suite():
-    return [#tsdcal2_exceptions, tsdcal2_skycal_ps,
-            #tsdcal2_skycal_otf, tsdcal2_skycal_otfraster,
-            #tsdcal2_tsyscal, tsdcal2_applycal,
+    return [tsdcal2_exceptions, tsdcal2_skycal_ps,
+            tsdcal2_skycal_otf, tsdcal2_skycal_otfraster,
+            tsdcal2_tsyscal, tsdcal2_applycal,
             tsdcal2_test_selection]
