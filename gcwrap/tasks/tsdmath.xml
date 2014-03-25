@@ -140,7 +140,7 @@ use IN0, IN1, etc. as variable names in varnames.
 
   <example>
 Keyword arguments:
-infilea -- a list of names of input SD datasets
+infiles -- a list of names of input SD datasets
         The file names will automatically replace the phrases 
         IN0, IN1, ... in expr parameter.
 expr -- mathematical expression using scantables 
