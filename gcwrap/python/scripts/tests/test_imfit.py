@@ -254,9 +254,6 @@ class imfit_test(unittest.TestCase):
     
     def test_fit_using_box(self):
         '''Imfit: Fit using box'''
-        method = "test_fit_using_box"
-        success = True
-        global msgs
         for i in range(3):
             test = 'fit_using_box, loop #' + str(i) + ': '
             # the regions and box that should be used all define the same region
@@ -284,102 +281,108 @@ class imfit_test(unittest.TestCase):
             def run_imfit():
                 default('imfit')
                 return imfit(imagename=noisy_image, box=box, region=region)
-    
             for code in [run_fitcomponents, run_imfit]:
-                res = code()
-                clist = res['results']
-                if (not res['converged'][0]):
-                    success = False
-                    msgs += method + " fit did not converge unexpectedly. box=" + box + " region=" + str(region)
-                epsilon = 1e-5
-                # I flux test
-                got = clist['component0']['flux']['value'][0]
-                expected = 60319.8604
-                if (not near(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "I flux density test failure, got " + str(got) \
-                        + " expected " + str(expected) + "\n"
-                # Q flux test
-                got = clist['component0']['flux']['value'][1]
-                expected = 0
-                if (got != expected):
-                    success = False
-                    msgs += method + "Q flux density test failure, got " + str(got) \
-                        + " expected " + str(expected) + "\n"
-                # RA test
-                got = clist['component0']['shape']['direction']['m0']['value']
-                expected = 0.00021337
-                if (not near_abs(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                # Dec test
-                got = clist['component0']['shape']['direction']['m1']['value']
-                expected = 1.935906e-05
-                if (not near_abs(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                # Major axis test
-                got = clist['component0']['shape']['majoraxis']['value']
-                expected = 23.545212
-                epsilon = 1e-6
-                if (not near(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                got = clist['component0']['shape']['majoraxiserror']['value']
-                expected = 0.0188108125957
-                epsilon = 1e-6
-                print "*** got, expect, epsilon " + str(got) + ", " + str(expected) + ", " + str(epsilon)
+                self._check_box_results(code())
+                
+    def _check_box_results(self, res):
+        epsilon = 1e-5
+        clist = res['results']
+        self.assertTrue(
+            res['converged'][0],
+            "fit did not converge unexpectedly"
+        )
+        # I flux test
+        got = clist['component0']['flux']['value'][0]
+        expected = 60319.8604
+        self.assertTrue(
+            near(got, expected, epsilon),
+            "I flux density test failure, got " + str(got)
+            + " expected " + str(expected)
+        )
+        # Q flux test
+        got = clist['component0']['flux']['value'][1]
+        expected = 0
+        self.assertTrue(
+            got == expected,
+            "Q flux density test failure, got " + str(got)
+            + " expected " + str(expected)
+        )
+        # RA test
+        got = clist['component0']['shape']['direction']['m0']['value']
+        expected = 0.00021337
+        self.assertTrue(
+            near_abs(got, expected, epsilon),
+            "RA test failure, got " + str(got) + " expected " + str(expected)
+        )
+        # Dec test
+        got = clist['component0']['shape']['direction']['m1']['value']
+        expected = 1.935906e-05
+        self.assertTrue(
+            near_abs(got, expected, epsilon),
+            "Dec test failure, got " + str(got) + " expected " + str(expected)
+        )
+        # Major axis test
+        got = clist['component0']['shape']['majoraxis']['value']
+        expected = 23.545212
+        epsilon = 1e-6
+        self.assertTrue(
+            near(got, expected, epsilon),
+            "Major axis test failure, got " + str(got) + " expected " + str(expected)
+        )
+        got = clist['component0']['shape']['majoraxiserror']['value']
+        expected = 0.01776
+        epsilon = 1e-3
+        self.assertTrue(
+            near(got, expected, epsilon),
+            "Major axis error test failure, got " + str(got) + " expected " + str(expected)
+        )
+        self.assertTrue(
+            clist['component0']['shape']['majoraxis']['unit']
+            == clist['component0']['shape']['majoraxiserror']['unit'],
+            "Major axis and major axis error units are different\n"
+        )
+        # Minor axis test
+        got = clist['component0']['shape']['minoraxis']['value']
+        expected = 18.86450
+        epsilon = 1e-6
+        self.assertTrue(
+            near(got, expected, epsilon),
+            "Minor axis test failure, got " + str(got) + " expected " + str(expected)
+        )
+        got = clist['component0']['shape']['minoraxiserror']['value']
+        expected = 0.01423
+        epsilon = 1e-3
+        self.assertTrue(
+            near(got, expected, epsilon),
+            "Minor axis error test failure, got " + str(got) + " expected " + str(expected)
+        )
+        self.assertTrue(
+            clist['component0']['shape']['minoraxis']['unit']
+            == clist['component0']['shape']['minoraxiserror']['unit'],
+            "Minor axis and minor axis error units are different"
+        )
+        # Position angle test
+        got = clist['component0']['shape']['positionangle']['value']
+        expected = 119.81296
+        epsilon = 1e-5
+        self.assertTrue(
+            near_abs(got, expected, epsilon),
+            "Position angle test failure, got " + str(got)
+            + " expected " + str(expected)
+        )
+        got = clist['component0']['shape']['positionangleerror']['value']
+        expected = 0.1367
+        epsilon = 1e-3
+        self.assertTrue(
+            near(got, expected, epsilon),
+            "Position angle error test failure, got " + str(got) + " expected " + str(expected)
+        )
+        self.assertTrue(
+            clist['component0']['shape']['positionangle']['unit']
+            == clist['component0']['shape']['positionangleerror']['unit'],
+            "Position angle and position angle error units are different"
+        )
 
-                if (not near(got, expected, epsilon)):
-                    print "*** failed"
-                    success = False
-                    msgs += method + "Major axis error test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                if (
-                    not clist['component0']['shape']['majoraxis']['unit']
-                    == clist['component0']['shape']['majoraxiserror']['unit']
-                ):
-                    success = False
-                    msgs += method + "Major axis and major axis error units are different\n"
-                # Minor axis test
-                got = clist['component0']['shape']['minoraxis']['value']
-                expected = 18.86450
-
-                if (not near(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                got = clist['component0']['shape']['minoraxiserror']['value']
-                expected = 0.0207481352015
-
-                if (not near(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "Minor axis error test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                if (
-                    not clist['component0']['shape']['minoraxis']['unit']
-                    == clist['component0']['shape']['minoraxiserror']['unit']
-                ):
-                    success = False
-                    msgs += method + "Minor axis and minor axis error units are different\n"
-                # Position angle test
-                got = clist['component0']['shape']['positionangle']['value']
-                expected = 119.81296
-                epsilon = 1e-5
-                if (not near_abs(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "Position angle test failure, got " + str(got) \
-                        + " expected " + str(expected) + "\n"
-                got = clist['component0']['shape']['positionangleerror']['value']
-                expected = 0.1425508
-                if (not near(got, expected, epsilon)):
-                    success = False
-                    msgs += method + "Position angle error test failure, got " + str(got) + " expected " + str(expected) + "\n"
-                if (
-                    not clist['component0']['shape']['positionangle']['unit']
-                    == clist['component0']['shape']['positionangleerror']['unit']
-                ):
-                    success = False
-                    msgs += method + "Position angle and position angle error units are different\n"
-        self.assertTrue(success,msgs)
-        
     def test_nonconvergence(self):
         '''Imfit: Test non-convergence'''
         test = "test_nonconvergence: "
@@ -1386,6 +1389,7 @@ class imfit_test(unittest.TestCase):
         myia = iatool()
         test = "test_strange_units: "
         myia.open(noisy_image)
+        box = "130,89,170,129"
         outname = "bad_units.im"
         subim = myia.subimage(outname)
         myia.done()
@@ -1395,12 +1399,12 @@ class imfit_test(unittest.TestCase):
         subim.done()
         def run_fitcomponents():
             myia.open(outname)
-            res = myia.fitcomponents()
+            res = myia.fitcomponents(box=box)
             myia.done()
             return res
         def run_imfit():
             default('imfit')
-            return imfit(imagename=outname)
+            return imfit(imagename=outname, box=box)
     
         for i in [0 ,1]:
             if (i == 0):
@@ -1409,7 +1413,7 @@ class imfit_test(unittest.TestCase):
             else:
                 code = run_imfit
                 method += test + "imfit: "
-            self._check_results(code())
+            self._check_box_results(code())
             
     def test_multiple_boxes(self):
         """Test support for multiple boxes (CAS-4978)"""
@@ -1456,14 +1460,14 @@ class imfit_test(unittest.TestCase):
         flux = zz['results']['component0']['flux']
         self.assertTrue(near(flux['value'][0], 0.00028916, 1e-4))
         print "*** xx " + str(flux['error'][0])
-        self.assertTrue(near(flux['error'][0], 1.73518728e-08, 1e-4))
+        self.assertTrue(near(flux['error'][0], 2.22688e-8, 1e-4))
         self.assertTrue(flux['unit'] == "K.rad.rad")
         
         sub.setbrightnessunit("Jy/beam")
         zz = sub.fitcomponents()
         flux = zz['results']['component0']['flux']
         self.assertTrue(near(flux['value'][0], 60318.42427068, 1e-4))
-        self.assertTrue(near(flux['error'][0], 3.58921108, 1e-4))
+        self.assertTrue(near(flux['error'][0], 4.6, 1e-1))
         self.assertTrue(flux['unit'] == "Jy")
         
         sub.setrestoringbeam(remove=T)
@@ -1471,14 +1475,15 @@ class imfit_test(unittest.TestCase):
         zz = sub.fitcomponents()
         flux = zz['results']['component0']['flux']
         self.assertTrue(near(flux['value'][0], 12302316.98919902, 1e-4))
-        self.assertTrue(near(flux['error'][0], 732.04187606, 1e-4))
+        self.assertTrue(near(flux['error'][0], 55, 1e-1))
         self.assertTrue(flux['unit'] == "Jy")
         
         sub.setbrightnessunit("K")
         zz = sub.fitcomponents()
         flux = zz['results']['component0']['flux']
         self.assertTrue(near(flux['value'][0],  0.00028916, 1e-4))
-        self.assertTrue(near(flux['error'][0], 1.73518728e-08, 1e-4))
+        print "got ", flux['error'][0]
+        self.assertTrue(near(flux['error'][0], 1.3e-9, 1e-1))
         self.assertTrue(flux['unit'] == "K.rad.rad")
         
         sub.done()
@@ -1491,23 +1496,25 @@ class imfit_test(unittest.TestCase):
         def run_fitcomponents():
             myia = iatool()
             myia.open(noisy_image)
-            res = myia.fitcomponents(box=box, rms=5)
+            res = myia.fitcomponents(box=box, rms=rms)
             myia.done()
             return res
         def run_imfit():
             default('imfit')
-            return imfit(imagename=noisy_image, box=box, rms=5)
+            return imfit(imagename=noisy_image, box=box, rms=rms)
         mycl = cltool()
         for i in [0 ,1]:
-            if (i == 0):
-                code = run_fitcomponents
-            else:
-                code = run_imfit
-            zz = code()
-            self._check_results2(zz)
-            mycl.fromrecord(zz['results'])
-            got = mycl.getfluxerror(0)[0]
-            self.assertTrue(abs(got - 2516) < 1)
+            for rms in [5, "5Jy/pixel"]:
+                if (i == 0):
+                    code = run_fitcomponents
+                else:
+                    code = run_imfit
+                zz = code()
+                self._check_results2(zz)
+                mycl.fromrecord(zz['results'])
+                got = mycl.getfluxerror(0)[0]
+                print "*** got ", got
+                self.assertTrue(abs(got - 224) < 1)
             
     def _check_results2(self, res):
         clist = res['results']
@@ -1575,6 +1582,8 @@ class imfit_test(unittest.TestCase):
             con = cltool()
             con.fromrecord(zz['results'])
             self.assertTrue((decon.getfluxvalue(0) == con.getfluxvalue(0)).all())
+            print "decon ", decon.getfluxerror(0)
+            print "convl ", con.getfluxerror(0)
             self.assertTrue((decon.getfluxerror(0) == con.getfluxerror(0)).all())
             self.assertTrue((decon.getfluxunit(0) == con.getfluxunit(0)))
             self.assertTrue((decon.getrefdir(0) == con.getrefdir(0)))
@@ -1619,8 +1628,138 @@ class imfit_test(unittest.TestCase):
         decon.done()
         con.done()
         myia.done()
-
         
+    def test_uncertainties(self):
+        """Test uncertainties, CAS-3476"""
+        imagename = datapath + "uncertainties_fixture.im"
+        myia = iatool()
+        mycl = cltool()
+        
+        def run_fitcomponents():
+            myia = iatool()
+            myia.open(imagename)
+            res = myia.fitcomponents(
+                chans=chans, rms=rms, noisefwhm=noisefwhm
+            )
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(
+                imagename=imagename, chans=chans,
+                rms=rms, noisefwhm=noisefwhm
+            )
+        def frac(val, err):
+            f = qa.div(err, val)
+            f = qa.convert(f, "")
+            return qa.getvalue(f)
+        
+        # first channel has gaussian elongated along x axis
+        # second channel has gaussian elongated along y axis
+        # third channel has gaussian at PA = 60 (150 degrees wrt positive x pixel axis)
+        
+        # uncorrelated noise, sqrt(2)/rho = 0.01329
+        noisefwhm = "-1arcmin"
+        rms = 0.1
+        # expfrac = sqrt(2)/rho
+        expfrac = 0.01329
+        for chans in range(3):
+            for code in [run_fitcomponents, run_imfit]:
+                res = code()
+                mycl.fromrecord(res['results'])
+                got = mycl.getfluxerror(0)[0]
+                self.assertTrue(near(got, 0.2214, 1e-3))
+                shape = mycl.getshape(0)
+                mj = qa.quantity(shape['majoraxis'])
+                mjerr = qa.quantity(shape['majoraxiserror'])
+                f = frac(mj, mjerr)
+                self.assertTrue(near(f, expfrac, 1e-3))
+                mn = qa.quantity(shape['minoraxis'])
+                mnerr = qa.quantity(shape['minoraxiserror'])
+                f = frac(mn, mnerr)
+                self.assertTrue(near(f, expfrac, 1e-3))
+                paerr = qa.quantity(shape['positionangleerror'])
+                paerr = qa.convert(paerr,"rad")
+                paerr = qa.getvalue(paerr)
+                self.assertTrue(near(paerr, 0.012526, 1e-3))
+                direrr = res['results']['component0']['shape']['direction']['error']
+                longerr = qa.convert(direrr['longitude'], "arcsec")
+                laterr = qa.convert(direrr['latitude'], "arcsec")
+                if chans == 0:
+                    self.assertTrue(near(qa.getvalue(longerr), 6.77, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 3.39, 1e-2))
+                    got = qa.quantity(
+                        res['deconvolved']['component0']['shape']['majoraxis']
+                    )
+                    # arcsec
+                    self.assertTrue(near(qa.getvalue(got), 1181, 1e-3))
+                    
+                    got = qa.quantity(
+                        res['deconvolved']['component0']['shape']['majoraxiserror']
+                    )
+                    self.assertTrue(near(qa.getvalue(got), 16.33, 1e-3))
+                    got = qa.quantity(
+                        res['deconvolved']['component0']['shape']['minoraxis']
+                    )
+                    self.assertTrue(near(qa.getvalue(got), 561.1, 1e-3))
+                    got = qa.quantity(
+                        res['deconvolved']['component0']['shape']['minoraxiserror']
+                    )
+                    self.assertTrue(near(qa.getvalue(got), 8.821, 1e-3))
+                    got = qa.quantity(
+                        res['deconvolved']['component0']['shape']['positionangle']
+                    )
+                    self.assertTrue(near(qa.getvalue(got), 90.67, 1e-3))
+                    got = qa.quantity(
+                        res['deconvolved']['component0']['shape']['positionangleerror']
+                    )
+                    self.assertTrue(near(qa.getvalue(got), 0.7479, 1e-3))
+                if chans == 1:
+                    self.assertTrue(near(qa.getvalue(longerr), 3.39, 1e-2))
+                    self.assertTrue(near(qa.getvalue(laterr), 6.77, 1e-3))
+                if chans == 2:
+                    self.assertTrue(near(qa.getvalue(longerr), 6.10, 1e-2))
+                    self.assertTrue(near(qa.getvalue(laterr), 4.48, 1e-3))
+                    
+                noisefwhm = "-1arcmin"        
+        
+        # correlated noise
+        # sqrt(2)/rho(1.5, 1.5) = 0.069498
+        # sqrt(2)/rho(2.5, 0.5) = 0.073398
+        # sqrt(2)/rho(0.5, 2.5) = 0.065805
+        
+        noisefwhm = "4arcmin"
+        for chans in range(3):
+            for code in [run_fitcomponents, run_imfit]:
+                res = code()
+                mycl.fromrecord(res['results'])
+                got = mycl.getfluxerror(0)[0]
+                self.assertTrue(near(got, 1.248, 1e-3))
+                shape = mycl.getshape(0)
+                mj = qa.quantity(shape['majoraxis'])
+                mjerr = qa.quantity(shape['majoraxiserror'])
+                f = frac(mj, mjerr)
+                self.assertTrue(near(f, 0.073398, 1e-3))
+                mn = qa.quantity(shape['minoraxis'])
+                mnerr = qa.quantity(shape['minoraxiserror'])
+                f = frac(mn, mnerr)
+                self.assertTrue(near(f, 0.065805, 1e-3))
+                paerr = qa.quantity(shape['positionangleerror'])
+                paerr = qa.convert(paerr,"rad")
+                paerr = qa.getvalue(paerr)
+                self.assertTrue(near(paerr, 0.06204, 1e-3))
+                direrr = res['results']['component0']['shape']['direction']['error']
+                longerr = qa.convert(direrr['longitude'], "arcsec")
+                laterr = qa.convert(direrr['latitude'], "arcsec")
+                if chans == 0:
+                    self.assertTrue(near(qa.getvalue(longerr), 37.403, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 16.766, 1e-3))
+                if chans == 1:
+                    self.assertTrue(near(qa.getvalue(longerr), 16.766, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 37.403, 1e-3))
+                if chans == 2:
+                    self.assertTrue(near(qa.getvalue(longerr), 33.46, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 23.68, 1e-3))
 
 def suite():
     return [imfit_test]

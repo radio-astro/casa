@@ -1937,7 +1937,8 @@ image* image::transpose(
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
 		bool overwrite, bool dooff, double offset,
-		bool fixoffset, bool stretch, double rms
+		bool fixoffset, bool stretch, const variant& rms,
+		const variant& noisefwhm
 ) {
 	if (detached()) {
 		return 0;
@@ -2028,19 +2029,44 @@ image* image::transpose(
 		if (dooff) {
 			fitter.setZeroLevelEstimate(offset, fixoffset);
 		}
-		if (rms > 0) {
-			fitter.setRMS(rms);
+		casa::Quantity myrms = (rms.type() == variant::DOUBLE || rms.type() == variant::INT)
+			? casa::Quantity(rms.toDouble(), _image->brightnessunit())
+			: _casaQuantityFromVar(rms);
+		if (myrms.getValue() > 0) {
+			fitter.setRMS(myrms);
+		}
+		variant::TYPE noiseType = noisefwhm.type();
+		if (noiseType == variant::DOUBLE || noiseType == variant::INT) {
+			fitter.setNoiseFWHM(noisefwhm.toDouble());
+		}
+		else if (noiseType == variant::BOOLVEC) {
+			fitter.clearNoiseFWHM();
+		}
+		else if (
+			noiseType == variant::STRING || noiseType == variant::RECORD
+		) {
+			if (noiseType == variant::STRING && noisefwhm.toString().empty()) {
+				fitter.clearNoiseFWHM();
+			}
+			else {
+				fitter.setNoiseFWHM(_casaQuantityFromVar(noisefwhm));
+			}
+		}
+		else {
+			ThrowCc(
+				"Unsupported data type for noisefwhm: " + noisefwhm.typeString()
+			);
 		}
 		if (doImages) {
 			std::vector<String> names;
 			names += "box", "region", "chans", "stokes", "mask", "includepix",
 				"excludepix", "residual", "model", "estimates", "logfile",
 				"append", "newestimates", "complist", "dooff", "offset",
-				"fixoffset", "stretch", "rms";
+				"fixoffset", "stretch", "rms", "noisefwhm";
 			std::vector<variant> values;
 			values += box, region, chans, stokes, vmask, in_includepix, in_excludepix,
 				residual, model, estimates, logfile, append, newestimates, complist,
-				dooff, offset, fixoffset, stretch, rms;
+				dooff, offset, fixoffset, stretch, rms, noisefwhm;
 			String fname = String("ia.") + String(__func__);
 			fitter.addHistory(lor, fname, names, values);
 		}
