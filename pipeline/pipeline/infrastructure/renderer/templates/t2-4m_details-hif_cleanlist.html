@@ -33,6 +33,64 @@ def is_pane_active(idx):
 
 <%block name="title">Clean/CleanList</%block>
 
+<h2>Image Details</h2>
+
+%if not len(result[0].targets):
+    <p>There are no clean results.
+%else:
+    <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>field</th>
+                    <th>spw</th>
+                    <th>pol</th>
+                    <th>beam</th>
+                    <th>image max.</th>
+                    <th>residual rms</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <%
+                ## get sorted key lists so that table entries are ordered
+                fields = sorted(set([k[0] for k in info_dict.keys()]))
+                spws = sorted(set([int(k[1]) for k in info_dict.keys()]))
+                pols = sorted(set([k[2] for k in info_dict.keys()]))
+                %>
+                % for field in fields:
+                    % for spw in spws:
+                        % for pol in pols:
+                            <tr>
+                                <td>${field}</td>
+                                <td>${spw}</td>
+                                <td>${pol}</td>
+                            %if info_dict.get((field,str(spw),pol,'beam')) is not None:
+                                <td>${'%.2g" x %.2g" p.a. %.2g %s' % (
+                                  info_dict[(field,str(spw),pol,'beam')]['major']['value'],
+                                  info_dict[(field,str(spw),pol,'beam')]['minor']['value'],
+                                  info_dict[(field,str(spw),pol,'beam')]['positionangle']['value'],
+                                  info_dict[(field,str(spw),pol,'beam')]['positionangle']['unit'])}</td>
+                            %else:
+                                <td>N/A</td>
+                            %endif
+                            %if info_dict.get((field,str(spw),pol,'max')) is not None:
+                                <td>${'%.2e' % info_dict[(field,str(spw),pol,'max')]}</td>
+                            %else:
+                                <td>N/A</td>
+                            %endif
+                            %if info_dict.get((field,str(spw),pol,'rms')) is not None:
+                                <td>${'%.2e' % info_dict[(field,str(spw),pol,'rms')]}</td>
+                            %else:
+                                <td>N/A</td>
+                            %endif
+                            </tr>
+                        %endfor
+                    %endfor
+                %endfor
+                </tbody>
+        </table>
+%endif
+
 <h2>Plots</h2>
 
 <div class="tabbable"> <!-- Only required for left/right tabs -->
