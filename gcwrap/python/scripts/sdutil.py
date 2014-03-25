@@ -1105,6 +1105,8 @@ def to_datetime(date):
 def to_timedelta(delta):
     delta_elements_list = split_date_string(delta, full=False)
     delta_list = map(int, delta_elements_list[:-1]) + [float(delta_elements_list[-1])]
+    while len(delta_list) < 3:
+        delta_list.insert(0, 0)
     dummy1 = datetime.datetime(1999, 1, 1)
     dummy2 = datetime.datetime(1999, 1, 1,
                                delta_list[0], delta_list[1], int(delta_list[2]),
