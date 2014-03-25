@@ -93,7 +93,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        self.unflag_ms()
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagdata)
 
     def setUp_alma_ms(self):
