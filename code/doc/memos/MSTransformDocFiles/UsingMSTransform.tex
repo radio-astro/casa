@@ -64,9 +64,9 @@ transformed in the same way as the other data columns, but this is not statistic
 correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
 to define the applicable error propagation formulas.
 
-The parameter {\it keepflags} from split is not available in mstransform. The
-behaviour in mstransform is to keep the flagged data in the output,
-which is the same default value of split.
+The parameter {\it keepflags} from split is also available in mstransform. By
+default, mstransform keeps the flagged data in the output, depending on the data
+selection parameters. Flagged data is never used in any averaging.
 
 \begin{verbatim}
     mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='0:21~120,3,5')
