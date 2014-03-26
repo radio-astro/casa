@@ -639,17 +639,15 @@ MDirection TwoSidedShape::directionFromCartesian (Double width, Double pa,
    Double z = width / 2.0;
    Double x = -z * sin(pa);
    Double y =  z * cos(pa);
-//
    MDirection dir;
    Vector<Double> pixelTip(2);
    pixelTip(0) = pixelCen(0) + x;
    pixelTip(1) = pixelCen(1) + y;
-   if (!dirCoord.toWorld(dir, pixelTip)) {
-      LogIO os(LogOrigin("TwoSidedShape", "directionFromCartesian"));
-      os << "DirectionCoordinate conversion failed because "
-         << dirCoord.errorMessage() << LogIO::EXCEPTION;
-   }
-//
+   ThrowIf(
+		   ! dirCoord.toWorld(dir, pixelTip),
+      "DirectionCoordinate conversion failed because "
+	 + dirCoord.errorMessage()
+   );
    return dir;
 }
 
