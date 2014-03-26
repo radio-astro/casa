@@ -4708,6 +4708,10 @@ Vector<Int> CoordinateSystem::getWorldAxesOrder(
 }
 
 Bool CoordinateSystem::isDirectionAbscissaLongitude() const {
+	ThrowIf(
+		! hasDirectionCoordinate(),
+		"Coordinate system has no direction coordinate"
+	);
 	Vector<Int> dirPixelAxes = directionAxesNumbers();
 	ThrowIf(
 		dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1,
