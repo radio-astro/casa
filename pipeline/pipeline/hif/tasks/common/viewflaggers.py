@@ -899,7 +899,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             newflags.append(arrayflaggerbase.FlagCmd(
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
-                              spw=spw, pol=pol, antenna=antenna))
+                              spw=spw, pol=pol, antenna=antenna,
+                              axisnames=axisnames, flagcoords=flagcoords))
 
                 elif rulename == 'tmf':
                     frac_limit = rule['frac_limit']
