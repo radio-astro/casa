@@ -1,4 +1,5 @@
 from taskinit import casalog
+import numpy
 from numpy import ma, array, logical_not, logical_and
 
 import asap as sd
@@ -70,14 +71,28 @@ class sdfit_worker(sdutil.sdtask_template):
         
         if self.assert_no_channel_selection_in_spw(mode='result'):
             maskline_dict = self.scan.parse_spw_selection(self.spw)
+            
+            valid_spw_list = []
+            for (k,v) in maskline_dict.items():
+                if len(v) > 0 and numpy.all(numpy.array(map(len, v)) > 0):
+                    valid_spw_list.append(k)
+
             sel_org = self.scan.get_selection()
-            for (spw,maskline) in maskline_dict.items():
-                sel = sd.selector(sel_org)
-                sel.set_ifs(spw)
-                self.scan.set_selection(sel)
+            for irow in xrange(self.scan.nrow()):
+                scantab = self.scan.get_row(irow, insitu=False)
+                spw = scantab.getif(0)
+                if not spw in valid_spw_list:
+                    continue
+                maskline = maskline_dict[spw]
+                casalog.post('maskline=%s'%(maskline))
+                sp = array(scantab._getspectrum(0))
+                casalog.post('irow=%s, spw=%s, max(sp)=%s, argmax(sp)=%s'%(irow, spw, max(sp), sp.argmax()))
                 self.maskline = maskline
-                self.__set_linelist()
-                self.__fit()
+                self.__set_linelist(scantab)
+                self.__fit(scantab)
+            ifs_org = sel_org.get_ifs()
+            ifs_new = list(set(ifs_org) & set(valid_spw_list))
+            sel_org.set_ifs(ifs_new)
             self.scan.set_selection(sel_org)
         else:
             self.maskline = []
@@ -94,20 +109,24 @@ class sdfit_worker(sdutil.sdtask_template):
         if hasattr(self,'restorer') and self.restorer is not None:
             self.restorer.restore()
 
-    def __fit(self):
+    def __fit(self, scantab=None):
         # initialize fitter
         self.fitter = sd.fitter()
         if abs(self.plotlevel) > 0:
             self.__init_plot()
 
         dbw = 1.0
-        current_unit = self.scan.get_unit()
-        kw = {'thescan':self.scan}
+        if scantab is None:
+            scantab = self.scan
+
+        current_unit = scantab.get_unit()
+
+        kw = {'thescan':scantab}
         if len(self.defaultmask) > 0: kw['mask'] = self.defaultmask
         self.fitter.set_scan(**kw)
         firstplot = True
     
-        for irow in range(self.scan.nrow()):
+        for irow in range(scantab.nrow()):
             casalog.post( "start row %d" % (irow) )
             numlines = self.nlines[irow] if isinstance(self.nlines,list) \
                        else self.nlines
@@ -115,7 +134,7 @@ class sdfit_worker(sdutil.sdtask_template):
             if numlines == 0:
                 self.fitparams.append([[0,0,0]])
                 self.result['nfit']+=[-1]
-                self.__warn_fit_failed(irow,'No lines detected.')
+                self.__warn_fit_failed(scantab,irow,'No lines detected.')
                 continue
                 
             if ( self.fitmode == 'auto'):
@@ -135,7 +154,7 @@ class sdfit_worker(sdutil.sdtask_template):
             if numfit <= 0:
                 self.fitparams.append([[0,0,0]])
                 self.result['nfit']+=[-1]
-                self.__warn_fit_failed(irow,'Fit failed.')
+                self.__warn_fit_failed(scantab,irow,'Fit failed.')
                 continue
 
             # Fit the line using numfit gaussians or lorentzians
@@ -145,9 +164,9 @@ class sdfit_worker(sdutil.sdtask_template):
                 # in auto mode, linelist will be detemined for each spectra
                 # otherwise, linelist will be the same for all spectra
                 if current_unit != 'channel':
-                    xx = self.scan._getabcissa(irow)
+                    xx = scantab._getabcissa(irow)
                     dbw = abs(xx[1]-xx[0])
-                self.__initial_guess(dbw,numfit,comps,irow)
+                self.__initial_guess(scantab,dbw,numfit,comps,irow)
             else:
                 # No guesses
                 casalog.post( "Fitting lines without starting guess" )
@@ -164,28 +183,30 @@ class sdfit_worker(sdutil.sdtask_template):
                 # Did not converge
                 self.result['nfit'] += [-ncomps]
                 self.fitparams.append([[0,0,0]])
-                self.__warn_fit_failed(irow,'Fit failed to converge')
+                self.__warn_fit_failed(scantab,irow,'Fit failed to converge')
 
             # plot
             if (irow < 16 and abs(self.plotlevel) > 0):
                 self.__plot(irow, goodfit, firstplot)
                 firstplot = False
         
-    def __initial_guess(self, dbw, numfit, comps, irow):
+    def __initial_guess(self, scantab, dbw, numfit, comps, irow):
         llist = self.linelist[irow] if self.fitmode == 'auto' \
                 else self.linelist
+        casalog.post('llist=%s'%(llist))
+        casalog.post('irow=%s'%(irow))
         if len(llist) > 0:
             # guesses: [maxlist, cenlist, fwhmlist]
             guesses = [[],[],[]]
             for x in llist:
                 x.sort()
                 casalog.post( "detected line: "+str(x) ) 
-                msk = self.scan.create_mask(x, row=irow)
-                guess = self.__get_initial_guess(msk,x,dbw,irow)
+                msk = scantab.create_mask(x, row=irow)
+                guess = self.__get_initial_guess(scantab,msk,x,dbw,irow)
                 for i in xrange(3):
                     guesses[i] = guesses[i] + [guess[i]]
         else:
-            guess = self.__get_initial_guess(self.defaultmask,[],dbw,irow)
+            guess = self.__get_initial_guess(scantab,self.defaultmask,[],dbw,irow)
             guesses = [[guess[i]] for i in xrange(3)]
 
         # Guesses using max, cen, and fwhm=0.7*eqw
@@ -197,15 +218,22 @@ class sdfit_worker(sdutil.sdtask_template):
                 # use guess
                 #getattr(self.fitter,'set_%s_parameters'%(self.fitfunc))(maxl[i], cenl[i], fwhm[i], component=n)
                 guess = (guesses[k][i] for k in xrange(3))
+                casalog.post('guess=%s'%([guesses[k][i] for k in xrange(3)]))
                 getattr(self.fitter,'set_%s_parameters'%(self.fitfunc))(*guess, component=n)
             n += comps[i]
 
-    def __get_initial_guess(self, msk, linerange, dbw, irow):
-        [maxl,suml] = [self.scan._math._statsrow(self.scan,msk,st,irow)[0] \
-                       for st in ['max','sum']]
+    def __get_initial_guess(self, scantab, msk, linerange, dbw, irow):
+        sp = array(scantab._getspectrum(irow))
+        if len(linerange) == 0:
+            data = sp
+        else:
+            data = sp[linerange[0]:linerange[1]+1]
+        maxl = max(data)
+        suml = sum(data)
+        casalog.post('maxl=%s, suml=%s'%(maxl,suml))
         fwhm = maxl if maxl==0.0 else 0.7*abs(suml/maxl*dbw)
         cen = 0.5*sum(linerange[:2]) if len(linerange) > 1 \
-              else self.scan.nchan(self.scan.getif(irow))/2
+              else scantab.nchan(scantab.getif(irow))/2
         return (maxl,cen,fwhm)
 
     def __update_params(self, ncomps):
@@ -229,40 +257,44 @@ class sdfit_worker(sdutil.sdtask_template):
         npars = len(pars) / ncomps
         self.fitparams.append(list(array(pars).reshape((ncomps,npars))))
 
-    def __set_linelist(self):
+    def __set_linelist(self, scantab=None):
         self.defaultmask = []
         self.linelist = []
         self.nlines = 1
-        getattr(self,'_set_linelist_%s'%(self.fitmode.lower()))()
+        getattr(self,'_set_linelist_%s'%(self.fitmode.lower()))(scantab)
 
-    def _set_linelist_list(self):
+    def _set_linelist_list(self, scantab=None):
         # Assume the user has given a list of lines
         # e.g. maskline=[[3900,4300]] for a single line
+        if scantab is None:
+            scantab = self.scan
         if ( len(self.maskline) > 0 ):
             # There is a user-supplied channel mask for lines
             # Make sure this is a list-of-lists (e.g. [[1,10],[20,30]])
             self.linelist = self.maskline if isinstance(self.maskline[0],list) \
                 else to_list_of_list(self.maskline)
             self.nlines = len(self.linelist)
-            self.defaultmask = self.scan.create_mask(self.maskline,invert=False)
+            self.defaultmask = scantab.create_mask(self.maskline,invert=False)
 
         casalog.post( "Identified %d regions for fitting" % (self.nlines) )
         casalog.post("Will use these as starting guesses")
 
-    def _set_linelist_interact(self):
+    def _set_linelist_interact(self, scantab=None):
+        if scantab is None:
+            scantab = self.scan
         # Interactive masking
-        new_mask = sdutil.init_interactive_mask(self.scan,
+        new_mask = sdutil.init_interactive_mask(scantab,
                                                 self.maskline,
                                                 False)
         self.defaultmask = sdutil.get_interactive_mask(new_mask,
                                                        purpose='to fit lines')
-        self.linelist=self.scan.get_masklist(self.defaultmask)
+        self.linelist=scantab.get_masklist(self.defaultmask)
         self.nlines=len(self.linelist)
         if self.nlines < 1:
             msg='No channel is selected. Exit without fittinging.'
             raise Exception(msg)
         print '%d region(s) is selected as a linemask' % self.nlines
-        print 'The final mask list ('+self.scan._getabcissalabel()+') ='+str(self.linelist)
+        print 'The final mask list ('+scantab._getabcissalabel()+') ='+str(self.linelist)
         print 'Number of line(s) to fit: nfit =',self.nfit
         ans=raw_input('Do you want to reassign nfit? [N/y]: ')
         if (ans.upper() == 'Y'):
@@ -276,28 +308,30 @@ class sdfit_worker(sdutil.sdtask_template):
             casalog.post('List of line number reassigned.\n   nfit = '+str(self.nfit))
         sdutil.finalize_interactive_mask(new_mask)
 
-    def _set_linelist_auto(self):
+    def _set_linelist_auto(self, scantab=None):
         # Fit mode AUTO and in channel mode
+        if scantab is None:
+            scantab = self.scan
         casalog.post( "Trying AUTO mode - find line channel regions" )
         if ( len(self.maskline) > 0 ):
             # There is a user-supplied channel mask for lines
-            self.defaultmask=self.scan.create_mask(self.maskline,
-                                                   invert=False)
+            self.defaultmask=scantab.create_mask(self.maskline,
+                                                 invert=False)
             
         # Use linefinder to find lines
         casalog.post( "Using linefinder" )
         fl=sd.linefinder()
-        fl.set_scan(self.scan)
+        fl.set_scan(scantab)
         # This is the tricky part
         # def  fl.set_options(threshold=1.732,min_nchan=3,avg_limit=8,box_size=0.2)
         # e.g. fl.set_options(threshold=5,min_nchan=3,avg_limit=4,box_size=0.1) seem ok?
         fl.set_options(threshold=self.thresh,min_nchan=self.min_nchan,avg_limit=self.avg_limit,box_size=self.box_size)
         # Now find the lines for each row in scantable
         self.nlines=[]
-        for irow in range(self.scan.nrow()):
+        for irow in range(scantab.nrow()):
             self.nlines.append(fl.find_lines(mask=self.defaultmask,nRow=irow,edge=self.edge))
             # Get ranges    
-            ptout="SCAN[%d] IF[%d] POL[%d]: " %(self.scan.getscan(irow), self.scan.getif(irow), self.scan.getpol(irow))
+            ptout="SCAN[%d] IF[%d] POL[%d]: " %(scantab.getscan(irow), scantab.getif(irow), scantab.getpol(irow))
             if ( self.nlines[irow] > 0 ):
                 ll = fl.get_ranges()
                 casalog.post( ptout+"Found %d lines at %s" % (self.nlines[irow], str(ll) ) )
@@ -401,9 +435,9 @@ class sdfit_worker(sdutil.sdtask_template):
                 myp.set_axes('xlabel',xlab)
         myp.release()
 
-    def __warn_fit_failed(self,irow,message=''):
+    def __warn_fit_failed(self,scantab,irow,message=''):
         casalog.post( 'Fitting:' )
-        casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(self.scan.getscan(irow), self.scan.getbeam(irow), self.scan.getif(irow), self.scan.getpol(irow), self.scan.getcycle(irow)) )
+        casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(scantab.getscan(irow), scantab.getbeam(irow), scantab.getif(irow), scantab.getpol(irow), scantab.getcycle(irow)) )
         casalog.post( "   %s"%(message), priority = 'WARN' )
 
 def plot_line(plotter,x,y,msk,label,color,colormap=None,scale=False):
