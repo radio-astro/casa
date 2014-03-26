@@ -84,9 +84,6 @@ class sdfit_worker(sdutil.sdtask_template):
                 if not spw in valid_spw_list:
                     continue
                 maskline = maskline_dict[spw]
-                casalog.post('maskline=%s'%(maskline))
-                sp = array(scantab._getspectrum(0))
-                casalog.post('irow=%s, spw=%s, max(sp)=%s, argmax(sp)=%s'%(irow, spw, max(sp), sp.argmax()))
                 self.maskline = maskline
                 self.__set_linelist(scantab)
                 self.__fit(scantab)
@@ -193,8 +190,6 @@ class sdfit_worker(sdutil.sdtask_template):
     def __initial_guess(self, scantab, dbw, numfit, comps, irow):
         llist = self.linelist[irow] if self.fitmode == 'auto' \
                 else self.linelist
-        casalog.post('llist=%s'%(llist))
-        casalog.post('irow=%s'%(irow))
         if len(llist) > 0:
             # guesses: [maxlist, cenlist, fwhmlist]
             guesses = [[],[],[]]
@@ -218,7 +213,6 @@ class sdfit_worker(sdutil.sdtask_template):
                 # use guess
                 #getattr(self.fitter,'set_%s_parameters'%(self.fitfunc))(maxl[i], cenl[i], fwhm[i], component=n)
                 guess = (guesses[k][i] for k in xrange(3))
-                casalog.post('guess=%s'%([guesses[k][i] for k in xrange(3)]))
                 getattr(self.fitter,'set_%s_parameters'%(self.fitfunc))(*guess, component=n)
             n += comps[i]
 
@@ -230,7 +224,6 @@ class sdfit_worker(sdutil.sdtask_template):
             data = sp[linerange[0]:linerange[1]+1]
         maxl = max(data)
         suml = sum(data)
-        casalog.post('maxl=%s, suml=%s'%(maxl,suml))
         fwhm = maxl if maxl==0.0 else 0.7*abs(suml/maxl*dbw)
         cen = 0.5*sum(linerange[:2]) if len(linerange) > 1 \
               else scantab.nchan(scantab.getif(irow))/2
