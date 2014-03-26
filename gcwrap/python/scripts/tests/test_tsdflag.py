@@ -521,7 +521,52 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row)
 
-
+    # Tests of channel flag with other selection
+    def test_chanflag_scan(self):
+        """test channel flagging with scan selection (scan='', spw='*:20~30;80-90')"""
+        scan = '16'
+        spw = '*:20~30;80~90'
+        ref_row = [1,2]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=tsdflag(infile=self.rawfile,scan=scan,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
+    
+    def test_chanflag_pol(self):
+        """test channel flagging with pol selection (pol='1', spw='*:20~30;80~90')"""
+        pol = '1'
+        spw = '*:20~30;80~90'
+        ref_row = [1,3]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=tsdflag(infile=self.rawfile, pol=pol,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
+    
+    def test_chanflag_beam(self):
+        """test channel flagging with beam selection (beam='13', spw='*:20~30;80~90')"""
+        beam = '13'
+        spw = '*:20~30;80~90'
+        ref_row = [2,3]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=tsdflag(infile=self.rawfile, beam=beam,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
+    
+    def test_chanflag_field(self):
+        """test channel flagging with field selection (field='M*', spw='*:20~30;80~90')"""
+        field = 'M*'
+        spw = '*:20~30;80~90'
+        ref_row = [0,1,2]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=tsdflag(infile=self.rawfile, field=field,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
+    
+    def test_chanflag_timerange(self):
+        """test channel flagging with timerange selection (timerange='2011/11/11/02:33:03.47', spw='*:20~30;80~90')"""
+        timerange = '2011/11/11/02:33:03.47'
+        spw = '*:20~30;80~90'
+        ref_row = [1,2]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=tsdflag(infile=self.rawfile, timerange=timerange,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
+    
     ####################
     # scan
     ####################
