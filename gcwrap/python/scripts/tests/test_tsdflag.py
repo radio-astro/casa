@@ -7,8 +7,29 @@ from taskinit import *
 import unittest
 import numpy
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
 import asap as sd
 from tsdflag import tsdflag
+
+class sdflag_unittest_base:
+    """
+    Base class for sdflag unit test
+    """
+    # Data path of input/output
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdflag/'
+    sddatapath = os.environ.get('CASAPATH').split()[0] + \
+                 '/data/regression/unittest/singledish/'
+    taskname = "sdflag"
+
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertTrue(isthere,
+                         msg='output file %s was not created because of the task failure'%(name))
 
 class sdflag_test(unittest.TestCase):
     """
@@ -181,7 +202,7 @@ class sdflag_test(unittest.TestCase):
         try:
             result = tsdflag(infile=infile, mode=mode, spw=spw)
         except Exception, e:
-            pos = str(e).find('No valid spw')
+            pos = str(e).find('Invalid IF value.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 class sdflag_test_timerange(unittest.TestCase):
@@ -395,6 +416,630 @@ class sdflag_test_timerange(unittest.TestCase):
         self.verify(self.infile, flag_row_expected)
         
         
+class sdflag_selection(selection_syntax.SelectionSyntaxTest,
+                       sdflag_unittest_base,unittest.TestCase):
+    """
+    Test selection syntax in sdflag.
+    Selection parameters to test are:
+    field, spw (with channel selection), timerange, scan, pol,
+    beam, row
+    """
+    rawfile = 'sd_analytic_type1-3.bl.asap'
+    ntbrow = 4 # number of rows in rawfile
+    #flagchan = ( (80,90), (60,70), (40,50), (20,30) )
+    #selchan = ()
+    outfile = ''
+    
+    @property
+    def task(self):
+        return tsdflag
+    
+    @property
+    def spw_channel_selection(self):
+        return True
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
+
+        default(tsdflag)
+        self.mode = 'manual'
+        self.outfile = ''
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+
+    ####################
+    # Additional tests
+    ####################
+    # Tests of row ID selection
+    def test_row_id_default(self):
+        """test row selection (row='')"""
+        self.mode='rowid'
+        row = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_row_id_exact(self):
+        """test row selection (row='2')"""
+        self.mode='rowid'
+        row = '2'
+        ref_row = [2]
+        self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_row_id_lt(self):
+        """test row selection (row='<2')"""
+        self.mode='rowid'
+        row = '<2'
+        ref_row = [0,1]
+        self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)
+
+    def test_row_id_gt(self):
+        """test row selection (row='>1')"""
+        self.mode='rowid'
+        row = '>1'
+        ref_row = [2,3]
+        self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)
+
+    def test_row_id_range(self):
+        """test row selection (row='1~2')"""
+        self.mode='rowid'
+        row = '1~2'
+        ref_row = [1,2]
+        self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)
+
+    def test_row_id_list(self):
+        """test row selection (row='0,2')"""
+        self.mode='rowid'
+        row = '0,2'
+        ref_row = [0,2]
+        self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)
+
+    def test_row_id_exprlist(self):
+        """test row selection (row='>2,1')"""
+        self.mode='rowid'
+        row = '>2,1'
+        ref_row = [1,3]
+        self.res=self.run_task(infile=self.rawfile,row=row,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)
+
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='') This should raise error."""
+        scan = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_scan_id_exact(self):
+        """test scan selection (scan='16')"""
+        scan = '16'
+        ref_row = [1,2]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_scan_id_lt(self):
+        """test scan selection (scan='<16')"""
+        scan = '<16'
+        ref_row = [0]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_scan_id_gt(self):
+        """test scan selection (scan='>16')"""
+        scan = '>16'
+        ref_row = [3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_scan_id_range(self):
+        """test scan selection (scan='16~17')"""
+        scan = '16~17'
+        ref_row = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_scan_id_list(self):
+        """test scan selection (scan='15,17')"""
+        scan = '15,17'
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_scan_id_exprlist(self):
+        """test scan selection (scan='15,>16')"""
+        scan = '15,>16'
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    ####################
+    # beam
+    ####################
+    def test_beam_id_default(self):
+        """test beam selection (beam='') This should raise error."""
+        beam = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_beam_id_exact(self):
+        """test beam selection (beam='13')"""
+        beam = '13'
+        ref_row = [2,3]
+        self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_beam_id_lt(self):
+        """test beam selection (beam='<12')"""
+        beam = '<12'
+        ref_row = [0]
+        self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_beam_id_gt(self):
+        """test beam selection (beam='>12')"""
+        beam = '>12'
+        ref_row = [2,3]
+        self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_beam_id_range(self):
+        """test beam selection (beam='11~12')"""
+        beam = '11~12'
+        ref_row = [0,1]
+        self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_beam_id_list(self):
+        """test beam selection (beam='11,12')"""
+        beam = '11,12'
+        ref_row = [0,1]
+        self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_beam_id_exprlist(self):
+        """test beam selection (beam='<12,13')"""
+        beam = '<12,13'
+        ref_row = [0,2,3]
+        self.res=self.run_task(infile=self.rawfile,beam=beam,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='') This should raise error."""
+        pol = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_pol_id_exact(self):
+        """test pol selection (pol='1')"""
+        pol = '1'
+        ref_row = [1,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_pol_id_lt(self):
+        """test pol selection (pol='<1')"""
+        pol = '<1'
+        ref_row = [0,2]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_pol_id_gt(self):
+        """test pol selection (pol='>0')"""
+        pol = '>0'
+        ref_row = [1,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_pol_id_range(self):
+        """test pol selection (pol='0~1')"""
+        pol = '0~1'
+        # it's possible to flag all rows if user explicitly specify IDs
+        ref_row = [0,1,2,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_pol_id_list(self):
+        """test pol selection (pol='0,1')"""
+        pol = '0,1'
+        # it's possible to flag all rows if user explicitly specify IDs
+        ref_row = [0,1,2,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='1,<1')"""
+        pol = '1,<1'
+        # it's possible to flag all rows if user explicitly specify IDs
+        ref_row = [0,1,2,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='') This should raise error."""
+        field = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_field_id_exact(self):
+        """test field selection (field='6')"""
+        field = '6'
+        ref_row = [1]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_id_lt(self):
+        """test field selection (field='<6')"""
+        field = '<6'
+        ref_row = [0]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_id_gt(self):
+        """test field selection (field='>7')"""
+        field = '>7'
+        ref_row = [3]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_id_range(self):
+        """test field selection (field='6~8')"""
+        field = '6~8'
+        ref_row = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_id_list(self):
+        """test field selection (field='5,8')"""
+        field = '5,8'
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_id_exprlist(self):
+        """test field selection (field='5,>7')"""
+        field = '5,>7'
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_value_exact(self):
+        """test field selection (field='M30')"""
+        field = 'M30'
+        ref_row = [2]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_value_pattern(self):
+        """test field selection (field='M*')"""
+        field = 'M*'
+        ref_row = [0,1,2]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_value_list(self):
+        """test field selection (field='3C273,M30')"""
+        field = '3C273,M30'
+        ref_row = [2,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_field_mix_exprlist(self):
+        """test field selection (field='<6,3*')"""
+        field = '<6,3*'
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='', all channels) This should raise error."""
+        spw = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_spw_id_exact(self):
+        """test spw selection (spw='23', all channels)"""
+        spw = '23'
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_lt(self):
+        """test spw selection (spw='<23', all channels)"""
+        spw = '<23'
+        ref_row = [2]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_gt(self):
+        """test spw selection (spw='>23', all channels)"""
+        spw = '>23'
+        ref_row = [1]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_range(self):
+        """test spw selection (spw='23~25', all channels)"""
+        spw = '23~25'
+        ref_row = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_list(self):
+        """test spw selection (spw='21,25', all channels)"""
+        spw = '21,25'
+        ref_row = [1,2]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_exprlist(self):
+        """test spw selection (spw='23,>24', all channels)"""
+        spw = '23,>24'
+        ref_row = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*', all channels)  This should raise error."""
+        spw = '*'
+        # it's possible to flag all rows if user explicitly specify IDs
+        ref_row = [0,1,2,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300~300.1GHz', all channels)"""
+        spw = '300~300.1GHz' # IFNO=23 will be selected
+        ref_row = [0,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-450.~0.km/s'', all channels)"""
+        spw = '-450.~0km/s' # IFNO=23,25 will be selected
+        ref_row = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='25,0~500km/s', all channels)"""
+        spw = '25,0~500km/s' # all IFs will be selected
+        ref_row = [0,1,2,3]
+        # it's possible to flag all rows if user explicitly specify IDs
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    #########################
+    # spw with channel range
+    #########################
+    def test_spw_id_default_channel(self):
+        """test spw selection w/ channel selection (spw='')"""
+#         spw = ''
+#         ref_row = []
+#         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+#         self._test_flag(self.rawfile, ref_row)        
+
+    def test_spw_id_default_frequency(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_default_velocity(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_default_list(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_exact_channel(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_exact_frequency(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_exact_velocity(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_exact_list(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_pattern_channel(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_pattern_frequency(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_pattern_velocity(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_pattern_list(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_frequency_channel(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_frequency_frequency(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_frequency_velocity(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_frequency_list(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_velocity_channel(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_velocity_frequency(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_velocity_velocity(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_value_velocity_list(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    def test_spw_id_list_channel(self):
+        """test spw selection w/ channel selection (spw='')"""
+
+    ####################
+    # timerange
+    ####################
+    def test_timerange_value_default(self):
+        """test timerange selection (timerange='') This should raise error."""
+        timerange = ''
+        try:
+            self.res=self.run_task(infile=self.rawfile,timerange=timerange,mode=self.mode,outfile=self.outfile,outform='ASAP')
+            self.fail('The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Trying to flag whole scantable.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test_timerange_value_exact(self):
+        """test timerange selection (timerange='2011/11/11/02:33:03.47')"""
+        timerange = '2011/11/11/02:33:03.47' # SCANNO=16 will be selected
+        ref_row = [1,2]
+        self.res=self.run_task(infile=self.rawfile,timerange=timerange,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_timerange_value_lt(self):
+        """test timerange selection (timerange='<2011/11/11/02:33:03.47')"""
+        timerange = '<2011/11/11/02:33:03.47' # SCANNO=15 will be selected
+        ref_row = [0]
+        self.res=self.run_task(infile=self.rawfile,timerange=timerange,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_timerange_value_gt(self):
+        """test timerange selection (timerange='>2011/11/11/02:33:03.5')"""
+        timerange = '>2011/11/11/02:33:03.5' # SCANNO=17 will be selected
+        ref_row = [3]
+        self.res=self.run_task(infile=self.rawfile,timerange=timerange,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_timerange_value_range(self):
+        """test timerange selection (timerange='2011/11/11/02:33:03.47~02:34:03.48')"""
+        timerange = '2011/11/11/02:33:03.47~02:34:03.48' # SCANNO=16,17 will be selected
+        ref_row = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,timerange=timerange,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+    def test_timerange_value_interval(self):
+        """test timerange selection (timerange='2011/11/11/02:33:03.47+00:01:00.1')"""
+        timerange = '2011/11/11/02:33:03.47+00:01:00.1' # SCANNO=16,17 will be selected
+        ref_row = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,timerange=timerange,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row)        
+
+
+    ####################
+    # Helper functions
+    ####################
+    def _test_flag(self, name, rowlist, chanlist=None):
+        """
+        Test FLAGROW and FLAGTRA
+        Arguments
+            name     : name of scantable to test
+            rowlist  : a list of row IDs to be flagged
+            chanlist : a list of channel ranges to be flagged
+                       If None or [], row flagging is assumed
+        """
+        if not os.path.exists(name):
+            self.fail("Scantable '%s' does not exist." % data)
+        if chanlist is None: chanlist = []
+        
+        tb.open(name)
+        flagtra = tb.getcol("FLAGTRA").transpose()
+        flagrow = tb.getcol("FLAGROW")
+        nrow = tb.nrows()
+        tb.close()
+        self.assertEqual(nrow, self.ntbrow, "The number of rows in table changed.")
+        idx_flagrow = rowlist if len(chanlist) == 0 else []
+        # compare FLAGROW
+        # create reference flagrow array
+        ref_flagrow = [ 0 for idx in xrange(self.ntbrow) ]
+        for irow in idx_flagrow: ref_flagrow[irow] = 1
+        print("Comparing FLAGROW")
+        self._exact_compare_array(flagrow, ref_flagrow)
+        # compare FLAGTRA
+        print("Comparing FLAGTRA")
+        for irow in xrange(self.ntbrow):
+            flag = flagtra[irow]
+            # convert flagtra to bool list
+            bflag = [ True if f>0 else False for f in flag ]
+            nchan = len(flag)
+            ref_flag = self._get_bool_array(nchan, masklist=chanlist)
+            self._exact_compare_array(bflag, ref_flag)
+
+    def _exact_compare_array(self, data, reference):
+        self.assertEqual(len(data), len(reference), "Number of elements in two arrays are different.")
+        for idx in xrange(len(data)):
+            self.assertEqual(data[idx], reference[idx], "Value in idx=%d differs: %s (expected: %s)" % (idx, str(data[idx]), str(reference[idx])) )
+
+    def _get_bool_array(self, nelements, masklist=None):
+        """
+        Create a bool array of length, nelements.
+        Elements of the array are set True if the indices are in range
+        of masklist. Otherwise, False.
+        """
+        self.assertTrue(nelements>0, "Internal error. Length of array should be positive value")
+        if masklist is None: masklist=[]
+        ret_array = [ False for idx in xrange(nelements) ]
+        for irange in masklist:
+            curr_range = masklist[irange]
+            if len(curr_range) < 2:
+                self.fail("Internal error. masklist should be a list of 2 elements array.")
+            schan = curr_range[0]
+            echan = curr_range[1]
+            ret_array[schan:echan+1] = True
+        
+        return ret_array
+            
         
 def suite():
-    return [sdflag_test, sdflag_test_timerange]
+    return [sdflag_test, sdflag_test_timerange, sdflag_selection]
