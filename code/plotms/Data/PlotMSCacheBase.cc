@@ -270,6 +270,9 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 	// Maintain access to this msname, selection, & averager, because we'll
 	// use it if/when we flag, etc.
+	if ( filename_ != filename ){
+		ephemerisInitialized = false;
+	}
 	filename_ = filename;
 	selection_ = selection;
 	averaging_ = averaging;

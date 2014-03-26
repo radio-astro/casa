@@ -376,7 +376,7 @@ protected:
   Vector<String> fldnames_;
 
   PMS::Axis iterAxis;
-
+  bool ephemerisInitialized;
 };
 typedef CountedPtr<PlotMSCacheBase> PlotMSCacheBasePtr;
 

@@ -77,39 +77,44 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     switch(axis) {
     
     case TIME:
-    //case TIME_INTERVAL:
+    case TIME_INTERVAL:
        	return UDATETIME;
-    /*case FREQUENCY:
-       	return HERTZ;
+    case FREQUENCY:
+       	return GHERTZ;
     case VELOCITY:
        	return METERS_PER_SECOND;
     case UVDIST:
-    case UVDIST_L:
     case U:
     case V:
     case W:
+       	return METERS;
+    case UVDIST_L:
     case UWAVE:
     case VWAVE:
     case WWAVE:
-       	return METERS;
-*/
-   /*
-       case AMP:
-       case PHASE:
-       case REAL:
-       case IMAG:
-       case WTxAMP:
+    	return WAVELENGTHS_PER_CHANNEL;
+    case PHASE:
+    case ELEVATION:
+    case AZIMUTH:
+    case PARANG:
+    case AZ0:
+    case EL0:
+    case PA0:
+    	return DEGREES;
+    case HA0:
+    	return HOURS;
+    case AMP:
+    case REAL:
+    case IMAG:
+    	return JANSKY;
 
-       		      AZ0,EL0,HA0,PA0,
-       		      ANTENNA,AZIMUTH,ELEVATION,
-       		      PARANG,
-       		      GAMP,GPHASE,GREAL,GIMAG,
+       		   /*   GAMP,GPHASE,GREAL,GIMAG,
        		      DELAY,SWP,TSYS,OPAC,*/
-  /*  case RADIAL_VELOCITY:
+   case RADIAL_VELOCITY:
        	return KILOMETERS_PER_SECOND;
 
     case RHO:
-       	return KILOMETERS;*/
+       	return KILOMETERS;
     default: return UNONE;
     }
 }

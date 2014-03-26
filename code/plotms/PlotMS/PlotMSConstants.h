@@ -175,10 +175,11 @@ public:
     // Enum for different axes units.  Currently only used in labels.
     // <group>
     PMS_ENUM1(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
-              UNONE, UDATETIME/*, HERTZ, METERS_PER_SECOND, KILOMETERS_PER_SECOND,
-              KILOMETERS, METERS*/);
+              UNONE, UDATETIME, GHERTZ, METERS_PER_SECOND, KILOMETERS_PER_SECOND,
+              KILOMETERS, METERS, HOURS, WAVELENGTHS_PER_CHANNEL, DEGREES, JANSKY);
     PMS_ENUM2(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
-              "", "date-time"/*"s", "Hz", "m/s", "km/s", "km", "m"*/);
+              "", "s", "GHz", "m/s", "km/s", "km", "m", "hours",
+              "wavelengths per channel", "degrees", "Jy");
 
     // </group>
               

@@ -33,6 +33,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Sort.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -50,7 +51,10 @@ namespace casa {
 
 MSCache::MSCache(PlotMSApp* parent):
 		  PlotMSCacheBase(parent)
-{}
+{
+	ephemerisAvailable = false;
+
+	}
 
 MSCache::~MSCache() {}
 
@@ -108,11 +112,12 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	setUpVisIter(filename_,selection_,True,True,True);
 	ROVisIterator& viter(*rvi_p);
 
-	if (averaging_.channel())
+	if (averaging_.channel()){
 		viter.setChanAveBounds(averaging_.channelValue(),chanAveBounds_p);
-	else
+	}
+	else {
 		viter.setChanAveBounds(-1.0,chanAveBounds_p);
-
+	}
 	// Remember how many antennas there are
 	//   (should remove this)
 	nAnt_ = viter.numberAnt();
@@ -172,9 +177,9 @@ void MSCache::setUpVisIter(const String& msname,
 	Block<Int> columns(nsortcol);
 	Int i(0);
 	Double iterInterval(0.0);
-	if (averaging_.time())
+	if (averaging_.time()){
 		iterInterval= averaging_.timeValue();
-
+	}
 	columns[i++]=MS::ARRAY_ID;
 	if (!combscan) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
 	if (!combfld) columns[i++]=MS::FIELD_ID;      // force field boundaries
@@ -216,7 +221,6 @@ void MSCache::setUpVisIter(const String& msname,
 	// Apply chan/corr selction
 	if (chanselect) rvi_p->selectChannel(chansel);
 	if (corrselect) rvi_p->selectCorrelation(corrsel);
-
 }
 
 void MSCache::countChunks(ROVisibilityIterator& vi,
@@ -364,7 +368,6 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 
 			// Keep track of the maximum # of rows that might get averaged
 			maxAveNRows=max(maxAveNRows,vb.nRow());
-
 
 			// Increment chunk-per-sol count for current solution
 			nIterPerAve(ave)++;
@@ -563,7 +566,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	vi.originChunks();
 	vi.origin();
 
-
 	Double time0=86400.0*floor(vb.time()(0)/86400.0);
 	for (Int chunk=0;chunk<nChunk_;++chunk) {
 
@@ -637,7 +639,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 		}
 
 		if (verby) logLoad(ss.str());
-
 
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
@@ -1037,6 +1038,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		}
 		case PMS::CORRECTED: {
+
 			*amp_[vbnum] = amplitude(vb.correctedVisCube());
 			break;
 		}
@@ -1223,22 +1225,22 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 }
 
 bool MSCache::isEphemeris(){
-	setUpVisIter(filename_,selection_,True,True,True);
-	ROVisIterator& viter(*rvi_p);
-	VisBuffer vb( viter );
-	Int fieldId = vb.fieldId();
-	const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
-	String ephemerisExists = fieldColumns.ephemPath( fieldId );
-	bool ephemerisAvailable = true;
-	if ( ephemerisExists.empty()){
-		ephemerisAvailable = false;
-	}
+	if ( !ephemerisInitialized ){
+		Table::TableOption tabopt(Table::Old);
 
-	vb.detachFromVisIter();
-	//Release the lock.
-	if (rvi_p != NULL ){
-		delete rvi_p;
-		rvi_p=NULL;
+		MeasurementSet ms(filename_,TableLock(TableLock::AutoLocking), tabopt);
+		ROMSColumns msc(ms);
+		const ROMSFieldColumns& fieldColumns = msc.field();
+
+		const ROMSMainColumns& mainColumns(ms);
+		const ROScalarColumn<int> scalerColumn = mainColumns.fieldId();
+
+		String ephemerisExists = fieldColumns.ephemPath( scalerColumn.asInt( MS::FIELD_ID) );
+		ephemerisAvailable = true;
+		if ( ephemerisExists.empty()){
+			ephemerisAvailable = false;
+		}
+		ephemerisInitialized = true;
 	}
 	return ephemerisAvailable;
 }

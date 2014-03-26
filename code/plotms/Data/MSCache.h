@@ -159,7 +159,7 @@ private:
   // Volume meter for volume calculation
   MSCacheVolMeter vm_;
 
-    
+  bool ephemerisAvailable;
 };
 typedef CountedPtr<MSCache> MSCachePtr;
 
