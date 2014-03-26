@@ -426,6 +426,9 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
     """
     rawfile = 'sd_analytic_type1-3.bl.asap'
     ntbrow = 4 # number of rows in rawfile
+    #single_chan = {'syntax': "40~60", 'chanlist': [(40,60)]}
+    #single_freq = {'syntax': "", 'chanlist': [(,)]}
+    #single_velo = {'syntax': "", 'chanlist': [(,)]}
     #flagchan = ( (80,90), (60,70), (40,50), (20,30) )
     #selchan = ()
     outfile = ''
@@ -440,14 +443,17 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+
+        shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
 
         default(tsdflag)
         self.mode = 'manual'
         self.outfile = ''
 
     def tearDown(self):
+        pass
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
 
@@ -861,71 +867,191 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
     # spw with channel range
     #########################
     def test_spw_id_default_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
-#         spw = ''
-#         ref_row = []
-#         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
-#         self._test_flag(self.rawfile, ref_row)        
+        """test spw selection w/ channel selection (spw=':40~60')"""
+        spw = ':40~60'
+        ref_row = [0,1,2,3]
+        ref_chanlist = [ (40,60) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
 
     def test_spw_id_default_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw=':299.490~299.500GHz')"""
+        spw = ':299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
+        ref_row = [2]
+        ref_chanlist = [ (40,50) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_default_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw=':-519.650~-509.640km/s')"""
+        spw = ':-519.650~-509.640km/s' # IFNO=25, channel=60~70 will be selected
+        ref_row = [1]
+        ref_chanlist = [ (60,70) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_default_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw=':20~30;80~90')"""
+        spw = ':20~30;80~90'
+        ref_row = [0,1,2,3]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_exact_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='23:40~60')"""
+        spw = '23:40~60' # IFNO=23, channel 40~60 will be selected
+        ref_row = [0,3]
+        ref_chanlist = [ (40,60) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_exact_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='21:299.490~299.500GHz')"""
+        spw = '21:299.4899~299.5001GHz' # IFNO=21, channel 40~50 will be selected
+        ref_row = [2]
+        ref_chanlist = [ (40,50) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_exact_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='25:-519.650~-509.640km/s')"""
+        spw = '25:-519.650~-509.640km/s'
+        ref_row = [1]
+        ref_chanlist = [ (60,70) ] # IFNO=25, channel=60~70 will be selected
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_exact_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='25:20~30;80~90')"""
+        spw = '25:20~30;80~90'
+        ref_row = [1]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_pattern_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:40~60')"""
+        spw = '*:40~60'
+        ref_row = [0,1,2,3]
+        ref_chanlist = [ (40,60) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_pattern_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:299.490~299.500GHz')"""
+        spw = '*:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
+        ref_row = [2]
+        ref_chanlist = [ (40,50) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_pattern_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:-519.650~-509.640km/s')"""
+        spw = '*:-519.650~-509.640km/s' # IFNO=25, channel=60~70 will be selected
+        ref_row = [1]
+        ref_chanlist = [ (60,70) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_pattern_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:20~30;80~90')"""
+        spw = '*:20~30;80~90'
+        ref_row = [0,1,2,3]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='299.490~299.500GHz:40~50')"""
+        spw = '299.490~299.500GHz:40~50' # IFNO=21, channel 40~50 will be selected
+        ref_row = [2]
+        ref_chanlist = [ (40,50) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='299.490~299.500GHz:299.490~299.500GHz')"""
+        spw = '299.490~299.500GHz:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
+        ref_row = [2]
+        ref_chanlist = [ (40,50) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='300.45~300.5GHz:-519.650~-509.640km/s')"""
+        spw = '300.45~300.5GHz:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
+        ref_row = [1]
+        ref_chanlist = [ (60,70) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='300.45~300.5GHz:20~30;80~90')"""
+        spw = '300.45~300.5GHz:20~30;80~90' # IFNO=25, channel=20~30 and 80~90 will be selected
+        ref_row = [1]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-30~30km/s:40~60')"""
+        spw = '-30~30km/s:40~60' # IFNO=23, channel 40~60 will be selected
+        ref_row = [0,3]
+        ref_chanlist = [ (40,60) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='450~500km/s:299.490~299.500GHz')"""
+        spw = '450~500km/s:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
+        ref_row = [2]
+        ref_chanlist = [ (40,50) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-519.650~-509.640km/s:-519.650~-509.640km/s')"""
+        spw = '-519.650~-509.640km/s:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
+        ref_row = [1]
+        ref_chanlist = [ (60,70) ]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-519.650~-509.640km/s:20~30;80~90')"""
+        spw = '-519.650~-509.640km/s:20~30;80~90' # IFNO=25, channel=20~30 and 80~90 will be selected
+        ref_row = [1]
+        ref_chanlist = ( (20,30), (80,90) )
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_id_list_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='21:40~50,25:60~70')"""
+        spw = '21:40~50,25:60~70'
+        ref_dict = {2:[ (40,50) ], 1: [ (60,70) ]}
+        self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        # Test
+        tb.open(self.rawfile)
+        nrow = tb.nrows()
+        flagrow = tb.getcol("FLAGROW")
+        flagtra = tb.getcol("FLAGTRA").transpose()
+        tb.close()
+        self.assertEqual(nrow, self.ntbrow, "The number of rows in table changed.")
+        print("Testing FLAGROW")
+        for fr in flagrow:
+            self.assertEqual(fr, 0, "FLAGROW should be all 0")
+        print("Testing FLAGROW")
+        for irow in xrange(self.ntbrow):
+            if irow in ref_dict.keys(): currlist = ref_dict[irow]
+            else: currlist = []
+            flag = flagtra[irow]
+            # convert flagtra to bool list
+            bflag = [ True if f!=0 else False for f in flag ]
+            nchan = len(flag)
+            ref_flag = self._get_bool_array(nchan, masklist=currlist)
+            self._exact_compare_array(bflag, ref_flag)
+
 
     ####################
     # timerange
@@ -1004,16 +1130,17 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         # create reference flagrow array
         ref_flagrow = [ 0 for idx in xrange(self.ntbrow) ]
         for irow in idx_flagrow: ref_flagrow[irow] = 1
-        print("Comparing FLAGROW")
+        print("Testing FLAGROW")
         self._exact_compare_array(flagrow, ref_flagrow)
         # compare FLAGTRA
-        print("Comparing FLAGTRA")
+        print("Testing FLAGTRA")
         for irow in xrange(self.ntbrow):
             flag = flagtra[irow]
             # convert flagtra to bool list
-            bflag = [ True if f>0 else False for f in flag ]
+            bflag = [ True if f!=0 else False for f in flag ]
             nchan = len(flag)
-            ref_flag = self._get_bool_array(nchan, masklist=chanlist)
+            currlist = chanlist if irow in rowlist else []
+            ref_flag = self._get_bool_array(nchan, masklist=currlist)
             self._exact_compare_array(bflag, ref_flag)
 
     def _exact_compare_array(self, data, reference):
@@ -1029,8 +1156,8 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         """
         self.assertTrue(nelements>0, "Internal error. Length of array should be positive value")
         if masklist is None: masklist=[]
-        ret_array = [ False for idx in xrange(nelements) ]
-        for irange in masklist:
+        ret_array = numpy.array([ False for idx in xrange(nelements) ])
+        for irange in xrange(len(masklist)):
             curr_range = masklist[irange]
             if len(curr_range) < 2:
                 self.fail("Internal error. masklist should be a list of 2 elements array.")
