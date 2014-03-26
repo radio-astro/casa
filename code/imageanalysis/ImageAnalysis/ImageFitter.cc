@@ -1234,6 +1234,12 @@ void ImageFitter::_fitsky(
 			False, False, False, _getStretch()
 		)
 	);
+	ImageMetaData md(subImageTmp);
+	ThrowIf(
+		anyTrue(md.directionShape() <= 1),
+		"Invalid region specification. The extent of the region in the direction plane must be "
+		"at least two pixels in both dimensions"
+	);
 	Vector<Double> imRefPix = _getImage()->coordinates().directionCoordinate().referencePixel();
 	Vector<Double> subRefPix = subImageTmp->coordinates().directionCoordinate().referencePixel();
 	pixelOffsets.first = (int)floor(subRefPix[0] - imRefPix[0] + 0.5);
@@ -1268,13 +1274,11 @@ void ImageFitter::_fitsky(
 	SubImage<Float> subImage = SubImage<Float>(
 		allAxesSubImage, AxesSpecifier(False)
 	);
-
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
 	Bool xIsLong = cSys.isDirectionAbscissaLongitude();
 	pixels = subImage.get(True);
 	pixelMask = subImage.getMask(True).copy();
-
 	// What Stokes type does this plane hold ?
 	Stokes::StokesTypes stokes = Stokes::type(_kludgedStokes);
 	// Form masked array and find min/max
