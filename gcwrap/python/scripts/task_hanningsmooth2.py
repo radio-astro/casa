@@ -74,20 +74,15 @@ def hanningsmooth2(vis=None,
     mtlocal = mttool()
     mslocal = mstool()
 
-    # Specifics for this task, different from mstransform
-    # default datacolumn='all'
-    # default createmms=False
-    # outputvis is TBD
-    # copying of other vis columns to output is TBD
-    # if requested datacolumn=CORRECTED doesn't exist, it uses DATA
-
     try:
                     
         # Gather all the parameters in a dictionary.        
         config = {}
+        
         config = msth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
-                    uvrange=uvrange,timerange=timerange, intent=intent, observation=observation)
+                    uvrange=uvrange,timerange=timerange, intent=intent, observation=observation,
+                    feed=feed)
         
         # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
@@ -141,43 +136,3 @@ def hanningsmooth2(vis=None,
     return True
  
  
-   
-# OLD CODE. DELETE LATER
-
-#     try:
-#         casalog.origin('hanningsmooth2')
-#         casalog.post('vis=\''+vis+'\', datacolumn=\''+datacolumn+'\', outputvis=\''+outputvis+'\'', 'INFO')
-#         newvis = vis;
-#         
-#         if os.path.exists(outputvis):
-#             ms.close()
-#             raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
-# 
-#         if(type(outputvis)==str and not outputvis==''):
-#             newvis = outputvis
-#             casalog.post('copying '+vis+' to '+newvis , 'INFO')
-#             tb.open(vis)
-#             tmptb = tb.copy(newvis, deep=True, valuecopy=True)
-#             tmptb.close()
-#             # note that the resulting copy is writable even if the original was read-only
-#             tb.close()
-#         else:
-#             newvis = vis
-# 
-#         if ((type(newvis)==str) & (os.path.exists(newvis))):
-#             ms.open(thems=newvis,nomodify=False)
-#         else:
-#             raise Exception, 'Visibility data set not found - please verify the name'
-#         
-#         ms.hanningsmooth2(datacolumn=str.lower(datacolumn))
-#         
-#         # write history
-#         ms.writehistory(message='taskname = hanningsmooth2',origin='hanningsmooth2')
-#         ms.writehistory(message='vis         = "'+str(vis)+'"',origin='hanningsmooth2')
-#         ms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',origin='hanningsmooth2')
-#         ms.writehistory(message='outputvis   = "'+str(outputvis)+'"',origin='hanningsmooth2')
-#         ms.close()
-#         
-#     except Exception, instance:
-#         print '*** Error ***',instance
-#         return

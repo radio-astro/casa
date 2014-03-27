@@ -57,7 +57,7 @@
 	    </param>
 	    <param type="bool" name="parallel" subparam="true">
 	        <description>Create a multi-MS in parallel using simple_cluster.</description>
-	        <value>False</value>
+	        <value>True</value>
 	    </param>        
 	    <param type="int" name="ddistart" subparam="true" visibility="hidden">
 	        <description>For internal use only. Do not change it!</description>
@@ -154,7 +154,7 @@
             <equals type="bool" value="True">
                   <default param="separationaxis"><value type="string">both</value></default>
                   <default param="numsubms"><value type="int">64</value></default>
-                  <default param="parallel"><value type="bool">False</value></default>
+                  <default param="parallel"><value type="bool">True</value></default>
            </equals>
           </when>
     </constraints>
