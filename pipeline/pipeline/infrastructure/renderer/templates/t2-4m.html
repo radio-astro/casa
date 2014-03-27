@@ -1,7 +1,7 @@
 <%!
 navbar_active='By Task'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.renderer.qa2adapter as qa2
+import pipeline.infrastructure.renderer.qaadapter as qa
 %>
 <%inherit file="base.html"/>
 
@@ -37,11 +37,11 @@ $(document).ready(function(){
 					   data-fakeframehref="stage${result.stage_number}/t2-4m_details.html"
 					   href="t2-4m.html?stage=${result.stage_number}">
 						${hr.get_task_name(result)}
-						<% qa2_url = qa2.get_url(result) %>
-						% if qa2_url:
+						<% qa_url = qa.get_url(result) %>
+						% if qa_url:
 						<ul>
 							<li>
-								<a class="replace" href="stage${result.stage_number}/t2-3m_details.html">QA2</a>
+								<a class="replace" href="stage${result.stage_number}/t2-3m_details.html">QA</a>
 							</li>
 						</ul>
 						% endif

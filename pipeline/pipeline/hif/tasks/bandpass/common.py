@@ -116,7 +116,7 @@ class BandpassResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
-        self.qa2 = {}
+        self.qa = {}
 
     def merge_with_context(self, context):
         """

@@ -7,7 +7,7 @@
 
 # Description:
 # ------------
-# This module runs the pointing offset subsystem of the QA2 system.
+# This module runs the pointing offset subsystem of the QA system.
 
 # Subsystem user functions:
 # -------------------------

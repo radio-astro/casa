@@ -1,11 +1,11 @@
 
 # -----------------------------------------------------------------------------
 
-# QA2Error
+# QAError
 
 # Description:
 # ------------
-# This module contains the class that handles exceptions for the QA2 system.
+# This module contains the class that handles exceptions for the QA system.
 
 # Inherited classes:
 # ------------------
@@ -25,7 +25,7 @@
 
 # -----------------------------------------------------------------------------
 
-class QA2Error( Exception ):
+class QAError( Exception ):
 
 # -----------------------------------------------------------------------------
 

@@ -3,42 +3,42 @@
 # System module ICD
 # ------------------------------------------------------------------------------
 
-# qa2.py
+# qa.py
 
 # Description:
 # ------------
-# This module runs the entire QA2 system.
+# This module runs the entire QA system.
 
 # User functions (system level):
 # ------------------------------
-# qa2        - This function runs the entire QA2 system.
+# qa        - This function runs the entire QA system.
 #
-# qa2_flag   - This function runs the QA2 flagging statistics subsystem.
-# qa2_gcal   - This function runs the QA2 gain calibration statistics subsystem.
-# qa2_bpcal  - This function runs the QA2 bandpass calibration statistics
+# qa_flag   - This function runs the QA flagging statistics subsystem.
+# qa_gcal   - This function runs the QA gain calibration statistics subsystem.
+# qa_bpcal  - This function runs the QA bandpass calibration statistics
 #              subsystem.
-# qa2_polcal - This function runs the QA2 polarization calibration statistics
+# qa_polcal - This function runs the QA polarization calibration statistics
 #              subsystem.
-# qa2_image  - This function runs the QA2 imaging statistics subsystem.
-# qa2_psf    - This function runs the QA2 psf information subsystem.
-# qa2_vis    - This function runs the QA2 visibility statistics subsystem.
+# qa_image  - This function runs the QA imaging statistics subsystem.
+# qa_psf    - This function runs the QA psf information subsystem.
+# qa_vis    - This function runs the QA visibility statistics subsystem.
 
 # Modification history:
 # ---------------------
 # 2011 May 20 - Nick Elias, NRAO
-#               Initial version created with function qa2().
+#               Initial version created with function qa().
 # 2011 Jun 08 - Nick Elias, NRAO
 #               Removed extraneous code.
 # 2011 Sep 01 - Nick Elias, NRAO
-#               Functions qa2_flag(), qa2_gcal(), qa2_bpcal(), qa2_polcal(),
-#               qa2_image(), qa2_log_start(), and qa2_log_stop() added.
+#               Functions qa_flag(), qa_gcal(), qa_bpcal(), qa_polcal(),
+#               qa_image(), qa_log_start(), and qa_log_stop() added.
 # 2011 Sep 10 - Nick Elias, NRAO
-#               Functions qa2_log_start() and qa2_log_stop() removed in favor of
+#               Functions qa_log_start() and qa_log_stop() removed in favor of
 #               local logging classes.
 # 2011 Sep 29 - Nick Elias, NRAO
-#               Imported psf.py module and added qa2_psf() function.
+#               Imported psf.py module and added qa_psf() function.
 # 2011 Oct 19 - Nick Elias, NRAO
-#               Imported vis.py module and added qa2_vis() function.
+#               Imported vis.py module and added qa_vis() function.
 
 # ------------------------------------------------------------------------------
 
@@ -60,11 +60,11 @@ import vis
 # System user functions and ICDs
 # ------------------------------------------------------------------------------
 
-# qa2
+# qa
 
 # Description:
 # ------------
-# This function runs the entire QA2 system.
+# This function runs the entire QA system.
 
 # Inputs:
 # -------
@@ -94,19 +94,19 @@ import vis
 #               log_level input parameter removed and replaced with logobj
 #               parameter.
 # 2011 Sep 29 - Nick Elias, NRAO
-#               Incorporated a call to the qa2_psf() function.
+#               Incorporated a call to the qa_psf() function.
 # 2011 Oct 19 - Nick Elias, NRAO
-#               Incorporated a call to the qa2_vis() function.
+#               Incorporated a call to the qa_vis() function.
 # 2012 Mar 16 - Nick Elias, NRAO
-#               Changed function calls to qa2_gcal() and qa2_bpcal().
+#               Changed function calls to qa_gcal() and qa_bpcal().
 
 # ------------------------------------------------------------------------------
 
-def qa2( in_dirs, out_dir, logobj='PYTHON' ):
+def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2'
+	root = 'qa.qa'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -114,7 +114,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Print the first log message
 
-	msg = 'QA2 system started ...\n'
+	msg = 'QA system started ...\n'
 	origin = root
 	logger.info( msg, origin=origin )
 
@@ -122,7 +122,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the flagging statistics
 
 	try:
-		status = qa2_flag( in_dirs, out_dir, logobj=logger )
+		status = qa_flag( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -132,7 +132,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the gain calibration statistics
 
 	try:
-		status = qa2_gcal( in_dirs, out_dir, logobj=logger )
+		status = qa_gcal( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -142,7 +142,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the bandpass calibration statistics
 
 	try:
-		status = qa2_bpcal( in_dirs, out_dir, logobj=logger )
+		status = qa_bpcal( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -152,7 +152,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the polarization calibration statistics
 
 	try:
-		status = qa2_polcal( in_dirs, out_dir, logobj=logger )
+		status = qa_polcal( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -162,7 +162,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the imaging statistics
 
 	try:
-		status = qa2_image( in_dirs, out_dir, logobj=logger )
+		status = qa_image( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -172,7 +172,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the psf information
 
 	try:
-		status = qa2_psf( in_dirs, out_dir, logobj=logger )
+		status = qa_psf( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -182,7 +182,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 	# Calculate and write the visibility statistics
 
 	try:
-		status = qa2_vis( in_dirs, out_dir, logobj=logger )
+		status = qa_vis( in_dirs, out_dir, logobj=logger )
 	except Exception, err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
@@ -191,7 +191,7 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Print the last log message
 
-	msg = 'QA2 system finished ...\n'
+	msg = 'QA system finished ...\n'
 	origin = root
 	logger.info( msg, origin=origin )
 
@@ -207,11 +207,11 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_flag
+# qa_flag
 
 # Description:
 # ------------
-# This function runs the QA2 flagging statistics subsystem.
+# This function runs the QA flagging statistics subsystem.
 
 # Inputs:
 # -------
@@ -237,11 +237,11 @@ def qa2( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-def qa2_flag( in_dirs, out_dir, logobj='PYTHON' ):
+def qa_flag( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2_flag'
+	root = 'qa.qa_flag'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -285,11 +285,11 @@ def qa2_flag( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_gcal
+# qa_gcal
 
 # Description:
 # ------------
-# This function runs the QA2 gain calibration statistics subsystem.
+# This function runs the QA gain calibration statistics subsystem.
 
 # Inputs:
 # -------
@@ -319,11 +319,11 @@ def qa2_flag( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-def qa2_gcal( in_dirs, out_dir, logobj='PYTHON' ):
+def qa_gcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2_gcal'
+	root = 'qa.qa_gcal'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -367,11 +367,11 @@ def qa2_gcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_bpcal
+# qa_bpcal
 
 # Description:
 # ------------
-# This function runs the QA2 bandpass calibration statistics subsystem.
+# This function runs the QA bandpass calibration statistics subsystem.
 
 # Inputs:
 # -------
@@ -401,11 +401,11 @@ def qa2_gcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-def qa2_bpcal( in_dirs, out_dir, logobj='PYTHON' ):
+def qa_bpcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2_bpcal'
+	root = 'qa.qa_bpcal'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -449,11 +449,11 @@ def qa2_bpcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_polcal
+# qa_polcal
 
 # Description:
 # ------------
-# This function runs the QA2 polarization calibration statistics subsystem.
+# This function runs the QA polarization calibration statistics subsystem.
 
 # Inputs:
 # -------
@@ -479,11 +479,11 @@ def qa2_bpcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-def qa2_polcal( in_dirs, out_dir, logobj='PYTHON' ):
+def qa_polcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2_polcal'
+	root = 'qa.qa_polcal'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -527,11 +527,11 @@ def qa2_polcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_image
+# qa_image
 
 # Description:
 # ------------
-# This function runs the QA2 imaging statistics subsystem.
+# This function runs the QA imaging statistics subsystem.
 
 # Inputs:
 # -------
@@ -557,11 +557,11 @@ def qa2_polcal( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-def qa2_image( in_dirs, out_dir, logobj='PYTHON' ):
+def qa_image( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2_image'
+	root = 'qa.qa_image'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -608,11 +608,11 @@ def qa2_image( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_psf
+# qa_psf
 
 # Description:
 # ------------
-# This function runs the QA2 psf information subsystem.
+# This function runs the QA psf information subsystem.
 
 # Inputs:
 # -------
@@ -636,15 +636,15 @@ def qa2_image( in_dirs, out_dir, logobj='PYTHON' ):
 # 2011 Oct 17 - Nick Elias, NRAO
 #               The fit_factor and stats_thresh parameters are fed to the
 #               psf.psf() function, but they cannot be changed from the
-#               qa2.qa2_psf() input parameters (QA2 is automated).
+#               qa.qa_psf() input parameters (QA is automated).
 
 # ------------------------------------------------------------------------------
 
-def qa2_psf( in_dirs, out_dir, logobj='PYTHON' ):
+def qa_psf( in_dirs, out_dir, logobj='PYTHON' ):
 
 	# Initialize the logger
 
-	root = 'qa2.qa2_psf'
+	root = 'qa.qa_psf'
 	level = logs.INFO
 
 	log_local, logger = logs.init( out_dir, root, level, logobj )
@@ -689,11 +689,11 @@ def qa2_psf( in_dirs, out_dir, logobj='PYTHON' ):
 
 # ------------------------------------------------------------------------------
 
-# qa2_vis
+# qa_vis
 
 # Description:
 # ------------
-# This function runs the QA2 visibility statistics subsystem.
+# This function runs the QA visibility statistics subsystem.
 
 # Inputs:
 # -------
@@ -719,11 +719,11 @@ def qa2_psf( in_dirs, out_dir, logobj='PYTHON' ):
 
 # vis module is missing
 
-#def qa2_vis( in_dirs, out_dir, logobj='PYTHON' ):
+#def qa_vis( in_dirs, out_dir, logobj='PYTHON' ):
 #
 #	# Initialize the logger
 #
-#	root = 'qa2.qa2_vis'
+#	root = 'qa.qa_vis'
 #	level = logs.INFO
 #
 #	log_local, logger = logs.init( out_dir, root, level, logobj )

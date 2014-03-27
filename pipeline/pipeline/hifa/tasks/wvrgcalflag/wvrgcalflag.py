@@ -23,23 +23,23 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-      flag_intent=None, qa2_intent=None, qa2_bandpass_intent=None,
+      flag_intent=None, qa_intent=None, qa_bandpass_intent=None,
       accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None):
         self._init_properties(vars())
 
-    # qa2_intent setter/getter overrides version in WvrgcalInputs with a 
+    # qa_intent setter/getter overrides version in WvrgcalInputs with a 
     # different default 
     @property
-    def qa2_intent(self):
+    def qa_intent(self):
         if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('qa2_intent')
+            return self._handle_multiple_vis('qa_intent')
 
-        if self._qa2_intent is None:
+        if self._qa_intent is None:
             value = 'PHASE'
         else:
-            value = self._qa2_intent
+            value = self._qa_intent
 
-        # ensure that qa2_intent includes flag_intent otherwise 
+        # ensure that qa_intent includes flag_intent otherwise 
         # the results for flag_intent will not be calculated
         value_set = set(value.split(','))
         temp = self.flag_intent
@@ -47,9 +47,9 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
         value = ','.join(value_set)
         return value
 
-    @qa2_intent.setter
-    def qa2_intent(self, value):
-        self._qa2_intent = value
+    @qa_intent.setter
+    def qa_intent(self, value):
+        self._qa_intent = value
 
     @property
     def flag_intent(self):
@@ -127,8 +127,8 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
           scale=inputs.scale, maxdistm=inputs.maxdistm,
           minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
-	  flag_intent=inputs.flag_intent, qa2_intent=inputs.qa2_intent,
-          qa2_bandpass_intent=inputs.qa2_bandpass_intent)
+	  flag_intent=inputs.flag_intent, qa_intent=inputs.qa_intent,
+          qa_bandpass_intent=inputs.qa_bandpass_intent)
         datatask = WvrgcalflagWorker(datainputs)
 
         # Construct the task that will set any flags raised in the
@@ -163,17 +163,18 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         return result
 
     def analyse(self, result):
+
         inputs = self.inputs
 
         # the result should now contain a wvrg file that has been
-        # 'flagged' as necessary. If the associated qa2 score indicates 
+        # 'flagged' as necessary. If the associated qa score indicates 
         # that applying it will make things worse then remove the file from
         # the result so that it cannot be accepted into the context.
-        if result.qa2.overall_score is not None and \
-          result.qa2.overall_score < inputs.accept_threshold:
+        if result.qa_wvr.overall_score is not None and \
+          result.qa_wvr.overall_score < inputs.accept_threshold:
             LOG.warning(
-              'wvrgcal file has qa2 score (%s) below accept_threshold (%s) and will not be applied' %
-              (result.qa2.overall_score, inputs.accept_threshold))
+              'wvrgcal file has qa score (%s) below accept_threshold (%s) and will not be applied' %
+              (result.qa_wvr.overall_score, inputs.accept_threshold))
             result.final = []
 
         return result
@@ -186,7 +187,7 @@ class WvrgcalflagWorkerInputs(basetask.StandardInputs):
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-      flag_intent=None, qa2_intent=None, qa2_bandpass_intent=None):
+      flag_intent=None, qa_intent=None, qa_bandpass_intent=None):
         self._init_properties(vars())
 
 
@@ -215,8 +216,8 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           disperse=inputs.disperse, wvrflag=inputs.wvrflag,
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
           maxdistm=inputs.maxdistm, minnumants=inputs.minnumants,
-	  mingoodfrac=inputs.mingoodfrac, qa2_intent=inputs.qa2_intent,
-          qa2_bandpass_intent=inputs.qa2_bandpass_intent,
+	  mingoodfrac=inputs.mingoodfrac, qa_intent=inputs.qa_intent,
+          qa_bandpass_intent=inputs.qa_bandpass_intent,
           accept_threshold=0.0,
           bandpass_result=self.result.bandpass_result,
           nowvr_result=self.result.nowvr_result)
@@ -235,7 +236,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         # take note of any antennas flagged by wvrgcal itself
         self.result.wvrflag = result.wvrflag
 
-        # copy the views for the flag_intent from the QA2 section of the
+        # copy the views for the flag_intent from the QA section of the
         # wvrgcal result
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
         fields = ms.fields
@@ -252,7 +253,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
             LOG.warning('no data fits flag_intent %s, no flagging will be done' %
               self.inputs.flag_intent)
 
-        for description in result.qa2.descriptions():
+        for description in result.qa_wvr.descriptions():
             add = False
             for intent_field in intent_fields:
                 if ('Field:%s' % intent_field[0] in description) and \
@@ -264,7 +265,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
                 # set antennas specified by the wvrflag parameter in the 
                 # flagging image to show that these data are already 'flagged'
                 # (i.e. interpolated)
-                image = result.qa2.last(description)
+                image = result.qa_wvr.last(description)
                 ant_names, ant_ids = commonhelpermethods.get_antenna_names(ms)
                 wvrflagids = []
                 for ant_name in self.result.wvrflag:
@@ -278,7 +279,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         self.result.pool[:] = result.pool[:]
         self.result.final = result.final 
         self.result.vis = inputs.vis
-        self.result.qa2 = result.qa2
+        self.result.qa_wvr = result.qa_wvr
         self.result.wvrflag = result.wvrflag
         self.result.wvr_infos = getattr(result, 'wvr_infos', [])
 

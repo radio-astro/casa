@@ -7,7 +7,7 @@
 
 # Description:
 # ------------
-# This module runs the image statistics subsystem of the QA2 system.
+# This module runs the image statistics subsystem of the QA system.
 
 # Notes:
 # ------
@@ -16,7 +16,7 @@
 
 # User functions (subsystem and component level):
 # -----------------------------------------------
-# image       - This function runs the image statistics subsystem of the QA2
+# image       - This function runs the image statistics subsystem of the QA
 #               system.
 #
 # image_calc  - This function calculates the image statistics.
@@ -83,7 +83,7 @@ import utility.logs as logs
 
 # Description:
 # ------------
-# This function runs the image statistics subsystem of the QA2 system.
+# This function runs the image statistics subsystem of the QA system.
 
 # Inputs:
 # -------

@@ -11,7 +11,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <shortdescription></shortdescription>
 <description>
 Generate a gain table based on Water Vapour Radiometer data, and calculate 
-a QA2 score based on its effect on the interferometric data.
+a QA score based on its effect on the interferometric data.
 </description>
     
 <input>
@@ -117,13 +117,13 @@ a QA2 score based on its effect on the interferometric data.
         <value>0.8</value>
       </param>
 
-    <param type="string" name="qa2_intent">
+    <param type="string" name="qa_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
         <value></value>
     </param>
 
-    <param type="string" name="qa2_bandpass_intent">
-        <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
+    <param type="string" name="qa_bandpass_intent">
+        <description>Data intent to use for the bandpass calibration in the qa calculation</description>
         <value></value>
     </param>
 
@@ -219,8 +219,8 @@ a QA2 score based on its effect on the interferometric data.
 <example>
 
 Generate a gain table based on the Water Vapour Radiometer data in each vis
-file. By applying the wvr calibration to the data specified by 'qa2_intent',
-calculate a QA2 score to indicate its effect on interferometric data;
+file. By applying the wvr calibration to the data specified by 'qa_intent',
+calculate a QA score to indicate its effect on interferometric data;
 a score &gt; 1 implies that the phase noise is improved, a score &lt; 1 implies
 that it is made worse. If the score is less than 'accept_threshold' then the 
 wvr gain table is not accepted into the context for subsequent use.
@@ -307,18 +307,18 @@ minnumants -- Minimum number of nearby antennas (up to 3) used for
     default: 2
     example: 3
 
-qa2_intent -- The list of data intents on which the wvr correction is to be 
+qa_intent -- The list of data intents on which the wvr correction is to be 
     tried as a means of estimating its effectiveness.
 
-    A QA2 'view' will be calculated for each specified intent, in each spectral
+    A QA 'view' will be calculated for each specified intent, in each spectral
     window in each vis file.
 
-    Each QA2 'view' will consist of a pair of 2-d images with dimensions
+    Each QA 'view' will consist of a pair of 2-d images with dimensions
     ['ANTENNA', 'TIME'], one showing the data phase-noise before the 
     wvr application, the second showing the phase noise after (both 'before'
     and 'after' images have a bandpass calibration applied as well).
 
-    An overall QA2 score is calculated for each vis file, by dividing the
+    An overall QA score is calculated for each vis file, by dividing the
     'before' images by the 'after' and taking the median of the result. An
     overall score of 1 would correspond to no change in the phase noise,
     a score &gt; 1 implies an improvement.
@@ -327,13 +327,13 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     'accept_threshold' then the wvr calibration file is not made available 
     for merging into the context for use in the subsequent reduction.
 
-    If you do not want any QA2 calculations then set qa2_intent=''.
+    If you do not want any QA calculations then set qa_intent=''.
 
     default: ''
     example: 'PHASE'
 
-qa2_bandpass_intent -- The data intent to use for the bandpass calibration
-    in the qa2 calculation. The default is blank to allow the 
+qa_bandpass_intent -- The data intent to use for the bandpass calibration
+    in the qa calculation. The default is blank to allow the 
     underlying bandpass task to select a sensible intent if the dataset
     lacks BANDPASS data.
 

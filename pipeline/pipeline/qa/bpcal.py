@@ -7,7 +7,7 @@
 
 # Description:
 # ------------
-# This module runs the bandpass calibration statistics subsystem of the QA2
+# This module runs the bandpass calibration statistics subsystem of the QA
 # system.
 
 # TBD:
@@ -17,7 +17,7 @@
 # User Functions (subsystem and component level):
 # -----------------------------------------------
 # bpcal       - This function runs the bandpass calibration statistics subsystem
-#               of the QA2 system.
+#               of the QA system.
 #
 # bpcal_calc  - This function calculates the bandpass calibration statistics.
 # bpcal_write - This function writes the bandpass calibration statistics to a
@@ -112,7 +112,7 @@ def rms(data):
 
 # Description:
 # ------------
-# This function runs the bandpass calibration statistics subsystem of the QA2
+# This function runs the bandpass calibration statistics subsystem of the QA
 # system.
 
 # Inputs:
@@ -245,11 +245,11 @@ def bpcal( in_table, out_dir, logobj='PYTHON', create_plots=False ):
 
 	# Return the dictionary containing the bandpass statistics, scores, and
 	# plots dictionaries
-        bpcal_qa2 = {'QA2NUMBERS': bpcal_stats, \
-                     'QA2SCORES': bpcal_scores, \
-                     'QA2PLOTS': bpcal_plots}
+        bpcal_qa = {'QANUMBERS': bpcal_stats, \
+                     'QASCORES': bpcal_scores, \
+                     'QAPLOTS': bpcal_plots}
 
-	return bpcal_qa2
+	return bpcal_qa
 
 # ------------------------------------------------------------------------------
 # Component user functions and ICDs

@@ -160,7 +160,7 @@ class SpectrumResult(ResultBase):
         self.units = units
 
 
-class Qa2Result(object):
+class QaResult(object):
     def __init__(self):
         self.overall_score = None
         self.view_score = {}

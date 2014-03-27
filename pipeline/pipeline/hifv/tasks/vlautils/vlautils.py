@@ -762,7 +762,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
             casatools.table.open(self.inputs.vis)
         
             if (len(self.flux_state_IDs) == 0):
-                #QA2_msinfo='Fail'
+                #QA_msinfo='Fail'
                 #logprint("ERROR: No flux density calibration scans found", logfileout='logs/msinfo.log')
                 raise Exception("No flux density calibration scans found")
             else:
@@ -847,7 +847,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                 #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log'
         
             if (len(self.phase_state_IDs) == 0):
-                #QA2_msinfo='Fail'
+                #QA_msinfo='Fail'
                 #logprint("ERROR: No gain calibration scans found", logfileout='logs/msinfo.log')
                 raise Exception("No gain calibration scans found")
             else:
@@ -909,7 +909,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
             casatools.table.open(self.inputs.vis)
             
             if (len(self.flux_state_IDs) == 0):
-                #QA2_msinfo='Fail'
+                #QA_msinfo='Fail'
                 #logprint("ERROR: No flux density calibration scans found", logfileout='logs/msinfo.log')
                 raise Exception("No flux density calibration scans found")
             else:
@@ -989,7 +989,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                 #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log')
             
             if (len(self.phase_state_IDs) == 0):
-                #QA2_msinfo='Fail'
+                #QA_msinfo='Fail'
                 #logprint("ERROR: No gain calibration scans found", logfileout='logs/msinfo.log')
                 raise Exception("No gain calibration scans found")
             else:

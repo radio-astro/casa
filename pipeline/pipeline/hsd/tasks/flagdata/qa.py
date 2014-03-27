@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import pipeline.qa2.scorecalculator as qa2calc
+import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -24,11 +24,11 @@ class SDFlagDataQAHandler(pqa.QAResultHandler):
             spw = summary['spw']
             pol = summary['pol']
             frac_flagged = summary['nflags'][0] / float(summary['nrow'])
-            scores.append(qa2calc.score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged))
+            scores.append(qacalc.score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged))
 #         frac_flagged = result.rows_flagged / result.num_rows
 #         frac_flagged = 0.25
 
-#         scores = [qa2calc.score_sdtotal_data_flagged(name, frac_flagged)]
+#         scores = [qacalc.score_sdtotal_data_flagged(name, frac_flagged)]
         result.qa.pool[:] = scores
 
 
@@ -38,6 +38,6 @@ class SDFlagDataListQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
-        # own QA2score list
+        # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated

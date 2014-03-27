@@ -12,24 +12,24 @@ from . import resultobjects
 LOG = infrastructure.get_logger(__name__)
 
 
-def calculate_qa2_numbers(result):
-    """Calculate a single number from the qa2 views stored in result.
+def calculate_qa_numbers(result):
+    """Calculate a single number from the qa views stored in result.
     
     result -- The Qa2Result object containing the Qa2 views.
     """
-    qa2_per_view = {}
+    qa_per_view = {}
 
     for description in result.descriptions():
-        qa2_result = result.last(description)
+        qa_result = result.last(description)
 
-        qa2_data = qa2_result.data
-        qa2_flag = qa2_result.flag
+        qa_data = qa_result.data
+        qa_flag = qa_result.flag
 
-        # qa2 score is no-wvr rms / with-wvr rms
-        qa2_per_view[description] = 1.0 / np.median(qa2_data[qa2_flag==False])
+        # qa score is no-wvr rms / with-wvr rms
+        qa_per_view[description] = 1.0 / np.median(qa_data[qa_flag==False])
 
-    result.view_score = qa2_per_view
-    result.overall_score = np.median(qa2_per_view.values())
+    result.view_score = qa_per_view
+    result.overall_score = np.median(qa_per_view.values())
 
 def calculate_view(context, nowvrtable, withwvrtable, result):
 

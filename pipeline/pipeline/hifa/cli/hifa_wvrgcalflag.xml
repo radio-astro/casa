@@ -121,13 +121,13 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
         <value></value>
     </param>
 
-    <param type="string" name="qa2_intent">
+    <param type="string" name="qa_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
         <value>BANDPASS,PHASE</value>
     </param>
 
-    <param type="string" name="qa2_bandpass_intent">
-        <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
+    <param type="string" name="qa_bandpass_intent">
+        <description>Data intent to use for the bandpass calibration in the qa calculation</description>
         <value></value>
     </param>
 
@@ -260,7 +260,7 @@ If any are found then recalculate the wvr calibration with the 'wvrflag'
 parameter set to ignore their data and interpolate results from other 
 antennas according to 'maxdistm' and 'minnumants'.
 
-Fourth, if the overall QA2 score for the final wvr correction of a vis file 
+Fourth, if the overall QA score for the final wvr correction of a vis file 
 is greater than the value in 'accept_threshold' then make available the
 wvr calibration file for merging into the context and use in the 
 subsequent reduction.
@@ -363,18 +363,18 @@ flag_intent -- The data intent(s) on whose wvr correction results the search
 
     default ''
 
-qa2_intent -- The list of data intents on which the wvr correction is to be
+qa_intent -- The list of data intents on which the wvr correction is to be
     tried as a means of estimating its effectiveness.
 
-    A QA2 'view' will be calculated for each specified intent, in each spectral
+    A QA 'view' will be calculated for each specified intent, in each spectral
     window in each vis file.
 
-    Each QA2 'view' will consist of a pair of 2-d images with dimensions
+    Each QA 'view' will consist of a pair of 2-d images with dimensions
     ['ANTENNA', 'TIME'], one showing the data phase-noise before the
     wvr application, the second showing the phase noise after (both 'before'
     and 'after' images have a bandpass calibration applied as well).
 
-    An overall QA2 score is calculated for each vis file, by dividing the
+    An overall QA score is calculated for each vis file, by dividing the
     'before' images by the 'after' and taking the median of the result. An
     overall score of 1 would correspond to no change in the phase noise,
     a score &gt; 1 implies an improvement.
@@ -385,8 +385,8 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
 
     default: 'BANDPASS,PHASE'
 
-qa2_bandpass_intent -- The data intent to use for the bandpass calibration
-    in the qa2 calculation. The default is blank to allow the
+qa_bandpass_intent -- The data intent to use for the bandpass calibration
+    in the qa calculation. The default is blank to allow the
     underlying bandpass task to select a sensible intent if the dataset
     lacks BANDPASS data.
 

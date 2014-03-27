@@ -34,6 +34,6 @@ class RefantListQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
-        # own QA2score list
+        # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated

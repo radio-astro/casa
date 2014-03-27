@@ -17,7 +17,7 @@ from pipeline.hifa.heuristics import wvrgcal as wvrgcal_heuristic
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import gaincal
 from . import resultobjects 
-from . import wvrg_qa2
+from . import wvrg_qa
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -32,7 +32,7 @@ class WvrgcalInputs(basetask.StandardInputs):
                  tie=None, sourceflag=None, nsol=None, disperse=None, 
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
                  maxdistm=None, minnumants=None, mingoodfrac=None,
-		 qa2_intent=None, qa2_bandpass_intent=None,
+		 qa_intent=None, qa_bandpass_intent=None,
 		 accept_threshold=None, bandpass_result=None,
 		 nowvr_result=None):
         self._init_properties(vars())
@@ -128,31 +128,31 @@ class WvrgcalInputs(basetask.StandardInputs):
         self._nsol = value
 
     @property
-    def qa2_bandpass_intent(self):
+    def qa_bandpass_intent(self):
         if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('qa2_bandpass_intent')
+            return self._handle_multiple_vis('qa_bandpass_intent')
 
-        if self._qa2_bandpass_intent is None:
+        if self._qa_bandpass_intent is None:
             # default is blank, which allows the bandpass task
             # to select a sensible default if the dataset lacks
             # data with BANDPASS intent
             return ''
 
-        return self._qa2_bandpass_intent
+        return self._qa_bandpass_intent
 
-    @qa2_bandpass_intent.setter
-    def qa2_bandpass_intent(self, value):
-        self._qa2_bandpass_intent = value
+    @qa_bandpass_intent.setter
+    def qa_bandpass_intent(self, value):
+        self._qa_bandpass_intent = value
 
     @property
-    def qa2_intent(self):
-        return self._qa2_intent
+    def qa_intent(self):
+        return self._qa_intent
 
-    @qa2_intent.setter
-    def qa2_intent(self, value):
+    @qa_intent.setter
+    def qa_intent(self, value):
         if value is None:
             value = ''
-        self._qa2_intent = value
+        self._qa_intent = value
 
     @property
     def scale(self):
@@ -381,57 +381,57 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # wvrcal files to be applied
         result.final[:] = on_disk
 
-        qa2_intent = inputs.qa2_intent.strip()
-        if not qa2_intent:
+        qa_intent = inputs.qa_intent.strip()
+        if not qa_intent:
             return result
         
-        # calculate the qa2 results if required
+        # calculate the qa results if required
         if not result.final:
             return result
 
         # do a bandpass calibration
-        result.bandpass_result = self._do_qa2_bandpass(inputs)
+        result.bandpass_result = self._do_qa_bandpass(inputs)
         
         # do a phase calibration on the bandpass and phase
         # calibrators with B preapplied
-        LOG.info('qa2: calculating phase calibration with B applied')
+        LOG.info('qa: calculating phase calibration with B applied')
         nowvr_result = self._do_nowvr_gaincal(inputs)
         result.nowvr_result = nowvr_result
 
         # accept this result object, thus adding the WVR table to the 
         # callibrary
-        LOG.debug('qa2: accept WVR results into copy of context')
+        LOG.debug('qa: accept WVR results into copy of context')
         result.accept(inputs.context)
 
         # do a phase calibration on the bandpass and phase calibrators, now 
         # with B *and* WVR preapplied.
-        LOG.info('qa2: calculating phase calibration with B and WVR applied')
+        LOG.info('qa: calculating phase calibration with B and WVR applied')
         wvr_result = self._do_wvr_gaincal(inputs)            
 
         nowvr_caltable = nowvr_result.inputs['caltable']
         wvr_caltable = wvr_result.inputs['caltable']
-        result.qa2.gaintable_wvr = wvr_caltable
+        result.qa_wvr.gaintable_wvr = wvr_caltable
 
-        LOG.info('qa2: calculate ratio no-WVR phase RMS / with-WVR phase rms')
-        wvrg_qa2.calculate_view(inputs.context, nowvr_caltable,
-                                wvr_caltable, result.qa2)
+        LOG.info('qa: calculate ratio no-WVR phase RMS / with-WVR phase rms')
+        wvrg_qa.calculate_view(inputs.context, nowvr_caltable,
+                                wvr_caltable, result.qa_wvr)
 
-        wvrg_qa2.calculate_qa2_numbers(result.qa2)
+        wvrg_qa.calculate_qa_numbers(result.qa_wvr)
 
-        # if the qa2 score indicates that applying the wvrg file will
+        # if the qa score indicates that applying the wvrg file will
         # make things worse then remove it from the results so that
         # it cannot be accepted into the context.
-        if result.qa2.overall_score < inputs.accept_threshold:
-            LOG.warning('wvrgcal has qa2 score (%s) below accept_threshold '
+        if result.qa_wvr.overall_score < inputs.accept_threshold:
+            LOG.warning('wvrgcal has qa score (%s) below accept_threshold '
                         '(%s) and will not be applied' %
-                        (result.qa2.overall_score, inputs.accept_threshold))
+                        (result.qa_wvr.overall_score, inputs.accept_threshold))
             result.final[:] = []
 
         return result
 
-    def _do_qa2_bandpass(self, inputs):
+    def _do_qa_bandpass(self, inputs):
         """
-        Create a bandpass caltable for QA2 analysis, returning the result of
+        Create a bandpass caltable for QA analysis, returning the result of
         the worker bandpass task.
         
         If a suitable bandpass caltable already exists, it will be reused. 
@@ -440,14 +440,14 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             # table already exists use it
             LOG.info('Reusing B calibration result:\n%s' % 
                      inputs.bandpass_result)
-            return self._do_user_qa2_bandpass(inputs)
+            return self._do_user_qa_bandpass(inputs)
         else:
-            LOG.info('Calculating new bandpass for QA2 analysis')
-            result = self._do_new_qa2_bandpass(inputs)
+            LOG.info('Calculating new bandpass for QA analysis')
+            result = self._do_new_qa_bandpass(inputs)
             inputs.bandpass_result = result
             return result
         
-    def _do_user_qa2_bandpass(self, inputs):
+    def _do_user_qa_bandpass(self, inputs):
         """
         Accept and return the bandpass result affixed to the inputs.
         
@@ -458,7 +458,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         bp_result.accept(inputs.context)
         return bp_result
     
-    def _do_new_qa2_bandpass(self, inputs):
+    def _do_new_qa_bandpass(self, inputs):
         """
         Create a new bandpass caltable by spawning a bandpass worker task, 
         merging the results with the context.
@@ -466,15 +466,15 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # passing an empty string as intent tells bandpass to use all intents,
         # which resolves to all fields. Convert '' to None, which will tell
         # bandpass to use the default bandpass intents, as expected. 
-        intent = None if inputs.qa2_bandpass_intent is '' else inputs.qa2_bandpass_intent
+        intent = None if inputs.qa_bandpass_intent is '' else inputs.qa_bandpass_intent
         
         args = {'vis'         : inputs.vis,
                 'mode'        : 'channel',
                 'intent'      : intent,
                 'solint'      : 'inf,7.8125MHz',
                 'maxchannels' : 0,
-                'qa2_intent'  : '',
-                'run_qa2'     : False}
+                'qa_intent'  : '',
+                'run_qa'     : False}
 
         inputs = bandpass.PhcorBandpass.Inputs(inputs.context, **args)        
         task = bandpass.PhcorBandpass(inputs)
@@ -496,7 +496,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             LOG.debug('Calculating new gaincal with B but no WVR')
             # get namer that will add '.wvr' to caltable filename 
             nowvr_caltable_namer = self._get_nowvr_caltable_namer(inputs)            
-            result = self._do_qa2_gaincal(inputs, nowvr_caltable_namer)            
+            result = self._do_qa_gaincal(inputs, nowvr_caltable_namer)            
             # cache the no WVR result on the inputs to save us having to
             # recalculate it in future runs
             inputs.nowvr_result = result
@@ -505,9 +505,9 @@ class Wvrgcal(basetask.StandardTaskTemplate):
     def _do_wvr_gaincal(self, inputs):
         # get namer that will add '.flags_1_2.wvr' to caltable filename 
         wvr_caltable_namer = self._get_wvr_caltable_namer(inputs)            
-        return self._do_qa2_gaincal(inputs, wvr_caltable_namer)                    
+        return self._do_qa_gaincal(inputs, wvr_caltable_namer)                    
 
-    def _do_qa2_gaincal(self, inputs, caltable_namer):
+    def _do_qa_gaincal(self, inputs, caltable_namer):
         """
         Generate a new gain caltable via a call to a child pipeline task.
         
@@ -517,7 +517,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         outside interaction helps enforce that requirement.  
         """
         args = {'vis' : inputs.vis,
-                'intent' : inputs.qa2_intent,
+                'intent' : inputs.qa_intent,
                 'solint' : 'int',
                 'calmode' : 'p',
                 'minsnr' : 0.0}

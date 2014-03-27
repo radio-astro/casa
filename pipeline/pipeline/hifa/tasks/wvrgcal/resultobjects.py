@@ -26,10 +26,10 @@ class WvrgcalResult(basetask.Results):
         self.preceding = preceding[:]
         self.error = set()
 
-        # section for qa2 results
-        self.qa2 = commonresultobjects.Qa2Result()
+        # section for qa results
+        self.qa_wvr = commonresultobjects.QaResult()
 
-        # results used to calculate the qa2 results
+        # results used to calculate the qa results
         self.bandpass_result = None
         self.nowvr_result = None
 

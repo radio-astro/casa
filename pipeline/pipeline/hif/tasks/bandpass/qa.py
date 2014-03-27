@@ -5,7 +5,7 @@ import shutil
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-import pipeline.qa2.bpcal as bpcal
+import pipeline.qa.bpcal as bpcal
 
 from . import common
 
@@ -52,7 +52,7 @@ class BandpassQAPool(pqa.QAScorePool):
         return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg)
 
     def _get_min(self, score_type):
-        rawscores = self.rawdata['QA2SCORES'][score_type]
+        rawscores = self.rawdata['QASCORES'][score_type]
         
         # attrs to hold score and QA identifier
         min_score = 1.0
@@ -94,27 +94,27 @@ class BandpassQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
     
-        qa2_dir = os.path.join(context.report_dir,
+        qa_dir = os.path.join(context.report_dir,
                                'stage%s' % result.stage_number,
-                               'qa2')
+                               'qa')
 
-        if not os.path.exists(qa2_dir):
-            os.makedirs(qa2_dir)
+        if not os.path.exists(qa_dir):
+            os.makedirs(qa_dir)
 
         for calapp in result.final:
             (root, _) = os.path.splitext(os.path.basename(calapp.gaintable))
-            qa2_file = os.path.join(qa2_dir, root + '.bpcal.stats')
-            if os.path.exists(qa2_file):
-                LOG.info('Removing existing QA2 statistics table from %s'
-                         % qa2_file)
-                shutil.rmtree(qa2_file)
+            qa_file = os.path.join(qa_dir, root + '.bpcal.stats')
+            if os.path.exists(qa_file):
+                LOG.info('Removing existing QA statistics table from %s'
+                         % qa_file)
+                shutil.rmtree(qa_file)
 
             try:
-                qa2_results = bpcal.bpcal(calapp.gaintable, qa2_dir)
-                result.qa = BandpassQAPool(qa2_results, calapp.gaintable)
+                qa_results = bpcal.bpcal(calapp.gaintable, qa_dir)
+                result.qa = BandpassQAPool(qa_results, calapp.gaintable)
                 result.qa.update_scores(ms)
             except Exception as e:
-                LOG.error('Problem occurred running QA2 analysis. QA2 '
+                LOG.error('Problem occurred running QA analysis. QA '
                           'results will not be available for this task')
                 LOG.exception(e)
 
@@ -128,6 +128,6 @@ class BandpassListQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
-        # own QA2score list
+        # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated

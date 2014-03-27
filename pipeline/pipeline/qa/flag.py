@@ -7,11 +7,11 @@
 
 # Description:
 # ------------
-# This module runs the flagging statistics subsystem of the QA2 system.
+# This module runs the flagging statistics subsystem of the QA system.
 
 # User functions (subsystem and component level):
 # -----------------------------------------------
-# flag       - This function runs the flagging statistics subsystem of the QA2
+# flag       - This function runs the flagging statistics subsystem of the QA
 #              system.
 #
 # flag_calc  - This function calculates the flagging statistics.
@@ -106,7 +106,7 @@ import utility.logs as logs
 
 # Description:
 # ------------
-# This function runs the flagging statistics subsystem of the QA2 system.
+# This function runs the flagging statistics subsystem of the QA system.
 
 # Inputs:
 # -------
@@ -216,11 +216,11 @@ def flag( in_ms, out_dir, logobj='PYTHON' ):
 
         # Return the dictionary containing the flagging statistics, scores, and
         # plots dictionaries
-        flag_qa2 = {'QA2NUMBERS': flag_stats, \
-                    'QA2SCORES': flag_scores, \
-                    'QA2PLOTS': flag_plots}
+        flag_qa = {'QANUMBERS': flag_stats, \
+                    'QASCORES': flag_scores, \
+                    'QAPLOTS': flag_plots}
 
-	return flag_qa2
+	return flag_qa
 
 # ------------------------------------------------------------------------------
 # Component user functions and ICDs

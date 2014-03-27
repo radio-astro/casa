@@ -23,15 +23,15 @@ $(document).ready(function(){
 			<iframe name="details"></iframe>
 		</div>
 		<div class="col2">
-		% for result_cls, results in qa2section.results_by_type.items():
+		% for result_cls, results in qasection.results_by_type.items():
 			% if results:
 				<ul>
-					<li>${qa2section.result_descriptions[result_cls]}</li>
+					<li>${qasection.result_descriptions[result_cls]}</li>
 					<ul>
 					% for result in results:
 						<li>Stage ${hr.get_stage_number(result)}: ${hr.get_task_name(result)}</li>
 						<ul>
-							<li><a id="link_stage${result.stage_number}" href="stage${result.stage_number}/t2-3m_details.html" target="details">QA2 details</a></li>
+							<li><a id="link_stage${result.stage_number}" href="stage${result.stage_number}/t2-3m_details.html" target="details">QA details</a></li>
 							<li><a href="t2-4m.html#stage=${result.stage_number}">Heuristics details</a></li>
 						</ul>
 					% endfor

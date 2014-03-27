@@ -7,7 +7,7 @@
 
 # Description:
 # ------------
-# This module runs the gain calibration statistics subsystem of the QA2 system.
+# This module runs the gain calibration statistics subsystem of the QA system.
 
 # TBD:
 # ----
@@ -16,7 +16,7 @@
 # User Functions (subsystem and component level):
 # -----------------------------------------------
 # gcal       - This function runs the gain calibration statistics subsystem of
-#              the QA2 system.
+#              the QA system.
 #
 # gcal_calc  - This function calculates the gain calibration statistics.
 # gcal_write - This function writes the gain calibration statistics to a CASA
@@ -70,7 +70,7 @@ import utility.logs as logs
 
 # Description:
 # ------------
-# This function runs the gain calibration statistics subsystem of the QA2
+# This function runs the gain calibration statistics subsystem of the QA
 # system.
 
 # Inputs:

@@ -4,7 +4,7 @@ import os
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-import pipeline.qa2.scorecalculator as qa2calc
+import pipeline.qa.scorecalculator as qacalc
 
 from . import resultobjects
 
@@ -21,7 +21,7 @@ class TsysflagQAHandler(pqa.QAResultHandler):
     def handle(self, context, result):
         caltable = os.path.basename(result.inputs['caltable'])
     
-        scores = [qa2calc.score_fraction_newly_flagged(caltable, result.summaries)]
+        scores = [qacalc.score_fraction_newly_flagged(caltable, result.summaries)]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % caltable
@@ -36,7 +36,7 @@ class TsysflagListQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
-        # own QA2score list
+        # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated
 

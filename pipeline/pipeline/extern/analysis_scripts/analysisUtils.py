@@ -13130,7 +13130,7 @@ class stuffForScienceDataReduction():
 
                 print >> f1, self.doAprioriFlagging(msName)
                 print >> f1, self.generateWVRCalTable(msName)
-                print >> f1, "es.wvr_stat(ms1='"+msName+"', refAnt='"+myRefAnt+"', qa2_output_dir='./')\n"
+                print >> f1, "es.wvr_stat(ms1='"+msName+"', refAnt='"+myRefAnt+"', qa_output_dir='./')\n"
 
                 f1.close()
 
@@ -13232,10 +13232,10 @@ class stuffForScienceDataReduction():
             print >> f1, self.runCleanOnSource(msNames, chanWid=chanWid, angScale=angScale)
             f1.close()
 
-    def ampcal_uvdist(self, ms2='', qa2_output_dir=''):
+    def ampcal_uvdist(self, ms2='', qa_output_dir=''):
 
         """
-        qa2_scripts/ampcal_uvdist.py
+        qa_scripts/ampcal_uvdist.py
 
         This program plots the calibrated and the model visibility
         data for the selected source (usually a solar system object)
@@ -13252,7 +13252,7 @@ class stuffForScienceDataReduction():
         The calibrated and model amplitudes for the selected field
         number is placed in
 
-           qa2_output_dir+'+ss_object+'_.png'
+           qa_output_dir+'+ss_object+'_.png'
 
 
         USEAGE: assumes ms2 as the visibility data set.  Program looks for
@@ -13279,9 +13279,9 @@ class stuffForScienceDataReduction():
                averagemode = 'vector',
                timebin = '30', width = '4000', plotsymbol = ',',
                interactive = False,
-               figfile = qa2_output_dir+'ampcal_uvdist.png')
+               figfile = qa_output_dir+'ampcal_uvdist.png')
 
-    def ant_amp_temporal(self, ms2='', phase_cal='', caltable='', qa2_output_dir=''):
+    def ant_amp_temporal(self, ms2='', phase_cal='', caltable='', qa_output_dir=''):
 
         """
         ant_amp_temporal.py
@@ -13412,9 +13412,9 @@ class stuffForScienceDataReduction():
                 pl.title('AMP '+ant_names[iant])
 
 
-        pl.savefig(qa2_output_dir+'ant_amp_temporal.png')
+        pl.savefig(qa_output_dir+'ant_amp_temporal.png')
 
-    def ant_gain_check(self, ms2='', qa2_output_dir=''):
+    def ant_gain_check(self, ms2='', qa_output_dir=''):
 
         """
         ant_gain_check.py
@@ -13431,7 +13431,7 @@ class stuffForScienceDataReduction():
 
         The ascii output file lists the relative gains of all data streams
 
-        qa2_output_dir+'ant_gain_check.txt'
+        qa_output_dir+'ant_gain_check.txt'
 
         USEAGE: assumes ms2 as the visibility data set
 
@@ -13477,7 +13477,7 @@ class stuffForScienceDataReduction():
         gavg = numpy.median(gg)
 
         #   Open file for writing
-        zfileRes = qa2_output_dir+'ant_gain_check.txt'
+        zfileRes = qa_output_dir+'ant_gain_check.txt'
         os.system('rm '+zfileRes)
         f = open (zfileRes, 'w')
         print 'opening file '+zfileRes
@@ -13548,7 +13548,7 @@ class stuffForScienceDataReduction():
         f.close()
         os.system('cat '+zfileRes)
 
-    def ant_phase_temporal(self, ms2='', caltable='', phase_cal='', qa2_output_dir=''):
+    def ant_phase_temporal(self, ms2='', caltable='', phase_cal='', qa_output_dir=''):
 
         """
         ant_phase_temporal.py
@@ -13575,7 +13575,7 @@ class stuffForScienceDataReduction():
         the relevant files.
 
         caltable = ms2+'.gain_inf'
-        execfile ('qa2_plot_bandpass.py')
+        execfile ('qa_plot_bandpass.py')
 
         """
 
@@ -13681,9 +13681,9 @@ class stuffForScienceDataReduction():
 
 
 
-        pl.savefig(qa2_output_dir+'ant_phase_temporal.png')
+        pl.savefig(qa_output_dir+'ant_phase_temporal.png')
 
-    def bandpass_plot(self, ms2='', qa2_output_dir=''):
+    def bandpass_plot(self, ms2='', qa_output_dir=''):
 
         """
         band_pass.py
@@ -13781,9 +13781,9 @@ class stuffForScienceDataReduction():
                 pl.plot(chan,gch,'r,')
 
 
-        pl.savefig(qa2_output_dir+'bandpass_avg.png')
+        pl.savefig(qa_output_dir+'bandpass_avg.png')
 
-    def bandpass_rms(self, ms2='', refAnt='', qa2_output_dir=''):
+    def bandpass_rms(self, ms2='', refAnt='', qa_output_dir=''):
 
         """
         bandpass_rms.py
@@ -13842,7 +13842,7 @@ class stuffForScienceDataReduction():
 
         #  Get avg gain and rms for each stream (both pols)
 
-        zfileRes = qa2_output_dir+'bandpass_rms.txt'
+        zfileRes = qa_output_dir+'bandpass_rms.txt'
         os.system('rm '+zfileRes)
         f = open (zfileRes, 'w')
         print 'opening file '+zfileRes
@@ -13980,7 +13980,7 @@ class stuffForScienceDataReduction():
                 pl.plot(chan,gg,'b,')
                 pl.title('Bandpass: spw '+str(spwbad[i])+'; ant '+str(antbad[i])+'; pol '+pbad[i])
                 pl.xticks([])
-            pl.savefig(qa2_output_dir+'bandpass_bad.png')
+            pl.savefig(qa_output_dir+'bandpass_bad.png')
             tb.close()
 
     def flag_calc(self, in_ms):
@@ -14013,7 +14013,7 @@ class stuffForScienceDataReduction():
 
         return flag_stats_dict
 
-    def flag_stats(self, ms2='', qa2_output_dir=''):
+    def flag_stats(self, ms2='', qa_output_dir=''):
 
             """
             flag_stats.py
@@ -14031,7 +14031,7 @@ class stuffForScienceDataReduction():
             The ascii output file lists the spw and antenna percentage of
             flagged data.
 
-            qa2/flag_stat.txt'
+            qa/flag_stat.txt'
 
             USEAGE: assumes ms2 as the visibility data set
 
@@ -14043,7 +14043,7 @@ class stuffForScienceDataReduction():
 
             flagStats = self.flag_calc(ms2)
 
-            zfileRes = qa2_output_dir+'flag_stat.txt'
+            zfileRes = qa_output_dir+'flag_stat.txt'
             os.system('rm '+zfileRes)
             f = open (zfileRes, 'w')
             print 'opening file '+zfileRes
@@ -14062,7 +14062,7 @@ class stuffForScienceDataReduction():
 
             f.close()
 
-    def flux_values(self, ms2='', qa2_output_dir=''):
+    def flux_values(self, ms2='', qa_output_dir=''):
 
         """
         flux_values.py
@@ -14084,7 +14084,7 @@ class stuffForScienceDataReduction():
 
         USEAGE: 
 
-        execfile ('qa2_flux_values.txt')
+        execfile ('qa_flux_values.txt')
 
         """
 
@@ -14092,7 +14092,7 @@ class stuffForScienceDataReduction():
 
         caltable = ms2+'.fluxscale'
         if os.path.isfile(caltable) == False: return 0
-        caltable2 = qa2_output_dir+'flux.txt'
+        caltable2 = qa_output_dir+'flux.txt'
         f1 = open(caltable, 'r')
         f2 = open(caltable2, 'w')
 
@@ -14116,12 +14116,12 @@ class stuffForScienceDataReduction():
         f2.close()
         os.system('cat '+caltable2)
 
-    def listobs2(self, ms2='', makeplot=True, qa2_output_dir=''):
+    def listobs2(self, ms2='', makeplot=True, qa_output_dir=''):
 
         """
         New_listobs.py
 
-        This is an experimental qa2 python script that produces a more
+        This is an experimental qa python script that produces a more
         readable listobs and plotants than the casapy version.
 
 
@@ -14134,16 +14134,16 @@ class stuffForScienceDataReduction():
 
         The ascii listobs output file is placed in
 
-        qa2_output_dir+'NewListobs.txt'
+        qa_output_dir+'NewListobs.txt'
 
         The antenna plot file is placed in
 
-        qa2_output_dir+'Antenna_config.png'
+        qa_output_dir+'Antenna_config.png'
 
         USEAGE:
 
         ms2 = <data set ms>
-        qa2_output_dir = <output directory path>
+        qa_output_dir = <output directory path>
         makeplot = T
         execfile (listobs.py)
 
@@ -14197,7 +14197,7 @@ class stuffForScienceDataReduction():
         #   Open file for writing
         #   Split data set?
 
-        zfileRes = qa2_output_dir+'NewListObs.txt'
+        zfileRes = qa_output_dir+'NewListObs.txt'
         os.system('rm '+zfileRes)
         f = open (zfileRes, 'w')
         print 'opening file '+zfileRes
@@ -14430,7 +14430,7 @@ class stuffForScienceDataReduction():
                         pl.text(plotx[i],ploty[i]-3.0,str(i)+'='+antenna[i])
 
                 pl.title(ms2)
-                myfigfile = qa2_output_dir+'antenna_config.png'
+                myfigfile = qa_output_dir+'antenna_config.png'
                 pl.savefig(myfigfile,format='png',density=108)
                 print 'saved antenna plot in Antenna_config.png'
 
@@ -14438,7 +14438,7 @@ class stuffForScienceDataReduction():
         os.system('cat '+zfileRes)
         ms.close()
 
-    def mosaic_plot(self, ms1='', qa2_output_dir=''):
+    def mosaic_plot(self, ms1='', qa_output_dir=''):
 
         """
         mosaic_plot.py
@@ -14451,13 +14451,13 @@ class stuffForScienceDataReduction():
 
         OUTPUTS:
 
-        The mosaic plot is put in 'qa2_mosaic_plot.png'
+        The mosaic plot is put in 'qa_mosaic_plot.png'
 
 
         USEAGE: 
 
         vis = ms1
-        execfile ('qa2_mosaic_plot_.py')
+        execfile ('qa_mosaic_plot_.py')
 
         """
 
@@ -14467,12 +14467,12 @@ class stuffForScienceDataReduction():
         idstr = a['OBSERVE_TARGET']['idstring']
         sid =   a['OBSERVE_TARGET']['sourceid']
         if idstr != sid:
-            plotmosaic(vis=ms1, sourceid=sid[0], figfile = qa2_output_dir+'mosaic_plot.png')
+            plotmosaic(vis=ms1, sourceid=sid[0], figfile = qa_output_dir+'mosaic_plot.png')
 
-    def phase_cal_check(self, ms2='', phase_cal='', qa2_output_dir=''):
+    def phase_cal_check(self, ms2='', phase_cal='', qa_output_dir=''):
 
         """
-        qa2_phase_cal_check.py
+        qa_phase_cal_check.py
 
         This script plots the phase calibration
           amp and phase versus uvdist for each spw
@@ -14489,8 +14489,8 @@ class stuffForScienceDataReduction():
         The calibrated and model amplitudes for the selected field
         number is placed in
 
-            qa2_output_dir+'phase_cal_uvdist.png'
-            qa2_output_dir+'phase_cal_freq.png'
+            qa_output_dir+'phase_cal_uvdist.png'
+            qa_output_dir+'phase_cal_freq.png'
 
 
         USEAGE: assumes ms2 as the visibility data set.  
@@ -14532,7 +14532,7 @@ class stuffForScienceDataReduction():
                    datacolumn = 'corrected', spw=str(i),
                    averagemode = 'vector', width = '4000', plotsymbol = ',',
                    field = phase_cal, timebin = '60', subplot=nsubplot,
-                   figfile = qa2_output_dir+'phase_cal_uvdist.png')
+                   figfile = qa_output_dir+'phase_cal_uvdist.png')
 
         #  Plot amp, phase versus freq for calibrator
 
@@ -14569,9 +14569,9 @@ class stuffForScienceDataReduction():
                    averagemode = 'vector', width = nwidth,timebin='100000',
                    crossscans = True, crossbls = True, interactive = False,
                    field = phase_cal,subplot=nsubplot,
-                   figfile = qa2_output_dir+'phase_cal_freq.png')
+                   figfile = qa_output_dir+'phase_cal_freq.png')
 
-    def sensitivity_calculator(self, ms2='', caltable='', s_id='', tsys_field='', qa2_output_dir=''):
+    def sensitivity_calculator(self, ms2='', caltable='', s_id='', tsys_field='', qa_output_dir=''):
 
         """
         Sensitivity calculator
@@ -14732,12 +14732,12 @@ class stuffForScienceDataReduction():
 
         return {'min_per_field': min_per_field, 'mfs_sensitivity': mfs_sensitivity}
 
-    def shadowed_ant(self, ms2='', qa2_output_dir=''):
+    def shadowed_ant(self, ms2='', qa_output_dir=''):
 
         """
         shadowed_ant.py
 
-        This is an experimental qa2 python script that determines the antenna
+        This is an experimental qa python script that determines the antenna
         and time range the were flagged because of shadowing.
 
         Must be run just after the shadowing flag command
@@ -14751,7 +14751,7 @@ class stuffForScienceDataReduction():
 
         The ascii output file is placed in
 
-        qa2_output_dir+'shadowed_ant.txt'
+        qa_output_dir+'shadowed_ant.txt'
 
 
         USEAGE:
@@ -14791,7 +14791,7 @@ class stuffForScienceDataReduction():
         n_ant = uniqa.shape[0]
 
         #   Open file for writing
-        zfileRes = qa2_output_dir+'shadowed_ant.txt'
+        zfileRes = qa_output_dir+'shadowed_ant.txt'
         if os.path.exists: os.system('rm '+zfileRes)
 
         f = open (zfileRes, 'w')
@@ -14917,7 +14917,7 @@ class stuffForScienceDataReduction():
         f.close()
         #os.system('cat '+zfileRes)
 
-    def target_check(self, ms2='', target='', target_source='', tsys_caltable='', tsys_field='', qa2_output_dir=''):
+    def target_check(self, ms2='', target='', target_source='', tsys_caltable='', tsys_field='', qa_output_dir=''):
 
         """
         target_check.py
@@ -14942,10 +14942,10 @@ class stuffForScienceDataReduction():
         The calibrated and model amplitudes for the selected field
         number is placed in
 
-            qa2_output_dir+'sensitivity.txt'    contains information about the image
-            qa2_output_dir+'target.image.png' is a display of the target image (done by hand)
-            qa2_output_dir+'target.psf.png'   is a display of the target psf (done by hand)
-            qa2_output_dir+'target.uvcov.png'  is a display of the target uv coverage
+            qa_output_dir+'sensitivity.txt'    contains information about the image
+            qa_output_dir+'target.image.png' is a display of the target image (done by hand)
+            qa_output_dir+'target.psf.png'   is a display of the target psf (done by hand)
+            qa_output_dir+'target.uvcov.png'  is a display of the target uv coverage
 
 
 
@@ -14984,7 +14984,7 @@ class stuffForScienceDataReduction():
 
         #  Get band
 
-        zfileRes = qa2_output_dir+'sensitivity.txt'
+        zfileRes = qa_output_dir+'sensitivity.txt'
         os.system('rm '+zfileRes)
         f = open (zfileRes, 'w')
         print 'opening file '+zfileRes
@@ -15033,10 +15033,10 @@ class stuffForScienceDataReduction():
 
         print 'making mfs image of selected target'
 
-        os.system('rm -rf '+qa2_output_dir+'target_check*')
+        os.system('rm -rf '+qa_output_dir+'target_check*')
         clean(vis=ms2,
               field = target,
-              imagename = qa2_output_dir+'target_check',
+              imagename = qa_output_dir+'target_check',
               imsize = zimsize, cell = zcell,
               interactive = False, niter=100)
 
@@ -15044,14 +15044,14 @@ class stuffForScienceDataReduction():
 
         zbox1 = str(int(0.1*zimsize)); zbox2 = str(int(0.9*zimsize))
 
-        a=imstat(imagename=qa2_output_dir+'target_check.image',
+        a=imstat(imagename=qa_output_dir+'target_check.image',
                box = zbox1+','+zbox1+','+zbox2+','+zbox2)
 
         amax = a['max'][0]
 
         zbox1 = str(int(0.1*zimsize)); zbox2 = str(int(0.3*zimsize))
 
-        a=imstat(imagename=qa2_output_dir+'target_check.image',
+        a=imstat(imagename=qa_output_dir+'target_check.image',
                box = zbox1+','+zbox1+','+zbox2+','+zbox2)
         arms = a['rms'][0]
 
@@ -15059,31 +15059,31 @@ class stuffForScienceDataReduction():
 
         #  Make plot of object and store
 
-        imview(raster = {'file':qa2_output_dir+'target_check.image'}, 
-               contour = {'file':qa2_output_dir+'target_check.image',
+        imview(raster = {'file':qa_output_dir+'target_check.image'}, 
+               contour = {'file':qa_output_dir+'target_check.image',
                           'levels':[-1,1,2,4,6,8,10,12,16,20,30,50],
                           'unit':clev},
                zoom = 1,
-               out = qa2_output_dir+'target_image.png')
+               out = qa_output_dir+'target_image.png')
 
-        imview(raster = {'file':qa2_output_dir+'target_check.psf'}, 
-               contour = {'file':qa2_output_dir+'target_check.psf',
+        imview(raster = {'file':qa_output_dir+'target_check.psf'}, 
+               contour = {'file':qa_output_dir+'target_check.psf',
                           'levels':[-3,-2,-1,1,2,3,5,7,9,9.5],
                           'unit':0.1},
                zoom = 1,
-               out = qa2_output_dir+'target_psf.png')
+               out = qa_output_dir+'target_psf.png')
 
         plotxy(vis = ms2,
                xaxis = 'u', yaxis = 'v',
                spw = '0:100~100',
                field = target,
                interactive = False,
-               figfile = qa2_output_dir+'target_uv.png')
+               figfile = qa_output_dir+'target_uv.png')
 
 
         #  Get image parameters
 
-        a = imhead(imagename = qa2_output_dir+'target_check.image',
+        a = imhead(imagename = qa_output_dir+'target_check.image',
                    mode = 'list')
         freq = a['crval4']*1.0E-9
         bwidth = a['cdelt4']*1.0E-9
@@ -15095,10 +15095,10 @@ class stuffForScienceDataReduction():
 
         #vis=ms2
         #s_id = ''
-        #execfile(qa2_scripts_dir+'sensitivity_calculator.py')
-#        print "Calling: sensitivity_calculator(ms2='%s', caltable='%s', s_id='%s', tsys_field='%s', qa2_output_dir='%s')" % (ms2,tsys_caltable,str(target_source),str(tsys_field),qa2_output_dir)
+        #execfile(qa_scripts_dir+'sensitivity_calculator.py')
+#        print "Calling: sensitivity_calculator(ms2='%s', caltable='%s', s_id='%s', tsys_field='%s', qa_output_dir='%s')" % (ms2,tsys_caltable,str(target_source),str(tsys_field),qa_output_dir)
         
-        tmp1 = self.sensitivity_calculator(ms2=ms2, caltable=tsys_caltable, s_id=target_source, tsys_field=tsys_field, qa2_output_dir=qa2_output_dir)
+        tmp1 = self.sensitivity_calculator(ms2=ms2, caltable=tsys_caltable, s_id=target_source, tsys_field=tsys_field, qa_output_dir=qa_output_dir)
 
         f.write('    target                 = %2s \n' % (target)) 
         f.write('    resolution             = %5.2f x%5.2f in pa %6.1f\n' % (bmaj, bmin, bpa)) 
@@ -15111,7 +15111,7 @@ class stuffForScienceDataReduction():
         f.close()
         os.system('cat '+zfileRes)
 
-    def target_spectrum(self, ms2='', target='', dospw='', qa2_output_dir='',uvrange='0~30m'):
+    def target_spectrum(self, ms2='', target='', dospw='', qa_output_dir='',uvrange='0~30m'):
 
         """
         target_spectrum.py
@@ -15132,7 +15132,7 @@ class stuffForScienceDataReduction():
 
         The source spectrum is placed in 
 
-            qa2_output_dir+'target.spectrum.png'
+            qa_output_dir+'target.spectrum.png'
 
 
 
@@ -15157,9 +15157,9 @@ class stuffForScienceDataReduction():
                 crossscans = True, crossbls = True, width = '5',
                 uvrange = uvrange,
                 spw = spw, subplot = subplot,
-                figfile = qa2_output_dir+'target_spectrum.png', interactive = False)
+                figfile = qa_output_dir+'target_spectrum.png', interactive = False)
 
-    def tsys_stat(self, ms1='', tsys_field='', makeplot=True, qa2_output_dir=''):
+    def tsys_stat(self, ms1='', tsys_field='', makeplot=True, qa_output_dir=''):
 
         """
         tsys_stat.py
@@ -15178,8 +15178,8 @@ class stuffForScienceDataReduction():
         The ascii output file lists the scans for each tsys observation, and
         any outliers for each antenna/spw.
 
-        <qa2_output_dir>+'tsys_stat.txt'
-        <qa2_output_dir>+'tsys_plot.png'
+        <qa_output_dir>+'tsys_stat.txt'
+        <qa_output_dir>+'tsys_plot.png'
 
 
         USEAGE: assumes ms1 as the visibility data set and the TDM tsys
@@ -15187,7 +15187,7 @@ class stuffForScienceDataReduction():
                 makeplot = T for plots, makeplot = F for no plots
 
         makeplot = T
-        execfile ('qa2_scripts/tsys_stat.py')
+        execfile ('qa_scripts/tsys_stat.py')
 
         """
 
@@ -15228,7 +15228,7 @@ class stuffForScienceDataReduction():
         dotime = 1
         fld_un = numpy.unique(fldid)
 
-        zfileRes = qa2_output_dir+'tsys_stat.txt'
+        zfileRes = qa_output_dir+'tsys_stat.txt'
         if os.path.exists (zfileRes): os.system('rm '+zfileRes)
 
         f = open (zfileRes, 'w')
@@ -15356,14 +15356,14 @@ class stuffForScienceDataReduction():
                     plotcal(caltable = caltable, xaxis = 'freq', yaxis = 'amp', field = tsys_field,
                         spw = str(tsys_spw[i])+':'+chanstr, showgui = False, plotsymbol = ',',
                         plotrange = [0,0,0,max_spw[i]], subplot=221 + i,
-                        figfile = qa2_output_dir+'tsys_plot.png')
+                        figfile = qa_output_dir+'tsys_plot.png')
 
-    def wvr_stat(self, ms1='', refAnt='', qa2_output_dir=''):
+    def wvr_stat(self, ms1='', refAnt='', qa_output_dir=''):
 
         """
         wvr_stat.py
 
-        This is an experimental qa2 python script that analyzes the
+        This is an experimental qa python script that analyzes the
         bandpass calibrator data to determine the phase rms before and
         after application of wvr.  This is useful to determine if the
         the wvr corrections are reasonable, and to suggests flags or
@@ -15380,12 +15380,12 @@ class stuffForScienceDataReduction():
         The ascii output file contains the statistics for each antenna (wrt
         to refAnt) and the output from wvrgcal in:
 
-        <qa2_output_dir>/wvr_stat.txt'
+        <qa_output_dir>/wvr_stat.txt'
 
         The corrected (green) and uncorrected (blue) phases are
         shown for each antenna in
 
-        <qa2_output_dir>/wvr_plot.png'
+        <qa_output_dir>/wvr_plot.png'
 
         USEAGE: assumes ms1 as the visibility data set
                 assumes refAnt='0', if not defined
@@ -15438,15 +15438,15 @@ class stuffForScienceDataReduction():
 
 
         #   Remove previous phase gain solutions:
-        os.system('rm -rf '+qa2_output_dir+'wvr_before')
-        os.system('rm -rf '+qa2_output_dir+'wvr_after')
+        os.system('rm -rf '+qa_output_dir+'wvr_before')
+        os.system('rm -rf '+qa_output_dir+'wvr_after')
 
         if makeplot == True:
             clearplot()
 
 
         #   Open file for writing
-        zfileRes = qa2_output_dir+'wvr_stat.txt'
+        zfileRes = qa_output_dir+'wvr_stat.txt'
         if os.path.exists (zfileRes): os.system('rm '+zfileRes)
 
         f = open (zfileRes, 'w')
@@ -15457,7 +15457,7 @@ class stuffForScienceDataReduction():
         gaincal(vis=ms1,
                 refant=refAnt,calmode='p', selectdata=True,
                 scan=cscan,spw=cspw,solint='int',
-                caltable=qa2_output_dir+'wvr_before')
+                caltable=qa_output_dir+'wvr_before')
 
         #   Which gain table.  Smoothed or not?
 
@@ -15467,7 +15467,7 @@ class stuffForScienceDataReduction():
         gaincal(vis=ms1,
                 refant=refAnt,calmode='p',selectdata=True,
                 scan=cscan,spw=cspw,solint='int',
-                caltable=qa2_output_dir+'wvr_after',gaintable = wvr_gaintable)
+                caltable=qa_output_dir+'wvr_after',gaintable = wvr_gaintable)
 
 
         f.write('number of antennas=%3d  refAnt=%4s   \n' % (nant, refAnt))
@@ -15483,7 +15483,7 @@ class stuffForScienceDataReduction():
 
         #  Get phases before wvrgcal
 
-        tb.open(qa2_output_dir+'wvr_before')
+        tb.open(qa_output_dir+'wvr_before')
         time=tb.getcol('TIME')
         time = time-time[0]+0.0
         antenna1 = tb.getcol('ANTENNA1')
@@ -15495,7 +15495,7 @@ class stuffForScienceDataReduction():
 
         #  Get phases after wvrgcal
 
-        tb.open(qa2_output_dir+'wvr_after')
+        tb.open(qa_output_dir+'wvr_after')
         time=tb.getcol('TIME')
         time = time-time[0]+0.0
         antenna1 = tb.getcol('ANTENNA1')
@@ -15579,7 +15579,7 @@ class stuffForScienceDataReduction():
             var_1.append(numpy.var(pc_1))
             var_2.append(numpy.var(pc_2))
 
-        if makeplot: pl.savefig(qa2_output_dir+'wvr_plot.png')
+        if makeplot: pl.savefig(qa_output_dir+'wvr_plot.png')
 
 
         f.write('\n****************************************************************** \n\n')
@@ -15613,18 +15613,18 @@ class stuffForScienceDataReduction():
         f.close()
         #os.system('cat '+zfileRes)
 
-    def glue_qa2(self, qa2_output_dir=''):
+    def glue_qa(self, qa_output_dir=''):
 
         cwd1 = os.getcwd()
-        os.chdir(qa2_output_dir)
+        os.chdir(qa_output_dir)
 
-        os.system("rm qa2.pdf textfile.txt textfile.ps")
+        os.system("rm qa.pdf textfile.txt textfile.ps")
 
         os.system("cat wvr_stat.txt   tsys_stat.txt  NewListObs.txt   ant_gain_check.txt   bandpass_rms.txt  flux.txt   flag_stat.txt   sensitivity.txt  >  textfile.txt")
 
         os.system("enscript -Bc -fCourier5 --columns=2 -ptextfile.ps textfile.txt")
 
-        os.system("ps2pdf textfile.ps qa2.pdf")
+        os.system("ps2pdf textfile.ps qa.pdf")
 
         #  combine all plots
 
@@ -15651,21 +15651,21 @@ class stuffForScienceDataReduction():
         os.system("convert target_image.png -font Utopia-Regular -pointsize 48 label:'Target Image' -gravity Center -append target_image_labeled.png")
         os.system("convert target_psf.png -font Utopia-Regular -pointsize 48 label:'Target psf' -gravity Center -append target_psf_labeled.png")
 
-        os.system("montage -tile 2X3 -geometry 1000x1000+0+0   obs_display_labeled.png   mosaic_plot_labeled.png   antenna_config_labeled.png   wvr_plot_labeled.png  ant_amp_temporal_labeled.png  ant_phase_temporal_labeled.png   qa2_part1.png")
+        os.system("montage -tile 2X3 -geometry 1000x1000+0+0   obs_display_labeled.png   mosaic_plot_labeled.png   antenna_config_labeled.png   wvr_plot_labeled.png  ant_amp_temporal_labeled.png  ant_phase_temporal_labeled.png   qa_part1.png")
 
-        os.system("montage -tile 2X3 -geometry 1000x1000+0+0   bandpass_avg_labeled.png   tsys_plot_labeled.png  target_spectrum_labeled.png  qa2_part2.png")
+        os.system("montage -tile 2X3 -geometry 1000x1000+0+0   bandpass_avg_labeled.png   tsys_plot_labeled.png  target_spectrum_labeled.png  qa_part2.png")
 
-        os.system("montage -tile 2x3 -geometry 1000x1000+0+0  ampcal_uvdist_labeled.png  phase_cal_uvdist_labeled.png  phase_cal_freq_labeled.png    target_uv_labeled.png   target_image_labeled.png  target_psf_labeled.png   qa2_part3.png")
+        os.system("montage -tile 2x3 -geometry 1000x1000+0+0  ampcal_uvdist_labeled.png  phase_cal_uvdist_labeled.png  phase_cal_freq_labeled.png    target_uv_labeled.png   target_image_labeled.png  target_psf_labeled.png   qa_part3.png")
 
-        #os.system("display *qa2_part*png &")
+        #os.system("display *qa_part*png &")
 
         os.chdir(cwd1)
 
-    def generateQA2Report(self, ms1='', ms2='', phase_cal='', target='', target_source='', tsys_field='', dospw='', refAnt='', qa2_output_dir='', uvrange='0~30m'):
+    def generateQAReport(self, ms1='', ms2='', phase_cal='', target='', target_source='', tsys_field='', dospw='', refAnt='', qa_output_dir='', uvrange='0~30m'):
 
         """
 
-        QA2 Package to interface with Eric's latest scripts.  Older scripts will
+        QA Package to interface with Eric's latest scripts.  Older scripts will
         work, but some names of calibration files may be different.
 
         Version 2.1:  Ed Fomalont, Feb 27, 2012
@@ -15679,28 +15679,28 @@ class stuffForScienceDataReduction():
         1.  Run Eric's latest reduction script in an appropriate directory.
 
             You can Eric's script from the beginning to the end, and,then run
-        the entire qa2 script, or you can run Eric's script by cutting and
-        pasting, and adding the appropriate qa2 scripts as you go.
+        the entire qa script, or you can run Eric's script by cutting and
+        pasting, and adding the appropriate qa scripts as you go.
 
-        2.  Make a directory <qa2_output> in an appropriate parent <QA2>
+        2.  Make a directory <qa_output> in an appropriate parent <QA>
         directory.
 
-        3.  Modify 'sample_qa2.py' to point to the script directory, data
+        3.  Modify 'sample_qa.py' to point to the script directory, data
         reduction directories, and output directories.  Set the global
         parameter values appropriate to your data set.
 
-        4.  execfile ('sample_qa2.py') to create the qa2 txt and png files.
+        4.  execfile ('sample_qa.py') to create the qa txt and png files.
         This will take about 10 minutes to run.
 
-        5.  Go to the qa2 directory and glue the txt and png files using
-        execfile ('glue_qa2.py').  It may be safer to run each step
+        5.  Go to the qa directory and glue the txt and png files using
+        execfile ('glue_qa.py').  It may be safer to run each step
         separately.
 
 
 
         """
 
-        #  qa2 plots and text Generating script
+        #  qa plots and text Generating script
 
         #  Any initialization stuff
 
@@ -15711,8 +15711,8 @@ class stuffForScienceDataReduction():
 
         #es = aU.stuffForScienceDataReduction()
 
-        ####  Point to directory that contains all of the qa2 mini-scripts
-        #qa2_scripts_dir = './'
+        ####  Point to directory that contains all of the qa mini-scripts
+        #qa_scripts_dir = './'
 
         ####  Point to data directories
         ## PreCalibration directory should contain .ms, .ms.wvr table, .ms.tsys table
@@ -15720,7 +15720,7 @@ class stuffForScienceDataReduction():
         ## Calibration directory should contain .ms.split, 
         #Cal_dir = '../reduction_X69/'
         ## output directory
-        #qa2_output_dir = '../reduction_X69/qa2/'
+        #qa_output_dir = '../reduction_X69/qa/'
 
         ####  Global parameters specific to data set:
 
@@ -15767,111 +15767,111 @@ class stuffForScienceDataReduction():
 
 	if refAnt == '': refAnt = self.getRefAntenna(ms1)
 
-	if qa2_output_dir == '':
+	if qa_output_dir == '':
     	    msdir = os.path.dirname(os.path.abspath(ms1))
-	    if os.path.exists(msdir+'/qa2') == False:
-	        os.makedirs(msdir+'/qa2')
-	    qa2_output_dir = msdir+'/qa2/'
+	    if os.path.exists(msdir+'/qa') == False:
+	        os.makedirs(msdir+'/qa')
+	    qa_output_dir = msdir+'/qa/'
 	else:
-	    qa2_output_dir += '/'
+	    qa_output_dir += '/'
 
 	#-------------
 
         print '# Get Colorful Diagram of Observations'
 
         #makeplot = T
-        self.listobs3(msName=ms1,figfile=qa2_output_dir+'obs_display.png')
+        self.listobs3(msName=ms1,figfile=qa_output_dir+'obs_display.png')
 
         print '# Get listings of experiment and antenna-config plot'
 
         print "# If mosaic, make this plot"
 
-        #execfile (qa2_scripts_dir+'mosaic_plot.py')
-        self.mosaic_plot(ms1=ms1, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'mosaic_plot.py')
+        self.mosaic_plot(ms1=ms1, qa_output_dir=qa_output_dir)
 
         print '# Determine wvr correction from bandpass obs'
 
-        #execfile (qa2_scripts_dir+'wvr_stat.py')
-        self.wvr_stat(ms1=ms1, refAnt=refAnt, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'wvr_stat.py')
+        self.wvr_stat(ms1=ms1, refAnt=refAnt, qa_output_dir=qa_output_dir)
 
         print '# Tsys statistics and plots'
 
         #makeplot = T
-        #execfile (qa2_scripts_dir+'tsys_stat.py')
-        self.tsys_stat(ms1=ms1, tsys_field=tsys_field, makeplot=True, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'tsys_stat.py')
+        self.tsys_stat(ms1=ms1, tsys_field=tsys_field, makeplot=True, qa_output_dir=qa_output_dir)
 
         print '# listing of split data set'
 
         #makeplot = T
-        #execfile (qa2_scripts_dir+'listobs2.py')
-        self.listobs2(ms2=ms2, makeplot=True, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'listobs2.py')
+        self.listobs2(ms2=ms2, makeplot=True, qa_output_dir=qa_output_dir)
 
         print '# Any antennas shadowed?'
 
-        #execfile (qa2_scripts_dir+'shadowed_ant.py')
-        self.shadowed_ant(ms2=ms2, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'shadowed_ant.py')
+        self.shadowed_ant(ms2=ms2, qa_output_dir=qa_output_dir)
 
         print '# Check antenna amp of bandpass scan'
 
-        #execfile (qa2_scripts_dir+'ant_gain_check.py')
-        self.ant_gain_check(ms2=ms2, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'ant_gain_check.py')
+        self.ant_gain_check(ms2=ms2, qa_output_dir=qa_output_dir)
 
         print '# Check channel to channel rms of bandpass scan and plot outliers'
 
-        #execfile (qa2_scripts_dir+'bandpass_rms.py')
-        self.bandpass_rms(ms2=ms2, refAnt=refAnt, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'bandpass_rms.py')
+        self.bandpass_rms(ms2=ms2, refAnt=refAnt, qa_output_dir=qa_output_dir)
 
         print '# Make an spw average bandpass plots for atmosphere effects'
 
-        #execfile (qa2_scripts_dir+'bandpass_plot.py')
-        self.bandpass_plot(ms2=ms2, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'bandpass_plot.py')
+        self.bandpass_plot(ms2=ms2, qa_output_dir=qa_output_dir)
 
         print '# Printout of flux density determinations'
 
-        #execfile (qa2_scripts_dir+'flux_values.py')
-        self.flux_values(ms2=ms2, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'flux_values.py')
+        self.flux_values(ms2=ms2, qa_output_dir=qa_output_dir)
 
         print '# Plot temporal antenna amp calibration of phase cal'
 
         caltable = ms2+'.flux_inf'
-        #execfile (qa2_scripts_dir+'ant_amp_temporal.py')
-        self.ant_amp_temporal(ms2=ms2, phase_cal=phase_cal, caltable=caltable, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'ant_amp_temporal.py')
+        self.ant_amp_temporal(ms2=ms2, phase_cal=phase_cal, caltable=caltable, qa_output_dir=qa_output_dir)
 
         print '# Plot temporal antenna phase calibration of phase cal'
 
         caltable = ms2+'.phase_inf'
-        #execfile (qa2_scripts_dir+'ant_phase_temporal.py')
-        self.ant_phase_temporal(ms2=ms2, caltable=caltable, phase_cal=phase_cal, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'ant_phase_temporal.py')
+        self.ant_phase_temporal(ms2=ms2, caltable=caltable, phase_cal=phase_cal, qa_output_dir=qa_output_dir)
 
         print '# Plot fluxcal object model and calibrated data'
 
-        #execfile (qa2_scripts_dir+'ampcal_uvdist.py')
-        self.ampcal_uvdist(ms2=ms2, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'ampcal_uvdist.py')
+        self.ampcal_uvdist(ms2=ms2, qa_output_dir=qa_output_dir)
 
         print '# Check uvdist and freq response of uv calibration phase cal'
 
-        #execfile (qa2_scripts_dir+'phase_cal_check.py')
-        self.phase_cal_check(ms2=ms2, phase_cal=phase_cal, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'phase_cal_check.py')
+        self.phase_cal_check(ms2=ms2, phase_cal=phase_cal, qa_output_dir=qa_output_dir)
 
         print '# Obtain flagging statistics'
 
-        #execfile (qa2_scripts_dir+'flag_stats.py')
-        self.flag_stats(ms2=ms2, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'flag_stats.py')
+        self.flag_stats(ms2=ms2, qa_output_dir=qa_output_dir)
 
         print '#  Check target properties'
 
-        #execfile (qa2_scripts_dir+'target_check.py')
-        self.target_check(ms2=ms2, target=target, target_source=target_source, tsys_caltable=ms1+'.tsys', tsys_field=tsys_field, qa2_output_dir=qa2_output_dir)
+        #execfile (qa_scripts_dir+'target_check.py')
+        self.target_check(ms2=ms2, target=target, target_source=target_source, tsys_caltable=ms1+'.tsys', tsys_field=tsys_field, qa_output_dir=qa_output_dir)
 
         print '#  Get a spectrum on the target'
 
-        #execfile (qa2_scripts_dir+'target_spectrum.py')
-        self.target_spectrum(ms2=ms2, target=target, dospw=dospw, qa2_output_dir=qa2_output_dir, uvrange=uvrange)
+        #execfile (qa_scripts_dir+'target_spectrum.py')
+        self.target_spectrum(ms2=ms2, target=target, dospw=dospw, qa_output_dir=qa_output_dir, uvrange=uvrange)
 
         #  Make overall pdf file of text file using
-        #  glue_qa2.py
+        #  glue_qa.py
         #  See instructions in README
-        self.glue_qa2(qa2_output_dir=qa2_output_dir)
+        self.glue_qa(qa_output_dir=qa_output_dir)
 
     def generateScriptForPI(self, fname=''):
 

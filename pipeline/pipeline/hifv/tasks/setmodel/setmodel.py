@@ -106,7 +106,7 @@ def standard_sources(vis):
     if not standard_source_found:
         standard_source_found = False
         LOG.error("ERROR: No standard flux density calibrator observed, flux density scale will be arbitrary")
-        QA2_calprep='Fail'
+        QA_calprep='Fail'
 
     return standard_source_names, standard_source_fields
 

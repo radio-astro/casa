@@ -7,7 +7,7 @@ from pipeline.infrastructure import casa_tasks, casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
-import pipeline.qa2.scorecalculator as qa2calc
+import pipeline.qa.scorecalculator as qacalc
 
 import pipeline.hif.tasks.importdata.qa as importdataqa
 
@@ -23,7 +23,7 @@ class SDImportDataQAHandler(importdataqa.ImportDataQAHandler):
         
         TODO Should we terminate execution on missing intents?        
         '''
-        return qa2calc.score_missing_intents(mses, array_type='ALMA_TP')
+        return qacalc.score_missing_intents(mses, array_type='ALMA_TP')
 
 
 class SDImportDataListQAHandler(importdataqa.ImportDataListQAHandler):

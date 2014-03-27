@@ -268,7 +268,7 @@ class Selector(object):
 
 class Plot(object):
     def __init__(self, filename, x_axis='Unknown', y_axis='Unknown', 
-                 field=None, parameters={}, qa2_score=None):
+                 field=None, parameters={}, qa_score=None):
         """
         Plot(filename, x_axis, y_axis, field, parameters)
 
@@ -287,7 +287,7 @@ class Plot(object):
         self.parameters = parameters
         if field is not None:
             self.parameters['field'] = field
-        self.qa2_score = qa2_score
+        self.qa_score = qa_score
 
     @property
     def css_class(self):

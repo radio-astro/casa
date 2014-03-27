@@ -50,7 +50,7 @@ import pipeline.infrastructure.renderer.rendererutils as rendererutils
 from pipeline.infrastructure.renderer import templates
 from pipeline.infrastructure.renderer.templates import resources
 from . import logger
-from . import qa2adapter
+from . import qaadapter
 from .. import utils
 import pipeline.hif as hif
 import pipeline.hsd as hsd
@@ -411,7 +411,7 @@ class T1_1Renderer(RendererBase):
         dt = exec_end - exec_start
         exec_duration = datetime.timedelta(days=dt.days, seconds=dt.seconds)
 
-        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+        qaresults = qaadapter.ResultsToQAAdapter(context.results)
 
         out_fmt = '%Y-%m-%d %H:%M:%S'
         
@@ -487,7 +487,7 @@ class T1_1Renderer(RendererBase):
                 'ousstatus_entity_id'     : context.project_structure.ousstatus_entity_id,
                 'ppr_uid'           : None,
                 'observers'         : observers,
-                'qa2adapter'        : qa2results,
+                'qaadapter'        : qaresults,
                 'ms_summary_rows'   : ms_summary_rows}
 
 
@@ -569,12 +569,12 @@ class T1_3MRenderer(RendererBase):
     
     @staticmethod
     def get_display_context(context):
-        # QA2 templates need a QA2 perspective of the results. Wrap the results
+        # QA templates need a QA perspective of the results. Wrap the results
         # in an adapter that provides this perspective.
-        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+        qaresults = qaadapter.ResultsToQAAdapter(context.results)
 
         return {'pcontext'   : context,
-                'qa2adapter' : qa2results}
+                'qaadapter' : qaresults}
 
 
 class T1_4MRenderer(RendererBase):
@@ -897,7 +897,7 @@ class T2_2_6Renderer(T2_2_XRendererBase):
 
 class T2_3_1MRenderer(RendererBase):
     """
-    Renderer for T2-3-1M: the QA2 calibration section.
+    Renderer for T2-3-1M: the QA calibration section.
     """
     # the filename to which output will be directed
     output_file = 't2-3-1m.html'
@@ -906,20 +906,20 @@ class T2_3_1MRenderer(RendererBase):
 
     @staticmethod
     def get_display_context(context):
-        # QA2 templates need a QA2 perspective of the results. Wrap the results
+        # QA templates need a QA perspective of the results. Wrap the results
         # in an adapter that provides this perspective.
-        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+        qaresults = qaadapter.ResultsToQAAdapter(context.results)
         
         # we only need to pass the calibration section through to the template
-        qa2section = qa2results.sections[qa2adapter.CalibrationQA2Section]
+        qasection = qaresults.sections[qaadapter.CalibrationQASection]
 
         return {'pcontext'   : context,
-                'qa2section' : qa2section}
+                'qasection' : qasection}
 
 
 class T2_3_2MRenderer(RendererBase):
     """
-    Renderer for T2-3-2M: the QA2 line finding section.
+    Renderer for T2-3-2M: the QA line finding section.
     """
     # the filename to which output will be directed
     output_file = 't2-3-2m.html'
@@ -928,20 +928,20 @@ class T2_3_2MRenderer(RendererBase):
 
     @staticmethod
     def get_display_context(context):
-        # QA2 templates need a QA2 perspective of the results. Wrap the results
+        # QA templates need a QA perspective of the results. Wrap the results
         # in an adapter that provides this perspective.
-        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+        qaresults = qaadapter.ResultsToQAAdapter(context.results)
         
         # we only need to pass the calibration section through to the template
-        qa2section = qa2results.sections[qa2adapter.LineFindingQA2Section]
+        qasection = qaresults.sections[qaadapter.LineFindingQASection]
 
         return {'pcontext'   : context,
-                'qa2section' : qa2section}
+                'qasection' : qasection}
 
 
 class T2_3_3MRenderer(RendererBase):
     """
-    Renderer for T2-3-3M: the QA2 flagging section.
+    Renderer for T2-3-3M: the QA flagging section.
     """
     # the filename to which output will be directed
     output_file = 't2-3-3m.html'
@@ -950,20 +950,20 @@ class T2_3_3MRenderer(RendererBase):
 
     @staticmethod
     def get_display_context(context):
-        # QA2 templates need a QA2 perspective of the results. Wrap the results
+        # QA templates need a QA perspective of the results. Wrap the results
         # in an adapter that provides this perspective.
-        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+        qaresults = qaadapter.ResultsToQAAdapter(context.results)
         
         # we only need to pass the calibration section through to the template
-        qa2section = qa2results.sections[qa2adapter.FlaggingQA2Section]
+        qasection = qaresults.sections[qaadapter.FlaggingQASection]
 
         return {'pcontext'   : context,
-                'qa2section' : qa2section}
+                'qasection' : qasection}
 
 
 class T2_3_4MRenderer(RendererBase):
     """
-    Renderer for T2-3-4M: the QA2 imaging section.
+    Renderer for T2-3-4M: the QA imaging section.
     """
     # the filename to which output will be directed
     output_file = 't2-3-4m.html'
@@ -972,15 +972,15 @@ class T2_3_4MRenderer(RendererBase):
 
     @staticmethod
     def get_display_context(context):
-        # QA2 templates need a QA2 perspective of the results. Wrap the results
+        # QA templates need a QA perspective of the results. Wrap the results
         # in an adapter that provides this perspective.
-        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+        qaresults = qaadapter.ResultsToQAAdapter(context.results)
         
         # we only need to pass the calibration section through to the template
-        qa2section = qa2results.sections[qa2adapter.ImagingQA2Section]
+        qasection = qaresults.sections[qaadapter.ImagingQASection]
 
         return {'pcontext'   : context,
-                'qa2section' : qa2section}
+                'qasection' : qasection}
 
 
 class T2_3MDetailsDefaultRenderer(object):
@@ -1062,7 +1062,7 @@ class T2_3MDetailsRenderer(object):
         return os.path.join(stage_dir, cls.output_file)
 
     """
-    Render the detailed QA2 perspective of each Results in the given context.
+    Render the detailed QA perspective of each Results in the given context.
     
     This renderer creates detailed T2_3M output for each Results. Each Results
     in the context is passed to a specialised renderer, which generates
@@ -1111,7 +1111,7 @@ class T2_3MDetailsRenderer(object):
 
 class T2_3MDetailsWvrgcalflagRenderer(T2_3MDetailsDefaultRenderer):
     """
-    T2_43DetailsBandpassRenderer generates the QA2 output specific to the
+    T2_43DetailsBandpassRenderer generates the QA output specific to the
     Wvrgcalflag task.
     """
     
@@ -1147,9 +1147,9 @@ class T2_3MDetailsWvrgcalflagRenderer(T2_3MDetailsDefaultRenderer):
         plotter = image.ImageDisplay()
         plots = []
         for result in results:
-            if result.qa2.view:
-                plot = plotter.plot(context, result.qa2, reportdir=plots_dir, 
-                                    prefix='qa2', change='WVR')
+            if result.qa_wvr.view:
+                plot = plotter.plot(context, result.qa_wvr, reportdir=plots_dir, 
+                                    prefix='qa', change='WVR')
                 plots.append(plot)
     
         # Group the Plots by axes and plot types; each logical grouping will
@@ -1157,7 +1157,7 @@ class T2_3MDetailsWvrgcalflagRenderer(T2_3MDetailsDefaultRenderer):
         plot_groups = logger.PlotGroup.create_plot_groups(plots)
         for plot_group in plot_groups:
             # Write the thumbnail pages for each plot grouping to disk 
-            renderer = PlotGroupRenderer(context, results, plot_group, 'qa2')
+            renderer = PlotGroupRenderer(context, results, plot_group, 'qa')
             plot_group.filename = renderer.filename
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
@@ -1171,7 +1171,7 @@ class T2_3MDetailsWvrgcalflagRenderer(T2_3MDetailsDefaultRenderer):
 
 class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
     """
-    T2_43DetailsBandpassRenderer generates the QA2 output specific to the
+    T2_43DetailsBandpassRenderer generates the QA output specific to the
     bandpass task.
     """
     
@@ -1203,10 +1203,10 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         flagged = []
         num_flagged_feeds = 0
         for result in results:
-            # return early if there are no QA2 results
-            if not result.qa2:
+            # return early if there are no QA results
+            if not result.qa:
                 return ctx
-            adapter = qa2adapter.QA2BandpassAdapter(context, result)
+            adapter = qaadapter.QABandpassAdapter(context, result)
             plots.append(adapter.amplitude_plots)
             plots.append(adapter.phase_plots)
             
@@ -1221,7 +1221,7 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         plot_groups = logger.PlotGroup.create_plot_groups(plots)
         # Write the thumbnail pages for each plot grouping to disk 
         for plot_group in plot_groups:
-            renderer = QA2PlotRenderer(context, results, plot_group, 'qa2')
+            renderer = QAPlotRenderer(context, results, plot_group, 'qa')
             plot_group.filename = renderer.filename 
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
@@ -1342,15 +1342,15 @@ class PlotGroupRenderer(object):
         return t.render(**display_context)
 
 
-class QA2PlotRenderer(PlotGroupRenderer):
-    template = 'qa2.html'
+class QAPlotRenderer(PlotGroupRenderer):
+    template = 'qa.html'
 
     def __init__(self, context, result, plot_group, prefix=''):
-        super(QA2PlotRenderer, self).__init__(context, result, plot_group, 
+        super(QAPlotRenderer, self).__init__(context, result, plot_group, 
                                                    prefix)
         json_path = os.path.join(context.report_dir, 
                                  'stage%s' % result.stage_number, 
-                                 'qa2.json')
+                                 'qa.json')
         
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
@@ -1359,7 +1359,7 @@ class QA2PlotRenderer(PlotGroupRenderer):
             self.json = '{}'
          
     def _get_display_context(self):
-        ctx = super(QA2PlotRenderer, self)._get_display_context()
+        ctx = super(QAPlotRenderer, self)._get_display_context()
         ctx.update({'json' : self.json});
         return ctx
 
@@ -1426,10 +1426,10 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
                 pass
 
             # collect flagging metric plots from result
-            if result.qa2.view:
+            if result.qa_wvr.view:
                 plotter = image.ImageDisplay()
-                plots = plotter.plot(context, result.qa2, reportdir=plots_dir, 
-                                     prefix='qa2', change='WVR')
+                plots = plotter.plot(context, result.qa_wvr, reportdir=plots_dir, 
+                                     prefix='qa', change='WVR')
                 plots = sorted(plots, key=lambda p: int(p.parameters['spw']))
                 
                 # render flagging metric plots to their own HTML page
@@ -1466,16 +1466,16 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
             renderer = WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(context, result, 
                                                                     baseline_plots)
 
-            # get the first scan for the QA2 intent(s)
-            qa2_intent = set(result.inputs['qa2_intent'].split(','))
-            qa2_scan = sorted([scan.id for scan in ms.scans 
-                               if not qa2_intent.isdisjoint(scan.intents)])[0]                               
+            # get the first scan for the QA intent(s)
+            qa_intent = set(result.inputs['qa_intent'].split(','))
+            qa_scan = sorted([scan.id for scan in ms.scans 
+                               if not qa_intent.isdisjoint(scan.intents)])[0]                               
             # scan parameter on plot is comma-separated string 
-            qa2_scan = str(qa2_scan)            
+            qa_scan = str(qa_scan)            
             LOG.trace('Using scan %s for phase vs baseline summary '
-                      'plots' % qa2_scan)
+                      'plots' % qa_scan)
             baseline_summary_plots[vis] = [p for p in baseline_plots
-                                           if qa2_scan in set(p.parameters['scan'].split(','))]
+                                           if qa_scan in set(p.parameters['scan'].split(','))]
             
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())        
@@ -1636,7 +1636,7 @@ class WvrgcalflagPhaseOffsetPlotRenderer(object):
             antenna_name = plot.parameters['ant']
             spw_id = plot.parameters['spw']
 
-            ratio = 1.0 / plot.qa2_score
+            ratio = 1.0 / plot.qa_score
 
             # Javascript JSON parser doesn't like Javascript floating point 
             # constants (NaN, Infinity etc.), so convert them to null. We  
@@ -2276,7 +2276,7 @@ class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = os.path.basename(result.inputs['vis']) 
         ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_amp_qa2_scores(ms, result, plots,
+        scores = get_bandpass_amp_qa_scores(ms, result, plots,
                                              context.report_dir)
                 
         super(BandpassAmpVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
@@ -2293,7 +2293,7 @@ class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = os.path.basename(result.inputs['vis']) 
         ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_phase_qa2_scores(ms, result, plots,
+        scores = get_bandpass_phase_qa_scores(ms, result, plots,
                                                context.report_dir)
 
         super(BandpassPhaseVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
@@ -5160,7 +5160,7 @@ class T2_4MDetailsRenderer(object):
 class WebLogGenerator(object):
     renderers = [T1_1Renderer,         # OUS splash page
                  T1_2Renderer,         # observation summary
-                 T1_3MRenderer,        # QA2 summary
+                 T1_3MRenderer,        # QA summary
                  T2_1Renderer,         # session tree
                  T2_1DetailsRenderer,  # session details
                  T2_2_1Renderer,       # spatial setup
@@ -5169,11 +5169,11 @@ class WebLogGenerator(object):
                  T2_2_4Renderer,       # sky setup
                  T2_2_5Renderer,       # weather
                  T2_2_6Renderer,       # scans
-                 T2_3_1MRenderer,      # QA2 calibration
-                 T2_3_2MRenderer,      # QA2 line finding
-                 T2_3_3MRenderer,      # QA2 flagging
-                 T2_3_4MRenderer,      # QA2 imaging
-                 T2_3MDetailsRenderer, # QA2 details pages
+                 T2_3_1MRenderer,      # QA calibration
+                 T2_3_2MRenderer,      # QA line finding
+                 T2_3_3MRenderer,      # QA flagging
+                 T2_3_4MRenderer,      # QA imaging
+                 T2_3MDetailsRenderer, # QA details pages
                  T2_4MRenderer,        # task tree
                  T2_4MDetailsRenderer, # task details
                  # some summary renderers are placed last for access to scores
@@ -5376,7 +5376,7 @@ class LogCopier(object):
 #        return rows[start_idx:end_idx]
           
           
-def get_bandpass_amp_qa2_scores(ms, result, plots, rootdir):
+def get_bandpass_amp_qa_scores(ms, result, plots, rootdir):
     # .. and because the caltable name is a heuristic and resolved at child 
     # taske execution time, the stage number doesn't map to the input! 
     #caltable = result.inputs['caltable']
@@ -5385,10 +5385,10 @@ def get_bandpass_amp_qa2_scores(ms, result, plots, rootdir):
     score_types = ['AMPLITUDE_SCORE_DD',
                    'AMPLITUDE_SCORE_FN',
                    'AMPLITUDE_SCORE_SNR']
-    return get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_pols)
+    return get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_pols)
 
 
-def get_bandpass_phase_qa2_scores(ms, result, plots, rootdir):
+def get_bandpass_phase_qa_scores(ms, result, plots, rootdir):
     # .. and because the caltable name is a heuristic and resolved at child 
     # taske execution time, the stage number doesn't map to the input! 
     #caltable = result.inputs['caltable']
@@ -5397,9 +5397,9 @@ def get_bandpass_phase_qa2_scores(ms, result, plots, rootdir):
     score_types = ['PHASE_SCORE_DD',
                    'PHASE_SCORE_FN',
                    'PHASE_SCORE_RMS']
-    return get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_pols)    
+    return get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_pols)    
 
-def get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_polarizations):
+def get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_polarizations):
     qa_data = result.qa.rawdata
     
     scores = {}
@@ -5426,17 +5426,17 @@ def get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_polariz
                       'thumbnail' : thumbnail}
         scores[png] = png_scores
 
-        # QA2 dictionary keys are peculiar, in that their index is a
+        # QA dictionary keys are peculiar, in that their index is a
         # function of both antenna and feed.
-        qa2_id = int(antenna.id) * num_polarizations + pol_id
-        qa2_str = str(qa2_id)
+        qa_id = int(antenna.id) * num_polarizations + pol_id
+        qa_str = str(qa_id)
 
         for score_type in score_types:            
-            if 'QA2SCORES' in qa_data:
+            if 'QASCORES' in qa_data:
                 try:
-                    score = qa_data['QA2SCORES'][score_type][spw_str][qa2_str]
+                    score = qa_data['QASCORES'][score_type][spw_str][qa_str]
                 except KeyError:
-                    LOG.error('Could not get %s score for %s (%s) spw %s pol %s (id=%s)' % (score_type, antenna.name, antenna.id, spw_str, pol, qa2_str))
+                    LOG.error('Could not get %s score for %s (%s) spw %s pol %s (id=%s)' % (score_type, antenna.name, antenna.id, spw_str, pol, qa_str))
                     score = None 
             else:
                 score = 1.0

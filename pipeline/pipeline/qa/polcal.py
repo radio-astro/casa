@@ -6,13 +6,13 @@
 
 # Description:
 # ------------
-# This module runs the polarization calibration statistics subsystem of the QA2
+# This module runs the polarization calibration statistics subsystem of the QA
 # system.
 
 # User functions:
 # ---------------
 # polcal       - This function runs the polarization calibration statistics
-#                subsystem of the QA2 system.
+#                subsystem of the QA system.
 # polcal_calc  - This function calculates the polarization calibration
 #                statistics.
 # polcal_write - This function writes the polarization calibration statistics to
@@ -41,7 +41,7 @@ import casa
 # Description:
 # ------------
 # This function runs the polarization calibration statistics subsystem of the
-# QA2 system.
+# QA system.
 
 # Inputs:
 # -------

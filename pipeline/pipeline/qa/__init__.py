@@ -1,6 +1,6 @@
 
 __all__ = list()
-__all__.append( 'qa2' )
+__all__.append( 'qa' )
 __all__.append( 'utility' )
 __all__.append( 'flag' )
 __all__.append( 'gcal' )

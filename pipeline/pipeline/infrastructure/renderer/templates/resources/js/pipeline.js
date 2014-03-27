@@ -338,8 +338,8 @@ PLOTS = function () {
         "unknown": function (xAxisLabel) {
             xAxisLabel.text("N/A");
         },
-        "qa2": function (xAxisLabel) {
-            xAxisLabel.text("QA2 Score");
+        "qa": function (xAxisLabel) {
+            xAxisLabel.text("QA Score");
         },
         "K": function (xAxisLabel) {
             xAxisLabel.text("K");

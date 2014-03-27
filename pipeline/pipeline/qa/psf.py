@@ -8,11 +8,11 @@
 # Description:
 # ------------
 # This module runs the psf information (histograms and statistics) subsystem of
-# the QA2 system.
+# the QA system.
 
 # User functions (subsystem and component level):
 # -----------------------------------------------
-# psf       - This function runs the psf information subsystem of the QA2
+# psf       - This function runs the psf information subsystem of the QA
 #             system.
 #
 # psf_calc  - This function calculates the psf information.
@@ -108,7 +108,7 @@ import utility.logs as logs
 
 # Description:
 # ------------
-# This function runs the psf information subsystem of the QA2 system.
+# This function runs the psf information subsystem of the QA system.
 
 # Inputs:
 # -------

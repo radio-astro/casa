@@ -19,7 +19,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 ## generate the plots
 <%
-qa2_results = False
+qa_results = False
 try:
     r = result[0]
     stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
@@ -29,13 +29,13 @@ try:
 
     plots = []
     for r in result:
-        if r.qa2.view:
-            qa2_results = True
+        if r.qa.view:
+            qa_results = True
 
             # display the view first
             # plot() returns the list of Plots it has generated, so we just
             # need to add each one to the HTML logger with logger.addPlot()
-            plots.append(displays.ImageDisplay().plot(pcontext, r.qa2,
+            plots.append(displays.ImageDisplay().plot(pcontext, r.qa,
               reportdir=plots_dir, change='WVR'))
 
     # Group the Plots by axes and plot types; each logical grouping will
@@ -55,12 +55,12 @@ except Exception, e:
  
 <ul>
 
-% if not qa2_results:
-    <li>No QA2 results were calculated.
+% if not qa_results:
+    <li>No QA results were calculated.
 % else:
-    <li>QA2 Results:</li>
+    <li>QA Results:</li>
     <ul>
-        <li>Overall QA2 score.
+        <li>Overall QA score.
             <table border="1">
                 <tr>
                     <td>Vis</td>
@@ -68,15 +68,15 @@ except Exception, e:
                 </tr>
             % for r in result:
                 <tr>
-                    <td>${r.qa2.vis}</td>
-                    <td>${r.qa2.overall_score}</td>
+                    <td>${r.qa.vis}</td>
+                    <td>${r.qa.overall_score}</td>
                 </tr>
             % endfor
             </table>
         </li>
     </ul>
 
-    <li>QA2 Plots:</li>
+    <li>QA Plots:</li>
     <ul>
     % if plot_groups:
         % for plot_group in plot_groups: 

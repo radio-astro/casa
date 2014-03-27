@@ -14,12 +14,12 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 			<tr>
 				<th class="span3">Topic</th>
 				<th class="span6"></th>
-				<th class="span2">QA2 Score</th>
+				<th class="span2">QA Score</th>
 				<th class="span1"></th>
 			</tr>
 		</thead>
 		<tbody>
-			% for section in qa2adapter.sections.values():
+			% for section in qaadapter.sections.values():
 			<tr>
 				<td><a href="${section.url}">${section.description}</a></td>
 				<td></td>

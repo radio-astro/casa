@@ -7,13 +7,13 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="header" />
 
-<%block name="title">Stage ${hr.get_stage_number(result)} QA2 Details</%block>
+<%block name="title">Stage ${hr.get_stage_number(result)} QA Details</%block>
 
-<h1>QA2 analysis for WVR calibration</h1>
+<h1>QA analysis for WVR calibration</h1>
 
-<h2>Overall QA2 Scores</h2>
-<table class="minimalist" summary="QA2 Scores">
-	<caption>Overall QA2 Scores</caption>
+<h2>Overall QA Scores</h2>
+<table class="minimalist" summary="QA Scores">
+	<caption>Overall QA Scores</caption>
     <thead>
         <tr>
             <th>Measurement Set</th>
@@ -23,8 +23,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	<tbody>
 % for r in result:
 		<tr>
-			<td>${getattr(r.qa2, 'vis', 'N/A')}</td>
-			<td>${getattr(r.qa2, 'overall_score', 'N/A')}</td>
+			<td>${getattr(r.qa, 'vis', 'N/A')}</td>
+			<td>${getattr(r.qa, 'overall_score', 'N/A')}</td>
 		</tr>
 % endfor
 	</tbody>

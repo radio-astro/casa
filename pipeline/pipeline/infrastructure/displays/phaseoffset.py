@@ -354,7 +354,7 @@ class PhaseOffsetPlot(object):
                                           'ant' : antenna_names})
         
         if plothelper.plot_per_antenna and len(antennas) is 1:
-            wrapper.qa2_score = self._score_retriever.get_score(spw, antennas[0])
+            wrapper.qa_score = self._score_retriever.get_score(spw, antennas[0])
         
         if not os.path.exists(figfile):
             LOG.trace('Phase offset plot for antenna %s spw %s not found.'

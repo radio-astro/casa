@@ -794,13 +794,13 @@ class PlotBase(object):
         self._data_after = data_after
         self._caltables_loaded = True
 
-    def _get_qa2_intents(self):
-        return set(self.result.inputs['qa2_intent'].split(','))
+    def _get_qa_intents(self):
+        return set(self.result.inputs['qa_intent'].split(','))
     
-    def _get_qa2_scans(self):
-        qa2_intents = self._get_qa2_intents()
+    def _get_qa_scans(self):
+        qa_intents = self._get_qa_intents()
         return [scan for scan in self.ms.scans 
-                if not qa2_intents.isdisjoint(scan.intents)]
+                if not qa_intents.isdisjoint(scan.intents)]
     
 # linux matplotlib is stuck on v0.99.3, which is missing the subplots function    
 def subplots(nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True,

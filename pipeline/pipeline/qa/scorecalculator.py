@@ -23,19 +23,19 @@ LOG = logging.get_logger(__name__)
 
 #- utility functions ---------------------------------------------------------
 
-def log_qa2(method):
+def log_qa(method):
     """
-    Decorator that logs QA2 evaluations as they return with a log level of
+    Decorator that logs QA evaluations as they return with a log level of
     INFO for scores of 1.0 and WARNING for any other level.
     """
     def f(self, *args, **kw):
         # get the size of the CASA log before task execution
-        qa2score = method(self, *args, **kw)
-        if qa2score.score == 1.0:
-            LOG.info(qa2score.longmsg)
+        qascore = method(self, *args, **kw)
+        if qascore.score == 1.0:
+            LOG.info(qascore.longmsg)
         else:
-            LOG.warning(qa2score.longmsg)
-        return qa2score
+            LOG.warning(qascore.longmsg)
+        return qascore
 
     return f
 
@@ -132,7 +132,7 @@ def score_ms_model_data_column_present(all_mses, mses_with_column):
     return pqa.QAScore(score, longmsg, shortmsg)
 
 
-@log_qa2
+@log_qa
 def score_ms_history_entries_present(all_mses, mses_with_history):
     """
     Give a score for a group of mses based on the number with history 
@@ -170,7 +170,7 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
     return pqa.QAScore(score, longmsg, shortmsg)
 
 
-@log_qa2
+@log_qa
 def score_missing_intents(mses, array_type='ALMA_12m'):
     """
     Score a MeasurementSet object based on the presence of certain
@@ -216,7 +216,7 @@ def score_missing_intents(mses, array_type='ALMA_12m'):
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
-@log_qa2
+@log_qa
 def score_online_shadow_agents(ms, summaries):
     """
     Get a score for the fraction of data flagged by online and shadow agents.
@@ -226,7 +226,7 @@ def score_online_shadow_agents(ms, summaries):
     return score_data_flagged_by_agents(ms, summaries, 0.2, 0.5, ['online', 'shadow'])
 
 
-@log_qa2
+@log_qa
 def score_total_data_flagged(filename, summaries):
     """
     Calculate a score for the flagging task based on the total fraction of
@@ -253,7 +253,7 @@ def score_total_data_flagged(filename, summaries):
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
-@log_qa2
+@log_qa
 def score_fraction_newly_flagged(filename, summaries):
     """
     Calculate a score for the flagging task based on the fraction of
@@ -280,7 +280,7 @@ def score_fraction_newly_flagged(filename, summaries):
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
-@log_qa2
+@log_qa
 def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
     """
     Check whether measurement sets are contiguous in time. 
@@ -326,7 +326,7 @@ def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
-@log_qa2
+@log_qa
 def score_wvrgcal(ms_name, wvr_score):
     if wvr_score < 1.0:
         score = 0
@@ -337,7 +337,7 @@ def score_wvrgcal(ms_name, wvr_score):
     shortmsg = '%0.2fx improvement' % wvr_score
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
-@log_qa2
+@log_qa
 def score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged):
     if frac_flagged > 0.5:
         score = 0

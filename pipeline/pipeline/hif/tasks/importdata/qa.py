@@ -7,7 +7,7 @@ from pipeline.infrastructure import casa_tasks, casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
-import pipeline.qa2.scorecalculator as qa2calc
+import pipeline.qa.scorecalculator as qacalc
 
 LOG = logging.get_logger(__name__)
 from . import importdata
@@ -27,9 +27,9 @@ class ImportDataQAHandler(pqa.QAResultHandler):
                  'contiguous?')
         score5 = self._check_contiguous(result.mses)
     
-        LOG.todo('ImportData QA2: missing source.xml and calibrator unknown to ' 
+        LOG.todo('ImportData QA: missing source.xml and calibrator unknown to ' 
                  'CASA')
-        LOG.todo('ImportData QA2: missing BDFs')
+        LOG.todo('ImportData QA: missing BDFs')
 
         scores = [score1, score3, score4, score5]
         result.qa.pool[:] = scores
@@ -39,12 +39,12 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         Check whether observations are contiguous. 
         '''
         tolerance = datetime.timedelta(hours=1)
-        return qa2calc.score_contiguous_session(mses, tolerance=tolerance)
+        return qacalc.score_contiguous_session(mses, tolerance=tolerance)
     
     def _check_model_data_column(self, mses):
         '''
         Check whether any of the measurement sets contain a MODEL_DATA column,
-        complaining if present, and returning an appropriate QA2 score.
+        complaining if present, and returning an appropriate QA score.
         '''
         bad_mses = []
     
@@ -53,7 +53,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
                 if 'MODEL_DATA' in table.colnames():
                     bad_mses.append(ms)
     
-        return qa2calc.score_ms_model_data_column_present(mses, bad_mses)
+        return qacalc.score_ms_model_data_column_present(mses, bad_mses)
     
     def _check_history_column(self, mses):
         '''
@@ -68,7 +68,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
                 if table.nrows() != 0:
                     bad_mses.append(ms)
     
-        return qa2calc.score_ms_history_entries_present(mses, bad_mses)
+        return qacalc.score_ms_history_entries_present(mses, bad_mses)
     
     def _check_flagged_calibrator_data(self, mses):
         '''
@@ -131,7 +131,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         
         TODO Should we terminate execution on missing intents?        
         '''
-        return qa2calc.score_missing_intents(mses)
+        return qacalc.score_missing_intents(mses)
 
 
 class ImportDataListQAHandler(pqa.QAResultHandler):
@@ -140,6 +140,6 @@ class ImportDataListQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
-        # own QA2score list
+        # own QAscore list
         collated = utils.flatten([r.qa.pool[:] for r in result]) 
         result.qa.pool[:] = collated

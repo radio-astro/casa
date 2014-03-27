@@ -29,7 +29,7 @@ class WVRScoreFinder(object):
         assert len(spw_viewlist) is 1, ('Unexpected number of views for spw '
                                         '%s. Expected %s but got '
                                         '%s' % (spw_id, 1, len(spw_viewlist)))
-        LOG.todo('Is the QA2 score the first or last viewlist?')
+        LOG.todo('Is the QA score the first or last viewlist?')
         spw_imageresult = spw_viewlist[0][-1]
         
         antenna_axis = [axis for axis in spw_imageresult.axes if axis.name == 'Antenna'][0]
@@ -74,7 +74,7 @@ class WVRPhaseVsBaselineChart(object):
         self._caltables_loaded = True
 
     def _get_plot_intents(self):
-        return set(self.result.inputs['qa2_intent'].split(','))
+        return set(self.result.inputs['qa_intent'].split(','))
     
     def _get_plot_scans(self):
         plot_intents = self._get_plot_intents()
@@ -111,7 +111,7 @@ class WVRPhaseVsBaselineChart(object):
                                             'gaintables: %s' % nowvr_gaintables) 
 
         nowvr_gaintable = nowvr_gaintables.pop()
-        wvr_gaintable = result.qa2.gaintable_wvr
+        wvr_gaintable = result.qa_wvr.gaintable_wvr
         LOG.debug('Gaintables for WVR plots:\n'
                   'No WVR: %s\tWith WVR: %s' % (nowvr_gaintable, wvr_gaintable))    
 
@@ -437,7 +437,7 @@ class WVRPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
                                             'gaintables: %s' % nowvr_gaintables) 
 
         nowvr_gaintable = nowvr_gaintables.pop()
-        wvr_gaintable = result.qa2.gaintable_wvr
+        wvr_gaintable = result.qa_wvr.gaintable_wvr
         LOG.debug('Gaintables for WVR plots:\n'
                   'No WVR: %s\tWith WVR: %s' % (nowvr_gaintable, wvr_gaintable))    
 

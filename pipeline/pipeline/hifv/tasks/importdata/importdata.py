@@ -368,9 +368,9 @@ class VLAImportData(basetask.StandardTaskTemplate):
                  'contiguous?')
         _check_contiguous(results.mses, datetime.timedelta(hours=1))
 
-        LOG.todo('ImportData QA2: missing source.xml and calibrator unknown to ' 
+        LOG.todo('ImportData QA: missing source.xml and calibrator unknown to ' 
                  'CASA')
-        LOG.todo('ImportData QA2: missing BDFs')
+        LOG.todo('ImportData QA: missing BDFs')
 	    
         return results
     
