@@ -23,6 +23,11 @@ Previous calibrations are applied on the fly.
 	<value></value>
    </param>
 
+   <param type="stringArray" name="calamptable" subparam="true">
+	<description>List of diagnostic output amplitude caltables for calibrator targets</description>
+	<value type="string"></value>
+   </param>
+
    <param type="stringArray" name="calphasetable" subparam="true">
 	<description>List of output phase caltables for calibrator targets</description>
 	<value type="string"></value>
@@ -130,6 +135,7 @@ Previous calibrations are applied on the fly.
 	    <equals type="string" value="automatic" />
 	    <equals type="string" value="interactive">
 	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="calamptable"><value type="stringArray"></value></default>
 	        <default param="calphasetable"><value type="stringArray"></value></default>
 	        <default param="targetphasetable"><value type="stringArray"></value></default>
 	        <default param="amptable"><value type="stringArray"></value></default>
@@ -145,6 +151,7 @@ Previous calibrations are applied on the fly.
 	    </equals>
 	    <equals type="string" value="getinputs">
 	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="calamptable"><value type="stringArray"></value></default>
 	        <default param="calphasetable"><value type="stringArray"></value></default>
 	        <default param="targetphasetable"><value type="stringArray"></value></default>
 	        <default param="amptable"><value type="stringArray"></value></default>
@@ -215,6 +222,12 @@ vis -- The list of input measurement sets. Defaults to the list of measurment
     default: ''
     example: ['M82A.ms', 'M82B.ms'] 
 
+calamptable -- The list of output diagnostic calibration amplitude tables for the
+    calibration targets.
+    Defaults to the standard pipeline naming convention.
+    default: ''
+    example: ['M82.gacal', 'M82B.gacal']
+
 calphasetable -- The list of output calibration phase tables for the
     calibration targets.
     Defaults to the standard pipeline naming convention.
@@ -238,9 +251,10 @@ field -- The list of field names or field ids for which gain solutions are
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched. Defaults to *PHASE*.
+    which the the selected fields are matched. Defaults to the
+    equivalent of 'AMPLITUDE,PHASE,BANDPASS'.
     default: '' 
-    example: '', '*AMP*,*PHASE*'
+    example: '', 'PHASE'
 
 spw -- The list of spectral windows and channels for which gain solutions are
     computed. Defaults to all science spectral windows.

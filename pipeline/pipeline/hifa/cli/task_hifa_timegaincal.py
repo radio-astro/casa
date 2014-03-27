@@ -5,11 +5,10 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifa_timegaincal(vis=None, calphasetable=None, targetphasetable=None,
-        amptable=None, field=None, intent=None, spw=None,
-	antenna=None, calsolint=None,
-        targetsolint=None, combine=None, refant=None, solnorm=None,
-	minblperant=None, calminsnr=None, targetminsnr=None, smodel=None,
+def hifa_timegaincal(vis=None, calamptable=None, calphasetable=None,
+        targetphasetable=None, amptable=None, field=None, intent=None, spw=None,
+	antenna=None, calsolint=None, targetsolint=None, combine=None, refant=None,
+	solnorm=None, minblperant=None, calminsnr=None, targetminsnr=None, smodel=None,
         pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
