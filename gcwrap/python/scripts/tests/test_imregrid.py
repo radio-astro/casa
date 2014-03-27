@@ -600,7 +600,7 @@ class imregrid_test(unittest.TestCase):
             )
         )
         myia.open(output)
-        self.assertFalse(myia.coordsys().findcoordinate("stokes")[0])
+        self.assertFalse(myia.coordsys().findcoordinate("stokes")['return'])
         myia.done()
         
     def test_no_template_stokes(self):
@@ -623,9 +623,9 @@ class imregrid_test(unittest.TestCase):
         )
         myia.open(output)
         stokes_info = myia.coordsys().findcoordinate("stokes")
-        self.assertTrue(stokes_info[0])
+        self.assertTrue(stokes_info['return'])
         exp_axis = 2
-        self.assertTrue(stokes_info[1][0] == exp_axis)
+        self.assertTrue(stokes_info['pixel'][0] == exp_axis)
         self.assertTrue(myia.shape()[exp_axis] == 2)
         self.assertTrue(myia.coordsys().stokes() == ['I','Q'])
         myia.done()

@@ -58,12 +58,12 @@ def imregrid(
                     for i in range(image_ncoords):
                         ctype = image_csys.coordinatetype(i)[0]
                         template_coord = template_csys.findcoordinate(ctype)
-                        if ctype != 'Stokes' and template_coord[0]:
+                        if ctype != 'Stokes' and template_coord["return"]:
                             # only regrid if not Stokes axis and coordinate exists in template
-                            for template_pix_axis in template_coord[1]:
+                            for template_pix_axis in template_coord['pixel']:
                                 if tempshape[template_pix_axis] > 1:
                                     # only regrid if template axis is not degenerate
-                                    world_axes = image_csys.findcoordinate(ctype)[1]
+                                    world_axes = image_csys.findcoordinate(ctype)['pixel']
                                     for world_pix_axis in world_axes:
                                         if imshape[world_pix_axis] > 1:
                                             # only regrid if the world axis is not degenerate
@@ -101,7 +101,7 @@ def imregrid(
         return True
         
     except Exception, instance:
-        casalog.post(str(instance), "SEVERE")
+        casalog.post("Error: " + str(instance), "SEVERE")
         raise instance
     finally:
         if _myia:
@@ -128,7 +128,7 @@ def _imregrid_to_new_ref_frame(
             "WARN"
         )
     dirinfo = csys.findcoordinate("direction")
-    if not dirinfo[0]:
+    if not dirinfo['return']:
         raise (Exception, "Image does not have a direction coordinate.")
     newrefcode = template.upper()
     oldrefcode = csys.referencecode("direction")[0]
@@ -144,7 +144,7 @@ def _imregrid_to_new_ref_frame(
         "Changing coordinate system from " + oldrefcode
         + " to " + newrefcode, 'INFO'
     )
-    diraxes = dirinfo[1]
+    diraxes = dirinfo['pixel']
     if len(diraxes) != 2:
         raise Exception("Unsupported number of direction axes. There must be exactly 2.")
     dirrefpix = csys.referencepixel("direction")["numeric"]
@@ -219,8 +219,9 @@ def _imregrid_handle_default_shape(
     shape = imshape
     targetaxesnames = image_csys.names()
     template_spectral_info = template_csys.findcoordinate("Spectral")
-    template_has_spectral = template_spectral_info[0]
-    template_spectral_axis = template_spectral_info[1][0]
+    template_has_spectral = template_spectral_info['return']
+    if template_has_spectral:
+        template_spectral_axis = template_spectral_info['pixel'][0]
     atr = axestoregrid[:]
     for i in range(len(imshape)):
         atr_count = 0
@@ -251,8 +252,8 @@ def _imregrid_handle_default_shape(
                 break
             atr_count += 1;
     if (
-        template_csys.findcoordinate("stokes")[0]
-        and image_csys.findcoordinate("stokes")[0]
+        template_csys.findcoordinate("stokes")['return']
+        and image_csys.findcoordinate("stokes")['return']
         and len(template_csys.stokes()) > 1
         and len(image_csys.stokes()) > 1
     ):

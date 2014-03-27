@@ -119,8 +119,8 @@ def _add_axes(inImage):
         if ok:
             tmpim='__decon_tmp_im'
             csys=ia.coordsys()
-            isStokes=csys.findcoordinate('stokes')[0] 
-            isSpectral=csys.findcoordinate('spectral')[0] 
+            isStokes=csys.findcoordinate('stokes')['return'] 
+            isSpectral=csys.findcoordinate('spectral')['return'] 
             if not isStokes:
                 ia.open(inImage)
                 ib=ia.adddegaxes(tmpim, stokes="I", overwrite=True)

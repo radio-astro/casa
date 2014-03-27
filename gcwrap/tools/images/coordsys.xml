@@ -1050,38 +1050,24 @@ qa.time(time)                    # Format with quanta
 </method>
 
  
-   <method type="function" name="findaxis">
-   <shortdescription>Find specified axis in coordinate system</shortdescription>
-   
-<output>  
-  
-     <param type="int" name="coordinate">
-     <description>Coordinate number</description>
-     </param>
-  
-     <param type="int" name="axisincoordinate">
-     <description>Axis in the coordinate</description>
-     </param>
-</output>  
-  
-<input>  
-     <param type="bool" direction="in" name="world">
-     <description>is axis a world or pixel axis ?</description>
-     <value>true</value>
-     </param>
-  
-     <param type="int" direction="in" name="axis">
-     <description>Axis in coordinate system</description>
-     <value>0</value>
-     </param>
-</input>    
-<returns type="bool">Whether it succeeded or not</returns>
+    <method type="function" name="findaxis">
+        <shortdescription>Find specified axis in coordinate system</shortdescription>
+            <input>  
+                <param type="bool" direction="in" name="world">
+                    <description>is axis a world or pixel axis ?</description>
+                    <value>true</value>
+                </param>
+                <param type="int" direction="in" name="axis">
+                    <description>Axis in coordinate system</description>
+                    <value>0</value>
+                </param>
+            </input>    
+            <returns type="record"/>
   
 <description>
 
 This function <!--(short-hand name {\stf fa})--> finds the specified axis in
-the Coordinate System. If the axis does not exist, it returns F. <!-- (not
-fail).-->
+the Coordinate System. If the axis does not exist, it throws an exception.
 
 </description>
 
@@ -1093,10 +1079,10 @@ print "\t----\t findaxis Ex 1 \t----"
 csys=cs.newcoordsys(direction=T, linear=2)          # RA/DEC/Lin1/Lin2
 rtn=csys.findaxis(T,1)                              # DEC
 rtn
-#{'axisincoordinate': 1L, 'coordinate': 0L, 'return': True}
+#{'axisincoordinate': 1L, 'coordinate': 0L}
 rtn = csys.findaxis(T,2)                            # Lin1
 rtn
-#{'axisincoordinate': 0L, 'coordinate': 1L, 'return': True}
+#{'axisincoordinate': 0L, 'coordinate': 1L}
 #
 """
 
@@ -1156,17 +1142,6 @@ the Linear Coordinate (coordinate 1).
    <method type="function" name="findcoordinate">
    <shortdescription>Find axes of specified coordinate</shortdescription>
    
-<output>  
-  
-     <param type="intArray" name="pixel">
-     <description>Pixel axes</description>
-     </param>
-  
-     <param type="intArray" name="world">
-     <description>World axes</description>
-     </param>
-</output>  
-  
 <input>  
      <param type="string" direction="in" name="type">
      <description>Type of coordinate to find: direction, stokes, spectral, linear, or tabular</description>
@@ -1178,16 +1153,20 @@ the Linear Coordinate (coordinate 1).
      <value>0</value>
      </param>
 </input>    
-<returns type="bool">Whether it succeeded or not</returns>
+<returns type="record"/>
   
 <description>
 
-This function <!--(short-hand name {\stf fc})--> finds the axes in the
+This function finds the axes in the
 Coordinate System for the specified coordinate (minimum match is active
 for argument {\stfaf type}).  By default it finds the first coordinate,
 but if there is more than one (can happen for linear coordinates), you
-can specify which.  If the coordinate does not exist, it returns F. <!-- (not
-fail).-->
+can specify which.  It returns a dictionary with 'return', 'pixel', and
+'world' as keys. The associated value of 'return' is a boolean indicating if
+the specified coordinate was found. The values of 'pixel' and 'world' are
+arrays indicating the indices of the associated pixel and world axes, respectively,
+of the specified coordinate. If the coordinate does not exist, these arrays
+will be empty.
 
 See also the function <link anchor="images:coordsys.axesmap.function">axesmap</link>
 which returns the mapping between pixel and world axes.
@@ -1202,7 +1181,7 @@ print "\t----\t findcoordinate Ex 1 \t----"
 csys=cs.newcoordsys(direction=T)
 rtn=cs.findcoordinate('direction')
 print rtn
-#{'world': [0L, 1L], 'return': True, 'pixel': [0L, 1L]}
+#{'world': [0L, 1L], 'pixel': [0L, 1L]}
 print 'pixel, world axes =', rtn['pixel'], rtn['world']
 #pixel, world axes = [0 1] [0 1]
 #
