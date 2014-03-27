@@ -417,6 +417,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         for name in self.rawfiles:
             if os.path.exists(name): shutil.rmtree(name)
             shutil.copytree(self.sddatapath+name, name)
+        os.system( 'rm -rf '+self.prefix+'*' )
         
         default(tsdreduce)
         self.calmode = 'none'
@@ -428,15 +429,14 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self.kwidth = 5
         self.maskmode = 'auto'
         self.blfunc = 'none'
-        self.npiece = 1
-        
+        self.order = 3
         self.outname = self.prefix+self.postfix
 
     def tearDown(self):
         for name in self.rawfiles:
             if os.path.exists(name): shutil.rmtree(name)
 
-        os.system( 'rm -rf '+self.prefix+'*' )
+        #os.system( 'rm -rf '+self.prefix+'*' )
 
     ####################
     # Additional tests
@@ -453,7 +453,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_scan_id_exact(self):
@@ -463,7 +463,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
 
@@ -474,7 +474,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_scan_id_gt(self):
@@ -484,7 +484,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_scan_id_range(self):
@@ -494,7 +494,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_scan_id_list(self):
@@ -504,7 +504,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_scan_id_exprlist(self):
@@ -514,7 +514,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, scan=scan, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     ####################
@@ -527,7 +527,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_pol_id_exact(self):
@@ -537,7 +537,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_pol_id_lt(self):
@@ -547,7 +547,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_pol_id_gt(self):
@@ -557,7 +557,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_pol_id_range(self):
@@ -567,7 +567,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_pol_id_list(self):
@@ -577,7 +577,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_pol_id_exprlist(self):
@@ -587,7 +587,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, pol=pol, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     ####################
@@ -600,7 +600,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_id_exact(self):
@@ -610,7 +610,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_id_lt(self):
@@ -620,7 +620,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_id_gt(self):
@@ -630,7 +630,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_id_range(self):
@@ -640,7 +640,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_id_list(self):
@@ -650,7 +650,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_id_exprlist(self):
@@ -660,7 +660,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_value_exact(self):
@@ -670,7 +670,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_value_pattern(self):
@@ -680,7 +680,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_value_list(self):
@@ -690,7 +690,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_field_mix_exprlist(self):
@@ -700,7 +700,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, field=field, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     ####################
@@ -713,7 +713,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_exact(self):
@@ -723,7 +723,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_lt(self):
@@ -733,7 +733,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_gt(self):
@@ -743,7 +743,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_range(self):
@@ -753,7 +753,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_list(self):
@@ -763,7 +763,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_exprlist(self):
@@ -773,7 +773,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_pattern(self):
@@ -783,7 +783,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency(self):
@@ -793,7 +793,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity(self):
@@ -803,7 +803,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_mix_exprlist(self):
@@ -813,7 +813,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=False)
-        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     #########################
@@ -826,68 +826,209 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
 #         # blflag = T (channel selection: average+baseline)
 #         #          F (no channel selection: only smoothing)
 #         self._set_test_mode(blflag=True)
-#         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
-#         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
+#         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+#         self._compare_with_tophat(self.outname, self.ref_data, ref_idx, precision = 1.e-5)
 
     def test_spw_id_default_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw=':300.491~300.549GHz')"""
+        spw = ':300.491~300.549GHz' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_default_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw=':-548.7~-490.5km/s')"""
+        spw = ':-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
+
 
     def test_spw_id_default_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw=':0~19;21~39;41~59;61~79;81~100')"""
+        spw = ':0~19;21~39;41~59;61~79;81~100'
+        ref_idx = []
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_exact_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='23:21~79')"""
+        spw = '23:21~79'
+        ref_idx = [0,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_exact_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='25:300.491~300.549GHz')"""
+        spw = '25:300.491~300.549GHz' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_exact_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='25:-548.7~-490.5km/s')"""
+        spw = '25:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_exact_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='23:0~19;21~79;81~100')"""
+        spw = '23:0~19;21~79;81~100'
+        ref_idx = [0,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_pattern_channel(self):
         """test spw selection w/ channel selection (spw='')"""
+#         spw = '*:21~39'
+#         ref_idx = []
+#         # blflag = T (channel selection: average+baseline)
+#         #          F (no channel selection: only smoothing)
+#         self._set_test_mode(blflag=True)
+#         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+#         self._compare_with_tophat(self.outname, self.ref_data, ref_idx, precision = 1.e-5)
 
     def test_spw_id_pattern_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:300.491~300.549GHz')"""
+        spw = '*:300.491~300.549GHz' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_pattern_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:-548.7~-490.5km/s')"""
+        spw = '*:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_pattern_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='*:0~19;21~39;41~59;61~79;81~100')"""
+        spw = '*:0~19;21~39;41~59;61~79;81~100'
+        ref_idx = []
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='300~300.1GHz:21~79')"""
+        spw = '300~300.1GHz:21~79' # IFNO=23
+        ref_idx = [0,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='300.491~300.549GHz:300.491~300.549GHz')"""
+        spw = '300.491~300.549GHz:300.491~300.549GHz' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='300.4~300.5GHz:-548.7~-490.5km/s')"""
+        spw = '300.4~300.5GHz:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='300~300.1GHz:0~19;21~79;81~100')"""
+        spw = '300~300.1GHz:0~19;21~79;81~100' # IFNO=23
+        ref_idx = [0,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-30~30km/s:21~79')"""
+        spw = '-30~30km/s:21~79' # IFNO=23
+        ref_idx = [0,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity_frequency(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-500~-450km/s:-548.7~-490.5km/s')"""
+        spw = '-500~-450km/s:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity_velocity(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-500~-450km/s:-548.7~-490.5km/s')"""
+        spw = '-500~-450km/s:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        ref_idx = [1]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity_list(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='-30~30km/s:0~19;21~79;81~100')"""
+        spw = '-30~30km/s:0~19;21~79;81~100' # IFNO=23
+        ref_idx = [0,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_id_list_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
+        """test spw selection w/ channel selection (spw='21:0~59,23:21~79')"""
+        spw = '21:0~59,23:21~79'
+        ref_idx = [0,2,3]
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     ####################
     # timerange
@@ -899,7 +1040,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=True)
-        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
 
     def test_timerange_value_exact(self):
         """test timerange selection (timerange='2011/11/11/02:33:03.47')"""
@@ -908,7 +1049,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=True)
-        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
 
     def test_timerange_value_lt(self):
         """test timerange selection (timerange='<2011/11/11/02:33:03.47')"""
@@ -917,7 +1058,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=True)
-        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
 
     def test_timerange_value_gt(self):
         """test timerange selection (timerange='>2011/11/11/02:33:03.5')"""
@@ -926,7 +1067,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=True)
-        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
 
     def test_timerange_value_range(self):
         """test timerange selection (timerange='2011/11/11/02:33:03.47~02:34:03.48')"""
@@ -935,7 +1076,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=True)
-        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
 
     def test_timerange_value_interval(self):
         """test timerange selection (timerange='2011/11/11/02:33:03.47+00:01:00.1')"""
@@ -944,7 +1085,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
         self._set_test_mode(blflag=True)
-        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,npiece=self.npiece,outfile=self.outname,outform='ASAP')
+        self.res=self.run_task(infile=self.rawfile, timerange=timerange, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
 
 
     ####################
@@ -958,7 +1099,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
             self.average = True
             self.timeaverage = True
             self.polaverage = False
-            self.blfunc = 'cspline'
+            self.blfunc = 'poly'
             self.maskmode = 'list'
             self.ref_data = self.refval_bl
         else: # smoothing only
@@ -1026,9 +1167,10 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         # set rdiff=0 for elements both data and reference are close to zero
         idx_ref = numpy.where(abs(ref_arr) < almostzero)
         idx_data = numpy.where(abs(data_arr) < almostzero)
-        idx = numpy.intersect1d(idx_data, idx_ref, assume_unique=True)
-        ref_arr[idx] = almostzero
-        data_arr[idx] = almostzero
+        if len(idx_ref[0])>0 and len(idx_data[0])>0:
+            idx = numpy.intersect1d(idx_data[0], idx_ref[0], assume_unique=True)
+            ref_arr[idx] = almostzero
+            data_arr[idx] = almostzero
         # prevent zero division
         ref_denomi[idx_ref] = almostzero
         return (data_arr-ref_arr)/ref_denomi
