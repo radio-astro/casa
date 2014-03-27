@@ -436,7 +436,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         for name in self.rawfiles:
             if os.path.exists(name): shutil.rmtree(name)
 
-        #os.system( 'rm -rf '+self.prefix+'*' )
+        os.system( 'rm -rf '+self.prefix+'*' )
 
     ####################
     # Additional tests
@@ -819,17 +819,15 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
     #########################
     # spw with channel range
     #########################
-    @unittest.expectedFailure
     def test_spw_id_default_channel(self):
         """test spw selection w/ channel selection (spw=':21~39')"""
-        self._default_test()
-#         spw = ':21~39'
-#         ref_idx = []
-#         # blflag = T (channel selection: average+baseline)
-#         #          F (no channel selection: only smoothing)
-#         self._set_test_mode(blflag=True)
-#         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
-#         self._compare_with_tophat(self.outname, self.ref_data, ref_idx, precision = 1.e-5)
+        spw = ':21~39'
+        ref_idx = []
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx, precision = 2.e-5)
 
     def test_spw_id_default_frequency(self):
         """test spw selection w/ channel selection (spw=':300.491~300.549GHz')"""
@@ -902,17 +900,15 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
-    @unittest.expectedFailure
     def test_spw_id_pattern_channel(self):
-        """test spw selection w/ channel selection (spw='')"""
-        self._default_test()
-#         spw = '*:21~39'
-#         ref_idx = []
-#         # blflag = T (channel selection: average+baseline)
-#         #          F (no channel selection: only smoothing)
-#         self._set_test_mode(blflag=True)
-#         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
-#         self._compare_with_tophat(self.outname, self.ref_data, ref_idx, precision = 1.e-5)
+        """test spw selection w/ channel selection (spw='*:21~39')"""
+        spw = '*:21~39'
+        ref_idx = []
+        # blflag = T (channel selection: average+baseline)
+        #          F (no channel selection: only smoothing)
+        self._set_test_mode(blflag=True)
+        self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
+        self._compare_with_tophat(self.outname, self.ref_data, ref_idx, precision = 2.e-5)
 
     def test_spw_id_pattern_frequency(self):
         """test spw selection w/ channel selection (spw='*:300.491~300.549GHz')"""
@@ -1130,7 +1126,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
             valuelist = curr_ref['value']
             yana = self._create_tophat_array(nchan, chanlist, valuelist)
             # compare
-            rdiff = self._get_array_relative_diff(y, yana, precision=1.e-6)
+            rdiff = self._get_array_relative_diff(y, yana, precision)
             rdiff_max = max(abs(rdiff))
             self.assertTrue(rdiff_max < precision, "Maximum relative difference %f > %f" % (rdiff_max, precision))
     
