@@ -2386,7 +2386,7 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
             valuelist = curr_ref['value']
             yana = self._create_tophat_array(nchan, chanlist, valuelist)
             # compare
-            rdiff = self._get_array_relative_diff(y, yana, precision=1.e-6)
+            rdiff = self._get_array_relative_diff(y, yana, precision)
             rdiff_max = max(abs(rdiff))
             self.assertTrue(rdiff_max < precision, "Maximum relative difference %f > %f" % (rdiff_max, precision))
     
