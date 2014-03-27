@@ -57,8 +57,6 @@ spectrum is
 
     Tsys * (ON - OFF) / OFF. 
 
-(this task is based on the ALMATST5 recommendations)
-
   </description>
 
   <input>

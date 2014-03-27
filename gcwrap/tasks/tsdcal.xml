@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tsdcal" startup="false" category="single dish" visibility="experimental">
 
-  <shortdescription>ASAP SD calibration task (based on the ALMATST5 recommendations)</shortdescription>
+  <shortdescription>ASAP SD calibration task</shortdescription>
 
   <description>
 Task sdcal performs calibration for single-dish spectra.
