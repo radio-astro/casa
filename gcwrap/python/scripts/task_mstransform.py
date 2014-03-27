@@ -112,42 +112,52 @@ class MSTHelper(ParallelTaskHelper):
            heuristics associated with the separationaxis and the several
            transformations that the task does.'''
         
-        # can continue in parallel
-        retval = 2
+        # success
+        retval = 1
         
         if (self.__args['separationaxis'] == 'spw'):
-            if self.__args['combinespws'] == True:
+            if self.__args.has_key('combinespws') and self.__args['combinespws'] == True:
                 casalog.post('Cannot partition MS in spw axis when combinespws = True', 'WARN')
                 retval = 0
         
-            elif self.__args['nspw'] > 1:
-                # It will separate spws. Do it in sequential
-                # CANNOT process in sequential either because internally the
+            elif self.__args.has_key('nspw') and self.__args['nspw'] > 1:
+                # CANNOT separate spws because internally the
                 # spws need to be combined first before the separation!!!!!!
-#                casalog.post('Can only process the MS in sequential', 'WARN')
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
                 
         elif (self.__args['separationaxis'] == 'scan'):
-            if self.__args['timespan'] == 'scan':
+            # mstransform parameter
+            if self.__args.has_key('timespan') and self.__args['timespan'] == 'scan':
                 casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
                               'Will reset timespan to None', 'WARN')
                 self.__args['timespan'] == ''
-                retval = 2
+                retval = 1
+            # split2 parameter
+            elif self.__args.has_key('combine') and self.__args['combine'] == 'scan':
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset combine to None', 'WARN')
+                self.__args['combine'] == ''
+                retval = 1
                 
         elif (self.__args['separationaxis'] == 'both'):
-            if self.__args['combinespws'] == True:
+            if self.__args.has_key('combinespws') and self.__args['combinespws'] == True:
                 casalog.post('Cannot partition MS in spw,scan axes when combinespws = True', 'WARN')
                 retval = 0
-
-            elif self.__args['timespan'] == 'scan':
+            # mstransform parameter
+            elif self.__args.has_key('timespan') and self.__args['timespan'] == 'scan':
                 casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
                               'Will reset timespan to None', 'WARN')
                 self.__args['timespan'] == ''
-                retval = 2
+                retval = 1
+            # split2 parameter
+            elif self.__args.has_key('combine') and self.__args['combine'] == 'scan':
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset combine to None', 'WARN')
+                self.__args['combine'] == ''
+                retval = 1
                 
-            elif self.__args['nspw'] > 1:
-                # CANNOT process in sequential either because internally the
+            elif self.__args.has_key('nspw') and self.__args['nspw'] > 1:
                 # spws need to be combined first before the separation!!!!!!
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
@@ -1074,18 +1084,17 @@ def mstransform(
     if createmms:
         
         # Validate the combination of some parameters
-        # pval = 0 -> abort
-        # pval = 2 -> run in parallel
+        # pval = 0 -> abort; cannot process
+        # pval = 1 -> success
         pval = mth.validateParams()
         if pval == 0:
             raise Exception, 'Cannot partition using separationaxis=%s with some of the requested transformations.'\
                             %separationaxis
                             
-        # pval == 2, can process in parallel
         # Setup a dictionary of the selection parameters
-        mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
-                            antenna=antenna, uvrange=uvrange, timerange=timerange, 
-                            intent=intent, observation=str(observation),feed=feed)
+#         mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
+#                             antenna=antenna, uvrange=uvrange, timerange=timerange, 
+#                             intent=intent, observation=str(observation),feed=feed)
         
         # The user decides to run in parallel or sequential
         if not parallel:

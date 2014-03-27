@@ -407,6 +407,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         normal MS, split according to the given data selection parameters.
         Note that, when this parameter is set to False, a simple_cluster
         will not be created.
+    
+        The combination of some transformations and createmms=True is not possible in
+        some cases, depending on the choice of separationaxis. The following table 
+        summarizes this:
+
+        separationaxis  combinespws  nspw > 1  regridms  chanaverage  timespan='scan' hanning
+        --------------------------------------------------------------------------------------
+        spw                NO         NO         YES        YES           YES           YES
+        scan               YES        YES        YES        YES           YES*          YES
+        both               NO         NO         YES        YES           YES*          YES
+
+        * --> it can partition per scan or scan,spw but cannot let timebins span across scans
+              when timeaverage=True. The task will reset timespan to None in these cases.
+        
 
         separationaxis -- Axis to do parallelization across. 
             default: 'both'
@@ -513,8 +527,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         options: 'data', 'model', 'corrected', 'all','float_data', 'lag_data', 
                  'float_data,data', 'lag_data,data'.
 
-            N.B.: 'all' = whichever of the above that are present.
-            Otherwise the selected column will go to DATA in the output.
+            NOTE: 'all' = whichever of the above that are present. If the requested
+                          column does not exist, the task will exit with an error.
 
             When datacolumn is set to either one of the values 'model','all',
             'data,model,corrected', a sub-parameter realmodelcol will be enabled.
@@ -527,11 +541,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	
     keepflags -- Keep completely flagged rows in the output or drop them. This has no
-                 effect on averaging or on partially flagged rows. All of the channels 
-                 and correlations of a row must be flagged for it to be droppable, and a 
-                 row must be well defined to be keepable. Regardless of this parameter, 
-                 flagged data is never included in averaging calculations.
-        default: True
+                 effect on partially flagged rows. All of the channels and correlations
+                 of a row must be flagged for it to be droppable, and a row must be
+                 well defined to be keepable. 
+    
+            IMPORTANT: Regardless of this parameter, flagged data is never included in 
+                       channel averaging. On the other hand, partially flagged rows will 
+                       always be included in time averaging. The average value of the 
+                       flagged data will be written to the output with the corresponding
+                       flag set to True.    
+        default: True (keep completely flagged rows in the output)
 		
 	
     usewtspectrum -- Create a WEIGHT_SPECTRUM column in the output MS. When set to True,
@@ -644,11 +663,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	
 --- Time averaging parameters ---
-    timeaverage -- Average data in time.
+    timeaverage -- Average data in time. Flagged data will be included in the average
+                   calculation, unless the parameter keepflags is set to False. In this
+                   case only partially flagged rows will be used in the average.
         default: False
 
         timebin -- Bin width for time averaging.
-            default: '1s'
+            default: '0s'
 
         timespan -- Let the timebin span across scan, state or both.
                     State is equivalent to sub-scans. One scan may have several
