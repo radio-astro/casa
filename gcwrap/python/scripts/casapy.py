@@ -212,7 +212,13 @@ a.reverse( )
 ##
 ## A session configuration 'casa.conf' now included in casa tree...
 ##
-dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
+# print("DEBUG: __casapath__ = %s" % (__casapath__))
+if os.path.isfile(__casapath__ + "/Resources/dbus-1/casa.conf"):
+    dbus_conf = __casapath__ + "/Resources/dbus-1/casa.conf"
+else:
+    dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
+# print("DEBUG: dbus_conf = %s" % (dbus_conf))
+		      
 __ipython_colors = 'LightBG'
 while len(a) > 0:
     c = a.pop()
