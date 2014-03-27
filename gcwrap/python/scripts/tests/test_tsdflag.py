@@ -894,7 +894,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         self._test_flag(self.rawfile, ref_row)        
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-450.~0.km/s'', all channels)"""
+        """test spw selection (spw='-450.~0.km/s', all channels)"""
         spw = '-450.~0km/s' # IFNO=23,25 will be selected
         ref_row = [0,1,3]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
@@ -1056,8 +1056,8 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_velocity(self):
-        """test spw selection w/ channel selection (spw='-519.650~-509.640km/s:-519.650~-509.640km/s')"""
-        spw = '-519.650~-509.640km/s:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
+        """test spw selection w/ channel selection (spw='-500~-450km/s:-519.650~-509.640km/s')"""
+        spw = '-500~-450km/s:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
         ref_row = [1]
         ref_chanlist = [ (60,70) ]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')

@@ -52,13 +52,13 @@ class sdaverage_unittest_base:
         # set rdiff=0 for elements both data and reference are close to zero
         idx_ref = numpy.where(abs(ref_arr) < almostzero)
         idx_data = numpy.where(abs(data_arr) < almostzero)
-        idx = numpy.intersect1d(idx_data, idx_ref, assume_unique=True)
-        ref_arr[idx] = almostzero
-        data_arr[idx] = almostzero
+        if len(idx_ref[0])>0 and len(idx_data[0])>0:
+            idx = numpy.intersect1d(idx_data[0], idx_ref[0], assume_unique=True)
+            ref_arr[idx] = almostzero
+            data_arr[idx] = almostzero
         # prevent zero division
         ref_denomi[idx_ref] = almostzero
         return (data_arr-ref_arr)/ref_denomi
-
 
 class sdaverage_smoothtest_base(sdaverage_unittest_base):
     """

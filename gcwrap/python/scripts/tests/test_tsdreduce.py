@@ -819,8 +819,10 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
     #########################
     # spw with channel range
     #########################
+    @unittest.expectedFailure
     def test_spw_id_default_channel(self):
         """test spw selection w/ channel selection (spw=':21~39')"""
+        self._default_test()
 #         spw = ':21~39'
 #         ref_idx = []
 #         # blflag = T (channel selection: average+baseline)
@@ -900,8 +902,10 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self.res=self.run_task(infile=self.rawfile, spw=spw, calmode=self.calmode,average=self.average,timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,maskmode=self.maskmode,blfunc=self.blfunc,order=self.order,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
+    @unittest.expectedFailure
     def test_spw_id_pattern_channel(self):
         """test spw selection w/ channel selection (spw='')"""
+        self._default_test()
 #         spw = '*:21~39'
 #         ref_idx = []
 #         # blflag = T (channel selection: average+baseline)
