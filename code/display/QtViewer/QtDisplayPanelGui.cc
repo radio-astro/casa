@@ -1123,7 +1123,7 @@ void QtDisplayPanelGui::showCleanTool( ) {
 void QtDisplayPanelGui::ddRegChange_() {
 	//A segfault can be generated if we try to add a track box when
 	//it is not visible.
-	if ( trkgDockWidget_ != NULL && trkgDockWidget_->isVisible()){
+	if ( trkgDockWidget_ != NULL ){
 		arrangeTrackBoxes_();
 	}
 	updateFrameInformation();
