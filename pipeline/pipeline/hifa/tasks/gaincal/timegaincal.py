@@ -1,13 +1,9 @@
 from __future__ import absolute_import
 
 import types
-#from . import common
 from pipeline.hif.tasks.gaincal import common
-#from . import gaincalworker
 from pipeline.hif.tasks.gaincal import gaincalworker
-#from . import gaincalmode
 from pipeline.hif.tasks.gaincal import gaincalmode
-#from . import gtypegaincal
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hif.heuristics import caltable as gcaltable
 import pipeline.infrastructure as infrastructure
@@ -16,16 +12,33 @@ import pipeline.infrastructure.callibrary as callibrary
 LOG = infrastructure.get_logger(__name__)
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
-    def __init__(self, context, mode='gtype',  calphasetable=None,
-                 amptable=None, targetphasetable=None, calsolint=None,
-                 targetsolint=None, calminsnr=None, targetminsnr=None, 
-                 **parameters):
+    def __init__(self, context, mode='gtype', calamptable=None,
+            calphasetable=None, amptable=None, targetphasetable=None,
+	    calsolint=None, targetsolint=None, calminsnr=None,
+	    targetminsnr=None, **parameters):
         super(TimeGaincalInputs, self).__init__(context, mode,
-            calphasetable=calphasetable, amptable=amptable,
-            targetphasetable=targetphasetable,
+            calamptable=calamptable, calphasetable=calphasetable,
+	    amptable=amptable, targetphasetable=targetphasetable,
             calsolint=calsolint, targetsolint=targetsolint,
             calminsnr=calminsnr, targetminsnr=targetminsnr,
 	    **parameters)
+
+    @property
+    def calamptable(self):
+        # The value of caltable is ms-dependent, so test for multiple
+        # measurement sets and listify the results if necessary
+
+	if self._calamptable is not None:
+            return self._calamptable
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('calamptable')
+
+	return gcaltable.GaincalCaltable()
+
+    @calamptable.setter
+    def calamptable(self, value):
+        self._calamptable = value
 
     @property
     def calphasetable(self):
@@ -39,7 +52,6 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
             return self._handle_multiple_vis('calphasetable')
 
 	return gcaltable.GaincalCaltable()
-
 
     @calphasetable.setter
     def calphasetable(self, value):
@@ -127,6 +139,10 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Create a results object.
         result = common.GaincalResults() 
 
+	# Produce the diagnostic table for displaying
+	# amplitude vs time plots. 
+        calampresult = self._do_caltarget_ampcal()
+
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal()
         # Readjust to the true calto.intent
@@ -157,9 +173,10 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Compute the amplitude calibration
         ampresult = self._do_target_ampcal()
 
-        # Accept the ampitude result as is.
+        # Accept the amplitude result as is.
         result.pool.extend(ampresult.pool)
         result.final.extend(ampresult.final)
+
 
         return result
 
@@ -179,6 +196,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         return result
     
+    # Used to calibrated "selfcaled" targets
     def _do_caltarget_phasecal(self):
         inputs = self.inputs
 
@@ -205,6 +223,36 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
+        
+        return result
+
+    # Used for diagnostics not calibration
+    def _do_caltarget_ampcal(self):
+        inputs = self.inputs
+
+        task_args = {
+          'output_dir'  : inputs.output_dir,
+          'vis'         : inputs.vis,
+          'caltable'    : inputs.calamptable,
+          'field'       : inputs.field,
+          'intent'      : inputs.intent,
+          'spw'         : inputs.spw,
+          'solint'      : inputs.calsolint,
+          'gaintype'    : 'T',
+          'calmode'     : 'a',
+          'minsnr'      : inputs.calminsnr,
+          'combine'     : inputs.combine,
+          'refant'      : inputs.refant,
+          'minblperant' : inputs.minblperant,
+          'solnorm'     : inputs.solnorm,
+          'to_intent'   : 'PHASE,TARGET,AMPLITUDE,BANDPASS',
+          'to_field'    : None
+        }
+        task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
+            **task_args)
+
+        gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
+        result = self._executor.execute(gaincal_task)
         
         return result
 
