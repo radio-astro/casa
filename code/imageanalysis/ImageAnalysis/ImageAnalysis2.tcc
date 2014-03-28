@@ -416,13 +416,10 @@ template<class T> Bool ImageAnalysis::_putchunk(
 	// Ensure that we reconstruct the  histograms objects
 	// now that the data have changed
 	deleteHist();
-
-	Bool rstat = True;
-
 	if (locking) {
-		rstat = unlock();
+		image.unlock();
 	}
-	return rstat;
+	return True;
 }
 
 template<class T> Bool ImageAnalysis::_setrestoringbeam(

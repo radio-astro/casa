@@ -153,8 +153,6 @@ class ImageAnalysis
 
     CoordinateSystem coordsys(const Vector<int>& axes);
 
-    CoordinateSystem csys(const Vector<int>& axes);
-
     Record* coordmeasures(Quantity& intensity, Record& direction, 
                           Record& frequency, Record& velocity, 
                           const Vector<double>& pixel);
@@ -280,8 +278,6 @@ class ImageAnalysis
 
     void setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
 
-    String name(const Bool strippath = False);
-
     Bool open(const String& infile);
 
     Record* pixelvalue(const Vector<Int>& pixel);
@@ -335,11 +331,7 @@ class ImageAnalysis
     Bool set(const String& pixels, const Int pixelmask, 
              Record& region, const Bool list = false);
 
-    Bool setbrightnessunit(const String& unit);
-
     bool setcoordsys(const Record& csys);
-
-    bool setmiscinfo(const Record& info);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
@@ -386,9 +378,7 @@ class ImageAnalysis
 
     Vector<Double> topixel(Record& value);
 
-    Record toworld(const Vector<double>& value, const String& format = "n");
-
-    Bool unlock();
+    Record toworld(const Vector<double>& value, const String& format = "n") const;
 
     Bool detached();
 
@@ -424,8 +414,6 @@ class ImageAnalysis
                                              const Int whichhdu = 0, 
                                              const Bool zeroblanks = False, 
                                              const Bool overwrite = False);
-
-    static Record* echo(Record& v, const Bool godeep = False);
 
 
 
@@ -565,9 +553,6 @@ class ImageAnalysis
     
 
     // Some helper functions that needs to be in casa namespace coordsys
-    
-    Record toWorldRecord (const Vector<Double>& pixel, 
-                       const String& format) const;
 
     Record worldVectorToRecord (const Vector<Double>& world, 
                                 Int c, const String& format, 
@@ -575,9 +560,6 @@ class ImageAnalysis
 
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
-
-    void trim (Vector<Double>& inout, 
-               const Vector<Double>& replace) const;
 
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already.  If a

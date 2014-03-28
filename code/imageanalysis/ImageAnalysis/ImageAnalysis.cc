@@ -1153,13 +1153,6 @@ CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
 	return cSys2;
 }
 
-CoordinateSystem ImageAnalysis::csys(const Vector<Int>& axes) {
-	_onlyFloat(__func__);
-	//No clue why this was done...just keeping it
-	return coordsys(axes);
-
-}
-
 Record *
 ImageAnalysis::coordmeasures(Quantity& intensity, Record& direction,
 		Record& frequency, Record& velocity, const Vector<Double>& pixel) {
@@ -1176,7 +1169,7 @@ ImageAnalysis::coordmeasures(Quantity& intensity, Record& direction,
 	}
 
 	String format("m");
-	r = new Record(toWorldRecord(vpixel, format));
+	r = new Record(toworld(vpixel, format));
 
 	Vector<Int> ipixel(vpixel.size());
 	convertArray(ipixel, vpixel);
@@ -2404,12 +2397,6 @@ void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* prog
 	imageMomentsProgressMonitor = progressMonitor;
 }
 
-String ImageAnalysis::name(const Bool strippath) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "name");
-	return _imageFloat->name(strippath);
-}
-
 Record*
 ImageAnalysis::pixelvalue(const Vector<Int>& pixel) {
 	_onlyFloat(__func__);
@@ -2767,9 +2754,13 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
 	deleteHist();
-
-	return unlock();
-
+	if (isFloat()) {
+		_imageFloat->unlock();
+	}
+	else {
+		_imageComplex->unlock();
+	}
+	return True;
 }
 
 ImageInterface<Float>* ImageAnalysis::rotate(
@@ -2952,8 +2943,7 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 		return False;
 	}
 
-	Bool strippath(False);
-	String oldName = this->name(strippath);
+	String oldName = _imageFloat->name(False);
 	if (oldName.size() == 0) {
 		return False;
 	}
@@ -3193,14 +3183,6 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	return True;
 }
 
-Bool ImageAnalysis::setbrightnessunit(const String& unit) {
-	*_log << LogOrigin(className(), __func__);
-	Bool res = _imageFloat
-		? _imageFloat->setUnits(Unit(unit))
-		: _imageComplex->setUnits(Unit(unit));
-	return res;
-}
-
 Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 	_onlyFloat(__func__);
 	*_log << LogOrigin("ImageAnalysis", "setcoordsys");
@@ -3215,13 +3197,6 @@ Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 		*_log << "Failed to set CoordinateSystem" << LogIO::EXCEPTION;
 	}
 	return ok;
-}
-
-Bool ImageAnalysis::setmiscinfo(const Record& info) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "setmiscinfo");
-
-	return _imageFloat->setMiscInfo(info);
 }
 
 Bool ImageAnalysis::setrestoringbeam(
@@ -3489,25 +3464,6 @@ Vector<Double> ImageAnalysis::topixel(Record&) {
 	Vector<Double> leGarbageTotal;
 	return leGarbageTotal;
 
-}
-
-Record ImageAnalysis::toworld(const Vector<Double>& value, const String& format) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "toworld");
-	Record bla(toWorldRecord(value, format));
-	return bla;
-
-}
-
-Bool ImageAnalysis::unlock() {
-	*_log << LogOrigin("ImageAnalysis", "unlock");
-	if (_imageFloat) {
-		_imageFloat->unlock();
-	}
-	if (_imageComplex) {
-		_imageComplex->unlock();
-	}
-	return True;
 }
 
 Bool ImageAnalysis::deleteHist() {
@@ -4010,36 +3966,6 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
 
 	return outImage;
 }
-
-
-Record*
-ImageAnalysis::echo(Record& v, const bool godeep) {
-
-	Record *inrec = new Record(v);
-	if (godeep) {
-		// FIXME ummm why is this commented out? confusing...
-		/*
-		 String error("");
-		 MeasureHolder mh;
-		 if (! mh.fromRecord(error,*inrec)) {
-		 *_log << LogIO::WARN << error
-		 << "\nInput record cannot be stored in a MeasureHolder"
-		 << LogIO::POST;
-		 } else {
-		 Record outRec;
-		 if (! mh.toRecord(error, outRec) ) {
-		 *_log << LogIO::WARN << error
-		 << "\nOutput record cannot be generated from MeasureHolder"
-		 << LogIO::POST;
-		 } else {
-		 retval=fromRecord(outRec);
-		 }
-		 }
-		 */
-	}
-	return inrec;
-}
-
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		Vector<Float>& specVal, const CoordinateSystem& cs,
@@ -4621,7 +4547,7 @@ Bool ImageAnalysis::getFreqProfile(
 
 // These should really go in a coordsys inside the casa name space
 
-Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
+Record ImageAnalysis::toworld(const Vector<Double>& pixel,
 		const String& format) const {
 
 	*_log << LogOrigin("ImageAnalysis", "toWorldRecord");
@@ -4629,7 +4555,20 @@ Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
 	Vector<Double> pixel2 = pixel.copy();
 	//   if (pixel2.nelements()>0) pixel2 -= 1.0;        // 0-rel
 	CoordinateSystem itsCSys = _imageFloat->coordinates();
-	trim(pixel2, itsCSys.referencePixel());
+	{
+		Vector<Double> replace = itsCSys.referencePixel();
+		const Int nIn = pixel2.nelements();
+		const Int nOut = replace.nelements();
+		Vector<Double> out(nOut);
+		for (Int i = 0; i < nOut; i++) {
+			if (i > nIn - 1) {
+				out(i) = replace(i);
+			} else {
+				out(i) = pixel2(i);
+			}
+		}
+		pixel2.assign(out);
+	}
 
 	// Convert to world
 
@@ -4964,20 +4903,6 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 	return rec;
 }
 
-void ImageAnalysis::trim(Vector<Double>& inout, const Vector<Double>& replace) const {
-	const Int nIn = inout.nelements();
-	const Int nOut = replace.nelements();
-	Vector<Double> out(nOut);
-	for (Int i = 0; i < nOut; i++) {
-		if (i > nIn - 1) {
-			out(i) = replace(i);
-		} else {
-			out(i) = inout(i);
-		}
-	}
-	inout.resize(nOut);
-	inout = out;
-}
 
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
