@@ -17,6 +17,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
                  fluxtable=None, reference=None, transfer=None, 
                  refspwmap=None, refintent=None, transintent=None,

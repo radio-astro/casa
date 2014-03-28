@@ -15,6 +15,7 @@ class BandpassWorkerInputs(common.CommonBandpassInputs):
     task.
     """
     
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # 
                  vis=None, caltable=None, 

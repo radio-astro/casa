@@ -4,7 +4,7 @@ import collections
 import datetime
 import inspect
 import itertools
-import operator
+import functools
 import os
 try:
     import cPickle as pickle
@@ -22,6 +22,7 @@ import uuid
 
 from . import api
 from . import adapters
+from . import argmapper
 from . import casatools
 from . import callibrary
 from . import filenamer
@@ -30,6 +31,7 @@ from . import launcher
 from . import logging
 from . import pipelineqa
 from . import utils
+import pipeline.extern.decorator as decorator
 import pipeline.extern.ordereddict as ordereddict
 
 LOG = logging.get_logger(__name__)
@@ -40,24 +42,37 @@ DISABLE_WEBLOG = False
 VISLIST_RESET_KEY = '_do_not_reset_vislist'
 
 def timestamp(method):
-    def timed(self, *args, **kw):
+    def attach_timestamp_to_results(self, *args, **kw):
         start = datetime.datetime.now();
         result = method(self, *args, **kw)
         end = datetime.datetime.now()
 
         if result is not None:
             result.timestamps = Timestamps(start, end)
-            
-            inputs = self.inputs
-            result.inputs = inputs.as_dict()
 
-            if inputs.context.subtask_counter is 0: 
-                result.stage_number = inputs.context.task_counter - 1
-            else:
-                result.stage_number = inputs.context.task_counter                
         return result
 
-    return timed
+    return attach_timestamp_to_results
+
+def result_finaliser(method):
+    """
+    Copy some useful properties to the Results object before returning it.
+    This is used in conjunction with execute(), where the Result could be
+    returned from a number of places but we don't want to set the properties
+    in each location.
+    
+    TODO: refactor so this is done as part of execute!  
+    """
+    def finalise_pipeline_result(self, *args, **kw):
+        result = method(self, *args, **kw)
+
+        if result is not None:
+            inputs = self.inputs
+            result.inputs = inputs.as_dict()
+            result.stage_number = inputs.context.task_counter
+        return result
+
+    return finalise_pipeline_result
 
 def capture_log(method):
     def capture(self, *args, **kw):
@@ -81,6 +96,96 @@ def capture_log(method):
                           '%s' % result.__class__)
         return result
     return capture
+
+def log_equivalent_CASA_call(func):
+    """
+    Create a signature-preserving decorator for recording equivalent CASA task
+    calls.
+    """
+    return decorator.decorator(_record_constructor_args, func)
+
+def _record_constructor_args(func, *args, **kwargs):
+    """
+    Inputs decorator to calculate the equivalent CASA task interface call and
+    record it to a file.
+
+    We want to create a 'script' of equivalent CASA task interface calls for
+    both PPR runs and interactive session. The CASA task interface itself is 
+    bypassed by the PPR (i.e. it creates and calls the Python implementation
+    directly) and when the Python classes are instantiated directly (see
+    recipereducer), so we need to reverse map both the Python class and 
+    arguments to the equivalent task interface call.
+
+    We do this by recording the creation of each Inputs class. Inputs created
+    when a task is not running must have been created via executeppr or via
+    the task interface. In these two execution environments the inputs will
+    not be subject to change, so we can inspect what was passed to the 
+    constructor and convert this to the equivalent CASA call.
+    
+    This decorator should be attached to Inputs.__init__.
+    
+    Note: this would be much, much simpler if we simply record execution from
+    executeppr or from the cli module, leaving recipereducer as an unhandled
+    case. It will become much easier to handle all three use cases once the
+    VisDependentProperty is merged, as it knows what properties have been set
+    per Inputs.
+    """
+    func(*args, **kwargs)
+
+    # result finaliser decorates Task.execute(), adding the inputs to the 
+    # Result. WVR creates another Inputs as an Inputs property, but we do not
+    # want to record creation of this created-inside-a-property class. 
+    # check the stack for results_finaliser rather than execute, otherwise
+    # we'd wrongly think that no task was executing when in reality execution
+    # was just coming out of the result finaliser decorator.
+    frames = [frame_obj for (frame_obj, _, _, _, _, _) in inspect.stack()
+              if frame_obj.f_code.co_name == 'finalise_pipeline_result'
+              and frame_obj.f_code.co_filename.endswith('pipeline/infrastructure/basetask.py')]
+    frame_count = len(frames)
+
+    # task depth of 0 means we've not yet entered task.execute()
+    if frame_count is not 0:
+        return
+
+    # populate a dictionary with call arguments mapped as {name:val}
+    call_args = inspect.getcallargs(func, *args, **kwargs)
+    
+    # Map the Inputs class to the hif* equivalent. Note that
+    # classToCASATask maps Task classes, not Inputs classes, to their hif
+    # equivalent. However, Task.Inputs *does* point to an Inputs class so
+    # we can compare self against that.
+    import pipeline.infrastructure.casataskdict as ctd
+    self = call_args['self']
+    casa_tasks = [casa_cls for task_cls, casa_cls in ctd.classToCASATask.items()
+                  if task_cls.Inputs is self.__class__]
+    if len(casa_tasks) is not 1:
+        return
+
+#         assert len(casa_tasks) is 1, \
+#                 'Got %s CASA task names for %s' % (len(casa_tasks), 
+#                                                    klass.__name__)
+
+    # ModeInputs classes collect all arguments into a kwargs dict called
+    # parameters. This dict needs to be unpacked.
+    if isinstance(self, ModeInputs) and 'parameters' in call_args:
+        parameters = call_args['parameters']
+        del call_args['parameters']
+        call_args.update(parameters.items())
+
+    # map Python Inputs arguments back to their CASA equivalent
+    remapped = argmapper.inputs_to_casa(self, call_args)
+
+    task_args = ['%s=%r' % (k,v) for k,v in remapped.items()
+                 if k not in ['self', 'context']
+                 and v is not None]
+    casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
+    LOG.info('Equivalent CASA call: %s', casa_call)
+
+    # having called the old constructor, we know that self.context is set.
+    # Use this context to find the report directory and write to the log
+    f = os.path.join(self.context.report_dir, 'casatasks.log')
+    with open(f, 'a+') as casatask_file: 
+        casatask_file.write('%s\n' % casa_call)
 
 
 class MandatoryInputsMixin(object):
@@ -636,15 +741,18 @@ class Results(api.Results):
         # execute our template function
         self.merge_with_context(context, **other_parameters)
 
+        # find whether this result is being accepted as part of a task 
+        # execution or whether it's being accepted after task completion
+        task_completed = utils.task_depth() == 0
+
         # perform QA if accepting this result from a top-level task
-        if context.subtask_counter is 0:
+        if task_completed:
             pipelineqa.registry.do_qa(context, self)
 
-        if context.subtask_counter is 0:
-            # If accept() is called at the end of a task as signified by the
-            # subtask counter, we should create a proxy for this result and
-            # pickle it to the appropriate weblog stage directory. This keeps
-            # the context size at a minimum.
+        if task_completed:
+            # If accept() is called at the end of a task, create a proxy for
+            # this result and pickle it to the appropriate weblog stage 
+            # directory. This keeps the context size at a minimum.
             proxy = ResultsProxy(context)
             proxy.write(self)
             result = proxy
@@ -655,8 +763,8 @@ class Results(api.Results):
         # results object to the results list
         context.results.append(result)
 
-        # generate weblog if accepting a result from a top-level task
-        if context.subtask_counter is 0 and not DISABLE_WEBLOG:
+        # generate weblog if accepting a result from outside a task execution
+        if task_completed and not DISABLE_WEBLOG:
             # cannot import at initial import time due to cyclic dependency
             import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
             htmlrenderer.WebLogGenerator.render(context)
@@ -889,6 +997,7 @@ class StandardTaskTemplate(api.Task):
 
     @timestamp
     @capture_log
+    @result_finaliser
     def execute(self, dry_run=True, **parameters):
         # The filenamer deletes any identically named file when constructing
         # the filename, which is desired when really executing a task but not
@@ -896,20 +1005,23 @@ class StandardTaskTemplate(api.Task):
         # 'delete-on-generate' behaviour.
         filenamer.NamingTemplate.dry_run = dry_run
 
-        # knowing when to increment the stage counter becomes interesting when
-        # the task spawns sub-tasks. In these circumstances, we don't want to
-        # increment the stage number, but instead want to increment the
-        # sub-stage number.
-        self.inputs.context.subtask_counter += 1
-
-        # Set the task name, but only if this is a top-level task. This name
-        # will be prepended to every data product name as a sign of their
-        # origin
-        if self.inputs.context.subtask_counter is 1:
+        if utils.is_top_level_task():
+            # Set the task name, but only if this is a top-level task. This 
+            # name will be prepended to every data product name as a sign of
+            # their origin
             from . import casataskdict
             name = casataskdict.classToCASATask.get(self.__class__,
                                                     self.__class__.__name__)
             filenamer.NamingTemplate.task = name
+            
+            # initialise the subtask counter, which will be subsequently 
+            # incremented for every execute within this top-level task  
+            self.inputs.context.task_counter += 1
+            LOG.info('Starting execution for stage %s', 
+                     self.inputs.context.task_counter)
+            self.inputs.context.subtask_counter = 0
+        else:
+            self.inputs.context.subtask_counter += 1
 
         # Create a copy of the inputs - including the context - and attach
         # this copy to the Inputs. Tasks can then merge results with this
@@ -966,11 +1078,8 @@ class StandardTaskTemplate(api.Task):
             # now the task has completed, we tell the namer not to delete again
             filenamer.NamingTemplate.dry_run = True
 
-            # decrement the task counter
-            self.inputs.context.subtask_counter -= 1
-
             # delete the task name once the top-level task is complete
-            if self.inputs.context.subtask_counter is 0:
+            if utils.is_top_level_task():
                 filenamer.NamingTemplate.task = None
 
             # now that the WARNING and above messages have been attached to the

@@ -13,10 +13,12 @@ from .solsyslinesdict import SolarSystemLineList
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class FluxcalFlagInputs(basetask.StandardInputs):
     """
     Initialise the flux calibration flagging task inputs object.
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # standard parameters 
                  vis=None, field=None, spw=None, 

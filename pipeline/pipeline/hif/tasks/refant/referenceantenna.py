@@ -153,6 +153,7 @@ class RefAntInputs(basetask.StandardInputs):
 
 # ------------------------------------------------------------------------------
 
+	@basetask.log_equivalent_CASA_call
 	def __init__( self, context, vis=None, output_dir=None, field=None,
                       spw=None, intent=None, hm_refant=None, refant=None,
 		      geometry=None, flagging=None ):

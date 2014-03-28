@@ -133,19 +133,6 @@ class Context(object):
         self.logtype = 'MOUS'
 
     @property
-    def subtask_counter(self):
-        return self._subtask_counter
-    
-    @subtask_counter.setter
-    def subtask_counter(self, value):
-        self._subtask_counter = value
-        if value is 0:
-            self.task_counter += 1
-
-        LOG.trace('Modifying counters: #task=%s #subtask=%s'
-                  '' % (self.task_counter, self.subtask_counter))
-
-    @property
     def stage(self):
         return '%s_%s' % (self.task_counter, self.subtask_counter) 
 

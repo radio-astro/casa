@@ -104,6 +104,7 @@ class ExportDataInputs(basetask.StandardInputs):
 
      """	
 
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, sessions=None, vis=None,
         pprfile=None, calintents=None, calimages=None, targetimages=None,
 	products_dir=None ):

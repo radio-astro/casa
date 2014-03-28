@@ -1,7 +1,7 @@
 """
 The restore data module provides a class for reimporting, reflagging, and
 recalibrating a subset of the ASDMs belonging to a member OUS, using pipeline
-flagging and calibration data products. 
+flagging and calibration data products.
 
 The basic restore data module assumes that the ASDMs, flagging, and calibration
 data products are on disk in the rawdata directory in the format produced by
@@ -49,44 +49,45 @@ LOG = infrastructure.get_logger(__name__)
 class RestoreDataInputs(basetask.StandardInputs):
     """
     RestoreDataInputs manages the inputs for the RestoreData task.
-        
+
     .. py:attribute:: context
 
         the (:class:`~pipeline.infrastructure.launcher.Context`) holding all
         pipeline state
 
     .. py:attribute:: products_dir
-        
+
         the directory containing the archived pipeline flagging and calibration
         data products. Data products will be unpacked from this directory
         into rawdata_dir. Support for this parameter is not yet implemented.
 
     .. py:attribute:: rawdata_dir
-        
+
         the directory containing the raw data ASDM(s) and the pipeline
         flagging and calibration data products.
 
     .. py:attribute:: output_dir
-        
+
         the working directory where the restored data will be written
 
     .. py:attribute:: session
-        
+
         a string or list of strings containing the sessions(s) one for
         each vis.
 
     .. py:attribute:: vis
 
         a string or list of strings containing the ASDM(s) to be restored.
-     """        
+     """
 
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
         rawdata_dir=None, output_dir=None, session=None, vis=None):
 
         """
         Initialise the Inputs, initialising any property values to those given
         here.
-                
+
         :param context: the pipeline Context state object
         :type context: :class:`~pipeline.infrastructure.launcher.Context`
         :param copytoraw: copy the required data products from products_dir to
@@ -101,7 +102,7 @@ class RestoreDataInputs(basetask.StandardInputs):
         :type session: a string or list of strings
         :param vis: the ASDMs(s) for which data is to be restored
         :type vis: a string or list of strings
-        """                
+        """
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -179,7 +180,7 @@ class RestoreDataResults(basetask.Results):
         super(RestoreDataResults, self).__init__()
         self.importdata_results = importdata_results
         self.applycal_results = applycal_results
-        self.mses=[]
+        self.mses = []
 
     def merge_with_context(self, context):
         if self.importdata_results:
@@ -203,7 +204,7 @@ class RestoreData(basetask.StandardTaskTemplate):
     """
     RestoreData is the base class for restoring flagged and calibrated
     data produced during a previous pipeline run and archived on disk.
-        
+
     - Imports the selected ASDMs from rawdata
     - Imports the flagversions for the selected ASDMs from ../rawdata
     - Imports the calibration data for the selected ASDMs from ../rawdata
@@ -212,7 +213,7 @@ class RestoreData(basetask.StandardTaskTemplate):
     - Applies the calibrations
     """
 
-    # link the accompanying inputs to this task 
+    # link the accompanying inputs to this task
     Inputs = RestoreDataInputs
 
     # Override the default behavior for multi-vis tasks
@@ -233,10 +234,10 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Force inputs.vis and inputs.session to be a list.
         sessionlist = inputs.session
         if type(sessionlist) is types.StringType:
-            sessionlist = [sessionlist,]
+            sessionlist = [sessionlist, ]
         tmpvislist = inputs.vis
         if type(tmpvislist) is types.StringType:
-            tmpvislist = [tmpvislist,]
+            tmpvislist = [tmpvislist, ]
         vislist = []
         for vis in tmpvislist:
             if os.path.dirname(vis) == '':
@@ -287,15 +288,15 @@ class RestoreData(basetask.StandardTaskTemplate):
         #    TBD: Add error handling
         import_results = self._do_importasdm(sessionlist=sessionlist,
             vislist=vislist)
-        
+
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
-        flag_version_list = self._do_restore_flags( \
+        flag_version_list = self._do_restore_flags(\
             flag_version_name=flag_version_name)
 
         # Get the session list and the visibility files associated with
         # each session.
-        session_names, session_vislists= self._get_sessions()
+        session_names, session_vislists = self._get_sessions()
 
         # Restore calibration tables
         self._do_restore_caltables(session_names=session_names,
@@ -313,12 +314,12 @@ class RestoreData(basetask.StandardTaskTemplate):
     def analyse(self, results):
         """
         Analyse the results of the export data operation.
-                
+
         This method does not perform any analysis, so the results object is
         returned exactly as-is, with no data massaging or results items
         added.
-                
-        :rtype: :class:~`ExportDataResults`                
+
+        :rtype: :class:~`ExportDataResults`
         """
         return results
 
@@ -358,7 +359,7 @@ class RestoreData(basetask.StandardTaskTemplate):
             LOG.info('Restoring final flags for %s from flag version %s' % \
                      (ms.basename, flag_version_name))
             if not self._executor._dry_run:
-                task = casa_tasks.flagmanager(vis=ms.name, 
+                task = casa_tasks.flagmanager(vis=ms.name,
                                               mode='restore',
                                               versionname=flag_version_name)
                 self._executor.execute(task)
@@ -388,7 +389,7 @@ class RestoreData(basetask.StandardTaskTemplate):
                     converted = self._convert_calstate_paths(applyfile_name)
                     tmpfile.write(converted)
                     tmpfile.flush()
-                    
+
                     inputs.context.callibrary.import_state(tmpfile.name,
                                                            append=append)
             append = True
@@ -397,20 +398,20 @@ class RestoreData(basetask.StandardTaskTemplate):
         """
         Convert paths in the exported calstate to point to the new output
         directory.
-        
+
         Returns the converted commands as a list of strings
         """
 
         # regex to match unix paths
-        unix_path = re.compile('((?:\\/[\\w\\.\\-]+)+)', 
-                               re.IGNORECASE|re.DOTALL)
+        unix_path = re.compile('((?:\\/[\\w\\.\\-]+)+)',
+                               re.IGNORECASE | re.DOTALL)
 
         # define a function that replaces directory names with our new output
         # directory
         def repfn(matchobj):
             basename = os.path.basename(matchobj.group(0))
             return os.path.join(self.inputs.output_dir, basename)
-        
+
         # search-and-replace directory names in the exported calstate file
         with open(applyfile, 'r') as f:
             return unix_path.sub(repfn, f.read())
@@ -425,7 +426,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         elif ps.ousstatus_entity_id == 'unknown':
             ousid = ''
         else:
-            ousid = ps.ousstatus_entity_id.translate( \
+            ousid = ps.ousstatus_entity_id.translate(\
                 string.maketrans(':/', '__')) + '.'
 
         # Loop over sessions
@@ -439,12 +440,12 @@ class RestoreData(basetask.StandardTaskTemplate):
                 tarfilename = glob.glob(os.path.join(inputs.rawdata_dir, '*' + session +
                     '.caltables.tar.gz'))[0]
             else:
-                tarfilename = os.path.join(inputs.rawdata_dir, 
+                tarfilename = os.path.join(inputs.rawdata_dir,
                                            ousid + session + '.caltables.tar.gz')
 
             with tarfile.open(tarfilename, 'r:gz') as tar:
                 tarmembers = tar.getmembers()
-    
+
                 # Loop over the visibilities associated with that session
                 for vis in vislist:
                     LOG.info('Restoring caltables for %s from %s'
@@ -461,7 +462,7 @@ class RestoreData(basetask.StandardTaskTemplate):
                         else:
                             tar.extractall(path=inputs.output_dir,
                                            members=extractlist)
-       
+
     def _do_applycal(self):
         inputs = self.inputs
         applycal_inputs = applycal.Applycal.Inputs(inputs.context)
@@ -486,10 +487,10 @@ class RestoreData(basetask.StandardTaskTemplate):
         else:
             wkvis = vis
 
-        # If the input session list is empty determine the sessions from 
+        # If the input session list is empty determine the sessions from
         # the context.
         if len(sessions) == 0:
-            wksessions = [] 
+            wksessions = []
             for visname in wkvis:
                 session = inputs.context.observing_run.get_ms(name=visname).session
                 wksessions.append(session)
@@ -498,7 +499,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Determine the number of unique sessions.
         session_seqno = 0; session_dict = {}
-        for i in range(len(wksessions)): 
+        for i in range(len(wksessions)):
             if wksessions[i] not in session_dict:
                 session_dict[wksessions[i]] = session_seqno
                 session_seqno = session_seqno + 1
@@ -506,26 +507,26 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Initialize the output session names and visibility file lists
         session_names = []
         session_vis_list = []
-        for key, _ in sorted(session_dict.iteritems(), 
-                             key=lambda(k,v): (v,k)):
+        for key, _ in sorted(session_dict.iteritems(),
+                             key=lambda(k, v): (v, k)):
             session_names.append(key)
             session_vis_list.append([])
 
         # Assign the visibility files to the correct session
-        for j in range(len(wkvis)): 
-            # Match the session names if possible 
+        for j in range(len(wkvis)):
+            # Match the session names if possible
             if j < len(wksessions):
                 for i in range(len(session_names)):
                     if wksessions[j] == session_names[i]:
                         session_vis_list[i].append(wkvis[j])
             # Assign to the last session
             else:
-                session_vis_list[len(session_names)-1].append(wkvis[j])
+                session_vis_list[len(session_names) - 1].append(wkvis[j])
 
         # Log the sessions
         for i in range(len(session_vis_list)):
             LOG.info('Visibility list for session %s is %s' % \
             (session_names[i], session_vis_list[i]))
-                
+
         return session_names, session_vis_list
 

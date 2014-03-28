@@ -16,6 +16,7 @@ class ChannelBandpassInputs(common.CommonBandpassInputs):
     def bandtype(self):
         return 'B'
 
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  #
                  vis=None, caltable=None, 

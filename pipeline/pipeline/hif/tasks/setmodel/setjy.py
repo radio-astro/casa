@@ -21,8 +21,8 @@ import pipeline.infrastructure.utils as utils
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class SetjyInputs(basetask.StandardInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # standard setjy parameters 
                  vis=None, field=None, spw=None, model=None, 
@@ -262,18 +262,19 @@ class SetjyInputs(basetask.StandardInputs):
         
     def to_casa_args(self):
         d = super(SetjyInputs, self).to_casa_args()
-	# Filter out reffile. Note that the , is required
-	for ignore in ('reffile',):
-	    if ignore in d:
-		del d[ignore]
+        # Filter out reffile. Note that the , is required
+        for ignore in ('reffile',):
+            if ignore in d:
+                del d[ignore]
 
-	# Enable intent selection in CASA.
-	d['selectdata'] = True
+        # Enable intent selection in CASA.
+        d['selectdata'] = True
 
-	# Force usescratch to True for now
-	d['usescratch'] = True
+        # Force usescratch to True for now
+        d['usescratch'] = True
 
-	return d
+        return d
+
 
 class Setjy(basetask.StandardTaskTemplate):
     Inputs = SetjyInputs
@@ -377,9 +378,8 @@ class Setjy(basetask.StandardTaskTemplate):
                         result.measurements[field_identifier].append(flux)
 
             # merge identical jobs into one job with a multi-spw argument
-            # be careful - that comma after spw is required for ignore to
-            # be an iterable of strings!
-            jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+            print jobs
+            jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=['spw'])
             for job in jobs:
                 self._executor.execute(job)
 

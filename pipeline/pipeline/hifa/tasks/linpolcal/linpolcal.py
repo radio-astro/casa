@@ -18,6 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, 
       vis=None, g0table=None, delaytable=None, 
       xyf0table=None, g1table=None, df0table=None,

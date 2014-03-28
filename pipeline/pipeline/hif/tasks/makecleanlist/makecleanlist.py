@@ -10,7 +10,7 @@ from pipeline.hif.heuristics import makecleanlist
 LOG = infrastructure.get_logger(__name__)
 
 class MakeCleanListInputs(basetask.StandardInputs):
-
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
       imagename=None, intent=None, field=None, spw=None, 
       uvrange=None, mode=None, outframe=None,

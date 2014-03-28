@@ -33,15 +33,15 @@ LOG = logging.get_logger(__name__)
 def context_manager_factory(tool):
     '''
     Create a context manager function that wraps the given CASA tool.
-    
+
     The returned context manager function takes one argument: a filename. The
     function opens the file using the CASA tool, returning the tool so that it
-    may be used for queries or other operations pertaining to the tool. The 
+    may be used for queries or other operations pertaining to the tool. The
     tool is closed once it falls out of scope or an exception is raised.
     '''
     tool_name = tool.__class__.__name__
-    
-    @contextlib.contextmanager    
+
+    @contextlib.contextmanager
     def f(filename):
         LOG.trace('%s tool: opening \'%s\'' % (tool_name, filename))
         tool.open(filename)
@@ -61,22 +61,22 @@ open_ms = context_manager_factory(casatools.ms)
 def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
     '''
     Return the textual description of the given list.
-    
-    For example: commafy(['a','b','c']) = "'a', 'b' and 'c'"     
+
+    For example: commafy(['a','b','c']) = "'a', 'b' and 'c'"
     '''
     if type(l) is not types.ListType and isinstance(l, collections.Iterable):
         l = [i for i in l]
-    
+
     # turn 's' into 's '
     if multi_prefix:
         multi_prefix += ' '
-    
+
     length = len(l)
     if length is 0:
         return ''
     if length is 1:
         if quotes:
-            return '\'%s\'' % l[0] 
+            return '\'%s\'' % l[0]
         else:
             return '%s' % l[0]
     if length is 2:
@@ -87,7 +87,7 @@ def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
     else:
         if quotes:
             return '%s\'%s\'%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes, conjunction=conjunction))
-        else: 
+        else:
             return '%s%s%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes, conjunction=conjunction))
 
 def find_ranges(data):
@@ -107,7 +107,7 @@ def find_ranges(data):
 
     s = sorted(integers)
     ranges = []
-    for _, g in itertools.groupby(enumerate(s), lambda (i,x):i-x):
+    for _, g in itertools.groupby(enumerate(s), lambda (i, x):i - x):
         rng = map(operator.itemgetter(1), g)
         if len(rng) is 1:
             ranges.append('%s' % rng[0])
@@ -128,7 +128,7 @@ def get_epoch_as_datetime(epoch):
     # subtract offset from UTC equivalent time
     epoch_utc = mt.measure(epoch, 'UTC')
     t = mt.getvalue(epoch_utc)['m0']
-    t = qt.sub(t, base_time)  
+    t = qt.sub(t, base_time)
     t = qt.convert(t, 's')
     t = datetime.datetime.utcfromtimestamp(qt.getvalue(t))
 
@@ -138,21 +138,21 @@ def unix_seconds_to_datetime(unix_secs):
     """
     Return the input list, specified in seconds elapsed since 1970-01-01,
     converted to the equivalent Python datetimes.
-    
-    If given a list, a list is returned. If given a scalar, a scalar is 
+
+    If given a list, a list is returned. If given a scalar, a scalar is
     returned.
-    """   
+    """
     datetimes = [datetime.datetime.fromtimestamp(s) for s in unix_secs]
-    return datetimes if len(unix_secs) > 1 else datetimes[0] 
+    return datetimes if len(unix_secs) > 1 else datetimes[0]
 
 def mjd_seconds_to_datetime(mjd_secs):
     """
-    Return the input list, specified in MJD seconds, converted to the 
+    Return the input list, specified in MJD seconds, converted to the
     equivalent Python datetimes.
-    
-    If given a list, a list is returned. If given a scalar, a scalar is 
+
+    If given a list, a list is returned. If given a scalar, a scalar is
     returned.
-    """   
+    """
     # 1970-01-01 is JD 40587. 86400 = seconds in a day
     unix_offset = 40587 * 86400
     return unix_seconds_to_datetime(mjd_secs - unix_offset)
@@ -160,7 +160,7 @@ def mjd_seconds_to_datetime(mjd_secs):
 def total_time_on_source(scans):
     '''
     Return the total time on source for the given Scans.
-    
+
     scans -- a collection of Scan domain objects
     return -- a datetime.timedelta object set to the total time on source
     '''
@@ -183,11 +183,11 @@ def format_timedelta(td, dp=0):
     '''
     Return a formatted string representation for the given timedelta
     '''
-    # 
-    secs = decimal.Decimal(td.seconds) 
+    #
+    secs = decimal.Decimal(td.seconds)
     microsecs = decimal.Decimal(td.microseconds) / decimal.Decimal('1e6')
     rounded_secs = (secs + microsecs).quantize(decimal.Decimal(10) ** -dp)
-    rounded = datetime.timedelta(days=td.days, 
+    rounded = datetime.timedelta(days=td.days,
                                  seconds=math.floor(rounded_secs))
     # get rounded number of microseconds as an integer
     rounded_microsecs = int((rounded_secs % 1).shift(6))
@@ -210,16 +210,16 @@ def dict_merge(a, b):
     result = copy.deepcopy(a)
     for k, v in b.iteritems():
         if k in result and isinstance(result[k], dict):
-                result[k] = dict_merge(result[k], v)
+            result[k] = dict_merge(result[k], v)
         else:
             result[k] = copy.deepcopy(v)
     return result
 
 def safe_split(fields):
     '''
-    Split a string containing field names into a list, taking account of 
+    Split a string containing field names into a list, taking account of
     field names within quotes.
-    ''' 
+    '''
     return pyparsing.commaSeparatedList.parseString(str(fields))
 
 def to_CASA_intent(ms, intents):
@@ -259,11 +259,11 @@ def stringSplitByNumbers(x):
 
 def numericSort(l):
     """
-    Sort a list numerically, eg. 
-    
+    Sort a list numerically, eg.
+
     ['9,11,13,15', '11,13', '9'] -> ['9', '9,11,13,15', '11,13']
-    """    
-    return sorted(l, key = stringSplitByNumbers)
+    """
+    return sorted(l, key=stringSplitByNumbers)
 
 def truncate_floats(s, precision=3):
     """
@@ -288,25 +288,25 @@ def enable_memstats():
     if platform.system() == 'Darwin':
         LOG.error('Cannot measure memory on OS X.')
         return
-    
+
     import pipeline.domain.measures as measures
     import pipeline.infrastructure.jobrequest as jobrequest
     def get_hook_fn(msg):
         pid = os.getpid()
-    
+
         def log_mem_usage(jobrequest):
-            sorted_cmds, shareds, _, _ = ps_mem.get_memory_usage([pid,], False, True)
+            sorted_cmds, shareds, _, _ = ps_mem.get_memory_usage([pid, ], False, True)
             for cmd in sorted_cmds:
-                private = measures.FileSize(cmd[1]-shareds[cmd[0]], 
+                private = measures.FileSize(cmd[1] - shareds[cmd[0]],
                                             measures.FileSizeUnits.KILOBYTES)
-                shared = measures.FileSize(shareds[cmd[0]], 
+                shared = measures.FileSize(shareds[cmd[0]],
                                            measures.FileSizeUnits.KILOBYTES)
                 total = measures.FileSize(cmd[1], measures.FileSizeUnits.KILOBYTES)
 
                 LOG.info('%s%s: private=%s shared=%s total=%s' % (
                         msg, jobrequest.fn.__name__, str(private),
                         str(shared), str(total)))
-                    
+
             vm_accuracy = ps_mem.shared_val_accuracy()
             if vm_accuracy is -1:
                 LOG.warning("Shared memory is not reported by this system. "
@@ -320,7 +320,7 @@ def enable_memstats():
                 LOG.warning("Shared memory is slightly over-estimated by "
                             "this system for each program, so totals are "
                             "not reported.")
-                
+
         return log_mem_usage
 
     jobrequest.PREHOOKS.append(get_hook_fn('Memory usage before '))
@@ -330,17 +330,17 @@ def enable_memstats():
 def get_calfroms(inputs, caltypes=None):
     """
     Get the CalFroms of the requested type from the callibrary.
-    
-    This function assumes that 'vis' is a property of the given inputs. 
+
+    This function assumes that 'vis' is a property of the given inputs.
     """
     import pipeline.infrastructure.callibrary as callibrary
     if caltypes is None:
         caltypes = callibrary.CalFrom.CALTYPES.keys()
 
-    # check that the 
+    # check that the
     if type(caltypes) is types.StringType:
         caltypes = (caltypes,)
-            
+
     for c in caltypes:
         assert c in callibrary.CalFrom.CALTYPES
 
@@ -349,14 +349,14 @@ def get_calfroms(inputs, caltypes=None):
     calstate = inputs.context.callibrary.get_calstate(calto)
 
     calfroms = (itertools.chain(*calstate.merged().values()))
-    
+
     return [cf for cf in calfroms if cf.caltype in caltypes]
-    
-    
+
+
 class memoized(object):
     '''
-    Function decorator. Caches a function's return value each time it is 
-    called. If called later with the same arguments, the cached value is 
+    Function decorator. Caches a function's return value each time it is
+    called. If called later with the same arguments, the cached value is
     returned (not re-evaluated).
     '''
     def __init__(self, func):
@@ -379,42 +379,42 @@ class memoized(object):
     def __get__(self, obj, objtype):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
-    
-    
+
+
 def areEqual(a, b):
     """
     Return True if the contents of the given arrays are equal.
     """
-    return len(a) == len(b) and len(a) == sum([1 for i,j in zip(a,b) if i==j])
-    
+    return len(a) == len(b) and len(a) == sum([1 for i, j in zip(a, b) if i == j])
+
 def pickle_copy(original):
     stream = StringIO.StringIO()
     pickle.dump(original, stream, -1)
     # rewind to the start of the 'file', allowing it to be read in its
     # entirety - otherwise we get an EOFError
     stream.seek(0)
-    copy = pickle.load(stream)
-    return copy
+    pcopy = pickle.load(stream)
+    return pcopy
 
 def gen_hash(o):
     """
-    Makes a hash from a dictionary, list, tuple or set to any level, that 
+    Makes a hash from a dictionary, list, tuple or set to any level, that
     contains only other hashable types (including any lists, tuples, sets,
     and dictionaries).
     """
     LOG.trace('gen_hash(%s)' % str(o))
-    if isinstance(o, set) or isinstance(o, tuple) or isinstance(o, list):        
-        return tuple([gen_hash(e) for e in o])    
-    
+    if isinstance(o, set) or isinstance(o, tuple) or isinstance(o, list):
+        return tuple([gen_hash(e) for e in o])
+
     elif not isinstance(o, dict):
         h = hash(o)
         LOG.trace('Hash: %s=%s' % (o, h))
         return hash(o)
-    
+
     new_o = copy.deepcopy(o)
     for k, v in new_o.items():
         new_o[k] = gen_hash(v)
-    
+
     return hash(tuple(frozenset(new_o.items())))
 
 def range_to_list(arg):
@@ -429,15 +429,15 @@ def range_to_list(arg):
 
     # convert '1~10' to a range
     rangeExpr = number('start') + TILDE + number('end')
-    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
+    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end + 1))
 
-    casa_chars = ''.join([c for c in string.printable 
-                          if c not in ',;"/' + string.whitespace]) 
+    casa_chars = ''.join([c for c in string.printable
+                          if c not in ',;"/' + string.whitespace])
     textExpr = pyparsing.Word(casa_chars)
 
     # numbers can be expressed as ranges or single numbers
     atomExpr = rangeExpr | number | textExpr
-    
+
     # we can have multiple items separated by commas
     atoms = pyparsing.delimitedList(atomExpr, delim=',')('atoms')
 
@@ -461,8 +461,8 @@ def collect_properties(instance, ignore=[]):
 
 def flatten(l):
     """
-    Flatten a list of lists into a single list  
-    """    
+    Flatten a list of lists into a single list
+    """
     for el in l:
         if isinstance(el, collections.Iterable) and not isinstance(el, (basestring, pipelineqa.QAScore)):
             for sub in flatten(el):
@@ -474,9 +474,9 @@ def approx_equal(x, y, tol=1e-15):
     """
     Return True if two numbers are equal within the given tolerance.
     """
-    lo = min(x, y)    
+    lo = min(x, y)
     hi = max(x, y)
-    return (lo+0.5*tol) >= (hi-0.5*tol)
+    return (lo + 0.5 * tol) >= (hi - 0.5 * tol)
 
 def get_num_caltable_polarizations(caltable):
     # it seems that the number of QA ID does not map directly to the number
@@ -487,7 +487,7 @@ def get_num_caltable_polarizations(caltable):
         col_shapes = set(tb.getcolshapestring('CPARAM'))
 
     # get the number of pols stored in the caltable, checking that this
-    # is consistent across all rows            
+    # is consistent across all rows
     fmt = re.compile(r'\[(?P<num_pols>\d+), (?P<num_rows>\d+)\]')
     col_pols = set()
     for shape in col_shapes:
@@ -495,8 +495,8 @@ def get_num_caltable_polarizations(caltable):
         if m:
             col_pols.add(int(m.group('num_pols')))
         else:
-            raise ValueError('Could not find shape of polarisation from %s' % shape)    
-    
+            raise ValueError('Could not find shape of polarisation from %s' % shape)
+
     if len(col_pols) is not 1:
         raise ValueError('Got %s polarisations from %s' % (len(col_pols), col_shapes))
 
@@ -511,5 +511,22 @@ def mkdir_p(path):
     except OSError as exc:
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
-        else: 
+        else:
             raise
+
+def task_depth():
+    """
+    Get the number of executing tasks currently on the stack. If the depth is
+    1, the calling function is the top-level task.
+    """
+    stack = [frame_obj for (frame_obj, _, _, _, _, _) in inspect.stack()
+             if frame_obj.f_code.co_name == 'execute'
+             and frame_obj.f_code.co_filename.endswith('pipeline/infrastructure/basetask.py')]
+    stack_count = len(stack)
+    return stack_count
+
+def is_top_level_task():
+    """
+    Return True if the callee if executing as part of a top-level task.
+    """
+    return task_depth() is 1

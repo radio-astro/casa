@@ -26,7 +26,7 @@ WVRInfo = collections.namedtuple('WVRInfo',
 
 
 class WvrgcalInputs(basetask.StandardInputs):
-    
+    @basetask.log_equivalent_CASA_call        
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
                  hm_toffset=None, toffset=None, segsource=None, hm_tie=None,
                  tie=None, sourceflag=None, nsol=None, disperse=None, 

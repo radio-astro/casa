@@ -20,9 +20,12 @@ LOG = logging.get_logger(__name__)
 
 # _altmapping holds the mapping for CASA arguments that should be given as a 
 # task input argument of a different name.
-_altmapping = {}
-_altmapping['Bandpass'] = {'hm_bandtype' : 'mode'}
-_altmapping['Gaincal'] = {'hm_gaintype' : 'mode'}
+_altmapping = {
+    'Bandpass'      : {'hm_bandtype' : 'mode'},
+    'Gaincal'       : {'hm_gaintype' : 'mode'},
+    'TimeGaincal'   : {'hm_gaintype' : 'mode'},
+    'PhcorBandpass' : {'hm_bandtype' : 'mode'}
+}
 
 
 def convert_args(taskname, casa_args, convert_nulls=True):
@@ -100,15 +103,23 @@ def _convert_null(val):
     return val
 
 def task_to_casa(taskname, task_args):
+    if taskname not in _altmapping:
+        return task_args
+    
     # If required, rename CASA pipeline arguments to their pipeline equivalent
-    if taskname in _altmapping:
-        casa_to_task = _altmapping[taskname]
-        task_to_casa = dict((v,k) for k, v in casa_to_task.iteritems())
-        remapped = {}
-        for k, v in task_args.iteritems():
-            name = task_to_casa.get(k, k)
-            remapped[name] = v
-    else:
-        remapped = task_args
+    casa_to_task = _altmapping[taskname]
+    d = dict((v,k) for k, v in casa_to_task.iteritems())
+    remapped = {}
+    for k, v in task_args.iteritems():
+        name = d.get(k, k)
+        remapped[name] = v
 
     return remapped
+
+def inputs_to_casa(inputs_cls, args):
+    for mod_entry in dir(pipeline.tasks):
+        task = getattr(pipeline.tasks, mod_entry)
+        task_inputs = getattr(task, 'Inputs', None)
+        if task_inputs == inputs_cls.__class__:        
+            return task_to_casa(mod_entry, args)
+    return args

@@ -18,6 +18,7 @@ class ApplycalInputs(basetask.StandardInputs,
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # 
                  vis=None, 

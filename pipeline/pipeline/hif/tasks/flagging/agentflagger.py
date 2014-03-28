@@ -53,7 +53,7 @@ class AgentFlaggerInputs(basetask.StandardInputs):
     shadow = basetask.property_with_default('shadow', True)
     template = basetask.property_with_default('template', False)
 
-
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                   autocorr=None, shadow=None, scan=None, scannumber=None,
                   intents=None, edgespw=None, fracspw=None, online=None,

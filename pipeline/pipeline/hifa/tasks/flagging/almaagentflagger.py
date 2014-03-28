@@ -1,7 +1,4 @@
 from __future__ import absolute_import
-import os
-import re
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -23,6 +20,7 @@ class ALMAAgentFlaggerInputs(agentflagger.AgentFlaggerInputs):
     # new property for ACA correlator
     fracspwfps = basetask.property_with_default('fracspwfps', 0.048387)
 
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                   autocorr=None, shadow=None, scan=None, scannumber=None,
                   intents=None, edgespw=None, fracspw=None, fracspwfps=None,

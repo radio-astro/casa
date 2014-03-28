@@ -21,7 +21,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
-
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
       intent=None, spw=None, refant=None, flag_nmedian=None,
       fnm_limit=None, niter=None):

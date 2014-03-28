@@ -21,6 +21,7 @@ class WvrgcalFlagSetterInputs(basetask.StandardInputs):
     """This class handles the setting of bad antennas in
     wvrgcal.
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, 
       table=None, vis=None, wvrgcaltask=None):
         self._init_properties(vars())

@@ -22,6 +22,7 @@ class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
     but does not extend - ChannelBandpassInputs.
 
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  #
                  vis=None, caltable=None, 

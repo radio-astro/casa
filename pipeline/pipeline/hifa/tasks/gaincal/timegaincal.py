@@ -7,11 +7,13 @@ from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hif.heuristics import caltable as gcaltable
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 
 LOG = infrastructure.get_logger(__name__)
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, mode='gtype', calamptable=None,
             calphasetable=None, amptable=None, targetphasetable=None,
 	    calsolint=None, targetsolint=None, calminsnr=None,

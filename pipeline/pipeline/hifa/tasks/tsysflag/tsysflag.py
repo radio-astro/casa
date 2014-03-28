@@ -54,8 +54,9 @@ def intent_ids(intent, ms):
 
     return ids
 
-class TsysflagInputs(basetask.StandardInputs):
 
+class TsysflagInputs(basetask.StandardInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       intentgroups=None, refintent=None, metric=None, flagcmdfile=None,
       flag_nmedian=None, fnm_limit=None,

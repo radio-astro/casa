@@ -34,8 +34,8 @@ from . import setjy
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class SetModelInputs(basetask.StandardInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, reference=None, 
                  refintent=None, transfer=None, scalebychan=None):
         # set the properties to the values given as input arguments

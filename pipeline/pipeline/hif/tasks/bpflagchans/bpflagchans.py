@@ -18,7 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class BandpassflagchansInputs(basetask.StandardInputs):
-
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
       flag_sharps2=None, sharps2_limit=None, flag_diffmad=None,
