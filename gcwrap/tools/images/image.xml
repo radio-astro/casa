@@ -10821,66 +10821,6 @@ ia.close()
 </method>
 
 
-   <method type="function" name="echo">
-   <shortdescription>returns input record</shortdescription>
-
-<input>
-     <param type="record"  name="v">
-     <description>a measure value</description>
-     </param>
-
-     <param type="bool"  name="godeep">
-     <description>force the use of MeasureHolder record conversions</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="record">
-<shortdescription>input measure</shortdescription>
-</returns>
-<description>
-echo returns input.  This method is for diagnostic purposes only.
-</description>
-<example>
-
-"""
-#
-x=5
-ia.echo(x)
-#
-"""
-
-</example>
-</method>
-
- <!--
-   <method type="function" name="outputvariant">
-   <shortdescription>returns a variant</shortdescription>
-
-<output>
-     <param type="variant" name="v">
-     <description>a variant</description>
-     </param>
-</output>
-
-<returns type="void">
-<shortdescription>for testing variant as output parameter</shortdescription>
-</returns>
-<description>
-returns internally generated v as a variant output parameter.
-Exists for test purposes only.
-</description>
-<example>
-
-"""
-#
-#ia.outputvariant()
-exit() # This is last example so lets exit().
-#
-"""
-
-</example>
-</method>
--->
 <method type="function" name="isconform">
     <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>
 

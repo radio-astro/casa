@@ -776,7 +776,7 @@ image* image::boxcar(
 		vector<String> msgs;
 		{
 			ostringstream os;
-			os << "Ran ia." << __func__ << "() on image " << name();
+			os << "Ran ia." << __func__ << "() on image " << _name();
 			msgs.push_back(os.str());
 			vector<std::pair<String, variant> > inputs;
 			inputs.push_back(make_pair("outfile", outfile));
@@ -1145,7 +1145,7 @@ image* image::decimate(
 		std::tr1::shared_ptr<Record> regPtr(_getRegion(region, True));
 		vector<String> msgs;
 		{
-			msgs.push_back("Ran ia.decimate() on image " + name());
+			msgs.push_back("Ran ia.decimate() on image " + _name());
 			vector<std::pair<String, variant> > inputs;
 			inputs.push_back(make_pair("outfile", outfile));
 			inputs.push_back(make_pair("axis", axis));
@@ -2421,26 +2421,6 @@ image* image::hanning(
                 );
             }
         }
-        /*
-		vector<String> msgs;
-		{
-			ostringstream os;
-			os << "Ran ia." << __func__ << "() on image " << name();
-			msgs.push_back(os.str());
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("outfile", outfile));
-			inputs.push_back(make_pair("region", region));
-			inputs.push_back(make_pair("mask", vmask));
-			inputs.push_back(make_pair("axis", axis));
-			inputs.push_back(make_pair("drop", drop));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("stretch", stretch));
-			inputs.push_back(make_pair("dmethod", dmethod));
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(os.str());
-		}
-		*/
 		vector<variant> values;
 		values += outfile, region, vmask, axis, drop, overwrite, stretch, dmethod;
 		if (_image->isFloat()) {
@@ -2888,13 +2868,20 @@ std::string image::name(const bool strippath) {
 		if (detached()) {
 			return "none";
 		}
-		else {
-			return _image->name(strippath);
-		}
-	} catch (AipsError x) {
+		return _name(strippath);
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
+	}
+}
+
+String image::_name(bool strippath) const {
+	if (_image->isFloat()) {
+		return _image->getImage()->name(strippath);
+	}
+	else {
+		return _image->getComplexImage()->name(strippath);
 	}
 }
 
@@ -3836,9 +3823,10 @@ bool image::setbrightnessunit(const std::string& unit) {
 		if (detached()) {
 			return False;
 		}
-		if (! _image->setbrightnessunit(unit)) {
-			_log << "Unable to set brightness units" << LogIO::EXCEPTION;
-		}
+		Bool res = _image->isFloat()
+			?  _image->getImage()->setUnits(Unit(unit))
+			: _image->getComplexImage()->setUnits(Unit(unit));
+		ThrowIf(! res, "Unable to set brightness unit");
 		_stats.reset(0);
 		return True;
 	} catch (const AipsError& x) {
@@ -3896,21 +3884,22 @@ bool image::sethistory(const std::string& origin,
 }
 
 bool image::setmiscinfo(const ::casac::record& info) {
-	bool rstat(false);
 	try {
-		_log << LogOrigin("image", "setmiscinfo");
-		if (detached())
-			return rstat;
-
-		Record *tmp = toRecord(info);
-		rstat = _image->setmiscinfo(*tmp);
-		delete tmp;
-	} catch (AipsError x) {
+		_log << LogOrigin("image", __func__);
+		if (detached()) {
+			return false;
+		}
+		std::auto_ptr<Record> tmp(toRecord(info));
+		Bool res = _image->isFloat()
+			? _image->getImage()->setMiscInfo(*tmp)
+			: _image->getComplexImage()->setMiscInfo(*tmp);
+		return res;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::vector<int> image::shape() {
@@ -4022,7 +4011,7 @@ record* image::statistics(
 		}
 		if (verbose) {
 			_log << LogIO::NORMAL << "Determining stats for image "
-				<< _image->name(True) << LogIO::POST;
+				<< _name(True) << LogIO::POST;
 		}
 		Record ret;
 		if (force || _stats.get() == 0) {
@@ -4346,19 +4335,23 @@ image::toworld(const ::casac::variant& value, const std::string& format) {
 }
 
 bool image::unlock() {
-	bool rstat(false);
 	try {
-		_log << LogOrigin("image", "unlock");
-		if (detached())
-			return rstat;
-
-		rstat = _image->unlock();
+		_log << LogOrigin("image", __func__);
+		if (detached()) {
+			return False;
+		}
+		if (_image->isFloat()) {
+			_image->getImage()->unlock();
+		}
+		else {
+			_image->getComplexImage()->unlock();
+		}
+		return True;
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::detached() const {
@@ -4682,24 +4675,6 @@ image::makearray(const double v, const std::vector<int>& shape) {
 	return new ::casac::variant(element, shape);
 }
 
-::casac::record* image::echo(const ::casac::record& v, const bool godeep) {
-	casac::record* rstat = 0;
-	try {
-		Record *tempo = toRecord(v);
-		rstat = fromRecord(*(_image->echo(*tempo, godeep)));
-
-		delete tempo;
-
-	} catch (const AipsError& x) {
-		_log << LogOrigin("image", "echo");
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-
-	return rstat;
-}
-
 casac::record*
 image::recordFromQuantity(const casa::Quantity q) {
 	::casac::record *r = 0;
@@ -4831,7 +4806,7 @@ std::tr1::shared_ptr<Record> image::_getRegion(
 				: new Record(
 					CasacRegionManager::regionFromString(
 						_image->getImage()->coordinates(),
-						region.toString(), _image->name(),
+						region.toString(), _name(False),
 						_image->getImage()->shape()
 					)
 				)

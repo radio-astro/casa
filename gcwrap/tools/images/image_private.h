@@ -108,4 +108,7 @@ static casa::String _inputsString(
 	const std::vector<std::pair<casa::String, casac::variant> >& inputs
 );
 
+// because public method name() is not const
+casa::String _name(bool strippath=false) const;
+
 
