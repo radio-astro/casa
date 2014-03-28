@@ -61,6 +61,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const MeasurementSet& ms, 
 			      const MFrequency::Types freqframe=MFrequency::LSRK,
 				   const Int fieldId=0);
+    //Return all the selected SPW types selected in the selected MS if the input ms
+    //is a reference MS. Else it will return all the types in the  SPW table
+    static Vector<String> getSpectralFrames(Vector<MFrequency::Types>& types, const MeasurementSet& ms);
 
   private:
     static void rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval, Vector<Int>& indx);
