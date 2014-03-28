@@ -4,7 +4,9 @@ navbar_active='Home'
 import datetime
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
-
+import collections
+import operator
+import itertools
 
 %>
 <%inherit file="base.html"/>
@@ -148,17 +150,17 @@ import pipeline.infrastructure.utils as utils
 
 
 
-		<h2>Observation Summary</h2>
+	    <h2>Observation Summary</h2>
+            
+
 
 	    <table class="table table-bordered table-striped table-condensed" 
 		    summary="Measurement Set Summaries">
 		    
 		<thead>
 		    <tr>
-		        <th scope="col" rowspan="2">Project ID</th>
-		        <th scope="col" rowspan="2">Sched. Block</th>
-		        <th scope="col" rowspan="2">Session</th>
-			<th scope="col" rowspan="2">Exec. Block / Meas. Set <i>(Click for overview)</i></th>
+
+			<th scope="col" rowspan="2">Measurement Set</th>
 			<th scope="col" rowspan="2">Receivers</th>
 			<th scope="col" rowspan="2">Num Antennas</th>
 			<th scope="col" colspan="3">Time (UTC)</th>
@@ -176,29 +178,56 @@ import pipeline.infrastructure.utils as utils
 		    </tr>
 		</thead>
 		    <tbody>
-			    % for row in ms_summary_rows:
-			        <tr>
-<!--
-				    % if pcontext.project_summary.proposal_code != '':
-					<td>${pcontext.project_summary.proposal_code}</td>
-				    % else:
-					<td></td>
-			            % endif
--->				
-				    <td>${row.project_id}</td>
-				    <td>${row.schedblock_id}</td>
-				    <td>${row.session}</td>
-				    <td>${row.execblock_id} / <a href="${row.href}">${row.ms}</a></td>
-				    <td>${utils.commafy(row.receivers)}</td>
-				    <td>${row.num_antennas}</td>
-				    <td>${row.time_start}</td>
-				    <td>${row.time_end}</td>
-				    <td>${row.time_on_source}</td>
-				    <td>${str(row.baseline_min)}</td>
-				    <td>${str(row.baseline_max)}</td>
-				    <td>${str(row.baseline_rms)}</td>
-				    <td>${str(row.filesize)}</td>
-				</tr>
+		            
+			    % for ouskey, ousgroup in itertools.groupby(sorted(ms_summary_rows, key=lambda x: (x.ousstatus_entity_id, x.schedblock_id, x.session)), key=operator.attrgetter('ousstatus_entity_id')):
+			       <%
+                                        ouslabel = '<b>Observing Unit Set:</b>'
+                                        ousid = ouskey
+                                    %>
+
+			        % for sbkey, sbgroup in itertools.groupby(ousgroup, key=operator.attrgetter('schedblock_id')):
+                                    <%
+                                        sblabel = '<b>Scheduling Block ID:</b>'
+                                        sbid = sbkey
+                                    %>
+
+			            % for sessionkey, sessiongroup in itertools.groupby(sbgroup, key=operator.attrgetter('session')):
+			                <tr>
+			                    <td colspan="2">${ouslabel} ${ousid} &nbsp; &nbsp;
+			                                     ${sblabel} ${sbid}  
+			                                     
+			                    </td>
+			                </tr>
+			                <tr bgcolor="#85D6FF">
+			                    <td colspan="10"><b>Session:</b> ${sessionkey}
+			                    </td>
+			                </tr>
+			                % for row in sorted(sessiongroup, key=lambda y: y.ms):
+                                            <tr>
+				                <td><a href="${row.href}">${row.ms}</a></td>
+				                <td>${utils.commafy(row.receivers)}</td>
+				                <td>${row.num_antennas}</td>
+				                <td>${row.time_start}</td>
+				                <td>${row.time_end}</td>
+				                <td>${row.time_on_source}</td>
+				                <td>${str(row.baseline_min)}</td>
+				                <td>${str(row.baseline_max)}</td>
+				                <td>${str(row.baseline_rms)}</td>
+				               <td>${str(row.filesize)}</td>
+				            </tr>
+				        %endfor
+				        <%
+				            ouslabel = ''
+                                            ousid = ''
+                                            sblabel = ''
+                                            sbid = ''
+                                            
+                                        %>
+				        
+				        
+				        
+				    % endfor
+				%endfor
 			    % endfor
 		    </tbody>
 	    </table>
