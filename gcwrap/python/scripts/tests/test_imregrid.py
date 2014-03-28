@@ -111,7 +111,8 @@ class imregrid_test(unittest.TestCase):
             for y in range(shape[1]):
                 p1 = im1.pixelvalue([x, y])
                 p2 = im2.pixelvalue([x, y])
-                if p1['mask'] != p2['mask']: raise Exception, p1['mask'] + ' != ' + p2['mask']
+                if p1['mask'] != p2['mask']:
+                    raise Exception, p1['mask'] + ' != ' + p2['mask']
                 if p1['value']['value'] != p2['value']['value']: raise Exception, p1['value']['value'] + ' != ' + p2['value']['value']
                 if p1['value']['unit'] != p2['value']['unit']: raise Exception, p1['value']['unit'] + ' != ' + p2['value']['unit']
                 checked += 3

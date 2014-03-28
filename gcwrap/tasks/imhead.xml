@@ -300,7 +300,9 @@ bpa                    quantity dictionary
 bunit                  string
 cdelt*                 quantity dictionary
 crpix*                 float
-crval*                 quantity dictionary
+crval*                 quantity dictionary, unless the value
+                       for the stokes axis is requested in which case
+                       an array of strings is returned
 ctype*                 string
 cunit*                 string
 datamax                image pixel data type
@@ -349,16 +351,20 @@ cdelt*                 One-based axis must be less than or equal to the number o
                        is assumed) or a quantity (string or dictionary). If a quantity, the unit must
                        conform to the existing axis unit.
 crpix*                 One-based axis must be less than or equal to the number of axes in the image.
-                       hdvalue type must be a number.
+                       hdvalue type must be a number. Will fail if the polarization axis.
 crval*                 One-based axis must be less than or equal to the number of axes in the image.
-                       hdvalue type must be a number (in which case the unit of the corresponding axis
-                       is assumed), a quantity (string or dictionary), or a valid measure format (such
-                       as a sexigesimal direction axis specification). If a quantity, the unit must
-                       conform to the existing axis unit.
+                       If not the polarization/stokes axis, hdvalue type must be a number (in which
+                       case the unit of the corresponding axis is assumed), a quantity (string or
+                       dictionary), or a valid measure format (such as a sexigesimal direction axis
+                       specification for an axis with angular units). If a quantity, the unit must
+                       conform to the existing axis unit. If the stokes/polarization axis, one must
+                       provide an array of stokes/polarization strings (["I", "Q", "XX"]) that is the
+                       same length as the stokes axis. If the stokes axis is degenerate, one can
+                       alternatively provide a string indicating the stokes value (eg "U").
 ctype*                 One-based axis must be less than or equal to the number of axes in the image.
                        hdvalue type must be a string.
 cunit*                 One-based axis must be less than or equal to the number of axes in the image. Specified
-                       unit must conform to the existing axis unit.
+                       unit must conform to the existing axis unit. Will fail if stokes/polarization axis.
 datamax                This cannot be modified. False is always returned.
 datamin                This cannot be modified. False is always returned.
 date-obs or epoch      A valid time specification must be given.

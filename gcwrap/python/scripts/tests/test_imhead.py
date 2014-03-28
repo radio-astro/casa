@@ -1535,6 +1535,32 @@ class imhead_test(unittest.TestCase):
         self.assertTrue(qa.getunit(got) == qa.getunit(exp))
         self.assertTrue(abs(qa.getvalue(got)/qa.getvalue(exp) - 1) < 1e-8)
         
+    def test_put_crval_stokes(self):
+        """Test updating stokes, CAS-6352"""
+        myia = iatool()
+        imagename = "CAS-6352.im"
+        myia.fromshape(imagename, [1, 1, 3])
+        myia.done()
+        self.assertFalse(
+            imhead(
+                imagename=imagename, mode="put", hdkey="crval3",
+                hdvalue="I"
+            )
+        )
+        expec = ["Q", "XX", "LL"]
+        self.assertTrue(
+            imhead(
+                imagename=imagename, mode="put", hdkey="crval3",
+                hdvalue=expec
+            )
+        )
+        self.assertTrue(
+            (
+                imhead(imagename=imagename, mode="get", hdkey="crval3")
+                == expec
+            ).all()
+        )
+        
         
 def suite():
     return [imhead_test]    
