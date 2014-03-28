@@ -154,7 +154,7 @@ import itertools
             
 
 
-	    <table class="table table-bordered table-striped table-condensed" 
+	    <table class="table table-bordered table-condensed" 
 		    summary="Measurement Set Summaries">
 		    
 		<thead>
@@ -178,32 +178,27 @@ import itertools
 		    </tr>
 		</thead>
 		    <tbody>
-		            
 			    % for ouskey, ousgroup in itertools.groupby(sorted(ms_summary_rows, key=lambda x: (x.ousstatus_entity_id, x.schedblock_id, x.session)), key=operator.attrgetter('ousstatus_entity_id')):
 			       <%
-                                        ouslabel = '<b>Observing Unit Set:</b>'
+                                        ouslabel = '<b> Observing Unit Set: </b>'
                                         ousid = ouskey
                                     %>
 
 			        % for sbkey, sbgroup in itertools.groupby(ousgroup, key=operator.attrgetter('schedblock_id')):
                                     <%
-                                        sblabel = '<b>Scheduling Block ID:</b>'
+                                        sblabel = '<b> Scheduling Block ID: </b>'
                                         sbid = sbkey
                                     %>
 
 			            % for sessionkey, sessiongroup in itertools.groupby(sbgroup, key=operator.attrgetter('session')):
-			                <tr>
-			                    <td colspan="2">${ouslabel} ${ousid} &nbsp; &nbsp;
-			                                     ${sblabel} ${sbid}  
-			                                     
-			                    </td>
+			                <tr bgcolor="#6699FF">
+			                    <td colspan="10">${ouslabel} ${ousid} ${sblabel} ${sbid}  </td>
 			                </tr>
-			                <tr bgcolor="#85D6FF">
-			                    <td colspan="10"><b>Session:</b> ${sessionkey}
-			                    </td>
+			                <tr bgcolor="#D1E0FF">
+			                    <td colspan="10"><b>Session:</b> ${sessionkey} </td>
 			                </tr>
 			                % for row in sorted(sessiongroup, key=lambda y: y.ms):
-                                            <tr>
+					    <tr>
 				                <td><a href="${row.href}">${row.ms}</a></td>
 				                <td>${utils.commafy(row.receivers)}</td>
 				                <td>${row.num_antennas}</td>
@@ -214,18 +209,14 @@ import itertools
 				                <td>${str(row.baseline_max)}</td>
 				                <td>${str(row.baseline_rms)}</td>
 				               <td>${str(row.filesize)}</td>
-				            </tr>
+					    </tr>
 				        %endfor
 				        <%
 				            ouslabel = ''
                                             ousid = ''
                                             sblabel = ''
                                             sbid = ''
-                                            
                                         %>
-				        
-				        
-				        
 				    % endfor
 				%endfor
 			    % endfor
