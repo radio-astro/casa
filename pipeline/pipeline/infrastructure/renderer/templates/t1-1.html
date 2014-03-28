@@ -182,7 +182,7 @@ import itertools
 			       <%
                                         ouslabel = '<b> Observing Unit Set: </b>'
                                         ousid = ouskey
-                                    %>
+                                %>
 
 			        % for sbkey, sbgroup in itertools.groupby(ousgroup, key=operator.attrgetter('schedblock_id')):
                                     <%
@@ -191,10 +191,10 @@ import itertools
                                     %>
 
 			            % for sessionkey, sessiongroup in itertools.groupby(sbgroup, key=operator.attrgetter('session')):
-			                <tr bgcolor="#6699FF">
+			                <tr bgcolor="#D1E0FF">
 			                    <td colspan="10">${ouslabel} ${ousid} ${sblabel} ${sbid}  </td>
 			                </tr>
-			                <tr bgcolor="#D1E0FF">
+			                <tr bgcolor="#E8F0FF">
 			                    <td colspan="10"><b>Session:</b> ${sessionkey} </td>
 			                </tr>
 			                % for row in sorted(sessiongroup, key=lambda y: y.ms):
