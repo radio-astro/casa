@@ -908,6 +908,7 @@ void ImageMetaDataRW::_setCoordinateValue(
 				! csys.replaceCoordinate(coord, csys.polarizationCoordinateNumber()),
 				"Failed to replace stokes coordinate"
 			);
+			_stokes = stokesTypes;
 		}
 		else {
 			Quantity qval = _getQuantity(value);
