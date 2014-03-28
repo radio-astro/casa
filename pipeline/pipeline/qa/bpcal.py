@@ -102,7 +102,7 @@ except:
 import utility.logs as logs
 
 def rms(data):
-    return numpy.sqrt(numpy.sum(data**2) / len(data))
+    return numpy.ma.sqrt(numpy.ma.sum(data**2) / len(data))
 
 # ------------------------------------------------------------------------------
 # Subsystem user function and ICD
@@ -246,8 +246,8 @@ def bpcal( in_table, out_dir, logobj='PYTHON', create_plots=False ):
 	# Return the dictionary containing the bandpass statistics, scores, and
 	# plots dictionaries
         bpcal_qa = {'QANUMBERS': bpcal_stats, \
-                     'QASCORES': bpcal_scores, \
-                     'QAPLOTS': bpcal_plots}
+                    'QASCORES': bpcal_scores, \
+                    'QAPLOTS': bpcal_plots}
 
 	return bpcal_qa
 
@@ -460,9 +460,14 @@ def bpcal_calc( in_table, logger='' ):
 
 	try:
             for s in range( len(spwList) ):
-                chanRange = bpcal_chanRangeList( numchanList[s] )
-                if chanRange == []: continue
-                spw = bpcal_spwChanString( spwList[s], chanRange )
+                #chanRange = bpcal_chanRangeList( numchanList[s] )
+                #if chanRange == []: continue
+                #spw = bpcal_spwChanString( spwList[s], chanRange )
+
+                # Consider full channel range. Any roll-off should be flagged
+                # already.
+                spw = spwList[s]
+
                 bpcal_stats['AMPLITUDE'][str(s)] = dict()
                 bpcal_stats['AMPLITUDE'][str(s)]['spw'] = int( spwList[s] )
                 bpcal_stats['AMPLITUDE'][str(s)]['chanRange'] = chanRange
@@ -475,14 +480,16 @@ def bpcal_calc( in_table, logger='' ):
                 # Amplitude
                 bp_data = caLoc.get(spw = spw)
                 for pol in bp_data.iterkeys():
-                    bpcal_stats['AMPLITUDE'][str(s)][pol] = bp_data[pol]['value'][chanRange[0]:chanRange[1]]
-                    amp_mean = numpy.average(bpcal_stats['AMPLITUDE'][str(s)][pol])
-                    amp_rms = rms(bp_data[pol]['value'][chanRange[0]:chanRange[1]]-amp_mean)
+                    amp_values = numpy.ma.array(bp_data[pol]['value'], mask=bp_data[pol]['flag'])
+                    bpcal_stats['AMPLITUDE'][str(s)][pol] = amp_values
+                    amp_mean = numpy.ma.average(bpcal_stats['AMPLITUDE'][str(s)][pol])
+                    amp_rms = rms(amp_values-amp_mean)
                     bpcal_stats['AMPLITUDE_SNR'][str(s)][pol] = amp_mean / amp_rms
                 # Phase
                 bp_data = caLoc.get(spw = spw, ap='PHASE')
                 for pol in bp_data.iterkeys():
-                    bpcal_stats['PHASE'][str(s)][pol] = bp_data[pol]['value'][chanRange[0]:chanRange[1]]
+                    phase_values = numpy.ma.array(bp_data[pol]['value'], mask=bp_data[pol]['flag'])
+                    bpcal_stats['PHASE'][str(s)][pol] = phase_values
 	except Exception, err:
 		origin = 'bpcal.bpcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
@@ -1498,7 +1505,7 @@ def bpcal_score_SNR( SNR ):
 def bpcal_score_flatness( values ):
 
     # Need to avoid zero mean
-    if (numpy.mean(values) == 0.0):
+    if (numpy.ma.mean(values) == 0.0):
         if ((values == 0.0).all()):
             wEntropy = 1.0
         else:
@@ -1509,7 +1516,7 @@ def bpcal_score_flatness( values ):
         if ((values <= 0.0).all()):
             wEntropy = 1.0e10
         else:
-            wEntropy = scipy.stats.mstats.gmean(values)/numpy.mean(values)
+            wEntropy = scipy.stats.mstats.gmean(values)/numpy.ma.mean(values)
 
     if (wEntropy == 1.0):
         flatnessScore = 1.0
@@ -1617,12 +1624,12 @@ def nanmedian(arr, **kwargs):
 def bpcal_score_derivative_deviation( values ):
 
     # Avoid scoring numerical inaccuracies for the reference antenna phase
-    if (numpy.sum(numpy.abs(values)) < 1e-4):
+    if (numpy.ma.sum(numpy.abs(values)) < 1e-4):
         ddScore = 1.0
     else:
         derivative = values[:-1]-values[1:]
         derivativeMAD = MAD(derivative)
-        numOutliers = len(numpy.where(derivative > 5.0 * derivativeMAD)[0])
+        numOutliers = len(numpy.ma.where(derivative > 5.0 * derivativeMAD)[0])
 
         if (numOutliers == 0):
             ddScore = 1.0
@@ -1921,7 +1928,7 @@ def bpcal_plot1( in_table, out_dir, stats_dict, spw, chanRange, iteration, ap ):
 	pl.errorbar( frequency, value, yerr=valueErr, fmt='go', label='good' )
 
 	flag = stats_dict['flag']
-	index = numpy.where( flag==True )[0]
+	index = numpy.ma.where( flag==True )[0]
 	if len(index) > 0:
 		pl.errorbar( frequency[index], value[index],
 		    yerr=valueErr[index], fmt='ro', label='flagged' )
