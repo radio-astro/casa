@@ -92,8 +92,10 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     case UWAVE:
     case VWAVE:
     case WWAVE:
-    	return WAVELENGTHS_PER_CHANNEL;
+    	//Should be lambda
+    	return WAVELENGTHS;
     case PHASE:
+    case GPHASE:
     case ELEVATION:
     case AZIMUTH:
     case PARANG:
@@ -103,19 +105,22 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     	return DEGREES;
     case HA0:
     	return HOURS;
-    case AMP:
-    case REAL:
-    case IMAG:
-    	return JANSKY;
-
-       		   /*   GAMP,GPHASE,GREAL,GIMAG,
-       		      DELAY,SWP,TSYS,OPAC,*/
    case RADIAL_VELOCITY:
        	return KILOMETERS_PER_SECOND;
+   case DELAY:
+	   	return NANOSECONDS;
+   case TSYS:
+	   	return KELVIN;
+   case OPAC:
+	   return NEPERS;
 
     case RHO:
        	return KILOMETERS;
     default: return UNONE;
+    //The following axis have units which are proportion to Jansky, but are
+    //time varying so Jansky is not accurate.  For now, we are not including
+    //units with them.
+    //AMP, REAL, IMAG, GAMP, GPHASE, GREAL, GIMAG, SWP
     }
 }
 

@@ -32,6 +32,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
 #include <measures/Measures/Stokes.h>
+//#include <QtCore/qmath.h>
 #include <QDebug>
 
 namespace casa {
@@ -332,6 +333,8 @@ bool PlotMSIndexer::unmaskedMinsMaxesRaw(double& xMin, double& xMax,
 	return True;
 }
 
+
+
 unsigned int PlotMSIndexer::numBins() const {
 	// TODO
 	return PMS::COLORS_LIST().size();
@@ -348,18 +351,24 @@ unsigned int PlotMSIndexer::binAt(unsigned int i) const {
 			binValue = val % numBins();
 		}
 		else {
-			double timeInterval = 1;
-			int timeIndex = val;
 			if ( plotmscache_->averaging_.time() ){
-				timeInterval= plotmscache_->averaging_.timeValue();
+				double timeInterval= plotmscache_->averaging_.timeValue();
 				double baseTime = plotmscache_->getTime( 0, 0 );
 				Double time = plotmscache_->getTime(currChunk_, 0);
 				Double timeDiff = time - baseTime;
-				timeIndex = static_cast<int>( timeDiff / timeInterval );
+				int timeIndex = static_cast<int>( timeDiff / timeInterval );
 				binValue = timeIndex % numBins();
 			}
 			else {
-				binValue = currChunk_ % numBins();
+				int timeIndex = 0;
+				if ( currChunk_ == 0 ){
+					timeIndex = plotmscache_->findColorIndex( currChunk_, false );
+				}
+				else {
+					timeIndex = plotmscache_->findColorIndex( currChunk_, false );
+				}
+				binValue = timeIndex % numBins();
+
 			}
 		}
 	}
@@ -373,7 +382,7 @@ bool PlotMSIndexer::isBinned() const {
 
 bool PlotMSIndexer::colorize(bool doColorize, PMS::Axis colorizeAxis) {
 	// TODO
-	bool changed = doColorize != itsColorize_ ||
+	bool changed = (doColorize != itsColorize_) ||
 			(doColorize && colorizeAxis != itsColorizeAxis_);
 	itsColorize_ = doColorize;
 	itsColorizeAxis_ = colorizeAxis;
@@ -399,26 +408,15 @@ void PlotMSIndexer::setUpIndexing() {
 	// Refer to the chunk shape matrix in the cache
 	Matrix<Int>& chsh(plotmscache_->chunkShapes());
 
-	//  cout << "Set shapes..." << endl;
-
 	icorrmax_.reference(chsh.row(0));
 	ichanmax_.reference(chsh.row(1));
 	ibslnmax_.reference(chsh.row(2));
 	iantmax_.reference(chsh.row(3));
 
-
-  /*cout << "icorrmax_ = " << icorrmax_ << endl;
-  cout << "ichanmax_ = " << ichanmax_ << endl;
-  cout << "ibslnmax_ = " << ibslnmax_ << endl;
-  cout << "iantmax_  = " << iantmax_  << endl;
-*/
-
 	idatamax_.resize(nChunk());
 	idatamax_=chsh.row(0);
 	idatamax_*=chsh.row(1);
 	idatamax_*=chsh.row(2);
-
-	//cout << "idatamax_ = " << idatamax_ << endl;
 
 	ichanbslnmax_.resize(nChunk());
 	ichanbslnmax_=chsh.row(1);
@@ -479,10 +477,20 @@ void PlotMSIndexer::setUpIndexing() {
 			}
 		break;
 	}
+	case PMS::TIME : {
+		nSegment_ = 0;
+		for ( Int ich=0; ich<nChunk();++ich ){
+			if (plotmscache_->goodChunk(ich)){
+				if (plotmscache_->getTime(ich, 0) == plotmscache_->getTime(iterValue_,0)){
+					++nSegment_;
+				}
+			}
+		}
+		break;
+	}
 	default:
 		// most iteration axis have nChunk segments
 		nSegment_=nChunk();
-
 	}
 
 	// Size up and initialize the indexing helpers and counters
@@ -511,8 +519,6 @@ void PlotMSIndexer::setUpIndexing() {
 		break;
 	}
 
-	//  cout << "iterAxisRef = " << iterAxisRef << endl;
-
 	// Count per segment
 	Int iseg(-1);
 	Vector<Bool>& nAM(plotmscache_->netAxesMask_[dataIndex]);
@@ -521,6 +527,7 @@ void PlotMSIndexer::setUpIndexing() {
 	if ( averagingTime ){
 		timeInterval = plotmscache_->averaging_.timeValue();
 	}
+	double iterTime = plotmscache_->time_[iterValue_];
 
 	for (Int ic=0;ic<nChunk();++ic) {
 
@@ -529,8 +536,6 @@ void PlotMSIndexer::setUpIndexing() {
 			continue;
 		}
 
-		//    cout << "Cache chunk = " << ic << endl;
-		//    cout << "plotmscache_->plmask_[ic]->shape() = " << plotmscache_->plmask_[ic]->shape() << endl;
 		switch (iterAxis_) {
 		case PMS::NONE:
 		case PMS::FIELD:
@@ -548,34 +553,28 @@ void PlotMSIndexer::setUpIndexing() {
 			break;
 		}
 		case PMS::TIME: {
-			Vector<double> timeAxisRef;
-			timeAxisRef.reference(plotmscache_->time_);
-			double elapsedTime = timeAxisRef(ic) - timeAxisRef(0);
 
-
-
-			int elapsedAmount = static_cast<int>(elapsedTime / timeInterval );
 			bool assignValues = false;
 			if ( averagingTime ){
-				if ( elapsedAmount == iterValue_ ){
+				double icTime = plotmscache_->time_[ic];
+				if ( icTime >= iterTime && icTime < iterTime + timeInterval ){
 					assignValues = true;
 				}
 			}
 			else {
-				if ( iterValue_  == ic ){
+				if ( iterTime  == plotmscache_->time_[ic] ){
 					assignValues = true;
 				}
 			}
 
 			if ( assignValues ){
 				++iseg;
-
 				cacheChunk_(iseg) = ic;
 				cacheOffset_(iseg) = 0;
-				nSegPoints_(iseg) = 1;
-				if ( !averagingTime ){
-					continue;
-				}
+				nSegPoints_(iseg) = ((nAM(0) ? icorrmax_(ic) : 1)*
+						(nAM(1) ? ichanmax_(ic) : 1)*
+						(nAM(2) ? ibslnmax_(ic) : 1)*
+						(nAM(3) ? iantmax_(ic) : 1));
 			}
 			break;
 		}
@@ -633,13 +632,6 @@ void PlotMSIndexer::setUpIndexing() {
 	nCumulPoints_(0)=nSegPoints_(0);
 	for (Int iseg=1;iseg<nSegment_;++iseg)
 		nCumulPoints_(iseg)=nCumulPoints_(iseg-1)+nSegPoints_(iseg);
-
-	/*
-  cout << "nSegPoints_   = " << nSegPoints_ << endl;
-  cout << "nCumulPoints_ = " << nCumulPoints_ << endl;
-  cout << "cacheChunk_   = " << cacheChunk_ << endl;
-  cout << "cacheOffset_  = " << cacheOffset_ << endl;
-	 */
 
 	nPoints_.reference(nSegPoints_);
 	nCumulative_.reference(nCumulPoints_);
@@ -1358,9 +1350,10 @@ String PlotMSIndexer::iterLabel() {
 	case PMS::FIELD:
 		return itername+": "+plotmscache_->fldnames_(iterValue_);
 		break;
-	case PMS::TIME:
-		return itername + ": "+String::toString(iterValue_);
+	case PMS::TIME:{
+		return ": "+plotmscache_->getTimeBounds( iterValue_);
 		break;
+	}
 	case PMS::BASELINE: {
 		maskedAt(0);  // sets currChunk_ and irel_ for first point so we can get ant indices
 		Int ant1=Int(plotmscache_->getAnt1(currChunk_,getIndex0010(currChunk_,irel_)));

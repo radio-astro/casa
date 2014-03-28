@@ -35,6 +35,8 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 
+
+
 namespace casa {
 
 //# Forward declarations.
@@ -208,6 +210,8 @@ private:
   // (see PlotLogger).
   void log(const String& method, const String& message, int eventType);
 
+
+
   // Private data
    
   // Parent plotms.
@@ -263,6 +267,8 @@ private:
   
   // Cope with const-ness in the get methods
   PlotMSIndexer* self;
+
+
   int dataIndex;
 
 };

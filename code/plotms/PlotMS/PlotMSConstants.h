@@ -176,10 +176,11 @@ public:
     // <group>
     PMS_ENUM1(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
               UNONE, UDATETIME, GHERTZ, METERS_PER_SECOND, KILOMETERS_PER_SECOND,
-              KILOMETERS, METERS, HOURS, WAVELENGTHS_PER_CHANNEL, DEGREES, JANSKY);
+              KILOMETERS, METERS, HOURS, WAVELENGTHS, DEGREES, NANOSECONDS, KELVIN,
+              NEPERS);
     PMS_ENUM2(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
               "", "s", "GHz", "m/s", "km/s", "km", "m", "hours",
-              "wavelengths per channel", "degrees", "Jy");
+              "wavelengths", "degrees", "ns", "K", "neper");
 
     // </group>
               

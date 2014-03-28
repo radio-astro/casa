@@ -611,6 +611,50 @@ void PlotMSCacheBase::clearRanges(){
 	xmaxG_=ymaxG_=xflmaxG_=yflmaxG_=-DBL_MAX;
 }
 
+String PlotMSCacheBase::getTimeBounds( int iterValue ){
+	String formattedTime;
+	if ( averaging_.time() ){
+		int nIter = 1;
+		if ( indexer_.size() > 0 ){
+			nIter = indexer_[0].size();
+		}
+		int divisor = nChunk_/nIter;
+		int lowBound = iterValue;
+		int highBound = iterValue;
+		double iterNorm = iterValue / divisor;
+		for ( int i = 0; i < nChunk_; i++ ){
+			if ( i / divisor == iterNorm ){
+				if ( lowBound > i ){
+					lowBound = i;
+				}
+				if ( highBound < i ){
+					highBound = i;
+				}
+			}
+		}
+
+		double lowValue = time_(lowBound);
+		double highValue = time_(highBound );
+		if ( highBound < nChunk_ - 1){
+			highValue = time_(highBound+1);
+		}
+
+		if ( lowBound == highBound ){
+			formattedTime = Plotter::formattedDateString(Plotter::DEFAULT_RELATIVE_DATE_FORMAT,lowValue, DATE_MJ_SEC );
+		}
+		else {
+			String lowTime = Plotter::formattedDateString(Plotter::DEFAULT_RELATIVE_DATE_FORMAT,lowValue, DATE_MJ_SEC );
+			String highTime = Plotter::formattedDateString(Plotter::DEFAULT_RELATIVE_DATE_FORMAT,highValue, DATE_MJ_SEC );
+			formattedTime = lowTime + " - " + highTime;
+		}
+	}
+	else {
+		double tValue = time_(iterValue);
+		formattedTime =Plotter::formattedDateString(Plotter::DEFAULT_RELATIVE_DATE_FORMAT,tValue, DATE_MJ_SEC );
+	}
+	return formattedTime;
+}
+
 void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		Bool globalYRange, int dataIndex ) {
 
@@ -705,6 +749,8 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		break;
 	}
 	case PMS::TIME: {
+
+
 		if (averaging_.time()){
 			double timeInterval= averaging_.timeValue();
 			if ( timeInterval <= 0 ){
@@ -713,35 +759,41 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 			double baseTime = getTime( 0, 0 );
 			double endTime = getTime( nChunk_-1, 0 );
 			double totalTime = endTime - baseTime;
-			double quotient = totalTime / timeInterval;
-			nIter = static_cast<int>( ceil(quotient) );
+			double quotient = qRound(totalTime / timeInterval);
+			nIter = static_cast<int>( quotient )+1;
 
-			//It does not make sense to have more iterations than number of chunks.
+		    //It does not make sense to have more iterations than number of chunks.
 			//This could happen if averaging is set less than the time interval between chunks.
 			if ( nIter > nChunk_){
 				nIter = nChunk_;
 			}
 			const int UNITIALIZED = -1;
 			Vector<Int> timeList(nIter, UNITIALIZED);
-			double actualTimeInterval = totalTime / nIter;
-			int divisor = nChunk_ / nIter;
-			for ( int j = 0; j < nChunk_; j++ ){
-				double chunkTime = getTime( j, 0 );
-				double chunkElapsed = chunkTime - baseTime;
 
-				int chunkIndex = static_cast<int>( chunkElapsed / actualTimeInterval );
-				//Set the index to the first time value in the iteration.
-				if ( timeList(chunkIndex) == UNITIALIZED ){
-					timeList(chunkIndex) = j / divisor;
-				}
+			int divisor = nChunk_ / nIter;
+			for ( int j = 0; j < nIter; j++ ){
+				int timeIndex = j * divisor;
+				timeList[j] = timeIndex;
 			}
 			iterValues = timeList;
 		}
+
+		//We are not averaging time.  Store and count the unique time values.
 		else {
-			Vector<Int> timeList(nChunk_);
-			indgen(timeList);
-			iterValues=timeList;
-			nIter=timeList.nelements();
+			QList<double> uniqueTimes;
+			QVector<int> timeList;
+			for ( int i = 0; i < nChunk(); i++ ){
+				double timeValue = getTime(i, 0);
+				if ( !uniqueTimes.contains( timeValue )){
+					uniqueTimes.append( timeValue );
+					timeList.append( i );
+				}
+			}
+			nIter = uniqueTimes.size();
+			iterValues.resize( nIter );
+			for ( int i = 0; i < nIter; i++ ){
+				iterValues[i] = timeList[i];
+			}
 		}
 		break;
 	}
@@ -1198,4 +1250,19 @@ void PlotMSCacheBase::log(const String& method, const String& message,
 		int eventType) {
 	plotms_->getLogger()->postMessage(PMS::LOG_ORIGIN,method,message,eventType);}
 
+}
+
+int PlotMSCacheBase::findColorIndex( int chunk, bool initialize ){
+	if ( initialize || uniqueTimes.size() == 0 ){
+		uniqueTimes.resize(0);
+		for ( int j = 0; j <= nChunk_; j++ ){
+			double chunkTime = getTime( j, 0 );
+			if ( !uniqueTimes.contains( chunkTime)){
+				uniqueTimes.append( chunkTime );
+			}
+		}
+	}
+	double timeChunk = getTime(chunk,0);
+	int index = uniqueTimes.indexOf( timeChunk );
+	return index;
 }

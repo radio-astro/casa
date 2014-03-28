@@ -36,6 +36,8 @@
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
 
+#include <QVector>
+
 namespace casa {
 
 //# Forward declarations.
@@ -223,6 +225,9 @@ public:
   PlotLogMessage* flagRange( int plotIterIndex, casa::PlotMSFlagging& flagging,
      		const Vector<PlotRegion>& regions, bool showFlagged);
 
+  //Return a formatted string for time iteration plots giving the time range.
+  String getTimeBounds( int iterValue );
+
 protected:
     
   // Forbid copy for now
@@ -288,6 +293,11 @@ protected:
   // Logs the given message from the given method name as the given event type
   // (see PlotLogger).
   void log(const String& method, const String& message, int eventType);
+
+  //Return the color lookup index for the chunk.
+  int findColorIndex( int chunk, bool initialize );
+
+
 
   // Private data
   
@@ -377,6 +387,7 @@ protected:
 
   PMS::Axis iterAxis;
   bool ephemerisInitialized;
+  QVector<double> uniqueTimes;
 };
 typedef CountedPtr<PlotMSCacheBase> PlotMSCacheBasePtr;
 

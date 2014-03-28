@@ -759,8 +759,7 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	// Title
 	bool resetTitle = set || (iter->iterationAxis() != PMS::NONE);
 	String iterTxt;
-	if(iter->iterationAxis() != PMS::NONE &&
-			itsCache_->nIter(0) > 0) {
+	if(iter->iterationAxis() != PMS::NONE && itsCache_->nIter(0) > 0) {
 		iterTxt = itsCache_->indexer(0,iteration).iterLabel();
 	}
 	String title = "";
@@ -814,6 +813,7 @@ bool PlotMSOverPlot::updateDisplay() {
 			uInt cols = itsPlots_[row].size();
 			//uInt iter = iter_ + row * cols;
 			//if(iter >= nIter) break;
+
 			for(uInt col = 0; col < cols; ++col) {
 				//if(iter >= nIter) break;
 				// Set symbols.
@@ -834,8 +834,9 @@ bool PlotMSOverPlot::updateDisplay() {
 				plot->setSymbol(symbolUnmasked);
 				plot->setMaskedSymbol(symbolMasked);
 				// Colorize and set data changed, if redraw is needed
-				if(nIter > 0 && itsCache_->indexer(row,col).colorize(
-						display->colorizeFlag(), display->colorizeAxis())) {
+				bool colorizeChanged = itsCache_->indexer(row,col).colorize(display->colorizeFlag(), display->colorizeAxis());
+
+				if(nIter > 0 && colorizeChanged ) {
 					plot->dataChanged();
 				}
 
@@ -879,17 +880,14 @@ void PlotMSOverPlot::setColors() {
 		uInt cols = itsPlots_[row].size();
 		itsColoredPlots_[row].resize(cols);
 		for(uInt col = 0; col < cols; ++col) {
-			uInt iteration = iter_ + row * cols + col;
+			uInt iteration = row * cols + col;
 			if(iteration >= nIter) break;
 			itsColoredPlots_[row][col] = ColoredPlotPtr(
 					dynamic_cast<ColoredPlot*>(&*itsPlots_[row][col]), false);
-			//dynamic_cast<QPScatterPlot*>(&*itsPlots_[row][col]);
 			if(!itsColoredPlots_[row][col].null()) {
-				//if(itsColoredPlots_[row][col] != NULL) {
 				const vector<String> &colors = PMS::COLORS_LIST();
 				for(uInt i = 0; i < colors.size(); ++i) {
-					itsColoredPlots_[row][col]->setColorForBin(
-							i ,itsFactory_->color(colors[i]));
+					itsColoredPlots_[row][col]->setColorForBin(i ,itsFactory_->color(colors[i]));
 				}
 			} else {
 				std::cout << "Could not convert plot (" << row << ", " << col
