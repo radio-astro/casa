@@ -241,9 +241,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
-  
+  Vector<String> MSUtil::getSpectralFrames(Vector<MFrequency::Types>& types, const MeasurementSet& ms)
+  {
+	  Vector<String> retval;
+	  Vector<Int> typesAsInt=ROMSSpWindowColumns(ms.spectralWindow()).measFreqRef().getColumn();
+	  if(ms.nrow()==Table(ms.getPartNames()).nrow()){
+		  types.resize(typesAsInt.nelements());
+		  for (uInt k=0; k < types.nelements(); ++k)
+			  types[k]=MFrequency::castType(typesAsInt[k]);
+  	  }
+	  else{
+		  Vector<Int> ddId;
+		  ROScalarColumn<Int> (ms,MS::columnName(MS::DATA_DESC_ID)).getColumn(ddId);
+		  Vector<uInt>  uniqIndx;
+		  uInt nTimes=GenSort<Int>::sort (ddId, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+		  ddId.resize(nTimes, True);
+		  Vector<Int> spwids(nTimes);
+		  Vector<Int> spwInDD=ROMSDataDescColumns(ms.dataDescription()).spectralWindowId().getColumn();
+		  for (uInt k=0; k < nTimes; ++k)
+			  spwids[k]=spwInDD[ddId[k]];
+
+		  nTimes=GenSort<Int>::sort (spwids, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+		  spwids.resize(nTimes, True);
+		  types.resize(nTimes);
+		  for(uInt k=0; k <nTimes; ++k)
+			  types[k]=MFrequency::castType(typesAsInt[spwids[k]]);
+	  }
+
+	  retval.resize(types.nelements());
+	  for (uInt k=0; k < types.nelements(); ++k){
+		retval[k]=MFrequency::showType(types[k]);
+	  }
 
 
+	  return retval;
+
+  }
 
 
 } //# NAMESPACE CASA - END
