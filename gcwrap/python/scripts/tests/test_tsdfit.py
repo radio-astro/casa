@@ -378,7 +378,9 @@ class tsdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
     # Input and output names
-    infile = 'sd_analytic_type1-3.bl.asap'
+    infile_convolve = 'sd_analytic_type3-1.asap'
+    infile_shift = 'sd_analytic_type4-1.asap'
+    infile_duplicate = 'sd_analytic_type5-1.asap'
     prefix = 'tsdfit_selection_syntax'
 
     # line information
@@ -394,22 +396,25 @@ class tsdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
 
     # reference values for baseline fit
     # (scan,beam,if,pol): [peak, center, fwhm]
-    fit_ref = {(15,23,0): [[0.9394372701644897, 20.0, 5.0]],
-               (16,25,1): [[1.8788745403289795, 40.0, 5.0]],
-               (16,21,0): [[3.757749080657959, 60.0, 5.0]],
-               (17,23,1): [[5.636623859405518, 80.0, 5.0]]}
-    fit_ref_shifted = {(15,23,0): [[0.9394372701644897, 50.0, 5.0]],
-                       (16,25,1): [[1.8788745403289795, 50.0, 5.0]],
-                       (16,21,0): [[3.757749080657959, 50.0, 5.0]],
-                       (17,23,1): [[5.636623859405518, 50.0, 5.0]]}
-    fit_ref_duplicated = {(15,23,0): [[0.9394372701644897, 50.0, 5.0],
+    fit_ref_convolve = {(15,23,0): [[0.9394372701644897, 20.0, 5.0]],
+                        (16,25,1): [[1.8788745403289795, 40.0, 5.0]],
+                        (16,21,0): [[3.757749080657959, 60.0, 5.0]],
+                        (17,23,1): [[5.636623859405518, 80.0, 5.0]]}
+    fit_ref_shift = {(15,23,0): [[0.9394372701644897, 50.0, 5.0]],
+                     (16,25,1): [[1.8788745403289795, 50.0, 5.0]],
+                     (16,21,0): [[3.757749080657959, 50.0, 5.0]],
+                     (17,23,1): [[5.636623859405518, 50.0, 5.0]]}
+    fit_ref_duplicate = {(15,23,0): [[0.9394372701644897, 50.0, 5.0],
                                       [0.9394372701644897, 75.0, 5.0]],
-                          (16,25,1): [[1.8788745403289795, 50.0, 5.0],
-                                      [1.8788745403289795, 75.0, 5.0]],
-                          (16,21,0): [[3.757749080657959, 50.0, 5.0],
-                                      [3.757749080657959, 75.0, 5.0]],
-                          (17,23,1): [[5.636623859405518, 50.0, 5.0],
-                                      [5.636623859405518, 75.0, 5.0]]}
+                         (16,25,1): [[1.8788745403289795, 50.0, 5.0],
+                                     [1.8788745403289795, 75.0, 5.0]],
+                         (16,21,0): [[3.757749080657959, 50.0, 5.0],
+                                     [3.757749080657959, 75.0, 5.0]],
+                         (17,23,1): [[5.636623859405518, 50.0, 5.0],
+                                     [5.636623859405518, 75.0, 5.0]]}
+    fit_ref = {infile_convolve: fit_ref_convolve,
+               infile_shift: fit_ref_shift,
+               infile_duplicate: fit_ref_duplicate}
     
     # tolerance
     tol = 1.0e-7
@@ -423,112 +428,22 @@ class tsdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
         return True
 
     def setUp(self):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
+        for infile in [self.infile_convolve, self.infile_shift, self.infile_duplicate]:
+            if os.path.exists(infile):
+                shutil.rmtree(infile)
+            shutil.copytree(self.datapath+infile, infile)
         default(tsdfit)
-        self.is_shifted = False
-        self.is_duplicated = False
 
     def tearDown(self):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
+        for infile in [self.infile_convolve, self.infile_shift, self.infile_duplicate]:
+            if os.path.exists(infile):
+                shutil.rmtree(infile)
 
-    def _convolve(self):
-        # gaussian with center 49 chan, fwhm 5 chan
-        nchan = 100
-        center = 49
-        fwhm = 5
-        g = numpy.zeros(nchan, dtype=float)
-        for i in xrange(nchan):
-            sigma = fwhm / (2.0 * math.sqrt(2.0 * math.log(2.0)))
-            g[i] = math.exp(-0.5 * ((i - center) / sigma)**2)
-        g /= sum(g)
-
-        # convolve spectral data with gaussian
-        tb.open(self.infile, nomodify=False)
-        for irow in xrange(tb.nrows()):
-            sp = tb.getcell('SPECTRA', irow)
-            newsp = numpy.convolve(sp, g, mode='same')
-            self.assertEqual(len(sp), len(newsp))
-            self.assertGreater(newsp.max(), 0.0)
-            tb.putcell('SPECTRA', irow, newsp)
-        tb.close()
-
-    def _shift(self):
-        # align center channel
-        center = 50
-
-        tb.open(self.infile, nomodify=False)
-        for irow in xrange(tb.nrows()):
-            sp = tb.getcell('SPECTRA', irow)
-            maxval = sp.max()
-            cent_org = sp.argmax()
-            tmp = sp[cent_org]
-            sp[cent_org] = sp[center]
-            sp[center] = tmp
-            self.assertEqual(sp.max(), maxval)
-            self.assertEqual(sp.argmax(), center)
-            tb.putcell('SPECTRA', irow, sp)
-        tb.close()
-
-    def _duplicate(self):
-        self._shift()
-
-        duplicate = 75
-        
-        tb.open(self.infile, nomodify=False)
-        for irow in xrange(tb.nrows()):
-            sp = tb.getcell('SPECTRA', irow)
-            maxval = sp.max()
-            center = sp.argmax()
-            sp[duplicate] = maxval
-            self.assertEqual(sp[center], sp[duplicate])
-            tb.putcell('SPECTRA', irow, sp)
-        tb.close()            
-        
-    def convolve(func):
-        import functools
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # first argument is 'self'
-            obj = args[0]
-            obj._convolve()
-            return func(*args, **kwargs)
-        return wrapper
-
-    def shift(func):
-        import functools
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # first argument is 'self'
-            obj = args[0]
-            obj._shift()
-            obj.is_shifted = True
-            return func(*args, **kwargs)
-        return wrapper
-
-    def duplicate(func):
-        import functools
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # first argument is 'self'
-            obj = args[0]
-            obj._duplicate()
-            obj.is_shifted = True
-            obj.is_duplicated = True
-            return func(*args, **kwargs)
-        return wrapper
-
-    def __test_result(self, result_ret, result_out, rows):
+    def __test_result(self, infile, result_ret, result_out, rows):
         casalog.post('result=%s'%(result_ret))
-        s = sd.scantable(self.infile, average=False)
-        if self.is_duplicated:
-            fit_ref = self.fit_ref_duplicated
-        elif self.is_shifted:
-            fit_ref = self.fit_ref_shifted
-        else:
-            fit_ref = self.fit_ref
+        s = sd.scantable(infile, average=False)
+        self.assertTrue(self.fit_ref.has_key(infile))
+        fit_ref = self.fit_ref[infile]
             
         for irow in xrange(len(rows)):
             row = rows[irow]
@@ -597,14 +512,14 @@ class tsdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
         return result
                 
 
-    def __exec_complex_test(self, params, exprs, rows, regular_test=True):
+    def __exec_complex_test(self, infile, params, exprs, rows, regular_test=True):
         num_param = len(params)
         test_name = self._get_test_name(regular_test)
         outfile = '.'.join([self.prefix, test_name])
         #print 'outfile=%s'%(outfile)
         casalog.post('%s: %s'%(test_name, ','.join(['%s = \'%s\''%(params[i],exprs[i]) for i in xrange(num_param)])))
-        nfit = [1,1] if self.is_duplicated else [1]
-        kwargs = {'infile': self.infile,
+        nfit = [1,1] if infile == self.infile_duplicate else [1]
+        kwargs = {'infile': infile,
                   'nfit': nfit,
                   'fitfunc': 'gauss',
                   'fitmode': 'list',
@@ -623,523 +538,499 @@ class tsdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
         # read outfile
         result_out = self.__read_result(outfile)
 
-        self.__test_result(result, result_out, rows)
+        self.__test_result(infile, result, result_out, rows)
                           
         return outfile
 
-    def __exec_simple_test(self, param, expr, rows, regular_test=True):
-        return self.__exec_complex_test([param], [expr],
+    def __exec_simple_test(self, infile, param, expr, rows, regular_test=True):
+        return self.__exec_complex_test(infile, [param], [expr],
                                         rows, regular_test)
 
     ### field selection syntax test ###
-    @shift
-    @convolve
     def test_field_value_default(self):
         """test_field_value_default: Test default value for field"""
+        infile = self.infile_shift
         field = ''
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
         
-    @convolve
     def test_field_id_exact(self):
         """test_field_id_exact: Test field selection by id"""
+        infile = self.infile_convolve
         field = '5'
         spw = '23:0~40'
         rows = [0]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
         
-    @convolve
     def test_field_id_lt(self):
         """test_field_id_lt: Test field selection by id (<N)"""
+        infile = self.infile_convolve
         field = '<7'
         spw = '23:0~40,25:20~60'
         rows = [0,1]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_id_gt(self):
         """test_field_id_gt: Test field selection by id (>N)"""
+        infile = self.infile_convolve
         field = '>6'
         spw = '23:60~100,21:40~80'
         rows = [2,3]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_id_range(self):
         """test_field_id_range: Test field selection by id ('N~M')"""
+        infile = self.infile_convolve
         field = '5~6'
         spw = '23:0~40,25:20~60'
         rows = [0,1]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_id_list(self):
         """test_field_id_list: Test field selection by id ('N,M')"""
+        infile = self.infile_convolve
         field = '5,7'
         spw = '23:0~40,21:40~80'
         rows = [0,2]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_id_exprlist(self):
         """test_field_id_exprlist: Test field selection by id ('EXPR0,EXPR1')"""
+        infile = self.infile_convolve
         field = '6~7,>7'
         spw = '23:60~100,25:20~60,21:40~80'
         rows = [1,2,3]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_value_exact(self):
         """test_field_value_exact: Test field selection by name"""
+        infile = self.infile_convolve
         field = 'M100'
         spw = '23:0~40,25:20~60'
         rows = [0,1]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_value_pattern(self):
         """test_field_value_pattern: Test field selection by pattern match"""
+        infile = self.infile_convolve
         field = 'M*'
         spw = '23:0~40,25:20~60,21:40~80'
         rows = [0,1,2]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_value_list(self):
         """test_field_value_list: Test field selection by name list"""
+        infile = self.infile_convolve
         field = 'M30,3C273'
         spw = '23:60~100,21:40~80'
         rows = [2,3]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
-    @convolve
     def test_field_mix_exprlist(self):
         """test_field_mix_list: Test field selection by name and id"""
+        infile = self.infile_convolve
         field = '6,M30,3C273'
         spw = '25:20~60,23:60~100,21:40~80'
         rows = [1,2,3]
 
-        self.__exec_complex_test(['field', 'spw'], [field, spw], rows)
+        self.__exec_complex_test(infile, ['field', 'spw'], [field, spw], rows)
 
     ### spw selection syntax test ###
-    @shift
-    @convolve
     def test_spw_id_default(self):
         """test_spw_id_default: Test default value for spw"""
+        infile = self.infile_shift
         spw = ''
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @shift
-    @convolve
     def test_spw_id_exact(self):
         """test_spw_id_exact: Test spw selection by id ('N')"""
+        infile = self.infile_shift
         spw = '21'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @shift
-    @convolve
     def test_spw_id_lt(self):
         """test_spw_id_lt: Test spw selection by id ('<N')"""
+        infile = self.infile_shift
         spw = '<24'
         rows = [0,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_id_gt(self):
         """test_spw_id_lt: Test spw selection by id ('>N')"""
+        infile = self.infile_shift
         spw = '>22'
         rows = [0,1,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_id_range(self):
         """test_spw_id_range: Test spw selection by id ('N~M')"""
+        infile = self.infile_shift
         spw = '22~25'
         rows = [0,1,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_id_list(self):
         """test_spw_id_list: Test spw selection by id ('N,M')"""
+        infile = self.infile_shift
         spw = '21,23,25'
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_id_exprlist(self):
         """test_spw_id_exprlist: Test spw selection by id ('EXP0,EXP1')"""
+        infile = self.infile_shift
         spw = '<22,23~25'
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_id_pattern(self):
         """test_spw_id_pattern: Test spw selection by wildcard"""
+        infile = self.infile_shift
         spw = '*'
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_value_frequency(self):
         """test_spw_value_frequency: Test spw selection by frequency range ('FREQ0~FREQ1')"""
+        infile = self.infile_shift
         spw = '299.4~299.6GHz'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @shift
-    @convolve
     def test_spw_value_velocity(self):
         """test_spw_value_velocity: Test spw selection by velocity range ('VEL0~VEL1')"""
+        infile = self.infile_shift
         spw = '-100~100km/s'
         rows = [0,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @shift
-    @convolve
     def test_spw_mix_exprlist(self):
         """test_spw_mix_exprlist: Test spw selection by id and frequency/velocity range"""
+        infile = self.infile_shift
         spw = '<22,-100~100km/s'
         rows = [0,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
     ### spw (channel) selection syntax test ###
-    @shift
-    @convolve
     def test_spw_id_default_channel(self):
         """test_spw_id_default_channel: Test spw selection with channel range (':CH0~CH1')"""
+        infile = self.infile_shift
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_id_default_frequency(self):
         """test_spw_id_default_frequency: Test spw selection with channel range (':FREQ0~FREQ1')"""
+        infile = self.infile_convolve
         spw = ':300470~300510MHz'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_id_default_velocity(self):
         """test_spw_id_default_velocity: Test spw selection with channel range (':VEL0~VEL1')"""
+        infile = self.infile_convolve
         spw = ':-509.6~-469.7km/s'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @duplicate
-    @convolve
     def test_spw_id_default_list(self):
         """test_spw_id_default_list: Test spw selection with multiple channel range (':CH0~CH1;CH2~CH3')"""
+        infile = self.infile_duplicate
         spw = ':30~70;55~95'
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_id_exact_channel(self):
         """test_spw_id_exact_channel: Test spw selection with channel range ('N:CH0~CH1')"""
+        infile = self.infile_convolve
         spw = '25:20~60'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @convolve
     def test_spw_id_exact_frequency(self):
         """test_spw_id_exact_frequency: Test spw selection with channel range ('N:FREQ0~FREQ1')"""
+        infile = self.infile_convolve
         spw = '25:3.0047e5~3.0051e5MHz'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @convolve
     def test_spw_id_exact_velocity(self):
         """test_spw_id_exact_velocity: Test spw selection with channel range ('N:VEL0~VEL1')"""
+        infile = self.infile_convolve
         spw = '25:-5.09647e2~-4.69675e2km/s'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @duplicate
-    @convolve
     def test_spw_id_exact_list(self):
         """test_spw_id_exact_list: Test spw selection with channel range ('N:CH0~CH1;CH2~CH3')"""
+        infile = self.infile_duplicate
         spw = '23:30~70;55~95'
         rows = [0,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @shift
-    @convolve
     def test_spw_id_pattern_channel(self):
         """test_spw_id_pattern_channel: Test spw selection with channel range ('*:CH0~CH1')"""
+        infile = self.infile_shift
         spw = '*:30~70'
         rows = [0,1,2,3]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
         
-    @convolve
     def test_spw_id_pattern_frequency(self):
         """test_spw_id_pattern_frequency: Test spw selection with channel range ('*:FREQ0~FREQ1')"""
+        infile = self.infile_convolve
         spw = '*:300470~300510MHz'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_id_pattern_velocity(self):
         """test_spw_id_pattern_velocity: Test spw selection with channel range ('*:VEL0~VEL1')"""
+        infile = self.infile_convolve
         spw = ':-509.6~-469.7km/s'
         rows = [1]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @duplicate
-    @convolve
     def test_spw_id_pattern_list(self):
         """test_spw_id_pattern_list: Test spw selection with channel range ('*:CH0~CH1;CH2~CH3')"""
+        infile = self.infile_duplicate
         spw = '*:30~70;55~95'
         rows = [0,1,2,3]
+        
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-        self.__exec_simple_test('spw', spw, rows)
-
-    @convolve
     def test_spw_value_frequency_channel(self):
         """test_spw_value_frequency_channel: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1')"""
+        infile = self.infile_convolve
         spw = '299.4~299.6GHz:40~80'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_value_frequency_frequency(self):
         """test_spw_value_frequency_frequency: Test spw selection with channel range ('FREQ0~FREQ1:FREQ2~FREQ3')"""
+        infile = self.infile_convolve
         spw = '299.4~299.6GHz:299.49~299.53GHz'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_value_frequency_velocity(self):
         """test_spw_value_frequency_velocity: Test spw selection with channel range ('FREQ0~FREQ1:VEL0~VEL1')"""
+        infile = self.infile_convolve
         spw = '299.4~299.6GHz:469.67~509.65km/s'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @duplicate
-    @convolve
     def test_spw_value_frequency_list(self):
         """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
+        infile = self.infile_duplicate
         spw = '299.4~299.6GHz:30~70;55~95'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_value_velocity_channel(self):
         """test_spw_value_velocity_channel: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1')"""
+        infile = self.infile_convolve
         spw = '400~600km/s:40~80'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_value_velocity_frequency(self):
         """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ0~FREQ1')"""
+        infile = self.infile_convolve
         spw = '400~600km/s:299.49~299.53GHz'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_value_velocity_velocity(self):
         """test_spw_value_velocity_velocity: Test spw selection with channel range ('VEL0~VEL1:VEL2~VEL3')"""
+        infile = self.infile_convolve
         spw = '400~600km/s:469.67~509.65km/s'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @duplicate
-    @convolve
     def test_spw_value_velocity_list(self):
         """test_spw_value_velocity_list: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1;CH2~CH3')"""
+        infile = self.infile_duplicate
         spw = '400~600km/s:30~70;55~95'
         rows = [2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
-    @convolve
     def test_spw_id_list_channel(self):
         """test_spw_id_list_channel: Test spw selection with channnel range ('ID0:CH0~CH1,ID1:CH2~CH3')"""
+        infile = self.infile_convolve
         spw = '21:40~80,25:20~60'
         rows = [1,2]
 
-        self.__exec_simple_test('spw', spw, rows)
+        self.__exec_simple_test(infile, 'spw', spw, rows)
 
     ### scan selection syntax test ###
-    @shift
-    @convolve
     def test_scan_id_default(self):
         """test_scan_id_default: Test default value for scan"""
+        infile = self.infile_shift
         scan = ''
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
 
-    @convolve
     def test_scan_id_exact(self):
         """test_scan_id_exact: Test scan selection by id ('N')"""
+        infile = self.infile_convolve
         scan = '15'
         spw = ':0~40'
         rows = [0]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
        
-    @convolve 
     def test_scan_id_lt(self):
         """test_scan_id_lt: Test scan selection by id ('<N')"""
+        infile = self.infile_convolve
         scan = '<16'
         spw = ':0~40'
         rows = [0]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
 
-    @convolve
     def test_scan_id_gt(self):
         """test_scan_id_gt: Test scan selection by id ('>N')"""
+        infile = self.infile_convolve
         scan = '>16'
         spw = ':60~100'
         rows = [3]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
 
-    @convolve
     def test_scan_id_range(self):
         """test_scan_id_range: Test scan selection by id ('N~M')"""
+        infile = self.infile_convolve
         scan = '15~16'
         spw = '23:0~40,25:20~60,21:40~80'
         rows = [0,1,2]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
 
-    @convolve
     def test_scan_id_list(self):
         """test_scan_id_list: Test scan selection by id ('N,M')"""
+        infile = self.infile_convolve
         scan = '15,16'
         spw = '21:40~80,23:0~40,25:20~60'
         rows = [0,1,2]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
 
-    @convolve
     def test_scan_id_exprlist(self):
         """test_scan_id_exprlist: Test scan selection by id ('EXP0,EXP1')"""
+        infile = self.infile_convolve
         scan = '<16,16'
         spw = '21:40~80,23:0~40,25:20~60'
         rows = [0,1,2]
 
-        self.__exec_complex_test(['scan', 'spw'], [scan, spw], rows)
+        self.__exec_complex_test(infile, ['scan', 'spw'], [scan, spw], rows)
 
     ### pol selection syntax test ###
-    @shift
-    @convolve
     def test_pol_id_default(self):
         """test_pol_id_default: Test default value for pol"""
+        infile = self.infile_shift
         pol = ''
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-    @convolve
     def test_pol_id_exact(self):
         """test_pol_id_exact: Test pol selection by id ('N')"""
+        infile = self.infile_convolve
         pol = '0'
         spw = '21:40~80,23:0~40'
         rows = [0,2]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-    @convolve
     def test_pol_id_lt(self):
         """test_pol_id_lt: Test pol selection by id ('<N')"""
+        infile = self.infile_convolve
         pol = '<1'
         spw = '21:40~80,23:0~40'
         rows = [0,2]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-    @convolve
     def test_pol_id_gt(self):
         """test_pol_id_gt: Test pol selection by id ('>N')"""
+        infile = self.infile_convolve
         pol = '>0'
         spw = '25:20~60,23:60~100'
         rows = [1,3]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-    @shift
-    @convolve
     def test_pol_id_range(self):
         """test_pol_id_range: Test pol selection by id ('N~M')"""
+        infile = self.infile_shift
         pol = '0~1'
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-    @shift
-    @convolve
     def test_pol_id_list(self):
         """test_pol_id_list: Test pol selection by id ('N,M')"""
+        infile = self.infile_shift
         pol = '0,1'
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-    @shift
-    @convolve
     def test_pol_id_exprlist(self):
         """test_pol_id_exprlist: Test pol selection by id ('EXP0,EXP1')"""
+        infile = self.infile_shift
         pol = '>0,<1'
         spw = ':30~70'
         rows = [0,1,2,3]
 
-        self.__exec_complex_test(['pol', 'spw'], [pol, spw], rows)
+        self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
 def suite():
     return [tsdfit_test, tsdfit_test_exceptions,
