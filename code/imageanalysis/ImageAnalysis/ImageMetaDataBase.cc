@@ -183,9 +183,17 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 			return ValueHolder(_getRefPixel()[n-1]);
 		}
 		else if (prefix == _CRVAL) {
-			return ValueHolder(
-				QuantumHolder(_getRefValue()[n-1]).toRecord()
-			);
+			if (_getCoords().polarizationAxisNumber(False) == (Int)(n-1)) {
+				cout << "found" << endl;
+				return ValueHolder(
+					_getStokes()
+				);
+			}
+			else {
+				return ValueHolder(
+					QuantumHolder(_getRefValue()[n-1]).toRecord()
+				);
+			}
 		}
 		else if (prefix == _CTYPE) {
 			return ValueHolder(_getAxisNames()[n-1]);
@@ -346,8 +354,8 @@ String ImageMetaDataBase::_getEpochString() const {
 
 IPosition ImageMetaDataBase::_getShape() const {
 	if (_shape.empty()) {
-		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		SPCIIF imf = _getFloatImage();
+		SPCIIC imc = _getComplexImage();
 		_shape = imf ? imf->shape() : imc->shape();
 	}
 	return _shape;

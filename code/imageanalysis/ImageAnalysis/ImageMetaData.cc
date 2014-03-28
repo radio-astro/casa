@@ -186,6 +186,18 @@ Vector<Double> ImageMetaData::_getRefPixel() const {
 	return _refPixel;
 }
 
+Vector<String> ImageMetaData::_getStokes() const {
+	const CoordinateSystem csys = _getCoords();
+	ThrowIf(
+		! csys.hasPolarizationCoordinate(),
+		"Logic Error: coordinate system does not have a polarization coordinate"
+	);
+	if (_stokes.empty()) {
+		_stokes = csys.stokesCoordinate().stokesStrings();
+	}
+	return _stokes;
+}
+
 Vector<Quantity> ImageMetaData::_getRefValue() const {
 	if (_refVal.size() == 0) {
 		Vector<Double> vals = _getCoords().referenceValue();

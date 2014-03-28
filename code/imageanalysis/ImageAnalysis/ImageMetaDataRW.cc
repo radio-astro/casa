@@ -808,7 +808,13 @@ void ImageMetaDataRW::_setCoordinateValue(
 	String prefix = key.substr(0, 5);
 	CoordinateSystem csys = _getCoords();
 	uInt n = _getAxisNumber(key);
+	Bool isStokes = csys.hasPolarizationCoordinate()
+		&& (Int)n == csys.polarizationAxisNumber(False) + 1;
 	if (prefix == ImageMetaDataBase::_CDELT) {
+		ThrowIf(
+			isStokes,
+			"A polarization axis cannot have an increment"
+		);
 		Quantity qinc = _getQuantity(value);
 		Vector<Double> increments = csys.increment();
 		if (qinc.getFullUnit().empty()) {
@@ -821,6 +827,10 @@ void ImageMetaDataRW::_setCoordinateValue(
 		}
 	}
 	else if (prefix == ImageMetaDataBase::_CRPIX) {
+		ThrowIf(
+			isStokes,
+			"A polarization axis cannot have a reference pixel"
+		);
 		DataType t = value.dataType();
 		Bool stringIsDouble = False;
 		Double x = 0;
@@ -851,20 +861,64 @@ void ImageMetaDataRW::_setCoordinateValue(
 		}
 	}
 	else if (prefix == ImageMetaDataBase::_CRVAL) {
+		DataType dType = value.dataType();
 		ThrowIf(
-			value.dataType() == TpString
+			dType == TpString
 			&& value.asString().empty(),
 			key + " value not specified"
 		);
 		Vector<Double> refval = csys.referenceValue();
-		Quantity qval = _getQuantity(value);
-		if (qval.getUnit().empty()) {
-			qval.setUnit(_getAxisUnits()[n-1]);
+		if (isStokes) {
+			ThrowIf(
+				dType != TpString && dType != TpArrayString,
+				"Data type to put must be either a string array or string"
+			);
+			uInt nStokes = csys.stokesCoordinate().stokes().size();
+			Vector<String> stokesTypes;
+			if (dType == TpString) {
+				ThrowIf(
+					nStokes > 1,
+					"There are " + String::toString(nStokes)
+					+ " polarization values, "
+					"so a string array of that length is needed"
+				);
+				stokesTypes = Vector<String>(1, value.asString());
+			}
+			else if (dType == TpArrayString) {
+				ThrowIf(
+					value.asArrayString().size() != nStokes,
+					"There are " + String::toString(nStokes)
+					+ " polarization values, "
+					"so a string array of that length is needed"
+				);
+				stokesTypes = value.asArrayString();
+			}
+			Vector<Int> stokesNumbers(nStokes);
+			Vector<String>::const_iterator begin = stokesTypes.begin();
+			Vector<String>::const_iterator typeIter = stokesTypes.begin();
+			Vector<String>::const_iterator end = stokesTypes.end();
+			Vector<Int>::iterator numberIter = stokesNumbers.begin();
+			while (typeIter != end) {
+				*numberIter = (Int)Stokes::type(*typeIter);
+				typeIter++;
+				numberIter++;
+			}
+			StokesCoordinate coord(stokesNumbers);
+			ThrowIf(
+				! csys.replaceCoordinate(coord, csys.polarizationCoordinateNumber()),
+				"Failed to replace stokes coordinate"
+			);
 		}
-		refval[n-1] = qval.getValue(_getAxisUnits()[n-1]);
-		csys.setReferenceValue(refval);
-		if (! _refVal.empty()) {
-			_refVal[n-1] = qval;
+		else {
+			Quantity qval = _getQuantity(value);
+			if (qval.getUnit().empty()) {
+				qval.setUnit(_getAxisUnits()[n-1]);
+			}
+			refval[n-1] = qval.getValue(_getAxisUnits()[n-1]);
+			csys.setReferenceValue(refval);
+			if (! _refVal.empty()) {
+				_refVal[n-1] = qval;
+			}
 		}
 	}
 	else if (prefix == ImageMetaDataBase::_CTYPE) {
@@ -876,6 +930,10 @@ void ImageMetaDataRW::_setCoordinateValue(
 		}
 	}
 	else if (prefix == ImageMetaDataBase::_CUNIT) {
+		ThrowIf(
+			isStokes,
+			"A polarization axis cannot have a unit"
+		);
 		String u = _getString(key, value);
 		// Test to see if CASA supports this string as a Unit
 		Unit x = Unit(u);
@@ -1029,6 +1087,18 @@ Vector<Double> ImageMetaDataRW::_getRefPixel() const {
 		_refPixel = _getCoords().referencePixel();
 	}
 	return _refPixel;
+}
+
+Vector<String> ImageMetaDataRW::_getStokes() const {
+	const CoordinateSystem csys = _getCoords();
+	ThrowIf(
+		! csys.hasPolarizationCoordinate(),
+		"Logic Error: coordinate system does not have a polarization coordinate"
+	);
+	if (_stokes.empty()) {
+		_stokes = csys.stokesCoordinate().stokesStrings();
+	}
+	return _stokes;
 }
 
 Vector<Quantity> ImageMetaDataRW::_getRefValue() const {

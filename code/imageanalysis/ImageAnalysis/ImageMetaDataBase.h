@@ -29,6 +29,7 @@
 #define IMAGES_IMAGEMETADATABASE_H
 
 #include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageTypedefs.h>
 #include <casa/aips.h>
 
 #include <tr1/memory>
@@ -120,9 +121,9 @@ protected:
 		_MINPOS, _OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
 		_RESTFREQ, _REFFREQTYPE, _SHAPE, _TELESCOPE;
 
-	virtual std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const = 0;
+	virtual SPCIIF _getFloatImage() const = 0;
 
-	virtual std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const = 0;
+	virtual SPCIIC _getComplexImage() const = 0;
 
 	ImageMetaDataBase() : _log() {}
 
@@ -184,6 +185,8 @@ protected:
 
 	uInt _ndim() const;
 
+	virtual Vector<String> _getStokes() const = 0;
+
 private:
 
 	mutable LogIO _log;
@@ -198,6 +201,8 @@ private:
 	template <class T> Record _calcStatsT(
 		std::tr1::shared_ptr<const ImageInterface<T> > image
 	) const;
+
+
 
 };
 
