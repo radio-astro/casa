@@ -180,7 +180,7 @@ public:
               NEPERS);
     PMS_ENUM2(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
               "", "s", "GHz", "m/s", "km/s", "km", "m", "hours",
-              "wavelengths", "degrees", "ns", "K", "neper");
+              "<html>&lambda;</html>", "degrees", "ns", "K", "neper");
 
     // </group>
               

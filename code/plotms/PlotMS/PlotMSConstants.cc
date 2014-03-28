@@ -260,10 +260,10 @@ const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_REFVALUE()) + " (from " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_REFVALUE()) + ")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE());/* +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE()) +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT())+" (" +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT())+")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());*/
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
 const PlotCanvas::LegendPosition PMS::DEFAULT_LEGENDPOSITION =
