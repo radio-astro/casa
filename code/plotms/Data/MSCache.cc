@@ -750,6 +750,11 @@ void MSCache::forceVBread(VisBuffer& vb,
 				vb.modelVisCube();
 				break;
 			}
+			case PMS::DATA_DIVIDE_MODEL: {
+				vb.visCube();
+				vb.modelVisCube();
+				break;
+			}
 			default:
 				break;
 			}
@@ -803,6 +808,10 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 				break;
 			}
 			case PMS::DATAMODEL: {
+				vba.setDoVC();
+				vba.setDoMVC();
+			}
+			case PMS::DATA_DIVIDE_MODEL: {
 				vba.setDoVC();
 				vba.setDoMVC();
 			}
@@ -1050,6 +1059,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*amp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
 			break;
 		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*amp_[vbnum] = amplitude( vb.visCube() / vb.modelVisCube());
+			break;
+		}
 		}
 		break;
 	}
@@ -1074,6 +1087,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATAMODEL: {
 			*pha_[vbnum] = phase(vb.visCube() - vb.modelVisCube()) * 180 / C::pi;
+			break;
+		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*pha_[vbnum] = phase(vb.visCube() / vb.modelVisCube()) * 180 / C::pi;
 			break;
 		}
 		}
@@ -1102,6 +1119,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*real_[vbnum] = real(vb.visCube()) - real(vb.modelVisCube());
 			break;
 		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*real_[vbnum] = real(vb.visCube()) / real(vb.modelVisCube());
+			break;
+		}
 		}
 		break;
 	}
@@ -1125,6 +1146,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATAMODEL: {
 			*imag_[vbnum] = imag(vb.visCube()) - imag(vb.modelVisCube());
+			break;
+		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*imag_[vbnum] = imag(vb.visCube()) / imag(vb.modelVisCube());
 			break;
 		}
 		}
@@ -1158,6 +1183,9 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		case PMS::DATAMODEL:
 			*wtxamp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+			break;
+		case PMS::DATA_DIVIDE_MODEL:
+			*wtxamp_[vbnum] = amplitude(vb.visCube() / vb.modelVisCube());
 			break;
 		}
 		uInt nchannels = vb.nChannel();
