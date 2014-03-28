@@ -416,12 +416,49 @@ class ImageAnalysis
                                              const Bool overwrite = False);
 
 
-
-
-    //The parameter shape is used to distinguish between an ellipitcal
-    //region and a rectangular region, both of which have Vectors of size 2.
-    //In other cases, the type of region is determined by the number of points
-    //passed in.
+    /**
+      * Populates two vectors, zxaxisval and zyaxisval, representing
+      * values along an axis (usually the spectral axis) with a corresponding
+      * summary intensity computed based on the region passed in.
+      *
+      * @param x a Vector of x-coordinates describing a region.
+      * @param y a Vector of y-coordinates describing a region.  Together, (x,y)
+      * 		describe the region.  So for a point region, both vectors would have
+      * 		length one.  For a rectangular reqion, they would describe the blc and
+      * 		trc points of the rectangle.  For a polygonal region, the vectors would
+      * 		have undetermined length and together be the coordinates of the corners
+      * 		of the polygon.
+      * @param zxaxisval contains the x-coordinates of the frequency profile.
+      * @param zyaxisval contains the y-coordinates of the frequency profile.
+      * @param xytype the coordinate system used by the input vectors x,y.  "world"
+      *      is the default, but an alternative might be "pixel".
+      * @param specaxis -values include "pixel", "frequency", "radio velocity"
+      *      "optical velocity", "wavelength" or "air wavelength"
+      * @param whichStokes - a parameter that is currently not being used by the
+      * 		profiler (not sure of the purpose).
+      * @param whichTabular - find a frequency profile along a tabular axis instead of
+      * 		the spectral axis.  This one was put in because people wanted to profile
+      * 		images that had tabular axes, but not spectral axes.  The idea is that if
+      * 		it is not at its default value of -1, then the method will use the specified
+      * 		tabular axis.
+      * @param whichLinear - another one that is currently not being used (not sure of the purpose).
+      * @param xunits - the units for the spectral (z) axis.  Possible values are
+      * 	    Hz, MHz, MHz, GHz, m/s, km/s, mm, um, nm, Angstrom
+      * @param specframe - String form of the MFrequency types such as TOPO, BARY, etc
+      * @param combineType - Method used for combining pixels.  Current values are an enum
+      * 	    in the PlotType enum of QtProfile.qo.h: PMEAN, PMEDIAN, PSUM, PFLUX.  For error
+      * 	    plotting and overplotting, the profiler also seems to be passing values in from
+      * 	    the ExtrType enum:  MEAN, MEDIAN, SUM, MSE, RMSE, SQRTSUM, NSQRTSUM, FLUX, EFLUX
+      * @param whichQuality - the profiler is not making any use of this one (passing in a
+      * 	    default value).  Not sure what it is there for.
+      * @param restValue - Specify a different rest frequency.  Currently the user can reset
+      * 	    the rest frequency for the image, and when they do this, a new frequency profile
+      * 	    is computed with the new rest value.
+      * @param beamChannel - currently this is only used when the combine type is FLUX.
+      * @param shape - this was added to distinguish 'rectangle' regions from 'ellipse'
+      * 	       regions (when the vectors x and y both have size 2).  Other types of region
+      * 	       can be distinguished from the size of the x,y vectors.
+      */
     Bool getFreqProfile(const Vector<Double>& x,
 			const Vector<Double>& y,
 			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
