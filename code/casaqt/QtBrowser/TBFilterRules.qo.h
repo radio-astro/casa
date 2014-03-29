@@ -62,7 +62,7 @@ public:
     // negated rules, false otherwise.  anyField should be true if the rule
     // applies to any field, false otherwise.  The rule "owns" value and value2
     // in that, upon deletion, they are deleted as well.
-    TBFilterRule(String field, Comparator comparator, TBData* value,
+    TBFilterRule(String field, tb::Comparator comparator, TBData* value,
              TBData* value2 = NULL, bool isNot = false, bool anyField = false);
     
     ~TBFilterRule();
@@ -73,7 +73,7 @@ public:
     String getField();
 
     // Returns this rule's comparator.
-    Comparator getComparator();
+    tb::Comparator getComparator();
 
     // Returns this rule's value.
     TBData* getValue();
@@ -102,7 +102,7 @@ private:
     String field;
 
     // This rule's comparator.
-    Comparator comparator;
+    tb::Comparator comparator;
 
     // This rule's value.
     TBData* value;

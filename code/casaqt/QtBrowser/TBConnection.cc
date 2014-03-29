@@ -103,12 +103,12 @@ void TBConnection::accepted() {
     // ignore local/remote option until it's implemented
 
     // driver
-    Driver d = DIRECT;
+    tb::Driver d = tb::DIRECT;
     // if(driverXML->isChecked()) d = XML;
 
-    Parser p = XERCES_SAX;
-    if(driverHome->isChecked()) p = HOME;
-    else if(driverDom->isChecked()) p = XERCES_DOM;
+    tb::Parser p = tb::XERCES_SAX;
+    if(driverHome->isChecked()) p = tb::HOME;
+    else if(driverDom->isChecked()) p = tb::XERCES_DOM;
 
     DriverParams* dp = new DriverParams(d, p);
     close();

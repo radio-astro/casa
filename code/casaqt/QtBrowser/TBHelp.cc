@@ -39,8 +39,10 @@
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
+#include <stdcasa/xerces.h>
 
 using namespace xercesc;
+using namespace casa::xerces;
 
 namespace casa {
 
@@ -155,7 +157,7 @@ bool TBHelp::rebuild() {
     if(lname == TBConstants::HELP_XML_HELP) {
        DOMImplementation* impl=DOMImplementationRegistry::getDOMImplementation(
                                     XMLString::transcode("LS"));
-        DOMWriter* writer = ((DOMImplementationLS*)impl)->createDOMWriter();
+        Writer* writer = create_writer(impl);
         ofstream index;
         index.open((helpdir + TBConstants::HELP_INDEX).c_str());
         index << header1 << "Home" << header2;
@@ -229,7 +231,7 @@ bool TBHelp::rebuild() {
                     DOMNodeList* t = e->getChildNodes();
                     for(unsigned int m = 0; m < t->getLength(); m++) {
                         DOMNode* n = t->item(m);
-                        XMLCh* ch = writer->writeToString(*n);
+                        XMLCh* ch = write_to_string(writer,n);
                         if(ch != NULL) {
                             chst = XMLString::transcode(ch);
                             ss2 << chst;

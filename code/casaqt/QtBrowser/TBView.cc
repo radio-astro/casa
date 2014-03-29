@@ -30,17 +30,20 @@
 #include <casaqt/QtBrowser/TBFormat.qo.h>
 #include <casaqt/QtBrowser/TBData.h>
 #include <casaqt/QtUtilities/QtFileDialog.qo.h>
+#include <stdcasa/xerces.h>
 
 #include <fstream>
 #include <sys/stat.h>
 
 #include <xercesc/dom/DOMImplementation.hpp>
 #include <xercesc/dom/DOMImplementationLS.hpp>
-#include <xercesc/dom/DOMWriter.hpp>
+#include <xercesc/dom/DOM.hpp>
 #include <xercesc/framework/LocalFileFormatTarget.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 
 #include <sstream>
+
+using namespace casa::xerces;
 
 namespace casa {
 
@@ -326,11 +329,9 @@ bool TBView::saveToFile(String file) {
             }
 
              // output to file
-            DOMWriter* writer = impl->createDOMWriter();
-            LocalFileFormatTarget fileTarget(file.c_str());
-            writer->setEncoding(TBConstants::xstr("UTF-8"));
-            writer->writeNode(&fileTarget, *doc);
-            
+            Writer* writer = create_writer(impl);
+            write_to_file( writer, doc, file, TBConstants::xstr("UTF-8") );
+
             writer->release();
             doc->release();
             return true;
@@ -536,7 +537,7 @@ TBView* TBView::loadFromFile(String file) {
                                     TBConstants::VIEW_FILTER_RULE_ANY)));
                             
 
-                            Comparator comp=TBConstants::stringToComp(compStr);
+                            tb::Comparator comp=TBConstants::stringToComp(compStr);
                             bool notBool = notStr == "1";
                             bool any = anyStr == "1";
 
@@ -545,7 +546,7 @@ TBView* TBView::loadFromFile(String file) {
                             
                             bool valid = true;
                             if(any) {
-                                if(comp != EQUALS && comp != CONTAINS) {
+                                if(comp != tb::EQUALS && comp != tb::CONTAINS) {
                                     String dt = TBConstants::TYPE_DATE;
                                     double d;
                                     
@@ -553,8 +554,8 @@ TBView* TBView::loadFromFile(String file) {
                                        !TBConstants::valueIsValid(val, dt))
                                         valid = false;
                                     
-                                    if(valid && (comp == BETWEEN ||
-                                       comp == CONTAINSBT)) {
+                                    if(valid && (comp == tb::BETWEEN ||
+                                       comp == tb::CONTAINSBT)) {
                                         if(TBConstants::atod(val2, &d) != 1 &&
                                            !TBConstants::valueIsValid(val2,dt))
                                             valid = false;
@@ -562,8 +563,8 @@ TBView* TBView::loadFromFile(String file) {
                                 }
                                 
                                 if(valid) {
-                                    String t = (comp == EQUALS ||
-                                                comp == CONTAINS) ?
+                                    String t = (comp == tb::EQUALS ||
+                                                comp == tb::CONTAINS) ?
                                                 TBConstants::TYPE_STRING :
                                                 TBConstants::TYPE_DOUBLE;
                                     d1 = TBData::create(val, t);
@@ -571,19 +572,19 @@ TBView* TBView::loadFromFile(String file) {
                                         d2 = TBData::create(val2, t);
                                 }
                             } else {                            
-                                if(comp == EQUALS || comp == LESSTHAN ||
-                                   comp == GREATERTHAN) {
+                                if(comp == tb::EQUALS || comp == tb::LESSTHAN ||
+                                   comp == tb::GREATERTHAN) {
                                     valid=TBConstants::valueIsValid(val, type);
-                                } else if(comp == CONTAINS ||
-                                          comp == CONTAINSLT ||
-                                          comp == CONTAINSGT) {
+                                } else if(comp == tb::CONTAINS ||
+                                          comp == tb::CONTAINSLT ||
+                                          comp == tb::CONTAINSGT) {
                                     type = TBConstants::arrayType(type);
                                     valid=TBConstants::valueIsValid(val, type);
-                                } else if(comp == BETWEEN) {
+                                } else if(comp == tb::BETWEEN) {
                                     valid = TBConstants::valueIsValid(val,
                                             type) && TBConstants::valueIsValid(
                                                     val2, type);
-                                } else if(comp == CONTAINSBT) {
+                                } else if(comp == tb::CONTAINSBT) {
                                     type = TBConstants::arrayType(type);
                                     valid = TBConstants::valueIsValid(val,
                                             type) && TBConstants::valueIsValid(

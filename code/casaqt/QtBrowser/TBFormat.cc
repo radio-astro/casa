@@ -52,7 +52,7 @@ QFontColor::~QFontColor() { }
 
 TBFormat::TBFormat() : allFont(NULL), fonts(),
         decimalPlaces(TBConstants::DEFAULT_DECIMALS), scientificFormat(false),
-        boolFormat(DEFAULT), dateFormat("%y-%m-%d-%h:%n:%s"),
+        boolFormat(tb::DEFAULT), dateFormat("%y-%m-%d-%h:%n:%s"),
         vectorThreshold(-1) { }
 
 TBFormat::~TBFormat() {
@@ -84,9 +84,9 @@ String TBFormat::getDateFormat() { return dateFormat; }
 
 void TBFormat::setDateFormat(String d) { dateFormat = d; }
 
-BooleanFormat TBFormat::getBoolFormat() { return boolFormat; }
+tb::BooleanFormat TBFormat::getBoolFormat() { return boolFormat; }
 
-void TBFormat::setBoolFormat(BooleanFormat f) { boolFormat = f; }
+void TBFormat::setBoolFormat(tb::BooleanFormat f) { boolFormat = f; }
 
 bool TBFormat::getScientificFormat() { return scientificFormat; }
 
@@ -209,9 +209,9 @@ void TBFormat::applyTo(QTableWidgetItem* item, TBData* data) {
                       decimalPlaces, scientificFormat) + ")";
             }
         
-        } else if(type == TBConstants::TYPE_BOOL && boolFormat != DEFAULT) {
-            if(boolFormat == TRUEFALSE) str = (data->asBool()?"true":"false");
-            else if(boolFormat == TF) str = (data->asBool()?"T":"F");
+        } else if(type == TBConstants::TYPE_BOOL && boolFormat != tb::DEFAULT) {
+            if(boolFormat == tb::TRUEFALSE) str = (data->asBool()?"true":"false");
+            else if(boolFormat == tb::TF) str = (data->asBool()?"T":"F");
         
         }
     } else {
@@ -378,12 +378,12 @@ void TBFormatter::setFormat(TBFormat* f) {
         decimalsSpinBox->setValue(0);
     }
     sfCheckBox->setChecked(f->getScientificFormat());
-    BooleanFormat bf = f->getBoolFormat();
-    if(bf == TRUEFALSE) {
+    tb::BooleanFormat bf = f->getBoolFormat();
+    if(bf == tb::TRUEFALSE) {
         boolTrueFalse->setChecked(true);
-    } else if(bf == TF) {
+    } else if(bf == tb::TF) {
         boolTF->setChecked(true);
-    } else if(bf == B10) {
+    } else if(bf == tb::B10) {
         bool10->setChecked(true);
     }
     dateEdit->setText(f->getDateFormat().c_str());
@@ -468,13 +468,13 @@ void TBFormatter::setFormat() {
     }
     if(boolFrame->isVisible()) {
         if(boolTrueFalse->isChecked()) {
-            f->setBoolFormat(TRUEFALSE);
+            f->setBoolFormat(tb::TRUEFALSE);
         } else if(boolTF->isChecked()) {
-            f->setBoolFormat(TF);
+            f->setBoolFormat(tb::TF);
         } else if(bool10->isChecked()) {
-            f->setBoolFormat(B10);
+            f->setBoolFormat(tb::B10);
         } else {
-            f->setBoolFormat(DEFAULT);
+            f->setBoolFormat(tb::DEFAULT);
         }
     }
     if(sfFrame->isVisible()) {

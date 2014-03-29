@@ -1029,10 +1029,6 @@ casa_find( XERCES
   CPP_VERSION XERCES_FULLVERSIONDOT 
   RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
 )
-if( XERCES_VERSION VERSION_EQUAL   3.0 OR
-    XERCES_VERSION VERSION_GREATER 3.0 )
-  message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
-endif()
 
 #
 # Boost
