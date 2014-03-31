@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.40 2014/03/11 18:57:02 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.41 2014/03/31 15:22:57 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.40 2014/03/11 18:57:02 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.41 2014/03/31 15:22:57 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -484,9 +484,12 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                 if (matched):
                     uTPFPS.append(t)
                     uTPFPStimerange.append(mymatch)
+        idx = np.argsort(uTPFPS)
+        uTPFPStimerange = np.array(uTPFPStimerange)[idx]
         uTPFPS = np.sort(uTPFPS)
+        timeFormat = 3  # HH:MM:SS  
         for a in range(len(uTPFPS)):
-            legendString = utstring(uTPFPS[a],220)
+            legendString = utstring(uTPFPS[a],timeFormat)
             if (debug): print "----> Defined legendString: %s" % (legendString)
             if (a==0):
                 pb.text(xstartTitle-0.02, ystartOverlayLegend, 'UT',color='k',fontsize=mysize,
@@ -927,9 +930,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       return()
   
     if (subplot == 11):
-        timeHorizontalSpacing = 0.06
+        timeHorizontalSpacing = 0.06*1.3 # *1.3 is for HH:MM:SS (timeFormat=3 in drawOverlayTimeLegends)
     else:
-        timeHorizontalSpacing = 0.05
+        timeHorizontalSpacing = 0.05*1.3 # *1.3 is for HH:MM:SS
 
     if (yaxis.find('both')<0 and yaxis.find('ap')<0 and yaxis.find('tsys')<0 and
         yaxis.find('amp')<0 and yaxis.find('phase')<0):
@@ -1689,6 +1692,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         # It's a single, integer entry
         timerangeList = [timeranges]
   
+    if (max(timerangeList) >= len(uniqueTimes)):
+        print "Invalid timerange.  Solution has %d times (%d~%d)" % (len(uniqueTimes),0,len(uniqueTimes)-1)
+        return
     timerangeListTimes = np.array(uniqueTimes)[timerangeList]
     timerangeListTimesString = mjdsecArrayToUTString(timerangeListTimes)
     if (tableFormat == 33 or scansForUniqueTimes == []):
