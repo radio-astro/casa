@@ -245,18 +245,25 @@ class CasaRegression:
         else:
             PYPROFILE = ", PY_PROFILE=False"
 
-        print "starting " + casapy
-        
-	#CALL TEST SCRIPT (Determine if a regression test or a unit test to determine the proper test method)
-	#UNIT TEST
-	if script.startswith("test_"):
-	    p = subprocess.Popen( [ casapy,'-cd', self._path['test'],
-                                '--eval=' + self._path['casa'] + '/build/init.pl',
-                                '--tmpdir=' + self._path['tmp'], '-c', "runUnitTest.main(['" + script + "'])" ],
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT );
+        print "starting: " + casapy
+        print "(CasaRegression.py) current directory: " + os.getcwd( )
 
-	#REGRESSION TEST
-	else:
+        #CALL TEST SCRIPT (Determine if a regression test or a unit test to determine the proper test method)
+        #UNIT TEST
+        if script.startswith("test_"):
+            print "invoking " + " ".join( [ casapy,'-cd', self._path['test'],
+                                          '--eval=' + self._path['casa'] + '/build/init.pl',
+                                          '--tmpdir=' + self._path['tmp'], '-c', "runUnitTest.main(['" + script + "'])" ] )
+            p = subprocess.Popen( [ casapy,'-cd', self._path['test'],
+                                  '--eval=' + self._path['casa'] + '/build/init.pl',
+                                  '--tmpdir=' + self._path['tmp'], '-c', "runUnitTest.main(['" + script + "'])" ],
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT );
+        #REGRESSION TEST
+        else:
+            print "invoking " + " ".join( [ casapy, '-cd', self._path['test'],
+                                            '--eval=' + self._path['casa'] + '/build/init.pl',
+                                            '--tmpdir=' + self._path['tmp'], '-c',
+                                            "publish_summary.runTest( '" + script + "', WORKING_DIR='"+self._path['test']+'/pubsum'+"', RESULT_DIR='"+self._path['output']+"', RESULT_SUBDIR='"+script+"', REDIRECT=False" + PYPROFILE + " )" ] )
 	    p = subprocess.Popen( [ casapy, '-cd', self._path['test'],
                                 '--eval=' + self._path['casa'] + '/build/init.pl',
                                 '--tmpdir=' + self._path['tmp'], '-c',
