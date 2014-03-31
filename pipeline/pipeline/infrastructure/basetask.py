@@ -70,6 +70,12 @@ def result_finaliser(method):
             inputs = self.inputs
             result.inputs = inputs.as_dict()
             result.stage_number = inputs.context.task_counter
+            try:
+                result.pipeline_casa_task = inputs._pipeline_casa_task
+            except AttributeError :
+                # sub-tasks may not have pipeline_casa_task, but we only need
+                # it for the top-level task
+                pass
         return result
 
     return finalise_pipeline_result
@@ -181,11 +187,8 @@ def _record_constructor_args(func, *args, **kwargs):
     casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
     LOG.info('Equivalent CASA call: %s', casa_call)
 
-    # having called the old constructor, we know that self.context is set.
-    # Use this context to find the report directory and write to the log
-    f = os.path.join(self.context.report_dir, 'casatasks.log')
-    with open(f, 'a+') as casatask_file: 
-        casatask_file.write('%s\n' % casa_call)
+    # attach the casa task to the inputs
+    self._pipeline_casa_task = casa_call
 
 
 class MandatoryInputsMixin(object):
@@ -547,7 +550,8 @@ class ModeInputs(api.Inputs):
         # If the property we're trying to set is one of this base class's
         # private variables, add it to our __dict__ using the standard
         # __setattr__ method
-        if name in ('_active', '_delegates', VISLIST_RESET_KEY):
+        if name in ('_active', '_delegates', '_pipeline_casa_task', 
+                    VISLIST_RESET_KEY):
             LOG.trace('Setting \'{0}\' attribute to \'{1}\' on \'{2}'
                       '\' object'.format(name, val, self.__class__.__name__))
             return super(ModeInputs, self).__setattr__(name, val)
@@ -769,6 +773,11 @@ class Results(api.Results):
             import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
             htmlrenderer.WebLogGenerator.render(context)
 
+        # having called the old constructor, we know that self.context is set.
+        # Use this context to find the report directory and write to the log
+        if task_completed:
+            write_pipeline_casa_tasks(context)
+            
     def _check_for_remerge(self, context):
         """
         Check whether this result has already been added to the given context. 
@@ -1239,3 +1248,25 @@ def property_with_default(name, default, doc=None):
 #    def delx(self):
 #        object.__delattr__(self, varname)
     return property(getx, setx, None, doc)
+
+
+def write_pipeline_casa_tasks(context):
+    """
+    Write the equivalent pipeline CASA tasks for results in the context to a
+    file
+    """
+    pipeline_tasks = [proxy.read().pipeline_casa_task for proxy in context.results]
+    task_string = '\n'.join(['    %s' % t for t in pipeline_tasks])
+    # replace the working directory with ''
+    task_string = re.sub('%s/' % context.output_dir, '', task_string)
+
+    template = '''h_init()
+try:
+%s
+finally:
+    h_save()
+''' % task_string
+            
+    f = os.path.join(context.report_dir, 'casatasks.log')
+    with open(f, 'w') as casatask_file: 
+        casatask_file.write(template)
