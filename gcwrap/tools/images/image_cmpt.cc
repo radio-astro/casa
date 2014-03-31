@@ -2079,39 +2079,8 @@ image* image::transpose(
 			fitter.addHistory(lor, fname, names, values);
 		}
 		std::pair<ComponentList, ComponentList> compLists = fitter.fit();
-		Vector<casa::Quantity> flux;
-		Vector<Bool> converged = fitter.converged();
-		Record returnRecord, convolved, deconvolved;
-		String error;
+		return fromRecord(fitter.getOutputRecord());
 
-		Vector<String> allowFluxUnits(2, "Jy.km/s");
-		allowFluxUnits[1] = "K.rad2";
-		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
-
-		ThrowIf(
-			! compLists.first.toRecord(error, convolved),
-			"Failed to generate output record convolved list. " + error
-		);
-
-		returnRecord.defineRecord("results", convolved);
-		if (compLists.second.nelements() > 0) {
-			ThrowIf(
-				! compLists.second.toRecord(error, deconvolved),
-				"Failed to generate output record from deconvolved list. " + error
-			);
-			returnRecord.defineRecord("deconvolved", deconvolved);
-		}
-
-		returnRecord.define("converged", converged);
-		if (dooff) {
-			vector<Double> zeroSol, zeroErr;
-			fitter.getZeroLevelSolution(zeroSol, zeroErr);
-			returnRecord.define("zerooff", Vector<Double>(zeroSol));
-			returnRecord.define("zeroofferr", Vector<Double>(zeroErr));
-		}
-		FluxRep<Double>::clearAllowedUnits();
-
-		return fromRecord(returnRecord);
 	}
 	catch (const AipsError& x) {
 		FluxRep<Double>::clearAllowedUnits();

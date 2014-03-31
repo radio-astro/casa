@@ -1303,7 +1303,7 @@ class imfit_test(unittest.TestCase):
             )
 
     def test_xx_fit(self):
-        '''Imfit: Fit using full image'''
+        '''Imfit: Fit using pol xx'''
         success = True
         test = "fit_xx: "
         global msgs
@@ -1603,6 +1603,10 @@ class imfit_test(unittest.TestCase):
         self.assertTrue(abs(dshape['minoraxis']['value'] - 141) < 1)
         self.assertTrue(abs(cshape['majoraxis']['value'] - 292) < 1)
         self.assertTrue(abs(cshape['minoraxis']['value'] - 229) < 1)
+        comp = zz['deconvolved']['component0']
+        self.assertTrue(abs(comp['peak']['value'] - 2.19935) < 1e-5)
+        self.assertTrue(abs(comp['peak']['error'] - 0.278872) < 1e-5)
+
         myia.setrestoringbeam("4arcmin", "4arcmin", "0deg")
         zz = imfit(imagename=decon_im)
         [decon, con] = _comp_lists(zz)
