@@ -170,6 +170,9 @@ public:
 	// the geometric mean of the beam major and minor axes.
 	void clearNoiseFWHM();
 
+	// The Record holding all the output info
+	Record getOutputRecord() const {return _output; }
+
 protected:
     virtual inline Bool _supportsMultipleRegions() {return True;}
 
@@ -184,7 +187,8 @@ private:
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
-	Record _residStats, inputStats;
+	vector<Quantity> _allConvolvedPeakIntensities, _allConvolvedPeakIntensityErrors;
+	Record _residStats, inputStats, _output;
 	Double _rms;
 	String _kludgedStokes;
 	ImageFitterResults::CompListWriteControl _writeControl;
@@ -221,18 +225,7 @@ private:
 	//summarize the size details in a nicely formatted string
 	String _sizeToString(const uInt compNumber) const;
 
-	//String _fluxToString(uInt compNumber) const;
-
 	String _spectrumToString(uInt compNumber) const;
-
-	// Write the estimates file using this fit.
-	//void _writeNewEstimatesFile() const;
-
-	// Set the flux densities and peak intensities of the fitted components.
-	//void _setFluxes();
-
-	// Set the convolved sizes of the fitted components.
-	//void _setSizes();
 
 	void _setDeconvolvedSizes();
 
@@ -305,6 +298,8 @@ private:
 	) const;
 
 	GaussianBeam _getCurrentBeam() const;
+
+	void _createOutputRecord(const ComponentList& convolved, const ComponentList& decon);
 
 };
 }

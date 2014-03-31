@@ -144,13 +144,12 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			_writeControl
 		);
 	}
-	else {
+	else if (! _compListName.empty()) {
 		*_getLog() << LogIO::WARN
 			<< "No fits converged. Will not write component list"
 			<< LogIO::POST;
 	}
 	if (residualImage || modelImage) {
-		//ArrayLattice<Bool> mask(completePixelMask->get(False));
 		if (residualImage) {
 			try {
 				_prepareOutputImage(
@@ -178,8 +177,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			}
 		}
 	}
-	FluxRep<Double>::clearAllowedUnits();
-	FluxRep<Float>::clearAllowedUnits();
+
 	if (converged && ! _newEstimatesFileName.empty()) {
 		_results.setConvolvedList(_curConvolvedList);
 		_results.setPeakIntensities(_peakIntensities);
@@ -187,13 +185,64 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		_results.setMinorAxes(_minorAxes);
 		_results.setPositionAngles(_positionAngles);
 		_results.writeNewEstimatesFile(_newEstimatesFileName);
-		//_writeNewEstimatesFile();
 	}
+	_createOutputRecord(convolvedList, deconvolvedList);
+	FluxRep<Double>::clearAllowedUnits();
+	FluxRep<Float>::clearAllowedUnits();
 	_writeLogfile(resultsString);
 	std::pair<ComponentList, ComponentList> lists;
 	lists.first = convolvedList;
 	lists.second = deconvolvedList;
 	return lists;
+}
+
+void ImageFitter::_createOutputRecord(
+	const ComponentList& convolved, const ComponentList& decon
+) {
+	String error;
+	Record allConvolved, allDeconvolved;
+	convolved.toRecord(error, allConvolved);
+	for (uInt i=0; i<convolved.nelements(); i++) {
+		Record peak;
+		peak.define("value", _allConvolvedPeakIntensities[i].getValue());
+		String unit = _allConvolvedPeakIntensities[i].getUnit();
+		peak.define("unit", unit);
+		peak.define("error", _allConvolvedPeakIntensityErrors[i].getValue());
+		String compString = "component" + String::toString(i);
+		Record sub = allConvolved.asRecord(compString);
+		sub.defineRecord("peak", peak);
+		allConvolved.defineRecord(compString, sub);
+	}
+	_output.defineRecord("results", allConvolved);
+	if (decon.nelements() > 0) {
+		decon.toRecord(error, allDeconvolved);
+		for (uInt i=0; i<decon.nelements(); i++) {
+			if (decon.getShape(i)->type() == ComponentType::GAUSSIAN) {
+				Double areaRatio = (
+					static_cast<const GaussianShape *>(convolved.getShape(i))->getArea()
+					/ static_cast<const GaussianShape *>(decon.getShape(i))->getArea()
+				).getValue("");
+				if (areaRatio < 1e6) {
+					Record peak;
+					Double x = _allConvolvedPeakIntensities[i].getValue()*areaRatio;
+					peak.define("value", x);
+					String unit = _allConvolvedPeakIntensities[i].getUnit();
+					peak.define("unit", unit);
+					peak.define("error", _allConvolvedPeakIntensityErrors[i].getValue()*areaRatio);
+					String compString = "component" + String::toString(i);
+					Record sub = allDeconvolved.asRecord(compString);
+					sub.defineRecord("peak", peak);
+					allDeconvolved.defineRecord(compString, sub);
+				}
+			}
+		}
+		_output.defineRecord("deconvolved", allDeconvolved);
+	}
+	_output.define("converged", _fitConverged);
+	if (_doZeroLevel) {
+		_output.define("zerooff", Vector<Double>(_zeroLevelOffsetSolution));
+		_output.define("zeroofferr", Vector<Double>(_zeroLevelOffsetError));
+	}
 }
 
 void ImageFitter::_fitLoop(
@@ -205,7 +254,6 @@ void ImageFitter::_fitLoop(
 	Bool converged = False;
 	Bool deconvolve = False;
 	Bool fit = True;
-	//Bool list = True;
 	Double zeroLevelOffsetSolution, zeroLevelOffsetError;
 	Double zeroLevelOffsetEstimate = _doZeroLevel ? _zeroLevelOffsetEstimate : 0;
 	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
@@ -325,6 +373,7 @@ void ImageFitter::_doConverged(
 ) {
 	convolvedList.addList(_curConvolvedList);
 	deconvolvedList.addList(_curDeconvolvedList);
+	String error;
 	if (_doZeroLevel) {
 		_zeroLevelOffsetSolution.push_back(
 			zeroLevelOffsetSolution
@@ -593,6 +642,8 @@ void ImageFitter::_calculateErrors() {
 			_peakIntensityErrors[i] = _fixed[i].contains("f")
 				? Quantity(0, _peakIntensities[i].getUnit())
 				: baseFac*abs(_peakIntensities[i]);
+			_allConvolvedPeakIntensities.push_back(_peakIntensities[i]);
+			_allConvolvedPeakIntensityErrors.push_back(_peakIntensityErrors[i]);
 		}
 		Double cor1 = ! _correlatedNoise
 			|| (_fixed[i].contains("a") && _fixed[i].contains("x"))
