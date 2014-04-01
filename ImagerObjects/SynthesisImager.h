@@ -169,6 +169,8 @@ protected:
   void createFTMachine(CountedPtr<FTMachine>& theFT, 
 		       CountedPtr<FTMachine>& theIFT,  
 		       const String& ftname,
+		       const uInt nTaylorTerms=1, 
+		       const String mType="default",
 		       const Int facets=1,
 		       //------------------------------
 		       const Int wprojplane=1,
@@ -202,7 +204,7 @@ protected:
 					 Bool useweightimage=False);
   
   // Choose between different types of Mappers (single term, multiterm, imagemosaic, faceted)
-  CountedPtr<SIMapperBase> createSIMapper(String mappertype,  
+  CountedPtr<SIMapper> createSIMapper(String mappertype,  
 					  CountedPtr<SIImageStore> imagestore, //// make this inside !!!!!
 					  CountedPtr<FTMachine> ftmachine,
 					  CountedPtr<FTMachine> iftmachine,

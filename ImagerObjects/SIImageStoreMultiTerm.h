@@ -104,9 +104,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool releaseLocks();
 
-  Double getReferenceFrequency();
+  virtual Double getReferenceFrequency();
 
-  uInt getNTaylorTerms(){return itsNTerms;};
+  uInt getNTaylorTerms(Bool dopsf=False);  // {return dopsf ? (2*itsNTerms-1) : itsNTerms;};
 
   GaussianBeam restorePlane();
   void pbcorPlane();

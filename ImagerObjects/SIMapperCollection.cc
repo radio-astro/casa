@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIMapperCollection","addMapper",WHERE) );
 
-    CountedPtr<SIMapperBase> localMapper=NULL;
+    CountedPtr<SIMapper> localMapper=NULL;
     Int nMappers = itsMappers.nelements();
     // Check 'mappertype' for valid types....
     if( mappertype == "default" )
@@ -132,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::addMapper( CountedPtr<SIMapperBase> map){
+  void SIMapperCollection::addMapper( CountedPtr<SIMapper> map){
     Int nMappers = itsMappers.nelements();
     itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers]=map;
@@ -168,7 +168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cout << " initGrid : nMappers : " << itsMappers.nelements() << endl;
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
-	    (itsMappers[k])->initializeGrid(vb,dopsf);
+	    (itsMappers[k])->initializeGrid(vb ,dopsf);
 
   	  }
   }

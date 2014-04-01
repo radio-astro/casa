@@ -1739,9 +1739,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   };
   
-  void FTMachine::setSkyJones(Vector<SkyJones *>& sj){
+  void FTMachine::setSkyJones(Vector<CountedPtr<SkyJones> >& sj){
     sj_p.resize();
     sj_p=sj;
+    cout << "FTM : Set Sky Jones of length " << sj_p.nelements() << " and types ";
+    for( uInt i=0;i<sj_p.nelements();i++) cout << sj_p[i]->type() << " ";
+    cout << endl;
   }
   // Convert complex correlation planes to float Stokes planes
   void FTMachine::correlationToStokes(ImageInterface<Complex>& compImage, 
@@ -1893,6 +1896,185 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      //     else  cout << " Normalized (" << normtype << ") Source Loc : " << skyImage.getAt(psource) << endl; 
     
   }
- 
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////  For use with the new framework 
+  ///// (Sorry about these copies, but need to keep old system working)
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Vectorized InitializeToVis
+  void FTMachine::initializeToVisNew(const VisBuffer& vb,
+				     CountedPtr<SIImageStore> imstore)
+  {
+    AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
+
+    Matrix<Float> tempWts;
+
+    // Convert from Stokes planes to Correlation planes
+    stokesToCorrelation(*(imstore->model()), *(imstore->forwardGrid()));
+
+    if(vb.polFrame()==MSIter::Linear) {
+      StokesImageUtil::changeCStokesRep(*(imstore->forwardGrid()),
+					StokesImageUtil::LINEAR);
+    }
+    else {
+      StokesImageUtil::changeCStokesRep(*(imstore->forwardGrid()),
+					StokesImageUtil::CIRCULAR);
+    }
+   
+    //------------------------------------------------------------------------------------
+    // Image Mosaic only :  Multiply the input model with the Primary Beam
+    if(sj_p.nelements() >0 ){
+      for (uInt k=0; k < sj_p.nelements(); ++k){
+	(sj_p(k))->apply(*(imstore->forwardGrid()), *(imstore->forwardGrid()), vb, 0, True);
+      }
+    }
+    //------------------------------------------------------------------------------------
+
+    // Call initializeToVis
+    initializeToVis(*(imstore->forwardGrid()), vb); // Pure virtual
+    
+  };
+  
+  // Vectorized finalizeToVis is not implemented because it does nothing and is never called.
+  
+  // Vectorized InitializeToSky
+  void FTMachine::initializeToSkyNew(const Bool /*dopsf*/, 
+				     const VisBuffer& vb, 
+				     CountedPtr<SIImageStore> imstore)
+    
+  {
+    AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
+
+    Matrix<Float> sumWeight;
+    initializeToSky(*(imstore->backwardGrid()) , sumWeight , vb);
+
+  };
+  
+  // Vectorized finalizeToSky
+  void FTMachine::finalizeToSkyNew(Bool dopsf, 
+				   const VisBuffer& vb,
+				   CountedPtr<SIImageStore> imstore  )				   
+  {
+    // Check vector lengths. 
+    AlwaysAssert( imstore->getNTaylorTerms(False)==1, AipsError);
+
+    Matrix<Float> sumWeights;
+    finalizeToSky(); 
+
+    //------------------------------------------------------------------------------------
+    // Straightforward case. No extra primary beams. No image mosaic
+    if(sj_p.nelements() == 0 ) 
+      {
+	correlationToStokes( getImage(sumWeights, False) , ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ), dopsf);
+	
+	if( useWeightImage() && dopsf ) { 
+	  getWeightImage( *(imstore->weight())  , sumWeights); 
+	  // Fill weight image only once, during PSF generation. Remember.... it is normalized only once
+	  // during PSF generation.
+	}
+	
+	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
+		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
+	
+	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
+	
+      }
+    //------------------------------------------------------------------------------------
+    // Image Mosaic only :  Multiply the residual, and weight image by the PB.
+    else 
+      {
+      
+      // Take the FT of the gridded values. Writes into backwardGrid(). 
+      getImage(sumWeights, False);
+
+      // Multiply complex image grid by PB.
+      if( !dopsf )
+	{
+	  for (uInt k=0; k < sj_p.nelements(); ++k){
+	    (sj_p(k))->apply(*(imstore->backwardGrid()), *(imstore->backwardGrid()), vb, 0, True);
+	  }
+	}
+
+      // Convert from correlation to Stokes onto a new temporary grid.
+      SubImage<Float>  targetImage( ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ) , True);
+      TempImage<Float> temp( targetImage.shape(), targetImage.coordinates() );
+      correlationToStokes( *(imstore->backwardGrid()), temp, False);
+
+      // Add the temporary Stokes image to the residual or PSF, whichever is being made.
+      LatticeExpr<Float> addToRes( targetImage + temp );
+      targetImage.copyData(addToRes);
+      
+      // Now, do the same with the weight image and sumwt ( only on the first pass )
+      if( dopsf )
+	{
+	  SubImage<Float>  weightImage(  *(imstore->weight()) , True);
+	  TempImage<Float> temp(weightImage.shape(), weightImage.coordinates());
+	  getWeightImage(temp, sumWeights);
+
+	  for (uInt k=0; k < sj_p.nelements(); ++k){
+	    (sj_p(k))->applySquare(temp,temp, vb, -1);
+	  }
+
+	  LatticeExpr<Float> addToWgt( weightImage + temp );
+	  weightImage.copyData(addToWgt);
+	  
+	  AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
+			((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
+
+	  SubImage<Float>  sumwtImage(  *(imstore->sumwt()) , True);
+	  TempImage<Float> temp2(sumwtImage.shape(), sumwtImage.coordinates());
+	  temp2.put( sumWeights.reform(sumwtImage.shape()) );
+	  LatticeExpr<Float> addToWgt2( sumwtImage + temp2 );
+	  sumwtImage.copyData(addToWgt2);
+	  
+	  //cout << "In finalizeGridCoreMos : sumwt : " << sumwtImage.get() << endl;
+	  
+	}
+
+    }
+    //------------------------------------------------------------------------------------
+
+
+    
+    return;
+  };
+
+  Bool FTMachine::changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow)
+  {
+    firstRow=False;
+    internalRow=False;
+
+    if( sj_p.nelements()==0 ) 
+      {throw(AipsError("Internal Error : Checking changedSkyJones, but it is not yet set."));}
+
+    CountedPtr<SkyJones> ej = sj_p[0];
+    if(ej.null())
+      return False;
+    if(ej->changed(vb,0))
+      firstRow=True;
+    Int row2temp=0;
+    if(ej->changedBuffer(vb,0,row2temp)) {
+      internalRow=True;
+    }
+    return (firstRow || internalRow) ;
+  }
+  
+
+  /*
+  /// Move to individual FTMs............ make it pure virtual.
+  Bool FTMachine::useWeightImage()
+  {
+    if( name() == "GridFT" || name() == "WProjectFT" )  
+      { return False; }
+    else
+      { return True; }
+  }
+  */
+
 } //# NAMESPACE CASA - END
 

@@ -474,6 +474,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImageName;
   }
 
+  uInt SIImageStore::getNTaylorTerms(Bool /*dopsf*/)
+  {
+    return 1;
+  }
+
   void SIImageStore::checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label )
   {
     if( ptr.null() && itsImageName==String("reference") ) 
@@ -752,9 +757,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
 
-    if( !itsResidual.null() // information exists on whether weight image is needed or not
+    if( ///!itsModel.null() 
 	//	&& getUseWeightImage( *residual() ) == True // only when needed
-	&& itsUseWeight // only when needed
+	//&& 
+	itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
         os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
@@ -775,8 +781,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //cout << "In multiplymodelbyweight : model, usewt, weight " << itsModel.null() << " " << getUseWeightImage( *residual() ) << " " << doesWeightExist() << endl;
 
     if( //!itsModel.null() // anything to do ? 
-	//&& 
        //	getUseWeightImage( *residual() ) == True // only when needed
+	//&& 
 	itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {

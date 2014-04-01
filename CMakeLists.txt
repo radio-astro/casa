@@ -45,6 +45,7 @@ casa_add_library( synthesis
   TransformMachines/HetArrayConvFunc.cc
   TransformMachines/MosaicFT.cc
   TransformMachines/MultiTermFT.cc	
+  TransformMachines/MultiTermFTNew.cc	
   TransformMachines/NewMultiTermFT.cc	
   TransformMachines/PBMath1DAiry.cc
   TransformMachines/PBMath1D.cc
@@ -333,9 +334,8 @@ casa_add_library( synthesis
  ImagerObjects/SIImageStore.cc
  ImagerObjects/SIImageStoreMultiTerm.cc
  ImagerObjects/SIMapperCollection.cc
- ImagerObjects/SIMapperBase.cc
- ImagerObjects/SIMapperSingle.cc
- ImagerObjects/SIMapperMultiTerm.cc
+ ImagerObjects/SIMapper.cc
+ ImagerObjects/SIMapperImageMosaic.cc
  ImagerObjects/SynthesisIterBot.cc
  ImagerObjects/SIMinorCycleController.cc
  ImagerObjects/SIIterBot.cc
@@ -635,9 +635,8 @@ install (FILES
 	ImagerObjects/SIImageStore.h
 	ImagerObjects/SIImageStoreMultiTerm.h
 	ImagerObjects/SIMapperCollection.h
-	ImagerObjects/SIMapperBase.h
-	ImagerObjects/SIMapperSingle.h
-	ImagerObjects/SIMapperMultiTerm.h
+	ImagerObjects/SIMapper.h
+	ImagerObjects/SIMapperImageMosaic.h
 	ImagerObjects/SynthesisIterBot.h
 	ImagerObjects/SIMinorCycleController.h
 	ImagerObjects/SIIterBot.h
@@ -679,6 +678,7 @@ install (FILES
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
 	TransformMachines/MultiTermFT.h
+	TransformMachines/MultiTermFTNew.h
 	TransformMachines/NewMultiTermFT.h
 	TransformMachines/PBMath.h
 	TransformMachines/PBMath1D.h
