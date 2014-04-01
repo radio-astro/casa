@@ -409,7 +409,7 @@ class MeasurementSet(object):
             return spws
         
         if self.antenna_array.name == 'ALMA':
-            science_intents = set(['TARGET','PHASE','BANDPASS','AMPLITUDE'])
+            science_intents = set(['TARGET','PHASE','BANDPASS','AMPLITUDE', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE'])
             return [w for w in spws if w.num_channels not in (1,4)
                     and not science_intents.isdisjoint(w.intents)]
 

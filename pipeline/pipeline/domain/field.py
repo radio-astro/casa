@@ -80,7 +80,7 @@ class Field(object):
         source_type = string.replace(source_type, 'FLUX', 'AMPLITUDE')
 
         for intent in ['BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'POINTING', 
-                       'WVR', 'ATMOSPHERE', 'SIDEBAND']:
+                       'WVR', 'ATMOSPHERE', 'SIDEBAND', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE']:
             if source_type.find(intent) != -1:
                 self.intents.add(intent)
 

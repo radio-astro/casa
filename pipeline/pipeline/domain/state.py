@@ -36,6 +36,12 @@ class State(object):
 
         # translate these into intents understood by the pipeline
         red_intents = set()
+        if 'POLARIZATION' in raw_intents:
+            red_intents.update(['POLARIZATION'])
+        if 'POLANGLE' in raw_intents:
+            red_intents.update(['POLANGLE'])
+        if 'POLLEAKAGE' in raw_intents:
+            red_intents.update(['POLLEAKAGE'])
         if 'BANDPASS' in raw_intents:
             red_intents.update(['BANDPASS'])
         if 'AMPLITUDE' in raw_intents:
@@ -68,6 +74,15 @@ class State(object):
 class StateALMA(State):
     # dictionary to map from STATE table obs_mode to pipeline intent
     obs_mode_mapping = {
+        'CALIBRATE_POLARIZATION#ON_SOURCE'   : 'POLARIZATION',
+        'CALIBRATE_POLARIZATION.ON_SOURCE'   : 'POLARIZATION',
+        'CALIBRATE_POLARIZATION_ON_SOURCE'   : 'POLARIZATION',
+        'CALIBRATE_POL_ANGLE#ON_SOURCE'      : 'POLANGLE',
+        'CALIBRATE_POL_ANGLE.ON_SOURCE'      : 'POLANGLE',
+        'CALIBRATE_POL_ANGLE_ON_SOURCE'      : 'POLANGLE',
+        'CALIBRATE_POL_LEAKAGE#ON_SOURCE'    : 'POLLEAKAGE',
+        'CALIBRATE_POL_LEAKAGE.ON_SOURCE'    : 'POLLEAKAGE',
+        'CALIBRATE_POL_LEAKAGE_ON_SOURCE'    : 'POLLEAKAGE',
         'CALIBRATE_BANDPASS#ON_SOURCE'       : 'BANDPASS',
         'CALIBRATE_BANDPASS.ON_SOURCE'       : 'BANDPASS',
         'CALIBRATE_BANDPASS_ON_SOURCE'       : 'BANDPASS',
