@@ -56,9 +56,10 @@
 
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
-//#include <synthesis/ImagerObjects/SIMapper.h>
-#include <synthesis/ImagerObjects/SIMapperSingle.h>
-#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
+#include <synthesis/ImagerObjects/SIMapper.h>
+#include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
+//#include <synthesis/ImagerObjects/SIMapperSingle.h>
+//#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
@@ -71,6 +72,7 @@
 #include <synthesis/TransformMachines/WProjectFT.h>
 
 #include <synthesis/TransformMachines/AWProjectFT.h>
+#include <synthesis/TransformMachines/MultiTermFTNew.h>
 //#include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
@@ -483,7 +485,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     try
       {
-	createFTMachine(ftm, iftm, gridpars.ftmachine, gridpars.facets, gridpars.wprojplanes,
+	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.nTaylorTerms, gridpars.mType, 
+			gridpars.facets, gridpars.wprojplanes,
 			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
 			gridpars.convFunc,
 			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
@@ -555,8 +558,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  String cft="SimpleComponentFTMachine";
 	  if(sdgrid)
 		  cft="SimpCompGridFTMachine";
-	  CountedPtr<VPSkyJones> tvp=NULL;
-	  CountedPtr<SIMapperBase> sm=new SIMapperSingle(cl, cft, tvp);
+	  CountedPtr<SIMapper> sm=new SIMapper(cl, cft);
 	  itsMappers.addMapper(sm);
 	  ////itsMappers.addMapper(  createSIMapper( mappertype, imstor, ftm, iftm, id) );
 
@@ -841,9 +843,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if( mappertype=="default" || mappertype=="imagemosaic" )
 	  {
-	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, useweightimage);
+	    //imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, useweightimage);
+	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
 	  }
-	else if (mappertype == "multiterm" )
+	else if (mappertype == "multiterm" )  // Currently does not support imagemosaic.
 	  {
 	    cout << "Making multiterm IS with nterms : " << ntaylorterms << endl;
 	    imstor=new SIImageStoreMultiTerm(imageName, cSys, imShape, facets, overwrite, ntaylorterms, useweightimage);
@@ -879,15 +882,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return imstor;
   }
   
-  CountedPtr<SIMapperBase> SynthesisImager::createSIMapper(String mappertype,  
+  CountedPtr<SIMapper> SynthesisImager::createSIMapper(String mappertype,  
 							   CountedPtr<SIImageStore> imagestore,
 							   CountedPtr<FTMachine> ftmachine,
 							   CountedPtr<FTMachine> iftmachine,
-							   uInt ntaylorterms)
+						       uInt /*ntaylorterms*/)
   {
     LogIO os( LogOrigin("SynthesisImager","createSIMapper",WHERE) );
     
-    CountedPtr<SIMapperBase> localMapper=NULL;
+    CountedPtr<SIMapper> localMapper=NULL;
 
     try
       {
@@ -901,15 +904,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 
 	// Check 'mappertype' for valid types....
+
+	/*
 	if( mappertype == "default" || mappertype == "imagemosaic"){
 	  localMapper = new SIMapperSingle( imagestore, ftmachine, iftmachine, vp );
 	  }
 	else if( mappertype == "multiterm" || mappertype == "mtimagemosaic" ){
 	  localMapper = new SIMapperMultiTerm( imagestore, ftmachine, iftmachine, vp, ntaylorterms );
 	  }
+	else if( mappertype == "new" ) {
+	  localMapper = new SIMapper( imagestore, ftmachine, iftmachine, vp );
+	}
+	
 	else{
 	    throw ( AipsError("Internal Error : Unrecognized Mapper Type in SynthesisImager::createSIMapper") );
 	  }
+	*/
+	
+	if( mappertype == "default" || mappertype == "multiterm" )
+	  {
+	    localMapper = new SIMapper( imagestore, ftmachine, iftmachine );
+	  }
+	else if( mappertype == "imagemosaic") // || mappertype == "mtimagemosaic" )
+	  {
+	    localMapper = new SIMapperImageMosaic( imagestore, ftmachine, iftmachine );
+	  }
+	else
+	  {
+	    throw(AipsError("Unknown mapper type : " + mappertype));
+	  }
+
       }
     catch(AipsError &x) {
 	throw(AipsError("Error in createSIMapper : " + x.getMesg() ) );
@@ -1004,7 +1028,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Create the ImageStore object
       CountedPtr<SIImageStore> imstor;
-      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, toUseWeightImage(iftm,mappertype) );
+      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage() );
 
       // Create the Mappers
       if( facets<2 ) // One facet. Just add the above imagestore to the mapper list.
@@ -1031,6 +1055,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
   /////////////////////////
+  /*
   Bool SynthesisImager::toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype)
   {
     if( (ftm->name() == "GridFT" || ftm->name() == "WProjectFT")&&(mappertype!="imagemosaic") )  
@@ -1038,9 +1063,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       { return True; }
   }
-  
+  */
+
   // Make the FT-Machine and related objects (cfcache, etc.)
-  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
+  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, 
+					CountedPtr<FTMachine>& theIFT, 
+					const String& ftname,
+					const uInt nTaylorTerms,
+					const String mType,
 					const Int facets,            //=1
 					//------------------------------
 					const Int wprojplane,        //=1,
@@ -1086,16 +1116,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
     }
-    else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft"))
-      createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, padding, useAutocorr, useDoublePrec, gridFunction,
-			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, doPointing, doPBCorr, conjBeams, computePAStep,
+    else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft")) {
+      createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, 
+			 padding, useAutocorr, useDoublePrec, gridFunction,
+			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, 
+			 doPointing, doPBCorr, conjBeams, computePAStep,
 			 rotatePAStep, cache,tile);
-
+    }
     /* else if(ftname== "MosaicFT"){
 
        }*/
     
 
+    ///////// Now, clone and pack the chosen FT into a MultiTermFT if needed.
+    if( mType=="multiterm" )
+      {
+	AlwaysAssert( nTaylorTerms>=1 , AipsError );
+
+	CountedPtr<FTMachine> theMTFT = new MultiTermFTNew( theFT , nTaylorTerms, True/*forward*/ );
+	CountedPtr<FTMachine> theMTIFT = new MultiTermFTNew( theIFT , nTaylorTerms, False/*forward*/ );
+
+	theFT = theMTFT;
+	theIFT = theMTIFT;
+      }
+
+    ////// Now, set the SkyJones if needed, and if not internally generated.
+    if( mType=="imagemosaic" && 
+	(ftname != "awprojectft" && ftname != "mawprojectft" && ftname != "proroft") )
+      {
+	CountedPtr<SkyJones> vp = NULL;
+	ROMSColumns msc(*mss_p[0]);
+	Quantity parang(0.0,"deg");
+	Quantity skyposthreshold(0.0,"deg");
+	vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
+
+	Vector<CountedPtr<SkyJones> > skyJonesList(1);
+	skyJonesList(0) = vp;
+	theFT->setSkyJones(  skyJonesList );
+	theIFT->setSkyJones(  skyJonesList );
+
+      }
 
   }
 

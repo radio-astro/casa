@@ -36,15 +36,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
+    <param type="any" name="scan">
+      <description>scan(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+
 
 <!--============================================== -->
 <!--                            Image Definition Parameters                                         -->
 <!--============================================== -->
-
-    <param type="string" name="outlierfile">
-      <description>Name of outlier-field image definitions</description>
-      <value type="string"></value>
-    </param>
 
     <param type="any" name="imagename" required="true">
       <description>Pre-name of output images</description>
@@ -63,6 +65,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="intArray">1,1</value>
     </param>
 
+    <param type="any" name="cellsize">
+      <description>Cell size</description>
+      <any type="variant" limittypes="int double intArray doubleArray string stringArray"/>
+      <value type="stringArray">"1arcsec","1arcsec"</value>
+    </param>
+
+    <param type="any" name="phasecenter">
+      <description>Phase center of the image</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="outlierfile">
+      <description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
 
 <!--============================================== -->
 <!--                            Imaging/Gridding Parameters                                                      -->
@@ -71,11 +89,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="ftmachine">
             <description>Name of FT machine during gridding</description>
 	    <value type="string">ft</value>
-    </param>
-
-    <param type="string" name="startmodel">
-            <description>Name of starting model image</description>
-	    <value type="string"></value>
     </param>
 
 <!--============================================== -->
@@ -130,6 +143,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 <!--                            Other Operational Parameters                                       -->
 <!--============================================== -->
+    <param type="string" name="action">
+            <description>What do you want to do ? (makeresidual, makepsf,... )</description>
+	    <value type="string"></value>
+    </param>
+
     <param type="bool" name="usescratch">
 	    <description>True if to save model visibilities in MODEL_DATA column</description>
 	    <value type="bool">False</value>
@@ -140,10 +158,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="bool">False</value>
     </param>
 
-    <param type="string" name="clusterdef">
+    <param type="bool" name="pmajor">
+	    <description>True to run major cycles in parallel. Need clusterdef too.</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="string" name="clusterdef" subparam="true">
             <description>Name of a file that contains the cluster definition</description>
 	    <value type="string"></value>
     </param>
+
 
 <!--=============================================== -->
 <!--===============  Constraints                        ============== -->
@@ -155,6 +179,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="minpsffraction"><value>0.05</value></default>
 	 <default param="maxpsffraction"><value>0.8</value></default>
        </notequals>
+     </when>
+
+
+     <when param="pmajor">
+       <equals type="bool" value="True">
+	 <default param="clusterdef"><value>""</value></default>
+       </equals>
      </when>
 
    </constraints>

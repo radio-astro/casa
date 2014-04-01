@@ -66,6 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     FTMachine* cloneFTM();
 
+    virtual Bool useWeightImage(){return True;};
+
   protected:
     void ftWeightImage(Lattice<Complex>& wtImage, 
 		       const Matrix<Float>& sumWt,

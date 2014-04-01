@@ -194,6 +194,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("==================================");
           casalog.post("Test 11 image-field, mfs --- WB AWP (single term)");
           casalog.post("==================================");
+          ## Note : For this test, if doMajor peak comes to 0.006 instead of 0.69, 
+          ##           it means unnormalized weight is being used (refilled perhaps but not normed).
           paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
                                        field='1',scan='',
                                        spw='*',\

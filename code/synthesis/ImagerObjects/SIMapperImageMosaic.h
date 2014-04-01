@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIMAPPER_H
-#define SYNTHESIS_SIMAPPER_H
+#ifndef SYNTHESIS_SIMAPPERMOSAIC_H
+#define SYNTHESIS_SIMAPPERMOSAIC_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -37,7 +37,7 @@
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisBufferImpl2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-//#include <synthesis/ImagerObjects/SIMapperBase.h>
+#include <synthesis/ImagerObjects/SIMapper.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -48,17 +48,19 @@ template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-  class SIMapper// : public SIMapperBase
+  class SIMapperImageMosaic : public SIMapper
 {
  public:
   // Default constructor
 
-  SIMapper( CountedPtr<SIImageStore>& imagestore,
+  SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore,
             CountedPtr<FTMachine>& ftm, 
-	    CountedPtr<FTMachine>& iftm);
-  SIMapper(const ComponentList& cl, 
-	   String& whichMachine);
-  virtual ~SIMapper();
+		       CountedPtr<FTMachine>& iftm);
+  //	    CountedPtr<VPSkyJones>& vp);
+  SIMapperImageMosaic(const ComponentList& cl, 
+		      String& whichMachine);
+  //	   CountedPtr<VPSkyJones>& vp);
+  virtual ~SIMapperImageMosaic();
 
   ///// Major Cycle Functions
 
@@ -68,7 +70,7 @@ template<class T> class ImageInterface;
   void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
   void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
   void degrid(vi::VisBuffer2& vb);
-  void finalizeDegrid();
+  //  void finalizeDegrid();
 
   /////////////////////// OLD VI/VB versions
   void initializeGrid(VisBuffer& vb, Bool dopsf);
@@ -78,21 +80,24 @@ template<class T> class ImageInterface;
   void degrid(VisBuffer& vb);
 
   //////////////the return value is False if no valid record is being returned
-  Bool getCLRecord(Record& rec);
-  Bool getFTMRecord(Record& rec);
+  //  Bool getCLRecord(Record& rec);
+  //  Bool getFTMRecord(Record& rec);
 
   virtual String getImageName(){return itsImages->getName();};
   virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
   virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
 
 protected:
+  //  Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  //////////////OLD vb version
+  //  Bool changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  ////////////////////////////////////////////
 
-  CountedPtr<FTMachine> ft_p, ift_p; 
+  ComponentList clCorrupted_p;
+  //  CountedPtr<VPSkyJones>  ejgrid_p, ejdegrid_p;
+  VisBuffer ovb_p;
 
-  CountedPtr<ComponentFTMachine> cft_p;
-  ComponentList cl_p;
-
-  CountedPtr<SIImageStore> itsImages;
+  Bool firstaccess_p;
 
 };
 

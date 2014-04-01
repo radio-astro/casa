@@ -281,6 +281,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     catch(AipsError &x)
       {
 	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
+	cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
 	foundFullImage = False;
       }
 

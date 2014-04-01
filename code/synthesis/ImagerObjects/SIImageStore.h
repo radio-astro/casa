@@ -112,7 +112,7 @@ class SIImageStore
 
   virtual Double getReferenceFrequency(){return 0.0;}
 
-  virtual uInt getNTaylorTerms(){return 1;};
+  virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
 
   GaussianBeam getPSFGaussian();
 

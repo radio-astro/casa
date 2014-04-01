@@ -35,11 +35,9 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
-#include <synthesis/ImagerObjects/SIMapperBase.h>
-
-//#include <synthesis/ImagerObjects/SIMapper.h>
-#include <synthesis/ImagerObjects/SIMapperSingle.h>
-#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
+#include <synthesis/ImagerObjects/SIMapper.h>
+//#include <synthesis/ImagerObjects/SIMapperSingle.h>
+//#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -51,7 +49,7 @@ class SIMapperCollection
   SIMapperCollection();
   ~SIMapperCollection();
 
-  void addMapper(CountedPtr <SIMapperBase> map);
+  void addMapper(CountedPtr <SIMapper> map);
   Int nMappers();
   Vector<String> getImageNames();
 
@@ -102,7 +100,7 @@ protected:
 
   ///////////////////// Member Objects
 
-  Block<CountedPtr<SIMapperBase> >  itsMappers;
+  Block<CountedPtr<SIMapper> >  itsMappers;
   Int oldMsId_p;
 
 };
