@@ -169,6 +169,50 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
 
     return pqa.QAScore(score, longmsg, shortmsg)
 
+@log_qa
+def score_polintents(mses):
+    """
+    Score a MeasurementSet object based on the presence of 
+    polarization intents.
+    """
+
+    # Polarization intents. Warnings will be raised for any 
+    # measurement sets containing these intents. Ignore the
+    # array type for now.
+    score = 1.0
+    score_map = {'POLARIZATION'  : -1.0,
+                 'POLANGLE'      : -1.0,
+                 'POLLEAKAGE'    : -1.0}
+
+    unsupported = set(score_map.keys())
+
+    num_mses = len(mses)
+    all_ok = True
+    complaints = []
+
+    # analyse each MS
+    for ms in mses:
+        # are these intents present in the ms
+        overlap = unsupported.intersection(ms.intents)
+	if not overlap:
+	    continue
+	all_ok = False
+	for m in overlap:
+            score += (score_map[m] / num_mses)
+
+        longmsg = ('%s contains %s polarization calibration intents'
+            '' % (ms.basename, utils.commafy(overlap, False)))
+        complaints.append(longmsg)
+
+    if all_ok:
+        longmsg = ('No polarization calibration intents were found in '
+                   '%s.' % utils.commafy([ms.basename for ms in mses], False))
+        shortmsg = 'No polarization calibrators found'
+    else:
+        longmsg = '%s.' % utils.commafy(complaints, False)
+        shortmsg = 'Polarization calibrators found'
+        
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_missing_intents(mses, array_type='ALMA_12m'):
