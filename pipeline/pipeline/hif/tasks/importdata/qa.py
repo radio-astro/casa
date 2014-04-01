@@ -32,7 +32,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         LOG.todo('ImportData QA: missing BDFs')
 
         scores = [score1, score3, score4, score5]
-        result.qa.pool[:] = scores
+        result.qa.pool.extend(scores)
     
     def _check_contiguous(self, mses):
         '''
@@ -142,4 +142,4 @@ class ImportDataListQAHandler(pqa.QAResultHandler):
         # collate the QAScores from each child result, pulling them into our
         # own QAscore list
         collated = utils.flatten([r.qa.pool[:] for r in result]) 
-        result.qa.pool[:] = collated
+        result.qa.pool.extend(collated)
