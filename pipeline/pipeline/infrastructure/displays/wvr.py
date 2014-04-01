@@ -106,7 +106,7 @@ class WVRPhaseVsBaselineChart(object):
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         self._caltables_loaded = False
 
-        nowvr_gaintables = set([c.gaintable for c in result.nowvr_result.final])
+        nowvr_gaintables = set([c.gaintable for c in result.nowvr_result.pool])
         assert len(nowvr_gaintables) is 1, ('Unexpected number of pre-WVR phase-up'
                                             'gaintables: %s' % nowvr_gaintables) 
 
@@ -426,13 +426,13 @@ class WVRPhaseVsBaselineChart(object):
 
 class WVRPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
     def __init__(self, context, result, plot_per_antenna=True):
-        calapp = result.final[0]
+        calapp = result.pool[0]
         
         rootdir = os.path.join(context.report_dir, 
                                'stage%s' % result.stage_number)
         prefix = '%s.phase_offset' % os.path.basename(calapp.vis)
 
-        nowvr_gaintables = set([c.gaintable for c in result.nowvr_result.final])
+        nowvr_gaintables = set([c.gaintable for c in result.nowvr_result.pool])
         assert len(nowvr_gaintables) is 1, ('Unexpected number of pre-WVR phase-up'
                                             'gaintables: %s' % nowvr_gaintables) 
 
@@ -450,10 +450,11 @@ class WVRPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
 
 class WVRPhaseOffsetPlot(phaseoffset.PhaseOffsetPlot):
     def __init__(self, context, result):
-        vis = os.path.basename(result.final[0].vis)
+        vis = os.path.basename(result.pool[0].vis)
         ms = context.observing_run.get_ms(vis)
         plothelper = WVRPhaseOffsetPlotHelper(context, result)        
-        super(WVRPhaseOffsetPlot, self).__init__(context, ms, plothelper, scan_intent='BANDPASS,PHASE', score_retriever=WVRScoreFinder(result))
+        scan_intent = result.inputs['qa_intent']
+        super(WVRPhaseOffsetPlot, self).__init__(context, ms, plothelper, scan_intent=scan_intent, score_retriever=WVRScoreFinder(result))
 
 
 class WVRPhaseOffsetSummaryPlotHelper(WVRPhaseOffsetPlotHelper):
@@ -463,7 +464,8 @@ class WVRPhaseOffsetSummaryPlotHelper(WVRPhaseOffsetPlotHelper):
 
 class WVRPhaseOffsetSummaryPlot(phaseoffset.PhaseOffsetPlot):
     def __init__(self, context, result):
-        vis = os.path.basename(result.final[0].vis)
+        vis = os.path.basename(result.pool[0].vis)
         ms = context.observing_run.get_ms(vis)
         plothelper = WVRPhaseOffsetSummaryPlotHelper(context, result)        
-        super(WVRPhaseOffsetSummaryPlot, self).__init__(context, ms, plothelper, scan_intent='BANDPASS,PHASE', score_retriever=WVRScoreFinder(result))
+        scan_intent = result.inputs['qa_intent']
+        super(WVRPhaseOffsetSummaryPlot, self).__init__(context, ms, plothelper, scan_intent=scan_intent, score_retriever=WVRScoreFinder(result))
