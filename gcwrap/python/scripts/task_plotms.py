@@ -243,7 +243,7 @@ def plotms(vis=None, plotindex=None,
         if not yaxis or type(yaxis) is str:
             if not yaxislocation or not type(yaxislocation) is str:
                 yaxislocation='left'
-            if not ydatacolumn or not type(ydataColumn) is str:
+            if not ydatacolumn or not type(ydatacolumn) is str:
                 ydatacolumn=''
             if not yaxis:
                 yaxis = ''

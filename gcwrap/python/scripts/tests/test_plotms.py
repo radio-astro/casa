@@ -327,7 +327,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)   
         
-    def mtest012(self):
+    def test012(self):
         '''Plotms 12: Test that we can colorize by time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot012.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -342,7 +342,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)        
         
-    def mtest013(self):
+    def test013(self):
         '''Plotms 13: Test that we can colorize by averaged time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot013.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -357,7 +357,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)
         
-    def mtest014(self):
+    def test014(self):
         '''Plotms 14: Test that we iterate over time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot014.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -373,7 +373,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(60000, self.plotfile_jpg) 
         
         
-    def mtest015(self):
+    def test015(self):
         '''Plotms 15: Test that we iterate over averaged time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot015.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -406,7 +406,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg) 
         
-    def mtest017(self):               
+    def test017(self):               
         '''Plotms 17: Test that we can generate a blank plot running plotms with no arguments'''
         self.plotfile_jpg = self.outputDir + "testPlot017.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -452,7 +452,58 @@ class plotms_test1(test_base):
                           customsymbol=[True,True], symbolshape=['diamond','circle'], symbolsize=[5,5],
                           symbolcolor=['ff0000','00ff00'], symbolfill=['mesh3','mesh3'])
         self.assertTrue(self.res)
-        self._checkPlotFile(222500, self.plotfile_jpg)            
+        self._checkPlotFile(222500, self.plotfile_jpg) 
+        
+    def stest020(self):
+        '''Plotms 20: Export an iteration plot with one plot per page (pipeline).'''
+        self.plotFiles = [self.outputDir + "testPlot020.jpg",
+                          self.outputDir + "testPlot0202.jpg",
+                          self.outputDir + "testPlot0203.jpg",
+                          self.outputDir + "testPlot0204.jpg",
+                          self.outputDir + "testPlot0205.jpg",
+                          self.outputDir + "testPlot0206.jpg",
+                          self.outputDir + "testPlot0207.jpg"]
+        
+        printMsg = 'Writing to '
+        for  i in range(0, len(self.plotFiles)):
+            printMsg = printMsg + self.plotFiles[i]
+            printMsg = printMsg + ', '
+        print printMsg
+        
+        for  i in range(0, len(self.plotFiles)):
+            if os.path.exists( self.plotFiles[i]):
+                os.remove( self.plotFiles[i])               
+              
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        '''Make iteration plots over scan'''
+        self.res = plotms(vis=self.ms, plotfile=self.plotFiles[0],
+                          overwrite=True, showgui=False, expformat='jpg', 
+                          exprange='all', iteraxis='scan')   
+        self.assertTrue(self.res)
+        
+        '''Check each page got saved'''
+        for  i in range(0, len(self.plotFiles)):
+            self.assertTrue(os.path.exists(self.plotFiles[i]), 'Plot was not created')
+            print 'Plot file size ', i, ' is ', os.path.getsize(self.plotFiles[i])
+            self._checkPlotFile(60000, self.plotFiles[i]) 
+        print  
+        
+    def test021(self):
+        '''Plotms 21: Test that model/data works.'''
+        self.plotfile_jpg = self.outputDir + "testPlot021.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Set up the y-axis to use data/model'''
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
+                          overwrite=True, showgui=False, yaxis='amp', ydatacolumn='data/model')
+        self.assertTrue(self.res)
+        self._checkPlotFile(230000, self.plotfile_jpg)   
+               
          
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'

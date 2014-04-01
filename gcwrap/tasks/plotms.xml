@@ -134,6 +134,7 @@ MS Parameters
         <value>residual</value>
         <value>corrected-model</value>
         <value>data-model</value>
+        <value>data/model</value>
       </allowed>
     </param>    
     
@@ -234,6 +235,7 @@ MS Parameters
         <value>residual</value>
         <value>corrected-model</value>
         <value>data-model</value>
+        <value>data/model</value>
       </allowed>
     </param>
     
