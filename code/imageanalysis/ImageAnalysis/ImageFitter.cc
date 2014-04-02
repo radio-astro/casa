@@ -230,6 +230,9 @@ void ImageFitter::_createOutputRecord(
 			beam.define("beamster", _allBeamsSter[i]);
 			sub.defineRecord("beam", beam);
 		}
+		Record spectrum = sub.asRecord("spectrum");
+		spectrum.define("channel", _allChanNums[i]);
+		sub.defineRecord("spectrum", spectrum);
 		allConvolved.defineRecord(compString, sub);
 		if (dodecon) {
 			Record sub = allDeconvolved.asRecord(compString);
@@ -255,6 +258,9 @@ void ImageFitter::_createOutputRecord(
 				}
 			}
 			sub.defineRecord("sum", sum);
+			Record spectrum = sub.asRecord("spectrum");
+			spectrum.define("channel", _allChanNums[i]);
+			sub.defineRecord("spectrum", spectrum);
 			allDeconvolved.defineRecord(compString, sub);
 		}
 	}
@@ -1511,6 +1517,7 @@ void ImageFitter::_fitsky(
 				_curDeconvolvedList.add(result[j].copy());
 			}
 			_setSum(result[j], subImage);
+			_allChanNums.push_back(_curChan);
 			j++;
 		}
 	}
