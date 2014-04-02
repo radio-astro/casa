@@ -188,6 +188,8 @@ private:
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
 	vector<Quantity> _allConvolvedPeakIntensities, _allConvolvedPeakIntensityErrors, _allSums;
+	vector<GaussianBeam> _allBeams;
+	vector<Double> _allBeamsPix, _allBeamsSter;
 	Record _residStats, inputStats, _output;
 	Double _rms;
 	String _kludgedStokes;
@@ -199,6 +201,7 @@ private:
 	Int _stokesPixNumber, _chanPixNumber;
 	ImageFitterResults _results;
 	std::auto_ptr<Quantity> _noiseFWHM;
+	Quantity _pixWidth;
 
 	const static String _class;
 
@@ -287,7 +290,7 @@ private:
 		SPIIF templateImage
 	);
 
-	Quantity _pixelWidth() const;
+	Quantity _pixelWidth();
 
 	void _calculateErrors();
 
@@ -303,6 +306,7 @@ private:
 
 	void _setSum(const SkyComponent& comp, const SubImage<Float>& im);
 
+	void _setBeam(GaussianBeam& beam, uInt ngauss);
 };
 }
 

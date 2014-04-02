@@ -67,7 +67,7 @@ ImageFitter::ImageFitter(
 	_writeControl(ImageFitterResults::NO_WRITE), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0),
 	_stokesPixNumber(-1), _chanPixNumber(-1), _results(image, _getLog()),
-	_noiseFWHM() {
+	_noiseFWHM(), _pixWidth(Quantity(0, "arcsec")) {
 	if (
 		stokes.empty() && image->coordinates().hasPolarizationCoordinate()
 		&& regionRec == 0 && region.empty()
@@ -209,6 +209,7 @@ void ImageFitter::_createOutputRecord(
 	if (dodecon > 0) {
 		decon.toRecord(error, allDeconvolved);
 	}
+	Bool addBeam = ! _allBeams.empty();
 	for (uInt i=0; i<convolved.nelements(); i++) {
 		Record peak;
 		peak.define("value", _allConvolvedPeakIntensities[i].getValue());
@@ -222,6 +223,13 @@ void ImageFitter::_createOutputRecord(
 		sum.define("value", _allSums[i].getValue());
 		sum.define("unit", _allSums[i].getUnit());
 		sub.defineRecord("sum", sum);
+		Record beam;
+		if (addBeam) {
+			beam.defineRecord("beamarcsec", _allBeams[i].toRecord());
+			beam.define("beampixels", _allBeamsPix[i]);
+			beam.define("beamster", _allBeamsSter[i]);
+			sub.defineRecord("beam", beam);
+		}
 		allConvolved.defineRecord(compString, sub);
 		if (dodecon) {
 			Record sub = allDeconvolved.asRecord(compString);
@@ -236,9 +244,14 @@ void ImageFitter::_createOutputRecord(
 					peak.define("value", x);
 					String unit = _allConvolvedPeakIntensities[i].getUnit();
 					peak.define("unit", unit);
-					peak.define("error", _allConvolvedPeakIntensityErrors[i].getValue()*areaRatio);
-
+					peak.define(
+						"error",
+						_allConvolvedPeakIntensityErrors[i].getValue()*areaRatio
+					);
 					sub.defineRecord("peak", peak);
+				}
+				if (addBeam) {
+					sub.defineRecord("beam", beam);
 				}
 			}
 			sub.defineRecord("sum", sum);
@@ -519,11 +532,14 @@ void ImageFitter::setNoiseFWHM(Double d) {
 	}
 }
 
-Quantity ImageFitter::_pixelWidth() const {
-	const DirectionCoordinate dCoord = _getImage()->coordinates().directionCoordinate();
-	return Quantity(
-		abs(dCoord.increment()[0]), dCoord.worldAxisUnits()[0]
-	);
+Quantity ImageFitter::_pixelWidth() {
+	if (_pixWidth.getValue() == 0) {
+		const DirectionCoordinate dCoord = _getImage()->coordinates().directionCoordinate();
+		_pixWidth = Quantity(
+			abs(dCoord.increment()[0]), dCoord.worldAxisUnits()[0]
+		);
+	}
+	return _pixWidth;
 }
 
 void ImageFitter::clearNoiseFWHM() {
@@ -1498,7 +1514,25 @@ void ImageFitter::_fitsky(
 			j++;
 		}
 	}
+	_setBeam(beam, j);
 }
+
+void ImageFitter::_setBeam(GaussianBeam& beam, uInt ngauss) {
+	if (beam.isNull()) {
+		return;
+	}
+	beam.convert("arcsec", "arcsec", "deg");
+	Double ster = beam.getArea("sr");
+	Double _pWidth = _pixelWidth().getValue("rad");
+	Double pixelArea = _pWidth*_pWidth;
+	Double pixels = ster/pixelArea;
+	for (uInt i=0; i<ngauss; i++) {
+		_allBeams.push_back(beam);
+		_allBeamsPix.push_back(pixels);
+		_allBeamsSter.push_back(ster);
+	}
+}
+
 
 void ImageFitter::_setSum(const SkyComponent& comp, const SubImage<Float>& im) {
 	const GaussianShape& g = static_cast<const GaussianShape&>(comp.shape());
@@ -1562,14 +1596,16 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 			parameters(3) = Double(std::max(shape(0), shape(1)) / 2); // major axis
 			parameters(4) = 0.9 * parameters(3); // minor axis
 			parameters(5) = 0.0; // position angle
-		} else if (parameters.nelements() != 6) {
-			*_getLog() << "Not enough parameters returned by fitter estimate"
-					<< LogIO::EXCEPTION;
 		}
-	} else {
-		// points, levels etc
-		*_getLog() << "Only Gaussian/Disk auto-single estimates are available"
-				<< LogIO::EXCEPTION;
+		else {
+			ThrowIf(
+				parameters.nelements() != 6,
+				"Not enough parameters returned by fitter estimate"
+			);
+		}
+	}
+	else {
+		ThrowCc("Only Gaussian/Disk auto-single estimates are available");
 	}
 	return parameters;
 }
