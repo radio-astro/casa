@@ -34,6 +34,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <lattices/Lattices/LCPixelSet.h>
 
+#include <imageanalysis/Annotations/AnnEllipse.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
@@ -116,6 +117,8 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	ImageStatsCalculator myStats(
 		_getImage(), _getRegion(), "", False
 	);
+	myStats.setList(False);
+	myStats.setVerbose(False);
 	myStats.setAxes(_getImage()->coordinates().directionAxesNumbers());
 	inputStats = myStats.statistics();
 	Vector<String> allowFluxUnits(2, "Jy.km/s");
@@ -202,6 +205,10 @@ void ImageFitter::_createOutputRecord(
 	String error;
 	Record allConvolved, allDeconvolved;
 	convolved.toRecord(error, allConvolved);
+	Bool dodecon = decon.nelements() > 0;
+	if (dodecon > 0) {
+		decon.toRecord(error, allDeconvolved);
+	}
 	for (uInt i=0; i<convolved.nelements(); i++) {
 		Record peak;
 		peak.define("value", _allConvolvedPeakIntensities[i].getValue());
@@ -211,12 +218,13 @@ void ImageFitter::_createOutputRecord(
 		String compString = "component" + String::toString(i);
 		Record sub = allConvolved.asRecord(compString);
 		sub.defineRecord("peak", peak);
+		Record sum;
+		sum.define("value", _allSums[i].getValue());
+		sum.define("unit", _allSums[i].getUnit());
+		sub.defineRecord("sum", sum);
 		allConvolved.defineRecord(compString, sub);
-	}
-	_output.defineRecord("results", allConvolved);
-	if (decon.nelements() > 0) {
-		decon.toRecord(error, allDeconvolved);
-		for (uInt i=0; i<decon.nelements(); i++) {
+		if (dodecon) {
+			Record sub = allDeconvolved.asRecord(compString);
 			if (decon.getShape(i)->type() == ComponentType::GAUSSIAN) {
 				Double areaRatio = (
 					static_cast<const GaussianShape *>(convolved.getShape(i))->getArea()
@@ -229,13 +237,16 @@ void ImageFitter::_createOutputRecord(
 					String unit = _allConvolvedPeakIntensities[i].getUnit();
 					peak.define("unit", unit);
 					peak.define("error", _allConvolvedPeakIntensityErrors[i].getValue()*areaRatio);
-					String compString = "component" + String::toString(i);
-					Record sub = allDeconvolved.asRecord(compString);
+
 					sub.defineRecord("peak", peak);
-					allDeconvolved.defineRecord(compString, sub);
 				}
 			}
+			sub.defineRecord("sum", sum);
+			allDeconvolved.defineRecord(compString, sub);
 		}
+	}
+	_output.defineRecord("results", allConvolved);
+	if (dodecon) {
 		_output.defineRecord("deconvolved", allDeconvolved);
 	}
 	_output.define("converged", _fitConverged);
@@ -405,7 +416,6 @@ void ImageFitter::_doConverged(
 			location[spectralAxisNumber] = _curChan - _chanVec[0];
 		}
 		Array<Bool> myMask(templateImage->shape(), True);
-		//completePixelMask.putSlice(pixelMask, location);
 		residualImage->putSlice(curResidPixels, location);
 		if (modelImage) {
 			modelImage->putSlice(curModelPixels, location);
@@ -446,7 +456,6 @@ void ImageFitter::_doConverged(
 	Lattice<Bool> *fittedResidPixelMask = &(fittedResid->pixelMask());
 	LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
 	fittedResidPixelMask = &lcResidMask;
-	//fittedResid->attachMask(lcResidMask);
 	std::auto_ptr<MaskedLattice<Float> > maskedLattice(fittedResid->cloneML());
 	LatticeStatistics<Float> lStats(*maskedLattice, False);
 	Array<Double> stat;
@@ -1368,10 +1377,10 @@ void ImageFitter::_fitsky(
 	}
 	// Add models
 	Vector<String> modelTypes(models.copy());
-	if (nEstimates == 0 && nGauss > 1) {
-		*_getLog() << "Can only auto estimate for a gaussian model"
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		nEstimates == 0 && nGauss > 1,
+		"Can only auto estimate for a gaussian model"
+	);
 	for (uInt i = 0; i < nModels; i++) {
 		// If we ask to fit a POINT component, that really means a
 		// Gaussian of shape the restoring beam.  So fix the shape
@@ -1440,6 +1449,10 @@ void ImageFitter::_fitsky(
 	Vector<SkyComponent> result(_doZeroLevel ? nModels - 1 : nModels);
 	Double facToJy;
 	uInt j = 0;
+	Bool doDeconvolved = _getImage()->imageInfo().hasBeam();
+	GaussianBeam beam = _getImage()->imageInfo().restoringBeam(
+		_chanPixNumber, _stokesPixNumber
+	);
 	for (uInt i = 0; i < nModels; i++) {
 		if (fitter.type(i) == Fit2D::LEVEL) {
 			zeroLevelOffsetSolution = fitter.availableSolution(i)[0];
@@ -1455,18 +1468,17 @@ void ImageFitter::_fitsky(
 				anyLT(errors, 0.0),
 				"At least one calculated error is less than zero"
 			);
-			result(j) = ImageUtilities::encodeSkyComponent(
+			result[j] = ImageUtilities::encodeSkyComponent(
 				*_getLog(), facToJy, allAxesSubImage, modelType,
-				solution, stokes, xIsLong, deconvolveIt,
-				_getImage()->imageInfo().restoringBeam(_chanPixNumber, _stokesPixNumber)
+				solution, stokes, xIsLong, deconvolveIt, beam
 			);
 			String error;
 			Record r;
-			result(j).flux().toRecord(error, r);
+			result[j].flux().toRecord(error, r);
 
             try {
                 _encodeSkyComponentError(
-				    result(j), facToJy, allAxesSubImage,
+				    result[j], facToJy, allAxesSubImage,
 				    solution, errors, stokes, xIsLong
 			    );
             }
@@ -1478,14 +1490,40 @@ void ImageFitter::_fitsky(
                 	+ x.getMesg()
                 );
             }
-			_curConvolvedList.add(result(j));
-			if (_getImage()->imageInfo().hasBeam()) {
-				_curDeconvolvedList.add(result(j).copy());
+			_curConvolvedList.add(result[j]);
+			if (doDeconvolved) {
+				_curDeconvolvedList.add(result[j].copy());
 			}
+			_setSum(result[j], subImage);
 			j++;
 		}
 	}
 }
+
+void ImageFitter::_setSum(const SkyComponent& comp, const SubImage<Float>& im) {
+	const GaussianShape& g = static_cast<const GaussianShape&>(comp.shape());
+	Quantum<Vector<Double> > dir = g.refDirection().getAngle();
+	Quantity xcen(dir.getValue()[0], dir.getUnit());
+	Quantity ycen(dir.getValue()[1], dir.getUnit());
+	Quantity sMajor = g.majorAxis()/2;
+	Quantity sMinor = g.minorAxis()/2;
+	Quantity pa = g.positionAngle();
+	const static Vector<Stokes::StokesTypes> stokes(0);
+	AnnEllipse x(
+		xcen, ycen, sMajor, sMinor, pa,
+		im.coordinates(), im.shape(), stokes
+	);
+	Record r = x.getRegion()->toRecord("");
+	SPCIIF tmp = SubImageFactory<Float>::createImage(
+		im, "", r, "", True, False, True, False
+	);
+	ImageStatsCalculator statsCalc(tmp, 0,	String(""), False);
+	statsCalc.setList(False);
+	statsCalc.setVerbose(False);
+	Record res = statsCalc.statistics();
+	_allSums.push_back(Quantity(*(res.asArrayDouble("sum").begin()), _bUnit));
+}
+
 
 Vector<Double> ImageFitter::_singleParameterEstimate(
 	Fit2D& fitter, Fit2D::Types model, const MaskedArray<Float>& pixels,

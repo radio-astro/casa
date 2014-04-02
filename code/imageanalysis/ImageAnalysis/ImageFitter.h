@@ -187,7 +187,7 @@ private:
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
-	vector<Quantity> _allConvolvedPeakIntensities, _allConvolvedPeakIntensityErrors;
+	vector<Quantity> _allConvolvedPeakIntensities, _allConvolvedPeakIntensityErrors, _allSums;
 	Record _residStats, inputStats, _output;
 	Double _rms;
 	String _kludgedStokes;
@@ -300,6 +300,8 @@ private:
 	GaussianBeam _getCurrentBeam() const;
 
 	void _createOutputRecord(const ComponentList& convolved, const ComponentList& decon);
+
+	void _setSum(const SkyComponent& comp, const SubImage<Float>& im);
 
 };
 }
