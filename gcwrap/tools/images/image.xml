@@ -4823,9 +4823,10 @@ offset is specified using the offset parameter. Units are assumed to be the
 same as the image brightness units. The zero level offset can be held constant during
 the fit by specifying fixoffset=True. In the case of dooff=True, the returned
 dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are both
-arrays containing the the fitted zero level offset value and its error, respectively,
-for each channel. Both sets of values are in image brightness units.
-In cases where the fit did not converge, these values are set to NaN.
+dictionaries containing 'unit' and 'value' keys. The values associated with the 'value'
+keys are arrays containing the the fitted zero level offset value and its error, respectively,
+for each channel. In cases where the fit did not converge, these values are set to NaN.
+The value associated with 'unit' is just the image brightness unit.
 
 The region can either be specified by a box(es) or a region.
 Ranges of pixel values can be included or excluded from the fit. If specified using

@@ -1062,8 +1062,6 @@ class imfit_test(unittest.TestCase):
     def test_zero_level(self):
         """Test zero level fitting"""
         
-        method = "test_zero_level"
-        test = "test_zero_level"
         mycl = cltool()
         myia = iatool()
 
@@ -1136,9 +1134,11 @@ class imfit_test(unittest.TestCase):
                 self.assertTrue(near(got, expected, epsilon))
                 mycl.done()
                 
-                got = res["zerooff"]
+                got = res["zerooff"]["value"][0]
                 expected = off - 0.102277
                 self.assertTrue(near(got, expected, epsilon))
+                self.assertTrue(res['zerooff']['unit'] == "Jy/pixel")
+
                 mycl.done()
                 
                 j = j + 1
@@ -1203,11 +1203,11 @@ class imfit_test(unittest.TestCase):
             self.assertTrue(near(got, expected, epsilon))
             mycl.done()
                 
-            got = res["zerooff"]
+            got = res["zerooff"]["value"][0]
             expected = offset
             self.assertTrue(near(got, expected, epsilon))
             
-            got = res["zeroofferr"]
+            got = res["zeroofferr"]["value"][0]
             expected = 0
             self.assertTrue(near(got, expected, epsilon))
             mycl.done()
