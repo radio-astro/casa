@@ -170,6 +170,57 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
     return pqa.QAScore(score, longmsg, shortmsg)
 
 @log_qa
+def score_bwswitching(mses):
+    """
+    Score a MeasurementSet object based on the presence of 
+    bandwidth switching observings. For bandwidth switched
+    observations the TARGET and PHASE spws are different.
+    """
+
+    score = 1.0
+    num_mses = len(mses)
+    all_ok = True
+    complaints = []
+
+    # analyse each MS
+    for ms in mses:
+
+	# Get phase calibrator spw ids
+        phasespws = []
+	for scan in ms.get_scans(scan_intent='PHASE'):
+	    phasespws.extend([spw.id for spw in scan.spws])
+	phasespws = set(phasespws)
+
+	# Get science target spw ids
+	targetspws = []
+	for scan in ms.get_scans(scan_intent='TARGET'):
+	    targetspws.extend([spw.id for spw in scan.spws])
+        targetspws = set(targetspws)
+
+	# Determine the difference between the two
+	nophasecals = targetspws.difference(phasespws)
+	if len(nophasecals) == 0:
+	    continue
+
+	# Score the difference
+	all_ok = False
+	for m in nophasecals:
+            score += (-1.0 / num_mses)
+        longmsg = ('%s contains no phase calibrations for target spws %s'
+            '' % (ms.basename, utils.commafy(nophasecals, False)))
+        complaints.append(longmsg)
+
+    if all_ok:
+        longmsg = ('Phase calibrations found for all target spws in %s.' % (
+                   utils.commafy([ms.basename for ms in mses], False)))
+        shortmsg = 'Phase calibrations found for all target spws' 
+    else:
+        longmsg = '%s.' % utils.commafy(complaints, False)
+        shortmsg = 'No phase calibrations found for target spws %s' % list(nophasecals)
+        
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
 def score_bands(mses):
     """
     Score a MeasurementSet object based on the presence of 
