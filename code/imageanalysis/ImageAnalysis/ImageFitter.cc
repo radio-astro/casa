@@ -270,8 +270,12 @@ void ImageFitter::_createOutputRecord(
 	}
 	_output.define("converged", _fitConverged);
 	if (_doZeroLevel) {
-		_output.define("zerooff", Vector<Double>(_zeroLevelOffsetSolution));
-		_output.define("zeroofferr", Vector<Double>(_zeroLevelOffsetError));
+		Record z;
+		z.define("value", Vector<Double>(_zeroLevelOffsetSolution));
+		z.define("unit", _bUnit);
+		_output.defineRecord("zerooff", z);
+		z.define("value", Vector<Double>(_zeroLevelOffsetError));
+		_output.defineRecord("zeroofferr", z);
 	}
 }
 
