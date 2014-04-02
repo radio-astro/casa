@@ -1608,9 +1608,10 @@ class imfit_test(unittest.TestCase):
         beaminfo = comp['beam']
         self.assertTrue(beaminfo['beamarcsec']['major']['value'] == 180)
         self.assertTrue(beaminfo['beamarcsec']['minor']['value'] == 180)
-        print "*** yyy ", beaminfo 
         self.assertTrue(abs(beaminfo['beampixels'] - 10.197810) < 1e-5)
         self.assertTrue(abs(beaminfo['beamster'] - 8.62897407e-7) < 1e-15)
+        
+        self.assertTrue(comp['spectrum']['channel'] == 0)
 
         myia.setrestoringbeam("4arcmin", "4arcmin", "0deg")
         zz = imfit(imagename=decon_im)
