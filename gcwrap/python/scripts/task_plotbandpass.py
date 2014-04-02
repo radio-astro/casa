@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.41 2014/03/31 15:22:57 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.42 2014/04/02 12:12:15 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.41 2014/03/31 15:22:57 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.42 2014/04/02 12:12:15 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2017,6 +2017,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         xant = antennasToPlot[xctr]
         antstring, Antstring = buildAntString(xant,msFound,msAnt)
         spwctr = 0
+        spwctrFirstToPlot = spwctr
         while (spwctr < len(spwsToPlot)):
          ispw = spwsToPlot[spwctr]
          mytime = 0
@@ -2530,6 +2531,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     while (xctr < len(antennasToPlot)):
       xant = antennasToPlot[xctr]
       bbctr = 0
+      spwctr = 0
+      spwctrFirstToPlot = 0
       antstring, Antstring = buildAntString(xant,msFound,msAnt)
       while (bbctr < len(spwsToPlotInBaseband)):
           baseband = basebands[bbctr]
@@ -2541,6 +2544,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   print "Showing baseband %d containing spws: %s" % (baseband,str(spwsToPlot))
           if (bbctr < len(spwsToPlotInBaseband)): 
               spwctr = 0
+              spwctrFirstToPlot = 0
           while (spwctr < len(spwsToPlot)):
                 ispw = spwsToPlot[spwctr]
                 ispwInCalTable = list(uniqueSpwsInCalTable).index(ispw)
@@ -2978,7 +2982,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                                        channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
                                                                        ampmarkstyle,markersize,ampmarkstyle2,gamp_std)
                       else:  # not overlaying times
-                          print "Skip %s (%s) all data flagged" % (antstring, titleString)
+                          print "Skip %s spw%d (%s) all data flagged" % (antstring, ispw, titleString)
+                          if ((overlaySpws or overlayBasebands) and spwctr==spwctrFirstToPlot):
+                              spwctrFirstToPlot += 1
                           if (myinput == 'b'):
                               redisplay = False # This prevents infinite loop when htting 'b' on first screen when ant0 flagged. 2013-03-08
                       if (overlayAntennas==False):
@@ -3032,7 +3038,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                         print "amp: xctr=%d, xant=%d, myap=%d, mytime=%d(%s), firstTimeMatch=%d, bOverlay=" % (xctr, xant, myap, mytime, utstring(uniqueTimes[mytime],3), firstTimeMatch), bOverlay
                     if (myap==1):
                       if (overlayTimes == False or mytime==firstTimeMatch):
-                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr==spwctrFirstToPlot or spwctr>len(spwsToPlot)):
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr==antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
@@ -3044,7 +3050,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
                     else: # (myap == 0)
                       if (overlayTimes == False or mytime==firstTimeMatch):
-                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr==spwctrFirstToPlot or spwctr>len(spwsToPlot)):
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
@@ -3581,7 +3587,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       yrange = ylim[1]-ylim[0]
 # #     # #            print "amp: ylim, yrange = ",  ylim, yrange
                       if (overlayAntennas == False and overlayTimes == False and bOverlay == False and
-                          ((overlaySpws == False and overlayBasebands == False) or spwctr==0)):
+                          ((overlaySpws == False and overlayBasebands == False) or spwctr==spwctrFirstToPlot)):
                           # draw polarization labels for no overlay
                           x0 = xstartPolLabel
                           y0 = ystartPolLabel
@@ -3896,7 +3902,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               pchannels2 = [xchannels2,ychannels2]  # this is necessary because np.diff reduces nchan by 1
                               pfrequencies2 = [xfrequencies2,yfrequencies2]  # this is necessary because np.diff reduces nchan by 1
                       if (overlayTimes == False or mytime==firstTimeMatch):  
-                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>spwsToPlot[-1]):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr==spwctrFirstToPlot or spwctr>spwsToPlot[-1]):
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
@@ -4359,7 +4365,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
 # #     # #            print "phase: ylim, yrange = ",  ylim, yrange
                       myap = 0
                       if (overlayAntennas == False and overlayTimes == False and bOverlay == False and
-                          ((overlaySpws == False and overlayBasebands == False) or spwctr==0)):
+                          ((overlaySpws == False and overlayBasebands == False) or spwctr==spwctrFirstToPlot)):
                           # draw polarization labels
                           x0 = xstartPolLabel
                           y0 = ystartPolLabel
@@ -4812,7 +4818,7 @@ def computeScansForUniqueTimes(uniqueTimes, cal_scans, times, unique_cal_scans,
         else:
             # This 3.4 table does not have the scan numbers populated
             scansForUniqueTimes = []
-            print "Because the scan numbers are not correct in this ms, I will use timestamps instead."
+            print "Because the scan numbers are either not filled in this table, or the solutions span multiple scans, I will use timestamps instead."
     else:
         nUniqueTimes = len(np.unique(scansForUniqueTimes))
     return(scansForUniqueTimes, nUniqueTimes)
@@ -6547,10 +6553,12 @@ def interpretLOs(vis, parentms='', showWVR=False,
             TFBLOoffset = LO4 - 3e9
             line += '%9.3f %+8.3f' % (LO4 * 1e-6,  TFBLOoffset * 1e-6)
             
-        if (bands[index[i]] == 'ALMA_RB_06'):
+        if (bands[index[i]] == 'ALMA_RB_06' or bands[index[i]] == 'ALMA_RB_09'):
             if (len(LOs[index[i]]) > 1):
                 if (LOs[index[i]][1] < 11.3e9 and LOs[index[i]][1] > 10.5e9):
-                    line = line + ' YIG may leak into this spw'
+                    line = line + ' leakage of LO2 undesired sideband may degrade dynamic range'
+                    if (bands[index[i]] == 'ALMA_RB_06'):
+                        line += ' (and YIG may leak in)'
                     yigLeakage = LOs[index[i]][0] + (LOs[index[i]][1] - LOs[index[i]][2]) + (yig - LOs[index[i]][1])
                     if (yigLeakage > 0):
                         line = line + ' at %.6f' % (yigLeakage*1e-9)
