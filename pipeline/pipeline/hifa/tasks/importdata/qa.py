@@ -19,15 +19,26 @@ class ALMAImportDataQAHandler(pqa.QAResultHandler):
         # replace this with results of calls to ALMA-specific functions in qacalc
         #score = pqa.QAScore(0.1, longmsg='Hello from ALMA-specific QA', shortmsg='ALMA QA') 
         #scores = [score]
+
+	# Check for the presense of polarization intents
 	score1 = self._check_polintents(result.mses)
 
-	scores = [score1]
+	# Check for the presence of receiver bands with calibration issues
+	score2 = self._check_bands(result.mses)
+
+	scores = [score1, score2]
 
         result.qa.pool.extend(scores)
 
     def _check_polintents(self, mses):
         '''
-	Check each measurement set for polarization inents
+	Check each measurement set for polarization intents
 	'''
 	return qacalc.score_polintents(mses)
+
+    def _check_bands(self, mses):
+        '''
+	Check each measurement set for bands with calibration issues
+	'''
+	return qacalc.score_bands(mses)
 
