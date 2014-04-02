@@ -1582,8 +1582,6 @@ class imfit_test(unittest.TestCase):
             con = cltool()
             con.fromrecord(zz['results'])
             self.assertTrue((decon.getfluxvalue(0) == con.getfluxvalue(0)).all())
-            print "decon ", decon.getfluxerror(0)
-            print "convl ", con.getfluxerror(0)
             self.assertTrue((decon.getfluxerror(0) == con.getfluxerror(0)).all())
             self.assertTrue((decon.getfluxunit(0) == con.getfluxunit(0)))
             self.assertTrue((decon.getrefdir(0) == con.getrefdir(0)))
@@ -1606,6 +1604,7 @@ class imfit_test(unittest.TestCase):
         comp = zz['deconvolved']['component0']
         self.assertTrue(abs(comp['peak']['value'] - 2.19935) < 1e-5)
         self.assertTrue(abs(comp['peak']['error'] - 0.278872) < 1e-5)
+        self.assertTrue(abs(comp['sum']['value'] - 10.93169) < 1e-5)
 
         myia.setrestoringbeam("4arcmin", "4arcmin", "0deg")
         zz = imfit(imagename=decon_im)
