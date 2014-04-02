@@ -26,7 +26,10 @@ class ALMAImportDataQAHandler(pqa.QAResultHandler):
 	# Check for the presence of receiver bands with calibration issues
 	score2 = self._check_bands(result.mses)
 
-	scores = [score1, score2]
+	# Check for the presence of bandwidth switching
+	score3 = self._check_bwswitching(result.mses)
+
+	scores = [score1, score2, score3]
 
         result.qa.pool.extend(scores)
 
@@ -41,4 +44,10 @@ class ALMAImportDataQAHandler(pqa.QAResultHandler):
 	Check each measurement set for bands with calibration issues
 	'''
 	return qacalc.score_bands(mses)
+
+    def _check_bwswitching(self, mses):
+        '''
+	Check each measurement set for bandwidth switching calibration issues
+	'''
+	return qacalc.score_bwswitching(mses)
 
