@@ -170,6 +170,48 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
     return pqa.QAScore(score, longmsg, shortmsg)
 
 @log_qa
+def score_bands(mses):
+    """
+    Score a MeasurementSet object based on the presence of 
+    ALMA bands with calibration issues.
+    """
+
+    # ALMA receiver bands. Warnings will be raised for any 
+    # measurement sets containing the following bands.
+    score = 1.0
+    score_map = {'8'  : -1.0,
+                 '9'  : -1.0}
+
+    unsupported = set(score_map.keys())
+
+    num_mses = len(mses)
+    all_ok = True
+    complaints = []
+
+    # analyse each MS
+    for ms in mses:
+        msbands = set ([str(spw.band) for spw in ms.get_spectral_windows(science_windows_only=True)])
+	overlap = unsupported.intersection(msbands)
+	if not overlap:
+	    continue
+	all_ok = False
+	for m in overlap:
+            score += (score_map[m] / num_mses)
+        longmsg = ('%s contains %s band data'
+            '' % (ms.basename, utils.commafy(overlap, False)))
+        complaints.append(longmsg)
+
+    if all_ok:
+        longmsg = ('No %s band data were found in %s.' % (list(unsupported),
+                   utils.commafy([ms.basename for ms in mses], False)))
+        shortmsg = 'No %s band data found' % list(unsupported)
+    else:
+        longmsg = '%s.' % utils.commafy(complaints, False)
+        shortmsg = '%s band data found' % list(unsupported)
+        
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
 def score_polintents(mses):
     """
     Score a MeasurementSet object based on the presence of 
