@@ -223,8 +223,11 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
 
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
+
+    //A plot not to be shown.
     if ( ! itsParent_->getPlotManager().isPlottable( this ) ){
-    	return;
+    	//Clear the plot
+    	detachFromCanvases();
     }
     vector<String> updates =
         PlotMSWatchedParameters::UPDATE_FLAG_NAMES(updateFlag);

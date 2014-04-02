@@ -163,13 +163,17 @@ bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) const {
 	//valid location.  First check to see if its current one is valid.
 	PlotMSPlotParameters& plotParams = plot->parameters();
 	PMS_PP_Iteration* iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-	if ( iterParams != NULL ){
-		int desiredRow = iterParams->getGridRow();
-		int desiredCol = iterParams->getGridCol();
+	int desiredRow = iterParams->getGridRow();
+	int desiredCol = iterParams->getGridCol();
+	bool wantsLocation = true;
+	if ( desiredRow < 0 || desiredCol < 0 ){
+		wantsLocation = false;
+	}
+	if ( iterParams != NULL && wantsLocation ){
 		locationFound = itsPages_.isSpot( desiredRow, desiredCol, plot );
 	}
 
-   	if ( !locationFound ){
+   	if ( !locationFound && wantsLocation ){
    		//Try to find an empty spot to put it.
    		pair<int,int> location = itsPages_.findEmptySpot();
    		if ( location.first != -1 && location.second != -1 ){
@@ -244,6 +248,15 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 				bool showPlot = isPlottable( itsPlots_[i]);
 				if ( showPlot ){
 					itsPlots_[i]->updateLocation();
+				}
+			}
+		}
+		//For GUI mode, the plots do not redraw themselves in their new grid when
+		//the grid size is changed unless we tell them to redraw.
+		if ( itsParent_->guiShown() ){
+			for ( int i = 0; i < plotCount; i++ ){
+				if ( isPlottable( itsPlots_[i])){
+					itsPlots_[i]->parametersHaveChanged( itsPlots_[i]->parameters(), PMS_PP::UPDATE_REDRAW);
 				}
 			}
 		}

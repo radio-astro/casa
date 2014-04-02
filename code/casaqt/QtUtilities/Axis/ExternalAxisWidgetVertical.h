@@ -23,28 +23,40 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef CASAQT_EXTERNALAXISWIDGETBOTTOM_H_
-#define CASAQT_EXTERNALAXISWIDGETBOTTOM_H_
+#ifndef EXTERNALAXISWIDGETVERTICAL_H_
+#define EXTERNALAXISWIDGETVERTICAL_H_
 
-#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetHorizontal.h>
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidget.h>
 
 namespace casa {
 
-class ExternalAxisWidgetBottom : public ExternalAxisWidgetHorizontal {
+/**
+ * Common code for drawing a vertical axis external to the plot
+ */
+
+class ExternalAxisWidgetVertical : public ExternalAxisWidget {
 public:
-	ExternalAxisWidgetBottom(QWidget* parent, QwtPlot* plot,
+	ExternalAxisWidgetVertical(QWidget* parent, QwtPlot* plot,
 			bool leftAxisInternal, bool bottomAxisInternal,
-			bool rightAxisInternal );
-
-	virtual ~ExternalAxisWidgetBottom();
+			bool rightAxisInternal);
+	virtual ~ExternalAxisWidgetVertical();
 protected:
-
-	virtual void defineAxis( QLine& axisLine );
-	//virtual void drawTicks( QPainter* painter, int tickLength);
-	virtual void drawAxisLabel( QPainter* painter );
-	virtual void drawTick( QPainter* painter, double xPixel, double value, int tickLength);
-
+	//Return the y pixel coordinate for the start of the axis.
+	virtual int getStartY() const;
+	//Return the y pixel coordinate for the end of the axis.
+	virtual int getEndY() const;
+	//Return the length of the axis in pixels.
+	virtual int getAxisLength() const;
+	//Draw tick marks on the axis of the specified length.
+	void drawTicks( QPainter* painter, int tickLength );
+	/*
+	 *Overriden by specific vertical axes to draw a tick.
+	 *@param yPixel the y pixel location for the tick.
+	 *@param value a numeric representation of the tick label.
+	 *@param tickLength the length of the tick horizontally in pixels.
+	 */
+	virtual void drawTick( QPainter* painter, double yPixel, double value, int tickLength) = 0;
 };
 
 } /* namespace casa */
-#endif /* EXTERNALAXISWIDGETBOTTOM_H_ */
+#endif /* EXTERNALAXISWIDGETVERTICAL_H_ */

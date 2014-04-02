@@ -260,44 +260,51 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 
 	//Resize based on the row and column count
 	PlotMSParameters params = itsParent_->getParameters();
-	uInt rows = params.getRowCount();
-	uInt cols = params.getColCount();
+	int rows = params.getRowCount();
+	int cols = params.getColCount();
 	resize( pages, rows, cols );
 	PlotMSPage& page = pages[pages.currentPageNumber()];
 
 	const PMS_PP_Iteration* iterParams = itsParams_.typedGroup<PMS_PP_Iteration>();
-	uInt rowIndex = 0;
-	uInt colIndex = 0;
+	int rowIndex = 0;
+	int colIndex = 0;
 	if ( iterParams != NULL ){
-		rowIndex = static_cast<uInt>(iterParams->getGridRow());
-		colIndex = static_cast<uInt>(iterParams->getGridCol());
+		rowIndex = iterParams->getGridRow();
+		colIndex = iterParams->getGridCol();
 	}
 
-	//Find a canvas for this plot.
-	for(uInt r = 0; r < rows; ++r) {
-		bool assigned = false;
-		for(uInt c = 0; c < cols; ++c) {
-			if ( isIteration() ){
-				if( !page.isOwned(r, c)) {
-					page.setOwner(r, c, this);
+	page.disown( this );
+	if ( rowIndex >= 0 && colIndex >= 0 ){
+
+		//Find a canvas for this plot.
+		for(int r = 0; r < rows; ++r) {
+			bool assigned = false;
+			for(int c = 0; c < cols; ++c) {
+				if ( isIteration() ){
+					if( !page.isOwned(r, c)) {
+						page.setOwner(r, c, this);
+					}
+					itsCanvases_[r][c] = page.canvas(r, c);
 				}
-				itsCanvases_[r][c] = page.canvas(r, c);
+				else {
+					//If it is not an iteration plot, there is just
+					//one canvas for this plot.
+					if ( rowIndex == r && colIndex == c){
+						//page.disown( this );
+
+						page.setOwner(r, c, this);
+						itsCanvases_[0][0] = page.canvas(r,c);
+						assigned = true;
+						break;
+					}
+
+				}
 			}
-			else {
-				//If it is not an iteration plot, there is just
-				//one canvas for this plot.
-				if ( rowIndex == r && colIndex == c){
-					page.disown( this );
-					page.setOwner(r, c, this);
-					itsCanvases_[0][0] = page.canvas(r,c);
-					assigned = true;
-					break;
-				}
+			if ( assigned ){
+				break;
 			}
 		}
-		if ( assigned ){
-			break;
-		}
+
 	}
 	page.setupPage();
 	return true;
@@ -361,18 +368,20 @@ bool PlotMSOverPlot::isIteration() const {
 void PlotMSOverPlot::updateLocation(){
 
 	PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+
+	//Initializes the canvases for this plot
 	assignCanvases(pages);
+
 	//Put the plot data on the canvas.
 	attachToCanvases();
-	//Put the plot axis on the canvas.  For scripting mode, we get plots without
-	//axes if the call is not preset.
-		//In Gui mode, we get an exception if it is
-	//called for the case where the number of plots in the grid is going down.  We
-	//seem to need it when the number of plots is going up. However, when reload is
-	//checked, it seems to work.
+
+
+	//For scripting mode, we get plots without axes if the call is not preset.
 	if ( !itsParent_->guiShown()  ){
+		//Put the plot axis on the canvas.
 		updateCanvas();
 	}
+
 }
 
 bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
@@ -390,6 +399,7 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	if(data == NULL || iter == NULL || axes == NULL ){
 		return true;
 	}
+
 	itsTCLParams_.releaseWhenDone = releaseWhenDone;
 	itsTCLParams_.updateCanvas = (updateFlag & PMS_PP::UPDATE_AXES) ||
 			(updateFlag & PMS_PP::UPDATE_CACHE) ||
@@ -448,17 +458,24 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 					(itsParent_->getAxisLocationX() != locationAxisX) ||
 					(itsParent_->getAxisLocationY() != locationAxisY) ||
 					locationChange );
+
 	itsParent_->setCommonAxes( commonAxisX, commonAxisY);
 	itsParent_->setAxisLocation( locationAxisX, locationAxisY);
 	gridRow = rows;
 	gridCol = cols;
+
+	//We are not plotting this particular plot so just clear it and return.
+	if ( displayRow == -1 || displayCol == -1 ){
+		clearCanvases();
+		return true;
+	}
 
 	bool dataSet = data->isSet();
 
 	bool updateData = (updateFlag & PMS_PP::UPDATE_MSDATA) || (updateFlag & PMS_PP::UPDATE_CACHE);
 
 	//If the iteration count has changed, ie from an iteration to a
-	//non-iteration or just a change in the iteration ais, we may need
+	//non-iteration or just a change in the iteration axis, we may need
 	//to clear the cache and update it.
 	if ( updateIter ){
 		PMS::Axis newAxis = iter->iterationAxis();
@@ -631,6 +648,16 @@ void PlotMSOverPlot::clearCanvasProperties( int row, int col){
 	canvas->showAllAxes( false );
 	canvas->setTitle( "" );
 	canvas->setCommonAxes( false, false );
+}
+
+void PlotMSOverPlot::clearCanvases() {
+	int rowCount = itsCanvases_.size();
+	for ( int i = 0; i < rowCount; i++ ){
+		int colCount = itsCanvases_[i].size();
+		for ( int j = 0; j < colCount; j++ ){
+			clearCanvasProperties( i, j );
+		}
+	}
 }
 
 void PlotMSOverPlot::setCanvasProperties (int row, int col,

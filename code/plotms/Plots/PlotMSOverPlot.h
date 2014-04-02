@@ -132,6 +132,9 @@ private:
     //Return the dimensions of the plot data that this plot should hold.
     void getPlotSize( Int& rows, Int& cols );
 
+    //Clear the title and axes from all this plots canvases.
+    void clearCanvases();
+
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.
     vector<vector<MaskedScatterPlotPtr> > itsPlots_;

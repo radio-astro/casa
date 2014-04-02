@@ -42,7 +42,9 @@ class QPScaleDraw;
 
 class ExternalAxisWidget : public QWidget {
 public:
-	ExternalAxisWidget(QWidget* parent, QwtPlot* plot);
+	ExternalAxisWidget(QWidget* parent, QwtPlot* plot,
+			bool leftAxisInternal, bool bottomAxisInternal,
+			bool rightAxisInternal );
 	void setAxisLabel( const QString& label );
 	QString getAxisLabel() const;
 
@@ -66,17 +68,29 @@ protected:
 	virtual void drawTicks( QPainter* painter, int tickLength ) = 0;
 	virtual void defineAxis( QLine& axisLine ) = 0;
 	virtual void drawAxisLabel( QPainter* painter ) = 0;
+	virtual int getAxisLength() const = 0;
 	virtual int getCanvasHeight() const;
+	virtual int getCanvasWidth() const;
 	virtual int getStartY() const;
 	virtual int getStartX() const;
+	virtual int getEndY() const;
+
 	int getTickIncrement( int tickCount ) const;
 	double getTickStartPixel( QwtPlot::Axis axis );
 	double getTickDistance( QwtPlot::Axis axis );
 	double getTickIncrement( double tickDistance, QwtPlot::Axis axis );
+
+	QString formatLabel( double value ) const;
+
 	QwtPlot* plot;
 	QPScaleDraw* scaleDraw;
 	QString axisLabel;
+	QwtPlot::Axis plotAxis;
 
+	//Which axis are internal (drawn by the Qwt plot)
+	bool leftAxisInternal;
+	bool bottomAxisInternal;
+	bool rightAxisInternal;
 
 	const int AXIS_SMALL_SIDE;
 	const int TICK_LENGTH;

@@ -279,6 +279,13 @@ private:
     static bool initColors();
     // </group>
     
+    //Returns true if the given axis is drawn by the Qwt plot; false if
+    //the drawing is external and custom.
+    // <group>
+    bool isLeftAxisInternal() const;
+    bool isBottomAxisInternal() const;
+    bool isRightAxisInternal() const;
+    // </group>
 private slots:
     // Default panel: hand tool changed.
     void handToolChanged(bool on);

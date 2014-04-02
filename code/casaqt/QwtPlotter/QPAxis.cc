@@ -165,7 +165,9 @@ PlotAxis QPAxis::axisIndex(unsigned int i) {
 
 // Constructors/Destructors //
 
-QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot) : m_parent(parent),
+QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot,
+		bool leftAxisInternal, bool bottomAxisInternal,
+		bool rightAxisInternal ) : m_parent(parent),
 		// m_canvas(NULL),
         m_axesRatioLocked(false), m_axesRatios(4, 1),
         axisWidget( NULL ){
@@ -182,26 +184,30 @@ QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot) : 
     //Make the external axis we will be using
     if ( plotAxis  == Y_LEFT ){
 
-    	axisWidget = new ExternalAxisWidgetLeft( this, associatedPlot );
+    	axisWidget = new ExternalAxisWidgetLeft( this, associatedPlot,
+    			leftAxisInternal, bottomAxisInternal, rightAxisInternal );
     	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
     	setFixedWidth( AXIS_SMALL_SIDE );
     	setMinimumWidth( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == X_BOTTOM ){
-    	axisWidget = new ExternalAxisWidgetBottom( this, associatedPlot );
+    	axisWidget = new ExternalAxisWidgetBottom( this, associatedPlot,
+    			leftAxisInternal, bottomAxisInternal, rightAxisInternal );
     	sizePolicy.setVerticalPolicy( QSizePolicy::Fixed );
     	setFixedHeight( AXIS_SMALL_SIDE );
     	setMinimumHeight( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == Y_RIGHT ){
 
-    	axisWidget = new ExternalAxisWidgetRight( this, associatedPlot );
+    	axisWidget = new ExternalAxisWidgetRight( this, associatedPlot,
+    			leftAxisInternal, bottomAxisInternal, rightAxisInternal );
     	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
     	setFixedWidth( AXIS_SMALL_SIDE );
     	setMinimumWidth( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == X_TOP ){
-    	axisWidget = new ExternalAxisWidgetTop( this, associatedPlot );
+    	axisWidget = new ExternalAxisWidgetTop( this, associatedPlot,
+    			leftAxisInternal, bottomAxisInternal, rightAxisInternal );
     	sizePolicy.setVerticalPolicy( QSizePolicy::Fixed );
     	setFixedHeight( AXIS_SMALL_SIDE );
     	setMinimumHeight( AXIS_SMALL_SIDE );

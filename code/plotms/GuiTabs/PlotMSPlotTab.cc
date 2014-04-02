@@ -103,8 +103,13 @@ void PlotMSPlotTab::getLocation( Int& rowIndex, Int& colIndex ){
 
 bool PlotMSPlotTab::isPlottable() const {
 	bool plottable = false;
-	if ( !closing && itsCurrentPlot_ != NULL ){
-		plottable = itsPlotManager_.isPlottable( itsCurrentPlot_ );
+	if ( !closing ){
+		if ( itsCurrentPlot_ == NULL ){
+			plottable = true;
+		}
+		else {
+			plottable = itsPlotManager_.isPlottable( itsCurrentPlot_ );
+		}
 	}
 	return plottable;
 }
@@ -213,8 +218,6 @@ String PlotMSPlotTab::getAveragingSummary() const {
 
 void PlotMSPlotTab::plot( bool forceReload ) {
 
-  //  cout << "PlotMSPlotTab::plot()" << endl;
-
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
@@ -232,7 +235,6 @@ void PlotMSPlotTab::plot( bool forceReload ) {
 		//
 		// note as of Aug 2010: .casheReady() seems to return false even if cache was cancelled.
         bool paramsChanged = params != *itsCurrentParameters_;
-
         bool cancelledCache = !itsCurrentPlot_->cache().cacheReady();
         if (forceReload)    {
 			forceReloadCounter_++;   
@@ -414,7 +416,7 @@ PlotMSDataTab*  PlotMSPlotTab::addDataSubtab (){
      return insertDataSubtab (itsSubtabs_.size ());
 }
 
-PlotMSIterateTab* PlotMSPlotTab::findIterateTab(){
+PlotMSIterateTab* PlotMSPlotTab::findIterateTab() const {
 	PlotMSIterateTab* tab = NULL;
 	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
 		tab = dynamic_cast < PlotMSIterateTab * >(t);
@@ -505,6 +507,7 @@ PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
          Int cols = 1;
          itsPlotManager_.getGridSize( rows, cols );
          tab->setGridSize( rows, cols );
+         connect( tab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
      }
      insertSubtab (index, tab);
      return tab;

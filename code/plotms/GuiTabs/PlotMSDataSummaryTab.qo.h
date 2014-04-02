@@ -88,11 +88,11 @@ private slots:
 	void observeModKeys();
 	void close( PlotMSDataCollapsible* collapsible );
 	bool plottableChanged();
+
 private:
 	void emptyLayout();
 	void fillLayout();
 	void plot( bool forceIt );
-	bool isVisibilityChange();
 
     QList<PlotMSDataCollapsible*> dataList;
     QWidget* scrollWidget;

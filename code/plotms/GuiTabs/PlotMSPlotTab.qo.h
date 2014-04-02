@@ -169,6 +169,9 @@ public:
     //it can be displayed.
     bool isPlottable() const;
 
+signals:
+	void plottableChanged();
+
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
@@ -229,7 +232,7 @@ protected:
 private:    
 
     PlotMSDataTab* findOrCreateDataTab();
-    PlotMSIterateTab* findIterateTab();
+    PlotMSIterateTab* findIterateTab() const;
     PlotMSDisplayTab* findDisplayTab();
 
     // PlotMSPlotSubtab objects in tab widget.

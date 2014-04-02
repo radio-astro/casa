@@ -505,6 +505,38 @@ int QPPlotter::getColCount(){
     return colCount;
 }
 
+
+bool QPPlotter::isLeftAxisInternal() const {
+	 bool leftAxisInternal = false;
+	 if ( axisLocationY == Y_LEFT ){
+	     if ( !commonAxisY ){
+	    	 leftAxisInternal = true;
+	     }
+	 }
+	 return leftAxisInternal;
+}
+
+bool QPPlotter::isBottomAxisInternal() const {
+	 bool bottomAxisInternal = false;
+	 if ( axisLocationX == X_BOTTOM ){
+	     if ( !commonAxisX ){
+	    	 bottomAxisInternal = true;
+	     }
+	 }
+	 return bottomAxisInternal;
+}
+
+bool QPPlotter::isRightAxisInternal() const {
+	 bool rightAxisInternal = false;
+	 if ( axisLocationY == Y_RIGHT ){
+	     if ( !commonAxisY ){
+	    	 rightAxisInternal = true;
+	     }
+	 }
+	 return rightAxisInternal;
+}
+
+
 // Private Methods //
 
 void QPPlotter::setupCanvasFrame() {
@@ -541,12 +573,16 @@ void QPPlotter::setupCanvasFrame() {
         int colCount = g->cols();
         int startCols = 0;
         int startRows = 0;
+        bool leftAxisInternal = isLeftAxisInternal();
+        bool bottomAxisInternal = isBottomAxisInternal();
+        bool rightAxisInternal = isRightAxisInternal();
         if ( commonAxisX ){
         	if ( axisLocationX == X_TOP ){
         		startRows = 1;
         		rowCount = rowCount + 1;
         	}
         }
+
 
         if ( commonAxisY ){
         	int axisColumn = colCount;
@@ -569,7 +605,8 @@ void QPPlotter::setupCanvasFrame() {
         		if ( associatedCanvas != NULL ){
 
         			QPLayeredCanvas& associatedPlot = associatedCanvas->asQwtPlot();
-        			QPAxis* axis = new QPAxis( axisLocationY, this, &associatedPlot);
+        			QPAxis* axis = new QPAxis( axisLocationY, this, &associatedPlot,
+        					leftAxisInternal, bottomAxisInternal, rightAxisInternal );
         			associatedCanvas->addAxisListener( axis );
 
         			qgl->addWidget(axis, i, axisColumn );
@@ -609,7 +646,8 @@ void QPPlotter::setupCanvasFrame() {
         		QPCanvas* associatedCanvas = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
         		if ( associatedCanvas != NULL ){
         			QwtPlot& associatedPlot = associatedCanvas->asQwtPlot();
-        			QPAxis* axis = new QPAxis( axisLocationX, this, &associatedPlot );
+        			QPAxis* axis = new QPAxis( axisLocationX, this, &associatedPlot,
+        					leftAxisInternal, bottomAxisInternal, rightAxisInternal );
         			//axis->setPlot( &associatedPlot );
         			associatedCanvas->addAxisListener( axis );
         			qgl->addWidget( axis, axisRow, j );

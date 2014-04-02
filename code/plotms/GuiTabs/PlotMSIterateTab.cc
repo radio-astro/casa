@@ -43,6 +43,8 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
 	: PlotMSPlotSubtab(tab, parent) 
 {
     setupUi(this);
+    gridRow = 1;
+    gridCol = 1;
     
     // Fill list of available iteration axis choices
     // For now, is same as colorize list
@@ -72,40 +74,47 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
     connect(globalYCheck, SIGNAL(stateChanged(int)), SLOT(globalChanged()));
     connect(sharedXCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
     connect(sharedYCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
-    connect(gridRowSpin, SIGNAL(valueChanged(int)), SIGNAL(changed()));
-    connect(gridColSpin, SIGNAL(valueChanged(int)), SIGNAL(changed()));
+    connect(gridRowSpin, SIGNAL(valueChanged(int)), SLOT(locationChanged()));
+    connect(gridColSpin, SIGNAL(valueChanged(int)), SLOT(locationChanged()));
+
+    //Initialize the check box indicating whether to use a shared scale and/or axis.
+    sharedXCheck->setEnabled( false );
+    sharedYCheck->setEnabled( false );
+    globalXCheck->setEnabled( true );
+    globalYCheck->setEnabled( true );
 }
 
-void PlotMSIterateTab::gridChanged( int rowCount, int colCount ){
 
-	//Common x-axis
-	if ( rowCount <= 1 ){
-		sharedXCheck->setEnabled( false );
-		sharedXCheck->setChecked( false );
-		globalXCheck->setEnabled( false );
-		globalXCheck->setChecked( false );
-	}
-	else {
-		globalXCheck->setEnabled( true );
-		if ( globalXCheck->isChecked()){
-			sharedXCheck->setEnabled( true );
-		}
-	}
 
-	//Common y-axis
-	if ( colCount <= 1 ){
-		sharedYCheck->setEnabled( false );
-		sharedYCheck->setChecked( false );
-		globalYCheck->setEnabled( false );
-		globalYCheck->setChecked( false );
+bool PlotMSIterateTab::isPlottable() const {
+	bool plottable = true;
+	if ( gridRowSpin->value() == 0 || gridColSpin->value() == 0 ){
+		plottable = false;
 	}
-	else {
-		globalYCheck->setEnabled( true );
-		if ( globalYCheck->isChecked()){
-			sharedYCheck->setEnabled( true );
-		}
+	return plottable;
+}
+
+
+void PlotMSIterateTab::locationChanged(){
+	int newRow = gridRowSpin->value();
+	int newCol = gridColSpin->value();
+	bool plottabilityChange = false;
+	if ( newRow == 0 && gridRow > 0 ){
+		plottabilityChange = true;
 	}
-	//emit changed();
+	else if ( newRow > 0 && gridRow == 0 ){
+		plottabilityChange = true;
+	}
+	else if ( newCol == 0 && gridCol > 0 ){
+		plottabilityChange = true;
+	}
+	else if ( newCol > 0 && gridCol == 0 ){
+		plottabilityChange = true;
+	}
+	if ( plottabilityChange ){
+		emit plottableChanged();
+	}
+	emit changed();
 }
 
 
@@ -132,13 +141,21 @@ bool PlotMSIterateTab::setGridSize(unsigned int nRows,unsigned int nCols){
     //Reset the limits on the spins.
     gridRowSpin->setMaximum( nRows );
     gridColSpin->setMaximum( nCols );
-    gridChanged( nRows, nCols );
+    //gridChanged( nRows, nCols );
     return validLocation;
 }
 
 void PlotMSIterateTab::globalChanged(){
-	sharedYCheck->setEnabled( globalYCheck->isChecked());
-	sharedXCheck->setEnabled( globalXCheck->isChecked());
+	bool globalYChecked = globalYCheck->isChecked();
+	bool globalXChecked = globalXCheck->isChecked();
+	sharedYCheck->setEnabled( globalYChecked );
+	sharedXCheck->setEnabled( globalXChecked );
+	if ( !globalYChecked ){
+		sharedYCheck->setChecked( false );
+	}
+	if ( !globalXChecked ){
+		sharedXCheck->setChecked( false );
+	}
 	emit changed();
 }
 
@@ -151,19 +168,21 @@ void PlotMSIterateTab::setGridIndices( int rowIndex, int colIndex ){
 	//Note that the rows and columns we display to the user begin with 1,
 	//whereas what we store in the code begins at 0.
 	int maxRows = gridRowSpin->maximum();
-	if ( 0< rowIndex && rowIndex <= maxRows ){
+	if ( 0<= rowIndex && rowIndex <= maxRows ){
 		gridRowSpin->setValue( rowIndex );
 	}
 	else {
 	    qDebug() << "PlotMSIterateTab::setValue maxRows="<<maxRows<<" rowIndex="<<rowIndex;
 	}
 	int maxCols = gridColSpin->maximum();
-	if ( 0 < colIndex && colIndex <= maxCols ){
+	if ( 0 <= colIndex && colIndex <= maxCols ){
 		gridColSpin->setValue( colIndex );
 	}
 	else {
 		 qDebug() << "PlotMSIterateTab::setValue maxCols="<<maxCols<<" colIndex="<<colIndex;
 	}
+	gridRow = rowIndex;
+	gridCol = colIndex;
 }
 
 PlotMSIterateTab::~PlotMSIterateTab() { }

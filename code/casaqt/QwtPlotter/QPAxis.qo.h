@@ -86,7 +86,9 @@ public:
     // Non-Static //
     
     // Constructor which takes (optional) parent QPPlotter.
-    QPAxis(PlotAxis axis, QPPlotter* parent = NULL, QwtPlot* associatedPlot = NULL );
+    QPAxis(PlotAxis axis, QPPlotter* parent, QwtPlot* associatedPlot,
+    		bool leftAxisInternal, bool bottomAxisInternal,
+    		bool rightAxisInternal );
 
     // Destructor.
     virtual ~QPAxis();

@@ -47,8 +47,11 @@
         </item>
         <item row="0" column="1">
          <widget class="QSpinBox" name="gridRowSpin">
+          <property name="toolTip">
+           <string>The row location for the plot.  Setting the row to 0 indicates the plot should not be shown.</string>
+          </property>
           <property name="minimum">
-           <number>1</number>
+           <number>0</number>
           </property>
          </widget>
         </item>
@@ -61,8 +64,11 @@
         </item>
         <item row="1" column="1">
          <widget class="QSpinBox" name="gridColSpin">
+          <property name="toolTip">
+           <string>The column location for the plot.  Setting the column to 0 indicates the plot should not be shown.</string>
+          </property>
           <property name="minimum">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="value">
            <number>1</number>
