@@ -94,6 +94,7 @@ def standard_sources(vis):
 
 
 class VLASetjyInputs(basetask.StandardInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # standard setjy parameters 
                  vis=None, field=None, spw=None, model=None, 
