@@ -30,7 +30,7 @@ class VLAAgentFlaggerInputs(agentflagger.AgentFlaggerInputs):
     baseband = basetask.property_with_default('baseband', True)
     
 
-
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
 		 autocorr=None, shadow=None, scan=None, scannumber=None, quack=None, clip=None, baseband=None,
 		 intents=None, edgespw=None, fracspw=None, online=None,
