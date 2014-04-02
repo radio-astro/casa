@@ -191,6 +191,7 @@ private:
 	vector<GaussianBeam> _allBeams;
 	vector<Double> _allBeamsPix, _allBeamsSter;
 	vector<uInt> _allChanNums;
+	vector<Bool> _isPoint;
 	Record _residStats, inputStats, _output;
 	Double _rms;
 	String _kludgedStokes;

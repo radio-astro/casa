@@ -233,6 +233,9 @@ void ImageFitter::_createOutputRecord(
 		Record spectrum = sub.asRecord("spectrum");
 		spectrum.define("channel", _allChanNums[i]);
 		sub.defineRecord("spectrum", spectrum);
+		if (dodecon) {
+			sub.define("ispoint", _isPoint[i]);
+		}
 		allConvolved.defineRecord(compString, sub);
 		if (dodecon) {
 			Record sub = allDeconvolved.asRecord(compString);
@@ -261,6 +264,7 @@ void ImageFitter::_createOutputRecord(
 			Record spectrum = sub.asRecord("spectrum");
 			spectrum.define("channel", _allChanNums[i]);
 			sub.defineRecord("spectrum", spectrum);
+			sub.define("ispoint", _isPoint[i]);
 			allDeconvolved.defineRecord(compString, sub);
 		}
 	}
@@ -1078,6 +1082,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 			fitSuccess = False;
 			isPointSource = True;
 		}
+		_isPoint.push_back(isPointSource);
 		ostringstream size;
 		Angular2DGaussian decon;
 		if(fitSuccess) {
@@ -1163,13 +1168,14 @@ void ImageFitter::_setDeconvolvedSizes() {
 							for (uInt k=0; k<2; k++) {
 								sourceIn.setPA(paRange[k]);
 								decon = Angular2DGaussian();
+								Bool isPoint;
 								try {
-									isPointSource = beam.deconvolve(decon, sourceIn);
+									isPoint = beam.deconvolve(decon, sourceIn);
 								}
 								catch (const AipsError& x) {
-									fitSuccess = False;
+									isPoint = True;
 								}
-								if (fitSuccess) {
+								if (! isPoint) {
 									Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
 									errMaj.convert(emaj.getUnit());
 									Quantity errMin = abs(bestDecon.getMinor() - decon.getMinor());
