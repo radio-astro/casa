@@ -56,9 +56,14 @@ public:
 	void setOutputMS(const String& msname);
 	Bool fillOutputMS();
 	virtual ~MSUVBin();
+	//Helper function for creating MDirection from a string
+	static Bool String2MDirection(const String& theString,
+					            MDirection& theMeas, const String msname="");
 
 private:
-	void recoverGridInfo(const String& msname);
+	static Int sepCommaEmptyToVectorStrings(Vector<String>& retStr,
+			  const String& str);
+	Int recoverGridInfo(const String& msname);
 	void storeGridInfo();
 	void createOutputMS(const Int nrrows);
 	Int makeUVW(const Double reffreq, Vector<Double>& incr, Vector<Int>& cent, Matrix<Double>&uvw);

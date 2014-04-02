@@ -35,6 +35,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Quanta/QuantumHolder.h>
+#include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSPolarization.h>
 #include <mstransform/MSTransform/MSUVBin.h>
@@ -106,7 +108,9 @@ void MSUVBin::setOutputMS(const String& msname){
 
 void MSUVBin::createOutputMS(const Int nrrow){
 	if(Table::isReadable(outMSName_p)){
-		recoverGridInfo(outMSName_p);
+		Int oldnrows=recoverGridInfo(outMSName_p);
+		if(oldnrows != nrrow)
+			throw(AipsError("Number of grid points requested "+ String::toString(nrrow)+ " does not match "+String::toString(oldnrows)+ " in outputms"));
 		existOut_p=True;
 		return;
 	}
@@ -143,7 +147,7 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	existOut_p=False;
 
 }
-void MSUVBin::recoverGridInfo(const String& msname){
+Int MSUVBin::recoverGridInfo(const String& msname){
 	outMsPtr_p=new MeasurementSet(msname, Table::Update);
 	if(!outMsPtr_p->keywordSet().isDefined("MSUVBIN")){
 		throw(AipsError("The ms "+msname+" was not made with the UV binner"));
@@ -153,13 +157,15 @@ void MSUVBin::recoverGridInfo(const String& msname){
 	rec.get("ny", ny_p);
 	rec.get("nchan", nchan_p);
 	rec.get("npol", npol_p);
+	LogIO os(LogOrigin("MSUVBin", "recoverInfo", WHERE));
+	os << "Output is a binned ms of "<< nx_p << " by " << ny_p << " with "<< npol_p << " pol and "<< nchan_p << " channel " << endl;
 	CoordinateSystem *tempCoordsys;
 	tempCoordsys=CoordinateSystem::restore(rec, "csys");
 	if(tempCoordsys==NULL)
 		throw(AipsError("could recover grid info from ms"));
 	csys_p=*tempCoordsys;
 	delete tempCoordsys;
-
+	return outMsPtr_p->nrow();
 
 
 }
@@ -205,6 +211,16 @@ Bool MSUVBin::fillOutputMS(){
 	if(existOut_p){
         //recover the previous data for summing
 
+		ROMSColumns msc(*outMsPtr_p);
+		msc.data().getColumn(grid);
+		msc.weightSpectrum().getColumn(wghtSpec);
+		msc.weight().getColumn(wght);
+		msc.flag().getColumn(flag);
+		msc.flagRow().getColumn(rowFlag);
+		msc.antenna1().getColumn(ant1);
+		msc.antenna2().getColumn(ant2);
+		msc.time().getColumn(timeCen);
+		msc.uvw().getColumn(uvw);
 	}
 	else{
 		grid.set(Complex(0));
@@ -417,6 +433,10 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 			Int newrow=locuv(1,k)*nx_p+locuv(0,k);
 			if(rowFlag(newrow) && !(vb.flagRow()(k))){
 				rowFlag(newrow)=False;
+				/////TEST
+				//uvw(0,newrow)=vb.uvw()(0,k);
+				//uvw(1,newrow)=vb.uvw()(1,k);
+				/////
 				uvw(2,newrow)=vb.uvw()(2,k);
 				ant1(newrow)=vb.antenna1()(k);
 				ant2(newrow)=vb.antenna2()(k);
@@ -426,10 +446,12 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 			for(Int chan=0; chan < vb.nChannels(); ++chan ){
 				if(chanMap_p(chan) >=0){
 					for(Int pol=0; pol < vb.nCorrelations(); ++pol){
-						if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0)){
+						if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0)){
+							Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k):
+									vb.visCube()(pol,chan,k)*vb.weight()(pol,k);
 							grid(polMap_p(pol),chanMap_p(chan), newrow)
-											+= hasCorrected ? vb.visCubeCorrected()(pol,chan,k):
-											vb.visCube()(pol,chan,k);
+											= (grid(polMap_p(pol),chanMap_p(chan), newrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),newrow)
+													  + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),newrow));
 							flag(polMap_p(pol),chanMap_p(chan), newrow)=False;
 							//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 							//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
@@ -624,6 +646,135 @@ void MSUVBin::fillFieldTable() {
     msField.referenceDirMeasCol().put(0, radecMeas);
     msField.flagRow().put(0, False);
     MSColumns(*outMsPtr_p).fieldId().fillColumn(0);
+}
+
+Bool MSUVBin::String2MDirection(const String& theString,
+		    MDirection& theMeas, const String msname){
+
+  istringstream istr(theString);
+  Int fieldid;
+  istr >> fieldid;
+  if(!istr.fail() && msname != ""){
+	  //We'll interprete string as a field id of ms
+	  MeasurementSet thems(msname);
+	  theMeas=ROMSFieldColumns(thems.field()).phaseDirMeas(fieldid);
+	  return True;
+  }
+
+
+  QuantumHolder qh;
+  String error;
+
+  Vector<String> str;
+  //In case of compound strings with commas or empty space
+  sepCommaEmptyToVectorStrings(str, theString);
+
+  if(str.nelements()==3){
+	  qh.fromString(error, str[1]);
+	  casa::Quantity val1=qh.asQuantity();
+      qh.fromString(error, str[2]);
+      casa::Quantity val2=qh.asQuantity();
+      MDirection::Types tp;
+      if(!MDirection::getType(tp, str[0])){
+    	  ostringstream oss;
+    	  oss << "Could not understand Direction frame...defaulting to J2000 " ;
+    	  cerr << oss.str() << endl;
+    	  tp=MDirection::J2000;
+      }
+      theMeas=MDirection(val1,val2,  tp);
+      return True;
+  }
+  else if(str.nelements()==2){
+	  qh.fromString(error, str[0]);
+      casa::Quantity val1=qh.asQuantity();
+      qh.fromString(error, str[1]);
+      casa::Quantity val2=qh.asQuantity();
+      theMeas=MDirection(val1, val2);
+      return True;
+ }
+  else if(str.nelements()==1){
+      //Must be a string like sun, moon, jupiter
+	  casa::Quantity val1(0.0, "deg");
+      casa::Quantity val2(90.0, "deg");
+      theMeas=MDirection(val1, val2);
+      MDirection::Types ref;
+      Int numAll;
+      Int numExtra;
+      const uInt *dum;
+      const String *allTypes=MDirection::allMyTypes(numAll, numExtra, dum);
+      //if it is SUN moon etc
+      if(MDirection::getType(ref,str[0])){
+
+    	  theMeas=MDirection(val1, val2, ref);
+    	  return True;
+      }
+      if(MeasTable::Source(theMeas, str[0])){
+    	  return True;
+      }
+      if(!MDirection::getType(ref, str[0])){
+    	  Vector<String> all(numExtra);
+    	  for(Int k =0; k < numExtra; ++k){
+    		  all[k]=*(allTypes+numAll-k-1);
+    	  }
+    	  ostringstream oss;
+    	  oss << "Could not understand Direction string " <<str[0] << "\n"  ;
+    	  oss << "Valid ones are " << all;
+    	  cerr << oss.str() <<  " or one of the valid known sources in the data repos" << endl;
+    	  theMeas=MDirection(val1, val2);
+    	  return False;
+      }
+
+  }
+
+
+
+
+  ///If i am here i don't know how to interprete this
+
+
+  return False;
+}
+
+
+Int MSUVBin::sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
+				 const String& str){
+
+    String oneStr=str;
+    Int nsep=0;
+    // decide if its comma seperated or empty space seperated
+    casa::String sep;
+    if((nsep=oneStr.freq(",")) > 0){
+      sep=",";
+    }
+    else {
+      nsep=oneStr.freq(" ");
+      sep=" ";
+    }
+    if(nsep == 0){
+      lesStrings.resize(1);
+      lesStrings=oneStr;
+      nsep=1;
+    }
+    else{
+      String *splitstrings = new String[nsep+1];
+      nsep=split(oneStr, splitstrings, nsep+1, sep);
+      lesStrings.resize(nsep);
+      Int index=0;
+      for (Int k=0; k < nsep; ++k){
+	if((String(splitstrings[k]) == String(""))
+	   || (String(splitstrings[k]) == String(" "))){
+	  lesStrings.resize(lesStrings.nelements()-1, True);
+	}
+	else{
+	  lesStrings[index]=splitstrings[k];
+	  ++index;
+	}
+      }
+      delete [] splitstrings;
+    }
+
+    return nsep;
+
 }
 
 
