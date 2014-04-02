@@ -1255,7 +1255,12 @@ def write_pipeline_casa_tasks(context):
     Write the equivalent pipeline CASA tasks for results in the context to a
     file
     """
-    pipeline_tasks = [proxy.read().pipeline_casa_task for proxy in context.results]
+    try:
+        pipeline_tasks = [proxy.read().pipeline_casa_task for proxy in context.results]
+    except AttributeError:
+        LOG.warning('Could not find equivalent CASA tasks for all results')
+        return
+    
     task_string = '\n'.join(['    %s' % t for t in pipeline_tasks])
     # replace the working directory with ''
     task_string = re.sub('%s/' % context.output_dir, '', task_string)
