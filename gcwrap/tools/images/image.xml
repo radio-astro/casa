@@ -4809,7 +4809,11 @@ There are also values in each component subdictionary not used by cl.fromrecord(
 supply additional information. There is a 'peak' subdictionary for each component that provides the
 peak intensity of the component. It is present for both 'results' and 'deconvolved' components.
 There is also a 'sum' subdictionary for each component indicated the simple sum of pixel values in
-the the original image enclosed by the fitted ellipse.
+the the original image enclosed by the fitted ellipse. In addtion, if the image has a beam(s), then
+there will be a 'beam' subdictionary associated with each component in both the 'results' and
+'deconvolved' dictionaries. This subdictionary will have three keys: 'beamarcsec' will be a subdictionary
+giving the beam dimensions in arcsec, 'beampixels' will have the value of the beam area expressed in
+pixels, and 'beamster' will have the value of the beam area epressed in steradians.
 
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
