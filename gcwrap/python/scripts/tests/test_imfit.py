@@ -1612,10 +1612,13 @@ class imfit_test(unittest.TestCase):
         self.assertTrue(abs(beaminfo['beamster'] - 8.62897407e-7) < 1e-15)
         
         self.assertTrue(comp['spectrum']['channel'] == 0)
-
+        self.assertFalse(zz['results']['component0']['ispoint'])
+        self.assertFalse(zz['deconvolved']['component0']['ispoint'])
         myia.setrestoringbeam("4arcmin", "4arcmin", "0deg")
         zz = imfit(imagename=decon_im)
         [decon, con] = _comp_lists(zz)
+        self.assertTrue(zz['results']['component0']['ispoint'])
+        self.assertTrue(zz['deconvolved']['component0']['ispoint'])
         dshape = decon.getshape(0)
         cshape = con.getshape(0)
         major = dshape['majoraxis']['value']
@@ -1626,6 +1629,9 @@ class imfit_test(unittest.TestCase):
         self.assertTrue(abs(cshape['minoraxis']['value'] - 229) < 1)
         myia.setrestoringbeam("5arcmin", "5arcmin", "0deg")
         zz = imfit(imagename=decon_im)
+        self.assertTrue(zz['results']['component0']['ispoint'])
+        self.assertTrue(zz['deconvolved']['component0']['ispoint'])
+
         [decon, con] = _comp_lists(zz)
         dshape = decon.getshape(0)
         cshape = con.getshape(0)

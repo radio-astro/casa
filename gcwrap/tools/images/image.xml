@@ -4815,7 +4815,9 @@ applies. In addtion, if the image has a beam(s), then there will be a 'beam' sub
 with each component in both the 'results' and 'deconvolved' dictionaries. This subdictionary will
 have three keys: 'beamarcsec' will be a subdictionary giving the beam dimensions in arcsec,
 'beampixels' will have the value of the beam area expressed in pixels, and 'beamster' will have the
-value of the beam area epressed in steradians.
+value of the beam area epressed in steradians. Also, if the image has a beam(s), in the component level
+dictionaries will be an 'ispoint' entry with an associated boolean value describing if the component
+is consistent with a point source.
 
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
