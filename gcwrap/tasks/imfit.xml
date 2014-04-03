@@ -252,6 +252,22 @@ keys are arrays containing the the fitted zero level offset value and its error,
 for each channel. In cases where the fit did not converge, these values are set to NaN.
 The value associated with 'unit' is just the image brightness unit.
 
+If the input image has units of K, the flux density of components will be reported in units
+of [prefix]K*rad*rad, where prefix is an SI prefix used so that the numerical value is between
+1 and 1000. To convert to units of K*beam, determine the area of the appropriate beam,
+which is given by pi/(4*ln(2))*bmaj*bmin, where bmaj and bmin are the major and minor axes
+of the beam, and convert to steradians (=rad*rad). This value is included in the beam portion
+of the component dictionary (key 'beamster').  Then divide the numerical value of the
+logged flux density by the beam area in steradians. So, for example
+
+\begin{verbatim}
+# run on an image with K brightness units
+res = imfit(...)
+# get the I flux density in K*beam of component 0
+comp = res['results']['component0']
+flux_density_kperbeam = comp['flux']['value'][0]/comp['beam']['beamster']
+\end{verbatim}
+
 The region can either be specified by a box(es) or a region.
 Ranges of pixel values can be included or excluded from the fit. If specified using
 the box parameter, multiple boxes can be given using the format
