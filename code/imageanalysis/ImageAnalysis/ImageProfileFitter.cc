@@ -741,7 +741,7 @@ void ImageProfileFitter::_fitProfiles(
 	}
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	uInt mark = max(1000, pow(Int(10), (Int)log10(nPoints/100)));
+	uInt mark = (uInt)max(1000.0, std::pow(10.0, log10(nPoints/100)));
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
 			pProgressMeter->update(Double(nProfiles));
@@ -910,8 +910,9 @@ void ImageProfileFitter::_setAbscissaDivisorIfNecessary(
 		if (abscissaValues.size() > 0) {
 			Double minAbs = min(abs(abscissaValues));
 			Double maxAbs = max(abs(abscissaValues));
-			Int l = (Int)log10(sqrt(minAbs*maxAbs));
-			setAbscissaDivisor(pow(10, l));
+			Double l = (Int)log10(sqrt(minAbs*maxAbs));
+			Double p = std::pow(10.0, l);
+			setAbscissaDivisor(p);
 		}
 	}
 	if (_abscissaDivisor != 1) {
