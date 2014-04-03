@@ -242,7 +242,7 @@ public:
   // All FTMachines that fill weightimage, need to set this.
   // TODO : Make this pure virtual.
   virtual Bool useWeightImage(){return False;}; 
-  virtual Bool isSkyJonesSet(){return (sj_p.nelements()>0);}
+  virtual Bool isSkyJonesSet(){return (sj_p.nelements()>0) && !(sj_p[0]).null()  ;}
   virtual Bool isSkyJonesChanged(VisBuffer& vb, Int row){if(sj_p.nelements()>0){return sj_p[0]->changed(vb,row);} else {return False;} };
 
   // Set SkyJones if image domain corrections /applycation are needed
