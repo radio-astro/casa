@@ -13,6 +13,7 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
     """
     Inputs for imaging
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, iflist=None, pollist=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, output_dir=None,

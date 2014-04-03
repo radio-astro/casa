@@ -6,6 +6,7 @@ import glob
 import numpy
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 
@@ -18,8 +19,9 @@ LOG = infrastructure.get_logger(__name__)
 
 class SDBaselineInputs(common.SingleDishInputs):
     """
-    Inputs for imaging
+    Inputs for baseline subtraction
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, iflist=None, pollist=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None):

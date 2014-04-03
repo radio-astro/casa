@@ -64,7 +64,7 @@ class SDExportDataInputs(basetask.StandardInputs):
     flag and bl coefficient in the context.
     
     """
-    
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,pprfile=None,
                  targetimages=None,skytsyscal_bl=None,products_dir=None):
         """

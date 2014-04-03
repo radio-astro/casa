@@ -21,6 +21,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SDImportDataInputs(basetask.StandardInputs):
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, infiles=None, output_dir=None, 
                  session=None, overwrite=None):
         self._init_properties(vars())

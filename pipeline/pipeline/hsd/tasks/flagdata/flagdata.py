@@ -17,6 +17,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
     """
     Inputs for single dish flagging
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
                  flag_weath=None, weath_thresh=None,

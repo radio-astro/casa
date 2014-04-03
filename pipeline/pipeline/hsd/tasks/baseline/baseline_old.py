@@ -15,8 +15,11 @@ from .baseline import SDBaselineResults
 
 LOG = infrastructure.get_logger(__name__)
 
+class SDBaselineInputsOld(SDBaselineInputs):
+    pass
+
 class SDBaseline(common.SingleDishTaskTemplate):
-    Inputs = SDBaselineInputs
+    Inputs = SDBaselineInputsOld
 
     def prepare(self):
         inputs = self.inputs

@@ -128,6 +128,7 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
     
     @basetask.timestamp
     @basetask.capture_log
+    @basetask.result_finaliser
     def execute(self, dry_run=True, **parameters):
         aresult = super(SingleDishTaskTemplate,self).execute(dry_run=dry_run, **parameters)
         # Don't convert results to ResultsList if it is not

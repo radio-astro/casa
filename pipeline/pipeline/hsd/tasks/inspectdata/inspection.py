@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import re
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
 from . import reader
@@ -18,6 +19,7 @@ class SDInspectDataInputs(common.SingleDishInputs):
     """
     Inputs for single dish calibration
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None):
         self._init_properties(vars())
         self._to_list(['infiles'])

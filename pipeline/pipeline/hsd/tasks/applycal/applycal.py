@@ -15,6 +15,7 @@ class SDApplyCalInputs(common.SingleDishInputs):
     """
     Inputs for single dish calibraton
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  infiles=None, outfile=None, field=None, iflist=None,
                  scanlist=None, pollist=None):
