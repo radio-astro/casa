@@ -179,7 +179,7 @@ String ImageFitterResults::resultsHeader(
 }
 
 String ImageFitterResults::fluxToString(
-	uInt compNumber, uInt chanPixNumber, uInt stokesPixNumber, Bool hasBeam
+	uInt compNumber, Bool hasBeam
 ) const {
 	vector<String> unitPrefix = ImageFitterResults::unitPrefixes(False);
 	ostringstream fluxes;
@@ -193,6 +193,8 @@ String ImageFitterResults::fluxToString(
 	String baseUnit = "Jy";
 	Bool hasTemperatureUnits = fluxDensity.isConform("K*rad2");
 	if (hasTemperatureUnits) {
+		String areaUnit = "rad*rad";
+		/*
 		String areaUnit = "beam";
 		if (_image->imageInfo().hasBeam()) {
 			Double beamArea = _image->imageInfo().restoringBeam(
@@ -218,6 +220,7 @@ String ImageFitterResults::fluxToString(
 				areaUnit = "arcsec2";
 			}
 		}
+		*/
 		baseUnit = "K." + areaUnit;
 		intensityToFluxConversion.setUnit(areaUnit);
 	}

@@ -1006,8 +1006,7 @@ String ImageFitter::_resultsToString(uInt nPixels) const {
 				&(_getImage()->coordinates()), True
 			) << endl;
 			summary << _sizeToString(i) << endl;
-			summary << _results.fluxToString(i, _chanPixNumber, _stokesPixNumber, ! _noBeam) << endl;
-			//summary << _fluxToString(i) << endl;
+			summary << _results.fluxToString(i, ! _noBeam) << endl;
 			summary << _spectrumToString(i) << endl;
 		}
 	}

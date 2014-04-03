@@ -120,9 +120,7 @@ public:
 
 	void setStokes(const String& s) { _stokes = s; }
 
-	String fluxToString(
-		uInt compNumber, uInt chanPixNumber, uInt stokesPixNumber, Bool hasBeam
-	) const;
+	String fluxToString(uInt compNumber, Bool hasBeam) const;
 
 	void setFixed(const Vector<String>& s) { _fixed = s; }
 
