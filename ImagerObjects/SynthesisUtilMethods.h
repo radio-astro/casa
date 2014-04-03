@@ -153,12 +153,14 @@ public:
   CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi) const;
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;
-  Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, Double& refPix, String& specmode,
-                   const MEpoch& obsEpoch, const MPosition& obsPosition,
-                   const Vector<Double>& dataChanFreqs, const Vector<Double>& dataFreqRes,
-                   const MFrequency::Types& dataFrame, const Quantity& qrestfreq, 
-                   const Double& freqmin, const Double& freqmax ) const;
-
+  Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, 
+		 Double& refPix, String& specmode,
+		 const MEpoch& obsEpoch, const MPosition& obsPosition,
+		 const Vector<Double>& dataChanFreqs, const Vector<Double>& dataFreqRes,
+		 const MFrequency::Types& dataFrame, const Quantity& qrestfreq, 
+		 const Double& freqmin, const Double& freqmax,
+		 const MDirection& phaseCenter ) const;
+  
   String findSpecMode(const String& mode) const;
 
   // Sky coordinates
@@ -167,6 +169,7 @@ public:
   Vector<Quantity> cellsize;
   Projection projection;
   MDirection phaseCenter;
+  Int phaseCenterFieldId;
 
   // Spectral coordinates ( TT : Add other params here  )
   Int nchan, nTaylorTerms, chanStart, chanStep;

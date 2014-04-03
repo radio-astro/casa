@@ -111,7 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-  void SIMapper::initializeGrid(VisBuffer& vb, Bool dopsf)
+  void SIMapper::initializeGrid(VisBuffer& vb, Bool dopsf, Bool /*firstaccess*/)
      {
 
        LogIO os( LogOrigin("SIMapper","initializeGrid",WHERE) );
