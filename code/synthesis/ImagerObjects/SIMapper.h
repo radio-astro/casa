@@ -63,19 +63,19 @@ template<class T> class ImageInterface;
   ///// Major Cycle Functions
 
   /////////////////////// NEW VI/VB versions
-  void initializeGrid(const vi::VisBuffer2& vb, Bool dopsf);
-  void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
-  void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
-  void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
-  void degrid(vi::VisBuffer2& vb);
-  void finalizeDegrid();
+  virtual void initializeGrid(const vi::VisBuffer2& vb, Bool dopsf);
+  virtual void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
+  virtual void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
+  virtual void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
+  virtual void degrid(vi::VisBuffer2& vb);
+  virtual void finalizeDegrid();
 
   /////////////////////// OLD VI/VB versions
-  void initializeGrid(VisBuffer& vb, Bool dopsf);
-  void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
-  void finalizeGrid(VisBuffer& vb, Bool dopsf);
-  void initializeDegrid(VisBuffer& vb, Int row=-1);
-  void degrid(VisBuffer& vb);
+  virtual void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
+  virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
+  virtual void finalizeGrid(VisBuffer& vb, Bool dopsf);
+  virtual void initializeDegrid(VisBuffer& vb, Int row=-1);
+  virtual void degrid(VisBuffer& vb);
 
   //////////////the return value is False if no valid record is being returned
   Bool getCLRecord(Record& rec);

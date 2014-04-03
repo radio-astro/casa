@@ -703,8 +703,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("nchan"), nchan);
 
 	/// phaseCenter (as a string) . // Add INT support later.
-	err += readVal( inrec, String("phasecenter"), phaseCenter );
+	//err += readVal( inrec, String("phasecenter"), phaseCenter );
+	if( inrec.isDefined("phasecenter") )
+	  {
+	    String pcent("");
+	    if( inrec.dataType("phasecenter") == TpString )
+	      {
+		inrec.get("phasecenter",pcent);
+		if( pcent.length() > 0 ) // if it's zero length, it means 'figure out from first field in MS'.
+		  {
+		    err += readVal( inrec, String("phasecenter"), phaseCenter );
+		    phaseCenterFieldId=-1;
+		    //// Phase Center Field ID.... if explicitly specified, and not via phasecenter.
+		    //   Need this, to deal with a null phase center being translated to a string to go back out.
+		    err += readVal( inrec, String("phasecenterfieldid"), phaseCenterFieldId);
+		  }
+		else {  phaseCenterFieldId=0; } // Take the first field of the MS.
+	      }
+	    if (inrec.dataType("phasecenter")==TpInt 
+		|| inrec.dataType("phasecenter")==TpFloat 
+		|| inrec.dataType("phasecenter")==TpDouble )
+	      {
+		// This will override the previous setting to 0 if the phaseCenter string is zero length.
+		err += readVal( inrec, String("phasecenter"), phaseCenterFieldId );
+	      }
 
+	    if( ( inrec.dataType("phasecenter") != TpString && inrec.dataType("phasecenter")!=TpInt
+		  && inrec.dataType("phasecenter")!=TpFloat && inrec.dataType("phasecenter")!=TpDouble ) )
+	      //		|| ( phaseCenterFieldId==-1 ) )
+	      {
+		err += String("Cannot set phasecenter. Please specify a string or int\n");
+	      }
+	  }
+
+	
 	//// Projection
 	if( inrec.isDefined("projection") )
 	  {
@@ -811,6 +843,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cellsize.resize(2); cellsize.set( Quantity(1.0,"arcsec") );
     stokes="I";
     phaseCenter=MDirection();
+    phaseCenterFieldId=-1;
     projection=Projection::SIN;
     startModel=String("");
     overwrite=False;
@@ -846,6 +879,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("nchan", nchan);
     impar.define("ntaylorterms", nTaylorTerms);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
+    impar.define("phasecenterfieldid",phaseCenterFieldId);
     impar.define("projection", projection.name() );
 
     impar.define("mode", mode );
@@ -879,8 +913,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
 
+    // get the first ms for multiple MSes
+    MeasurementSet msobj=rvi->getMeasurementSet();
+
+    MDirection phaseCenterToUse = phaseCenter;
+
+    if( phaseCenterFieldId != -1 )
+      {
+	ROMSFieldColumns msfield(msobj.field());
+	phaseCenterToUse=msfield.phaseDirMeas( phaseCenterFieldId ); 
+      }
+    // Setup Phase center if it is specified only by field id.
+
     /////////////////// Direction Coordinates
-    MVDirection mvPhaseCenter(phaseCenter.getAngle());
+    MVDirection mvPhaseCenter(phaseCenterToUse.getAngle());
     // Normalize correctly
     MVAngle ra=mvPhaseCenter.get()(0);
     ra(0.0);
@@ -899,7 +945,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Double> xform(2,2);
     xform=0.0;xform.diagonal()=1.0;
     DirectionCoordinate
-      myRaDec(MDirection::Types(phaseCenter.getRefPtr()->getType()),
+      myRaDec(MDirection::Types(phaseCenterToUse.getRefPtr()->getType()),
 	      projection,
 	      refCoord(0), refCoord(1),
 	      deltas(0), deltas(1),
@@ -909,7 +955,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //defining observatory...needed for position on earth
     // get the first ms for multiple MSes
-    MeasurementSet msobj=rvi->getMeasurementSet();
+    //    MeasurementSet msobj=rvi->getMeasurementSet();
     ROMSColumns msc(msobj);
     String telescop = msc.observation().telescopeName()(0);
     MEpoch obsEpoch = msc.timeMeas()(0);
@@ -979,7 +1025,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
 
     if (!getImFreq(chanFreq, chanFreqStep, refPix, specmode, obsEpoch, 
-      obsPosition, dataChanFreq, dataChanWidth, dataFrame, qrestfreq, freqmin, freqmax))
+		   obsPosition, dataChanFreq, dataChanWidth, dataFrame, qrestfreq, freqmin, freqmax,
+		   phaseCenterToUse))
       throw(AipsError("Failed to determine channelization parameters"));
 
     Bool nonLinearFreq(false);
@@ -1030,7 +1077,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
 
     if (freqFrameValid) {
-      mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenter);   
+      mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
     }
 
     //    cout << "RF from coordinate : " << mySpectral.restFrequency() << endl;
@@ -1091,7 +1138,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        const Vector<Double>& dataChanFreq, 
                                        const Vector<Double>& dataChanWidth,
                                        const MFrequency::Types& dataFrame, 
-                                       const Quantity& qrestfreq, const Double& freqmin, const Double& freqmax) const
+                                       const Quantity& qrestfreq, const Double& freqmin, const Double& freqmax,
+				       const MDirection& phaseCenter) const
   {
 
     String start, step;

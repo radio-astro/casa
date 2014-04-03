@@ -179,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
-	    (itsMappers[k])->initializeGrid(vb,dopsf);
+	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
 
   	  }
   }

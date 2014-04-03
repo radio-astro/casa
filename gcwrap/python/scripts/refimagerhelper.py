@@ -697,15 +697,39 @@ class PyParallelImagerHelper():
 class ImagerParameters():
 
     def __init__(self,
-                 msname='',field='',spw='',scan='',usescratch=True,readonly=True,
+                 msname='',
+                 field='',
+                 spw='',
+                 scan='',
+                 usescratch=True,
+                 readonly=True,
+                 
+                 imagename='', 
+                 mode='mfs', 
+                 ntaylorterms=1, 
+                 mtype='default',
+                 nchan=1, 
+                 chanstart=0, 
+                 chanstep=1, 
+                 freqstart='', 
+                 freqstep='',
+                 velstart='', 
+                 velstep='', 
+                 veltype='radio', 
+                 freqframe='LSRK', 
+                 reffreq='',
+                 restfreq=[''],
+
+                 imsize=[1,1], 
+                 facets=1, 
+                 cellsize=[10.0,10.0],
+                 phasecenter='',
+                 stokes='I',
                  outlierfile='',
-                 imagename='', mode='mfs', nchan=1, chanstart=0, chanstep=1, 
-                 freqstart='', freqstep='',
-                 velstart='', velstep='', veltype='radio', 
-                 freqframe='LSRK', reffreq='',
-                 ntaylorterms=1, mtype='default',restfreq=[''],
-                 imsize=[1,1], facets=1, cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
-                 ftmachine='ft', startmodel='', weighting='natural', stokes='I',
+                 startmodel='', 
+                 weighting='natural', 
+
+                 ftmachine='ft', 
 
                  aterm=True,
                  psterm=True,
@@ -736,6 +760,7 @@ class ImagerParameters():
         ## The outlier '1', '2', ....  parameters come from the outlier file
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
+        ######### Image definition
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cellsize':cellsize, 'phasecenter':phasecenter, 'stokes': stokes,
                                  'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
@@ -743,17 +768,27 @@ class ImagerParameters():
                                  'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
                                  'freqframe':freqframe, 'reffreq':reffreq  }      }
+        ######### Gridding
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
                                    'rotatepastep':rotatepastep, 'mtype':mtype, 'weightlimit':weightlimit,
                                    'facets':facets   }     }
+        ######### weighting
         self.weightpars = {'type':weighting } 
+        
+        ######### Normalizers ( this is where flat noise, flat sky rules will go... )
+        #self.normpars = { '0' : {'imagename':imagename, 'mtype': mtype,
+        #                         'weightlimit': weightlimit,'ntaylorterms':ntaylorterms,'facets':facets }     }
+
+        ######### Deconvolution
         self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
 
-        ## Iteration control. 
+
+        ######### Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
+
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.

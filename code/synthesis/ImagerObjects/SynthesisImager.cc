@@ -894,6 +894,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
+	/*
 	CountedPtr<VPSkyJones> vp = NULL;
 	if( mappertype == "imagemosaic" || mappertype == "mtimagemosaic" )
 	  {
@@ -902,7 +903,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Quantity skyposthreshold(0.0,"deg");
 	    vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
 	  }
-
+	*/
 	// Check 'mappertype' for valid types....
 
 	/*

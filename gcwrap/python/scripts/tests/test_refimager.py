@@ -256,6 +256,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       #phasecenter=1,\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
@@ -292,7 +293,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
-                                       ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
+                                       ntaylorterms=2,mtype='multiterm',
+                                       reffreq='1.6GHz',\
+                                       #restfreq=['1.5GHz'],\
                                        imsize=[200,200],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
@@ -417,8 +420,12 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        imsize=[110,110],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ### center
+                                       #phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ### offset
+                                       phasecenter="J2000 19:59:23.591 +40.44.01.50",\
+                                       #phasecenter=0,
+                                       ftmachine='GridFT', startmodel='', weighting='briggs',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\

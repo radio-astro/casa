@@ -73,7 +73,7 @@ template<class T> class ImageInterface;
   //  void finalizeDegrid();
 
   /////////////////////// OLD VI/VB versions
-  void initializeGrid(VisBuffer& vb, Bool dopsf);
+  void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
   void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
   void finalizeGrid(VisBuffer& vb, Bool dopsf);
   void initializeDegrid(VisBuffer& vb, Int row=-1);

@@ -343,7 +343,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Double SIImageStoreMultiTerm::getReferenceFrequency()
   {
-    return (itsCoordSys.spectralCoordinate()).restFrequency();
+    Double theRefFreq;
+
+    Vector<Double> refpix = (itsCoordSys.spectralCoordinate()).referencePixel();
+    AlwaysAssert( refpix.nelements()>0, AipsError );
+    (itsCoordSys.spectralCoordinate()).toWorld( theRefFreq, refpix[0] );
+    //    cout << "Reading ref freq as : " << theRefFreq << endl;
+    return theRefFreq;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

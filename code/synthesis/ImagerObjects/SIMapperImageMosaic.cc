@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     : SIMapper( imagestore, ftm, iftm )
     //    vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
   {
-    LogIO os( LogOrigin("SIMapperImageMosaic","Construct a mapper",WHERE) );
+    LogIO os( LogOrigin("SIMapperImageMosaic","Constructor",WHERE) );
 
     /*
     if( !vp.null() ) {
@@ -127,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-  void SIMapperImageMosaic::initializeGrid(VisBuffer& vb, Bool dopsf)
+  void SIMapperImageMosaic::initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess)
   {
     
     LogIO os( LogOrigin("SIMapperImageMosaic","initializeGrid",WHERE) );
@@ -142,7 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ovb_p.assign(vb, False);
     ovb_p.updateCoordInfo(&vb, dirDep);
     
-    firstaccess_p = True;
+    firstaccess_p = firstaccess;
     
   }
   
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //anyways right now we are allowing only 1 ftmachine for GridBoth
       Bool IFTChanged=ift_p->changed(vb);
 
-      //      cout << "gridCoreMos : internalChanges : " << internalChanges << "  firstchange : " << firstOneChanges << endl;
+      // cout << "gridCoreMos : internalChanges : " << internalChanges << "  firstchange : " << firstOneChanges << endl;
       
       if(internalChanges) {
 	// Yes there are changes: go row by row.
@@ -181,9 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		// Need to apply the SkyJones from the previous row
 		// and finish off before starting with this row
-		///	    finalizeGridCoreMos(dopsf, ftm, targetImage, sumwtImage, weightImage, complexImage, ovb_p);
-		///	    initializeGridCoreMos(vb,ftm,complexImage);
-		
+
 		finalizeGrid( ovb_p, dopsf );
 		initializeGrid( vb, dopsf );
 		
@@ -192,28 +190,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //gridCore( vb, dopsf, col, ftm, row );
 	  }
       } else if (IFTChanged || firstOneChanges) {
-	//if(!isBeginingOfSkyJonesCache_p){
-	//finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
-	// }
 	//IMPORTANT:We need to finalize here by checking that we are not at the begining of the iteration
 	if( !firstaccess_p )
 	  {
-	    //   finalizeGridCoreMos(dopsf, ftm, targetImage, sumwtImage, weightImage, complexImage, ovb_p);
 	    finalizeGrid( ovb_p, dopsf );
 	    firstaccess_p=False;
 	  }
-	//initializeGridCoreMos(vb,ftm,complexImage);
 	initializeGrid( vb, dopsf );
 	ift_p->put(vb, -1, dopsf, col);
-	//gridCore( vb, dopsf, col, ftm, -1 );
       } else  {
 	ift_p->put(vb, -1, dopsf, col);
-
-	//       throw(AipsError("Internal error : unsupported image-domain mosaic option"));
       }
-      
-
-      //     ift_p->put(vb, -1, dopsf, col);
      
    }
 
@@ -230,14 +217,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       LogIO os( LogOrigin("SIMapperImageMosaic","finalizeGrid",WHERE) );
     
-      //      if(ejgrid_p.null()) throw(AipsError("Internal error : null ejgrid..."));
-
       if(ift_p.null())
       	return;
 
       ift_p->finalizeToSkyNew( dopsf, vb, itsImages );
-
-
     }
 
   
@@ -325,9 +308,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		{
 		  // Need to apply the SkyJones from the previous row
 		  // and finish off before starting with this row
-		  //		  finalizeDegridCoreMos();
-		  //		  initializeDegridCoreMos(vb, ftm, modelImage, complexImage, cftm, clCorrupted_p );
-
 		  finalizeDegrid();
 		  initializeDegrid(vb,row);
 		}
@@ -340,9 +320,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// This buffer has changed wrt the previous buffer, but
 	// this buffer has no changes within it. Again we don't need to
 	// check for the FTMachine changing.
-	//	finalizeDegridCoreMos();
-	//	initializeDegridCoreMos(vb, ft_p, modelImage, complexImage, cft_p,clCorrupted_p);
-
 	finalizeDegrid();
 	initializeDegrid(vb, 0);
 
@@ -351,9 +328,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else {
 	ft_p.null() ? cft_p->get(vb, clCorrupted_p) : ft_p->get(vb);
       }
-
-      //      if( ! ft_p.null() ) { ft_p->get(vb); }
-      //      if( ! cft_p.null() ) { cft_p->get(vb, cl_p); }
       
       vb.modelVisCube()+=origCube;
 
