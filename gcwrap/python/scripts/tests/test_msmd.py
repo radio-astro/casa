@@ -138,7 +138,11 @@ class msmd_test(unittest.TestCase):
         self.assertRaises(Exception,self.md.exposuretime, scan=30, spwid=0, polid=0)
         got = self.md.exposuretime(scan=30, spwid=0, polid=1)
         self.assertTrue(got == qa.quantity("1.152s"))
+        got = self.md.exposuretime(scan=30, spwid=0)
+        self.assertTrue(got == qa.quantity("1.152s"))
         got = self.md.exposuretime(scan=17, spwid=10, polid=0)
+        self.assertTrue(got == qa.quantity("1.008s"))
+        got = self.md.exposuretime(scan=17, spwid=10)
         self.assertTrue(got == qa.quantity("1.008s"))
         
     def test_fdmspws(self):

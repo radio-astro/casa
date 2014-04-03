@@ -33,6 +33,7 @@
 #include <tools/ms/msmetadata_forward.h>
 
 #include <casa/Containers/Record.h>
+#include <casa/IO/STLIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>
@@ -226,10 +227,7 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 		}
 		else if (type == variant::INT) {
 			Int id = antennaids.toInt();
-			if (id < 0) {
-				*_log << "Antenna ID must be nonnegative."
-					<< LogIO::EXCEPTION;
-			}
+			ThrowIf(id < 0, "Antenna ID must be nonnegative");
 			myIDs.push_back(id);
 		}
 		else if (type == variant::INTVEC) {
@@ -239,17 +237,15 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 				vector<Int>::const_iterator iter=tmp.begin();
 				iter!=tmp.end(); iter++
 			) {
-				if (*iter < 0) {
-					*_log << "Antenna ID must be nonnegative."
-						<< LogIO::EXCEPTION;
-				}
+				ThrowIf(*iter < 0, "Antenna ID must be nonnegative");
 				myIDs.push_back(*iter);
 			}
 		}
 		else {
-			*_log << "Unsupported type for parameter antennaids. "
-				<< "Must be either an integer or integer array."
-				<< LogIO::EXCEPTION;
+			ThrowCc(
+				"Unsupported type for parameter antennaids. "
+				"Must be either an integer or integer array"
+			);
 		}
 		std::map<String COMMA uInt> namesToIDsMap;
 		return _vectorStringToStdVectorString(
@@ -270,8 +266,10 @@ record* msmetadata::antennaoffset(const variant& which) {
 			out = _msmd->getAntennaOffset(which.toString());
 		}
 		else {
-			*_log << "Unsupported type for input parameter which. Supported types are int and string"
-				<< LogIO::EXCEPTION;
+			ThrowCc(
+				"Unsupported type for input parameter which. "
+				"Supported types are int and string"
+			);
 		}
 		Vector<Double> v = out.getValue();
 		String u = out.getUnit();
@@ -526,7 +524,26 @@ record* msmetadata::effexposuretime() {
 record* msmetadata::exposuretime(int scan, int spwid, int polid) {
 	_FUNC(
 		_checkSpwId(spwid, True);
-		_checkPolId(polid, True);
+		if (polid >= 0) {
+			_checkPolId(polid, True);
+		}
+		else {
+			std::set<uInt> polids = _msmd->getPolarizationIDs(scan, spwid);
+			ThrowIf(
+				polids.empty(),
+				"This dataset has no records for the specified scan and spwid"
+			);
+			if (polids.size() == 1) {
+				polid = *(polids.begin());
+			}
+			else {
+				*_log << LogIO::WARN	<< "This scan and spwID has multiple "
+					<< " polarization IDs which are " << polids
+					<< ". You must specify one of those."
+					<< LogIO::POST;
+				return 0;
+			}
+		}
 		std::map<std::pair<uInt COMMA uInt> COMMA Int> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
 		std::pair<uInt COMMA uInt> mykey;
 		mykey.first = spwid;
