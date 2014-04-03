@@ -189,38 +189,10 @@ String ImageFitterResults::fluxToString(
 	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
 	    ? Quantity(1.0, "beam")
 	    : Quantity(1.0, "pixel");
-
 	String baseUnit = "Jy";
 	Bool hasTemperatureUnits = fluxDensity.isConform("K*rad2");
 	if (hasTemperatureUnits) {
 		String areaUnit = "rad*rad";
-		/*
-		String areaUnit = "beam";
-		if (_image->imageInfo().hasBeam()) {
-			Double beamArea = _image->imageInfo().restoringBeam(
-				chanPixNumber, stokesPixNumber
-			).getArea("rad2");
-			fluxDensity /= Quantity(beamArea, "rad2");
-			fluxDensity.setUnit("K.beam");
-			fluxDensityError /= Quantity(beamArea, "rad2");
-			fluxDensityError.setUnit("K.beam");
-			areaUnit = "beam";
-		}
-		else {
-			if (_minorAxes[compNumber] > Quantity(1.0, "rad")) {
-				areaUnit = "rad2";
-			}
-			else if (_minorAxes[compNumber] > Quantity(1.0, "deg")) {
-				areaUnit = "deg2";
-			}
-			else if (_minorAxes[compNumber] > Quantity(1.0, "arcmin")) {
-				areaUnit = "arcmin2";
-			}
-			else if (_minorAxes[compNumber] > Quantity(1.0, "arcsec")) {
-				areaUnit = "arcsec2";
-			}
-		}
-		*/
 		baseUnit = "K." + areaUnit;
 		intensityToFluxConversion.setUnit(areaUnit);
 	}
