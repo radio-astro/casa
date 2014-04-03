@@ -71,6 +71,10 @@ class MSTHelper(ParallelTaskHelper):
         self.__isMMS = False
         self._calScanList = None
         self._selectionScanList = None
+        self.taskname = None
+        self.__ddistart = None
+        self._msTool = None
+        self._tbTool = None
         
         if not self.__args.has_key('spw'):
             self.__args['spw'] = ''
@@ -80,12 +84,16 @@ class MSTHelper(ParallelTaskHelper):
         # __ddidict contains the names of the subMSs to consolidate
         # the keys are the ddistart and the values the subMSs names
         self.__ddidict = {}
-        self._msTool = None
-        self._tbTool = None
         
         # start parameter for DDI in main table of each sub-MS
         # It should be a counter of spw IDs starting at 0
-        self.__ddistart = self.__origpars['ddistart']
+        if self.__origpars.has_key('ddistart'):
+              self.__ddistart = self.__origpars['ddistart']
+
+
+    def setTaskName(self, thistask=''):
+        '''Setup this run with the task that called self.setupCluster(taskname)'''
+        self.taskname = thistask
                 
 #    @dump_args
     def setupIO(self):
@@ -173,7 +181,7 @@ class MSTHelper(ParallelTaskHelper):
         # It needs to use the updated list of parameters!!!
 #        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__origpars)
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
-            
+        self.setTaskName(thistask)            
     
 #    @dump_args
     def setupParameters(self, **pars):
@@ -291,12 +299,12 @@ class MSTHelper(ParallelTaskHelper):
     def generateJobs(self):
         '''This is the method which generates all of the actual jobs to be done.'''
         '''This method overrides the one in ParallelTaskHelper baseclass'''
-        # How about when the input is a list of MMSs? What to do? Nothing!
         
-        if self._arg['outputvis'] != '':
-            casalog.post("Analyzing MS for partitioning")
-            self._createPrimarySplitCommand()
-                                     
+        if self._arg['createmms']:
+            if self._arg['outputvis'] != '':
+                casalog.post("Analyzing MS for partitioning")
+                self._createPrimarySplitCommand()
+                                      
         return True
      
 #    @dump_args
@@ -316,6 +324,7 @@ class MSTHelper(ParallelTaskHelper):
             # TODO: REVIEW this later. ScanList does not exist!
             # Single mms case
             singleCmd = copy.copy(self._arg)
+            scanList = self._selectionScanList
             if scanList is not None:
                 singleCmd['scan'] = ParallelTaskHelper.\
                                     listToCasaString(scanList)
@@ -672,6 +681,7 @@ class MSTHelper(ParallelTaskHelper):
         selectionPairs = []
         selectionPairs.append(('field','field'))
         selectionPairs.append(('spw','spw'))
+        selectionPairs.append(('polarization','correlation'))
         selectionPairs.append(('baseline','antenna'))
         selectionPairs.append(('time','timerange'))
         selectionPairs.append(('scan','scan'))
@@ -770,124 +780,6 @@ class MSTHelper(ParallelTaskHelper):
 
 
         return seldict
-
-#    @dump_args
-    def postExecution(self):
-        '''
-        This method overrides the postExecution method of ParallelTaskHelper
-        in this case we probably need to generate the output reference
-        ms.
-        '''
-        if self._arg['createmms']:
-            casalog.post("Finalizing MMS structure")
-            
-            if self._msTool:
-                self._msTool.close()
-
-            # TODO: revise this later                        
-            # restore POINTING and SYSCAL
-#            if self.pwriteaccess and not self.pointingisempty:
-#                print "restoring POINTING"
-#                os.system('rm -rf '+self.ptab) # remove empty copy
-#                os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
-#            if self.swriteaccess and not self.syscalisempty:
-#                print "restoring SYSCAL"
-#                os.system('rm -rf '+self.stab) # remove empty copy
-#                os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
-            
-            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
-                outputList = self._sequential_return_list
-                self._sequential_return_list = {}
-            else:
-                outputList = self._jobQueue.getOutputJobs()
-                
-            # We created a data directory and many SubMSs,
-            # now build the reference MS            
-            subMSList = []
-            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
-                for subMS in outputList:
-                    subMSList.append(subMS)
-            else:
-                for job in outputList:
-                    if job.status == 'done':
-                        subMSList.append(job.getCommandArguments()['outputvis'])
-                        
-            subMSList.sort()
-
-            if len(subMSList) == 0:
-                casalog.post("Error: no subMSs were created.", 'WARN')
-                return False
-            
-            # When separationaxis='scan' there is no need to give ddistart. 
-            # The tool looks at the whole spw selection and
-            # creates the indices from it. After the indices are worked out, 
-            # it applys MS selection. We do not need to consolidate either.
-                                           
-            # If axis is spw or both, give a list of the subMSs
-            # that need to be consolidated. This list is pre-organized
-            # inside the separation functions above.
-            if (self.__origpars['separationaxis'] == 'spw' or 
-                self.__origpars['separationaxis'] == 'both'):                
-                toUpdateList = self.__ddidict.values()
-                                
-                toUpdateList.sort()
-                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
-                                
-                # Consolidate the spw sub-tables to take channel selection
-                # or averages into account.
-                mtlocal1 = mttool()
-                try:                        
-                    mtlocal1.mergespwtables(toUpdateList)
-                    mtlocal1.done()
-                except Exception, instance:
-                    mtlocal1.done()
-                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
-                    raise
-                  
-            # Get the first subMS to be as a reference when
-            # copying the sub-tables to the other subMSs  
-            mastersubms = subMSList[0]
-            subtabs_to_omit = []
-
-            # deal with POINTING table
-            if not self.pointingisempty:
-#                print '******Dealing with POINTING table'
-                shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
-                # master subms gets a full copy of the original
-                shutil.copytree(self.ptab, mastersubms+'/POINTING') 
-            if self.makepointinglinks:
-                for i in xrange(1,len(subMSList)):
-                    theptab = subMSList[i]+'/POINTING'
-                    shutil.rmtree(theptab, ignore_errors=True)
-                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
-                    # (link in target will be created by makeMMS)
-                subtabs_to_omit.append('POINTING')
-
-            # deal with SYSCAL table
-            if not self.syscalisempty:
-#                print '******Dealing with SYSCAL table'
-                shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
-                # master subms gets a full copy of the original
-                shutil.copytree(self.stab, mastersubms+'/SYSCAL') 
-            if self.makesyscallinks:
-                for i in xrange(1,len(subMSList)):
-                    thestab = subMSList[i]+'/SYSCAL'
-                    shutil.rmtree(thestab, ignore_errors=True)
-                    os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
-                    # (link in target will be created my makeMMS)
-                subtabs_to_omit.append('SYSCAL')
-                
-            # Copy sub-tables from first subMS to the others.
-            ph.makeMMS(self._arg['outputvis'], subMSList,
-                       True, # copy subtables
-                       subtabs_to_omit # omitting these
-                       )
-
-            thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
-            
-            os.rmdir(thesubmscontainingdir)
-
-        return True
 
 #    @dump_args 
     def createSPWExpression(self, partdict):
@@ -1017,7 +909,126 @@ class MSTHelper(ParallelTaskHelper):
         width = self.__args['width']
         
         return start, width
-           
+
+#    @dump_args
+    def postExecution(self):
+        '''
+        This method overrides the postExecution method of ParallelTaskHelper
+        in this case we probably need to generate the output reference
+        ms.
+        '''
+        if self._arg['createmms']:
+            casalog.post("Finalizing MMS structure")
+            
+            if self._msTool:
+                self._msTool.close()
+
+            # TODO: revise this later                        
+            # restore POINTING and SYSCAL
+#            if self.pwriteaccess and not self.pointingisempty:
+#                print "restoring POINTING"
+#                os.system('rm -rf '+self.ptab) # remove empty copy
+#                os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
+#            if self.swriteaccess and not self.syscalisempty:
+#                print "restoring SYSCAL"
+#                os.system('rm -rf '+self.stab) # remove empty copy
+#                os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
+            
+            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+                outputList = self._sequential_return_list
+                self._sequential_return_list = {}
+            else:
+                outputList = self._jobQueue.getOutputJobs()
+                
+            # We created a data directory and many SubMSs,
+            # now build the reference MS            
+            subMSList = []
+            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+                for subMS in outputList:
+                    subMSList.append(subMS)
+            else:
+                for job in outputList:
+                    if job.status == 'done':
+                        subMSList.append(job.getCommandArguments()['outputvis'])
+                        
+            subMSList.sort()
+
+            if len(subMSList) == 0:
+                casalog.post("Error: no subMSs were created.", 'WARN')
+                return False
+            
+            # When separationaxis='scan' there is no need to give ddistart. 
+            # The tool looks at the whole spw selection and
+            # creates the indices from it. After the indices are worked out, 
+            # it applys MS selection. We do not need to consolidate either.
+                                           
+            # If axis is spw or both, give a list of the subMSs
+            # that need to be consolidated. This list is pre-organized
+            # inside the separation functions above.
+            if (self.__origpars['separationaxis'] == 'spw' or 
+                self.__origpars['separationaxis'] == 'both'):                
+                toUpdateList = self.__ddidict.values()
+                                
+                toUpdateList.sort()
+                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
+                                
+                # Consolidate the spw sub-tables to take channel selection
+                # or averages into account.
+                mtlocal1 = mttool()
+                try:                        
+                    mtlocal1.mergespwtables(toUpdateList)
+                    mtlocal1.done()
+                except Exception, instance:
+                    mtlocal1.done()
+                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
+                    raise
+                  
+            # Get the first subMS to be as a reference when
+            # copying the sub-tables to the other subMSs  
+            mastersubms = subMSList[0]
+            subtabs_to_omit = []
+
+            # deal with POINTING table
+            if not self.pointingisempty:
+#                print '******Dealing with POINTING table'
+                shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
+                # master subms gets a full copy of the original
+                shutil.copytree(self.ptab, mastersubms+'/POINTING') 
+            if self.makepointinglinks:
+                for i in xrange(1,len(subMSList)):
+                    theptab = subMSList[i]+'/POINTING'
+                    shutil.rmtree(theptab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
+                    # (link in target will be created by makeMMS)
+                subtabs_to_omit.append('POINTING')
+
+            # deal with SYSCAL table
+            if not self.syscalisempty:
+#                print '******Dealing with SYSCAL table'
+                shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
+                # master subms gets a full copy of the original
+                shutil.copytree(self.stab, mastersubms+'/SYSCAL') 
+            if self.makesyscallinks:
+                for i in xrange(1,len(subMSList)):
+                    thestab = subMSList[i]+'/SYSCAL'
+                    shutil.rmtree(thestab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
+                    # (link in target will be created my makeMMS)
+                subtabs_to_omit.append('SYSCAL')
+                
+            # Copy sub-tables from first subMS to the others.
+            ph.makeMMS(self._arg['outputvis'], subMSList,
+                       True, # copy subtables
+                       subtabs_to_omit # omitting these
+                       )
+
+            thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+            
+            os.rmdir(thesubmscontainingdir)
+
+        return True
+
+          
 #@dump_args
 def mstransform(
              vis, 
