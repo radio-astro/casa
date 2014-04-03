@@ -3040,8 +3040,17 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 		    	sqldSpw.insert(i);
 		    }
 		}
-		if (spwInfo[i].nchans==64 || spwInfo[i].nchans==128 || spwInfo[i].nchans==256) {
-			tdmSpw.insert(i);
+		// algorithm from thunter, CAS-5794
+		uInt nchan = spwInfo[i].nchans;
+		if (
+			nchan >= 15
+			&& ! (
+				nchan == 256 || nchan == 128 || nchan == 64 || nchan == 32
+				|| nchan == 16 || nchan == 248 || nchan == 124
+				|| nchan == 62 || nchan == 31
+			)
+		) {
+			fdmSpw.insert(i);
 		}
 		else if (spwInfo[i].nchans==1) {
 			avgSpw.insert(i);
@@ -3050,7 +3059,7 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 			wvrSpw.insert(i);
 		}
 		else {
-			fdmSpw.insert(i);
+			tdmSpw.insert(i);
 		}
 	}
 	return spwInfo;
