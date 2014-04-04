@@ -23,7 +23,6 @@ from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, KTypeGaincal
 from .importdata import ImportData
 from .lowgainflag import Lowgainflag
 from .makecleanlist import MakeCleanList
-from .linpolcal import Linpolcal
 from .refant import RefAnt
 from .restoredata import RestoreData
 from .setmodel import Setjy
