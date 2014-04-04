@@ -100,8 +100,8 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
 
-#    if task_cls is hif.tasks.Flagchans:
-#        return 'Flag channels in raw data'
+    if task_cls is hif.tasks.Flagchans:
+        return 'Flag channels in raw data'
 
     if task_cls in (hifa.tasks.FlagDeterALMA, hifa.tasks.ALMAAgentFlagger):
         return 'ALMA deterministic flagging'
@@ -1293,6 +1293,55 @@ class T2_4MDetailsDefaultRenderer(object):
             return '<pre>%s</pre>' % re.sub('\x08.', '', page)
         except Exception:
             return None
+
+
+class CleanPlotsRenderer(object):
+    template = 'cleanplots.html'
+
+    def __init__(self, context, result, plots_dict, field, spw, pol):
+        self.context = context
+        self.result = result
+        self.plots_dict = plots_dict
+        self.field = field
+        self.spw = spw
+        self.pol = pol
+        
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):
+        filename = 'field%s-spw%s-pol%s-cleanplots.html' % (
+          self.field, 
+          self.spw,
+          self.pol)
+        filename = filenamer.sanitize(filename)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots_dict' : self.plots_dict,
+                'dirname'    : self.dirname,
+                'field'      : self.field,
+                'spw'        : self.spw}
+
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
 
 
 class PlotGroupRenderer(object):
@@ -3957,20 +4006,34 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
                    if info.has_key('spw'): 
                        spw = info['spw']
                    if info.has_key('field'):
-                       field = '%s(%s)' % (info['field'], r.intent)
+                       field = '%s (%s)' % (info['field'], r.intent)
 
                    coordsys = image.coordsys()
                    coord_names = np.array(coordsys.names())
                    coord_refs = coordsys.referencevalue(format='s')
                    pol = coord_refs['string'][coord_names=='Stokes'][0]
+                   frequency = coord_refs['string'][coord_names=='Frequency'][0]
+                   frequency = casatools.quanta.convert(frequency, 'GHz')
+                   info_dict[(field,spw,pol,'frequency')] = frequency
 
+                   info_dict[(field,spw,pol,'image name')] = image.name(strippath=True)
                    stats = image.statistics(robust=False)
                    info_dict[(field,spw,pol,'max')] = stats.get('max')[0]
-                   info_dict[(field,spw,pol,'beam')] = image.restoringbeam()
+                   beam = image.restoringbeam()
+                   major = casatools.quanta.convert(beam['major'], 'arcsec')
+                   info_dict[(field,spw,pol,'beam major')] = major
+                   minor = casatools.quanta.convert(beam['minor'], 'arcsec')
+                   info_dict[(field,spw,pol,'beam minor')] = minor
+                   pa = casatools.quanta.convert(beam['positionangle'], 'deg')
+                   info_dict[(field,spw,pol,'beam pa')] = pa
+                   info_dict[(field,spw,pol,'brightness unit')] = image.brightnessunit()
+
+                   stats = image.statistics(robust=False)
+                   info_dict[(field,spw,pol,'image rms')] = stats.get('rms')[0]
 
                 with casatools.ImageReader(r.iterations[maxiter]['residual']) as residual:
                    stats = image.statistics(robust=False)
-                   info_dict[(field,spw,pol,'rms')] = stats.get('rms')[0]
+                   info_dict[(field,spw,pol,'residual rms')] = stats.get('rms')[0]
 
         # Make the plots
         plotter = clean.CleanSummary(context, results[0])
@@ -5462,7 +5525,7 @@ renderer_map = {
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
-#        hif.tasks.Flagchans      : T2_4MDetailsFlagchansRenderer(),
+        hif.tasks.Flagchans      : T2_4MDetailsFlagchansRenderer(),
         hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
