@@ -184,7 +184,6 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 		}
 		else if (prefix == _CRVAL) {
 			if (_getCoords().polarizationAxisNumber(False) == (Int)(n-1)) {
-				cout << "found" << endl;
 				return ValueHolder(
 					_getStokes()
 				);
@@ -227,7 +226,6 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 		return ValueHolder(_getRefFreqType());
 	}
 	else if (c == _RESTFREQ) {
-		cout << "get restfreq" << endl;
 		return ValueHolder(
 			QuantumHolder(_getRestFrequency()).toRecord()
 		);
