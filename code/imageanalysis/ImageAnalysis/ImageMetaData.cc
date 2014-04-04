@@ -220,7 +220,11 @@ String ImageMetaData::_getRefFreqType() const {
 
 Quantity ImageMetaData::_getRestFrequency() const {
 	const CoordinateSystem& csys = _getCoords();
-	if (_restFreq.getValue() == 0 && csys.hasSpectralAxis()) {
+	ThrowIf(
+		! csys.hasSpectralAxis(),
+		"Image has no spectral axis so there is no rest frequency"
+	);
+	if (_restFreq.getValue() == 0) {
 		_restFreq = Quantity(
 			csys.spectralCoordinate().restFrequency(),
 			csys.spectralCoordinate().worldAxisUnits()[0]
