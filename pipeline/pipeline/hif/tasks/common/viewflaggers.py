@@ -853,7 +853,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table,
                               rulename=rulename,
-                              spw=spw, axisnames=axisnames,
+                              spw=spw, antenna=antenna, axisnames=axisnames,
                               flagcoords=flagcoords))
 
                 elif rulename == 'diffmad':
