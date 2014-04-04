@@ -14,11 +14,13 @@ LOG = infrastructure.get_logger(__name__)
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, mode='gtype', calamptable=None,
+#    def __init__(self, context, mode='gtype', calamptable=None,
+    def __init__(self, context, mode=None, calamptable=None,
             calphasetable=None, amptable=None, targetphasetable=None,
 	    calsolint=None, targetsolint=None, calminsnr=None,
 	    targetminsnr=None, **parameters):
-        super(TimeGaincalInputs, self).__init__(context, mode,
+#        super(TimeGaincalInputs, self).__init__(context, mode=mode,
+        super(TimeGaincalInputs, self).__init__(context, mode='gtype',
             calamptable=calamptable, calphasetable=calphasetable,
 	    amptable=amptable, targetphasetable=targetphasetable,
             calsolint=calsolint, targetsolint=targetsolint,
