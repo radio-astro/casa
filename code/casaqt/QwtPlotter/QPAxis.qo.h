@@ -114,6 +114,8 @@ public:
     	   return PlotLinePtr();
        }
 
+       virtual void setMinimumSizeHint( int width, int height );
+
        // Implements PlotCanvas::setLegendLine().
        void setLegendLine(const PlotLine& /*line*/){}
 

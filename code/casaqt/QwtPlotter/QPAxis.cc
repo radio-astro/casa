@@ -242,6 +242,10 @@ QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot,
     //m_canvas.setAutoReplot(true);
 }
 
+void QPAxis::setMinimumSizeHint( int /*width*/, int /*height*/ ){
+
+}
+
 QPAxis::~QPAxis() {
     vector<PlotMouseToolPtr> tools = allMouseTools();
     for(unsigned int i = 0; i < tools.size(); i++)

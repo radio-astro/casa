@@ -65,6 +65,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Select the export format.</string>
+         </property>
         </widget>
        </item>
        <item row="1" column="0">
@@ -78,7 +81,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QComboBox" name="exportRangeCombo"/>
+        <widget class="QComboBox" name="exportRangeCombo">
+         <property name="toolTip">
+          <string>Select whether to export the current page or for iteration plots whether to export all pages.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -309,6 +316,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="exportButton">
+       <property name="toolTip">
+        <string>Click to export.</string>
+       </property>
        <property name="text">
         <string>Export</string>
        </property>
@@ -316,8 +326,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="toolTip">
+        <string>Close this dialog.</string>
+       </property>
        <property name="text">
-        <string>Cancel</string>
+        <string>Close</string>
        </property>
       </widget>
      </item>

@@ -419,6 +419,23 @@ void QPPlotter::resizeEvent(QResizeEvent* event) {
             m_resizeHandlers[i]->handleResize(e);
         event->accept();
     } else event->ignore();
+    resetCanvasMinSizeHints();
+
+}
+
+void QPPlotter::resetCanvasMinSizeHints(){
+	if ( !m_layout.null() ){
+		pair<int,int> currentSize = size();
+		int rowCount = getRowCount();
+		int colCount = getColCount();
+		int minWidth = currentSize.first / (colCount + 2 );
+		int minHeight = currentSize.second / (rowCount + 2 );
+		vector<PlotCanvasPtr> canvases = m_layout->allCanvases();
+		int canvasCount = canvases.size();
+		for ( int i = 0; i < canvasCount; i++ ){
+			canvases[i]->setMinimumSizeHint( minWidth, minHeight );
+		}
+	}
 }
 
 void QPPlotter::logObject(const String& className, void* address,
@@ -675,6 +692,8 @@ void QPPlotter::setupCanvasFrame() {
         m_canvasTools[i]->setBlocking(true);
     }
     
+    resetCanvasMinSizeHints();
+
     // Set the parent of the canvases to this plotter.
     for(unsigned int i = 0; i < canvases.size(); i++)
         dynamic_cast<QPCanvas&>(*canvases[i]).setQPPlotter(this);

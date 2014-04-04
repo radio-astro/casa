@@ -73,6 +73,8 @@ public:
     virtual void setProgress(unsigned int progress, const String& status);
     virtual void finishProgress();
 
+    int getId();
+
 signals:
     // This signal MUST be emitted after start() has been called, and when the
     // operation has finished.  The thread parameter points to the thread that
@@ -103,7 +105,8 @@ private slots:
 	// For when the user requests "resume" for the thread.
 	void resumeThread();
 
-
+private:
+	int id;
 
 };
 }

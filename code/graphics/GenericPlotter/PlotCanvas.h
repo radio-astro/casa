@@ -164,6 +164,7 @@ public:
     // Returns the canvas size in pixels (width x height).
     virtual pair<int, int> size() const = 0;
     virtual void setMinimumSize( int width, int height ) = 0;
+    virtual void setMinimumSizeHint( int width, int height ) = 0;
     virtual void show() = 0;
     virtual void hide() = 0;
     virtual bool isDrawing() const = 0;

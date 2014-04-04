@@ -109,6 +109,7 @@ public:
     
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();
+    void clearCanvas(int row, int col );
 
     void unassignPlots();
 
@@ -119,7 +120,11 @@ public:
     
     //Returns whether or not a canvas has been allocated
     //for the plot.
-    bool isPlottable( PlotMSPlot* plot ) const;
+    bool isPlottable( PlotMSPlot* plot );
+
+    //Tries to find an empty spot for the plot
+    bool assignEmptySpot( PlotMSPlot* plot );
+
 private:
     // Parent.
     PlotMSApp* itsParent_;

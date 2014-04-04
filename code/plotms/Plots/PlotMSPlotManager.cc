@@ -120,6 +120,10 @@ void PlotMSPlotManager::unassignPlots(){
 	}
 }
 
+void PlotMSPlotManager::clearCanvas( int row, int col ){
+	itsPages_.clearCanvas( row, col );
+}
+
 void PlotMSPlotManager::clearPlotsAndCanvases() {
     unassignPlots();
     vector<PlotMSPlot*> plotsCopy = itsPlots_;
@@ -135,6 +139,24 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
     notifyWatchers();
 }
 
+bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
+	bool foundSpot = false;
+	//Try to find an empty spot to put it.
+	pair<int,int> location = itsPages_.findEmptySpot();
+	if ( location.first != -1 && location.second != -1 ){
+		PlotMSPlotParameters& params = plot->parameters();
+	    PMS_PP_Iteration* iterParams = params.typedGroup<PMS_PP_Iteration>();
+		if ( iterParams == NULL ){
+			params.setGroup<PMS_PP_Iteration>();
+			iterParams = params.typedGroup<PMS_PP_Iteration>();
+		}
+		iterParams->setGridRow( location.first );
+		iterParams->setGridCol( location.second );
+		plot->assignCanvases( itsPages_ );
+		foundSpot = true;
+	}
+	return foundSpot;
+}
 
 // Private Methods //
 
@@ -149,16 +171,19 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     itsPlotParameters_.push_back(&plot->parameters());
     itsPages_.setupCurrentPage();
 
-
     bool locationFound = isPlottable( plot );
+    if ( !locationFound ){
+    	locationFound = assignEmptySpot( plot );
+    }
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }
 	notifyWatchers();
 }
 
-bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) const {
+bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) {
 	bool locationFound = false;
+
 	 //Before we set up any graphic elements we need to make sure the plot has a
 	//valid location.  First check to see if its current one is valid.
 	PlotMSPlotParameters& plotParams = plot->parameters();
@@ -172,20 +197,6 @@ bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) const {
 	if ( iterParams != NULL && wantsLocation ){
 		locationFound = itsPages_.isSpot( desiredRow, desiredCol, plot );
 	}
-
-   	if ( !locationFound && wantsLocation ){
-   		//Try to find an empty spot to put it.
-   		pair<int,int> location = itsPages_.findEmptySpot();
-   		if ( location.first != -1 && location.second != -1 ){
-   			locationFound = true;
-   			if ( iterParams == NULL ){
-   				plotParams.setGroup<PMS_PP_Iteration>();
-   			    iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-   			}
-   			iterParams->setGridRow( location.first );
-   			iterParams->setGridCol( location.second );
-   		}
-   	}
    	return locationFound;
 }
 
@@ -193,6 +204,7 @@ bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) const {
 void PlotMSPlotManager::removePlot( PlotMSPlot* plot ){
 	std::vector<PlotMSPlot*>::iterator plotLoc = std::find( itsPlots_.begin(), itsPlots_.end(), plot );
 	if ( plotLoc != itsPlots_.end() ){
+		plot->clearCanvases();
 		plot->detachFromCanvases();
 		itsPages_.disown( plot );
 		itsPlots_.erase(plotLoc);
@@ -211,11 +223,13 @@ void PlotMSPlotManager::getGridSize( Int& rows, Int& cols ){
 	}
 }
 
+
+
 bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 	//Detach the plots from the canvases
 	bool resized = itsPages_.isGridChanged( rows, cols );
 	if ( resized || override ){
-		bool guiShown = itsParent_->guiShown();
+
 		int plotCount = itsPlots_.size();
 		for ( int i =0; i < plotCount; i++ ){
 
@@ -230,9 +244,11 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			//Clears the canvas and sets the owner to NULL
 			itsPages_.disown( itsPlots_[i]);
 
+
 		}
 		//We delete all the plots and canvases in scripting mode because
 		//it is easy enough to script them back in.
+		bool guiShown = itsParent_->guiShown();
 		if ( !guiShown ){
 			clearPlotsAndCanvases();
 			itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
@@ -246,7 +262,12 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			itsPages_.setupCurrentPage();
 			for ( int i = 0; i < plotCount; i++ ){
 				bool showPlot = isPlottable( itsPlots_[i]);
+				if ( !showPlot ){
+				   	showPlot = assignEmptySpot( itsPlots_[i] );
+				}
 				if ( showPlot ){
+					//Without this call the plot will appear as a separate window from
+					//plotms.
 					itsPlots_[i]->updateLocation();
 				}
 			}
@@ -256,7 +277,8 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 		if ( itsParent_->guiShown() ){
 			for ( int i = 0; i < plotCount; i++ ){
 				if ( isPlottable( itsPlots_[i])){
-					itsPlots_[i]->parametersHaveChanged( itsPlots_[i]->parameters(), PMS_PP::UPDATE_REDRAW);
+					itsPlots_[i]->parametersHaveChanged( itsPlots_[i]->parameters(),
+							PMS_PP::UPDATE_REDRAW | PMS_PP::UPDATE_ITERATION | PMS_PP::UPDATE_CANVAS);
 				}
 			}
 		}

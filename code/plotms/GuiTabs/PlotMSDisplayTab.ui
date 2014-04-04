@@ -49,7 +49,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="yDataCombo"/>
+      <widget class="QComboBox" name="yDataCombo">
+       <property name="toolTip">
+        <string>Set the display properties for the selected y-axis data.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">

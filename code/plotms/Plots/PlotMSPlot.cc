@@ -221,13 +221,16 @@ bool PlotMSPlot::updateData() {
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
 
+
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
 
     //A plot not to be shown.
-    if ( ! itsParent_->getPlotManager().isPlottable( this ) ){
+    bool plottable = itsParent_->getPlotManager().isPlottable( this );
+    if ( ! plottable ){
     	//Clear the plot
     	detachFromCanvases();
+    	return;
     }
     vector<String> updates =
         PlotMSWatchedParameters::UPDATE_FLAG_NAMES(updateFlag);
@@ -287,6 +290,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone){
         releaseDrawing();
     }
+
 }
 
 void PlotMSPlot::plotDataChanged() {

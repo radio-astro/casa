@@ -184,6 +184,10 @@ public:
       // that have already been assigned to it in the page).
       virtual bool assignCanvases(PlotMSPages& pages) = 0;
       virtual void updateLocation() = 0;
+
+      //Clear the title and axes from all this plots canvases.
+      virtual void clearCanvases()=0;
+
 protected:
     // ABSTRACT METHODS //
     

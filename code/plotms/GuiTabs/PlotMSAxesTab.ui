@@ -66,7 +66,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="yAxisCombo"/>
+      <widget class="QComboBox" name="yAxisCombo">
+       <property name="toolTip">
+        <string>Set properties of the selected y-axis.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_4">
@@ -86,7 +90,7 @@
    <item>
     <widget class="QFrame" name="yAxisFrame">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -101,6 +105,9 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>1</number>
+     </property>
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
@@ -116,15 +123,21 @@
      </item>
      <item>
       <widget class="QPushButton" name="addYButton">
+       <property name="toolTip">
+        <string>Click to overplot another set of y-axis data on the plot.</string>
+       </property>
        <property name="text">
-        <string>Add Y Axis</string>
+        <string>Add Y Axis Data</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="removeYButton">
+       <property name="toolTip">
+        <string>Click to remove the selected y-axis data from the plot.</string>
+       </property>
        <property name="text">
-        <string>Remove Y Axis</string>
+        <string>Delete Y Axis Data</string>
        </property>
       </widget>
      </item>

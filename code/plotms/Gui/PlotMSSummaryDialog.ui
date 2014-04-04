@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>131</height>
+    <height>139</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,7 +40,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="fileCombo"/>
+      <widget class="QComboBox" name="fileCombo">
+       <property name="toolTip">
+        <string>Select the data to summarize.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_3">
@@ -83,7 +87,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="summaryType"/>
+      <widget class="QComboBox" name="summaryType">
+       <property name="toolTip">
+        <string>Select the information to summarize.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_5">
@@ -117,6 +125,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="summaryVerbose">
+       <property name="toolTip">
+        <string>Select for a verbose summary.</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -157,6 +168,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="summaryButton">
+       <property name="toolTip">
+        <string>Summarize the indicated information and close this dialog.</string>
+       </property>
        <property name="text">
         <string>Summarize</string>
        </property>
@@ -164,6 +178,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="closeButton">
+       <property name="toolTip">
+        <string>Close this dialog.</string>
+       </property>
        <property name="text">
         <string>Close</string>
        </property>

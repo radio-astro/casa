@@ -449,6 +449,8 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	bool locationChange = false;
 	if ( gridRow != displayRow || gridCol != displayCol ){
 		locationChange = true;
+		//This removes the title and axes from its previous plot location.
+		itsParent_->getPlotManager().clearCanvas( gridRow, gridCol );
 	}
 
 	bool updateIter = updateFlag & PMS_PP::UPDATE_ITERATION;
@@ -461,8 +463,8 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 
 	itsParent_->setCommonAxes( commonAxisX, commonAxisY);
 	itsParent_->setAxisLocation( locationAxisX, locationAxisY);
-	gridRow = rows;
-	gridCol = cols;
+	gridRow = displayRow;
+	gridCol = displayCol;
 
 	//We are not plotting this particular plot so just clear it and return.
 	if ( displayRow == -1 || displayCol == -1 ){

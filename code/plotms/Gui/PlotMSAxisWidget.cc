@@ -141,9 +141,11 @@ PMS::DataColumn PlotMSAxisWidget::data() const {
 
 QString PlotMSAxisWidget::getIdentifier() const {
 	QString axisText = chooser->currentText();
-	QString dataText = dataChooser->currentText();
-	if ( dataText.length() > 0 ){
-		axisText = axisText + ": "+dataText;
+	if ( dataChooser->isVisible()){
+		QString dataText = dataChooser->currentText();
+		if ( dataText.length() > 0 ){
+			axisText = axisText + ": "+dataText;
+		}
 	}
 	return axisText;
 }

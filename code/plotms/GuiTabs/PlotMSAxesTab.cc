@@ -110,8 +110,8 @@ void PlotMSAxesTab::addYWidget(){
 	if ( index > 0 ){
 		numberStr = QString::number( index+1 );
 	}
-	QString axisLabel = "Y Axis "+ numberStr + ":";
-	yWidget->axisLabel()->setText( axisLabel );
+	QString axisLabel = "Y Axis "+ numberStr;
+	yWidget->axisLabel()->setText( axisLabel + ":" );
 	yWidget->insertLabelDefaults( itsLabelDefaults_ );
 	itsYWidgets_.append( yWidget );
 

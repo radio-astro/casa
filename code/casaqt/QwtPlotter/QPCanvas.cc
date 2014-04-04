@@ -217,12 +217,12 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_axesRatioLocked(false), m_axesRatios(4, 1), m_stackCache(*this),
         m_autoIncColors(false), m_picker(m_canvas.canvas()),
         m_mouseFilter(m_canvas.canvas()), m_legendFontSet(false),
-        m_inDraggingMode(false)/*, m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL)*/ {
+        m_inDraggingMode(false), minSizeHint(50,50) {
     logObject(CLASS_NAME, this, true);
     
     commonX = false;
     commonY = false;
+
 
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -1347,13 +1347,17 @@ void QPCanvas::reinstallTrackerFilter() {
 
 QSize QPCanvas::sizeHint() const { 
 	QSize canvasSize = m_canvas.sizeHint();
-    return m_canvas.sizeHint();
+    return canvasSize;
 }
 
+void QPCanvas::setMinimumSizeHint( int width, int height ) {
+	minSizeHint.setWidth( width );
+	minSizeHint.setHeight( height );
+}
 
 QSize QPCanvas::minimumSizeHint() const {
-	QSize canvasSize = m_canvas.minimumSizeHint();
-    return m_canvas.minimumSizeHint();
+	//QSize canvasSize = m_canvas.minimumSizeHint();
+	return minSizeHint;
 }
 
 // Protected Methods //

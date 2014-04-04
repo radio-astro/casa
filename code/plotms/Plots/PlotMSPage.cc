@@ -181,14 +181,29 @@ void PlotMSPage::disown( PlotMSPlot* plot ){
 	}
 }
 
+
+void PlotMSPage::clearCanvas( int row, int col ){
+	bool canvasDisowned = disown( row, col );
+	if ( canvasDisowned ){
+		PlotCanvasPtr canvas = itsCanvases_[row][col];
+		if(canvas.null()){
+			return;
+		}
+		canvas->showAllAxes( false );
+		canvas->setTitle( "" );
+		canvas->setCommonAxes( false, false );
+	}
+}
+
 bool PlotMSPage::disown(unsigned int row, unsigned int col) {
-    if(row >= itsCanvasOwners_.size() || col >= itsCanvasOwners_[row].size() ||
-       itsCanvasOwners_[row][col] == NULL){
+    if(row >= itsCanvasOwners_.size() || col >= itsCanvasOwners_[row].size() ){
     	return false;
     }
     itsCanvases_[row][col]->clearItems();
-    itsCanvasOwners_[row][col]->canvasWasDisowned(itsCanvases_[row][col]);
-    itsCanvasOwners_[row][col] = NULL;
+    if ( itsCanvasOwners_[row][col] != NULL ){
+    	itsCanvasOwners_[row][col]->canvasWasDisowned(itsCanvases_[row][col]);
+    	itsCanvasOwners_[row][col] = NULL;
+    }
     return true;
 }
 
