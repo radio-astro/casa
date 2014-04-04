@@ -74,13 +74,13 @@ bool imagemetadata::open(const std::string& infile) {
 			_log.reset(new LogIO());
 		}
 		if (
-			ImageOpener::pagedImageDataType(infile)
-			== TpFloat
+			ImageOpener::imageType(infile) == ImageOpener::AIPSPP
+			&& ImageOpener::pagedImageDataType(infile) == TpComplex
 		) {
-			_openImage<Float>(infile);
+			_openImage<Complex>(infile);
 		}
 		else {
-			_openImage<Complex>(infile);
+			_openImage<Float>(infile);
 		}
 		return True;
 
