@@ -23,7 +23,7 @@ LOG = logging.get_logger(__name__)
 _altmapping = {
     'Bandpass'      : {'hm_bandtype' : 'mode'},
     'Gaincal'       : {'hm_gaintype' : 'mode'},
-    'TimeGaincal'   : {'hm_gaintype' : 'mode'},
+#    'TimeGaincal'   : {'hm_gaintype' : 'mode'},
     'PhcorBandpass' : {'hm_bandtype' : 'mode'}
 }
 
