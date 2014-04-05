@@ -1046,6 +1046,8 @@ int main(int argc,  char* argv[])
      loadSpec(ms, sp);
      std::set<size_t> reverse=reversedSPWs(sp, vm);  
      
+     std::cout << "Writing gain table ..." << std::endl;
+
      // Write new table, including history
      LibAIR::writeNewGainTbl(g,
 			     fnameout.c_str(),
