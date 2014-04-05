@@ -31,7 +31,8 @@ class wvrgcal_test(unittest.TestCase):
            'wvrgcalctest_sourceflag2.W',
            'wvrgcalctest_statsource.W',
            'wvrgcalctest_nsol.W',
-           'wvrgcalctest_disperse.W']
+           'wvrgcalctest_disperse.W',
+           'multisource_unittest_reference-mod.wvr']
 
 ## 2   'wvrgcalctest.W': '',
 ## 3   'wvrgcalctest_toffset.W': '--toffset -1', ........................ test3
@@ -58,12 +59,18 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = False
 
         if(not os.path.exists(self.vis_f)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/multisource_unittest.ms .')
+            rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/multisource_unittest.ms .')
+            if rval!=0:
+                raise Exception, "Error copying input data"
         if(not os.path.exists(self.vis_g)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/wvrgcal4quasar_10s.ms .')
+            rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/wvrgcal4quasar_10s.ms .')
+            if rval!=0:
+                raise Exception, "Error copying input data"
         for i in range(0,len(self.ref)):
             if(not os.path.exists(self.ref[i])):
-                os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/'+self.ref[i]+' .')
+                rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/'+self.ref[i]+' .')
+                if rval!=0:
+                    raise Exception, "Error copying input data"
 
         default(wvrgcal)
 
@@ -362,7 +369,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[1], self.out, ['WEIGHT', 'CPARAM'] # ignore WEIGHT because it is empty
+            self.rval = th.compTables(self.ref[18], self.out, ['WEIGHT', 'CPARAM'] # ignore WEIGHT because it is empty
                                       )
             if(self.rval):
                 tb.open(self.out)
