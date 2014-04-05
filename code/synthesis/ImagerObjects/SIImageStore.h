@@ -95,11 +95,10 @@ class SIImageStore
   virtual void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
-  virtual void divideResidualByWeight(const Float weightlimit=C::minfloat);
-  //  virtual void divideSensitivityPatternByWeight();
   virtual void dividePSFByWeight();
-  virtual void divideModelByWeight(const Float weightlimit=C::minfloat);
-  virtual void multiplyModelByWeight(const Float weightlimit=C::minfloat);
+  virtual void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
+  virtual void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
+  virtual void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
 
   //  virtual Bool isValid(){return itsValidity;}
   virtual Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
@@ -158,6 +157,9 @@ protected:
   CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, 
 					       const Bool overwrite, 
 					       const Bool dosumwt=False);
+
+  Double getPbMax();
+
   ///////////////////// Member Objects
 
   IPosition itsImageShape;
@@ -176,6 +178,8 @@ protected:
   Bool itsValidity;
 
   CountedPtr<ImageInterface<Float> > itsMask; // mutliterm shares this...
+
+  Double itsPBScaleFactor;
 
 private:
 

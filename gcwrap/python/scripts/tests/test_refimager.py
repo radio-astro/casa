@@ -186,6 +186,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
                                        algo='msmfs',\
+                                       pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -212,6 +213,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
                                        algo='hogbom',\
+                                       pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -220,8 +222,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("==================================");
           casalog.post("Test 10 image-field, mfs --- WB AWP");
           casalog.post("==================================");
-          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms',
-                                       field='1',scan='',
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms', #_offcenter.ms',
+                                       field='*',scan='',
                                        spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
@@ -233,10 +235,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        startmodel='', weighting='natural',\
                                        aterm=True, psterm=False, mterm=True,\
                                        wbawp = False, 
-                                       cfcache = "perm.mytest0.cfcache",\
+                                       cfcache = "perm.mytest0.cfcache.mos",#.offcenter",\
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
                                        algo='hogbom',\
+                                       #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -259,6 +262,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        #phasecenter=1,\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
                                        algo='hogbom',\
+                                       #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -423,8 +427,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        ### center
                                        #phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ### offset
-                                       phasecenter="J2000 19:59:23.591 +40.44.01.50",\
-                                       #phasecenter=0,
+                                       #phasecenter="J2000 19:59:23.591 +40.44.01.50",\
+                                       phasecenter=0,
                                        ftmachine='GridFT', startmodel='', weighting='briggs',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\

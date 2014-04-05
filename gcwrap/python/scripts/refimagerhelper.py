@@ -36,6 +36,7 @@ class PySynthesisImager:
         self.alldecpars = params.getDecPars()
         self.allimpars = params.getImagePars()
         self.allgridpars = params.getGridPars()
+        self.allnormpars = params.getNormPars()
         self.weightpars = params.getWeightPars()
         # Iteration parameters
         self.iterpars = params.getIterPars() ## Or just params.iterpars
@@ -92,11 +93,12 @@ class PySynthesisImager:
     def initializeNormalizers(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisnormalizer())
-            normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
-            normpars['facets'] = self.allgridpars[str(immod)]['facets']
+            #normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            #normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            #normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
+            #normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
+            #normpars['facets'] = self.allgridpars[str(immod)]['facets']
+            normpars = self.allnormpars[str(immod)]
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
 #############################################
@@ -339,11 +341,12 @@ class PyParallelContSynthesisImager(PySynthesisImager):
     def initializeNormalizers(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisnormalizer())
-            normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
-            normpars['facets'] = self.allgridpars[str(immod)]['facets']
+            #normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            #normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
+            #normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
+            #normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
+            #normpars['facets'] = self.allgridpars[str(immod)]['facets']
+            normpars = copy.deepcopy( self.allnormpars[str(immod)] )
             partnames = []
             if(self.NN>1):
                 for node in range(0,self.NN):
@@ -399,6 +402,7 @@ class PyParallelCubeSynthesisImager():
         allselpars = params.getSelPars()
         allimagepars = params.getImagePars()
         self.allgridpars = params.getGridPars()
+        self.allnormpars = params.getNormPars()
         self.weightpars = params.getWeightPars()
         self.decpars = params.getDecPars()
         self.iterpars = params.getIterPars()
@@ -741,7 +745,9 @@ class ImagerParameters():
                  conjbeams = True,
                  computepastep =360.0,
                  rotatepastep =5.0,
-                 weightlimit=0.01,
+                 
+                 pblimit=0.01,
+                 normtype='flatnoise',
 
                  algo='test',
                  niter=0, cycleniter=0, cyclefactor=1.0,
@@ -773,14 +779,15 @@ class ImagerParameters():
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
-                                   'rotatepastep':rotatepastep, 'mtype':mtype, 'weightlimit':weightlimit,
+                                   'rotatepastep':rotatepastep, 'mtype':mtype, # 'weightlimit':weightlimit,
                                    'facets':facets   }     }
         ######### weighting
         self.weightpars = {'type':weighting } 
         
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
-        #self.normpars = { '0' : {'imagename':imagename, 'mtype': mtype,
-        #                         'weightlimit': weightlimit,'ntaylorterms':ntaylorterms,'facets':facets }     }
+        self.allnormpars = { '0' : {'imagename':imagename, 'mtype': mtype,
+                                 'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
+                                 'normtype':normtype }     }
 
         ######### Deconvolution
         self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
@@ -798,6 +805,7 @@ class ImagerParameters():
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
         self.outdecparlist=['algo','startmodel','ntaylorterms']
+        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
 
 
     def getSelPars(self):
@@ -812,6 +820,8 @@ class ImagerParameters():
         return self.alldecpars
     def getIterPars(self):
         return self.iterpars
+    def getNormPars(self):
+        return self.allnormpars
 
     def setSelPars(self,selpars):
         self.allselpars = selpars
@@ -825,6 +835,8 @@ class ImagerParameters():
         self.alldecpars = decpars
     def setIterPars(self,iterpars):
         self.iterpars = iterpars
+    def setNormPars(self,normpars):
+        self.allnormpars = normpars
 
 
 
@@ -918,10 +930,12 @@ class ImagerParameters():
             self.allgridpars[ modelid ].update(outlierpars[immod]['gridpars'])
             self.alldecpars[ modelid ] = copy.deepcopy(self.alldecpars[ '0' ])
             self.alldecpars[ modelid ].update(outlierpars[immod]['decpars'])
+            self.allnormpars[ modelid ] = copy.deepcopy(self.allnormpars[ '0' ])
+            self.allnormpars[ modelid ].update(outlierpars[immod]['normpars'])
             self.alldecpars[ modelid ][ 'id' ] = immod+1  ## Try to eliminate.
 
 
-        print self.allimpars
+        #print self.allimpars
 
         for immod in self.allimpars.keys() :
             synu = casac.synthesisutils()
@@ -960,6 +974,7 @@ class ImagerParameters():
         tempgridpar={}
         tempweightpar={}
         tempdecpar={}
+        tempnormpar={}
         for oneline in thelines:
             aline = oneline.replace('\n','')
 #            aline = oneline.replace(' ','').replace('\n','')
@@ -975,6 +990,7 @@ class ImagerParameters():
                     tempgridpar={}
                     tempweightpar={}
                     tempdecpar={}
+                    tempnormpar={}
                 usepar=False
                 if parpair[0] in self.outimparlist:
                     tempimpar[ parpair[0] ] = parpair[1]
@@ -988,11 +1004,14 @@ class ImagerParameters():
                 if parpair[0] in self.outdecparlist:
                     tempdecpar[ parpair[0] ] = parpair[1]
                     usepar=True
+                if parpair[0] in self.outnormparlist:
+                    tempnormpar[ parpair[0] ] = parpair[1]
+                    usepar=True
                 if usepar==False:
                     print 'Ignoring unknown parameter pair : ' + oneline
 
         if len(errs)==0:
-            returnlist.append( {'impars':tempimpar,'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
+            returnlist.append( {'impars':tempimpar,'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar, 'normpars':tempnormpar} )
 
         ## Extra parsing for a few parameters.
         returnlist = self.evalToTarget( returnlist, 'impars', 'imsize', 'intvec' )
@@ -1000,6 +1019,7 @@ class ImagerParameters():
         returnlist = self.evalToTarget( returnlist, 'impars', 'cellsize', 'strvec' )
         returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'normpars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'impars', 'restfreq', 'strvec' )
 
         ## Extra parsing for a few parameters.
@@ -1083,6 +1103,7 @@ class ImagerParameters():
         casalog.post('SelPars : ' + str(self.allselpars), 'INFO')
         casalog.post('ImagePars : ' + str(self.allimpars), 'INFO')
         casalog.post('GridPars : ' + str(self.allgridpars), 'INFO')
+        casalog.post('NormPars : ' + str(self.allnormpars), 'INFO')
         casalog.post('Weightpars : ' + str(self.weightpars), 'INFO')
         casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
         casalog.post('IterPars : ' + str(self.iterpars), 'INFO')

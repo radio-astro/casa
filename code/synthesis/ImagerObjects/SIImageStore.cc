@@ -74,6 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWt=NULL;
     itsNFacets=1;
     itsUseWeight=False;
+    itsPBScaleFactor=1.0;
 
     itsImageShape=IPosition();
     itsImageName=String("");
@@ -104,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWt=NULL;
     itsNFacets=nfacets;
     itsUseWeight=useweightimage;
+    itsPBScaleFactor=1.0;
 
     itsImageName = imagename;
     itsImageShape = imshape;
@@ -154,6 +156,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	imptr = new PagedImage<Float> (itsImageName+String(".sumwt"));
 	itsNFacets = imptr->shape()[0];
 	itsUseWeight = getUseWeightImage( *imptr );
+	itsPBScaleFactor=1.0; ///// No need to set properly here as it will be calc'd in dividePSF...()
 	if( itsUseWeight && ! doesImageExist(itsImageName+String(".weight")) )
 	  {
 	    throw(AipsError("Internal error : Sumwt has a useweightimage=True but the weight image does not exist."));
@@ -188,6 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWt=sumwtim;
     itsNFacets=sumwtim->shape()[0];
     itsUseWeight=getUseWeightImage( *sumwtim );
+    itsPBScaleFactor=1.0;// No need to set properly here as it will be computed in makePSF.
 
     itsImageShape=psfim->shape();
     itsCoordSys = psfim->coordinates();
@@ -683,8 +687,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+  Double SIImageStore::getPbMax()
+  {
+    //LatticeExprNode pbmax( max ( sqrt( *weight() ) ) );
+    //return pbmax.getDouble();
+
+    Array<Float> pbmat;
+    ( weight(0) )->get( pbmat, True );
+    //    Float minval, maxval;
+    //    IPosition posmin,posmax;
+    //    minMax(minval, maxval, posmin, posmax);
+    //    return maxval;
+
+    return max(sqrt(pbmat));
+
+  }
+
+
+  void SIImageStore::dividePSFByWeight()
+  {
+    LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
+
+    // Normalize by the sumwt, per plane. 
+    divideImageByWeightVal( *psf() );
+    if( itsUseWeight ) 
+      { 
+	divideImageByWeightVal( *weight() ); 
+
+	// Get the scale factor that will make the peak PB gain 1.
+	// This will be used to divide the residual image, and multiply the model image.
+	// It will let the minor cycle see as close to the 'principal solution' as possible.
+	itsPBScaleFactor = getPbMax();
+	cout << " PB Scale factor : " << itsPBScaleFactor << endl;
+      }
+    // createMask
+  }
+
   // Make another for the PSF too.
-  void SIImageStore::divideResidualByWeight(Float weightlimit)
+  void SIImageStore::divideResidualByWeight(Float pblimit,String normtype)
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
 
@@ -697,13 +737,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( useweightimage == True )
       {
 	//	divideImageByWeightVal( *weight() ); // Assume already normalized by PSF making.
+
+	itsPBScaleFactor = getPbMax();
+	//	cout << " pbscale : " << itsPBScaleFactor << endl;
+
+	LatticeExpr<Float> deno;
+	if( normtype=="flatnoise"){
+	  deno = LatticeExpr<Float> ( sqrt( *(weight()) ) * itsPBScaleFactor );
+	  os << "Dividing " << itsImageName+String(".residual") ;
+	  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
+	  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
+	  
+	  }
+	if( normtype=="flatsky") {
+	  deno = LatticeExpr<Float> ( *(weight()) );
+	  os << "Dividing " << itsImageName+String(".residual") ;
+	  os << " by [ weight ] to get flat sky"<< LogIO::POST;
+	}
 	
-	os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / ( deno + maskinv ) );
 	
-	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / sqrt( (*(weight())) + maskinv ) );
+	////LatticeExpr<Float> mask( iif( (*(weight())) > pblimit , 1.0, 0.0 ) );
+	////LatticeExpr<Float> maskinv( iif( (*(weight())) > pblimit , 0.0, 1.0 ) );
+	////	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / sqrt( (*(weight())) + maskinv ) );
 	residual()->copyData(ratio);
       }
     
@@ -715,45 +773,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // createMask
   }
   
-  void SIImageStore::dividePSFByWeight()
-  {
-    LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
 
-    // Normalize by the sumwt, per plane. 
-    divideImageByWeightVal( *psf() );
-    if( itsUseWeight ) { divideImageByWeightVal( *weight() ); }
-    ///    if( getUseWeightImage( *psf() ) ) { divideImageByWeightVal( *weight() ); }
-
-    /*    
-    if( getUseWeightImage( *psf() ) == True )
-      {
-	    os << "Dividing " << itsImageName+String(".psf") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
-	    
-	    LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-	    
-	    LatticeExpr<Float> ratio( ( (*(psf())) * mask ) / sqrt( (*(weight())) + maskinv ) );
-	    psf()->copyData(ratio);
-      }
-    */
-    // createMask
-  }
-
-  /*
-  void SIImageStore::divideSensitivityPatternByWeight()
-  {
-    LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
-
-    if( getUseWeightImage( *psf() ) == True )// i.e. only when needed.
-      {
-	// Normalize by the sumwt, per plane. 
-	divideImageByWeightVal( *weight() );
-      }
-
-  }
-  */
-
-  void SIImageStore::divideModelByWeight(Float weightlimit)
+  void SIImageStore::divideModelByWeight(Float pblimit, const String normtype)
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
 
@@ -763,22 +784,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
-        os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+
+	if( normtype=="flatsky") {
+	  Array<Float> arrmod;
+	  model()->get( arrmod, True );
+
+	  os << "Model is already flat sky with peak flux : " << max(arrmod);
+	  os << ". No need to divide before prediction" << LogIO::POST;
+	  
+	  return;
+	  }
+	else if( normtype=="flatnoise"){
+
+	  itsPBScaleFactor = getPbMax();
+	  //	  cout << " pbscale : " << itsPBScaleFactor << endl;
+
+	  os << "Dividing " << itsImageName+String(".model") ;
+	  os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
+	  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
+	  
+	  LatticeExpr<Float> deno( sqrt( *(weight()) ) / itsPBScaleFactor );
+
+	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
+	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	  LatticeExpr<Float> ratio( ( (*(model())) * mask ) / ( deno + maskinv ) );
+	  
+	  //	LatticeExpr<Float> mask( iif( (*(weight())) > pblimit , 1.0, 0.0 ) );
+	  //	LatticeExpr<Float> maskinv( iif( (*(weight())) > pblimit , 0.0, 1.0 ) );
+	  //	LatticeExpr<Float> ratio( ( (*(model())) * mask ) / sqrt( (*(weight())) + maskinv ) );
+	  model()->copyData(ratio);
+	}
 	
-	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*(model())) * mask ) / sqrt( (*(weight())) + maskinv ) );
-	model()->copyData(ratio);
       }
     // createMask
   }
   
-  void SIImageStore::multiplyModelByWeight(Float weightlimit)
+  void SIImageStore::multiplyModelByWeight(Float pblimit, const String normtype)
   {
     LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
-
-    //cout << "In multiplymodelbyweight : model, usewt, weight " << itsModel.null() << " " << getUseWeightImage( *residual() ) << " " << doesWeightExist() << endl;
 
     if( //!itsModel.null() // anything to do ? 
        //	getUseWeightImage( *residual() ) == True // only when needed
@@ -786,13 +829,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
+	if( normtype=="flatsky") {
+	  os << "Model is already flat sky. No need to multiply back after prediction" << LogIO::POST;
+	  return;
+	  }
+	else if( normtype=="flatnoise"){
+
+	  itsPBScaleFactor = getPbMax();
+	  cout << " pbscale : " << itsPBScaleFactor << endl;
+
+	  os << "Multiplying " << itsImageName+String(".model") ;
+	  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
+	  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
+	  
+	  LatticeExpr<Float> deno( sqrt( *(weight()) ) / itsPBScaleFactor );
+
+	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
+	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	  LatticeExpr<Float> ratio( ( (*(model())) * mask ) * ( deno + maskinv ) );
+	  
+	  //	LatticeExpr<Float> mask( iif( (*(weight())) > pblimit , 1.0, 0.0 ) );
+	  //	LatticeExpr<Float> maskinv( iif( (*(weight())) > pblimit , 0.0, 1.0 ) );
+	  //	LatticeExpr<Float> ratio( ( (*(model())) * mask ) / sqrt( (*(weight())) + maskinv ) );
+	  model()->copyData(ratio);
+	}
+
+	/*
         os << "Multiplying " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+
+	if( normtype=="flatnoise"){
+	    LatticeExpr<Float> deno( sqrt( *(weight()) ) / itsPBScaleFactor );
+	  }
+	if( normtype=="flatsky") {
+	    LatticeExpr<Float> deno( 1.0 );
+	  }
+
+	LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	LatticeExpr<Float> ratio( ( (*(model())) * mask ) * ( deno + maskinv ) );
+
 	
-	LatticeExpr<Float> mask( iif( (*(weight())) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*(weight())) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*(model())) * mask ) * sqrt( (*(weight())) + maskinv ) );
+	//	LatticeExpr<Float> mask( iif( (*(weight())) > pblimit , 1.0, 0.0 ) );
+	//	LatticeExpr<Float> maskinv( iif( (*(weight())) > pblimit , 0.0, 1.0 ) );
+	//	LatticeExpr<Float> ratio( ( (*(model())) * mask ) * sqrt( (*(weight())) + maskinv ) );
 	model()->copyData(ratio);
+	*/
       }
     // createMask
   }

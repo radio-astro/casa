@@ -99,10 +99,12 @@ protected:
   String itsImageName;
   Vector<String> itsPartImageNames;
   String itsStartingModelName;
-  Float itsWeightLimit;
+  Float itsPBLimit;
 
   String itsMapperType;
   uInt itsNTaylorTerms, itsNFacets;
+
+  String itsNormType;
 
 };
 

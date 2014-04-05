@@ -55,7 +55,7 @@ synthesisnormalizer::~synthesisnormalizer()
   return rstat;
 }
 
-  bool synthesisnormalizer::setimstore(const casac::synthesisimstore *imstore)
+bool synthesisnormalizer::setimstore(const casac::synthesisimstore */*imstore*/)
 {
   Bool rstat(False);
   try {

@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
-				       itsWeightLimit(0.1),
+				       itsPBLimit(0.1),
 				       itsMapperType("default"),
 				       itsNTaylorTerms(1),
                                        itsNFacets(1)
@@ -94,13 +94,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{ itsPartImageNames.resize(0); }
 
-      if( normpars.isDefined("weightlimit") )
+      if( normpars.isDefined("pblimit") )
 	{
-	  normpars.get( RecordFieldId("weightlimit") , itsWeightLimit );
+	  normpars.get( RecordFieldId("pblimit") , itsPBLimit );
 	}
       else
-	{ itsWeightLimit = 0.1; }
+	{ itsPBLimit = 0.1; }
 
+      if( normpars.isDefined("normtype") )  // A single string
+	{ itsNormType = normpars.asString( RecordFieldId("normtype")); }
+      else
+	{ itsNormType = "flatnoise";} // flatnoise, flatsky
+
+      cout << "Chosen normtype : " << itsNormType << endl;
 
       // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
       if( normpars.isDefined("mtype") )  // A single string
@@ -188,14 +194,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisNormalizer", "divideResidualByWeight",WHERE) );
     
-    //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
 
     if( itsNFacets==1) {
-      itsImages->divideResidualByWeight( itsWeightLimit );
+      itsImages->divideResidualByWeight( itsPBLimit, itsNormType );
     }
     else {
       for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
-        { itsFacetImageStores[facet]->divideResidualByWeight( itsWeightLimit ); }
+        { itsFacetImageStores[facet]->divideResidualByWeight( itsPBLimit , itsNormType ); }
     }
     
   }
@@ -211,7 +216,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
         { itsFacetImageStores[facet]->dividePSFByWeight( ); }
     }
-    //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
 
   }
 
@@ -225,11 +229,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return;
       }
     if( itsNFacets==1) {
-      itsImages->divideModelByWeight( itsWeightLimit );
+      itsImages->divideModelByWeight( itsPBLimit, itsNormType );
     }
     else {
       for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
-        { itsFacetImageStores[facet]->divideModelByWeight( itsWeightLimit ); }
+        { itsFacetImageStores[facet]->divideModelByWeight( itsPBLimit, itsNormType ); }
     }
  }
 
@@ -237,11 +241,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     //    LogIO os( LogOrigin("SynthesisNormalizer", "multiplyModelByWeight",WHERE) );
     if( itsNFacets==1) {
-      itsImages->multiplyModelByWeight( itsWeightLimit );
+      itsImages->multiplyModelByWeight( itsPBLimit , itsNormType );
     }
     else {
       for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
-        { itsFacetImageStores[facet]->multiplyModelByWeight( itsWeightLimit ); }
+        { itsFacetImageStores[facet]->multiplyModelByWeight( itsPBLimit , itsNormType); }
     }
  }
 
