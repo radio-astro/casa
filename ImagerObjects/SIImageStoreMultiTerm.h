@@ -92,11 +92,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
-  void divideResidualByWeight(const Float weightlimit=C::minfloat);
   void dividePSFByWeight();
-  void divideSensitivityPatternByWeight();
-  void divideModelByWeight(const Float weightlimit=C::minfloat);
-  void multiplyModelByWeight(const Float weightlimit=C::minfloat);
+
+  void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
+  //  void divideSensitivityPatternByWeight();
+  void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
+  void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
 
   Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 		     const Bool imodel, const Bool irestored, const Bool imask=False, 
