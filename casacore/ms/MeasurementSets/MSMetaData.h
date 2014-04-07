@@ -329,6 +329,9 @@ public:
 	// get polarization IDs for the specified scan and spwid
 	std::set<uInt> getPolarizationIDs(Int scan, uInt spwid);
 
+	// get unique field IDs that exist in the main table.
+	std::set<Int> getUniqueFiedIDs();
+
 private:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
@@ -451,8 +454,6 @@ private:
 	std::tr1::shared_ptr<Quantum<Vector<Double> > > _getExposureTimes();
 
 	std::tr1::shared_ptr<ArrayColumn<Bool> > _getFlags();
-
-	std::set<Int> _getUniqueFiedIDs();
 
 	std::map<Int, std::set<Int> > _getScanToStatesMap();
 

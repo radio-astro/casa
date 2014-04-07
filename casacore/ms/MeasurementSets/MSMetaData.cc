@@ -2955,11 +2955,11 @@ Bool MSMetaData::_hasFieldID(const Int fieldID) {
 		    + ") in this MS's FIELD table"
 		);
 	}
-	std::set<Int> uniqueFields = _getUniqueFiedIDs();
+	std::set<Int> uniqueFields = getUniqueFiedIDs();
 	return uniqueFields.find(fieldID) != uniqueFields.end();
 }
 
-std::set<Int> MSMetaData::_getUniqueFiedIDs() {
+std::set<Int> MSMetaData::getUniqueFiedIDs() {
 	if (_uniqueFieldIDs.empty()) {
 		std::tr1::shared_ptr<Vector<Int> > allFieldIDs = _getFieldIDs();
 		_uniqueFieldIDs.insert(allFieldIDs->begin(), allFieldIDs->end());
