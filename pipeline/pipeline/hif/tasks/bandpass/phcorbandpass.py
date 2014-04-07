@@ -23,14 +23,16 @@ class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self,
                  # parameters for BandpassModeInputs:
-                 context, mode='channel',
+                 #context, mode='channel',
+                 context, mode=None,
                  # parameters specific to this task:
                  phaseup=None, phaseupbw=None, phaseupsolint=None,
                  # parameters overridden by this task:
                  solint=None, maxchannels=None,
                  # other parameters to be passed to child bandpass task
                  **parameters):
-        super(PhcorBandpassInputs, self).__init__(context, mode=mode,
+        #super(PhcorBandpassInputs, self).__init__(context, mode=mode,
+        super(PhcorBandpassInputs, self).__init__(context, mode='channel',
             phaseup=phaseup, phaseupbw=phaseupbw, phaseupsolint=phaseupsolint,
             solint=solint, maxchannels=maxchannels, **parameters)
 
