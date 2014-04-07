@@ -21,10 +21,10 @@ LOG = logging.get_logger(__name__)
 # _altmapping holds the mapping for CASA arguments that should be given as a 
 # task input argument of a different name.
 _altmapping = {
-    'Bandpass'      : {'hm_bandtype' : 'mode'},
+#    'Bandpass'      : {'hm_bandtype' : 'mode'},
     'Gaincal'       : {'hm_gaintype' : 'mode'},
 #    'TimeGaincal'   : {'hm_gaintype' : 'mode'},
-    'PhcorBandpass' : {'hm_bandtype' : 'mode'}
+#    'PhcorBandpass' : {'hm_bandtype' : 'mode'}
 }
 
 
