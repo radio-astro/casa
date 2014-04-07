@@ -1290,6 +1290,14 @@ void testIt(MSMetaData& md) {
 			cout << "mymap " << mymap[10][17] << endl;
 		}
 		{
+			cout << "*** test getUniqueFiedIDs()" << endl;
+			std::set<Int> expec;
+			for (Int i=0; i<6; i++) {
+				expec.insert(i);
+			}
+			AlwaysAssert(md.getUniqueFiedIDs() == expec, AipsError);
+		}
+		{
 			cout << "*** cache size " << md.getCache() << endl;
 		}
 	}
