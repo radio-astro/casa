@@ -1922,7 +1922,7 @@ bool table::fromascii(const std::string& tablename, const std::string& asciifile
       if(columnnames[0] != "")
 	      atmp = toVectorString(columnnames);
       if(datatypes[0] != "")
-	      btmp = toVectorString(columnnames);
+	      btmp = toVectorString(datatypes);
       itsTable = new casa::TableProxy(String(asciifile), String(headerfile), String(tablename), autoheader, tautoshape, String(sep), String(commentmarker), firstline, lastline, atmp, btmp);
       // itsTable = new casa::TableProxy(asciifile, headerfile, String(tablename));
       rstatus = true;
