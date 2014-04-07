@@ -106,7 +106,12 @@ spectrum is
       <value>False</value>
     </param>
 
-    <param type="intArray" name="tsysiflist" subparam="true">
+    <param type="bool" name="tsysavg" subparam="true">
+      <description>Whether Tsys is averaged in spectral axis or not</description>
+      <value>False</value>
+    </param>
+    
+    <param type="string" name="tsysspw" subparam="true">
       <description>List of IFNOs for Tsys calibration.</description>
       <value></value>
     </param>
@@ -172,7 +177,8 @@ spectrum is
           <default param="noff"><value type="int">-1</value></default>
         </equals>
         <equals value="tsys">
-          <default param="tsysiflist"><value type="intArray"/></default>
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
         </equals>
         <equals value="apply">
           <default param="applytable"><value type="string"></value></default>
@@ -185,7 +191,8 @@ spectrum is
           <default param="ifmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,tsys,apply">
-          <default param="tsysiflist"><value type="intArray"/></default>
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="ifmap"><value type="dict">{}</value></default>
@@ -202,7 +209,8 @@ spectrum is
           <default param="fraction"><value type="string">10%</value></default>
           <default param="width"><value type="double">0.5</value></default>
           <default param="elongated"><value type="bool">False</value></default>
-          <default param="tsysiflist"><value type="intArray"/></default>
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="ifmap"><value type="dict">{}</value></default>
@@ -217,7 +225,8 @@ spectrum is
         <equals value="otfraster,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
           <default param="noff"><value type="int">-1</value></default>
-          <default param="tsysiflist"><value type="intArray"/></default>
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="ifmap"><value type="dict">{}</value></default>
@@ -302,10 +311,12 @@ calmode -- Calibration mode. If you want to generate calibration table
                      Set True only if observed area is elongated 
                      in one direction.
                 default: False
-        tsysiflist -- List of IFNOs for Tsys calibration. It does 
-                      no effect if you don't want to do Tsys 
-                      calibration.
-                default: [] (auto-detect tsys spws)
+        tsysavg -- Whether Tsys is averaged in spectral axis or not.
+                default: False
+        tsysspw -- List of IFNOs for Tsys calibration. It does 
+                   no effect if you don't want to do Tsys 
+                   calibration.
+                default: '' (auto-detect tsys spws)
         applytable -- List of sky/Tsys calibration tables you want to 
                       apply.
                 default: ''

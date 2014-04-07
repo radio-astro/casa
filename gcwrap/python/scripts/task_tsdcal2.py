@@ -9,7 +9,8 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdcal2(infile, calmode, fraction, noff, width, elongated, tsysiflist, applytable, interp, ifmap, field, spw, scan, pol, outfile, overwrite):
+def tsdcal2(infile, calmode, fraction, noff, width, elongated, tsysavg, tsysspw, applytable, interp, ifmap, field, spw, scan, pol, outfile, overwrite):
+    casalog.post(str(locals()))
     with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 
         worker.initialize()
         worker.execute()
@@ -50,7 +51,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             elif self.calmode == 'tsys':
                 # generate Tsys table
                 self.check_outfile()
-                self.check_tsysiflist()
+                self.check_tsysspw()
                 self.dotsys = True
             else:
                 # generate sky table
@@ -67,7 +68,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.skymode = self.calmode.split(sep)[0]
         else:
             # generate sky and Tsys table and apply them on-the-fly
-            self.check_tsysiflist()
+            self.check_tsysspw()
             #self.check_ifmap()
             self.check_interp()
             self.check_update()
@@ -131,33 +132,10 @@ class sdcal2_worker(sdutil.sdtask_template):
             raise Exception('ifmap must be non-empty dictionary.')
 
     def check_ifmap2(self):
-        #if len(self.tsystable) > 0:
-            self.check_ifmap()
+        self.check_ifmap()
             
-    def check_tsysiflist(self):
-        #if len(self.tsysiflist) == 0:
-        #    raise Exception('You must specify iflist as a list of IFNOs for Tsys calibration.')
-        if len(self.tsysiflist) == 0:
-            tb = gentools(['tb'])[0]
-            if is_scantable(self.infile):
-                tb.open(self.infile)
-                tsel = tb.query('SRCTYPE==10 && NELEMENTS(TSYS)>1')
-                if tsel.nrows() == 0:
-                    tsel.close()
-                    tb.close()
-                    raise Exception('No Tsys calibration available in the data')
-                self.tsysiflist = numpy.unique(tsel.getcol('IFNO'))
-                tsel.close()
-                tb.close()
-            else:
-                # should be MS
-                try:
-                    tb.open(os.path.join(self.infile,'SYSCAL'))
-                except:
-                    return
-                self.tsysiflist = numpy.unique(tb.getcol('SPECTRAL_WINDOW_ID'))
-                tb.close()
-            casalog.post('tsysiflist is set to %s'%(self.tsysiflist.tolist()), 'INFO')
+    def check_tsysspw(self):
+        pass
 
     def check_update(self):
         if len(self.outfile) == 0:
@@ -188,8 +166,16 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.manager.set_calmode(self.skymode)
             self.manager.calibrate()
         if self.dotsys:
+            self.__detect_tsysspw()
             self.manager.set_calmode('tsys')
-            self.manager.set_tsys_spw(self.tsysiflist)
+            #self.manager.set_tsys_spw(self.tsysspw)
+            if len(self.tsysspw) > 0:
+                casalog.post('Testing new tsysspw specification: %s'%(self.tsysspw))
+                tsysspw_dict = {}
+                for (k,v) in self.scan.parse_spw_selection(self.tsysspw).items():
+                    tsysspw_dict[str(k)] = numpy.array(v).flatten().tolist()
+                casalog.post('tsysspw_dict=%s'%(tsysspw_dict))
+                self.manager.set_tsys_spw_withrange(tsysspw_dict, self.tsysavg)
             self.manager.calibrate()
         if self.doapply:
             if isinstance(self.applytable,str):
@@ -198,18 +184,6 @@ class sdcal2_worker(sdutil.sdtask_template):
             else:
                 for tab in self.applytable:
                     self.manager.add_applytable(tab)
-##             if len(self.skytable) > 0:
-##                 if isinstance(self.skytable,str):
-##                     self.manager.add_skytable(self.skytable)
-##                 else:
-##                     for tab in self.skytable:
-##                         self.manager.add_skytable(tab)
-##             if len(self.tsystable) > 0:
-##                 if isinstance(self.tsystable,str):
-##                     self.manager.add_tsystable(self.tsystable)
-##                 else:
-##                     for tab in self.tsystable:
-##                         self.manager.add_tsystable(tab)
             if len(self.interp_time) > 0:
                 self.manager.set_time_interpolation(self.interp_time)
             if len(self.interp_freq) > 0:
@@ -242,3 +216,34 @@ class sdcal2_worker(sdutil.sdtask_template):
             opt = {'fraction': self.fraction,
                    'npts': self.noff}
             self.manager.set_calibration_options(opt)
+
+    def __detect_tsysspw(self):
+        if len(self.tsysspw) == 0:
+            if is_scantable(self.infile):
+                sel_org = self.scan.get_selection()
+                query_org = sel_org.get_query()
+                casalog.post('original query: %s'%(query_org),priority='DEBUG')
+                query_new = 'SRCTYPE == 10 && NELEMENTS(TSYS) > 1'
+                if len(query_org.strip()) > 0:
+                    query_new = '(%s) && (%s)'%(query_org, query_new)
+                casalog.post('new query: %s'%(query_new),priority='DEBUG')
+                sel = sd.selector(sel_org)
+                sel.set_query(query_new)
+                try:
+                    self.scan.set_selection(sel)
+                    self.tsysspw = ','.join(map(str,self.scan.getifnos()))
+                except Exception, e:
+                    casalog.post('Exception: %s'%(e))
+                    self.tsysspw = ''
+                finally:
+                    self.scan.set_selection(sel_org)
+            else:
+                # should be MS
+                tb = gentools(['tb'])[0]
+                try:
+                    tb.open(os.path.join(self.infile,'SYSCAL'))
+                except:
+                    return
+                self.tsysspw = ','.join(map(str,numpy.unique(tb.getcol('SPECTRAL_WINDOW_ID'))))
+                tb.close()
+        casalog.post('tsysspw is set to %s (type %s)'%(self.tsysspw,type(self.tsysspw)), 'INFO')

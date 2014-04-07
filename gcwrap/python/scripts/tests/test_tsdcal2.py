@@ -301,7 +301,7 @@ class tsdcal2_exceptions(tsdcal2_unittest_base,unittest.TestCase):
 #    def test_exception10(self):
 #        """test_exception10: Empty iflist for Tsys calibration"""
 #        try:
-#            self.res=tsdcal2(infile=self.rawfile,calmode='tsys',tsysiflist=[],outfile=self.outfile)
+#            self.res=tsdcal2(infile=self.rawfile,calmode='tsys',tsysspw=[],outfile=self.outfile)
 #            self.assertTrue(False,
 #                            msg='The task must throw exception')
 #        except Exception, e:
@@ -505,7 +505,7 @@ class tsdcal2_tsyscal(tsdcal2_caltest_base,unittest.TestCase):
     outfile=prefix+'.tsys.out'
     tsystable=prefix+'.tsys'
     calmode='tsys'
-    tsysiflist=[1]
+    tsysspw='1'#[1]
     
     def setUp(self):
         self.res=None
@@ -523,7 +523,7 @@ class tsdcal2_tsyscal(tsdcal2_caltest_base,unittest.TestCase):
 
     def test_tsyscal00(self):
         """test_tsyscal00: Tsys calibration"""
-        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile)
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,outfile=self.outfile)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
         
@@ -531,13 +531,13 @@ class tsdcal2_tsyscal(tsdcal2_caltest_base,unittest.TestCase):
         """test_tsyscal01: Tsys calibration, overwrite existing table"""
         if (not os.path.exists(self.tsystable)):
             shutil.copytree(self.rawfile, self.outfile)
-        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile,overwrite=True)
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,outfile=self.outfile,overwrite=True)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
 
     def test_tsyscal02(self):
         """test_tsyscal02: Default outfile name for Tsys calibration."""
-        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile='',overwrite=True)
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,outfile='',overwrite=True)
         defaultname = self.rawfile.rstrip('/')+'_tsys'
         self.assertTrue(os.path.exists(defaultname),
                         msg='Failed to generate default outfile name.')
@@ -545,7 +545,7 @@ class tsdcal2_tsyscal(tsdcal2_caltest_base,unittest.TestCase):
 
     def test_tsyscal03(self):
         """test_tsyscal03: Auto-detect spws for atmcal"""
-        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile)
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,outfile=self.outfile)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
       
@@ -566,7 +566,7 @@ class tsdcal2_applycal(tsdcal2_caltest_base,unittest.TestCase):
     tsystable=prefix+'.tsys'
     reftables=[prefix+'.asap.ref',prefix+'.asap.noTsys.ref',prefix+'.asap.cspline.ref']
     calmode='apply'
-    tsysiflist=[1]
+    tsysspw='1'#[1]
     ifmap={1:[5,6]}
     
     def setUp(self):
@@ -635,7 +635,7 @@ class tsdcal2_applycal(tsdcal2_caltest_base,unittest.TestCase):
     def test_applycal06(self):
         """test_applycal06: calibrate sky as well as Tsys and apply them on-the-fly"""
         self.calmode='ps,tsys,apply'
-        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,ifmap=self.ifmap,outfile=self.outfile)
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,ifmap=self.ifmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 
