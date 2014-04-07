@@ -612,6 +612,9 @@ variant* msmetadata::fieldsforintent(
 
 vector<int> msmetadata::fieldsforname(const string& name) {
 	_FUNC(
+		if (name.empty()) {
+			return _setIntToVectorInt(_msmd->getUniqueFiedIDs());
+		}
 		return _setIntToVectorInt(_msmd->getFieldIDsForField(name));
 	)
 	return vector<int>();
@@ -637,14 +640,17 @@ variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
 
 variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames) {
 	_FUNC(
+		ThrowIf(
+			scans.empty(), "Scans array cannot be empty"
+		);
 		std::set<Int> uscans;
 		for (
 			vector<int>::const_iterator scan=scans.begin();
 			scan!=scans.end(); scan++
 		) {
-			if (*scan < 0) {
-				throw AipsError("All scan numbers must be nonnegative.");
-			}
+			ThrowIf(
+				*scan < 0, "All scan numbers must be nonnegative."
+			);
 			uscans.insert(*scan);
 		}
 		std::set<Int> ids = _msmd->getFieldsForScans(uscans);

@@ -547,7 +547,8 @@ windows in the dataset and close the tool.
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique, zero-based field IDs for the specified field name.
+                Get an array of the unique, zero-based field IDs for the specified field name. If the field name is the
+                empty string (the default), a list of all unique field IDs in the main table of the MS will be returned.
             </description>
             <example>
     msmd.open("my.ms")
