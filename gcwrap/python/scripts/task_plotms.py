@@ -31,7 +31,7 @@ def plotms(vis=None, plotindex=None,
            showlegend=None, legendposition=None,   
            plotfile=None, expformat=None, exprange=None,
            highres=None, overwrite=None, 
-           showgui=None
+           showgui=None, clearplots=None
 ):
 
 # we'll add these later
@@ -164,6 +164,7 @@ def plotms(vis=None, plotindex=None,
                     Interior legends can be located in the upper right, lower right, upper left, or lower left.
                     Exterior legends can be located on the right, left, top, or bottom.
                     default: 'upperright'
+    clearplots -- clear existing plots so that the new ones coming in can replace them.                 
     
     """
     # Check if DISPLAY environment variable is set.
@@ -214,10 +215,7 @@ def plotms(vis=None, plotindex=None,
         if (xdatacolumn=='cor' or xdatacolumn=='corr'):  xdatacolumn='corrected'
         if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
 
-        #if showgui:
-         #   tp.setgui( True )     ####  showgui );
-        #else:
-         #   tp.setgui( False )    
+         
         vis = os.path.abspath(vis.strip())
         if not plotindex:
             plotindex = 0
@@ -226,15 +224,20 @@ def plotms(vis=None, plotindex=None,
         #user interaction.  This must be done before other properties are set because it affects
         #the constructor of plotms.
         pm.setShowGui( showgui )
-        if gridrows or gridcols:
+        
+        #Clear any existing plots.
+        if clearplots:
+            pm.clearPlots()
+       
+        gridChange = False    
+        if gridrows > 0 or gridcols > 0:
+            gridChange = True
             if not gridrows:
                 gridrows = 1
             if not gridcols:
                 gridcols = 1
-        else:
-            gridrows = 1
-            gridcols = 1
-        pm.setGridSize( gridrows, gridcols )
+        if gridChange:
+            pm.setGridSize( gridrows, gridcols )
         pm.setPlotMSFilename(vis, False, plotindex )
         
         if type(yaxis) is tuple:

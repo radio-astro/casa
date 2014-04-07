@@ -665,6 +665,12 @@ void plotms::setShowGui( bool showGui ){
 	}
 }
 
+void plotms::clearPlots(){
+	launchApp();
+	QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ), PlotMSDBusApp::METHOD_CLEARPLOTS,
+	                                   Record(), asyncCall );
+}
+
 
 
 bool plotms::save(const string& filename, const string& format,
@@ -798,7 +804,7 @@ void plotms::setPlotMSSelection_(const PlotMSSelection& selection,
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
-            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
 }
 
 void plotms::setPlotMSAveraging_(const PlotMSAveraging& averaging,
@@ -809,7 +815,7 @@ void plotms::setPlotMSAveraging_(const PlotMSAveraging& averaging,
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
-            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
 }
 
 void plotms::setPlotMSTransformations_(const PlotMSTransformations& trans,

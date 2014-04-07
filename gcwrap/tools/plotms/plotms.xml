@@ -1777,6 +1777,19 @@ State Methods
   <returns />
  
 </method>
+
+<method type="function" name="clearPlots">
+  <keyword>clearPlots</keyword>
+  
+  <shortdescription>Remove existing plots so that new plots can replace them.</shortdescription>
+  
+  <description />
+  
+  <input />
+  <example />
+  <returns />
+ 
+</method>
 <!--
 ###############################################################################
 Miscellaneous Methods

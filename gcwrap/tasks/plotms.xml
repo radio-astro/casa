@@ -60,13 +60,13 @@ MS Parameters
   </param>
   
   <param type="int" name="gridrows">
-    <description>The number of rows to display, for multiple plots on a page.</description>
-    <value>1</value>
+    <description>The number of rows to display, for multiple plots on a page. This does not need to be set except in cases where scripts are not using the default 1x1 display.  For multiple plots per page, it should be set once for each change in the number of grid rows.</description>
+  	<value>0</value>
   </param>
   
   <param type="int" name="gridcols">
-    <description>The number of columns to display, for multiple plots on a page.</description>
-    <value>1</value>
+    <description>The number of columns to display, for multiple plots on a page.  This does not need to be set except in cases where scripts are not using the default 1x1 display.  For multiple plots per page, it should be set once for each change in the number of grid columns.</description>
+  	<value>0</value>
   </param>
 
   <param type="string" name="xaxis">
@@ -98,7 +98,9 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
-      <value>wt</value><value>weight</value>
+      <value>wt</value>
+      <value>weight</value>
+      <value>wt*amp</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -135,6 +137,7 @@ MS Parameters
         <value>corrected-model</value>
         <value>data-model</value>
         <value>data/model</value>
+        <value>corrected/model</value>
       </allowed>
     </param>    
     
@@ -184,6 +187,7 @@ MS Parameters
       <value>imaginary</value>
       <value>wt</value>
       <value>weight</value>
+      <value>wt*amp</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -236,6 +240,7 @@ MS Parameters
         <value>corrected-model</value>
         <value>data-model</value>
         <value>data/model</value>
+        <value>corrected/model</value>
       </allowed>
     </param>
     
@@ -815,6 +820,11 @@ Export plot as image Parameters
      <param type="bool" name="showgui">
          <description>Show GUI</description>
          <value>True</value>
+     </param>
+     
+     <param type="bool" name="clearplots">
+     	<description>Remove any existing plots so new ones can replace them.</description>
+     	<value>False</value>
      </param>
 
 <!--
