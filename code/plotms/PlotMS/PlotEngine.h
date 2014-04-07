@@ -66,6 +66,7 @@ public:
 	virtual void showGUI(bool show = true) = 0;
 	virtual bool guiShown() const = 0;
 	virtual bool isClosed() const = 0;
+	virtual void clearPlots() = 0;
 
 	virtual bool isOperationCompleted() const = 0;
 	virtual bool save(const PlotExportFormat& format) = 0;

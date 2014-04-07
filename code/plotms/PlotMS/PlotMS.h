@@ -66,10 +66,6 @@ public:
   
     
     // Plotter Methods //
-    
-    // Returns the PlotMSPlotter associated with this PlotMS. 
-    //PlotMSPlotter* getPlotter();
-    
 
     // See PlotMSPlotter::showGUI().
     virtual void showGUI(bool show = true);
@@ -86,6 +82,9 @@ public:
     // See PlotMSPlotter::close().
     void close();
     
+    //Remove existing plots.
+    virtual void clearPlots();
+
     // See PlotMSPlotter::showError().
     // <group>
     void showError(const String& message, const String& title = "PlotMS Error",

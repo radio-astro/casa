@@ -166,7 +166,12 @@ PlotMSPlotManager& PlotMSApp::getPlotManager() { return itsPlotManager_; }
 
 
 PlotMSOverPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
-    return itsPlotManager_.addOverPlot(p); }
+    return itsPlotManager_.addOverPlot(p);
+}
+
+void PlotMSApp::clearPlots(){
+	return itsPlotManager_.clearPlotsAndCanvases( false );
+}
 
 bool PlotMSApp::isDrawing() const {
 	return itsPlotter_->isDrawing();

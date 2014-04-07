@@ -108,7 +108,7 @@ public:
     void removePlot( PlotMSPlot* plot );
     
     // Clears out all plots and canvases.
-    void clearPlotsAndCanvases();
+    void clearPlotsAndCanvases( bool clearCanvases = true );
     void clearCanvas(int row, int col );
 
     void unassignPlots();
@@ -153,6 +153,11 @@ private:
     
     // Notifies any watchers that the managed plots have changed.
     void notifyWatchers() const;
+
+    //Wait for existing draw threads to finish before we proceed so
+    //we don't get a seg fault from a draw thread hanging onto deleted
+    //data.
+    void waitForDrawing();
 };
 
 

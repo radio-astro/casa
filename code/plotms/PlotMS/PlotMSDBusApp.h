@@ -208,6 +208,11 @@ public:
     // RETURNS: none.
     static const String METHOD_UPDATE;
     
+    //Existing plots should be removed.
+    //PARAMETERS: none.
+    //RETURNS: none.
+    static const String METHOD_CLEARPLOTS;
+
     // DBus method name for quitting the entire application.
     // PARAMETERS: none.
     // RETURNS: none.

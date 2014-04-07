@@ -79,6 +79,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 			for (uInt i=0;i<loadData.size();++i) {
 				switch (loadData[i]) {
 				case PMS::CORRECTED:
+				case PMS::CORRECTED_DIVIDE_MODEL:
 				case PMS::CORRMODEL: {
 					//Exception was removed - see CAS-5214
 					loadData[i] = PMS::DATA;
@@ -740,6 +741,7 @@ void MSCache::forceVBread(VisBuffer& vb,
 				vb.correctedVisCube();
 				break;
 			}
+			case PMS::CORRECTED_DIVIDE_MODEL:
 			case PMS::CORRMODEL: {
 				vb.correctedVisCube();
 				vb.modelVisCube();
@@ -801,6 +803,7 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 				vba.setDoCVC();
 				break;
 			}
+			case PMS::CORRECTED_DIVIDE_MODEL:
 			case PMS::CORRMODEL: {
 				// cout << "Arranging to load CVC & MVC." << endl;
 				vba.setDoCVC();
@@ -1063,6 +1066,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*amp_[vbnum] = amplitude( vb.visCube() / vb.modelVisCube());
 			break;
 		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*amp_[vbnum] = amplitude( vb.correctedVisCube() / vb.modelVisCube());
+			break;
+		}
 		}
 		break;
 	}
@@ -1080,6 +1087,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*pha_[vbnum] = phase(vb.correctedVisCube()) * 180.0 / C::pi;
 			break;
 		}
+
 		case PMS::CORRMODEL: {
 			*pha_[vbnum] = phase(vb.correctedVisCube() - vb.modelVisCube()) *
 					180.0 / C::pi;
@@ -1091,6 +1099,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATA_DIVIDE_MODEL: {
 			*pha_[vbnum] = phase(vb.visCube() / vb.modelVisCube()) * 180 / C::pi;
+			break;
+		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*pha_[vbnum] = phase(vb.correctedVisCube() / vb.modelVisCube()) * 180 / C::pi;
 			break;
 		}
 		}
@@ -1123,6 +1135,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*real_[vbnum] = real(vb.visCube()) / real(vb.modelVisCube());
 			break;
 		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*real_[vbnum] = real(vb.correctedVisCube()) / real(vb.modelVisCube());
+			break;
+		}
 		}
 		break;
 	}
@@ -1150,6 +1166,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATA_DIVIDE_MODEL: {
 			*imag_[vbnum] = imag(vb.visCube()) / imag(vb.modelVisCube());
+			break;
+		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*imag_[vbnum] = imag(vb.correctedVisCube()) / imag(vb.modelVisCube());
 			break;
 		}
 		}
@@ -1186,6 +1206,9 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		case PMS::DATA_DIVIDE_MODEL:
 			*wtxamp_[vbnum] = amplitude(vb.visCube() / vb.modelVisCube());
+			break;
+		case PMS::CORRECTED_DIVIDE_MODEL:
+			*wtxamp_[vbnum] = amplitude(vb.correctedVisCube() / vb.modelVisCube());
 			break;
 		}
 		uInt nchannels = vb.nChannel();

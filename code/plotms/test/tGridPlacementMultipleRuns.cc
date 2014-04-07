@@ -39,10 +39,9 @@
 #include <QDebug>
 
 /**
- * Tests whether a plot can be placed in the second row, second column
- * of a 2x3 page layout.  Then it changes the grid size to 3x2 and tries
- * putting the plot into the third row, second column.  This tests whether
- * the grid size and location can be dynamically changed in scripting mode.
+ * Tests whether plots can be placed in a 2x3 page layout.  Then it changes
+ * the grid size to 1x1 and generates a plot.  This tests whether
+ * the grid size  can be dynamically changed in scripting mode.
  */
 
 int main(int /*argc*/, char** /*argv[]*/) {
@@ -188,7 +187,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save="<<ok;
     
-	ok = tUtil::checkFile( outFile, 80000, 100000, -1 );
+	ok = tUtil::checkFile( outFile, 311000, 312000, -1 );
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save file check="<<ok;
 
 	 //Now neck down the grid size
@@ -221,7 +220,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	 ok = app.save(format2);
 	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save="<<ok;
 
-	ok = tUtil::checkFile( outFile2, 80000, 100000, -1 );
+	ok = tUtil::checkFile( outFile2, 231000, 232000, -1 );
 	qDebug() << "tGridPlacementMultipleRuns 2:: Result of save file check="<<ok;
 
 	tUtil::exitMain( false );

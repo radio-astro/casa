@@ -124,15 +124,33 @@ void PlotMSPlotManager::clearCanvas( int row, int col ){
 	itsPages_.clearCanvas( row, col );
 }
 
-void PlotMSPlotManager::clearPlotsAndCanvases() {
-    unassignPlots();
+void PlotMSPlotManager::clearPlotsAndCanvases( bool clearCanvases ) {
+
+	//Make sure all drawing is finished before we start clearing
+	//the existing plots and canvases.
+	waitForDrawing();
+
+    //Remove the plots(data) from the canvases.
+	unassignPlots();
+    
+    if ( clearCanvases ){
+    	//Reset the page layout.
+    	itsPages_.clearPages();
+    }
+    else {
+
+    	//Remove all trace of the plots on the pages.
+    	int plotCount = itsPlots_.size();
+    	for ( int i = 0; i < plotCount; i++ ){
+    		itsPages_.disown( itsPlots_[i] );
+    	}
+    }
+
+    //Delete the manager's copy of the plots.
     vector<PlotMSPlot*> plotsCopy = itsPlots_;
     itsPlots_.clear();
-    
     itsPlotParameters_.clear();
-    itsPages_.clearPages();
     for(unsigned int i = 0; i < plotsCopy.size(); i++) {
-        plotsCopy[i]->detachFromCanvases();
         delete plotsCopy[i];
     }
     
@@ -162,7 +180,6 @@ bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
 
 void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
         const PlotMSPlotParameters* params) {
-
     if(plot == NULL) return;
     itsPlots_.push_back(plot);
     if(params != NULL){
@@ -178,6 +195,7 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }
+
 	notifyWatchers();
 }
 
@@ -223,20 +241,24 @@ void PlotMSPlotManager::getGridSize( Int& rows, Int& cols ){
 	}
 }
 
+void PlotMSPlotManager::waitForDrawing(){
+	int plotCount = itsPlots_.size();
+	for ( int i = 0; i < plotCount; i++ ){
+
+		itsPlots_[i]->waitForDrawing( true );
+
+	}
+}
+
 
 
 bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 	//Detach the plots from the canvases
 	bool resized = itsPages_.isGridChanged( rows, cols );
 	if ( resized || override ){
-
 		int plotCount = itsPlots_.size();
+		waitForDrawing();
 		for ( int i =0; i < plotCount; i++ ){
-
-			//Wait for existing draw threads to finish before we proceed so
-			//we don't get a seg fault from a draw thread hanging onto deleted
-			//data.
-			itsPlots_[i]->waitForDrawing( true );
 
 			//This is needed to avoid a segfault if the grid size is shrinking so
 			//some of the existing plots may no longer be plotted.
@@ -244,8 +266,8 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			//Clears the canvas and sets the owner to NULL
 			itsPages_.disown( itsPlots_[i]);
 
-
 		}
+
 		//We delete all the plots and canvases in scripting mode because
 		//it is easy enough to script them back in.
 		bool guiShown = itsParent_->guiShown();
@@ -253,6 +275,7 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			clearPlotsAndCanvases();
 			itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
 		}
+
 		//In GUI mode the user has the ability to delete individual plots
 		//as needed and would probably be mad if all the plots disappeared
 		//when the grid size changed.  Instead, we change the grid, and then
@@ -274,7 +297,7 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 		}
 		//For GUI mode, the plots do not redraw themselves in their new grid when
 		//the grid size is changed unless we tell them to redraw.
-		if ( itsParent_->guiShown() ){
+		if ( guiShown ){
 			for ( int i = 0; i < plotCount; i++ ){
 				if ( isPlottable( itsPlots_[i])){
 					itsPlots_[i]->parametersHaveChanged( itsPlots_[i]->parameters(),

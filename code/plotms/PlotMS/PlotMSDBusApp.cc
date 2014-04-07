@@ -133,6 +133,7 @@ const String PlotMSDBusApp::METHOD_SHOW   = "show";
 const String PlotMSDBusApp::METHOD_HIDE   = "hide";
 const String PlotMSDBusApp::METHOD_UPDATE = "update";
 const String PlotMSDBusApp::METHOD_QUIT   = "quit";
+const String PlotMSDBusApp::METHOD_CLEARPLOTS = "clearPlots";
 
 const String PlotMSDBusApp::METHOD_SAVE   = "save";
 const String PlotMSDBusApp::METHOD_ISDRAWING   = "isDrawing";
@@ -311,12 +312,14 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         itsPlotms_.getParameters().setCachedImageSize(ci.first, ci.second);
         int gridRows = itsPlotms_.getParameters().getRowCount();
         int gridCols = itsPlotms_.getParameters().getColCount();
+
         if ( parameters.isDefined( PARAM_GRIDROWS) &&
         		(parameters.dataType( PARAM_GRIDROWS) == TpInt ||
         				parameters.dataType(PARAM_GRIDROWS)==TpUInt)){
         		gridRows = parameters.dataType(PARAM_GRIDROWS) == TpInt ?
                         parameters.asInt(PARAM_GRIDROWS) :
                         parameters.asuInt(PARAM_GRIDROWS);
+
         }
         if ( parameters.isDefined( PARAM_GRIDCOLS) &&
                		(parameters.dataType( PARAM_GRIDCOLS) == TpInt ||
@@ -324,7 +327,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 gridCols = parameters.dataType(PARAM_GRIDCOLS) == TpInt ?
                                parameters.asInt(PARAM_GRIDCOLS) :
                                parameters.asuInt(PARAM_GRIDCOLS);
+
         }
+
         bool changedSize = itsPlotms_.getParameters().setGridSize( gridRows, gridCols );
         if ( changedSize ){
         	itsPlotParams_.clear();
@@ -342,7 +347,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     else if(methodName == METHOD_SETCACHEDIMAGESIZETOSCREENRES) {
         itsPlotms_.getParameters().setCachedImageSizeToResolution();
         
-    } else if(methodName == METHOD_GETPLOTPARAMS) {
+    }
+    else if ( methodName == METHOD_CLEARPLOTS ){
+    	itsPlotms_.clearPlots();
+    }
+    else if(methodName == METHOD_GETPLOTPARAMS) {
         if(indexValid) {
             const PlotMSPlotParameters& p = itsPlotParams_[index];
             const PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
