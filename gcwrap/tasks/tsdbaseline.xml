@@ -558,7 +558,39 @@ DESCRIPTION
 
 Task sdbaseline performs baseline fitting/removal for single-dish spectra.
 The fit parameters, terms and rms of baseline are saved to an ascii 
-file, '&lt;outfile&gt;_blparam.txt' if bloutput is True. 
+file, '&lt;outfile&gt;_blparam.txt' if bloutput is True.
+
+-----------------------
+BASELINE MODEL FUNCTION
+-----------------------
+The list of available model functions are shown above (see Keyword arguments
+section). In general 'cspline' or 'chebyshev' are recommended since they are
+more stable than others. 'poly' will work for lower order but will be unstable
+for higher order fitting. 'sinusoid' is kind of special mode that will be
+useful for the data that clearly shows standing wave in the spectral baseline.
+
+----------------------------------
+SIGMA CLIPPING (ITERATIVE FITTING)
+----------------------------------
+In general least square fitting is strongly affected by an extreme data
+so that the resulting fit makes worse. Sigma clipping is an iterative
+baseline fitting with data clipping based on a certain threshold. Threshold
+is set as a certain factor times rms of the resulting (baseline subtracted)
+spectra. If sigma clipping is on, baseline fit/removal is performed several
+times. After each baseline subtraction, the data whose absolute value is
+above threshold are detected and those data are excluded from the next round
+of fitting. By using sigma clipping, extreme data are excluded from the
+fit so that resulting fit is more robust.
+
+The user is able to control a multiplication factor using parameter
+clipthresh for clipping threshold based on rms. Actual threshold for sigma
+clipping will be (clipthresh) x (rms of spectra). Also, the user can specify
+number of maximum iteration to the parameter clipniter.
+
+In general, sigma clipping will lower the performance since it increases
+number of fits per spectra. However, it is strongly recommended to turn
+on sigma clipping unless you are sure that the data is free from any kind
+of extreme values that may affect the fit.
 
 --------------------
 FLUX UNIT CONVERSION
