@@ -363,7 +363,7 @@ void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allCha
 
 	int selectedId = getSelectedId();
 	if ( histogramMap.contains( selectedId )){
-		//histogramMap[selectedId]->reset();
+		histogramMap[selectedId]->reset();
 		reset();
 	}
 }
