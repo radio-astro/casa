@@ -150,6 +150,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","Open existing Images",WHERE) );
 
+    //    String fname( imagename + ".info" );
+    //    recreate( fname );
+
     itsPsf=NULL;
     itsModel=NULL;
     itsResidual=NULL;
@@ -458,6 +461,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SIImageStore::releaseLocks() 
   {
     LogIO os( LogOrigin("SIImageStore","releaseLocks",WHERE) );
+
+    //    String fname( itsImageName+String(".info") );
+    //    makePersistent( fname );
 
     if( ! itsPsf.null() ) itsPsf->unlock();
     if( ! itsModel.null() ) itsModel->unlock();
