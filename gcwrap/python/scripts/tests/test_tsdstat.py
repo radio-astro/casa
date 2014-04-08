@@ -1057,6 +1057,8 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
 class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unittest_base, unittest.TestCase ):
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
+    datapath_ref = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdstat/'
     # Input and output names
     rawfile='sd_analytic_type1-3.cal.asap'
     refstat_file = 'refstat_sel_new'
@@ -1077,9 +1079,9 @@ class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unitt
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
-        self.refstats = read_stats(self.datapath+self.refstat_file)
-        self.refstats_chan = read_stats(self.datapath+self.refstat_file_chan)
-        self.refstats_2chan = read_stats(self.datapath+self.refstat_file_2chan)
+        self.refstats = read_stats(self.datapath_ref+self.refstat_file)
+        self.refstats_chan = read_stats(self.datapath_ref+self.refstat_file_chan)
+        self.refstats_2chan = read_stats(self.datapath_ref+self.refstat_file_2chan)
         default(tsdstat)
         self.outname=self.prefix+self.postfix
         
