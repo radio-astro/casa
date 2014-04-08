@@ -42,10 +42,15 @@
 #include <casa/BasicSL/Constants.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+  
+  template <class T>
+  void openImage(const String& imagenamefull,CountedPtr<ImageInterface<T> >* img);
+    
 
 class SIImageStore 
 {
  public:
+  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS=BACKWARDGRID};
   // Default constructor
 
   SIImageStore();
@@ -65,6 +70,7 @@ class SIImageStore
 	       ImageInterface<Float>* restoredim, ImageInterface<Float>* maskim,
 	       ImageInterface<Float>* sumwtim);
     
+  void init();
 
   virtual ~SIImageStore();
 
@@ -132,6 +138,12 @@ class SIImageStore
   virtual Bool hasSensitivity(){return !itsWeight.null();}
   virtual Bool hasMask(){return !itsMask.null(); }
 
+  //
+  //---------------------------------------------------------------
+  //
+  void makePersistent(String& fileName);
+  void recreate(String& fileName);
+
 protected:
 // Can make this a utility function elsewhere...
 //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
@@ -187,6 +199,10 @@ private:
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
 
+  //
+  //------------------------------------------
+  // Non-persistent internal variables
+  Vector<String> imageExts;
 };
 
 

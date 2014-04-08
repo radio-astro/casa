@@ -51,6 +51,7 @@
 
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 
 #include <sys/types.h>
@@ -58,6 +59,35 @@
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+  //
+  //===========================================================================
+  // Global method that I (SB) could make work in SynthesisUtilsMethods.
+  //
+  template <class T>
+  void openImage(const String& imagenamefull,CountedPtr<ImageInterface<T> >& imPtr )
+  {
+    LogIO logIO ( LogOrigin("SynthesisImager","openImage(name)") );
+    try
+      {
+	if (Table::isReadable(imagenamefull))
+	  imPtr=new PagedImage<T>( imagenamefull );
+      }
+    catch (AipsError &x)
+      {
+	logIO << "Error in reading image \"" << imagenamefull << "\"" << LogIO::EXCEPTION;
+      }
+  }
+  //
+  //--------------------------------------------------------------
+  //
+  template 
+  void openImage(const String& imagenamefull, CountedPtr<ImageInterface<Float> >& img );
+  template 
+  void openImage(const String& imagenamefull, CountedPtr<ImageInterface<Complex> >& img );
+  //
+  //===========================================================================
+  //
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImageName=String("");
     itsCoordSys=CoordinateSystem();
     itsMiscInfo=Record();
-
+    init();
     //    itsValidity = False;
 
   }
@@ -113,6 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMiscInfo=Record();
 
+    init();
   }
 
   SIImageStore::SIImageStore(String imagename) 
@@ -166,6 +197,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
+    init();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,6 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cout << " In ref imstore, hasSensitivity : " << hasSensitivity() << endl;
 	
     //    itsValidity=((!itsPsf.null()) &&   (!itsResidual.null()) && (!itsWeight.null()));
+    init();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -246,6 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //// Either read an image from disk, or construct one. 
+
   CountedPtr<ImageInterface<Float> > SIImageStore::openImage(const String imagenamefull, 
 							     const Bool overwrite, const Bool dosumwt)
   {
@@ -1023,6 +1057,111 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    lsumwt = 1.0; setSumWt( target , lsumwt );
 
     return div;
+  }
+  //
+  //-------------------------------------------------------------
+  // Initialize the internals of the object.  Perhaps other such
+  // initializations in the constructors can be moved here too.
+  //
+  void SIImageStore::init()
+  {
+    imageExts.resize(MAX_IMAGE_IDS);
+    
+    imageExts(MASK)=".mask";
+    imageExts(PSF)=".psf";
+    imageExts(MODEL)=".model";
+    imageExts(RESIDUAL)=".residual";
+    imageExts(WEIGHT)=".weight";
+    imageExts(IMAGE)=".image";
+    imageExts(SUMWT)=".sumwt";
+    imageExts(FORWARDGRID)=".forward";
+    imageExts(BACKWARDGRID)=".backward";
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void SIImageStore::makePersistent(String& fileName)
+  {
+    LogIO logIO(LogOrigin("SIImageStore", "makePersistent"));
+    ofstream outFile; outFile.open(fileName.c_str(),std::ofstream::out);
+    if (!outFile) logIO << "Failed to open filed \"" << fileName << "\"" << LogIO::EXCEPTION;
+    //  String itsImageName;
+    outFile << "itsImageNameBase: " << itsImageName << endl;
+
+    //IPosition itsImageShape;
+    outFile << "itsImageShape: " << itsImageShape.nelements() << " ";
+    for (uInt i=0;i<itsImageShape.nelements(); i++) outFile << itsImageShape(i) << " "; outFile << endl;
+
+    // Don't know what to do with this.  Looks like this gets
+    // filled-in from one of the images.  So load this from one of the
+    // images if they exist?
+    //CoordinateSystem itsCoordSys; 
+
+    // Int itsNFacets;
+    outFile << "itsNFacets: " << itsNFacets << endl;
+    //Bool itsUseWeight, itsValidity;
+    outFile << "itsUseWeight: " << itsUseWeight << endl;
+    outFile << "itsValidity: " << itsValidity << endl;
+    
+
+    // Misc Information to go into the header. 
+    //    Record itsMiscInfo; 
+    itsMiscInfo.print(outFile);
+    
+    // CountedPtr<ImageInterface<Float> > itsMask, itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
+    // CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
+
+    Vector<Bool> ImageExists(MAX_IMAGE_IDS);
+    if (itsMask.null())     ImageExists(MASK)=False;
+    if (itsPsf.null())      ImageExists(PSF)=False;
+    if (itsModel.null())    ImageExists(MODEL)=False;
+    if (itsResidual.null()) ImageExists(RESIDUAL)=False;
+    if (itsWeight.null())   ImageExists(WEIGHT)=False;
+    if (itsImage.null())    ImageExists(IMAGE)=False;
+    if (itsSumWt.null())    ImageExists(SUMWT)=False;
+
+    if (itsForwardGrid.null())    ImageExists(FORWARDGRID)=False;
+    if (itsBackwardGrid.null())    ImageExists(BACKWARDGRID)=False;
+    
+    outFile << "ImagesExist: " << ImageExists << endl;
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void SIImageStore::recreate(String& fileName)
+  {
+    LogIO logIO(LogOrigin("SIImageStore", "recreate"));
+    ifstream inFile; inFile.open(fileName.c_str(),std::ofstream::out);
+    if (!inFile) logIO << "Failed to open filed \"" << fileName << "\"" << LogIO::EXCEPTION;
+      
+    String token;
+    inFile >> token; if (token == "itsImageNameBase:") inFile >> itsImageName;
+
+    inFile >> token; 
+    if (token=="itsImageShape:")
+      {
+	Int n;
+	inFile >> n;
+	itsImageShape.resize(n);
+	for (Int i=0;i<n; i++) inFile >> itsImageShape(i);
+      }
+
+    // Int itsNFacets;
+    inFile >> token; if (token=="itsNFacets:") inFile >> itsNFacets;
+    //Bool itsUseWeight, itsValidity;
+    inFile >> token; if (token=="itsUseWeight:") inFile >> itsUseWeight;
+    inFile >> token; if (token=="itsValidity:") inFile >> itsValidity;
+
+    casa::openImage(itsImageName+imageExts(PSF),      itsPsf);
+    casa::openImage(itsImageName+imageExts(MASK),     itsMask);
+    casa::openImage(itsImageName+imageExts(MODEL),    itsModel);
+    casa::openImage(itsImageName+imageExts(RESIDUAL), itsResidual);
+    casa::openImage(itsImageName+imageExts(WEIGHT),   itsWeight);
+    casa::openImage(itsImageName+imageExts(IMAGE),    itsImage);
+    casa::openImage(itsImageName+imageExts(SUMWT),    itsSumWt);
+    casa::openImage(itsImageName+imageExts(FORWARDGRID),  itsForwardGrid);
+    casa::openImage(itsImageName+imageExts(BACKWARDGRID), itsBackwardGrid);
+
   }
 
 
