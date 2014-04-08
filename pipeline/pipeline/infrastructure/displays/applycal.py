@@ -21,7 +21,7 @@ class PlotmsLeaf(object):
     ant arguments through to plotms without further manipulation, creating
     exactly one plot. 
     """
-    def __init__(self, context, result, calto, xaxis, yaxis, 
+    def __init__(self, context, result, calto, xaxis, yaxis,  
                  spw='', ant='', field='', scan='', intent='', **plot_args):
         self._context = context
         self._result = result
@@ -136,15 +136,15 @@ class PlotmsLeaf(object):
         return wrapper
 
     def _create_plot(self):
-        task_args = {'vis'       : self._ms.name,
-                     'xaxis'     : self._xaxis,
-                     'yaxis'     : self._yaxis,
-                     'field'     : str(self._field),
-                     'spw'       : str(self._spw),
-                     'scan'      : str(self._scan),
-                     'antenna'   : self._ant,
-                     'plotfile'  : self._plotfile,
-                     'showgui'   : False}
+        task_args = {'vis'             : self._ms.name,
+                     'xaxis'           : self._xaxis,
+                     'yaxis'           : self._yaxis,
+                     'field'           : str(self._field),
+                     'spw'             : str(self._spw),
+                     'scan'            : str(self._scan),
+                     'antenna'         : self._ant,
+                     'plotfile'        : self._plotfile,
+                     'showgui'         : False}
 
         task_args.update(**self._plot_args)
 
@@ -454,8 +454,8 @@ class AmpVsUVSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
@@ -472,8 +472,8 @@ class PhaseVsUVSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
@@ -490,8 +490,8 @@ class AmpVsTimeSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
@@ -508,8 +508,8 @@ class PhaseVsTimeSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
@@ -526,8 +526,8 @@ class AmpVsFrequencySummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgchannel'  : '',
                      'avgtime'     : '1e8',
                      'avgscan'     : True,
@@ -546,8 +546,8 @@ class PhaseVsFrequencySummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgchannel'  : '',
                      'avgtime'     : '1e8',
                      'avgscan'     : True,
@@ -595,8 +595,8 @@ class AmpVsFrequencyDetailChart(FieldSpwAntDetailChart):
     Create an amplitude vs frequency plot for each spw and antenna, 
     overplotting by field.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgchannel'  : '',
                      'avgtime'     : '1e8',
                      'avgscan'     : True,
@@ -615,8 +615,8 @@ class PhaseVsFrequencyDetailChart(FieldSpwAntDetailChart):
     Create a phase vs frequency plot for each spw and antenna, overplotting
     by field.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgchannel'  : '',
                      'avgtime'     : '1e8',
                      'avgscan'     : True,
@@ -634,8 +634,8 @@ class AmpVsUVDetailChart(SpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each spw and antenna
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
@@ -652,8 +652,8 @@ class PhaseVsUVDetailChart(SpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each spw and antenna
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
@@ -671,8 +671,8 @@ class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
     Create an amplitude vs time plot for each field, spw and antenna, 
     overplotting by correlation.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgantenna'  : False,
@@ -690,8 +690,8 @@ class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
     Create an phase vs time plot for each field, spw and antenna, 
     overplotting by correlation.
     """
-    def __init__(self, context, result, intent=''):
-        plot_args = {'ydatacolumn' : 'corrected',
+    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+        plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgantenna'  : False,
