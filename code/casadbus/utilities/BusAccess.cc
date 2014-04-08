@@ -80,7 +80,7 @@ namespace casa {
 				name_ = generate_name("dba");
 			}
 		} else {
-			name_ = generate_name(bus_address);
+			name_ = generate_name(bus_address,unique);
 		}
 	}
 
@@ -88,20 +88,28 @@ namespace casa {
 		name_ = generate_name("dba");
 	}
 
-	std::string address::generate_name( const std::string &base ) {
+	std::string address::generate_name( const std::string &base, bool unique ) {
         casa::DBusSession &session = casa::DBusSession::instance( );
 		std::string result;
 		const int suffix_length = 3;
 		char *buffer = new char[ strlen(CASA_PREFIX) + base.size( ) + suffix_length + 2 ];
-		while ( result.size( ) == 0 ) {
-            char *suffix = generate_proxy_suffix(suffix_length);
-            sprintf( buffer, "%s%s_%s", CASA_PREFIX, base.c_str( ), suffix );
-            try {
-                session.connection( ).request_name( buffer );
-                result = buffer;
-            } catch (...) { }
-			delete [] suffix;
-        }
+		if ( unique ) {
+			while ( result.size( ) == 0 ) {
+				char *suffix = generate_proxy_suffix(suffix_length);
+				sprintf( buffer, "%s%s_%s", CASA_PREFIX, base.c_str( ), suffix );
+				try {
+					session.connection( ).request_name( buffer );
+					result = buffer;
+				} catch (...) { }
+				delete [] suffix;
+			}
+		} else {
+			sprintf( buffer, "%s%s", CASA_PREFIX, base.c_str( ) );
+			try {
+				session.connection( ).request_name( buffer );
+				result = buffer;
+			} catch (...) { throw std::runtime_error("DBus address already in use..."); }
+		}
 		delete [] buffer;
 		return result;
 	}

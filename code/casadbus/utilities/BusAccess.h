@@ -49,7 +49,7 @@ namespace casa {
 			virtual ~address( );
 			std::string busName( ) const { return name_; }
 	    private:
-			std::string generate_name( const std::string &base );
+			std::string generate_name( const std::string &base, bool unique=true );
 			std::string name_;
 	};
 
