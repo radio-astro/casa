@@ -78,13 +78,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record continuumDataPartition(Record &selpars, const Int npart);
     
     // Data partitioning rules for CUBE imaging
-    Record cubeDataPartition(Record &selpars, Int npart);
+    //uniform contiguous partition in frequency step
+    static Record cubeDataPartition(Record &selpars, const Int npart, const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype=MFrequency::LSRK);
+
+    // freqBeg and freqEnd are frequency range  of the sub image cubes defined in frame set here
+    // number of partions is obviously the length of freqBeg and freqEnd 
+    // Use this for non uniform width of imge frequencies
+    static Record cubeDataPartition(Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>& freqEnd, const MFrequency::Types frame=MFrequency::LSRK);
     
     // Image cube partitioning rules for CUBE imaging
     Record cubeImagePartition(Record &impars, Int npart);
     
     
   protected:
+    static String mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel);
 
   };
 
