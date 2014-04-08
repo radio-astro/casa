@@ -50,7 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SIImageStore 
 {
  public:
-  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS=BACKWARDGRID};
+  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
   // Default constructor
 
   SIImageStore();
@@ -177,7 +177,7 @@ protected:
   IPosition itsImageShape;
   String itsImageName;
   CoordinateSystem itsCoordSys;
-  Int itsNFacets;
+  Int itsNFacets, itsFacetId;
   Bool itsUseWeight;
 
   // Misc Information to go into the header. 
