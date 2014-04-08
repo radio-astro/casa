@@ -673,6 +673,11 @@ class T2_1DetailsRenderer(object):
 #         dirname = os.path.join(context.report_dir, 
 #                                'session%s' % ms.session,
 #                                ms.basename)
+
+        task = summary.WeatherChart(context, ms)
+        weather_plot = task.plot()
+
+
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
         
@@ -691,7 +696,8 @@ class T2_1DetailsRenderer(object):
             'time_on_science' : utils.format_timedelta(time_on_science),
             'intent_vs_time'  : intent_vs_time,
             'field_vs_time'   : field_vs_time,
-            'dirname'         : dirname
+            'dirname'         : dirname,
+            'weather_plot'    : weather_plot
         }
 
     @classmethod
