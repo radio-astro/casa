@@ -285,9 +285,24 @@ void flagInterp(const casa::MeasurementSet &ms,
 						3,
 						maxdist_m);
     if(near.size()>= static_cast<unsigned int>(minnumants)){
-      LibAIR::interpBadAntW(d, 
-			    *i, 
-			    near);
+      //LibAIR::interpBadAntW(d, *i, near);
+      const LibAIR::InterpArrayData::wvrdata_t &data(d.g_wvrdata());
+      for(size_t ii=0; ii<d.g_time().size(); ++ii){
+	for(size_t k=0; k < 4; ++k){
+	  double p=0;
+	  for(LibAIR::AntSetWeight::const_iterator j=near.begin(); j!=near.end(); ++j){
+	    double thisData = data[ii][j->second][k];
+	    if(thisData>0){
+	      p+=thisData*j->first;
+	    }
+	    else{ // no good data; set solution to zero => will be flagged later
+	      p=0.;
+	      break;
+	    }
+	  }
+	  d.set(ii, *i, k, p);
+	}
+      }
     }
     else
     { 
@@ -302,7 +317,7 @@ void flagInterp(const casa::MeasurementSet &ms,
       {
         for(size_t k=0; k < 4; ++k)
         {
-          d.set(j, *i, k, 2.7); // set all WVR data of this antenna to a minimum temperature
+          d.set(j, *i, k, 0.); // set all WVR data of this antenna to zero => will be flagged later
         }
       }
       interpImpossibleAnts.insert(*i);
