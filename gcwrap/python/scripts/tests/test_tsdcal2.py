@@ -616,7 +616,7 @@ class tsdcal2_tsyscal_average(tsdcal2_caltest_base,unittest.TestCase):
                     averaged_value /= nchan_averaged
                 #print 'averaged_value =', averaged_value
                 diff=self._diff(sp,averaged_value)
-                self.assertTrue(numpy.all(diff < 0.01),
+                self.assertTrue(numpy.all(diff < 1e-5),
                                 msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         except Exception, e:
             raise e
