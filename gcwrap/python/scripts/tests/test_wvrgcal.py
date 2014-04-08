@@ -32,7 +32,8 @@ class wvrgcal_test(unittest.TestCase):
            'wvrgcalctest_statsource.W',
            'wvrgcalctest_nsol.W',
            'wvrgcalctest_disperse.W',
-           'multisource_unittest_reference-mod.wvr']
+           'multisource_unittest_reference-mod.wvr',
+           'wvrgcalctest-test19.W']
 
 ## 2   'wvrgcalctest.W': '',
 ## 3   'wvrgcalctest_toffset.W': '--toffset -1', ........................ test3
@@ -334,6 +335,7 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
 
         os.system('rm -rf '+self.out)
+
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41', toffset=-1.)
 
         tb.open('myinput.ms/ANTENNA', nomodify=False)
@@ -446,6 +448,26 @@ class wvrgcal_test(unittest.TestCase):
             self.rval = (rvaldict==rvaldict2)
                
         self.assertTrue(self.rval)
+
+    def test19(self):
+        '''Test 19:  wvrgcal4quasar_10s.ms, PM02 partially flagged in main table, DV41 with wvrflag, PM02 necessary for interpol of DV41'''
+        myvis = self.vis_g
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        os.system('rm -rf '+self.out)
+
+        flagdata(vis='myinput.ms', mode='manual', antenna='PM02&&*', scan='3')
+
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41', toffset=-1., mingoodfrac=0.2)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
+        if(self.rval):
+            self.rval = th.compTables(self.ref[19], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
+        self.assertTrue(self.rval)
+
 
 
 
