@@ -247,10 +247,11 @@ void ImageProfileFitterResults::_marshalFitResults(
 			}
 		}
 		else {
-			LogOrigin logOrigin(_class, __FUNCTION__);
-			*_log << "Could not convert pixel to world coordinate: "
-				<< csysSub.errorMessage() << LogIO::EXCEPTION;
-			}
+			ThrowCc(
+				"Could not convert pixel to world coordinate: "
+				+ csysSub.errorMessage()
+			);
+		}
 		if (validArr(pixel)) {
 			mask(pixel) = anyTrue(inIter.getMask());
 			niterArr(pixel) = (Int)fitter->getNumberIterations();
@@ -332,9 +333,9 @@ void ImageProfileFitterResults::_marshalFitResults(
 				}
 				break;
 				default:
-					*_log << LogOrigin(_class, __FUNCTION__)
-						<< "Logic Error: Unhandled Spectral Element type"
-						<< LogIO::EXCEPTION;
+					ThrowCc(
+						"Logic Error: Unhandled Spectral Element type"
+					);
 					break;
 				}
 			}
@@ -349,7 +350,7 @@ void ImageProfileFitterResults::_writeLogfile(const String& str, Bool open, Bool
 }
 
 void ImageProfileFitterResults::_setResults() {
-    LogOrigin logOrigin(_class, __FUNCTION__);
+    LogOrigin logOrigin(_class, __func__);
     Double fNAN = casa::doubleNaN();
     uInt nComps = _nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets;
     if (_polyOrder >= 0) {
@@ -377,7 +378,6 @@ void ImageProfileFitterResults::_setResults() {
     // correspond location in the _fitters array. Final structure index
     // corresponds to the sub component number (eg for multiple singlets or
     // for gaussian multiplet components
- 
 	std::auto_ptr<vector<vector<Array<Double> > > > pcfArrays = _createPCFArrays();
     IPosition bShape(1, max(_nPLPCoeffs, _nLTPCoeffs));
     bShape.prepend(fitterShape);
@@ -414,7 +414,7 @@ void ImageProfileFitterResults::_setResults() {
 
 	);
 	{
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << LogOrigin(_class, __func__);
 		ostringstream oss;
 		oss << "Number of profiles       = " << _fitters->size();
 		String str = oss.str();
@@ -423,25 +423,25 @@ void ImageProfileFitterResults::_setResults() {
 		oss.str("");
 		oss << "Number of fits attempted = " << ntrue(attemptedArr);
 		str = oss.str();
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << LogOrigin(_class, __func__);
 		*_log << LogIO::NORMAL << str << LogIO::POST;
 		_writeLogfile(str + "\n", False, False);
 		oss.str("");
 		oss << "Number succeeded         = " << ntrue(successArr);
 		str = oss.str();
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << LogOrigin(_class, __func__);
 		*_log << LogIO::NORMAL << str << LogIO::POST;
 		_writeLogfile(str + "\n", False, False);
 		oss.str("");
 		oss << "Number converged         = " << ntrue(convergedArr);
 		str = oss.str();
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << LogOrigin(_class, __func__);
 		*_log << LogIO::NORMAL << str << LogIO::POST;
 		_writeLogfile(str + "\n", False, False);
 		oss.str("");
 		oss << "Number valid             = " << ntrue(validArr) << endl;
 		str = oss.str();
-		*_log << LogOrigin(_class, __FUNCTION__);
+		*_log << LogOrigin(_class, __func__);
 		*_log << LogIO::NORMAL << str << LogIO::POST;
 		_writeLogfile(str + "\n", False, False);
 	}
@@ -598,7 +598,6 @@ void ImageProfileFitterResults::_writeImages(
 	Vector<String> units(1, "");
 	LinearCoordinate componentCoord(name, units, crval, cdelt, pc, crpix);
 	CoordinateSystem mycsys = CoordinateSystem(xcsys);
-
 	mycsys.addCoordinate(componentCoord);
 	map<String, String> mymap;
 	map<String, String> unitmap;
@@ -628,13 +627,11 @@ void ImageProfileFitterResults::_writeImages(
 		}
 		String id = _getTag(i);
 		IPosition maskShape = _results.asRecord(id).asArrayDouble("amp").shape();
-
 		maskShape[maskShape.size()-1] = 1;
 		Array<Bool> reshapedMask = mask.reform(maskShape);
 		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
 		uInt n = maskShape[maskShape.size()-1];
 		Array<Bool> fMask = _replicateMask(reshapedMask, n);
-
 		for (
 			map<String, String>::const_iterator iter=mymap.begin();
 			iter!=mymap.end(); iter++
@@ -800,13 +797,15 @@ void ImageProfileFitterResults::_resultsToLog() {
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
 	CoordinateSystem csysSub = _subImage->coordinates();
 	Vector<Double> worldStart;
-	if (! csysSub.toWorld(worldStart, inIter.position())) {
-		*_log << csysSub.errorMessage() << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		! csysSub.toWorld(worldStart, inIter.position()),
+		csysSub.errorMessage()
+	);
 	Vector<Double> pixStart;
-	if (! _csysIm.toPixel(pixStart, worldStart)) {
-		*_log << _csysIm.errorMessage() << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		! _csysIm.toPixel(pixStart, worldStart),
+		_csysIm.errorMessage()
+	);
 	if (_multiFit) {
 		for (uInt i=0; i<pixStart.size(); i++) {
 			pixStart[i] = (Int)std::floor( pixStart[i] + 0.5);
@@ -858,7 +857,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 			}
 		}
 		else {
-			*_log << csysSub.errorMessage() << LogIO::EXCEPTION;
+			ThrowCc(csysSub.errorMessage());
 		}
 		for (uInt i=0; i<pixStart.size(); i++) {
 			imPix[i] = pixStart[i] + subimPos[i];
@@ -940,9 +939,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 							}
 							break;
 						default:
-							*_log << LogOrigin(_class, __FUNCTION__)
-								<< "Logic Error: Unhandled spectral element type"
-							    << LogIO::EXCEPTION;
+							ThrowCc("Logic Error: Unhandled spectral element type");
 							break;
 						}
 					}
@@ -1290,7 +1287,22 @@ void ImageProfileFitterResults::_makeSolutionImage(
 		);
 		image.makeMask(maskName, True, True, False);
 		if (hasPixMask) {
-			resMask = mask.copy().reform(shape);
+			if (shape == mask.shape()) {
+				resMask = mask.copy().reform(shape);
+			}
+			else {
+				IPosition maskShape = shape;
+				uInt ndim = maskShape.nelements();
+				maskShape[ndim - 1] = 1;
+				Array<Bool> maskCopy = mask.copy().reform(maskShape);
+				IPosition start(ndim, 0);
+				IPosition end = maskShape - 1;
+				for (uInt i=0; i<shape[ndim - 1]; i++) {
+					start[ndim - 1] = i;
+					end[ndim - 1] = i;
+					resMask(start, end) = maskCopy.copy();
+				}
+			}
 			if (hasNanMask) {
 				resMask = resMask && nanInfMask;
 			}
