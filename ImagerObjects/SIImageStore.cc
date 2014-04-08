@@ -1152,15 +1152,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inFile >> token; if (token=="itsUseWeight:") inFile >> itsUseWeight;
     inFile >> token; if (token=="itsValidity:") inFile >> itsValidity;
 
-    casa::openImage(itsImageName+imageExts(PSF),      itsPsf);
-    casa::openImage(itsImageName+imageExts(MASK),     itsMask);
-    casa::openImage(itsImageName+imageExts(MODEL),    itsModel);
-    casa::openImage(itsImageName+imageExts(RESIDUAL), itsResidual);
-    casa::openImage(itsImageName+imageExts(WEIGHT),   itsWeight);
-    casa::openImage(itsImageName+imageExts(IMAGE),    itsImage);
-    casa::openImage(itsImageName+imageExts(SUMWT),    itsSumWt);
-    casa::openImage(itsImageName+imageExts(FORWARDGRID),  itsForwardGrid);
-    casa::openImage(itsImageName+imageExts(BACKWARDGRID), itsBackwardGrid);
+    Bool coordSysLoaded=False;
+    String itsName;
+    try 
+      {
+	itsName=itsImageName+imageExts(PSF);casa::openImage(itsName,      itsPsf);
+	if (coordSysLoaded==False) {itsCoordSys=itsPsf->coordinates(); itsMiscInfo=itsPsf->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try 
+      {
+	itsName=itsImageName+imageExts(MASK);casa::openImage(itsName,     itsMask);
+	if (coordSysLoaded==False) {itsCoordSys=itsMask->coordinates(); itsMiscInfo=itsImage->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try 
+      {
+	itsName=itsImageName+imageExts(MODEL);casa::openImage(itsName,    itsModel);
+	if (coordSysLoaded==False) {itsCoordSys=itsModel->coordinates(); itsMiscInfo=itsModel->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try 
+      {
+	itsName=itsImageName+imageExts(RESIDUAL);casa::openImage(itsName, itsResidual);
+	if (coordSysLoaded==False) {itsCoordSys=itsResidual->coordinates(); itsMiscInfo=itsResidual->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try 
+      {
+	itsName=itsImageName+imageExts(WEIGHT);casa::openImage(itsName,   itsWeight);
+	if (coordSysLoaded==False) {itsCoordSys=itsWeight->coordinates(); itsMiscInfo=itsWeight->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try 
+      {
+	itsName=itsImageName+imageExts(IMAGE);casa::openImage(itsName,    itsImage);
+	if (coordSysLoaded==False) {itsCoordSys=itsImage->coordinates(); itsMiscInfo=itsImage->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try 
+      {
+	itsName=itsImageName+imageExts(SUMWT);casa::openImage(itsName,    itsSumWt);
+	if (coordSysLoaded==False) {itsCoordSys=itsSumWt->coordinates(); itsMiscInfo=itsSumWt->miscInfo();coordSysLoaded=True;}
+      } catch (AipsIO& x) {logIO << "\"" << itsName << "\" not found." << LogIO::WARN;};
+    try
+      {
+	casa::openImage(itsImageName+imageExts(FORWARDGRID),  itsForwardGrid);
+	casa::openImage(itsImageName+imageExts(BACKWARDGRID), itsBackwardGrid);
+      }
+    catch (AipsError& x)
+      {
+	logIO << "Did not find forward and/or backward grid.  Just say'n..." << LogIO::POST;
+      }
 
   }
 
