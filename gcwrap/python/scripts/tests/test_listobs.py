@@ -3,6 +3,7 @@ import sys
 import shutil
 import string
 import listing as lt
+import hashlib
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -38,6 +39,16 @@ reffile = datapath+'reflistobs'
 msfile1 = 'ngc5921_ut.ms'
 msfile2 = 'uid___X02_X3d737_X1_01_small.ms'
 
+def _sha1it(filename):
+    blocksize = 65536
+    hasher = hashlib.sha1()
+    with open(filename, 'rb') as afile:
+        buf = afile.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(blocksize)
+    return hasher.hexdigest()
+
 class listobs_test1(unittest.TestCase):
 
     def setUp(self):
@@ -53,8 +64,7 @@ class listobs_test1(unittest.TestCase):
             
     def test1(self):
         '''Listobs 1: Input MS'''
-        self.res = listobs(vis=msfile1, listunfl=True)
-        self.assertEqual(self.res, None, "Return value should be None")
+        self.assertTrue(listobs(vis=msfile1, listunfl=True))
 
     def test2(self):
         '''Listobs 2: CSV-591. Check if long field names are fully displayed'''
@@ -160,6 +170,26 @@ class listobs_test1(unittest.TestCase):
                         'See the diff file %s.'%(out,reference,diff))
 
 
+    def test_overwrite(self):
+        """Test overwrite parameter - CAS-5203"""
+        listfile = "CAS-5203.log"
+        self.assertTrue(
+            listobs(vis=msfile1, listfile=listfile)
+        )
+        # test default value is overwrite=False
+        self.assertFalse(
+            listobs(vis=msfile1, listfile=listfile)
+        )
+        self.assertFalse(
+            listobs(vis=msfile1, listfile=listfile, overwrite=False)
+        )
+        expec = _sha1it(listfile)
+        self.assertTrue(
+            listobs(vis=msfile1, listfile=listfile, overwrite=True)
+        )
+        got = _sha1it(listfile)
+        self.assertTrue(got == expec)
+        
 class listobs_cleanup(unittest.TestCase):
     
     def tearDown(self):

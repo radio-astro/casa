@@ -1,11 +1,11 @@
 import os
 from taskinit import *
 
-
 def listobs(
     vis, selectdata, spw, field, antenna, uvrange,
     timerange, correlation, scan, intent, feed,
-    array, observation, verbose, listfile, listunfl, cachesize
+    array, observation, verbose, listfile,
+    listunfl, cachesize, overwrite
 ):
     
     """List data set summary in the logger:
@@ -31,8 +31,9 @@ def listobs(
        # Python script
        # parameter_printvalues(arg_names,arg_values,arg_types)
     try:
+        myms = mstool()
         if (type(vis) == str) & os.path.exists(vis):
-            ms.open(thems=vis)
+            myms.open(thems=vis)
         else:
             raise Exception, \
                 'Visibility data set not found - please verify the name'
@@ -52,13 +53,16 @@ def listobs(
             sel['feed'] = feed
 
         # Select the data. Only-parse is set to false.
-        ms.msselect(sel, False)
-            
-        ms.summary(verbose=verbose, listfile=listfile, listunfl=listunfl, cachesize=cachesize)
-
-        ms.close()
+        myms.msselect(sel, False)
+        myms.summary(
+            verbose=verbose, listfile=listfile, listunfl=listunfl,
+            cachesize=cachesize, overwrite=overwrite
+        )
+        return True
     except Exception, instance:
-        ms.close()
-        print '*** Error ***', instance
+        casalog.post('*** Error *** ' + str(instance), 'SEVERE')
+        return False
+    finally:
+        myms.close()
 
 

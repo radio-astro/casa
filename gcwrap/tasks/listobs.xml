@@ -99,6 +99,10 @@
             <description>EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
             <value>50</value>
         </param>
+        <param type="bool" direction="in" name="overwrite" subparam="true">
+            <description>If True, tacitly overwrite listfile if it exists.</description>
+            <value>False</value>
+        </param>
             <constraints>      
                 <when param="selectdata">
                     <equals type="bool" value="True">
@@ -115,7 +119,14 @@
                         <default param="observation"><value type="string"></value></default>
                         </equals>
                     <equals type="bool" value="False"/>
-                </when>                    
+                </when>
+                <when param="listfile">
+                    <notequals type="string" value="">
+                        <default param="overwrite">
+                            <value>False</value>
+                        </default>
+                    </notequals>
+                </when>                 
             </constraints>
             
 	</input>

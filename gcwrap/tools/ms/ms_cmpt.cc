@@ -602,29 +602,33 @@ msmetadata* ms::metadata(const float cachesize) {
 	}
 }
 
-::casac::record*
-ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesize)
-{
+::casac::record* ms::summary(
+	bool verbose, const string& listfile, bool listunfl,
+	double cachesize, bool overwrite
+) {
+	if (detached()) {
+		return 0;
+	}
   ::casac::record *header = 0;
   try {
-     if(!detached()){
-       *itsLog << LogOrigin("ms", "summary");
+
+       *itsLog << LogOrigin("ms", __func__);
        // pass the original MS name to the constructor
        // so that it is correctly printed in the output
        MSSummary mss(itsMS, itsOriginalMS->tableName());
        mss.setListUnflaggedRowCount(listunfl);
        mss.setMetaDataCacheSizeInMB(cachesize);
        casa::Record outRec;
-       if (listfile != ""){
+       if (! listfile.empty()){
     	   File diskfile(listfile);
-    	   if (diskfile.exists()){
-    		   String errmsg = "File: "+ listfile +
-    		   " already exists; delete it or choose another name.";
-    		   throw(AipsError(errmsg));
-    	   }
-    	   else {
-    		   cout << "Writing output to file: " << listfile << endl;
-    	   }
+    	   ThrowIf(
+    			   diskfile.exists() && ! overwrite,
+    			   "File: " + listfile + " already exists; delete "
+    			   "it, choose another name, or set overwrite=True."
+    	   );
+
+    	   *itsLog << LogIO::NORMAL << "Writing output to file: "
+    			   << listfile << LogIO::POST;
 
     	   /* First, save output to a string so that LogMessages
     	      and time stamps can be removed from it */
@@ -664,12 +668,12 @@ ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesiz
     	   mss.list(*itsLog, outRec, verbose, True);
     	   header=fromRecord(outRec);
        }
-     }
-   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks(True);
-       RETHROW(x);
    }
+  	  catch (const AipsError& x) {
+  		  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+  		  Table::relinquishAutoLocks(True);
+  		  RETHROW(x);
+  	  }
    Table::relinquishAutoLocks(True);
    return header;
 }
@@ -3245,7 +3249,7 @@ ms::detached()
   Bool rstat(False);
   try {
      if (itsMS->isNull()) {
-       *itsLog << LogOrigin("ms", "detached");
+       *itsLog << LogOrigin("ms", __func__);
        *itsLog << LogIO::SEVERE
               << "ms is not attached to a file - cannot perform operation.\n"
               << "Call ms.open('filename') to reattach." << LogIO::POST;
