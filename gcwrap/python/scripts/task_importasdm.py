@@ -263,9 +263,9 @@ def importasdm(
             if singledish:
                 viso = vis.rstrip('/') + '.importasdm.tmp.ms'
         else:
-            viso = asdm + '.ms'
-            visoc = asdm + '-wvr-corrected.ms'
-            vis = asdm
+            viso = asdm.rstrip("/") + '.ms'
+            visoc = asdm.rstrip("/") + '-wvr-corrected.ms'
+            vis = asdm.rstrip("/")
             if singledish:
                 viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                 vis = asdm.rstrip('/') + '.asap'
