@@ -57,6 +57,7 @@
 #include <synthesis/TransformMachines/Utils.h>
 
 #include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/MSUtil.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -224,12 +225,85 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Data partitioning rules for CUBE imaging
-  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, Int npart)
+  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Int npart,
+		  const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype)
   {
     LogIO os( LogOrigin("SynthesisUtilMethods","cubeDataPartition",WHERE) );
     // Temporary special-case code. Please replace with actual rules.
-    return continuumDataPartition( selpars, npart );
+    Vector<Double> fstart(npart);
+    Vector<Double> fend(npart);
+    Double step=(freqEnd-freqBeg)/Double(npart);
+    fstart(0)=freqBeg;
+    fend(0)=freqBeg+step;
+    for (Int k=1; k < npart; ++k){
+    	fstart(k)=fstart(k-1)+step;
+    	fend(k)=fend(k-1)+step;
+    }
+    return cubeDataPartition( selpars, fstart, fend, eltype );
 
+  }
+
+  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>&freqEnd, const MFrequency::Types eltype){
+    Record retRec;
+    Int npart=freqBeg.shape()(0);
+    for (Int k=0; k < npart; ++k){
+      Int nms=selpars.nfields();
+      Record partRec;
+      for(Int j=0; j < nms; ++j){
+    	  if(selpars.isDefined(String("ms"+String::toString(j)))){
+    		  Record msRec=selpars.asRecord(String("ms"+String::toString(j)));
+    		  if(!msRec.isDefined("msname"))
+    			  throw(AipsError("No msname key in ms record"));
+    		  String msname=msRec.asString("msname");
+    		  String userspw=msRec.isDefined("spw")? msRec.asString("spw") : "*";
+    		  String userfield=msRec.isDefined("field") ? msRec.asString("field") : "*";
+    		  MeasurementSet elms(msname);
+    		  Record laSelection=elms.msseltoindex(userspw, userfield);
+    		  Matrix<Int> spwsel=laSelection.asArrayInt("channel");
+    		  Vector<Int> fieldsel=laSelection.asArrayInt("field");
+    		  Vector<Int> freqSpw;
+    		  Vector<Int> freqStart;
+    		  Vector<Int> freqNchan;
+    		  MSUtil::getSpwInFreqRange(freqSpw, freqStart, freqNchan, elms, freqBeg(k), freqEnd(k),0.0, eltype, fieldsel[0]);
+    		  String newspw=mergeSpwSel(freqSpw, freqStart, freqNchan, spwsel);
+    		  msRec.define("spw", newspw);
+    		  partRec.defineRecord(String("ms"+String::toString(j)),msRec);
+    	  }
+
+      }
+      retRec.defineRecord(String::toString(k), partRec);
+    }
+
+
+
+
+    return retRec;
+  }
+
+
+ String  SynthesisUtilMethods::mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel)
+  {
+	 String retval="";
+	 Int cstart, cend;
+  	  for(Int k=0; k < fspw.shape()(0); ++k){
+  		  cstart=fstart(k);
+  		  cend=fstart(k)+fnchan(k)-1;
+  		  for (Int j=0; j < spwsel.shape()(1); ++j){
+  			//need to put this here as multiple rows can have the same spw
+  			cstart=fstart(k);
+  			cend=fstart(k)+fnchan(k)-1;
+  			if(spwsel(0,j)==fspw[k]){
+  				if(cstart < spwsel(1,j)) cstart=spwsel(1,j);
+  				if(cend > spwsel(2,j)) cend= spwsel(2,j);
+  				if(!retval.empty()) retval=retval+(",");
+  				retval=retval+String::toString(fspw[k])+":"+String::toString(cstart)+"~"+String::toString(cend);
+  			}
+  		  }
+  	  }
+
+
+
+  	  return retval;
   }
 
   // Image cube partitioning rules for CUBE imaging
