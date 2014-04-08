@@ -404,6 +404,46 @@ class specfit_test(unittest.TestCase):
             for im in solims:
                 self.checkImage(im, datapath + im)
                 shutil.rmtree(im)
+                
+    def test_4_5(self):
+        """writing solution images for multipixel, two gaussian fit with mask - CAS-6134"""
+        imagename = twogauss
+        outfile = "CAS6134_in.im"
+        myia = iatool()
+        myia.open(imagename)
+        subim = myia.subimage(outfile=outfile)
+        myia.done()
+        cc = subim.getchunk()
+        cc[5,5,:,:] = 1e9
+        subim.putchunk(cc)
+        # so we have a mask in the output
+        subim.calcmask(outfile + "<1e8")
+        subim.done()
+        imagename = outfile
+        box = ""
+        region = ""
+        chans = ""
+        stokes = ""
+        axis = 2
+        mask = ""
+        ngauss = 2
+        poly = -1
+        multifit = True
+        model = ""
+        residual = ""
+        [
+            amp, amperr, center, centererr,
+            fwhm, fwhmerr, integral, integralerr
+        ] = solims
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename, box, region, chans,
+                stokes, axis, mask, ngauss, poly,
+                multifit, model, residual, amp,
+                amperr, center, centererr, fwhm, fwhmerr,
+                integral, integralerr
+            )
+            # running successfully validates that the fix worked
             
     def test_5(self):
         """test results of multi-pixel one gaussian fit with estimates file"""
