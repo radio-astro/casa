@@ -548,7 +548,113 @@ class tsdcal2_tsyscal(tsdcal2_caltest_base,unittest.TestCase):
         tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,outfile=self.outfile)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
-      
+
+
+class tsdcal2_tsyscal_average(tsdcal2_caltest_base,unittest.TestCase):
+    """
+    Test Tsys calibration
+    """
+    # Input and output names
+    rawfile='sdcal2Test.ps.asap.tsysavg'
+    #prefix=tsdcal2_unittest_base.taskname+'Test.ps'
+    prefix='sdcal2Test.ps'
+    outfile=prefix+'.tsys.out'
+    tsystable=prefix+'.tsysavg'
+    calmode='tsys'
+    tsysspw='1'#[1]
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.tsystable)):
+            shutil.copytree(self.datapath+self.tsystable, self.tsystable)
+
+        default(tsdcal2)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _comparecal_average(self, out, ref, col='SPECTRA', channelrange=[]):
+        self._checkfile(out)
+        tout = tbtool()
+        tref = tbtool()
+        try:
+            tout.open(out)
+            tref.open(ref)
+            self.assertEqual(tout.nrows(), tref.nrows(),
+                             msg='number of rows differ.')
+            # check meta data
+            meta = ['SCANNO','IFNO','POLNO','TIME','ELEVATION']
+            for name in meta:
+                vout = tout.getcol(name)
+                vref = tref.getcol(name)
+                diff = numpy.abs(vout - vref) / vref
+                #print 'max difference: ',diff.max()
+                #self.assertTrue(numpy.all(vout==vref),
+                #                msg='column %s differ'%(name))
+                self.assertTrue(numpy.all(diff < 1.0e-15),
+                                          msg='column %s differ'%(name))
+
+            # check calibration data
+            for irow in xrange(tout.nrows()):
+                sp = tout.getcell(col, irow)
+                spref = tref.getcell(col, irow)
+                #print 'sp =', sp
+                #print 'spref =', spref
+                averaged_value = 0.0
+                nchan_averaged = 0
+                if len(channelrange) == 0:
+                    averaged_value = spref.mean()
+                else:
+                    for crange in channelrange:
+                        segment = spref[crange[0]:crange[1]+1]
+                        averaged_value += segment.sum()
+                        nchan_averaged += len(segment)
+                    averaged_value /= nchan_averaged
+                #print 'averaged_value =', averaged_value
+                diff=self._diff(sp,averaged_value)
+                self.assertTrue(numpy.all(diff < 0.01),
+                                msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        except Exception, e:
+            raise e
+        finally:
+            tout.close()
+            tref.close()
+
+    def test_tsyscal04(self):
+        """test_tsyscal04: Averaging Tsys for full range"""
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysavg=True,tsysspw=self.tsysspw,outfile=self.outfile)
+
+        self._comparecal_average(self.outfile, self.tsystable, 'TSYS')
+
+    def test_tsyscal05(self):
+        """test_tsyscal05: Averaging Tsys for specified single range"""
+        self.tsysspw = '1:0~128'
+        channelrange = [[0,128]]
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysavg=True,tsysspw=self.tsysspw,outfile=self.outfile)
+
+        self._comparecal_average(self.outfile, self.tsystable, 'TSYS', channelrange)
+
+    def test_tsyscal06(self):
+        """test_tsyscal06: Averaging Tsys for specified multiple ranges"""
+        self.tsysspw = '1:0~100;300~400'
+        channelrange = [[0,100],[300,400]]
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysavg=True,tsysspw=self.tsysspw,outfile=self.outfile)
+
+        self._comparecal_average(self.outfile, self.tsystable, 'TSYS', channelrange)
+
+    def test_tsyscal07(self):
+        """test_tsyscal07: Averaging Tsys for specified single channel"""
+        self.tsysspw = '1:0'
+        channelrange = [[0,0]]
+        tsdcal2(infile=self.rawfile,calmode=self.calmode,tsysavg=True,tsysspw=self.tsysspw,outfile=self.outfile)
+
+        self._comparecal_average(self.outfile, self.tsystable, 'TSYS', channelrange)
+
+
 
 ###
 # Test apply calibration
@@ -1108,5 +1214,6 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
 def suite():
     return [tsdcal2_exceptions, tsdcal2_skycal_ps,
             tsdcal2_skycal_otf, tsdcal2_skycal_otfraster,
-            tsdcal2_tsyscal, tsdcal2_applycal,
+            tsdcal2_tsyscal, tsdcal2_tsyscal_average,
+            tsdcal2_applycal,
             tsdcal2_test_selection]
