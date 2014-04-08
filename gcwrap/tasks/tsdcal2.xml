@@ -112,7 +112,7 @@ spectrum is
     </param>
     
     <param type="string" name="tsysspw" subparam="true">
-      <description>List of IFNOs for Tsys calibration.</description>
+      <description>list of IF IDs (spectral windows) and their channel ranges of averaging for Tsys calibration.</description>
       <value></value>
     </param>
 
@@ -313,10 +313,16 @@ calmode -- Calibration mode. If you want to generate calibration table
                 default: False
         tsysavg -- Whether Tsys is averaged in spectral axis or not.
                 default: False
-        tsysspw -- List of IFNOs for Tsys calibration. It does 
-                   no effect if you don't want to do Tsys 
-                   calibration.
+                options: (bool) True, False
+        tsysspw -- list of IF IDs (spectral windows) and their channel
+                   ranges of averaging for Tsys calibration.
+                   It does no effect if you don't want to do Tsys 
+                   calibration. the user is able to specify channel
+                   range for averaging (effective if tsysavg is True). 
                 default: '' (auto-detect tsys spws)
+                example: tsysspw='3,5,7' (IF IDs 3,5,7; all channels)
+                         tsysspw='&lt;2' (IF IDs less than 2; all channels)
+                         tsysspw='1:0~100' (IF ID1; between channels 0 and 100)
         applytable -- List of sky/Tsys calibration tables you want to 
                       apply.
                 default: ''
@@ -464,6 +470,30 @@ Allowed calibration modes in this task is as follows:
 
 There are several control parameters for sky/Tsys calibration and 
 application of caltables. See the above parameter description.
+
+For Tsys calibration, the user is able to choose whether Tsys is
+averaged in spectral axis or not. If tsysavg is False (default),
+resulting Tsys is spectral value. On the other hand, when tsysavg
+is True, Tsys is averaged in spectral axis before output. The channel
+range for averaging is whole channels by default. If channel range is
+specified by tsysspw string, it is used for averaging. The user can
+specify channel range with ms selection syntax. For example,
+
+    tsysspw = '1:0~100'
+
+specifies spw 1 for Tsys calibration and channel range between channel
+0 and 100 for averaging. You can specify more than one ranges per spw.
+
+    tsysspw = '1:0~100;200~400'
+
+In this case, selected ranges are between 0 and 100 plus 200 and 400.
+Note that even if multiple ranges are selected, the task average whole
+ranges together and output single averaged value. You can specify multiple
+spws by separating comma.
+
+    tsysspw = '1:0~100,3:400~500'
+
+Note that specified channel range is ignored if tsysavg is False.
   </example>
 
 </task>
