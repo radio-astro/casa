@@ -90,6 +90,7 @@ casa_add_library( tools
  mstransformer/mstransformer_cmpt.cc
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
+ singledish/sakura_cmpt.cc
  scimath/fitter_cmpt.cc
  scimath/functional_cmpt.cc
  StdCasa/conversions_python.cc
@@ -155,6 +156,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  mstransformer/mstransformer.xml
  nrao/vlafillertask.xml
  plotms/plotms.xml
+ singledish/sakura.xml
  scimath/fitter.xml
  scimath/functional.xml
  spectralline/spectralline.xml
