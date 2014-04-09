@@ -172,6 +172,9 @@ template <class T> String ImageTask<T>::_summaryHeader() const {
 }
 
 template <class T> void ImageTask<T>::setLogfile(const String& lf) {
+	if (lf.empty()) {
+		return;
+	}
 	ThrowIf(
 		! _logfileSupport,
 		"Logic Error: This task does not support writing of a log file"

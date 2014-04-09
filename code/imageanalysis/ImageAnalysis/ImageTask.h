@@ -54,6 +54,7 @@ public:
 
     inline void setStretch(const Bool stretch) { _stretch = stretch;}
 
+    // tacitly does nothing if <src>lf</src> is the empty string.
     void setLogfile(const String& lf);
 
     void setLogfileAppend(const Bool a);
