@@ -118,7 +118,7 @@ class tsdgrid_failure_case(tsdgrid_unittest_base,unittest.TestCase):
                             msg='The task must throw exception')
         except Exception, e:
             #pos=str(e).find('No corresponding rows for given selection: SPW %s'%(self.badid))
-            pos=str(e).find('No valid spw.')
+            pos=str(e).find('Invalid IF')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
