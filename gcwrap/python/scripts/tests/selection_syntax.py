@@ -549,8 +549,6 @@ class SelectionSyntaxTest(unittest.TestCase):
         
         # execute task here
         d = kwargs.copy()
-        if not d.has_key('infile'):
-            d['infile'] = self.infile
         #task_string = '%s(%s)'%(self.task.__name__, ','.join(['%s=\'%s\''%(k,v) for (k,v) in d.items()]))
         #print 'executing %s'%(task_string)
         result = self.task(**d)
