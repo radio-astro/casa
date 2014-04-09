@@ -148,6 +148,7 @@ def _record_constructor_args(func, *args, **kwargs):
               if frame_obj.f_code.co_name == 'finalise_pipeline_result'
               and frame_obj.f_code.co_filename.endswith('pipeline/infrastructure/basetask.py')]
     frame_count = len(frames)
+    LOG.trace('Stack depth: %s', frame_count)
 
     # task depth of 0 means we've not yet entered task.execute()
     if frame_count is not 0:
@@ -164,6 +165,9 @@ def _record_constructor_args(func, *args, **kwargs):
     self = call_args['self']
     casa_tasks = [casa_cls for task_cls, casa_cls in ctd.classToCASATask.items()
                   if task_cls.Inputs is self.__class__]
+    LOG.trace('Equivalent CASA tasks for %s: %s', func.im_class.__name__, casa_tasks)
+    LOG.trace('Constructor arguments: %s', call_args)
+    
     if len(casa_tasks) is not 1:
         return
 
@@ -184,9 +188,14 @@ def _record_constructor_args(func, *args, **kwargs):
     task_args = ['%s=%r' % (k,v) for k,v in remapped.items()
                  if k not in ['self', 'context']
                  and v is not None]
+    
+    # work around CASA problem with globals when no arguments are specified
+    if not task_args:
+        task_args = ['pipelinemode="automatic"']
+        
     casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
     LOG.info('Equivalent CASA call: %s', casa_call)
-
+    
     # attach the casa task to the inputs
     self._pipeline_casa_task = casa_call
 
@@ -1255,17 +1264,22 @@ def write_pipeline_casa_tasks(context):
     Write the equivalent pipeline CASA tasks for results in the context to a
     file
     """
-    try:
-        pipeline_tasks = [proxy.read().pipeline_casa_task for proxy in context.results]
-    except AttributeError:
-        LOG.warning('Could not find equivalent CASA tasks for all results')
-        return
+    pipeline_tasks = []
+    for proxy in context.results:
+        result = proxy.read()
+        try:
+            pipeline_tasks.append(result.pipeline_casa_task)
+        except AttributeError:
+            pipeline_tasks.append('# stage %s: unknown task generated %s '
+                                  'result' % (result.stage_number,
+                                              result.__class__.__name__))
     
     task_string = '\n'.join(['    %s' % t for t in pipeline_tasks])
     # replace the working directory with ''
     task_string = re.sub('%s/' % context.output_dir, '', task_string)
 
-    template = '''h_init()
+    template = '''__rethrow_casa_exceptions = True
+h_init()
 try:
 %s
 finally:
