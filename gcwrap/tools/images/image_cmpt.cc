@@ -4007,7 +4007,9 @@ record* image::statistics(
 		_stats->setRobust(robust);
 		_stats->setVerbose(verbose);
 		_stats->setStretch(stretch);
-		_stats->setLogfile(logfile);
+		if (! logfile.empty()) {
+			_stats->setLogfile(logfile);
+		}
 		_stats->setLogfileAppend(append);
 		return fromRecord(_stats->calculate());
 	}
