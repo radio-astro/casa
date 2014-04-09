@@ -78,7 +78,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         target_sources = [v for v in reference_data.source.values() 
                           if 'TARGET' in v.intents]
         source_name = target_sources[0].name
-        field = '%s*' % (source_name)
+        field = '"%s*"' % (source_name)
     
         # baseline
         #baseline = '0&&&'
