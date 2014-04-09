@@ -129,8 +129,11 @@ template<class T> void ImageInputProcessor::_process(
 		stokesControl, box, image->shape(), image->name(),
 		verbose
 	);
+	// FIXME an exception can be incorrectly thrown for a union of two regions
+	// in which one defines a single region in direction space and the
+	// defines spectral extent
     ThrowIf(
-    	!allowMultipleBoxes && regionRecord.isDefined("regions"),
+    	! allowMultipleBoxes && regionRecord.isDefined("regions"),
     	"Only a single n-dimensional rectangular region is supported"
     );
     _processHasRun = True;
