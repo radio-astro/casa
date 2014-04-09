@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+//#include <libsakura/sakura.h>
+
 #include <casa/aipstype.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -14,21 +16,6 @@ public:
   static Bool IsSakuraInitialized();
 };
 
-
-inline Bool SakuraUtils::InitializeSakura() {
-  std::cout << "Initializing Sakura..." << std::endl;
-  return True;
-}
-
-inline void SakuraUtils::CleanUpSakura() {
-  std::cout << "Cleaning up Sakura..." << std::endl;
-}
-
-inline Bool SakuraUtils::IsSakuraInitialized() {
-  std::cout << "Sakura is initialized" << std::endl;
-  return True;
-}
-  
 } //# NAMESPACE CASA - END
   
 #endif /* _CASA_SAKURA_UTILS_H_ */
