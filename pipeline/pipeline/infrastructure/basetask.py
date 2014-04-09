@@ -165,8 +165,8 @@ def _record_constructor_args(func, *args, **kwargs):
     self = call_args['self']
     casa_tasks = [casa_cls for task_cls, casa_cls in ctd.classToCASATask.items()
                   if task_cls.Inputs is self.__class__]
-    LOG.trace('Equivalent CASA tasks for %s: %s', func.im_class.__name__, casa_tasks)
-    LOG.trace('Constructor arguments: %s', call_args)
+#     LOG.trace('Equivalent CASA tasks for %s: %s', func.im_class.__name__, casa_tasks)
+#     LOG.trace('Constructor arguments: %s', call_args)
     
     if len(casa_tasks) is not 1:
         return
