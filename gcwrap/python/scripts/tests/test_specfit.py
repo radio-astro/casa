@@ -882,7 +882,23 @@ class specfit_test(unittest.TestCase):
                                 self.assertTrue(((mymax*myia.getchunk() - fullsigma)/fullsigma < 1e-7).all())
                             myia.remove()
                 
-        
+    def test_multiregion(self):
+        """Test that multiple regions are supported - CAS-6115"""
+        imagename = datapath + "simple.im"
+        resid = "myres.im"
+        res = specfit(
+            imagename=datapath + 'simple.im',
+            region='circle [[5pix, 5pix], 3pix], range=[1chan,14chan]',
+            multifit=T,residual=resid
+        )
+        myia = iatool()
+        myia.open(datapath + resid)
+        expec = myia.getchunk(getmask=True)
+        myia.done()
+        myia.open(resid)
+        got = myia.getchunk(getmask=True)
+        myia.done()
+        self.assertTrue((got == expec).all())
 
 
 def suite():
