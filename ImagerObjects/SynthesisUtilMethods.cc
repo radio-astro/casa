@@ -289,13 +289,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   	  for(Int k=0; k < fspw.shape()(0); ++k){
   		  cstart=fstart(k);
   		  cend=fstart(k)+fnchan(k)-1;
-  		  for (Int j=0; j < spwsel.shape()(1); ++j){
+  		  for (Int j=0; j < spwsel.shape()(0); ++j){
   			//need to put this here as multiple rows can have the same spw
   			cstart=fstart(k);
   			cend=fstart(k)+fnchan(k)-1;
-  			if(spwsel(0,j)==fspw[k]){
-  				if(cstart < spwsel(1,j)) cstart=spwsel(1,j);
-  				if(cend > spwsel(2,j)) cend= spwsel(2,j);
+  			if(spwsel(j,0)==fspw[k]){
+			  if(cstart < spwsel(j,1)) cstart=spwsel(j,1);
+			  if(cend > spwsel(j,2)) cend= spwsel(j,2);
   				if(!retval.empty()) retval=retval+(",");
   				retval=retval+String::toString(fspw[k])+":"+String::toString(cstart)+"~"+String::toString(cend);
   			}
