@@ -95,6 +95,9 @@ public:
     //Clear the title and axes from all this plots canvases.
     virtual void clearCanvases();
 
+    //The cache load did not succeed so clear the plot and the cache.
+    virtual void dataMissing();
+
 protected:
 
     bool initializePlot();
@@ -136,8 +139,6 @@ private:
 
     //Return the dimensions of the plot data that this plot should hold.
     void getPlotSize( Int& rows, Int& cols );
-
-
 
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.

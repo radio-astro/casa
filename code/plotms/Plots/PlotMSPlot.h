@@ -92,7 +92,8 @@ public:
     virtual void detachFromCanvases() = 0;
     // </group>
     
-    
+    //The cache load did not succeed so clear the plot and the cache.
+    virtual void dataMissing() = 0;
     
 
     // IMPLEMENTED METHODS //

@@ -473,7 +473,6 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	}
 
 	bool dataSet = data->isSet();
-
 	bool updateData = (updateFlag & PMS_PP::UPDATE_MSDATA) || (updateFlag & PMS_PP::UPDATE_CACHE);
 
 	//If the iteration count has changed, ie from an iteration to a
@@ -1128,18 +1127,21 @@ void PlotMSOverPlot::logIter(Int iter, Int nIter) {
 	}
 }
 
+void PlotMSOverPlot::dataMissing(){
+	detachFromCanvases();
+	initializePlot();
+	releaseDrawing();
+	itsCache_->clear();
+}
+
 void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	// Ensure we fail gracefully if cache loading yielded nothing
 	// or was cancelled
 	if ( itsCache_ == NULL ){
 		return;
 	}
-
 	if (!itsCache_->cacheReady() || wasCanceled) {
-		detachFromCanvases();
-		initializePlot();
-		releaseDrawing();
-		itsCache_->clear();
+		dataMissing();
 		return;
 	}
 

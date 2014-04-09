@@ -35,10 +35,16 @@ PlotMSDataSymbolWidget::PlotMSDataSymbolWidget(PlotMSPlotter *parent)
     : QWidget(parent){
 	ui.setupUi(this);
 	PlotFactoryPtr factory = parent->getPlotFactory();
-	itsSymbolWidget_ = new PlotSymbolWidget(factory,
-	            PMS::DEFAULT_UNFLAGGED_SYMBOL(factory), false, false, false,false);
-	itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory,
-	            PMS::DEFAULT_FLAGGED_SYMBOL(factory), false, false, false, false);
+	PlotSymbolPtr unflaggedSymbol = PMS::DEFAULT_UNFLAGGED_SYMBOL(factory );
+	String defaultUnflaggedColor = unflaggedSymbol->getColor();
+	unflaggedSymbol->setColor( "#0000FF" );
+	itsSymbolWidget_ = new PlotSymbolWidget(factory, unflaggedSymbol, false, false, false,false);
+
+	PlotSymbolPtr flaggedSymbol = PMS::DEFAULT_FLAGGED_SYMBOL( factory );
+	String defaultFlaggedColor = flaggedSymbol->getColor();
+	flaggedSymbol->setColor( "#FF0000");
+	itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory, flaggedSymbol, false, false, false, false);
+
 	QtUtilities::putInFrame(ui.unflaggedFrame, itsSymbolWidget_);
 	QtUtilities::putInFrame(ui.flaggedFrame, itsMaskedSymbolWidget_);
 

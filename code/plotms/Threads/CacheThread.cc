@@ -26,13 +26,14 @@
 #include "CacheThread.h"
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Threads/ThreadCommunication.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
 
 namespace casa {
 
 CacheThread::CacheThread() {
-	// TODO Auto-generated constructor stub
+	itsPlot = NULL;
 
 }
 
@@ -75,6 +76,10 @@ void CacheThread::setAveraging( PlotMSAveraging averaging ){
 
 void CacheThread::setTransformations( PlotMSTransformations transforms ){
 	itsTransformations = transforms;
+}
+
+void CacheThread::setPlot( PlotMSPlot* plot ){
+	itsPlot = plot;
 }
 
 bool CacheThread::doWork(){
@@ -124,27 +129,33 @@ bool CacheThread::doWork(){
 			}
 		}
 
-	} catch(AipsError& err) {
-		String error = "Error during cache ";
-		error += itsLoad ? "loading": "releasing";
-		error += ": " + err.getMesg();
-		qDebug() << error.c_str();
-		if ( threadController != NULL ){
-			threadController->setError( error );
-		}
+	}
+	catch(AipsError& err) {
+		handleError(err.getMesg());
 		success = false;
 
 	} catch(...) {
-		String error  = "Unknown error during cache ";
-		error += itsLoad ? "loading": "releasing";
-		error +="!";
-		qDebug() << error.c_str();
-		if ( threadController != NULL ){
-			threadController->setError( error );
-		}
+		handleError( "");
 		success = false;
 	}
 	return success;
+}
+
+void CacheThread::handleError(String message ){
+	String error = "Error during cache ";
+	error += itsLoad ? "loading": "releasing";
+	if ( message.length() > 0 ){
+		error += ": " + message;
+	}
+	//Cleanup the plot so the data is not left in an
+	//inconsistent state.
+	if ( itsPlot != NULL ){
+		itsPlot->dataMissing();
+	}
+	//Notify that an error has ocurred.
+	if ( threadController != NULL ){
+		threadController->setError( error );
+	}
 }
 
 CacheThread::~CacheThread() {

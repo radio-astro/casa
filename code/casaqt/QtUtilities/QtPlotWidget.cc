@@ -114,12 +114,13 @@ void PlotColorWidget::colorChanged() {
 ////////////////////////////////
 
 PlotFillWidget::PlotFillWidget(PlotFactoryPtr factory, bool showAlpha,
-        QWidget* parent) : QtPlotWidget(factory, parent) {
+		String fillColor, QWidget* parent) :
+		QtPlotWidget(factory, parent) {
     setupUi(this);
     itsColorWidget_ = new PlotColorWidget(factory, showAlpha);
     QtUtilities::putInFrame(colorFrame, itsColorWidget_);
     
-    setFill(factory->areaFill("black"));
+    setFill(factory->areaFill(fillColor));
     
     connect(itsColorWidget_, SIGNAL(changed()), SLOT(fillChanged()));
     connect(fillChooser, SIGNAL(currentIndexChanged(int)), SLOT(fillChanged()));
@@ -263,21 +264,28 @@ PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
         bool showAlphaLine, bool showCharacter, QWidget* parent) :
         QtPlotWidget(factory, parent) {
     setupUi(this);
-    itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill);
+
+    //Line
     itsLineWidget_ = new PlotLineWidget(factory, false, showAlphaLine);
-    QtUtilities::putInFrame(fillFrame, itsFillWidget_);
     QtUtilities::putInFrame(outlineFrame, itsLineWidget_);
     outlineFrame->setEnabled(false);
     
     if(!showCustom) outlineCustomFrame->setVisible(false);
     
-    if(defaultSymbol.null())
+    //Symbol
+    if(defaultSymbol.null()){
         itsDefault_ = itsFactory_->symbol(PlotSymbol::AUTOSCALING);
-    else
+    }
+    else {
         itsDefault_ = itsFactory_->symbol(*defaultSymbol);
-    
+    }
     setSymbol(itsDefault_);
     
+    //Fill
+    String symbolColor = itsDefault_->getColor();
+    itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill, symbolColor );
+    QtUtilities::putInFrame(fillFrame, itsFillWidget_);
+
     if(!showCharacter && itsDefault_->symbol() != PlotSymbol::CHARACTER) {
         SymbolWidget::style->removeItem(4);
         charEdit->hide();

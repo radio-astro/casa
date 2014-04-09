@@ -127,6 +127,7 @@ void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, int plotInde
 			cacheThread->setAxesData( cachedData[plotIndex] );
 		}
 
+		cacheThread->setPlot(plots[plotIndex]);
 		cacheThread->setName( paramsData->filename() );
 		cacheThread->setSelection(  paramsData->selection() );
 		cacheThread->setAveraging( paramsData->averaging() );
