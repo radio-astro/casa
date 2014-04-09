@@ -49,6 +49,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MRadialVelocity.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
@@ -374,7 +375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else { return String(""); }
   }
-  
+
   // Read Float from Record
   String SynthesisParams::readVal(Record &rec, String id, Float& val)
   {
@@ -454,7 +455,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Convert String to Quantity
-  String SynthesisParams::stringToQuantity(String instr, Quantity& qa)
+  String SynthesisParams::stringToQuantity(String instr, Quantity& qa) const
   {
     //QuantumHolder qh;
     //String error;
@@ -533,7 +534,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
   }
-
+  
+  // Convert Record contains Quantity or Measure quantities to String
+  String SynthesisParams::recordQMToString(Record &rec)
+  { 
+     Double val;
+     String unit;
+     if ( rec.isDefined("m0") ) 
+       {
+         Record subrec = rec.subRecord("m0");
+         subrec.get("value",val); 
+         subrec.get("unit",unit);
+       }
+     else if (rec.isDefined("value") )
+       {
+         rec.get("value",val);
+         rec.get("unit",unit);
+       }
+     return String::toString(val) + unit;
+  } 
 
   /////////////////////// Selection Parameters
 
@@ -569,7 +588,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("freqend"), freqend);
 
 	String freqframestr( MFrequency::showType(freqframe) );
-	err += readVal( inrec, String("freqframe"), freqframestr);
+	err += readVal( inrec, String("frame"), freqframestr);
 	if( ! MFrequency::getType(freqframe, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
 	/// -------------------------------------------------------------------------------------
@@ -674,7 +693,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisParamsImage::fromRecord(Record &inrec)
   {
     setDefaults();
-
     String err("");
 
     try
@@ -832,30 +850,244 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// Frequency frame stuff. 
 	err += readVal( inrec, String("mode"), mode);
-	err += readVal( inrec, String("chanstart"), chanStart);
-	err += readVal( inrec, String("chanstep"), chanStep);
-	err += readVal( inrec, String("freqstart"), freqStart);
-	err += readVal( inrec, String("freqstep"), freqStep);
-	err += readVal( inrec, String("reffreq"), refFreq); 
-	err += readVal( inrec, String("velstart"), velStart); 
-	err += readVal( inrec, String("velstep"), velStep); 
+        err += readVal( inrec, String("frame"), frame);
+        qmframe="";
+        //start 
+        if( inrec.isDefined("start") ) 
+          {
+            if( inrec.dataType("start") == TpInt ) 
+              {
+	        err += readVal( inrec, String("start"), chanStart);
+	        start = String::toString(chanStart);
+              }
+            else if( inrec.dataType("start") == TpString ) 
+              {
+	        err += readVal( inrec, String("start"), start);
+                if( start.contains("Hz") ) 
+                  {
+                    stringToQuantity(start,freqStart);
+                  }
+                else if( start.contains("m/s") )
+                  {
+                    stringToQuantity(start,velStart); 
+                  } 
+              }
+            else if ( inrec.dataType("start") == TpRecord ) 
+              {
+                //record can be freq in Quantity or MFreaquency or vel in Quantity or
+                //MRadialVelocity or Doppler (by me.todoppler())
+                // ** doppler => converted to radialvel with frame 
+                startRecord = inrec.subRecord("start");
+                if(startRecord.isDefined("m0") )
+                  { 
+                    //must be a measure
+                    String mtype;
+                    startRecord.get("type", mtype);
+                    if( mtype=="frequency")
+                      { 
+                        //mfrequency
+                        startRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in start:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        start = recordQMToString(startRecord);
+                        stringToQuantity(start,freqStart);
+                      }
+                    else if( mtype=="radialvelocity")
+                      {
+                        //mradialvelocity
+                        startRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in start:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        start = recordQMToString(startRecord);
+                        stringToQuantity(start,velStart);
+                      }
+                    else if( mtype=="doppler") 
+                      {
+                        start = MDopToVelString(startRecord);
+                        stringToQuantity(start,velStart);
+                      }
+                  }
+                else 
+                  {
+                    start = recordQMToString(startRecord);
+                    if( start.contains("Hz") ) { stringToQuantity(start,freqStart);}
+                    else if ( start.contains("m/s") ) { stringToQuantity(start,velStart);}
+                    else { err+= String("Unrecognized Quantity unit for start, must contain m/s or Hz\n"); }
+                  }
+              }
+            else { err += String("start must be an integer, a string, or frequency/velocity in Quantity/Measure\n");}
+           }
+
+        //step
+        if( inrec.isDefined("step") ) 
+          {
+            if( inrec.dataType("step") == TpInt )
+              {           
+	        err += readVal( inrec, String("step"), chanStep);
+                step = String::toString(chanStep);
+              }
+            else if( inrec.dataType("step") == TpString ) 
+              {
+	        err += readVal( inrec, String("step"), step);
+                if( step.contains("Hz") ) 
+                  {
+                    stringToQuantity(step,freqStep);
+                  }
+                else if( step.contains("m/s") )
+                  {
+                    stringToQuantity(step,velStep); 
+                  } 
+              }
+            else if ( inrec.dataType("step") == TpRecord ) 
+              {
+                //record can be freq in Quantity or MFreaquency or vel in Quantity or
+                //MRadialVelocity or Doppler (by me.todoppler())
+                // ** doppler => converted to radialvel with frame 
+                stepRecord = inrec.subRecord("step");
+                if(stepRecord.isDefined("m0") )
+                  { 
+                    //must be a measure
+                    String mtype;
+                    stepRecord.get("type", mtype);
+                    if( mtype=="frequency")
+                      { 
+                        //mfrequency
+                        stepRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in step:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        step = recordQMToString(stepRecord);
+                        stringToQuantity(step, freqStep);
+                      }
+                    else if( mtype=="radialvelocity")
+                      {
+                        //mradialvelocity
+                        stepRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in step:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        step = recordQMToString(stepRecord);
+                        stringToQuantity(step,velStep);
+                      }
+                    else if( mtype=="doppler") 
+                      {
+                        step = MDopToVelString(stepRecord);
+                        stringToQuantity(step,velStep);
+                      }
+                  }
+                else 
+                  {
+                    step = recordQMToString(stepRecord);
+                    if( step.contains("Hz") ) { stringToQuantity(step,freqStep);}
+                    else if ( step.contains("m/s") ) { stringToQuantity(step,velStep);}
+                    else { err+= String("Unrecognized Quantity unit for step, must contain m/s or Hz\n"); }
+                  }
+              }
+            else { err += String("step must be an integer, a string, or frequency/velocity in Quantity/Measure\n");}
+            }
+
+        //reffreq (String, Quantity, or Measure)
+	if( inrec.isDefined("reffreq") )
+          {
+            if( inrec.dataType("reffreq")==TpString ) 
+              {
+	        err += readVal( inrec, String("reffreq"), refFreq); 
+              }
+            else if( inrec.dataType("reffreq")==TpRecord) 
+              {
+                String reffreqstr;
+                reffreqRecord = inrec.subRecord("reffreq"); 
+                if(reffreqRecord.isDefined("m0") )
+                  { 
+                    String mtype;
+                    reffreqRecord.get("type", mtype);
+                    if( mtype=="frequency")
+                      {
+                        reffreqstr = recordQMToString(reffreqRecord);
+                        stringToQuantity(reffreqstr,refFreq);
+                      }
+                    else{ err+= String("Unrecognized Measure for reffreq, must be a frequency measure\n");}
+                  }
+                else  
+                  {
+                    reffreqstr = recordQMToString(reffreqRecord);
+                    if( reffreqstr.contains("Hz") ) { stringToQuantity(reffreqstr,refFreq);}
+                    else { err+= String("Unrecognized Quantity unit for reffreq, must contain Hz\n");}
+                  }
+              }
+            else { err += String("reffreq must be a string, or frequency in Quantity/Measure\n");}
+          }
+   
 	err += readVal( inrec, String("veltype"), veltype); 
+        // sysvel (String, Quantity)
+        if( inrec.isDefined("sysvel") )
+          {
+            if( inrec.dataType("sysvel")==TpString )
+              {
+	        err += readVal( inrec, String("sysvel"), sysvel); 
+              }
+            else if( inrec.dataType("sysvel")==TpRecord )
+              {
+                sysvelRecord = inrec.subRecord("sysvel"); 
+                sysvel = recordQMToString(sysvelRecord);
+                if( sysvel=="" || !sysvel.contains("m/s") )
+                  { err+= String("Unrecognized Quantity unit for sysvel, must contain m/s\n");}
+              }
+            else
+              { err += String("sysvel must be a string, or velocity in Quantity\n");}
+          }
+	err += readVal( inrec, String("sysvelframe"), sysvelframe); 
 
-	Vector<String> rfreqs(0);
-	err += readVal( inrec, String("restfreq"), rfreqs );
-        // case no restfreq is given: set to  
+        // rest frequencies (record or vector of Strings)
+        if( inrec.isDefined("restfreq") )
+          {
+	    Vector<String> rfreqs(0);
+            Record restfreqSubRecord;
+            if( inrec.dataType("restfreq")==TpRecord )
+              {
+                restfreqRecord = inrec.subRecord("restfreq");
+                // assume multiple restfreqs are index as '0','1'..
+                if( restfreqRecord.isDefined("0") )
+                  {
+                    rfreqs.resize( restfreqRecord.nfields() );
+                    for( uInt fr=0; fr<restfreqRecord.nfields(); fr++)
+                      {
+                        restfreqSubRecord = restfreqRecord.subRecord(String::toString(fr));
+                        rfreqs[fr] = recordQMToString(restfreqSubRecord);
+                      }
+                  }
+              }
+            else if( inrec.dataType("restfreq")==TpArrayString ) 
+              {
+	        //Vector<String> rfreqs(0);
+	        err += readVal( inrec, String("restfreq"), rfreqs );
+                // case no restfreq is given: set to
+              }
+       	    restFreq.resize( rfreqs.nelements() );
+	    for( uInt fr=0; fr<rfreqs.nelements(); fr++)
+	      {
+	        err += stringToQuantity( rfreqs[fr], restFreq[fr] );
+	      }
+            } 
+       
+	//String freqframestr( MFrequency::showType(freqFrame) );
+	//err += readVal( inrec, String("frame"), freqframestr);
+	//if( ! MFrequency::getType(freqFrame, freqframestr) )
+	//  { err += "Invalid Frequency Frame " + freqframestr ; }
 
-	restFreq.resize( rfreqs.nelements() );
-	for( uInt fr=0; fr<rfreqs.nelements(); fr++)
-	  {
-	    err += stringToQuantity( rfreqs[fr], restFreq[fr] );
-	  }
-
-	String freqframestr( MFrequency::showType(freqFrame) );
-	err += readVal( inrec, String("freqframe"), freqframestr);
-	if( ! MFrequency::getType(freqFrame, freqframestr) )
+        String freqframestr = (frame!="" && qmframe!="")? qmframe:frame;
+	if( frame!="" && ! MFrequency::getType(freqFrame, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
-	
 	err += readVal( inrec, String("overwrite"), overwrite );
 
 	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
@@ -870,6 +1102,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       if( err.length()>0 ) throw(AipsError("Invalid Image Parameter set : " + err));
       
+  }
+
+  String SynthesisParamsImage::MDopToVelString(Record &rec)
+  {
+    if( rec.isDefined("type") ) 
+      {
+        String measType;
+        String unit;
+        Double val;
+        rec.get("type", measType);
+        if(measType=="doppler")
+          {
+            rec.get(String("refer"), mveltype);
+            Record dopRecord = rec.subRecord("m0");
+            String dopstr = recordQMToString(dopRecord);
+            MRadialVelocity::Types mvType;
+            //use input frame
+            qmframe = frame!=""? frame: "LSRK";
+            MRadialVelocity::getType(mvType, qmframe);
+            MDoppler::Types mdType;
+            MDoppler::getType(mdType, mveltype);
+            MDoppler dop(Quantity(val,unit), mdType);
+            MRadialVelocity mRadVel(MRadialVelocity::fromDoppler(dop, mvType));
+            Double velval = mRadVel.get("m/s").getValue();
+            return start = String::toString(velval) + String("m/s");
+          }
+        else
+          { return String("");}
+      }
+      else { return String("");}
   }
 
   String SynthesisParamsImage::verify()
@@ -925,16 +1187,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Spectral coordinates
     nchan=1;
     mode="mfs";
+    start="";
+    step="";
     chanStart=0;
     chanStep=1;
-    freqStart=Quantity(0,"Hz");
-    freqStep=Quantity(0,"Hz");
-    velStart=Quantity(0,"m/s");
-    velStep=Quantity(0,"m/s");
+    //freqStart=Quantity(0,"Hz");
+    //freqStep=Quantity(0,"Hz");
+    //velStart=Quantity(0,"m/s");
+    //velStep=Quantity(0,"m/s");
+    freqStart=Quantity(0,"");
+    freqStep=Quantity(0,"");
+    velStart=Quantity(0,"");
+    velStep=Quantity(0,"");
     veltype=String("radio");
     restFreq.resize(0);
     refFreq = Quantity(0,"Hz");
+    frame = "";
     freqFrame=MFrequency::LSRK;
+    sysvel="";
+    sysvelframe="";
     nTaylorTerms=1;
 
     
@@ -957,21 +1228,79 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("projection", projection.name() );
 
     impar.define("mode", mode );
-    impar.define("chanstart", chanStart );
-    impar.define("chanstep", chanStep );
-    impar.define("freqstart", QuantityToString( freqStart ));
-    impar.define("freqstep", QuantityToString( freqStep ) );
-    impar.define("velstart", QuantityToString( velStart ));
-    impar.define("velstep", QuantityToString( velStep ) );
+    // start and step can be one of these types
+    if( start!="" )
+      { 
+        if(String::toInt(start) == chanStart )
+          {
+            impar.define("start",chanStart); 
+          }
+        else if( startRecord.nfields() > 0 )
+          {
+            impar.defineRecord("start", startRecord ); 
+          }
+        else 
+          {
+            impar.define("start",start);
+        }
+      }
+    else { 
+        impar.define("start", start ); 
+      }
+    if( step!="" )
+      {
+        if( String::toInt(step) == chanStep )
+          {
+            impar.define("step", chanStep);
+          }
+        else if( stepRecord.nfields() > 0 )
+          { 
+            impar.defineRecord("step",stepRecord);
+          }
+        else
+          {
+            impar.define("step",step);
+          }
+      }
+    else 
+      { 
+        impar.define("step", step);
+      }
+    //impar.define("chanstart", chanStart );
+    //impar.define("chanstep", chanStep );
+    //impar.define("freqstart", QuantityToString( freqStart ));
+    //impar.define("freqstep", QuantityToString( freqStep ) );
+    //impar.define("velstart", QuantityToString( velStart ));
+    //impar.define("velstep", QuantityToString( velStep ) );
     impar.define("veltype", veltype);
-    Vector<String> rfs( restFreq.nelements() );
-    for(uInt rf=0; rf<restFreq.nelements(); rf++){rfs[rf] = QuantityToString(restFreq[rf]);}
-    impar.define("restfreq", rfs);
-    impar.define("reffreq", QuantityToString(refFreq));
-    impar.define("freqframe", MFrequency::showType(freqFrame));
+    if (restfreqRecord.nfields() != 0 ) 
+      {
+        impar.defineRecord("restfreq", restfreqRecord);
+      }
+    else
+      {
+        Vector<String> rfs( restFreq.nelements() );
+        for(uInt rf=0; rf<restFreq.nelements(); rf++){rfs[rf] = QuantityToString(restFreq[rf]);}
+        impar.define("restfreq", rfs);
+      }
+    //impar.define("reffreq", QuantityToString(refFreq));
+    //reffreq
+    if( reffreqRecord.nfields() != 0 )  
+      { impar.defineRecord("reffreq",reffreqRecord); }
+    else
+      { impar.define("reffreq",reffreq); }
+    //impar.define("reffreq", reffreq );
+    //impar.define("frame", MFrequency::showType(freqFrame) );
+    impar.define("frame", frame );
+    //sysvel
+    if( sysvelRecord.nfields() != 0 )
+      { impar.defineRecord("sysvel",sysvelRecord); } 
+    else
+      { impar.define("sysvel", sysvel );}
+    impar.define("sysvelframe", sysvelframe );
 
     impar.define("overwrite",overwrite );
-    impar.define("startmodel", startModel);
+    impar.define("startmodel", startModel );
 
     return impar;
   }
@@ -986,6 +1315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi) const
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
+  
 
     // get the first ms for multiple MSes
     MeasurementSet msobj=rvi->getMeasurementSet();
@@ -1063,33 +1393,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> spwids;
     Vector<Int> nvischan;
     rvi->allSelectedSpectralWindows(spwids,nvischan);
-    if (spwids.nelements()==0) {
-      Int nspw=msc.spectralWindow().nrow();
-      spwids.resize(nspw);
-      indgen(spwids); 
-    }
-    MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
-
-    Vector<Double> dataChanFreq, dataChanWidth;
-    if (spwids.nelements()==1) {
-      dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
-      dataChanWidth=msc.spectralWindow().chanWidth()(spwids[0]);
-    }
-    else {
-      SubMS thems(msobj);
-      if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth)){
-        os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
+    if(spwids.nelements()==0)
+      {
+        Int nspw=msc.spectralWindow().nrow();
+        spwids.resize(nspw);
+        indgen(spwids); 
       }
-    }
+    MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
+    Vector<Double> dataChanFreq, dataChanWidth;
+    if(spwids.nelements()==1)
+      {
+        dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
+        dataChanWidth=msc.spectralWindow().chanWidth()(spwids[0]);
+      }
+    else 
+      {
+        SubMS thems(msobj);
+        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+          {
+            os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
+          }
+      }
     
     Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
-    if ( qrestfreq.getValue("Hz")==0 ) {
-      Int fld = rvi->fieldId();
-      MSDopplerUtil msdoppler(msobj);
-      Vector<Double> restfreqvec;
-      msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
-      qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
-    }
+    if( qrestfreq.getValue("Hz")==0 ) 
+      {
+        Int fld = rvi->fieldId();
+        MSDopplerUtil msdoppler(msobj);
+        Vector<Double> restfreqvec;
+        msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
+        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
+      }
     Double refPix;
     Vector<Double> chanFreq;
     Vector<Double> chanFreqStep;
@@ -1106,48 +1440,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool nonLinearFreq(false);
     String veltype_p=veltype;
     veltype_p.upcase(); 
-    if (veltype_p.contains("OPTICAL") || veltype_p.matches("Z") || veltype_p.contains("BETA") ||
-        veltype_p.contains("RELATI") || veltype_p.contains("GAMMA")) {
-       nonLinearFreq= true;
-    }
+    if(veltype_p.contains("OPTICAL") || veltype_p.matches("Z") || veltype_p.contains("BETA") ||
+         veltype_p.contains("RELATI") || veltype_p.contains("GAMMA")) 
+      {
+        nonLinearFreq= true;
+      }
 
     SpectralCoordinate mySpectral;
     Double stepf;
-    if (!nonLinearFreq) {
-      Double startf=chanFreq[0];
-      //Double stepf=chanFreqStep[0];
-      if (chanFreq.nelements()==1) {
-        stepf=chanFreqStep[0];
-      }
-      else { 
-        stepf=chanFreq[1]-chanFreq[0];
-      }
-      Double restf=qrestfreq.getValue("Hz");
-      //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
-      // once NOFRAME is implemented do this 
-      //if (mode=="cubedata") {
-      //  mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::NOFRAME : MFrequency::REST, 
-      //	startf, stepf, refPix, restf);
-      //}
-      //else {
+    if(!nonLinearFreq) 
+    //TODO: velocity mode default start case (use last channels?)
+      {
+        Double startf=chanFreq[0];
+        //Double stepf=chanFreqStep[0];
+        if(chanFreq.nelements()==1) 
+          {
+            stepf=chanFreqStep[0];
+          }
+        else 
+          { 
+            stepf=chanFreq[1]-chanFreq[0];
+          }
+        Double restf=qrestfreq.getValue("Hz");
+        //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
+        // once NOFRAME is implemented do this 
+        //if(mode=="cubedata") 
+        //  {
+        //     mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::NOFRAME : MFrequency::REST, 
+        //	 startf, stepf, refPix, restf);
+        //  }
+        //else 
+        //  {
         mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
 		startf, stepf, refPix, restf);
-      //}
-    }
-    else { // nonlinear freq coords - use tabular setting
-      // once NOFRAME is implemented do this 
-      //if (mode=="cubedata") { 
-      //  mySpectral = SpectralCoordinate(freqFrameValid ? MFrequnecy::NOFRAME : MFrequency::REST,
-      //             chanFreq, (Double)qrestfreq.getValue("Hz"));
-      //}
-      //else {
+        //  }
+      }
+    else 
+      { // nonlinear freq coords - use tabular setting
+        // once NOFRAME is implemented do this 
+        //if(mode=="cubedata") 
+        //  {
+        //    subMS::calcChanFreqs cannot handle NOFRAME  
+        //    mySpectral = SpectralCoordinate(freqFrameValid ? MFrequnecy::NOFRAME : MFrequency::REST,
+        //             chanFreq, (Double)qrestfreq.getValue("Hz"));
+        //  }
+        //else 
+        //  {
         mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
                  chanFreq, (Double)qrestfreq.getValue("Hz"));
-      //}
-    }
+        //  }
+      }
     //cout << "Rest Freq : " << restFreq << endl;
 
-    for (uInt k=1 ; k < restFreq.nelements(); ++k)
+    for(uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
 
     if (freqFrameValid) {
@@ -1216,71 +1561,97 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const MDirection& phaseCenter) const
   {
 
-    String start, step;
+    String inStart, inStep; 
     specmode = findSpecMode(mode);
-    //cerr<<"specmode="<<specmode<<" mode="<<mode<<endl;
+    String freqframe;
     Bool verbose("true"); // verbose logging messages from calcChanFreqs
     LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
-    //os<<LogIO::NORMAL<<"getImFreq"<<LogIO::POST;
     //cerr<<"qrestfreq="<<qrestfreq<<endl;
     //cerr<<" freqframe="<<MFrequency::showType(freqFrame)<<endl;
 
     refPix=0.0; 
     Bool descendingfreq(false);
 
-    if ( mode.contains("cube") ) { 
-      // For the returned chanfreqs and chanwidths from calcChanFreqs()
-      String restfreq=String::toString(qrestfreq.getValue(qrestfreq.getUnit()))+qrestfreq.getUnit();
-      String freqframe=MFrequency::showType(freqFrame);
+    if( mode.contains("cube") )
+      { 
+        String restfreq=String::toString(qrestfreq.getValue(qrestfreq.getUnit()))+qrestfreq.getUnit();
+        // use frame from input start or width in MFreaquency or MRadialVelocity
+        freqframe = qmframe!=""? qmframe: MFrequency::showType(freqFrame);
+        // emit warning here if qmframe is used 
+        //
+        inStart = start;
+        inStep = step;
+        if( specmode=="channel" ) 
+          {
+            inStart = String::toString(chanStart);
+            inStep = String::toString(chanStep); 
+            // negative step -> descending channel indices 
+            if (inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+            // input frame is the data frame
+            freqframe = MFrequency::showType(dataFrame);
+          }
+        else if( specmode=="frequency" ) 
+          {
+            //if ( freqStart.getValue("Hz") == 0 && freqStart.getUnit() != "" ) { // default start
+            //start = String::toString( freqmin ) + freqStart.getUnit();
+            //}
+            //else {
+            //start = String::toString( freqStart.getValue(freqStart.getUnit()) )+freqStart.getUnit();  
+            //}
+            //step = String::toString( freqStep.getValue(freqStep.getUnit()) )+freqStep.getUnit();  
+            // negative freq width -> descending freq ordering
+            if(inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+          }
+        else if( specmode=="velocity" ) 
+          {
+            // if velStart is empty set start to vel of freqmin or freqmax?
+            //if ( velStart.getValue(velStart.getUnit()) == 0 && !(velStart.getUnit().contains("m/s")) ) {
+            //  start = "";
+            //}
+            //else { 
+            //  start = String::toString( velStart.getValue(velStart.getUnit()) )+velStart.getUnit();  
+            //}
+            //step = String::toString( velStep.getValue(velStep.getUnit()) )+velStep.getUnit();  
+            // positive velocity width -> descending freq ordering
+            if (!inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+          }
 
-      if ( specmode=="channel" ) {
-        start = String::toString(chanStart);
-        step = String::toString(chanStep); 
-        // negative step -> descending channel indices 
-        if (step.contains(casa::Regex("^-"))) descendingfreq=true;
-      }
-      else if ( specmode=="frequency" ) {
-        if ( freqStart.getValue("Hz") == 0 ) {
-           start = String::toString( freqmin ) + freqStart.getUnit();
-        }
-        else {
-          start = String::toString( freqStart.getValue(freqStart.getUnit()) )+freqStart.getUnit();  
-        }
-        step = String::toString( freqStep.getValue(freqStep.getUnit()) )+freqStep.getUnit();  
-        // negative freq width -> descending freq ordering
-        if (step.contains(casa::Regex("^-"))) descendingfreq=true;
-      }
-      else if ( specmode=="velocity" ) {
-        // if velStart is empty set start to vel of freqmin or freqmax?
-        // add freq to vel conversion here
-        if ( velStart.getValue(velStart.getUnit()) == 0 && !(velStart.getUnit().contains("m/s")) ) {
-          start = "";
-        }
-        else { 
-          start = String::toString( velStart.getValue(velStart.getUnit()) )+velStart.getUnit();  
-        }
-        step = String::toString( velStep.getValue(velStep.getUnit()) )+velStep.getUnit();  
-        // positive velocity width -> descending freq ordering
-        if (!step.contains(casa::Regex("^-"))) descendingfreq=true;
-      }
+      if (inStep=='0') inStep="";
 
-      if (step=='0') step="";
-
-      String infreqframe = freqframe;
-      if ( infreqframe=="SOURCE" && mode!="cubesrc") {
-        os << LogIO::SEVERE << "freqframe=\"SOURCE\" is only allowed for mode=\"cubesrc\""
-           << LogIO::EXCEPTION;
-        return false; 
-      }
+      MRadialVelocity mSysVel; 
+      Quantity qVel;
+      MRadialVelocity::Types mRef;
+      if(mode!="cubesrc") 
+        {
+          if(freqframe=="SOURCE") 
+            {
+              os << LogIO::SEVERE << "freqframe=\"SOURCE\" is only allowed for mode=\"cubesrc\""
+                 << LogIO::EXCEPTION;
+              return false; 
+            }
+        }
+      else // only for cubesrc mode: TODO- check for the ephemeris info.
+        {
+          if(sysvel!="") {
+            stringToQuantity(sysvel,qVel);
+            MRadialVelocity::getType(mRef,sysvelframe);
+            mSysVel=MRadialVelocity(qVel,mRef);
+          }
+          else // and if no ephemeris info, issue a warning... 
+            {  mSysVel=MRadialVelocity();}
+        }
       // cubedata mode: input start, step are those of the input data frame
-      if ( mode=="cubedata" ) infreqframe=dataFrame; 
-
+      if ( mode=="cubedata" ) freqframe=MFrequency::showType(dataFrame); 
+      
       // *** NOTE *** 
       // calcChanFreqs alway returns chanFreq in
       // ascending freq order. 
       // for step < 0 calcChanFreqs returns chanFreq that 
       // contains start freq. in its last element of the vector. 
       //
+      os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
+         <<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
+         << LogIO::POST;
       Bool rst=SubMS::calcChanFreqs(os,
                            chanFreq, 
                            chanFreqStep,
@@ -1292,22 +1663,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                            obsPosition,
                            specmode,
                            nchan,
-                           start,
-                           step,
+                           inStart,
+                           inStep,
                            restfreq,
-                           infreqframe,
+                           freqframe,
                            veltype,
-                           verbose 
+                           verbose, 
+                           mSysVel
                            );
 
-      //cerr<<"chanFreq.nelements()="<<chanFreq.nelements()<<endl;
-      //cerr<<"chanFreq 0="<<chanFreq[0]<<endl;
-      //cerr<<"chanFreq last="<<chanFreq[chanFreq.nelements()-1]<<endl;
       if (!rst) {
         os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
            << LogIO::EXCEPTION;
         return False;
       }
+      os << LogIO::DEBUG1
+         <<"chanFreq 0="<<chanFreq[0]<<" chanFreq last="<<chanFreq[chanFreq.nelements()-1]
+         << LogIO::POST;
+
       if (descendingfreq) {
         // reverse the freq vector if necessary so the first element can be
         // used to set spectralCoordinates in all the cases.
@@ -1340,7 +1713,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           << LogIO::EXCEPTION;
        return False;
     }
-
     return True;
 
   }//getImFreq
@@ -1353,12 +1725,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // if velstart or velstep is defined -> specmode='vel'
       // else if freqstart or freqstep is defined -> specmode='freq'
       // velocity: assume unset if velStart => 0.0 with no unit
-      //           assume unset if velStep => 0.0 with/wiout unit
-      if ( !(velStart.getValue()==0.0 and velStart.getUnit()=="" ) ||
+      //           assume unset if velStep => 0.0 with/without unit
+      if ( !(velStart.getValue()==0.0 && velStart.getUnit()=="" ) ||
            !( velStep.getValue()==0.0)) { 
         specmode="velocity";
       }
-      else if ( !(freqStart.getValue()==0.0 and freqStart.getUnit()=="") ||
+      else if ( !(freqStart.getValue()==0.0 && freqStart.getUnit()=="") ||
                 !(freqStep.getValue()==0.0)) {
         specmode="frequency";
       }

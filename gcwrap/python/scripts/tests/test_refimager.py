@@ -17,6 +17,51 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      interactive=False
 
 
+     if(testnum==18): ## mode=cubesrc (For interface test purpose only, the mode is not fully implemeted yet)
+          casalog.post("==================================");
+          casalog.post("Test 18 image-field, cubesrc --- Real Imaging with various cube parameter specifications");
+          #casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
+                                       spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename="CubesrcTest", mode='cubesrc',\
+                                       nchan=10,\
+                                       start="1.1GHz",\
+                                       step="",\
+                                       veltype='radio',\
+                                       sysvel="-3000km/s",\
+                                       sysvelframe="LSRK",\
+                                       restfreq=["1.0GHz"],\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+     if(testnum==17): ## mode=cubedata (For interface test purpose only, the mode is not full implemented yet)
+          casalog.post("==================================");
+          casalog.post("Test 17 image-field, cubedata --- Real Imaging with various cube parameter specifications");
+          #casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
+                                       spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename="CubedataTest", mode='cubedata',\
+                                       nchan=10,\
+                                       start=5,\
+                                       step=1,\
+                                       veltype='radio',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
      if(testnum==16):  ## 2 image-fields, mfs - one with nterms 1 and one with nterms 2
           casalog.post("==================================");
           casalog.post("Test 16 image-fields, mfs (one with nterms=1. one with nterms=2).");
@@ -28,7 +73,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out16.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -51,7 +96,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        mode='mfs',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        algo='msmfs',\
-                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:58:39.580 +40.55.55.931",\
@@ -72,7 +117,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out14.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:58:39.580 +40.55.55.931",\
@@ -85,54 +130,62 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
      if(testnum==13): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
           casalog.post("==================================");
-          casalog.post("Test 11 image-field, cube --- Real Imaging with various cube parameter specifications");
+          casalog.post("Test 13 image-field, cube --- Real Imaging with various cube parameter specifications");
           #casalog.post("==================================");
+          qfstart=qa.quantity("1.1GHz")
+          qvstart=qa.quantity("-59958.5km/s")
+          mfstart=me.frequency('LSRK',qa.quantity("1.1GHz"))
+          mvstart=me.radialvelocity('BARY',qa.quantity("-59976.1km/s"))
+          dop = me.todoppler('radio',mfstart,qa.quantity('1.0GHz'))
+          qvstep = qa.quantity("11991.700km/s")
+          mvstep = me.radialvelocity('TOPO',qvstep)
 
           testList = {
-                      0:{'imagename':'Cubetest_chandefstdefstep','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                      0:{'imagename':'Cubetest_chandefstdefstep','spw':'0','start':0,'step':1,'frame':'LSRK',
                         'desc':'channel, default start and step, LSRK'},
-                      1:{'imagename':'Cubetest_chandefstdefsteptopo','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'TOPO',
+                      1:{'imagename':'Cubetest_chandefstdefsteptopo','spw':'0','start':0,'step':1, 'frame':'TOPO',
                         'desc':'channel, default start and step, TOPO'},
-                      2:{'imagename':'Cubetest_chandefststep2','spw':'0','chanstart':0,'chanstep':2,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                      2:{'imagename':'Cubetest_chandefststep2','spw':'0','start':0,'step':2, 'frame':'LSRK',
                         'desc':'channel, default start, step=2, LSRK'},
-                      3:{'imagename':'Cubetest_chanst5wd1','spw':'0','chanstart':5,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                      3:{'imagename':'Cubetest_chanst5wd1','spw':'0','start':5,'step':1, 'frame':'LSRK',
                         'desc':'channel, start=5, default step, LSRK'},
-                      4:{'imagename':'Cubetest_chanst5wd1spwsel','spw':'0:5~19','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'','freqframe':'LSRK',
+                      4:{'imagename':'Cubetest_chandefstwd1spwsel','spw':'0:5~19','start':0,'step':1, 'frame':'LSRK',
                         'desc':'channel, spw=0:5~19, LSRK'},
-                      5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'40MHz','velstart':'','velstep':'','freqframe':'TOPO',
-                        'desc':'frequency, default freqstart, freqstep=\'40MHz\', TOPO'},
-                      6:{'imagename':'Cubetest_freqst5defwd','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'1.1GHz','freqstep':'','velstart':'','velstep':'','freqframe':'TOPO',
-                        'desc':'frequency, freqstart=\'1.1GHz\', default freqstep, TOPO'},
-                      7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:10~19','chanstart':0,'chanstep':1,
-                        'freqstart':'1.1GHz','freqstep':'','velstart':'','velstep':'','freqframe':'TOPO',
-                        'desc':'frequency, freqstart=\'1.1GHz\', default freqstep, spw=0:10~19, TOPO'},
-                      8:{'imagename':'Cubetest_freqst10wdm','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'1.2GHz','freqstep':'-20MHz','velstart':'','velstep':'','freqframe':'TOPO',
-                        'desc':'frequency, freqstart=\'1.2GHz\', freqstep=\'-20MHz\', spw=0:10~19, TOPO'},
-                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'11991.700km/s','freqframe':'TOPO',
-                        'desc':'frequency, default velstart, freqstep=\'11991.700km/s\', TOPO'},
-                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'','velstep':'-11991.700km/s','freqframe':'TOPO',
-                        'desc':'velocity, default velstart, freqstep=\'-11991.700km/s\', TOPO'},
-                     11:{'imagename':'Cubetest_velst10defwd','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'-59958.5km/s','velstep':'','freqframe':'TOPO',
-                        'desc':'velocity, velstart=\'-59958.5km/s\', default freqstep, TOPO'},
-                     12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'-59976.1km/s','velstep':'','freqframe':'BARY',
-                        'desc':'velocity, velstart=\'-59976.1km/s\', default freqstep, BARY'},
-                     13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','chanstart':0,'chanstep':1,
-                        'freqstart':'','freqstep':'','velstart':'-49962.6km/s','velstep':'','veltype':'optical', 
-                        'freqframe':'LSRK',
-			# identical channel should be selected as for 12
-                        'desc':'velocity, velstart=\'-49962.6km/s\', default freqstep, veltype=optical LSRK'}
+                      5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','step':'40MHz','frame':'TOPO',
+                        'desc':'frequency, default start, step=\'40MHz\', TOPO'},
+                      6:{'imagename':'Cubetest_freqst5defwd','spw':'0','start':'1.1GHz','step':'','frame':'TOPO',
+                        'desc':'frequency, start=\'1.1GHz\', default step, TOPO'},
+                      #7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:6~19','start':'1.1GHz','step':'','frame':'TOPO',
+                      7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:4~19','start':'1.1GHz','step':'','frame':'TOPO',
+                        'desc':'frequency, start=\'1.1GHz\', default step, spw=0:6~19, TOPO'},
+                      8:{'imagename':'Cubetest_freqst10wdm','spw':'0','start':'1.2GHz','step':'-20MHz','frame':'TOPO',
+                        'desc':'frequency, start=\'1.2GHz\', step=\'-20MHz\', TOPO'},
+                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','start':'','step':'11991.700km/s','frame':'TOPO',
+                        'desc':'frequency, default start, step=\'11991.700km/s\', TOPO'},
+                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','step':'-11991.700km/s','frame':'TOPO',
+                        'desc':'velocity, default start, step=\'-11991.700km/s\', TOPO'},
+                     11:{'imagename':'Cubetest_velst10defwd','spw':'0','start':'-59958.5km/s','step':'','frame':'TOPO',
+                        'desc':'velocity, start=\'-59958.5km/s\', default step, TOPO'},
+                     12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','start':'-59976.1km/s','step':'','frame':'BARY',
+                        'desc':'velocity, start=\'-59976.1km/s\', default step, BARY'},
+                     #13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','step':'4234.40km/s',
+                     13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','step':'5500.0km/s',
+                        'veltype':'optical','frame':'LSRK',
+                        'desc':'velocity, start=\'-49962.6km/s\', default step, veltype=optical LSRK'},
+                     14:{'imagename':'Cubetest_stqfreqdefwd','spw':'0','start':qfstart,'step':'', 'veltype':'radio','frame':'',
+                        'desc':'frequency, start=%s, default step, veltype=radio TOPO' % qfstart},
+                     15:{'imagename':'Cubetest_stmfreqdefwd','spw':'0','start':mfstart,'step':'', 'veltype':'radio','frame':'',
+                        'desc':'frequency, start=%s, default step, veltype=radio LSRK' % mfstart},
+                     16:{'imagename':'Cubetest_stqveldefwd','spw':'0','start':qvstart,'step':'','frame':'TOPO',
+                        'desc':'velocity, start=%s, default step, TOPO' % qvstart},
+                     17:{'imagename':'Cubetest_stmveldefwd','spw':'0','start':mvstart,'step':'','frame':'TOPO',
+                        'desc':'velocity, start=%s, default step, BARY' % mvstart},
+                     18:{'imagename':'Cubetest_veldefstqvstep','spw':'0','start':'','step':qvstep,'frame':'TOPO',
+                        'desc':'velocity, default start, step=%s, TOPO' % qvstep},
+                     19:{'imagename':'Cubetest_veldefstmvstep','spw':'0','start':'','step':mvstep,'frame':'TOPO',
+                        'desc':'velocity, default start, step=%s, TOPO' % mvstart},
+                     20:{'imagename':'Cubetest_stdopdefwd','spw':'0','start':dop,'step':'','frame':'TOPO',
+                        'desc':'doppler, start=%s, default step, LSRK' % dop}
                     }
 
           casalog.post("Sub-test "+str(testid)+":"+testList[testid]['desc']);
@@ -146,14 +199,10 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        imagename=testList[testid]['imagename'], mode='cube',\
                                        nchan=10,\
-                                       chanstart=testList[testid]['chanstart'],\
-                                       chanstep=testList[testid]['chanstep'],\
-                                       freqstart=testList[testid]['freqstart'],\
-                                       freqstep=testList[testid]['freqstep'],\
-                                       velstart=testList[testid]['velstart'],\
-                                       velstep=testList[testid]['velstep'],\
+                                       start=testList[testid]['start'],\
+                                       step=testList[testid]['step'],\
                                        veltype=inveltype,\
-                                       freqframe=testList[testid]['freqframe'],\
+                                       frame=testList[testid]['frame'],\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -173,7 +222,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='*',scan='',
                                        spw='*',\
                                        usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='1.0GHz',\
+                                       imagename='mytest0', nchan=1,start='1.5GHz', step='1.0GHz',\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -201,7 +250,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='1',scan='',
                                        spw='*',\
                                        usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='1.0GHz',\
+                                       imagename='mytest0', nchan=1,start='1.5GHz', step='1.0GHz',\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -227,7 +276,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='0.3GHz',\
+                                       imagename='mytest0', nchan=1,start='1.5GHz', step='0.3GHz',\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -254,7 +303,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='',spw='1',scan='',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.5GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1,start='1.5GHz', step='4.0GHz',\
                                        ntaylorterms=1,mtype='imagemosaic',restfreq=['1.5GHz'],\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
@@ -276,7 +325,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
@@ -296,7 +345,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
                                        ntaylorterms=2,mtype='multiterm',
                                        reffreq='1.6GHz',\
                                        #restfreq=['1.5GHz'],\
@@ -318,7 +367,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
                                        ntaylorterms=1,mtype='default',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
@@ -338,7 +387,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,  freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -360,7 +409,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out4.txt',\
                                        mode='cube',\
-                                       imagename='mytest0', nchan=2, freqstart='1.0GHz', freqstep='1.0GHz',\
+                                       imagename='mytest0', nchan=2, start='1.0GHz', step='1.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -383,7 +432,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out3.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -402,7 +451,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='cube',\
-                                       imagename='mytest0', nchan=10,freqstart='1.0GHz', freqstep='40MHz',\
+                                       imagename='mytest0', nchan=10,start='1.0GHz', step='40MHz',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -421,7 +470,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
                                        imsize=[110,110],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        ### center
@@ -769,7 +818,7 @@ def testImageCoordinates( testnum=1, testid=0):
     
     multitest=False
     if testnum==13: multitest=True
-    if multitest and testid==-1: testid=range(14)
+    if multitest and testid==-1: testid=range(21)
     if type(testid)==int: testid=[testid]
     for tst in testid:
       params = getparams( testnum, testid=tst )

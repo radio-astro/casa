@@ -713,16 +713,14 @@ class ImagerParameters():
                  ntaylorterms=1, 
                  mtype='default',
                  nchan=1, 
-                 chanstart=0, 
-                 chanstep=1, 
-                 freqstart='', 
-                 freqstep='',
-                 velstart='', 
-                 velstep='', 
+                 start='', 
+                 step='',
                  veltype='radio', 
-                 freqframe='LSRK', 
+                 frame='LSRK', 
                  reffreq='',
                  restfreq=[''],
+                 sysvel='', 
+                 sysvelframe='',
 
                  imsize=[1,1], 
                  facets=1, 
@@ -769,11 +767,12 @@ class ImagerParameters():
         ######### Image definition
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cellsize':cellsize, 'phasecenter':phasecenter, 'stokes': stokes,
-                                 'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
-                                 'freqstart':freqstart, 'freqstep':freqstep,
-                                 'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
+                                 #'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
+                                 #'freqstart':freqstart, 'freqstep':freqstep,
+                                 #'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
+                                 'mode':mode, 'start':start, 'step':step, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
-                                 'freqframe':freqframe, 'reffreq':reffreq  }      }
+                                 'frame':frame, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe  }      }
         ######### Gridding
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
@@ -800,7 +799,7 @@ class ImagerParameters():
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel',
-                             'freqstart','freqstep',
+                             'start','step',
                              'ntaylorterms','restfreq']
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]

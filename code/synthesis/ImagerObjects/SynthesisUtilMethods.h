@@ -113,13 +113,14 @@ protected:
   String readVal(Record &rec, String id, Vector<Int>& val);
   String readVal(Record &rec, String id, Vector<Float>& val);
   String readVal(Record &rec, String id, Vector<String>& val);
-  String stringToQuantity(String instr, Quantity& qa);
+  String stringToQuantity(String instr, Quantity& qa) const;
   String stringToMDirection(String instr, MDirection& md);
   String readVal(Record &rec, String id, Quantity& val);
   String readVal(Record &rec, String id, MDirection& val);
   // Others..
   String MDirectionToString(MDirection val);
   String QuantityToString(Quantity val);
+  String recordQMToString(Record &rec);
 };
 
   class SynthesisParamsSelect : public SynthesisParams
@@ -169,6 +170,7 @@ public:
 		 const MDirection& phaseCenter ) const;
   
   String findSpecMode(const String& mode) const;
+  String MDopToVelString(Record &rec);
 
   // Sky coordinates
   String imageName, stokes, startModel;
@@ -182,8 +184,16 @@ public:
   Int nchan, nTaylorTerms, chanStart, chanStep;
   Quantity freqStart, freqStep, refFreq, velStart, velStep;
   MFrequency::Types freqFrame;
+  MFrequency mFreqStart, mFreqStep;
+  MRadialVelocity mVelStart, mVelStep;
   Vector<Quantity> restFreq;
-  String veltype, mode;
+  String start, step, frame, veltype, mode, reffreq, sysvel, sysvelframe;
+  // private variable to store ref frame defined in Quantity or Measure 
+  // in start or step parameters and veltype from measure (e.g. MDoppler)
+  String qmframe, mveltype;  
+  String tststr;
+  // for holding quantity or measure records
+  Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
 
   Bool overwrite;
 

@@ -456,7 +456,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	os << "Adding " << impars.imageName << " (nchan : " << impars.nchan 
-	   << ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
+	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
+	   << ", start:" << impars.start
 	   <<  ", imsize:" << impars.imsize 
 	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
 	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
@@ -466,7 +467,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//MeasurementSet tms(*mss_p[0]);
 	//csys = impars.buildCoordinateSystem( tms );
 	csys = impars.buildCoordinateSystem( rvi_p );
-
 	IPosition imshape = impars.shp();
 
 	if( (itsMappers.nMappers()==0) || 
