@@ -110,14 +110,14 @@ import itertools
 					<td></td>
 					<td></td>
 				</tr>
-<!--				
+<%doc>
 				<tr>
 					<th>QA Total</th>
 					<td></td>
 					<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
 					<td><span class="badge">N/A</span></td>
 				</tr>
-				% for section in qaadapter.sections.values():
+				% for section in topicregistry.topics.values():
 				<tr>
 					<td>&nbsp;&nbsp;&nbsp;&nbsp;<a href="${section.url}">${section.description}</a></td>
                                         <td></td>
@@ -131,7 +131,7 @@ import itertools
 
 				</tr>
 				% endfor
--->
+</%doc>
 			</tbody>
 		</table>								
 <!-- 

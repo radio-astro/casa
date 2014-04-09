@@ -37,14 +37,6 @@ $(document).ready(function(){
 					   data-fakeframehref="stage${result.stage_number}/t2-4m_details.html"
 					   href="t2-4m.html?stage=${result.stage_number}">
 						${hr.get_task_name(result)}
-						<% qa_url = qa.get_url(result) %>
-						% if qa_url:
-						<ul>
-							<li>
-								<a class="replace" href="stage${result.stage_number}/t2-3m_details.html">QA</a>
-							</li>
-						</ul>
-						% endif
 					</a>
 				</li>
 			% endfor

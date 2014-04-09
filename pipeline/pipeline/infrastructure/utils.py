@@ -11,6 +11,7 @@ import itertools
 import math
 import operator
 import os
+from __builtin__ import isinstance
 try:
     import cPickle as pickle
 except:
@@ -530,3 +531,21 @@ def is_top_level_task():
     Return True if the callee if executing as part of a top-level task.
     """
     return task_depth() is 1
+
+def get_logrecords(result, loglevel):
+    """
+    Get the logrecords for the result, removing any duplicates
+
+    :param result: a result containing logrecords
+    :param loglevel: the loglevel to match
+    :return:
+    """
+    if isinstance(result, list):
+        records = flatten([get_logrecords(r, loglevel) for r in result])
+    else:
+        records = [l for l in result.logrecords if l.levelno is loglevel]
+
+    dset = set()
+    # relies on the fact that dset.add() always returns None.
+    return [r for r in records if
+            r.msg not in dset and not dset.add(r.msg)]

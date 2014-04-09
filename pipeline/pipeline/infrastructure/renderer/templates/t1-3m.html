@@ -1,7 +1,66 @@
 <%!
 navbar_active='By Topic'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.pipelineqa as pipelineqa
+
+def get_bar_class(pqascore):
+	score = pqascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.1:
+		return ' bar-danger'
+	elif score <= 0.5:
+		return ' bar-warning'
+	else:
+		return ' bar-success'
+
+def get_badge_class(pqascore):
+	score = pqascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.1:
+		return ' badge-important'
+	elif score <= 0.5:
+		return ' badge-warning'
+	else:
+		return ' badge-success'
+
+def get_bar_width(pqascore):
+	if pqascore.score in (None, '', 'N/A'):
+		return 0
+	else:
+		return 100.0 * pqascore.score
+
+def format_score(pqascore):
+	if pqascore.score in (None, '', 'N/A'):
+		return 'N/A'
+	return '%0.2f' % pqascore.score
+
+def get_lowest_scoring_results(topic):
+	all_results_lists = topic.results_by_type.values()
+	if not all_results_lists:
+		return ('No tasks in this topic', pipelineqa.QAScore(None, '', ''))
+		
+	min_scoring_results = []
+	for l in all_results_lists:
+		no_na = filter(lambda z:z.qa.representative.score is not None, l)
+		if no_na:
+			min_result_for_task = min(no_na, 
+								      key=lambda result: result.qa.representative.score)
+			min_scoring_results.append(min_result_for_task)
+
+	if not min_scoring_results:
+		return ('No scoring tasks in this topic', pipelineqa.QAScore(None, '', ''))
+		
+	minresult = min(min_scoring_results, 
+				    key=lambda result:result.qa.representative.score)
+	anchor = '<a href="t2-4m.html?stage=%s">%s</a>' % (minresult.stage_number, 
+												       hr.get_task_description(minresult))
+	return (anchor,
+			minresult.qa.representative)
+
 %>
+
 <%inherit file="base.html"/>
 
 <div class="page-header">
@@ -12,33 +71,22 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	<table class="table">
 		<thead>
 			<tr>
-				<th class="span3">Topic</th>
-				<th class="span6"></th>
-				<th class="span2">QA Score</th>
+				<th class="span1">Topic</th>
+				<th class="span8">Lowest Scoring Task</th>
+				<th class="span2">Min Score</th>
 				<th class="span1"></th>
 			</tr>
 		</thead>
 		<tbody>
-			% for section in qaadapter.sections.values():
+			% for _, topic in registry.get_topics().items():
+			<% (task_description, pqascore) = get_lowest_scoring_results(topic) %> 
 			<tr>
-				<td><a href="${section.url}">${section.description}</a></td>
-				<td></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
-				<td><span class="badge">N/A</span></td>
+				<td><a href="${topic.url}">${topic.description}</a></td>
+				<td>${task_description}</a><span class="pull-right">${pqascore.shortmsg}</span></td>
+				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${get_bar_class(pqascore)}" style="width:${get_bar_width(pqascore)}%;"><span class="text-center"></span></div></div></td>
+				<td><span class="badge${get_badge_class(pqascore)}">${format_score(pqascore)}</span></td>
 			</tr>
 			% endfor
-			<tr>
-				<td class="muted">Example: Line finding</td>
-				<td><span class="text-error pull-right">Line too broad</span></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar bar-danger" style="width:20%;"></div></div></td>
-				<td><span class="badge badge-important">0.2</span></td>
-			</tr>
-			<tr>
-				<td class="muted">Example: Imaging</td>
-				<td><span class="text-warning pull-right">Residual structure</span></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar bar-warning" style="width:50%;"></div></div></td>
-				<td><span class="badge badge-warning">0.5</span></td>
-			</tr>
 		</tbody>
 	</table>
 </div>

@@ -46,6 +46,7 @@ import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdispl
 import pipeline.infrastructure.displays.vla.opacitiesdisplay as opacitiesdisplay
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 from pipeline.infrastructure.renderer import templates
 from pipeline.infrastructure.renderer.templates import resources
@@ -69,7 +70,7 @@ def get_task_description(result_obj):
         LOG.error(msg)
         return msg
 
-    task_cls = result_obj[0].task
+    task_cls = getattr(result_obj[0], 'task', None)
     if task_cls is None:
         results_cls = result_obj[0].__class__.__name__
         msg = 'No task registered on results of type %s' % results_cls
@@ -411,7 +412,7 @@ class T1_1Renderer(RendererBase):
         dt = exec_end - exec_start
         exec_duration = datetime.timedelta(days=dt.days, seconds=dt.seconds)
 
-        qaresults = qaadapter.ResultsToQAAdapter(context.results)
+#         qaresults = qaadapter.ResultsToQAAdapter(context.results)
 
         out_fmt = '%Y-%m-%d %H:%M:%S'
         
@@ -487,7 +488,7 @@ class T1_1Renderer(RendererBase):
                 'ousstatus_entity_id'     : context.project_structure.ousstatus_entity_id,
                 'ppr_uid'           : None,
                 'observers'         : observers,
-                'qaadapter'        : qaresults,
+#                 'qaadapter'        : qaresults,
                 'ms_summary_rows'   : ms_summary_rows}
 
 
@@ -569,12 +570,17 @@ class T1_3MRenderer(RendererBase):
     
     @staticmethod
     def get_display_context(context):
-        # QA templates need a QA perspective of the results. Wrap the results
-        # in an adapter that provides this perspective.
-        qaresults = qaadapter.ResultsToQAAdapter(context.results)
+        registry = qaadapter.registry
+        # distribute results between topics
+        registry.assign_to_topics(context.results)
 
-        return {'pcontext'   : context,
-                'qaadapter' : qaresults}
+        scores = {}
+        for result in context.results:
+            scores[result.stage_number] = result.qa.representative
+
+        return {'pcontext' : context,
+                'registry' : registry,
+                'scores'   : scores}
 
 
 class T1_4MRenderer(RendererBase):
@@ -901,29 +907,92 @@ class T2_2_6Renderer(T2_2_XRendererBase):
                 'tablerows'    : tablerows}
 
 
-class T2_3_1MRenderer(RendererBase):
+class T2_3_XMBaseRenderer(RendererBase):
+    # the filename to which output will be directed
+    output_file = 'overrideme'
+    # the template file for this renderer
+    template = 'overrideme'
+
+    MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message')
+
+    @classmethod
+    def get_display_context(cls, context):
+        topic = cls.get_topic()
+
+        scores = {}
+        for result in context.results:
+            scores[result.stage_number] = result.qa.representative
+
+        tablerows = []
+        for list_of_results_lists in topic.results_by_type.values():
+            if not list_of_results_lists:
+                continue
+            
+            for results_list in list_of_results_lists:
+                qa_errors = cls._filter_qascores(results_list, -0.1, 0.1)
+                tablerows.extend(cls._qascores_to_tablerows(qa_errors,
+                                                            results_list,
+                                                            'QA Error'))
+                    
+                qa_warnings = cls._filter_qascores(results_list, 0.1, 0.5)
+                tablerows.extend(cls._qascores_to_tablerows(qa_warnings,
+                                                            results_list,
+                                                            'QA Warning'))
+
+                error_msgs = utils.get_logrecords(results_list, logging.ERROR)
+                tablerows.extend(cls._logrecords_to_tablerows(error_msgs,
+                                                              results_list,
+                                                              'Error'))
+
+                warning_msgs = utils.get_logrecords(results_list, logging.WARNING)
+                tablerows.extend(cls._logrecords_to_tablerows(warning_msgs,
+                                                              results_list,
+                                                              'Warning'))
+                
+        return {'pcontext'  : context,
+                'scores'    : scores,
+                'tablerows' : tablerows,
+                'topic'     : topic     }
+                
+    @classmethod
+    def _filter_qascores(cls, results_list, lo, hi):
+        qa_pool = results_list.qa.pool
+        with_score = [s for s in qa_pool if s.score not in ('', 'N/A', None)]
+        return [s for s in with_score if s.score > lo and s.score <= hi]
+
+    @classmethod
+    def _create_tablerow(cls, results, message, msgtype):
+        return cls.MsgTableRow(stage=results.stage_number,
+                               task=get_task_name(results, False),
+                               type=msgtype,
+                               message=message)
+
+    @classmethod
+    def _qascores_to_tablerows(cls, qascores, results, msgtype='ERROR'):
+        return [cls._create_tablerow(results, qascore.longmsg, msgtype)
+                for qascore in qascores]
+
+    @classmethod
+    def _logrecords_to_tablerows(cls, records, results, msgtype='ERROR'):
+        return [cls._create_tablerow(results, record.msg, msgtype)
+                for record in records]
+
+
+class T2_3_1MRenderer(T2_3_XMBaseRenderer):
     """
-    Renderer for T2-3-1M: the QA calibration section.
+    Renderer for T2-3-1M, the calibration topic.
     """
     # the filename to which output will be directed
     output_file = 't2-3-1m.html'
     # the template file for this renderer
     template = 't2-3-1m.html'
 
-    @staticmethod
-    def get_display_context(context):
-        # QA templates need a QA perspective of the results. Wrap the results
-        # in an adapter that provides this perspective.
-        qaresults = qaadapter.ResultsToQAAdapter(context.results)
-        
-        # we only need to pass the calibration section through to the template
-        qasection = qaresults.sections[qaadapter.CalibrationQASection]
-
-        return {'pcontext'   : context,
-                'qasection' : qasection}
+    @classmethod
+    def get_topic(cls):
+        return qaadapter.registry.get_calibration_topic()        
 
 
-class T2_3_2MRenderer(RendererBase):
+class T2_3_2MRenderer(T2_3_XMBaseRenderer):
     """
     Renderer for T2-3-2M: the QA line finding section.
     """
@@ -932,20 +1001,12 @@ class T2_3_2MRenderer(RendererBase):
     # the template file for this renderer
     template = 't2-3-2m.html'
 
-    @staticmethod
-    def get_display_context(context):
-        # QA templates need a QA perspective of the results. Wrap the results
-        # in an adapter that provides this perspective.
-        qaresults = qaadapter.ResultsToQAAdapter(context.results)
-        
-        # we only need to pass the calibration section through to the template
-        qasection = qaresults.sections[qaadapter.LineFindingQASection]
-
-        return {'pcontext'   : context,
-                'qasection' : qasection}
+    @classmethod
+    def get_topic(cls):
+        return qaadapter.registry.get_linefinding_topic()        
 
 
-class T2_3_3MRenderer(RendererBase):
+class T2_3_3MRenderer(T2_3_XMBaseRenderer):
     """
     Renderer for T2-3-3M: the QA flagging section.
     """
@@ -954,20 +1015,12 @@ class T2_3_3MRenderer(RendererBase):
     # the template file for this renderer
     template = 't2-3-3m.html'
 
-    @staticmethod
-    def get_display_context(context):
-        # QA templates need a QA perspective of the results. Wrap the results
-        # in an adapter that provides this perspective.
-        qaresults = qaadapter.ResultsToQAAdapter(context.results)
-        
-        # we only need to pass the calibration section through to the template
-        qasection = qaresults.sections[qaadapter.FlaggingQASection]
-
-        return {'pcontext'   : context,
-                'qasection' : qasection}
+    @classmethod
+    def get_topic(cls):
+        return qaadapter.registry.get_flagging_topic()        
 
 
-class T2_3_4MRenderer(RendererBase):
+class T2_3_4MRenderer(T2_3_XMBaseRenderer):
     """
     Renderer for T2-3-4M: the QA imaging section.
     """
@@ -976,17 +1029,23 @@ class T2_3_4MRenderer(RendererBase):
     # the template file for this renderer
     template = 't2-3-4m.html'
 
-    @staticmethod
-    def get_display_context(context):
-        # QA templates need a QA perspective of the results. Wrap the results
-        # in an adapter that provides this perspective.
-        qaresults = qaadapter.ResultsToQAAdapter(context.results)
-        
-        # we only need to pass the calibration section through to the template
-        qasection = qaresults.sections[qaadapter.ImagingQASection]
+    @classmethod
+    def get_topic(cls):
+        return qaadapter.registry.get_imaging_topic()        
 
-        return {'pcontext'   : context,
-                'qasection' : qasection}
+
+class T2_3_5MRenderer(T2_3_XMBaseRenderer):
+    """
+    Renderer for T2-3-5M: the miscellaneous topic
+    """
+    # the filename to which output will be directed
+    output_file = 't2-3-5m.html'
+    # the template file for this renderer
+    template = 't2-3-5m.html'
+
+    @classmethod
+    def get_topic(cls):
+        return qaadapter.registry.get_miscellaneous_topic()        
 
 
 class T2_3MDetailsDefaultRenderer(object):
@@ -2612,7 +2671,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                                                       applycal.PhaseVsUVSummaryChart, 
                                                       ['AMPLITUDE'])
 
-        create_detail_plots = True
+        create_detail_plots = False
         if create_detail_plots:
             # detail plots. Don't need the return dictionary, but make sure a
             # renderer is passed so the detail page is written to disk
@@ -5229,7 +5288,7 @@ class T2_4MDetailsRenderer(object):
 class WebLogGenerator(object):
     renderers = [T1_1Renderer,         # OUS splash page
                  T1_2Renderer,         # observation summary
-                 T1_3MRenderer,        # QA summary
+                 T1_3MRenderer,        # by topic page
                  T2_1Renderer,         # session tree
                  T2_1DetailsRenderer,  # session details
                  T2_2_1Renderer,       # spatial setup
@@ -5238,10 +5297,11 @@ class WebLogGenerator(object):
                  T2_2_4Renderer,       # sky setup
                  T2_2_5Renderer,       # weather
                  T2_2_6Renderer,       # scans
-                 T2_3_1MRenderer,      # QA calibration
-                 T2_3_2MRenderer,      # QA line finding
-                 T2_3_3MRenderer,      # QA flagging
-                 T2_3_4MRenderer,      # QA imaging
+                 T2_3_1MRenderer,      # calibration topic
+                 T2_3_2MRenderer,      # line finding topic
+                 T2_3_3MRenderer,      # flagging topic
+                 T2_3_4MRenderer,      # imaging topic
+                 T2_3_5MRenderer,      # miscellaneous topic
                  T2_3MDetailsRenderer, # QA details pages
                  T2_4MRenderer,        # task tree
                  T2_4MDetailsRenderer, # task details

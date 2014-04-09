@@ -1,46 +1,113 @@
 <%!
+navbar_active='By Topic'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+
+def get_bar_class(scores, result):
+	qascore = scores[result.stage_number]
+	score = qascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.1:
+		return ' bar-danger'
+	elif score <= 0.5:
+		return ' bar-warning'
+	else:
+		return ' bar-success'
+
+def get_badge_class(scores, result):
+	qascore = scores[result.stage_number]
+	score = qascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.1:
+		return ' badge-important'
+	elif score <= 0.5:
+		return ' badge-warning'
+	else:
+		return ' badge-success'
+
+def get_bar_width(scores, result):
+	qascore = scores[result.stage_number]
+	if qascore.score in (None, '', 'N/A'):
+		return 0
+	else:
+		return 100.0 * qascore.score
+
+def format_score(scores, result):
+	qascore = scores[result.stage_number]
+	if qascore.score in (None, '', 'N/A'):
+		return 'N/A'
+	return '%0.2f' % qascore.score
+	
+tablerow_css_classes = {'QA Error'   : 'error',
+						'QA Warning' : 'warning',
+						'Error'      : 'error',
+						'Warning'    : 'warning'}
+
+def get_tablerow_class(row):
+	return tablerow_css_classes.get(row.type, '')
+
 %>
 <%inherit file="base.html"/>
 
-<script src="${self.attr.rsc_path}resources/base.js"></script>
-
-<script>
-$(document).ready(function(){
-	// Load stage details into panel is 'stage=x' given in URL 
-	var stageNum = $.url().fparam('stage');
-	var stageDetailsUrl = $('a#link_stage' + stageNum).attr('href');
-	if (typeof stageDetailsUrl != 'undefined')
-		$('iframe[name="details"]').attr({ src : stageDetailsUrl });
-});
-</script>
- 
-<h1>${next.title()}</h1>
- 
-<div class="colmask leftmenu">
-	<div class="colleft">
-		<div class="col1">
-			<iframe name="details"></iframe>
-		</div>
-		<div class="col2">
-		% for result_cls, results in qasection.results_by_type.items():
-			% if results:
-				<ul>
-					<li>${qasection.result_descriptions[result_cls]}</li>
-					<ul>
-					% for result in results:
-						<li>Stage ${hr.get_stage_number(result)}: ${hr.get_task_name(result)}</li>
-						<ul>
-							<li><a id="link_stage${result.stage_number}" href="stage${result.stage_number}/t2-3m_details.html" target="details">QA details</a></li>
-							<li><a href="t2-4m.html#stage=${result.stage_number}">Heuristics details</a></li>
-						</ul>
-					% endfor
-					</ul>
-				</ul>
-			% endif				
-		% endfor
-		</div>
-	</div>
+<div class="page-header">
+	<h1>${next.title()}<%block name="backbutton"><button class="btn btn-large pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
 </div>
+
+% if topic.results_by_type:
+<div class="row-fluid">
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="span9">Task</th>
+				<th class="span2">QA Score</th>
+				<th class="span1"></th>
+			</tr>
+		</thead>
+		<tbody>
+		% for result_type, results_list in topic.results_by_type.items():
+			% if results_list:
+				% for results in results_list:
+			<tr>
+				<td><a href="t2-4m.html?stage=${results.stage_number}">${hr.get_task_description(results)}</a><span class="pull-right">${scores[results.stage_number].shortmsg}</span></td>
+				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${get_bar_class(scores, results)}" style="width:${get_bar_width(scores, results)}%;"><span class="text-center"></span></div></div></td>
+				<td><span class="badge${get_badge_class(scores, results)}">${format_score(scores, results)}</span></td>
+			</tr>
+				% endfor
+			% endif
+		% endfor
+		</tbody>
+	</table>
+</div>
+% else:
+<p>No tasks belong to this topic.</p>
+% endif
+
+<h3>Warnings and errors</h3>
+% if tablerows:
+<table class="table table-bordered table-striped table-condensed"
+	   summary="Messages from tasks for this topic">
+	<thead>
+		<tr>
+			<th>Stage</th>
+			<th>Task</th>
+			<th>Type</th>
+			<th>Message</th>
+		</tr>
+	</thead>
+	<tbody>
+	% for row in tablerows:
+		<tr class="${get_tablerow_class(row)}">
+			<td><a href="t2-4m.html?stage=${row.stage}">${row.stage}</a></td>
+			<td><a href="t2-4m.html?stage=${row.stage}">${row.task}</a></td>
+			<td>${row.type}</td>
+			<td>${row.message}</td>
+		</tr>
+	% endfor		
+	</tbody>
+</table>
+% else:
+<p>No warnings or errors were emitted for this topic.</p>
+% endif
 
 ${next.body()}
