@@ -54,16 +54,23 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
-  casac::record* synthesisutils::cubedatapartition(const casac::record& selpars, const int npart, const double fstart, const double fend, const string& frame)
+  casac::record* synthesisutils::cubedatapartition(const casac::record& selpars, const int npart, const ::casac::variant& fstart, const ::casac::variant&  fend, const string& frame)
 {
   casac::record* rstat(0);
 
   try 
     {
       casa::Record recpars = *toRecord( selpars );
+      casa::Quantity qstart(1.0, "GHz");
+      casa::Quantity qend(1.5,"GHz");
+      if( (fstart.toString().size() != 0) && String(fstart.toString()) != String("[]"))
+	qstart=casaQuantity(fstart);
+      if( (fend.toString().size() != 0) && String(fend.toString()) != String("[]"))
+	qend=casaQuantity(fend);
+      
       casa::MFrequency::Types eltype;
       casa::MFrequency::getType(eltype, frame);
-      rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart, fstart, fend, eltype ) );
+      rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart, qstart.getValue("Hz"), qend.getValue("Hz"), eltype ) );
     } 
   catch  (AipsError x) 
     {
