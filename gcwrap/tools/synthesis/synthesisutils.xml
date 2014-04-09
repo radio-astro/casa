@@ -83,6 +83,22 @@ This is used to construct {\tt synthesisutils} tool.
      <value>1</value>
      </param>
 
+       <param type="double" name="fstart">
+     <description>start frequency of cube image</description>
+     <value>1.4e9</value>
+     </param>
+      
+       <param type="double" name="fend">
+     <description>end frequency of cube image</description>
+     <value>1.5e9</value>
+     </param>
+
+       <param type="string" name="frame">
+     <description>end frequency of cube image</description>
+     <value>LSRK</value>
+     </param>
+      
+
 </input>
 <returns type="record"/>
 </method>

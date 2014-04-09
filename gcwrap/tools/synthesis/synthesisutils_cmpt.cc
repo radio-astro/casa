@@ -54,14 +54,16 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
-  casac::record* synthesisutils::cubedatapartition(const casac::record& selpars, const int npart)
+  casac::record* synthesisutils::cubedatapartition(const casac::record& selpars, const int npart, const double fstart, const double fend, const string& frame)
 {
   casac::record* rstat(0);
 
   try 
     {
       casa::Record recpars = *toRecord( selpars );
-      rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart ) );
+      casa::MFrequency::Types eltype;
+      casa::MFrequency::getType(eltype, frame);
+      rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart, fstart, fend, eltype ) );
     } 
   catch  (AipsError x) 
     {
