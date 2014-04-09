@@ -390,6 +390,8 @@ protected:
 	// return a string representing a pixel value, precision 1.
 	static String _printPixel(const Double& d);
 
+	MDirection::Types _getDirectionRefFrame() const { return _directionRefFrame; }
+
 private:
 	Type _type;
 	MDirection::Types _directionRefFrame;
