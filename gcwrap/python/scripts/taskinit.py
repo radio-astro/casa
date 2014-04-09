@@ -61,6 +61,8 @@ cp = cptool()
 qatool = casac.quanta
 qa = casac.qa =  qatool()
 tbtool = casac.table
+ssdtool = casac.sakura
+ssd=ssdtool()
 #fgtool = casac.flagger
 aftool = casac.agentflagger
 af = aftool()
@@ -96,13 +98,13 @@ def gentools(tools=None):
 	"""
 	Generate a fresh set of tools the ones who's
 	state can be funny
-	im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi=gentools() 
+	im,cb,ms,tb,ssd,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi=gentools() 
 	or if you want specific set of tools
 	im, ia, cb=gentools(['im', 'ia', 'cb'])
 
 	"""
 	tooldic={'im':'imager()', 'cb' :'calibrater()', 'ms':'mstool()',
-		 'tb':'tbtool()',  'me' :'metool()', 
+		 'tb':'tbtool()', 'me' :'metool()', 
 		 'ia': 'iatool()', 'po':'potool()', 'sm' :'smtool()', 
 		 'cl': 'cltool()', 'cs' :'cstool()', 'rg':'rgtool()',
 		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()',
