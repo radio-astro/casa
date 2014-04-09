@@ -31,24 +31,6 @@ sakura::sakura()
   }
 }
 
-int
-sakura::dosomething(int number) {
-  *itsLog << LogOrigin("sakura", "dosomething");
-  try {
-    if (number < 0)
-      throw(AipsError("The input number should be >= 0"));
-    // do something here
-    *itsLog << "sakura::dosomething is called with the input value, "
-	    << number << ". This function just resturns the input value."
-	    << LogIO::POST;
-      return number;
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    RETHROW(x);
-  }
-}
-
 sakura::~sakura()
 {
   try {
@@ -59,6 +41,23 @@ sakura::~sakura()
       delete itsLog;
       itsLog = NULL;
     }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+}
+
+void
+sakura::welcome(int number) {
+  *itsLog << LogOrigin("sakura", "welcome");
+  try {
+    if (number < 0)
+      throw(AipsError("The input number should be >= 0"));
+    // do something here
+    *itsLog << "sakura::welcome is called with the input value, "
+	    << number << ". This function just returns the input value."
+	    << LogIO::POST;
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 	    << LogIO::POST;

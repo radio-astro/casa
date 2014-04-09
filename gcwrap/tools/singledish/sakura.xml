@@ -34,8 +34,8 @@ ssd = casac.sakura()
 </example>
 </method>
 
-<method type="function" name="dosomething">
-   <shortdescription>sample function do something with sakura module
+<method type="function" name="welcome">
+   <shortdescription>sample function welcome with sakura module
    </shortdescription>
 <description>
 This function simply returns the input value.
@@ -47,11 +47,11 @@ This function simply returns the input value.
      <value>0</value>
      </param>
 </input>
-   <returns type="int">
+   <returns type="void">
    </returns>
 <example>
 
-ssd.dosomething(10)
+ssd.welcome(10)
 
 </example>
 </method>
