@@ -198,17 +198,16 @@ template <class T> Bool ImageTask<T>::_openLogfile() {
 	if (_logfile.get() == 0) {
 		return False;
 	}
-	*_log << LogOrigin(getClass(), __FUNCTION__);
 	ThrowIf(
 		! _logfileSupport,
 		"Logic Error: This task does not support writing of a log file"
 	);
-	return _logfile->openFile();
+	return _logfile->open();
 }
 
 template <class T> void ImageTask<T>::_closeLogfile() const {
 	if (_logfile) {
-		_logfile->closeFile();
+		_logfile->close();
 	}
 }
 

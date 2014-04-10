@@ -952,7 +952,7 @@ void ImageProfileFitterResults::_resultsToLog() {
     	_writeLogfile(summary.str(), False, False);
 	}
 	if (_logfile.get() != 0) {
-		_logfile->closeFile();
+		_logfile->close();
 	}
 }
 
