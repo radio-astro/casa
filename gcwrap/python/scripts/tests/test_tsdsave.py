@@ -1712,6 +1712,13 @@ class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_uni
 
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
 
+    def test_spw_id_pattern(self):
+        """test_spw_id_pattern: Test spw selection by wildcard"""
+        iflist = [0,1,2,3]
+        spw = '*'
+        expected_nrow = 64
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)        
     def test_spw_id_list(self):
         """test_spw_id_list: Test spw selection by id ('N,M')"""
         iflist = [1,2,3]
