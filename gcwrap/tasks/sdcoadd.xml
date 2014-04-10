@@ -19,8 +19,15 @@ ASAP, MS2,SDFITS, and ASCII.
 The units of line flux, the units of spectral axis, frame, and doppler
 are assumed to be those of the first one in the infiles.
 
-Note that it only works if the data structures are the same (nif, npol,
+The task tries to combine spws according to a tolerance value specified
+by the parameter freqtol. Default tolerance is '0Hz', which means spws
+are combined only when spectral setup are the same. Note that, except
+for first data in the infiles, spw is ignored if there are no corresponding
+spectral data in the main table.
+<!--
+   Note that it only works if the data structures are the same (nif, npol,
 nchan...)
+-->
   </description>
 
   <input>
