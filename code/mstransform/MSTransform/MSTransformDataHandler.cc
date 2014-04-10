@@ -2544,38 +2544,6 @@ Bool MSTransformDataHandler::copyFeed()
 	return True;
 }
 
-// Get the processorId corresponding to a given DDI
-Int MSTransformDataHandler::getProcessorId(Int dataDescriptionId, String msname)
-{
-    ostringstream taql;
-    taql << "SELECT PROCESSOR_ID from " << msname;
-    taql << " WHERE DATA_DESC_ID==" << dataDescriptionId;
-    taql << " LIMIT 1";
-
-    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
-    Record colWrapper = firstSelectedRow->getVarColumn(String('PROCESSOR_ID'),0,1,0);
-    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
-
-    return processorId[0];
-}
-
-// Get the processor Type corresponding to a given Processor ID
-String MSTransformDataHandler::getProcessorType(Int processorId, String msname)
-{
-	// How to get row??
-    ostringstream taql;
-    String procname = msname+"/PROCESSOR";
-    taql << "SELECT TYPE from " << procname;
-    taql << " WHERE DATA_DESC_ID==" << processorId;
-    taql << " LIMIT 1";
-
-    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
-    Record colWrapper = firstSelectedRow->getVarColumn(String('PROCESSOR_ID'),0,1,0);
-    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
-
-    return processorId[0];
-};
-
 
 // -----------------------------------------------------------------------
 //
