@@ -112,7 +112,8 @@ public:
 
 	void setReplicate(Bool r) { _replicate = r; }
 
-	void setDecimate(Int d) { _decimate = d; }
+	// throws exception if 3*decimate > length of an axis that will be regridded
+	void setDecimate(Int d);
 
 	void setForceRegrid(Bool f) { _forceRegrid = f; }
 
@@ -166,6 +167,7 @@ private:
 		const Vector<std::pair<Double, Double> >& corners1
 	);
 
+	Bool _regriddingDirectionAxes() const;
 
 };
 }
