@@ -4,7 +4,7 @@ from taskinit import *
 def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=None,
 	       subscanduration=None, sbduration=None, apcorrected=None,
 	       verbose=None, showversion=None, useversion=None):
-	""" Convert a CASA visibility file (MS) into an ALMA Science Data Model.
+	""" Convert a CASA visibility file (MS) into an ALMA or EVLA Science Data Model.
                                           
 	Keyword arguments:
 	vis       -- MS name,
@@ -30,7 +30,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 	          default: "2700s"
 
 	apcorrected -- If true, the data in column datacolumn should be regarded
-	          as having atmospheric phase correction, default: True
+	          as having atmospheric phase correction, default: False
 
 	verbose     -- produce log output, default: True
 
@@ -217,5 +217,5 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 			return False
 	
 	except Exception, instance:
-		casalog.post("Error ...", 'SEVERE')
+		casalog.post("Error: "+str(instance), 'SEVERE')
 		raise Exception, instance

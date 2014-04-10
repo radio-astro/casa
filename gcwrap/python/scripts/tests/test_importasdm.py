@@ -16,6 +16,7 @@
 #    6) Is the created ASDM well-formed (XML) and complete                  #
 #    7) Can the resulting ASDM be reimported without raising exceptions     #
 #    8) Does it have the same number of integrations as the original        #
+#    9) Can a mixed mode ASDM be imported in lazy mode                      #
 #                                                                           #
 # Input data:                                                               #
 #     one dataset for the filler of ASDM 1.0                                #
@@ -31,7 +32,7 @@ from taskinit import *
 import testhelper as th
 import unittest
 
-myname = 'asdm-import_regression'
+myname = 'test_importasdm'
 
 # default ASDM dataset name
 myasdm_dataset_name = 'uid___X5f_X18951_X1'
@@ -172,6 +173,23 @@ class test_base(unittest.TestCase):
             
         default(importasdm)
 
+    def setUp_acaex(self):
+        res = None
+        myasdmname = 'uid___A002_X72bc38_X000' # ACA example ASDM with mixed pol/channelisation
+
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/asdm-import/input/'
+        os.system('ln -sf '+datapath+myasdmname)
+        default(importasdm)
+
+    def setUp_12mex(self):
+        res = None
+        myasdmname = 'uid___A002_X71e4ae_X317_short' # 12m example ASDM with mixed pol/channelisation
+
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/asdm-import/input/'
+        os.system('ln -sf '+datapath+myasdmname)
+        default(importasdm)
+
+
 ###########################
 # beginning of actual test 
 class asdm_import1(test_base):
@@ -180,7 +198,7 @@ class asdm_import1(test_base):
         self.setUp_m51()
         
     def tearDown(self):
-        shutil.rmtree(myasdm_dataset_name)
+        os.system('rm -rf '+myasdm_dataset_name)
         shutil.rmtree(myms_dataset_name)
         shutil.rmtree(msname,ignore_errors=True)
         shutil.rmtree(msname+'.flagversions',ignore_errors=True)
@@ -751,13 +769,437 @@ class asdm_import5(test_base):
             
                 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+class asdm_import6(test_base):
+
+    def setUp(self):
+        self.setUp_acaex()
+        
+    def tearDown(self):
+        myasdmname = 'uid___A002_X72bc38_X000'
+        os.system('rm '+myasdmname) # a link
+        shutil.rmtree(msname,ignore_errors=True)
+        shutil.rmtree(msname+'.flagversions',ignore_errors=True)
+        os.system('rm -rf reference.ms*')
+               
+    def test6_lazy1(self):
+        '''Asdm-import: Test good ACA ASDM with mixed pol/channelisation input with default filler in lazy mode'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X72bc38_X000'
+        themsname = myasdmname + ".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, scans='0:1~3') # only the first 3 scans to save time
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(themsname)
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            importasdm(asdm=myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
+
+            if(os.path.exists('reference.ms')):
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
+                if not retValue['success']:
+                    print "ERROR: DATA does not agree with reference."
+                else:
+                    print "DATA columns agree."
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
+                if not retValueTmp:
+                    print "ERROR: FLAG does not agree with reference."
+                else:
+                    print "FLAG columns agree."
+
+                retValue['success'] = retValue['success'] and retValueTmp
+
+                for subtname in ["ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POINTING",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL",
+                                 "ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POINTING",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL"]:
+                    
+                    print "Subtable ",subtname
+                    excllist = []
+                    if subtname=='SOURCE':
+                        excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
+                    if subtname=='SYSCAL':
+                        excllist=['TANT_SPECTRUM', 'TANT_TSYS_SPECTRUM']
+                    if subtname=='SPECTRAL_WINDOW':
+                        excllist=['CHAN_FREQ', 'CHAN_WIDTH', 'EFFECTIVE_BW', 'RESOLUTION']
+                        for colname in excllist: 
+                            retValue['success'] = th.compVarColTables('reference.ms/SPECTRAL_WINDOW',
+                                                                      themsname+'/SPECTRAL_WINDOW', colname, 0.01) and retValue['success']
+                        
+                    try:    
+                        retValue['success'] = th.compTables('reference.ms/'+subtname,
+                                                            themsname+'/'+subtname, excllist, 
+                                                            0.01) and retValue['success']
+                    except:
+                        retValue['success'] = False
+                        print "ERROR for table ", subtname
+            
                 
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        
+class asdm_import7(test_base):
+
+    def setUp(self):
+        self.setUp_12mex()
+        
+    def tearDown(self):
+        myasdmname = 'uid___A002_X71e4ae_X317_short'
+        os.system('rm '+myasdmname) # a link
+        shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+        shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+        shutil.rmtree("reference.ms",ignore_errors=True)
+               
+    def test7_lazy1(self):
+        '''Asdm-import: Test good 12 m ASDM with mixed pol/channelisation input with default filler in lazy mode'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X71e4ae_X317_short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, scans='0:1~4') # only the first 4 scans to save time
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(themsname)
+            ms.close()
+            print  myname, ": MS can be opened. Now testing the changing of the asdmref ..."
+            os.system("mv "+myasdmname+" moved_"+myasdmname)
+            ms.open(themsname)
+            ms.asdmref("./moved_"+myasdmname)
+            ms.close()
+            
+            ms.open(themsname)
+            
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
+
+            if(os.path.exists('reference.ms')):
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
+                if not retValue['success']:
+                    print "ERROR: DATA does not agree with reference."
+                else:
+                    print "DATA columns agree."
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
+                if not retValueTmp:
+                    print "ERROR: FLAG does not agree with reference."
+                else:
+                    print "FLAG columns agree."
+
+                retValue['success'] = retValue['success'] and retValueTmp
+
+                for subtname in ["ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL",
+                                 "ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL"]:
+                    
+                    print "Subtable ",subtname
+                    excllist = []
+                    if subtname=='SOURCE':
+                        excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
+                    if subtname=='SYSCAL':
+                        excllist=['TANT_SPECTRUM', 'TANT_TSYS_SPECTRUM']
+                    if subtname=='SPECTRAL_WINDOW':
+                        excllist=['CHAN_FREQ', 'CHAN_WIDTH', 'EFFECTIVE_BW', 'RESOLUTION', 'ASSOC_SPW_ID', 'ASSOC_NATURE']
+                        for colname in excllist:
+                            if colname!='ASSOC_NATURE':
+                                retValue['success'] = th.compVarColTables('reference.ms/SPECTRAL_WINDOW',
+                                                                          themsname+'/SPECTRAL_WINDOW', colname, 0.01) and retValue['success']
+                    if subtname=='POLARIZATION':
+                        excllist=['CORR_TYPE', 'CORR_PRODUCT']
+                        for colname in excllist: 
+                            retValue['success'] = th.compVarColTables('reference.ms/POLARIZATION',
+                                                                      themsname+'/POLARIZATION', colname, 0.01) and retValue['success']
+                    try:    
+                        retValue['success'] = th.compTables('reference.ms/'+subtname,
+                                                            themsname+'/'+subtname, excllist, 
+                                                            0.01) and retValue['success']
+                    except:
+                        retValue['success'] = False
+                        print "ERROR for table ", subtname
+
+        os.system("mv moved_"+myasdmname+" "+myasdmname)
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+    def test7_lazy2(self):
+        '''Asdm-import: Test good 12 m ASDM with mixed pol/channelisation input with default filler in lazy mode with reading the BDF flags'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X71e4ae_X317_short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, bdfflags=True) 
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(themsname)
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            importasdm(asdm=myasdmname, vis='reference.ms', lazy=True, overwrite=True, bdfflags=False)
+
+            if(os.path.exists('reference.ms')):
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
+                if not retValue['success']:
+                    print "ERROR: DATA does not agree with reference."
+                else:
+                    print "DATA columns agree."
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") != 0
+                if not retValueTmp:
+                    print "ERROR: FLAG columns do agree with reference but they shouldn't."
+                else:
+                    print "FLAG columns do not agree as expected."
+
+                retValue['success'] = retValue['success'] and retValueTmp
+
+                for subtname in ["ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL",
+                                 "ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL"]:
+                    
+                    print "Subtable ",subtname
+                    excllist = []
+                    if subtname=='SOURCE':
+                        excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
+                    if subtname=='SYSCAL':
+                        excllist=['TANT_SPECTRUM', 'TANT_TSYS_SPECTRUM']
+                    if subtname=='SPECTRAL_WINDOW':
+                        excllist=['CHAN_FREQ', 'CHAN_WIDTH', 'EFFECTIVE_BW', 'RESOLUTION', 'ASSOC_SPW_ID', 'ASSOC_NATURE']
+                        for colname in excllist:
+                            if colname!='ASSOC_NATURE':
+                                retValue['success'] = th.compVarColTables('reference.ms/SPECTRAL_WINDOW',
+                                                                          themsname+'/SPECTRAL_WINDOW', colname, 0.01) and retValue['success']
+                    if subtname=='POLARIZATION':
+                        excllist=['CORR_TYPE', 'CORR_PRODUCT']
+                        for colname in excllist: 
+                            retValue['success'] = th.compVarColTables('reference.ms/POLARIZATION',
+                                                                      themsname+'/POLARIZATION', colname, 0.01) and retValue['success']
+                    try:    
+                        retValue['success'] = th.compTables('reference.ms/'+subtname,
+                                                            themsname+'/'+subtname, excllist, 
+                                                            0.01) and retValue['success']
+                    except:
+                        retValue['success'] = False
+                        print "ERROR for table ", subtname
+            
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+
         
 def suite():
     return [asdm_import1, 
             asdm_import2, 
             asdm_import3, 
             asdm_import4,
-            asdm_import5]        
+            asdm_import5,
+            asdm_import6,
+            asdm_import7]        
         
     

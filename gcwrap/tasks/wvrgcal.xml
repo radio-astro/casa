@@ -107,7 +107,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value>0.8</value>
       </param>
       
-
+      <param type="bool" name="usefieldtab">
+	<description>derive the antenna AZ/EL values from the FIELD rather than the POINTING table</description>
+	<value>False</value>
+      </param>
 
       <!-- ================================================================= -->
     
@@ -149,11 +152,11 @@ WVRGCAL correction should not be used.
              default: 0 (ALMA default for cycle 1, for cycle 0, i.e. up to Jan 2013 it was -1)
 
   segsource -- Do a new coefficient calculation for each source
-             default: True
+               default: True
 
   tie -- Prioritise tieing the phase of these sources as well as possible
          (requires segsource=True)
-             default: [] example: ['3C273,NGC253', 'IC433,3C279']
+         default: [] example: ['3C273,NGC253', 'IC433,3C279']
 
   sourceflag -- Flag the WVR data for these source(s) as bad and do not produce corrections for it
                (requires segsource=True)
@@ -163,32 +166,32 @@ WVRGCAL correction should not be used.
           By default only one set of coefficients is generated for the entire observation. 
           If more sets are requested, then they will be evenly distributed in time throughout 
           the observation. Values > 1 require segsource=False.
-             default: 1
+          default: 1
 
   disperse -- Apply correction for dispersion
              default: False
 
   wvrflag -- Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values
-               default: [] (none) example: ['DV03','DA05','PM02']           
+             default: [] (none) example: ['DV03','DA05','PM02']           
 
   statfield -- Compute the statistics (Phase RMS, Disc) on this field only
                default: '' (all) 
 
   statsource -- Compute the statistics (Phase RMS, Disc) on this source only
-               default: '' (all)             
+                default: '' (all)             
 
   smooth -- Smooth the calibration solution on the given timescale 
-	     default: '' (no smoothing), example: '3s' smooth on a timescale of 3 seconds									
+	    default: '' (no smoothing), example: '3s' smooth on a timescale of 3 seconds									
 
   scale -- Scale the entire phase correction by this factor
-             default: 1. (no scaling)
+           default: 1. (no scaling)
 
   reversespw -- Reverse the sign of the correction for the listed SPWs
                 (only neede for early ALMA data before Cycle 0)
-             default: '' (none), example: reversespw='0~2,4'; spectral windows 0,1,2,4
+                default: '' (none), example: reversespw='0~2,4'; spectral windows 0,1,2,4
 
   cont -- Estimate the continuum (e.g., due to clouds)
-             default: False
+          default: False
 
   maxdistm -- maximum distance (m) an antenna may have to be considered for being part
               of the antenna set (minnumants to 3 antennas) for the interpolation of a solution 
@@ -202,6 +205,8 @@ WVRGCAL correction should not be used.
                  the antenna is flagged.
                  default: 0.8
 
+  usefieldtab -- derive the antenna AZ/EL values from the FIELD rather than the POINTING table
+	         default: False
   </description>
 
   <example>

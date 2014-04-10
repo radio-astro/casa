@@ -204,7 +204,7 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
 #                                        print tdata[j]
                                         differs = True
 ###                                elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
-                                elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
+                                elif (isinstance(rdata[j],list)) or (isinstance(rdata[j],np.ndarray)):
                                     for k in range(0,len(rdata[j])):
                                         if (abs(rdata[j][k]-tdata[j][k]) > tolerance*abs(rdata[j][k]+tdata[j][k])):
 #                                            print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
@@ -425,4 +425,48 @@ def getTileShape(mydict, column='DATA'):
             break
     
     return tsh
+
+def checkwithtaql(taqlstring):
+    os.system('rm -rf mynewtable.tab')
+    tb.create('mynewtable.tab')
+    tb.open('mynewtable.tab',nomodify=False)
+    rval = tb.taql(taqlstring)
+    tb.close()
+    therval = rval.nrows()
+    tmpname = rval.name()
+    rval.close()
+    os.system('rm -rf mynewtable.tab')
+    os.system('rm -rf '+tmpname)
+    print "Found ", therval, " rows in selection."
+    return therval
+
                     
+def compmsmainnumcol(vis1, vis2, tolerance, colname1='DATA', colname2="DATA"):
+    print "Comparing column "+colname1+" of MS "+vis1
+    print "     with column "+colname2+" of MS "+vis2
+    print "Discrepant row search ..."
+    rval = False
+    try:
+        discrepantrows = checkwithtaql("select from [select from "+vis1+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "+vis2+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1."+colname1+",t2."+colname2+", "+str(tolerance)+")))")
+        if discrepantrows==0:
+            print "The two columns agree."
+            rval = True
+    except Exception, instance:
+        print "Error: "+str(instance)
+
+    return rval
+
+def compmsmainboolcol(vis1, vis2, colname1='FLAG', colname2='FLAG'):
+    print "Comparing column "+colname1+" of MS "+vis1
+    print "     with column "+colname2+" of MS "+vis2
+    print "Discrepant row search ..."
+    rval = False
+    try:
+        discrepantrows = checkwithtaql("select from [select from "+vis1+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "+vis2+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1."+colname1+"==t2."+colname2+"))")
+        if discrepantrows==0:
+            print "The two columns agree."
+            rval = True
+    except Exception, instance:
+        print "Error: "+str(instance)
+
+    return rval
