@@ -320,7 +320,7 @@ class imregrid_test(unittest.TestCase):
         mycsys.setincrement(mycsys.increment()["numeric"]/2)
         myia.setcoordsys(mycsys.torecord())
         exp[2] = mycsys.increment()["numeric"][2]
-        zz = imregrid(imagename, template=templatename, output=output, axes=2)
+        zz = imregrid(imagename, template=templatename, output=output, axes=2, decimate=3)
         myia.open(output)
         got = myia.coordsys().increment()["numeric"]
         self.assertTrue((got == exp).all())
@@ -385,7 +385,7 @@ class imregrid_test(unittest.TestCase):
         csys.setincrement(refpix, "spectral")
         
         myia.setrestoringbeam(major="4arcsec", minor="2arcsec", pa="0deg", channel=0, polarization=-1)
-        regridded = myia.regrid(axes=[0, 1], csys=csys.torecord())
+        regridded = myia.regrid(axes=[0, 1], csys=csys.torecord(), decimate=3)
         regridded.done()
         self.assertRaises(Exception, myia.regrid, axes=[0,1,2], csys=csys.torecord())
         self.assertTrue(len(tb.showcache()) == 0)
@@ -512,21 +512,21 @@ class imregrid_test(unittest.TestCase):
         output = "cas_4959_0"
         imregrid(
             imagename=imagename, template=template,
-            output=output
+            output=output, decimate=3
         )
         myia.open(output)
         self.assertTrue((myia.shape() == [10, 10, 10]).all())
         output = "CAS_4959_1"
         imregrid(
             imagename=imagename, template=template,
-            output=output, axes=[0,1]
+            output=output, axes=[0,1], decimate=3
         )
         myia.open(output)
         self.assertTrue((myia.shape() == [10, 10, 20]).all())
         output = "CAS_4959_2"
         imregrid(
             imagename=imagename, template=template,
-            output=output, axes=[2]
+            output=output, axes=[2], decimate=3
         )
         myia.open(output)
         self.assertTrue((myia.shape() == [20, 20, 10]).all())
@@ -544,7 +544,12 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue((myia.shape() == [6, 6, 2, 36]).all())
         myia.done()
         outfile = "myout1.im"
-        self.assertTrue(imregrid(imagename=target, template=template, output=outfile, axes=[0, 1]))
+        self.assertTrue(
+            imregrid(
+                imagename=target, template=template,
+                output=outfile, axes=[0, 1], decimate=2
+            )
+        )
         myia.open(outfile)
         self.assertTrue((myia.shape() == [6, 6, 2, 30]).all())
         myia.done()
@@ -1010,6 +1015,26 @@ class imregrid_test(unittest.TestCase):
         myia.open(output)
         self.assertTrue(myia.shape()[3] == 4)
         myia.done()
+        
+    def test_decimate(self):
+        """imregrid, test too high a value for decimate throws exception - CAS-5313"""
+        myia = self._myia
+        myia.fromshape("", [10, 10, 10])
+        self.assertRaises(
+            Exception, myia.regrid, axes=[0, 1], csys=myia.coordsys().torecord()
+        )
+        regridded = myia.regrid(
+            axes=[0, 1], csys=myia.coordsys().torecord(), decimate=3
+        )
+        self.assertTrue(regridded)
+        regridded.done()
+        # decimate doen't matter for non-direction axis regridding
+        regridded = myia.regrid(
+            axes=[2], csys=myia.coordsys().torecord()
+        )
+        self.assertTrue(regridded)
+        regridded.done()
+        
         
 def suite():
     return [imregrid_test]
