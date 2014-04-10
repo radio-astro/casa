@@ -282,6 +282,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 	//
 
 	
+		
 	
 		
 		
@@ -337,9 +338,11 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		SysPowerRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -355,7 +358,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 			
 			
 			
-	SysPowerRow*  SysPowerTable::checkAndAdd(SysPowerRow* x, bool skipCheckUniqueness) {
+	SysPowerRow*  SysPowerTable::checkAndAdd(SysPowerRow* x, bool ) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -549,7 +552,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -671,7 +674,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysPowerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -790,7 +793,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SysPower");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -1049,7 +1052,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SysPower");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.

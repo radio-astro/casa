@@ -39,16 +39,20 @@ namespace casa {
     int polSize;
     switch (dataType) {
     case 0:
-      polSize = 2*2*nPol;    // cross complex short
+      //polSize = 2*2*nPol;    
+      polSize = 2*2;  // cross complex short
       break;
     case 1:
-      polSize = 2*4*nPol;    // cross complex int
+      //polSize = 2*4*nPol;
+      polSize = 2*4;    // cross complex int
       break;
     case 3:
-      polSize = 2*4*nPol;    // cross complex float
+      //polSize = 2*4*nPol;
+      polSize = 2*4;    // cross complex float
       break;
     case 10:
       // For autocorr, the nr of pol values is special (see getAuto).
+      /*
       if (nPol == 3) {
         polSize = 4*4;
       } else if (nPol == 4) {
@@ -56,12 +60,14 @@ namespace casa {
       } else {
         polSize = 4*nPol;
       }
+      */
+      polSize = 4;
       break;
     default:
       throw DataManError ("AsdmStMan: unknown datatype " +
                           String::toString(dataType));
     }
-    return nBl * nSpw * nChan * polSize;
+    return nBl * stepBl * polSize;
   }
 
   AipsIO& operator<< (AipsIO& os, const AsdmIndex& ix)
@@ -69,7 +75,7 @@ namespace casa {
     // This is version 1 of the index.
     os << Short(1) << ix.dataType << ix.fileNr
        << ix.nBl << ix.nSpw << ix.nChan << ix.nPol
-       << ix.stepBl << ix.stepSpw << ix.row << ix.fileOffset << ix.blockOffset;
+       << ix.stepBl << ix.iSpw << ix.row << ix.fileOffset << ix.blockOffset;
     os.put (ix.scaleFactors);
     return os;
   }
@@ -79,7 +85,7 @@ namespace casa {
     Short version;
     os >> version >> ix.dataType >> ix.fileNr;
     os >> ix.nBl >> ix.nSpw >> ix.nChan >> ix.nPol
-       >> ix.stepBl >> ix.stepSpw >> ix.row >> ix.fileOffset >> ix.blockOffset;
+       >> ix.stepBl >> ix.iSpw >> ix.row >> ix.fileOffset >> ix.blockOffset;
     os.get (ix.scaleFactors);
     return os;
   }
@@ -93,7 +99,7 @@ namespace casa {
 	 << ":" << ix.nChan
 	 << ":" << ix.nPol
 	 << ":" << ix.stepBl
-	 << ":" << ix.stepSpw
+	 << ":" << ix.iSpw
 	 << ":" << ix.row
 	 << ":" << ix.fileOffset
 	 << ":" << ix.blockOffset;

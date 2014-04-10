@@ -4504,6 +4504,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     Int origNumSourceRows = 0;
     Int nextSourceRow = -1;
     Int numNewSourceRows = 0;
+    vector<Int> newSourceIds;
+    vector<Int> newSourceSPWIds;
     MSSource* p_sourcetable = NULL;
     MSSourceColumns* p_sourceCol = NULL;
     if(Table::isReadable(ms_p.sourceTableName())){
@@ -5128,7 +5130,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
           // Add a row to the SOURCE table by copying the contents from the row
           // identified by the SOURCE_ID cell in the row theFieldId from the
           // FIELD table. Set the value of the cell SPECTRAL_WINDOW_ID in this
-          // new row to the value nextSPWId column.
+          // new row to the value nextSPWId.
 	  if(nextSourceRow>=0){ // there is a source table
 	    if(!p_sourcetable->canAddRow()){
 	      os << LogIO::WARN
@@ -5166,6 +5168,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
               // anticipate the deletion of the original SPW rows
 	      SOURCESPWIdCol.put(nextSourceRow, nextSPWId - origNumSPWs);
+	      newSourceIds.push_back(theSOURCEId);
+	      newSourceSPWIds.push_back(nextSPWId - origNumSPWs);
 	    }
 	      
 	  } // end if there is a source table
@@ -5209,8 +5213,45 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
       }
       if(numNewSourceRows>0){
+	ScalarColumn<Int> sourceIdCol = p_sourceCol->sourceId();
+	ScalarColumn<Int> spwIdCol = p_sourceCol->spectralWindowId();
+	// delete duplicate rows among the original Source rows
+	vector<Bool> tBRemRows(origNumSourceRows, False);
+	for(Int i=0; i<origNumSourceRows-1; i++){
+	  if(tBRemRows[i]){
+	    continue;
+	  }
+	  Int tSId = sourceIdCol(i);
+	  Int tSpwId = spwIdCol(i);
+	  for(Int j=i+1; j<origNumSourceRows; j++){
+	    if(sourceIdCol(j)==tSId && spwIdCol(j)==tSpwId){
+	      tBRemRows[j]=True;
+	    }
+	  }
+	}
+	for(Int i=origNumSourceRows-1; i>0; i--){
+	  if(tBRemRows[i]){
+	    p_sourcetable->removeRow(i);
+	    origNumSourceRows--; 
+	  }
+	}
+
+	// delete those original Source rows with Source/SPW ID pairs also present among the new ones
+	uInt sIndex=0;
 	for(Int i=0; i<origNumSourceRows; i++){
-	  p_sourcetable->removeRow(0);
+	  Bool sFound=False;
+	  for(Int j=0; j<newSourceIds.size(); j++){
+	    if(sourceIdCol(sIndex)==newSourceIds[j] && spwIdCol(sIndex)==newSourceSPWIds[j]){
+	      sFound=True;
+	      break;
+	    }
+	  }
+	  if(sFound){
+	    p_sourcetable->removeRow(sIndex);
+	  }
+	  else{
+	    sIndex++;
+	  }
 	}
       }
 

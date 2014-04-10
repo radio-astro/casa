@@ -181,6 +181,17 @@ public:
   uInt getAsdmStManVersion() const
     { return itsVersion; }
 
+  // access the references to the ASDM BDFs
+  void getBDFNames(Block<String>& bDFNames);
+
+  // overwrite the BDFNames (Block needs to have same size as original,
+  // returns False otherwise)
+  Bool setBDFNames(Block<String>& bDFNames);
+
+  // overwrite the index with the information presently stored in the
+  // data manager
+  void writeIndex();
+
 private:
   // Copy constructor cannot be used.
   AsdmStMan (const AsdmStMan& that);
@@ -268,7 +279,7 @@ private:
   void getShort (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
   void getInt   (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
   void getFloat (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
-  void getAuto  (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
+  void getAuto  (const AsdmIndex&, Complex* buf, uInt bl);
   // </group>
 
 

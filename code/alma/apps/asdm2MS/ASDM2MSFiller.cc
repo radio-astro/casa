@@ -984,26 +984,28 @@ void ASDM2MSFiller::addData (bool                      complexData,
   delete[] flag_row__;
 }
 
-void ASDM2MSFiller::addData (bool                complexData,
-			     vector<double>     &time_,
-			     vector<int>        &antennaId1_,
-			     vector<int>        &antennaId2_,
-			     vector<int>        &feedId1_,
-			     vector<int>        &feedId2_,
-			     vector<int>        &dataDescId_,
-			     int                 processorId_,
-			     vector<int>        &fieldId_,
-			     vector<double>     &interval_,
-			     vector<double>     &exposure_,
-			     vector<double>     &timeCentroid_,
-			     int                 scanNumber_,
-			     int                 arrayId_,
-			     int                 observationId_,
-			     vector<int>        &stateId_,
-			     vector<double>     &uvw_,
+void ASDM2MSFiller::addData (bool			 complexData,
+			     vector<double>		&time_,
+			     vector<int>		&antennaId1_,
+			     vector<int>		&antennaId2_,
+			     vector<int>		&feedId1_,
+			     vector<int>		&feedId2_,
+			     vector<int>		&dataDescId_,
+			     int			 processorId_,
+			     vector<int>		&fieldId_,
+			     vector<double>		&interval_,
+			     vector<double>		&exposure_,
+			     vector<double>		&timeCentroid_,
+			     int			 scanNumber_,
+			     int			 arrayId_,
+			     int			 observationId_,
+			     vector<int>		&stateId_,
+			     vector<double>		&uvw_,
 			     vector<vector<unsigned int> >  &dataShape_,
-			     vector<float *>    &data_,
-			     vector<unsigned int>      &flag_) {
+			     vector<float *>		&data_,
+			     vector<unsigned int>	&flag_,
+			     vector<double> &		 weight_,
+			     vector<double> &            sigma_) {
   
   //cout << "Entering addData" << endl;
   //printf("entering addData ...\n");
@@ -1088,25 +1090,26 @@ void ASDM2MSFiller::addData (bool                complexData,
     int numCorr = dataShape_.at(cRow0).at(0);
     int numChan = dataShape_.at(cRow0).at(1);
 
-    Vector<float>   ones(IPosition(1, numCorr), 1.0);
+    Vector<float>   weight(IPosition(1, numCorr), weight_[cRow-itsMSMainRow]);
+    Vector<float>   sigma(IPosition(1, numCorr), sigma_[cRow-itsMSMainRow]);
 
     //@pragma omp ordered
     { 
-    if (complexData) {
-      data.resize(numCorr,numChan);
-      data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
-      itsMSCol->data().put(cRow, data);
-      //printf("DONE writing complex data column %d %d\n", cRow, maxrow);
+      if (complexData) {
+	data.resize(numCorr,numChan);
+	data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
+	itsMSCol->data().put(cRow, data);
+	//printf("DONE writing complex data column %d %d\n", cRow, maxrow);
+      }
+      else {
+	// Float data.
+	float_data.takeStorage(IPosition(2, numCorr, numChan), data_.at(cRow0), SHARE);
+	itsMSCol->floatData().put(cRow, float_data);
+      }
     }
-    else {
-      // Float data.
-      float_data.takeStorage(IPosition(2, numCorr, numChan), data_.at(cRow0), SHARE);
-      itsMSCol->floatData().put(cRow, float_data);
-    }
-    }
-    // Sigma and Weight set to arrays of 1.0
-    itsMSCol->sigma().put(cRow, ones);
-    itsMSCol->weight().put(cRow, ones);
+    // Sigma and Weight.
+    itsMSCol->sigma().put(cRow, sigma);
+    itsMSCol->weight().put(cRow, weight);
     // The flag cell (an array) is put at false.
 
     itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));

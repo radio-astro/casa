@@ -659,6 +659,7 @@ namespace casa {
       
       // construct binary parts for dataStruct
       unsigned int bpFlagsSize = numSpectralPoint * numStokes * (numBaselines+numAutoCorrs);
+
       vector<AxisName> bpFlagsAxes;
       bpFlagsAxes.push_back(AxisNameMod::TIM); // order: inner part of loop should be last!!!!!!
       bpFlagsAxes.push_back(AxisNameMod::SPP); 
@@ -780,7 +781,9 @@ namespace casa {
 	
 	// SORT the data by baseline and antenna resp.!!!!!!!!!!!!
 
-	// create a list of the row numbers in this timestamp sorted by baseline
+	// create a list of the row numbers in this timestamp sorted by baseline in BDF style,
+	// i.e., e.g., for antennas (1,2,3,4): ['(1,1)', '(1,2)', '(2,2)', '(1,3)', '(2,3)', '(3,3)', '(1,4)', 
+        //                             '(2,4)', '(3,4)', '(4,4)', '(1,5)', '(2,5)', '(3,5)', '(4,5)', '(5,5)']
 	vector< uInt > rowsSorted;
 	{
 	  vector< uInt > rows;
@@ -799,20 +802,49 @@ namespace casa {
 	    rows.push_back(mainTabRow);
 	    mainTabRow++;
 	  }
+
 	  uInt nRows = rows.size();
-	  Int* bLine = new Int[nRows];
+	  vector<Int> bLine(nRows);
+	  uInt maxAnt = 0;
 	  for(uInt i=0; i<nRows; i++){
-	    bLine[i] = antenna1()(rows[i])*1000 + antenna2()(rows[i]);
-	  }	    
-	  Sort sort;
-	  sort.sortKey(bLine, TpInt);
-	  Vector<uInt> inx(nRows);
-	  sort.sort(inx, nRows);
+	    uInt a2 = antenna2()(rows[i]);
+	    bLine[i] = antenna1()(rows[i])*1000 + a2;
+	    if(maxAnt<a2){
+	      maxAnt=a2;
+	    }
+	  }	
+
 	  rowsSorted.resize(nRows);
-	  for(uInt i=0; i<nRows; i++){
-	    rowsSorted[i] = rows[inx(i)];
-	  }	  
-	  delete[] bLine;
+	  uInt expNRows = maxAnt*(maxAnt+1)/2; // (zero-based counting)
+	  uInt expNRowsWAuto = maxAnt*(maxAnt+1)/2 + maxAnt+1; // (zero-based counting)
+	  Bool haveAuto = False;
+	  if(nRows==expNRowsWAuto){
+	    haveAuto=True;
+	  }
+	  else if(nRows!=expNRows){ 
+	    ostringstream oss;
+	    oss << "Expected " << expNRows << " rows in integration but found " << nRows << endl;
+	    throw(asdmbinaries::SDMDataObjectWriterException(oss.str()));
+	  }
+	  uInt count=0;
+	  for(uInt i= (haveAuto ? 0 : 1) ; i<maxAnt+1; i++){
+	    for(uInt j=0; j< (haveAuto ? i+1 : i); j++){
+	      Int myBLine = j*1000 + i;
+	      for(uInt ii=0; ii<nRows; ii++){
+		if(bLine[ii]==myBLine){
+		  rowsSorted[count] = rows[ii];
+		  break;
+		}
+		if(ii==nRows-1){ // not found
+		  ostringstream oss;
+		  oss << "Baseline " << myBLine << " not found." << endl;
+		  throw(asdmbinaries::SDMDataObjectWriterException(oss.str()));
+		}
+	      }
+	      count++;
+	    }
+	  }
+
 	}
 	
 	for(uInt ii=0; ii<rowsSorted.size(); ii++){
@@ -837,7 +869,11 @@ namespace casa {
 	  }
 	  flagsm.reference(flag()(iRow));
 	  
-	  if(antenna1()(iRow) == antenna2()(iRow)){
+	  //cout << " ii row a1 a2 " << ii << " " << iRow << " " << antenna1()(iRow) << " " << antenna2()(iRow) << endl;
+
+	  Bool haveAuto = (antenna1()(iRow) == antenna2()(iRow));
+
+	  if(haveAuto){
 	    Complex x;  
 	    float a;
 	    for(uInt i=0; i<numSpectralPoint; i++){
@@ -859,23 +895,19 @@ namespace casa {
 	    // int a,b;
 	    for(uInt i=0; i<numSpectralPoint; i++){
 	      for(uInt j=0; j<numStokesMS; j++){
-		if(skipCorr_p[PolId][j]){
-		  continue;
-		}
-		else{
-		  x = dat(j,i);
-		  a = x.real();
-		  b = x.imag();
-		  crossData.push_back( a );
-		  crossData.push_back( b );
-		}
+		x = dat(j,i);
+		a = x.real();
+		b = x.imag();
+		crossData.push_back( a );
+		crossData.push_back( b );
 	      }
 	    }
-	  }	
+	  }
+
 	  unsigned int ul;
 	  for(uInt i=0; i<numSpectralPoint; i++){
 	    for(uInt j=0; j<numStokesMS; j++){
-	      if(skipCorr_p[PolId][j]){
+	      if(haveAuto && skipCorr_p[PolId][j]){
 		continue;
 	      }
 	      else{
@@ -1409,20 +1441,18 @@ namespace casa {
 	Stokes::StokesTypes st = static_cast<Stokes::StokesTypes>(v[i]);
 	if(st == Stokes::LR){ // only add if RL is not also present
 	  if(!stokesTypePresent(v, Stokes::RL)){
-	    corrTypeV.push_back( ASDMStokesParameter( st ) );
 	    skip = False;
 	  }
 	}
 	else if(st == Stokes::YX){ // only add if XY is not also present
 	  if(!stokesTypePresent(v, Stokes::XY)){
-	    corrTypeV.push_back( ASDMStokesParameter( st ) );
 	    skip = False;
 	  }
 	}
 	else{
-	  corrTypeV.push_back( ASDMStokesParameter( st ) );
 	  skip = False;
 	}
+	corrTypeV.push_back( ASDMStokesParameter( st ) );
 	skipCorr.push_back(skip);
       }
       int numCorr = corrTypeV.size(); 
@@ -1909,7 +1939,22 @@ namespace casa {
 	asdmFieldId_p.define(irow, tR->getFieldId());
       }
       else{
-	os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	if(sId == tR2->getSourceId()){ // if also the Source ID agrees, we really have a duplication
+	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	  return False;
+	}
+	fieldName = fieldName+"_B";
+	tR->setFieldName(fieldName);
+	tR2 = tT.add(tR);
+	if(tR2 == tR){ // adding this row caused a new tag to be defined
+	  os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << endl
+	     << "   appended \"_B\" to field name for second occurrence. New field name: " << fieldName << LogIO::POST;
+	  asdmFieldId_p.define(irow, tR->getFieldId());
+	}
+	else{
+	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	  return False;
+	} 
       }
     } // end loop over MS field table
 
@@ -4518,6 +4563,7 @@ namespace casa {
     for(uInt j=0; j<corrT.size(); j++){
       if(corrT[j]==static_cast<Int>(st)){
 	 rval = True;
+	 break;
       }
     }
     return rval;
@@ -4551,13 +4597,13 @@ namespace casa {
 	receiverSideband = ReceiverSidebandMod::SSB; 
 	rval = 1;
       }
-      if(67.<=theFreqGHz &&  theFreqGHz<90.){
+      else if(67.<=theFreqGHz &&  theFreqGHz<90.){
 	repFreq = (67.+90.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_02;
 	receiverSideband = ReceiverSidebandMod::SSB; 
 	rval = 2;
       }
-      if(84.<=theFreqGHz &&  theFreqGHz<116.){
+      else if(84.<=theFreqGHz &&  theFreqGHz<116.){
 	repFreq = (84.+116.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_03;
 	receiverSideband = ReceiverSidebandMod::TSB; 
@@ -4605,10 +4651,90 @@ namespace casa {
 	receiverSideband = ReceiverSidebandMod::DSB; 
 	rval = 10;
       }
+      else{
+	repFreq = theFreqGHz*1E9;
+	frequencyBand = ReceiverBandMod::UNSPECIFIED;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 0;
+      }
+	
       Quantity tempQ2(repFreq, "Hz");
       repFreq =  tempQ2.getValue(unitASDMFreq());
       return rval;
     }
+    else if(telName_p == "VLA" || telName_p == "EVLA" || telName_p == "JVLA"){
+      // EVLA freq band implementation!!
+      if( 0.033 <=theFreqGHz &&  theFreqGHz<0.081 ){
+	repFreq = (0.033/0.081)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_4;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 1;
+      }
+      else if(0.298<=theFreqGHz &&  theFreqGHz< 0.345){
+	repFreq = (0.298+0.345)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_P;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 2;
+      }
+      else if(1.0 <=theFreqGHz &&  theFreqGHz< 2.0){
+	repFreq = (1.+2.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_L;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 3;
+      }
+      else if(2.0 <=theFreqGHz &&  theFreqGHz< 4.0){
+	repFreq = (2.+4.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_S;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 4;
+      }	  
+      else if(4.0 <=theFreqGHz &&  theFreqGHz< 8.0){
+	repFreq = (4.+8.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_C;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 5;
+      }	  
+      else if(8.0 <=theFreqGHz &&  theFreqGHz< 12.0){
+	repFreq = (8.+12.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_X;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 6;
+      }	  
+      else if(12. <=theFreqGHz &&  theFreqGHz< 18.){ 
+	repFreq = (12.+18.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_Ku; // a.k.a. U
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 7;
+      }	  
+      else if(18.0 <=theFreqGHz &&  theFreqGHz< 26.5){
+	repFreq = (18.+26.5)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_K;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 8;
+      }	  
+      else if(26.5 <=theFreqGHz &&  theFreqGHz< 40.){
+	repFreq = (26.5+40.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_Ka;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 9;
+      }	  
+      else if(40. <=theFreqGHz &&  theFreqGHz< 50.){
+	repFreq = (40.+50.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_Q;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 10;
+      }
+      else{
+	repFreq = theFreqGHz*1E9;
+	frequencyBand = ReceiverBandMod::UNSPECIFIED;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 0;
+      }
+      Quantity tempQ2(repFreq, "Hz");
+      repFreq =  tempQ2.getValue(unitASDMFreq());
+      return rval;
+    }
+
     return 0; // unknown observatory
   }  
 

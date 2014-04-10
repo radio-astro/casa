@@ -44,7 +44,8 @@ public:
 		       unsigned int		stepBl,
 		       unsigned int		stepSpw,
 		       const vector<double>&	scaleFactors,
-		       uint64_t	         	fileOffset);
+		       uint64_t	         	fileOffset,
+		       uint32_t                 spwOffset);
 
   void appendWVRIndex(unsigned int              iDD,
 		      const string&		bdfName,
@@ -55,7 +56,8 @@ public:
 		      unsigned int		stepBl,
 		      unsigned int		stepSpw,
 		      const vector<double>&	scaleFactors,
-		      uint64_t	         	fileOffset);
+		      uint64_t	         	fileOffset,
+		      uint32_t                  spwOffset);
 
   void appendCrossIndex(unsigned int            iDD,
 			const string&		bdfName,
@@ -67,6 +69,7 @@ public:
 			unsigned int		stepSpw,
 			const vector<double>&	scaleFactors,
 			uint64_t		fileOffset,
+			uint32_t                spwOffset,
 			PrimitiveDataTypeMod::PrimitiveDataType       dataType);
 
   void	dumpAutoCross();

@@ -71,7 +71,6 @@ namespace LibAIR {
 	      dispt);
     }
 
-
     // Make the empty NewCaltable
     NewCalTable ct("wvrgcal",            // temporary name for mem table
 		   VisCalEnum::COMPLEX,
@@ -81,7 +80,7 @@ namespace LibAIR {
 
     // Workspace
     Cube<Complex> cpar(1,1,nAnt);                   // filled below
-    Cube<Bool>    flag(1,1,nAnt); flag.set(False);  // All unflagged
+    Cube<Bool>    flag(1,1,nAnt);                   // filled below
     Cube<Float>   err(1,1,nAnt);  err.set(0.0);     // All zero
     Cube<Float>   snr(1,1,nAnt);  snr.set(3.0);     // All 3
 
@@ -106,18 +105,19 @@ namespace LibAIR {
 	
 	// Generate antenna-based complex factors
 	cpar.set(Complex(0.0));
+	flag.set(False); // i.e. all unflagged
 	for (size_t j=0; j<nAnt; ++j)
 	{
-	  
-	  const double phase=g.g_path()[i][j]*path_to_phase;
 
-	  if(interpImpossibleAnts.count(j)==0)
+	  if(interpImpossibleAnts.count(j)==0 && g.g_path()[i][j]!=0)
 	  {
+	    const double phase=g.g_path()[i][j]*path_to_phase;
 	    cpar(0,0,j)=std::complex<float>(cos(phase),sin(phase));
 	  }
 	  else // there is no useful WVR data for this antenna
 	  {
             cpar(0,0,j)=std::complex<float>(1.,0.);
+	    flag(0,0,j)=True; 
 	  }
 
 	}
