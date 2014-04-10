@@ -12,6 +12,7 @@ from taskinit import gentools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
 
 from . import SDFlagPlotter as SDP
 from .. import common
@@ -77,8 +78,8 @@ class SDFlagSummary(object):
                     TimeTable = time_table[1]
                 else:
                     TimeTable = time_table[0]
-                
-                dt_idx = numpy.array([chunks[1] for chunks in TimeTable]).flatten()
+                flatiter = utils.flatten([ chunks[1] for chunks in TimeTable ])
+                dt_idx = [ chunk for chunk in flatiter ]
                 # generate summary plot
                 st_prefix = st.name.rstrip('/').split('/')[-1].rstrip('\.asap').replace('\.', '_')
                 iteration = _get_iteration(self.context.observing_run.reduction_group,

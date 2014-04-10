@@ -11,6 +11,7 @@ from taskinit import gentools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
 
 from . import SDFlagPlotter as SDP
 from .. import common
@@ -142,7 +143,7 @@ class SDFlagDataWorker(object):
     def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge):
 
         # Calculate RMS and Diff from running mean
-        NROW = len(numpy.array(TimeTable).flatten())/2
+        NROW = len([ series for series in utils.flatten(TimeTable) ])/2
         # parse edge
         if len(edge) == 2:
             (edgeL, edgeR) = edge
