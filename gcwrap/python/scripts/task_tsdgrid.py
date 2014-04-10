@@ -79,7 +79,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.pols = tmpst.parse_idx_selection("POL", self.polno)
 
         # spw
-        if int(self.spw.strip()) == -1:
+        if (self.spw.strip() == '-1'):
             self.ifno = tmpst.getif(0)
         else:
             masklist = tmpst.parse_spw_selection(self.spw)
