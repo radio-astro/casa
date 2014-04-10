@@ -91,6 +91,9 @@ private:
 	//Hide/show features associated with multipleYAxes.
 	void setMultipleAxesYEnabled();
 
+	//Relabel based on the new y-axis index.
+	void setYAxisLabel( PlotMSAxisWidget* yWidget, int index );
+
     // Widgets for the x axis and y axis, respectively.
     PlotMSAxisWidget* itsXWidget_;
     QList<PlotMSAxisWidget*> itsYWidgets_;

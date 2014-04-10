@@ -719,7 +719,8 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	String yLabelLeft;
 	String yLabelRight;
 	if(set) {
-		String xLabelSingle = canv->xLabelFormat().getLabel(x, xref, xrefval);
+		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
+		String xLabelSingle = canv->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
 		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
@@ -729,7 +730,8 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 			PlotAxis cy = axesParams->yAxis( i );
 			bool yref = itsCache_->hasReferenceValue(y);
 			double yrefval = itsCache_->referenceValue(y);
-			String yLabelSingle = canv->yLabelFormat( ).getLabel(y, yref, yrefval );
+			PMS::DataColumn yDataColumn = cacheParams->yDataColumn(i);
+			String yLabelSingle = canv->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
 			if ( cy == Y_LEFT ){
 				if ( yLabelLeft.size() > 0 ){
 					yLabelLeft.append( ", ");
@@ -756,9 +758,6 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 			canvas->setAxisFont(Y_RIGHT, yFont);
 		}
 	}
-
-
-
 
 	// Custom axes ranges
 	canvas->setAxesAutoRescale(true);
@@ -792,15 +791,20 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	}
 	String title = "";
 	if(resetTitle) {
+		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
 		vector<PMS::Axis> yAxes (yAxisCount, PMS::DEFAULT_YAXIS);
 		vector<bool> yRefs( yAxisCount, false);
 		vector<double> yRefVals( yAxisCount, 0);
+		vector<PMS::DataColumn> yDatas (yAxisCount, PMS::DATA );
 		for ( int i = 0; i < yAxisCount; i++ ){
 			yAxes[i] = cacheParams->yAxis( i );
 			yRefs[i] = itsCache_->hasReferenceValue(yAxes[i]);
 			yRefVals[i] = itsCache_->referenceValue(yAxes[i]);
+			yDatas[i] = cacheParams->yDataColumn( i );
 		}
-		title = canv->titleFormat().getLabel(x, yAxes, xref, xrefval, yRefs, yRefVals) + " " + iterTxt;
+		title = canv->titleFormat().getLabel(x, yAxes, xref,
+				xrefval, yRefs, yRefVals, xDataColumn, yDatas)
+				+ " " + iterTxt;
 	}
 	canvas->setTitle(title);
 

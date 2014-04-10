@@ -181,7 +181,9 @@ public:
     // <group>
     const QPAreaFill& areaFill() const;
     const QBrush& brush() const;
-    void setAreaFill(const PlotAreaFill& fill);
+    //The update flag allows an export operation to set the fill without affecting
+    //what is shown on the GUI.
+    void setAreaFill(const PlotAreaFill& fill, bool update=true);
     void setAreaFill(const QBrush& brush) { setAreaFill(QPAreaFill(brush)); }
     // </group>
     
@@ -251,7 +253,9 @@ public:
     // <group>
     const QPAreaFill& areaFill() const { return m_legend->areaFill(); }
     const QBrush& brush() const { return m_legend->brush(); }
-    void setAreaFill(const PlotAreaFill& fill) { m_legend->setAreaFill(fill); }
+    //The update flag allows an export operation to set the fill without
+    //affecting what is shown on the GUI.
+    void setAreaFill(const PlotAreaFill& fill, bool update = true ) { m_legend->setAreaFill(fill, update); }
     void setAreaFill(const QBrush& brush) { m_legend->setAreaFill(brush); }
     // </group>
     

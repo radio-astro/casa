@@ -92,31 +92,48 @@ void PlotMSAxesTab::yAxisSelected( int index ){
 }
 
 void PlotMSAxesTab::removeYWidget(){
+
+	//Remove the item from the combo
 	int removeIndex = yAxisCombo->currentIndex();
+	yAxisCombo->removeItem( removeIndex );
+
+	//Remove the widget
 	PlotMSAxisWidget* removeWidget = itsYWidgets_[removeIndex];
 	itsYWidgets_.removeAt( removeIndex );
-	yAxisCombo->removeItem( removeIndex );
+
+	//Reset the selected y-widget.
+	int currentIndex = yAxisCombo->currentIndex();
+	yAxisSelected( currentIndex );
+
 	setMultipleAxesYEnabled();
 	emit yAxisIdentifierRemoved( removeIndex );
 	delete removeWidget;
 	emit changed();
 }
 
-void PlotMSAxesTab::addYWidget(){
-	PlotMSAxisWidget* yWidget = new PlotMSAxisWidget(PMS::DEFAULT_YAXIS, Y_LEFT | Y_RIGHT );
-
-	int index = itsYWidgets_.size();
-	QString numberStr = "";
+void PlotMSAxesTab::setYAxisLabel( PlotMSAxisWidget* yWidget,
+		int /*index*/ ){
+	/*QString numberStr = "";
 	if ( index > 0 ){
 		numberStr = QString::number( index+1 );
 	}
 	QString axisLabel = "Y Axis "+ numberStr;
-	yWidget->axisLabel()->setText( axisLabel + ":" );
-	yWidget->insertLabelDefaults( itsLabelDefaults_ );
-	itsYWidgets_.append( yWidget );
+	yWidget->axisLabel()->setText( axisLabel + ":" );*/
+	QString identifier = yWidget->getIdentifier();
 
-	//Add the new one to the combo box.
-	yAxisCombo->addItem( axisLabel );
+	yAxisCombo->addItem( identifier );
+
+}
+
+void PlotMSAxesTab::addYWidget(){
+	PlotMSAxisWidget* yWidget = new PlotMSAxisWidget(PMS::DEFAULT_YAXIS, Y_LEFT | Y_RIGHT );
+
+	int index = itsYWidgets_.size();
+
+	yWidget->insertLabelDefaults( itsLabelDefaults_ );
+
+	itsYWidgets_.append( yWidget );
+	setYAxisLabel( yWidget, index);
 	yAxisCombo->setCurrentIndex( index );
 
 	setMultipleAxesYEnabled();
@@ -194,6 +211,7 @@ void PlotMSAxesTab::axisIdentifierChanged(PlotMSAxisWidget* axisWidget){
 	int yIndex = itsYWidgets_.indexOf( axisWidget );
 	if ( yIndex >= 0 ){
 		QString newIdentifier = axisWidget->getIdentifier();
+		yAxisCombo->setItemText(yIndex, newIdentifier );
 		emit yAxisIdentifierChanged( yIndex, newIdentifier );
 	}
 }

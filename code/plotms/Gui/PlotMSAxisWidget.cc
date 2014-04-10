@@ -29,6 +29,7 @@
 
 #include <plotms/Gui/PlotRangeWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -141,11 +142,9 @@ PMS::DataColumn PlotMSAxisWidget::data() const {
 
 QString PlotMSAxisWidget::getIdentifier() const {
 	QString axisText = chooser->currentText();
-	if ( dataChooser->isVisible()){
-		QString dataText = dataChooser->currentText();
-		if ( dataText.length() > 0 ){
-			axisText = axisText + ": "+dataText;
-		}
+	QString dataText = dataChooser->currentText();
+	if ( dataText != "data"){
+		axisText = axisText + ": "+dataText;
 	}
 	return axisText;
 }

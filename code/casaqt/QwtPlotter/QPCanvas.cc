@@ -75,6 +75,10 @@ bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidt
 		int rowIndex, int colIndex, QRect /*imageRect*/ ){
 	PlotAreaFillPtr originalBackground = background();
 	setBackground(*paf);
+	if ( m_legend != NULL ){
+		PlotColorPtr plotColor = paf->color();
+		m_legend->setAreaFill( *paf, false );
+	}
 
 	//Decide the print rectangle inside the image rectangle.
 	QRect printGeom;
@@ -108,9 +112,16 @@ bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidt
 	            asQwtPlot().setTitle(title);
 	        }
 
-	        setBackground(originalBackground);
+
+
 
 	        if (!op.null()) wasCanceled |= op->cancelRequested();
+	}
+
+	//Restore the background.
+	setBackground(originalBackground);
+	if ( m_legend != NULL ){
+		m_legend->setAreaFill( *originalBackground, false );
 	}
 	return wasCanceled;
 }
