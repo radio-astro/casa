@@ -221,6 +221,8 @@ public:
 	void copyMainTableKeywords (TableRecord& outKeys,
 			const TableRecord& inKeys);
 
+	Int getProcessorId(Int dataDescriptionId, String msname);
+
 	// This falls between copyGenericSubtables() and the copiers for standard
 	// sub-tables like copyFeed().  It is for optional sub-tables like CALDEVICE
 	// and SYSPOWER which can be watched for by name and may need their

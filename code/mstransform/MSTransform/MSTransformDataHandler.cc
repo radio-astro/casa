@@ -24,6 +24,7 @@
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableParse.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /////////////////////////////////////////////
@@ -2517,20 +2518,19 @@ Bool MSTransformDataHandler::copyFeed()
 	// Check if selected spw is WVR data. WVR data does not have FEED data
 	// so it is not a failure if newFeed.nrow == 0
 	if (newFeed.nrow() < 1 and spw_p.size() == 1){
-		const MSSpectralWindow oldSpw = mssel_p.spectralWindow();
-		const ROMSSpWindowColumns spwcols(oldSpw);
-		const ROScalarColumn<String>& spwNames = spwcols.name();
+		Int ddid = spw2ddid_p[0];
+		String inputMSName = ms_p.tableName();
+		Int procid = getProcessorId(ddid, inputMSName);
 
-		String wvrName = spwNames.asString(spw_p[0]);
-		os << LogIO::DEBUG1 << "spw name is "<< wvrName << LogIO::POST;;
-		if (wvrName.compare("WVR#NOMINAL") == 0)
-			return true;
+		const MSProcessor oldProc = mssel_p.processor();
+		if (oldProc.nrow() != 0){
+			const ROMSProcessorColumns proccols(oldProc);
+			const ROScalarColumn<String>& ptype = proccols.type();
+			String proctype = ptype.asString(procid);
 
-		// NOTE: for older MSs that do not have NAME set in the SPW table,
-		// an alternative solution will be used to get the PROCESSOR_TYPE instead.
-		// spw2ddid_p[0] will give the DDID of spw=0
-		// use TaQL to get the PROCESSOR_ID from this DDID
-		// get the PROCESSOR_TYPE from this PROCESSOR_ID... maybe also using TaQL?
+			if (proctype.compare("RADIOMETER") == 0)
+				return true;
+		}
 
 	}
 
@@ -2542,6 +2542,24 @@ Bool MSTransformDataHandler::copyFeed()
 	}
 
 	return True;
+}
+
+// -----------------------------------------------------------------------
+//  Get the processorId corresponding to a given DDI
+// -----------------------------------------------------------------------
+Int MSTransformDataHandler::getProcessorId(Int dataDescriptionId, String msname)
+{
+    ostringstream taql;
+    taql << "SELECT PROCESSOR_ID from " << msname;
+    taql << " WHERE DATA_DESC_ID ==" << dataDescriptionId;
+    taql << " LIMIT 1";
+
+    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
+    Record colWrapper = firstSelectedRow->getVarColumn(String("PROCESSOR_ID"),0,1,1);
+    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
+
+    delete firstSelectedRow;
+    return processorId[0];
 }
 
 
