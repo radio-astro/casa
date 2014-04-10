@@ -21,6 +21,8 @@
 //# $Id: $
 
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
+#include <tables/Tables/TableProxy.h>
+#include <tables/Tables/TableParse.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -2463,8 +2465,9 @@ Bool MSTransformDataHandler::copyAntenna()
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::copyFeed()
 {
-	const MSFeed& oldFeed = mssel_p.feed();
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
+	const MSFeed& oldFeed = mssel_p.feed();
 	MSFeed& newFeed = msOut_p.feed();
 	const ROMSFeedColumns incols(oldFeed);
 	MSFeedColumns outcols(newFeed);
@@ -2511,15 +2514,68 @@ Bool MSTransformDataHandler::copyFeed()
 		}
 	}
 
+	// Check if selected spw is WVR data. WVR data does not have FEED data
+	// so it is not a failure if newFeed.nrow == 0
+	if (newFeed.nrow() < 1 and spw_p.size() == 1){
+		const MSSpectralWindow oldSpw = mssel_p.spectralWindow();
+		const ROMSSpWindowColumns spwcols(oldSpw);
+		const ROScalarColumn<String>& spwNames = spwcols.name();
+
+		String wvrName = spwNames.asString(spw_p[0]);
+		os << LogIO::DEBUG1 << "spw name is "<< wvrName << LogIO::POST;;
+		if (wvrName.compare("WVR#NOMINAL") == 0)
+			return true;
+
+		// NOTE: for older MSs that do not have NAME set in the SPW table,
+		// an alternative solution will be used to get the PROCESSOR_TYPE instead.
+		// spw2ddid_p[0] will give the DDID of spw=0
+		// use TaQL to get the PROCESSOR_ID from this DDID
+		// get the PROCESSOR_TYPE from this PROCESSOR_ID... maybe also using TaQL?
+
+	}
+
 	if (newFeed.nrow() < 1)
 	{
-		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+//		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 		os << LogIO::SEVERE << "No feeds were selected." << LogIO::POST;
 		return false;
 	}
 
 	return True;
 }
+
+// Get the processorId corresponding to a given DDI
+Int MSTransformDataHandler::getProcessorId(Int dataDescriptionId, String msname)
+{
+    ostringstream taql;
+    taql << "SELECT PROCESSOR_ID from " << msname;
+    taql << " WHERE DATA_DESC_ID==" << dataDescriptionId;
+    taql << " LIMIT 1";
+
+    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
+    Record colWrapper = firstSelectedRow->getVarColumn(String('PROCESSOR_ID'),0,1,0);
+    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
+
+    return processorId[0];
+}
+
+// Get the processor Type corresponding to a given Processor ID
+String MSTransformDataHandler::getProcessorType(Int processorId, String msname)
+{
+	// How to get row??
+    ostringstream taql;
+    String procname = msname+"/PROCESSOR";
+    taql << "SELECT TYPE from " << procname;
+    taql << " WHERE DATA_DESC_ID==" << processorId;
+    taql << " LIMIT 1";
+
+    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
+    Record colWrapper = firstSelectedRow->getVarColumn(String('PROCESSOR_ID'),0,1,0);
+    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
+
+    return processorId[0];
+};
+
 
 // -----------------------------------------------------------------------
 //

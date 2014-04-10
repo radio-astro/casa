@@ -1273,7 +1273,7 @@ class test_state(test_base):
 
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        #os.system('rm -rf '+ self.outputms)
+        os.system('rm -rf '+ self.outputms)
         
     def test_select_by_scan_intent_and_reindex_state_accordingly(self):
         '''mstransform: select a scan intent and re-index state sub-table'''
@@ -1937,7 +1937,6 @@ class test_spw_poln(test_base):
         self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
-        # Verify that POLARIZATION table is properly re-indexed.
         pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
         self.assertEqual(pol_col['r1'][0], 0,'Error re-indexing POLARIZATION_ID of DATA_DESCRIPTION table')
         self.assertEqual(pol_col['r2'][0], 1,'Error re-indexing POLARIZATION_ID of DATA_DESCRIPTION table')
