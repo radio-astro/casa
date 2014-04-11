@@ -2171,8 +2171,8 @@ class test_spw_poln(test_base):
         self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r4'][0], 2,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         
-        in_feed_col = th.getVarCol(self.vis+'/FEED', 'SPECTRAL_WINDOW_ID')
-        out_feed_col = th.getVarCol(self.outputms+'/FEED', 'SPECTRAL_WINDOW_ID')
+#        in_feed_col = th.getVarCol(self.vis+'/FEED', 'SPECTRAL_WINDOW_ID')
+#       out_feed_col = th.getVarCol(self.outputms+'/FEED', 'SPECTRAL_WINDOW_ID')
         
         self.assertDictEqual(in_feed_col, out_feed_col, 'FEED table differs in input and output')
 
