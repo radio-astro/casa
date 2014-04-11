@@ -76,11 +76,11 @@ namespace casa {
 
 		//Log Scale
 		logScale = 0;
-		ui.logScaleSlider->setMinimum( 0 );
+		/*ui.logScaleSlider->setMinimum( 0 );
 		ui.logScaleSlider->setMaximum( COLOR_MAX );
 		ui.logScaleSlider->setValue( logScale );
 		connect( ui.logScaleSlider, SIGNAL(valueChanged(int)), this, SLOT(logScaleChanged(int)));
-
+		*/
 		//Histogram plot
 		histogram = new BinPlotWidget( false, true, false, this );
 		histogram->setPlotMode( FootPrintWidget::IMAGE_MODE );
@@ -144,7 +144,7 @@ namespace casa {
 			QString powerCycleText = ui.powerCyclesLineEdit->text();
 			float powerCycles = powerCycleText.toFloat();
 			displayData->setHistogramColorMapping( minValue, maxValue, powerCycles );
-			displayData->setHistogramColorProperties( ui.invertMapCheckBox->isChecked(), ui.logScaleSlider->value() );
+			displayData->setHistogramColorProperties( ui.invertMapCheckBox->isChecked(), /*ui.logScaleSlider->value()*/0 );
 
 		}
 	}
