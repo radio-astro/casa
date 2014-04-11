@@ -2,6 +2,9 @@
 navbar_active='By Topic'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.pipelineqa as pipelineqa
+import pipeline.domain.measures as measures
+import pipeline.extern.asizeof as asizeof
+import pipeline.infrastructure.logging as logging
 
 def get_bar_class(pqascore):
 	score = pqascore.score
@@ -59,9 +62,19 @@ def get_lowest_scoring_results(topic):
 	return (anchor,
 			minresult.qa.representative)
 
+tablerow_css_classes = {'QA Error'   : 'error',
+						'QA Warning' : 'warning',
+						'Error'      : 'error',
+						'Warning'    : 'warning'}
+
+def get_tablerow_class(row):
+	return tablerow_css_classes.get(row.type, '')
+
 %>
 
 <%inherit file="base.html"/>
+
+<%block name="title">Topic Summary</%block>
 
 <div class="page-header">
 <h1>Tasks by Topic</h1>
@@ -90,3 +103,37 @@ def get_lowest_scoring_results(topic):
 		</tbody>
 	</table>
 </div>
+
+
+<h3>Warnings and errors</h3>
+% if tablerows:
+<table class="table table-bordered table-striped table-condensed"
+	   summary="Messages from tasks for this topic">
+	<thead>
+		<tr>
+			<th>Stage</th>
+			<th>Task</th>
+			<th>Type</th>
+			<th>Message</th>
+		</tr>
+	</thead>
+	<tbody>
+	% for row in tablerows:
+		<tr class="${get_tablerow_class(row)}">
+			<td><a href="t2-4m.html?stage=${row.stage}">${row.stage}</a></td>
+			<td><a href="t2-4m.html?stage=${row.stage}">${row.task}</a></td>
+			<td>${row.type}</td>
+			<td>${row.message}</td>
+		</tr>
+	% endfor		
+	</tbody>
+</table>
+% else:
+<p>No warnings or errors were emitted for this topic.</p>
+% endif
+
+
+
+
+
+

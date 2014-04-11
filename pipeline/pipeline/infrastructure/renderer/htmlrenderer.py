@@ -568,20 +568,70 @@ class T1_3MRenderer(RendererBase):
     output_file = 't1-3.html'
     template = 't1-3m.html'
     
-    @staticmethod
-    def get_display_context(context):
+    MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message')
+    
+    @classmethod
+    def get_display_context(cls, context):
         registry = qaadapter.registry
         # distribute results between topics
         registry.assign_to_topics(context.results)
 
         scores = {}
+        tablerows = []
+        results_list = []
         for result in context.results:
             scores[result.stage_number] = result.qa.representative
+            results_list = result
+        
+            qa_errors = cls._filter_qascores(results_list, -0.1, 0.1)
+            tablerows.extend(cls._qascores_to_tablerows(qa_errors,
+                                                            results_list,
+                                                            'QA Error'))
+        
+            qa_warnings = cls._filter_qascores(results_list, 0.1, 0.5)
+            tablerows.extend(cls._qascores_to_tablerows(qa_warnings,
+                                                            results_list,
+                                                            'QA Warning'))
+
+            error_msgs = utils.get_logrecords(results_list, logging.ERROR)
+            tablerows.extend(cls._logrecords_to_tablerows(error_msgs,
+                                                              results_list,
+                                                              'Error'))
+
+            warning_msgs = utils.get_logrecords(results_list, logging.WARNING)
+            tablerows.extend(cls._logrecords_to_tablerows(warning_msgs,
+                                                              results_list,
+                                                              'Warning'))
 
         return {'pcontext' : context,
                 'registry' : registry,
-                'scores'   : scores}
+                'scores'   : scores,
+                'tablerows': tablerows}
 
+
+    @classmethod
+    def _filter_qascores(cls, results_list, lo, hi):
+        qa_pool = results_list.qa.pool
+        #print qa_pool
+        with_score = [s for s in qa_pool if s.score not in ('', 'N/A', None)]
+        return [s for s in with_score if s.score > lo and s.score <= hi]
+
+    @classmethod
+    def _create_tablerow(cls, results, message, msgtype):
+        return cls.MsgTableRow(stage=results.stage_number,
+                               task=get_task_name(results, False),
+                               type=msgtype,
+                               message=message)
+
+    @classmethod
+    def _qascores_to_tablerows(cls, qascores, results, msgtype='ERROR'):
+        return [cls._create_tablerow(results, qascore.longmsg, msgtype)
+                for qascore in qascores]
+
+    @classmethod
+    def _logrecords_to_tablerows(cls, records, results, msgtype='ERROR'):
+        return [cls._create_tablerow(results, record.msg, msgtype)
+                for record in records]
 
 class T1_4MRenderer(RendererBase):
     """
