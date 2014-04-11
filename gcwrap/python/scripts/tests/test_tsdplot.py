@@ -2009,65 +2009,57 @@ class tsdplot_selectionTest(selection_syntax.SelectionSyntaxTest,tsdplot_unittes
             ['IF22','IF23'])
         self._compareDictVal(outinfo, refinfo)
 
-    @unittest.expectedFailure
     def test_field_id_gt(self):
         """ test field selection (field='>7')"""
-#        field = '>7'
-#        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
-#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-#        outinfo = self._get_plot_info()
-#        refinfo = self._set_plot_info(
-#            [1, 1],
-#            [(0.0,49.0),(0.0,99.0)],
-#            [(-20.0,5.0),(4.7,5.3)],
-#            ['IF22','IF23'])
-#        self._compareDictVal(outinfo, refinfo)
-        self._default_test()
+        field = '>7'
+        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_plot_info()
+        refinfo = self._set_plot_info(
+            [1, 1],
+            [(0.0,49.0),(0.0,99.0)],
+            [(-20.0,5.0),(4.7,5.3)],
+            ['IF22','IF23'])
+        self._compareDictVal(outinfo, refinfo)
     
-    @unittest.expectedFailure
     def test_field_id_range(self):
         """ test field selection (field='5~7')"""
-#        field = '5~7'
-#        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
-#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-#        outinfo = self._get_plot_info()
-#        refinfo = self._set_plot_info(
-#            [1, 1, 1, 1, 1, 1],
-#            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-#            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-#            ['IF20','IF21','IF22','IF23','IF24','IF25'])
-#        self._compareDictVal(outinfo, refinfo)
-        self._default_test()
+        field = '5~7'
+        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_plot_info()
+        refinfo = self._set_plot_info(
+            [1, 1, 1, 1, 1, 1],
+            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
+            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
+            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        self._compareDictVal(outinfo, refinfo)
     
-    @unittest.expectedFailure
     def test_field_id_list(self):
         """ test field selection (field='5,7')"""
-#        field = '5,7'
-#        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
-#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-#        outinfo = self._get_plot_info()
-#        refinfo = self._set_plot_info(
-#            [1, 1, 1, 1],
-#            [(0.0,49.0),(0.0,99.0),(0.0,49.0),(0.0,99.0)],
-#            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3)],
-#            ['IF20','IF21','IF22','IF23'])
-#        self._compareDictVal(outinfo, refinfo)
-        self._default_test()
+        field = '5,7'
+        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_plot_info()
+        refinfo = self._set_plot_info(
+            [1, 1, 1, 1],
+            [(0.0,49.0),(0.0,99.0),(0.0,49.0),(0.0,99.0)],
+            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3)],
+            ['IF20','IF21','IF22','IF23'])
+        self._compareDictVal(outinfo, refinfo)
 
-    @unittest.expectedFailure
     def test_field_id_exprlist(self):
         """ test field selection (field='<7,8')"""
-#        field = '<7,8'
-#        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
-#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-#        outinfo = self._get_plot_info()
-#        refinfo = self._set_plot_info(
-#            [2, 2, 1, 1],
-#            [(0.0,49.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-#            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-#            ['IF22','IF23','IF24','IF25'])
-#        self._compareDictVal(outinfo, refinfo)
-        self._default_test()
+        field = '<7,8'
+        self.res=tsdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_plot_info()
+        refinfo = self._set_plot_info(
+            [2, 2, 1, 1],
+            [(0.0,49.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
+            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
+            ['IF22','IF23','IF24','IF25'])
+        self._compareDictVal(outinfo, refinfo)
     
     def test_field_value_exact(self):
         """ test field selection (field='M100')"""

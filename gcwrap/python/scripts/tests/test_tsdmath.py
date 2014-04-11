@@ -1494,7 +1494,7 @@ class tsdmath_test_selection(selection_syntax.SelectionSyntaxTest,
     @unittest.expectedFailure
     def test_spw_id_exact(self):
         """ test spw selection (spw='21')"""
-        self._default_test()
+#        self._default_test()
 #        outname=self.prefix+self.postfix
 #        spw = '21'
 #        self.res=tsdmath(field=field,expr=self.expr,outfile=outname)
