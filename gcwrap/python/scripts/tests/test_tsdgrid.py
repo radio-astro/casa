@@ -1085,18 +1085,16 @@ class tsdgrid_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
-    @unittest.expectedFailure
     def test_pol_id_exact(self):
         """ test pol selection (pol='1')"""
-#        infiles=[self.rawfile]
-#        outname=self.prefix+self.postfix
-#        pol = '1'
-#        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
-#        tbsel = {'POLNO': [1]}
-#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-#        self._comparecal_with_selection(outname, tbsel)
-        self._default_test()
-
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '1'
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        tbsel = {'POLNO': [1]}
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
     def test_pol_id_lt(self):
         """ test pol selection (pol='<1')"""
         infiles=[self.rawfile]
@@ -1107,17 +1105,15 @@ class tsdgrid_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_pol_id_gt(self):
         """ test pol selection (pol='>0')"""
-#        infiles=[self.rawfile]
-#        outname=self.prefix+self.postfix
-#        pol = '>0'
-#        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
-#        tbsel = {'POLNO': [1]}
-#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-#        self._comparecal_with_selection(outname, tbsel)
-        self._default_test()
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '>0'
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        tbsel = {'POLNO': [1]}
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
     
     def test_pol_id_range(self):
         """ test pol selection (pol='0~1')"""
