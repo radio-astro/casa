@@ -144,7 +144,7 @@ infiles -- a list of names of input SD datasets
         The file names will automatically replace the phrases 
         IN0, IN1, ... in expr parameter.
 expr -- mathematical expression using scantables 
-varnames -- dictionary of variables in expr and their values.
+varnames -- a python dictionary of variables in expr and their values.
         Keys must be coincide with variables used in expr.
         Values are substituted in each value in expr.
 antenna -- select an antenna name or ID
@@ -252,12 +252,18 @@ outfile='orion_cal.asap'
 tsdmath()
 
 # do on-off/off calculation using varnames
-expr='V0/V1-V2'
+varnames={} (this can be skipped if you executed inp(tsdgrid) or 
+             default(tsdgrid).)
 varnames['V0']="orion_on_data.asap"
 varnames['V1']="orion_off_data.asap"
 varnames['V2']=1.0
+expr='V0/V1-V2'
 outfile='orion_cal.asap'
 tsdmath()
+
+# do on-off/off calculation using varnames (in pythonic way)
+tsdmath(varnames={'V0':'orion_on_data.asap','V1':'orion_off_data.asap',
+        'V2':1.0}, expr='V0/V1-V2', outfile='orion_cal.asap')
 
 # interpretation of ASCII file value for varnames
 If the contents of input ASCII file is shown as, 
