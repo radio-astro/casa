@@ -88,7 +88,7 @@ use IN0, IN1, etc. as variable names in varnames.
     </param>
 
     <param type="string" name="outfile">
-      <description>name of output file (See a WARNING in help)</description>
+      <description>name of output file (must be specified)</description>
       <value></value>
     </param>
 
@@ -193,7 +193,7 @@ pol -- select data by polarization IDs
         example: pol='0,1' (polarization IDs 0,1)
         this selection is in addition to the other selections to data
 outfile -- name of output file
-        default: '' (&lt;infile&gt;_cal)
+        default: '' (must be specified)
 outform -- output file format
         options: 'ASAP','MS2', 'ASCII','SDFITS'
         default: 'ASAP'

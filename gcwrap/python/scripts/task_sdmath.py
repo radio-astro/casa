@@ -29,6 +29,8 @@ class sdmath_worker(sdutil.sdtask_template):
             raise Exception, 'expr is undefined'
 
         # check outfile
+        if (self.outfile.strip() == ''):
+            raise Exception("'outfile' must be specified.")
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
                                                           self.outform,
                                                           self.overwrite)

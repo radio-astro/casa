@@ -93,7 +93,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="outfile">
-	    <description>output file name</description>
+	    <description>output file name (must be specified)</description>
 	    <value></value>
     </param>
 
@@ -199,7 +199,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: [1]
                 this selection is in addition to scanlist, field, and iflist
         outfile -- Name of output file
-                default: '' (&lt;infile&gt;_cal)
+                default: '' (must be specified)
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'

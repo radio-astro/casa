@@ -32,6 +32,8 @@ class sdmath_worker(sdutil.sdtask_template):
         self.assert_no_channel_selection_in_spw('warn')
         
         # check outfile
+        if (self.outfile.strip() == ''):
+            raise Exception("'outfile' must be specified.")
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
                                                           self.outform,
                                                           self.overwrite)
