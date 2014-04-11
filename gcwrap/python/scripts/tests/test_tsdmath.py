@@ -1491,17 +1491,15 @@ class tsdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
-    @unittest.expectedFailure
     def test_spw_id_exact(self):
         """ test spw selection (spw='21')"""
-#        self._default_test()
-#        outname=self.prefix+self.postfix
-#        spw = '21'
-#        self.res=tsdmath(field=field,expr=self.expr,outfile=outname)
-#        tbsel = {'IFNO': [21]}
-#        self.assertEqual(self.res,None,
-#                         msg='Any error occurred during calibration')
-#        self._comparecal_with_selection(outname, tbsel)
+        outname=self.prefix+self.postfix
+        spw = '21'
+        self.res=tsdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
     
     def test_spw_id_lt(self):
         """ test spw selection (spw='<25')"""
