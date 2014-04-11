@@ -1349,9 +1349,9 @@ class tsdgrid_selection(selection_syntax.SelectionSyntaxTest,
         return sp
 
 def suite():
-    return [#tsdgrid_failure_case, tsdgrid_single_integ,
-            #tsdgrid_clipping, tsdgrid_flagging,
-            #tsdgrid_weighting, tsdgrid_map,
-            #tsdgrid_dec_correction, tsdgrid_grid_center,
-            #tsdgrid_flagging2,
+    return [tsdgrid_failure_case, tsdgrid_single_integ,
+            tsdgrid_clipping, tsdgrid_flagging,
+            tsdgrid_weighting, tsdgrid_map,
+            tsdgrid_dec_correction, tsdgrid_grid_center,
+            tsdgrid_flagging2,
             tsdgrid_selection]
