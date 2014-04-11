@@ -150,9 +150,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","Open existing Images",WHERE) );
 
-    //    String fname( imagename + ".info" );
-    //    recreate( fname );
+    /*
+    init();
+    String fname( imagename + ".info" );
+    recreate( fname );
+    */
 
+   
     itsPsf=NULL;
     itsModel=NULL;
     itsResidual=NULL;
@@ -201,6 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
     init();
+    
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -739,7 +744,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    minMax(minval, maxval, posmin, posmax);
     //    return maxval;
 
-    return max(sqrt(pbmat));
+    return max(sqrt(fabs(pbmat)));
 
   }
 
@@ -783,7 +788,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	LatticeExpr<Float> deno;
 	if( normtype=="flatnoise"){
-	  deno = LatticeExpr<Float> ( sqrt( *(weight()) ) * itsPBScaleFactor );
+	  deno = LatticeExpr<Float> ( sqrt( abs(*(weight())) ) * itsPBScaleFactor );
 	  os << "Dividing " << itsImageName+String(".residual") ;
 	  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
 	  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
@@ -843,7 +848,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
 	  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
 	  
-	  LatticeExpr<Float> deno( sqrt( *(weight()) ) / itsPBScaleFactor );
+	  LatticeExpr<Float> deno( sqrt( abs(*(weight())) ) / itsPBScaleFactor );
 
 	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
 	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
@@ -882,7 +887,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
 	  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
 	  
-	  LatticeExpr<Float> deno( sqrt( *(weight()) ) / itsPBScaleFactor );
+	  LatticeExpr<Float> deno( sqrt( abs(*(weight())) ) / itsPBScaleFactor );
 
 	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
 	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
