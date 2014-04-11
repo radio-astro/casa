@@ -998,6 +998,16 @@ casa_find( READLINE
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
+# libsakura
+find_package(LIBSAKURA)
+message( STATUS "LIBSAKURA_INCLUDE_DIRS=${LIBSAKURA_INCLUDE_DIRS}")
+message( STATUS "LIBSAKURA_LIBRARIES=${LIBSAKURA_LIBRARIES}")
+
+# log4cxx
+find_package(LOG4CXX)
+message( STATUS "LOG4CXX_INCLUDE_DIRS=${LOG4CXX_INCLUDE_DIRS}")
+message( STATUS "LOG4CXX_LIBRARIES=${LOG4CXX_LIBRARIES}")
+
 casa_config_end()
 
 # The modules must be defined in dependency order!
@@ -1034,7 +1044,7 @@ casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost)
 casa_add_module( mstransform CASACORE synthesis)
-casa_add_module( casa_sakura CASACORE )
+casa_add_module( casa_sakura CASACORE LIBSAKURA LOG4CXX)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()
