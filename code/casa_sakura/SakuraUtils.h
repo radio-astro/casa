@@ -14,6 +14,8 @@ public:
   static Bool InitializeSakura();
   static void CleanUpSakura();
   static Bool IsSakuraInitialized();
+private:
+  static Bool is_initialized_;
 };
 
 } //# NAMESPACE CASA - END
