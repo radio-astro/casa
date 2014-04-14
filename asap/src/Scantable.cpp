@@ -1863,21 +1863,21 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   }
 
   // update FREQUENCIES subtable
+  Vector<uInt> freqIdArray = mfreqidCol_.getColumn();
+  uInt numFreqId = GenSort<uInt>::sort(freqIdArray, Sort::Ascending,
+				       Sort::HeapSort | Sort::NoDuplicates);
   Double refpix ;
   Double refval ;
   Double increment ;
-  int freqnrow = freqTable_.table().nrow() ;
-  Vector<uInt> oldId( freqnrow ) ;
-  Vector<uInt> newId( freqnrow ) ;
-  for ( int irow = 0 ; irow < freqnrow ; irow++ ) {
-    freqTable_.getEntry( refpix, refval, increment, irow ) ;
+  for (uInt irow  = 0; irow < numFreqId; irow++) { 
+    freqTable_.getEntry( refpix, refval, increment, freqIdArray[irow] ) ;
     /***
      * need to shift refpix to nmin
      * note that channel nmin in old index will be channel 0 in new one
      ***/
     refval = refval - ( refpix - nmin ) * increment ;
     refpix = 0 ;
-    freqTable_.setEntry( refpix, refval, increment, irow ) ;
+    freqTable_.setEntry( refpix, refval, increment, freqIdArray[irow] ) ;
   }
 
   // update nchan

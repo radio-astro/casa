@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STMath.cpp 2526 2012-05-15 23:33:55Z MalteMarquarding $
+//# $Id: python_STMath.cpp 2902 2014-03-12 05:00:54Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <boost/python.hpp>
 
@@ -69,7 +69,8 @@ namespace asap {
         .def("_convertflux", &STMathWrapper::convertFlux)
         .def("_convertpol", &STMathWrapper::convertPolarisation)
         .def("_opacity", &STMathWrapper::opacity)
-        .def("_merge", &STMathWrapper::merge)
+        .def("_merge", &STMathWrapper::merge,
+	     (boost::python::arg("freqTol")=std::string("")) )
         .def("_rotate_xyphase", &STMathWrapper::rotateXYPhase)
         .def("_rotate_linpolphase", &STMathWrapper::rotateLinPolPhase)
         .def("_invert_phase", &STMathWrapper::invertPhase)

@@ -674,7 +674,8 @@ class MSWriterVisitor: public BaseMSWriterVisitor, public MSWriterUtils {
 public:
   MSWriterVisitor(const Table &table, Table &mstable)
     : BaseMSWriterVisitor(table),
-      ms(mstable)
+      ms(mstable),
+      addScanrate_(False)
   { 
     rowidx = 0 ;
     fieldName = "" ;
@@ -715,6 +716,11 @@ public:
     // attach to MS columns
     attachMain() ;
     attachPointing() ;
+
+    // decide whether put SCANRATE to MS POINTING column
+    if (anyNE(scanRateCol.getColumn(), (Double)0.0)) {
+      addScanrate_ = True;
+    }
   }
   
   virtual void enterFieldName(const uInt recordNo, const String &/*columnValue*/) {
@@ -802,7 +808,8 @@ public:
     if ( ptName.empty() ) {
       Vector<Double> dir = directionCol( recordNo ) ;
       Vector<Double> rate = scanRateCol( recordNo ) ;
-      if ( anyNE( rate, 0.0 ) ) {
+      //if ( anyNE( rate, 0.0 ) ) {
+      if (addScanrate_) {
         Matrix<Double> msdir( 2, 2 ) ;
         msdir.column( 0 ) = dir ;
         msdir.column( 1 ) = rate ;
@@ -1479,6 +1486,7 @@ private:
   String ptName;
   Bool useFloat;
   String poltype;
+  Bool addScanrate_;
 
   // MS subtables
   Table spwtab;

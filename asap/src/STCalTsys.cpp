@@ -17,8 +17,6 @@
 
 #include "STSelector.h"
 #include "STCalTsys.h"
-#include "RowAccumulator.h"
-#include "STIdxIter.h"
 #include "STDefs.h"
 #include <atnf/PKSIO/SrcType.h>
 
@@ -26,10 +24,25 @@ using namespace std;
 using namespace casa;
 
 namespace asap {
-  STCalTsys::STCalTsys(CountedPtr<Scantable> &s, vector<int> &iflist)
-    : STCalibration(s),
-      iflist_(iflist)
+STCalTsys::STCalTsys(CountedPtr<Scantable> &s, vector<int> &iflist)
+  : STCalibration(s, "TSYS"),
+    iflist_(iflist),
+    tsysspw_(),
+    do_average_(false)
 {
+  applytable_ = new STCalTsysTable(*s);
+}
+
+STCalTsys::STCalTsys(CountedPtr<Scantable> &s, Record &iflist, bool average)
+  : STCalibration(s, "TSYS"),
+    iflist_(),
+    tsysspw_(iflist),
+    do_average_(average)
+{
+  iflist_.resize(tsysspw_.nfields());
+  for (uInt i = 0; i < tsysspw_.nfields(); ++i) {
+    iflist_[i] = std::atoi(tsysspw_.name(i).c_str());
+  }
   applytable_ = new STCalTsysTable(*s);
 }
 
@@ -58,110 +71,43 @@ void STCalTsys::setupSelector(const STSelector &sel)
   }
 }
 
-void STCalTsys::fillCalTable()
+void STCalTsys::appenddata(uInt scanno, uInt cycleno, 
+			   uInt beamno, uInt ifno, uInt polno, 
+			   uInt freqid, Double time, Float elevation, 
+			   Vector<Float> any_data)
 {
-  RowAccumulator acc(W_TINT);
-  
-  vector<string> cols(3);
-  cols[0] = "IFNO";
-  cols[1] = "POLNO";
-  cols[2] = "BEAMNO";
-  STIdxIterAcc iter(scantable_, cols);
-
-  ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(scantable_->table(), "TIME");
-  Vector<Double> timeSec = tcol->getColumn() * 86400.0;
-  tcol->attach(scantable_->table(), "INTERVAL");
-  Vector<Double> intervalSec = tcol->getColumn();
-  delete tcol;
-  ROScalarColumn<Float> *ecol = new ROScalarColumn<Float>(scantable_->table(), "ELEVATION");
-  Vector<Float> elevation = ecol->getColumn();
-  delete ecol;
-
-  ROArrayColumn<Float> specCol(scantable_->table(), "TSYS");
-  ROArrayColumn<uChar> flagCol(scantable_->table(), "FLAGTRA");
-  ROScalarColumn<uInt> freqidCol(scantable_->table(), "FREQ_ID");
-
-  // dummy Tsys: the following process doesn't need Tsys but RowAccumulator 
-  //             requires to set it with spectral data
-  Vector<Float> tsys(1, 1.0);
-
-  Double timeCen = 0.0;
-  Float elCen = 0.0;
-  uInt count = 0;
-
-  while(!iter.pastEnd()) {
-    Vector<uInt> rows = iter.getRows(SHARE);
-    Vector<uInt> current = iter.current();
-    //os_ << "current=" << current << LogIO::POST;
-    uInt len = rows.nelements();
-    if (len == 0) {
-      iter.next();
-      continue;
-    }
-    else if (len == 1) {
-      STCalTsysTable *p = dynamic_cast<STCalTsysTable *>(&(*applytable_));
-      uInt irow = rows[0];
-      p->appenddata(0, 0, current[2], current[0], current[1], 
-                    freqidCol(irow), timeSec[irow], elevation[irow], specCol(irow));
-      iter.next();
-      continue;
-    }
-    
-    uInt nchan = scantable_->nchan(scantable_->getIF(rows[0]));
-    Vector<uChar> flag(nchan);
-    Vector<Bool> bflag(nchan);
-    Vector<Float> spec(nchan);
-
-    Vector<Double> timeSep(len); 
-    for (uInt i = 0; i < len-1; i++) {
-      timeSep[i] = timeSec[rows[i+1]] - timeSec[rows[i]] ;
-    }
-    Double tMedian = median(timeSep(IPosition(1,0), IPosition(1,len-2)));
-    timeSep[len-1] = tMedian * 10000.0 ; // any large value
-
-    uInt irow ;
-    uInt jrow ;
-    for (uInt i = 0; i < len; i++) {
-      //os_ << "start row " << rows[i] << LogIO::POST;
-      irow = rows[i];
-      jrow = (i < len-1) ? rows[i+1] : rows[i];
-      // accumulate data
-      flagCol.get(irow, flag);
-      convertArray(bflag, flag);
-      specCol.get(irow, spec);
-      if ( !allEQ(bflag,True) ) 
-        acc.add( spec, !bflag, tsys, intervalSec[irow], timeSec[irow] ) ;
-      timeCen += timeSec[irow];
-      elCen += elevation[irow];
-      count++;
-
-      // check time gap
-      double gap = 2.0 * timeSep[i] / (intervalSec[jrow] + intervalSec[irow]);
-      if ( gap > 5.0 ) {
-        if ( acc.state() ) {
-          acc.replaceNaN() ;
-//           const Vector<Bool> &msk = acc.getMask();
-//           convertArray(flag, !msk);
-//           for (uInt k = 0; k < nchan; ++k) {
-//             uChar userFlag = 1 << 7;
-//             if (msk[k]==True) userFlag = 0 << 7;
-//             flag(k) = userFlag;
-//           }
-          timeCen /= (Double)count * 86400.0; // sec->day
-          elCen /= (Float)count;
-          STCalTsysTable *p = dynamic_cast<STCalTsysTable *>(&(*applytable_));
-          p->appenddata(0, 0, current[2], current[0], current[1],
-                        freqidCol(irow), timeCen, elCen, acc.getSpectrum());
-        }
-        acc.reset() ;
-        timeCen = 0.0;
-        elCen = 0.0;
-        count = 0;
+  STCalTsysTable *p = dynamic_cast<STCalTsysTable *>(&(*applytable_));
+  if (do_average_ && tsysspw_.isDefined(String::toString(ifno))) {
+    LogIO os(LogOrigin("STCalTsys", "appenddata", WHERE));
+    Vector<Float> averaged_data(any_data.size());
+    Float averaged_value = 0.0;
+    size_t num_value = 0;
+    Vector<Double> channel_range = tsysspw_.asArrayDouble(String::toString(ifno));
+    os << LogIO::DEBUGGING << "do averaging: channel range for IFNO " << ifno << " is " << channel_range << LogIO::POST;
+    for (uInt i = 1; i < channel_range.size(); i += 2) {
+      size_t start = (size_t)channel_range[i-1];
+      size_t end = std::min((size_t)channel_range[i] + 1, averaged_data.size());
+      os << LogIO::DEBUGGING << "start=" << start << ", end=" << end << LogIO::POST;
+      //Vector<Float> segment = any_data(Slice(start, end - 1, 1, False));
+      //averaged_value += sum(segment);
+      //num_value += segment.size();
+      float sum_per_segment = 0.0;
+      for (size_t j = start; j < end; ++j) {
+        sum_per_segment += any_data[j];
       }
+      averaged_value += sum_per_segment;
+      num_value += end - start;
     }
-
-    iter.next() ;
-    //os_ << "end " << current << LogIO::POST;
+    averaged_value /= (Float)num_value;
+    averaged_data = averaged_value;
+    os << LogIO::DEBUGGING << "averaged_data = " << averaged_data << LogIO::POST;
+    os << LogIO::DEBUGGING << "any_data = " << any_data << LogIO::POST;
+    p->appenddata(scanno, cycleno, beamno, ifno, polno,
+		  freqid, time, elevation, averaged_data);
+  }
+  else {
+    p->appenddata(scanno, cycleno, beamno, ifno, polno,
+		  freqid, time, elevation, any_data);
   }
 }
 

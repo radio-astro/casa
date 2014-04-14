@@ -309,7 +309,8 @@ public:
                                       const std::vector<float>& tau);
 
   casa::CountedPtr<Scantable>
-    merge(const std::vector<casa::CountedPtr<Scantable> >& in);
+    merge(const std::vector<casa::CountedPtr<Scantable> >& in,
+	  const std::string &freqTol = "");
 
   casa::CountedPtr<Scantable>
     invertPhase( const casa::CountedPtr<Scantable>& in);
@@ -399,27 +400,6 @@ private:
                  const casa::Vector<casa::uChar>& f );
   casa::Vector<casa::uChar>
     flagsFromMA(const casa::MaskedArray<casa::Float>& ma);
-
-  casa::Vector<casa::Float> getSpectrumFromTime( double reftime, const casa::Vector<casa::Double> &v, const vector<int> &idx, const casa::Matrix<casa::Float>& sp, string mode = "before" ) ;
-  casa::Vector<casa::Float> getTcalFromTime( double reftime, const casa::Vector<casa::Double> &v, const vector<int> &idx, const casa::CountedPtr<Scantable>& s, string mode="before" ) ;
-  casa::Vector<casa::Float> getTsysFromTime( double reftime, const casa::Vector<casa::Double> &v, const vector<int> &idx, const casa::CountedPtr<Scantable>& s, string mode="before" ) ;
-  vector<int> getRowIdFromTime( double reftime, const casa::Vector<casa::Double>& t ) ;
-
-  // Chopper-Wheel type calibration
-  void calibrateCW( casa::CountedPtr<Scantable> &out,
-                    const casa::CountedPtr<Scantable> &on,
-                    const casa::CountedPtr<Scantable> &off,
-                    const casa::CountedPtr<Scantable> &sky,
-                    const casa::CountedPtr<Scantable> &hot,
-                    const casa::CountedPtr<Scantable> &cold,
-                    const casa::Vector<casa::uInt> &rows,
-                    const casa::String &antname ) ;
-
-  // Tsys * (ON-OFF)/OFF
-  void calibrateALMA( casa::CountedPtr<Scantable>& out,
-                      const casa::CountedPtr<Scantable>& on,
-                      const casa::CountedPtr<Scantable>& off,
-                      const casa::Vector<casa::uInt>& rows ) ;
 
   // Frequency switching
   void calibrateFS( casa::CountedPtr<Scantable> &sig,

@@ -35,7 +35,9 @@ namespace asap {
 CalibrationManager::CalibrationManager()
   : target_(0),
     calmode_(""),
-    spwlist_(0)
+    spwlist_(0),
+    spwlist_withrange_(),
+    do_average_(false)
 {
   applicator_ = new STApplyCal();
 }
@@ -145,6 +147,17 @@ void CalibrationManager::setTsysSpw(const vector<int> &spwlist)
   spwlist_ = spwlist;
 }
 
+void CalibrationManager::setTsysSpwWithRange(const Record &spwlist, bool average)
+{
+  os_.origin(LogOrigin("CalibrationManager","setTsysSpw",WHERE));
+  os_ << LogIO::DEBUGGING << "set IFNO for Tsys calibration to " << LogIO::POST;
+  spwlist.print(os_.output());
+  os_ << LogIO::DEBUGGING << LogIO::POST;
+  os_ << LogIO::DEBUGGING << ((average) ? "with averaging" : "without averaging") << LogIO::POST;
+  spwlist_withrange_ = spwlist;
+  do_average_ = average;
+}
+
 void CalibrationManager::resetCalSetup()
 {
   os_.origin(LogOrigin("CalibrationManager","resetCalSetup",WHERE));
@@ -152,6 +165,8 @@ void CalibrationManager::resetCalSetup()
   applicator_->reset();
   calmode_ = "";
   spwlist_.clear();
+  spwlist_withrange_ = Record();
+  do_average_ = false;
 }
 
 void CalibrationManager::reset()
@@ -161,6 +176,8 @@ void CalibrationManager::reset()
   applicator_->completeReset();
   calmode_ = "";
   spwlist_.clear();
+  spwlist_withrange_ = Record();
+  do_average_ = false;
 }
 
 void CalibrationManager::calibrate()
@@ -171,10 +188,17 @@ void CalibrationManager::calibrate()
   assert_<AipsError>(!target_.null(), "You have to set target scantable first.");
   if (calmode_ == "TSYS") {
     //assert(spwlist_.size() > 0);
-    assert_<AipsError>(spwlist_.size() > 0, "You have to set list of IFNOs for ATM calibration.");
-    STCalTsys cal(target_, spwlist_);
-    cal.calibrate();
-    tsystables_.push_back(cal.applytable());
+    if (spwlist_withrange_.empty()) {
+      assert_<AipsError>(spwlist_.size() > 0, "You have to set list of IFNOs for ATM calibration.");
+      STCalTsys cal(target_, spwlist_);
+      cal.calibrate();
+      tsystables_.push_back(cal.applytable());
+    }
+    else {
+      STCalTsys cal(target_, spwlist_withrange_, do_average_);
+      cal.calibrate();
+      tsystables_.push_back(cal.applytable());
+    }      
   }
   else if (calmode_ == "PS") {
 //     // will match DV01-25, DA41-65, PM01-04, CM01-12

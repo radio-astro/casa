@@ -10,12 +10,14 @@ namespace asap {
   namespace python {
 
     void python_Iterator() {
-      class_<STIdxIterAcc>("iterator")
+      class_<STIdxIter2>("iterator")
         .def( init < const string &, const vector<string> & > () )
-        .def("current", &STIdxIterAcc::currentSTL)
-        .def("pastEnd", &STIdxIterAcc::pastEnd)
-        .def("next", &STIdxIterAcc::next)
-        .def("getrows", &STIdxIterAcc::getRowsSTL)
+#ifdef HAVE_LIBPYRAP
+        .def("current", &STIdxIter2::currentValue)
+#endif
+        .def("pastEnd", &STIdxIter2::pastEnd)
+        .def("next", &STIdxIter2::next)
+        .def("getrows", &STIdxIter2::getRowsSTL)
       ;
     };
 

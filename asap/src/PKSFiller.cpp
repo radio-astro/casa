@@ -325,15 +325,19 @@ void PKSFiller::fill( )
     Vector<Float> tsysvec(1);
     // Why is spectra.ncolumn() == 3 for haveXPol_ == True
     uInt npol = (pksrec.spectra.ncolumn()==1 ? 1: 2);
-    uInt polno =0;
+    //uInt polno =0;
+    Int polno =0;
     for ( uInt i=0; i< npol; ++i ) {
       tsysvec = pksrec.tsys(i);
       if (isGBTFITS) {
         polno = pksrec.polNo ;
+        if (polno==-1) {
+          polno = i;
+        }
       } else {
         polno = i;
       }
-      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1, polno,
+      setIndex(pksrec.scanNo-1, pksrec.cycleNo-1, pksrec.IFno-1, (uInt) polno,
                pksrec.beamNo-1);
       setSpectrum(pksrec.spectra.column(i), pksrec.flagged.column(i), tsysvec);
       commitRow();

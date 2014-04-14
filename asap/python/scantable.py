@@ -1336,6 +1336,13 @@ class scantable(Scantable):
         self._add_history("set_feedtype", vars())
 
     @asaplog_post_dec
+    def get_doppler(self):
+        """\
+        Get the doppler.
+        """
+        return self._getcoordinfo()[2]
+    
+    @asaplog_post_dec
     def set_doppler(self, doppler='RADIO'):
         """\
         Set the doppler for all following operations on this scantable.
@@ -1840,6 +1847,12 @@ class scantable(Scantable):
                            '1:-200~250km/s' = channels that fall between the
                                               specified velocity range in
                                               spw 1.
+            restfreq: the rest frequency.
+                     examples: '115.2712GHz', 115271201800.0
+            frame:   an optional frame type, default 'LSRK'. Valid frames are:
+                     'TOPO', 'LSRD', 'LSRK', 'BARY',
+                     'GEO', 'GALACTO', 'LGROUP', 'CMB'
+            doppler: one of 'RADIO', 'OPTICAL', 'Z', 'BETA', 'GAMMA'
         Returns:
         A dictionary of selected (valid) spw and masklist pairs,
         e.g. {'0': [[50,250],[350,462]], '2': [[100,400],[550,974]]}
@@ -1856,7 +1869,7 @@ class scantable(Scantable):
             orig_molids = self._getmolidcol_list()
             set_restfreq(self, restfreq)
 
-        orig_coord   = self._getcoordinfo()
+        orig_coord = self._getcoordinfo()
 
         if frame is not None:
             orig_frame = orig_coord[1]
@@ -1865,13 +1878,6 @@ class scantable(Scantable):
         if doppler is not None:
             orig_doppler = orig_coord[2]
             self.set_doppler(doppler)
-        """
-        if frame is None: frame = orig_frame
-        self.set_freqframe(frame)
-
-        if doppler is None: doppler = orig_doppler
-        self.set_doppler(doppler)
-        """
         
         valid_ifs = self.getifnos()
 
@@ -2046,6 +2052,8 @@ class scantable(Scantable):
             for spw in spw_list:
                 pmin = 0.0
                 pmax = float(self.nchan(spw) - 1)
+
+                molid = self._getmolidcol_list()[self.get_first_rowno_by_if(spw)]
                 
                 if (len(colon_sep) == 1):
                     # no expression for channel selection, 
@@ -2103,10 +2111,11 @@ class scantable(Scantable):
 
                                 elif is_number(expr0) and is_velocity(expr1):
                                     # 'a~b*m/s'
-                                    restf = self.get_restfreqs().values()[0][0]
+                                    restf = self.get_restfreqs()[molid][0]
                                     (expr_v0, expr_v1) = get_velocity_by_string(expr0, expr1)
-                                    expr_f0 = get_frequency_by_velocity(restf, expr_v0, doppler)
-                                    expr_f1 = get_frequency_by_velocity(restf, expr_v1, doppler)
+                                    dppl = self.get_doppler()
+                                    expr_f0 = get_frequency_by_velocity(restf, expr_v0, dppl)
+                                    expr_f1 = get_frequency_by_velocity(restf, expr_v1, dppl)
                                     expr_p0 = coord.to_pixel(expr_f0)
                                     expr_p1 = coord.to_pixel(expr_f1)
                                     expr_pmin = min(expr_p0, expr_p1)
@@ -2128,10 +2137,11 @@ class scantable(Scantable):
                     if (len(crange_list) == 0):
                         crange_list.append([])
 
-                if res.has_key(spw):
-                    res[spw].extend(crange_list)
-                else:
-                    res[spw] = crange_list
+                if (len(crange_list[0]) > 0):
+                    if res.has_key(spw):
+                        res[spw].extend(crange_list)
+                    else:
+                        res[spw] = crange_list
 
         for spw in res.keys():
             if spw not in valid_ifs:
