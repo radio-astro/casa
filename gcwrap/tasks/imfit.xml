@@ -448,6 +448,15 @@ Note well the following caveats:
   * If the image being analyzed is an interferometric image with poor uv sampling, the parameter
     uncertainties may be significantly underestimated.
 
+The deconvolved size and position angle errors are computed by taking the maximum of the absolute values of the
+differences of the best fit deconvolved value of the given parameter and the deconvolved size of the eight
+possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
+and (position andle +/- position angle error). If the source cannot be deconvolved from the beam (if the best
+fit convolved source size cannot be deconvolved from the beam), upper limits on the deconvolved source size
+are sometimes reported. These limits simply come from the maximum major and minor axes of the deconvolved
+gaussians taken from trying all eight of the aforementioned combinations. In the case none of these combinations
+produces a deconvolved size, no upper limit is reported.
+
 EXAMPLE: 
 
 Here is how one might fit two gaussians to multiple channels of a cube using the fit
