@@ -93,7 +93,7 @@ IMPLEMENT_LOG4CXX_OBJECT(CasaLoggerAppender);
 namespace casa {
 Bool SakuraUtils::is_initialized_ = False;
   
-Bool SakuraUtils::InitializeSakura() {
+Bool SakuraUtils::InitializeSakura(const std::string &level) {
   // return if already initialized
   if (is_initialized_) {
     return True;
@@ -112,6 +112,10 @@ Bool SakuraUtils::InitializeSakura() {
   catch (log4cxx::helpers::Exception &) {
     result = 1;
   }
+
+  // set logging level for sakura
+  SetLogLevel(level);
+  
   LogIO logger(LogOrigin("SakuraUtils", "InitializeSakura", WHERE));
   if (result == 0) {
     log4cxx::LoggerPtr log4cxx_logger = log4cxx::Logger::getRootLogger();
@@ -147,5 +151,27 @@ Bool SakuraUtils::IsSakuraInitialized() {
   logger << LogIO::DEBUGGING << "sakura is "
 	 << ((is_initialized_) ? "" : "not ") << "initialized." << LogIO::POST;
   return is_initialized_;
+}
+  
+void SakuraUtils::SetLogLevel(const std::string &loglevel)
+{
+  String level_string = String(loglevel);
+  level_string.upcase();
+  log4cxx::LoggerPtr log4cxx_logger = log4cxx::Logger::getRootLogger();
+  if (level_string == "EXCEPTION") {
+    log4cxx_logger->setLevel(log4cxx::Level::getFatal());
+  }
+  else if (level_string == "SEVERE") {
+    log4cxx_logger->setLevel(log4cxx::Level::getError());
+  }
+  else if (level_string == "WARN") {
+    log4cxx_logger->setLevel(log4cxx::Level::getWarn());
+  }
+  else if (level_string == "INFO") {
+    log4cxx_logger->setLevel(log4cxx::Level::getInfo());
+  }
+  else if (level_string == "DEBUG") {
+    log4cxx_logger->setLevel(log4cxx::Level::getDebug());
+  }
 }
 }  // End of casa namespace.
