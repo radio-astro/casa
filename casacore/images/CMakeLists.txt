@@ -58,7 +58,9 @@ ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
 )
 
-set_target_properties( casa_images PROPERTIES SOVERSION ${casa_soversion} )
+if( NOT NO_SOVERSION )
+    set_target_properties( casa_images PROPERTIES SOVERSION ${casa_soversion} )
+endif()
 
 target_link_libraries (
 casa_images

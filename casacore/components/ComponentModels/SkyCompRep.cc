@@ -561,12 +561,11 @@ void SkyCompRep::fromPixel (
 //
    LogIO os(LogOrigin("SkyCompRep", "fromPixel()"));
       
-// Find DirectionCoordinate
-   Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
-   if (dirCoordinate==-1) {
-      os << "CoordinateSystem does not contain a DirectionCoordinate" << LogIO::EXCEPTION;
-   }
-   const DirectionCoordinate& dirCoord = cSys.directionCoordinate(dirCoordinate);
+   ThrowIf(
+		   ! cSys.hasDirectionCoordinate(),
+		   "CoordinateSystem does not contain a DirectionCoordinate"
+   );
+   const DirectionCoordinate& dirCoord = cSys.directionCoordinate();
 //
 // We need to find the ratio that converts the input peak brightness
 // from whatevers/per whatever to Jy per whatever.  E.g. mJy/beam to Jy/beam.  
@@ -577,10 +576,10 @@ void SkyCompRep::fromPixel (
 
 // Now proceed with type dependent conversions
    if (componentShape==ComponentType::POINT) {
-      if (parameters.nelements()!=3) {
-         os << "Wrong number of parameters for Point shape" << LogIO::EXCEPTION;
-      }
-//
+      ThrowIf(
+    		  parameters.nelements() != 3,
+    	  "Wrong number of parameters for Point shape"
+       );
       Vector<Double> pars(2);
       pars(0) = parameters(1);
       pars(1) = parameters(2);
@@ -592,14 +591,16 @@ void SkyCompRep::fromPixel (
       itsFlux.setUnit(Unit("Jy"));
       itsFlux.setValue (value, stokes);
    } else if (componentShape==ComponentType::GAUSSIAN || componentShape==ComponentType::DISK) {
-      if (parameters.nelements()!=6) {
-         os << "Wrong number of parameters for Gaussian or Point shape" << LogIO::EXCEPTION;
-      }
+      ThrowIf(
+         parameters.nelements() != 6,
+         "Wrong number of parameters for Gaussian or Point shape"
+     );
 
 // Do x,y,major,minor,pa
       Vector<Double> pars(5);
-      for (uInt i=0; i<5; i++) pars(i) = parameters(i+1);
-//
+      for (uInt i=0; i<5; i++) {
+    	  pars(i) = parameters(i+1);
+      }
       Quantum<Double> majorAxis, minorAxis, pa;
       if (componentShape==ComponentType::GAUSSIAN) {
          GaussianShape shp;
@@ -620,7 +621,6 @@ void SkyCompRep::fromPixel (
       Quantum<Double> integralFlux = 
            SkyCompRep::peakToIntegralFlux (dirCoord, componentShape, peakFlux,
                                            majorAxis, minorAxis, restoringBeam);
-// Set flux
       itsFlux.setUnit(integralFlux.getFullUnit());   
       itsFlux.setValue (integralFlux, stokes);
    }
@@ -628,30 +628,16 @@ void SkyCompRep::fromPixel (
 
 // Spectrum; assumed constant !
    ConstantSpectrum constSpec;
-   Int specCoordinate = cSys.findCoordinate(Coordinate::SPECTRAL);
-   if (specCoordinate!=-1) {
-      Vector<Int> specAxes = cSys.pixelAxes(specCoordinate);
-      if (specAxes.nelements() > 1) {
-         os << LogIO::WARN
-            << "This image has a SpectralCoordinate with > 1 axes.  I cannot handle that"
-            << endl;
-         os << "The image will be treated as if it had no SpectralCorodinate" << LogIO::POST;
-      } else {
-   
-// If the subImage has a SpectralCoordinate, there is only one Spectral pixel (with
-// pixel coordinate 0.0) in that subImage (because region is 2D in DirectionCoordinate).
-// Find its frequency.
-      
-         SpectralCoordinate specCoord = cSys.spectralCoordinate(specCoordinate);
+   if (cSys.hasSpectralAxis()) {
+         SpectralCoordinate specCoord = cSys.spectralCoordinate();
          MFrequency mFreq;
-         if (!specCoord.toWorld(mFreq, 0.0)) {
-            os << "SpectralCoordinate conversion failed because "
-               << specCoord.errorMessage() << LogIO::EXCEPTION;
-         } else {
+         ThrowIf(
+            ! specCoord.toWorld(mFreq, 0.0),
+            "SpectralCoordinate conversion failed because "
+               + specCoord.errorMessage()
+            );
             constSpec.setRefFrequency(mFreq);
-         }
       }
-   }
    setSpectrum(constSpec);
 }
 

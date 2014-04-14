@@ -43,6 +43,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/Block.h>
+#include <casa/IO/STLIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
@@ -4707,6 +4708,10 @@ Vector<Int> CoordinateSystem::getWorldAxesOrder(
 }
 
 Bool CoordinateSystem::isDirectionAbscissaLongitude() const {
+	ThrowIf(
+		! hasDirectionCoordinate(),
+		"Coordinate system has no direction coordinate"
+	);
 	Vector<Int> dirPixelAxes = directionAxesNumbers();
 	ThrowIf(
 		dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1,

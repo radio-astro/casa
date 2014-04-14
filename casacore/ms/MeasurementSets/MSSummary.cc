@@ -33,6 +33,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Containers/Record.h>
+#include <casa/IO/STLIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/Unit.h>
 #include <measures/Measures/MDirection.h>

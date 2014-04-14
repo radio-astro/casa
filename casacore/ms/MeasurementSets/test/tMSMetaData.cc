@@ -35,7 +35,7 @@
 #include <casa/OS/EnvVar.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <casa/Arrays/ArrayIO.h>
+#include <casa/IO/STLIO.h>
 #include <iomanip>
 
 #include <casa/namespace.h>
@@ -387,7 +387,7 @@ void testIt(MSMetaData& md) {
 		cout << "*** test nScans()" << endl;
 		AlwaysAssert(md.nScans() == 32, AipsError);
 		std::set<Int> scanNumbers = md.getScanNumbers();
-		cout << "*** test getSpwsForScan()" << endl;
+		cout << "*** test getSpwsForScan() and getPolarizationIDs()" << endl;
 		for (
 				std::set<Int>::const_iterator scan=scanNumbers.begin();
 				scan!=scanNumbers.end(); scan++
@@ -395,7 +395,7 @@ void testIt(MSMetaData& md) {
 			std::set<uInt> exp;
 			if (*scan == 1 || *scan==5 || *scan==8) {
 				uInt myints[] = {
-						0, 1, 2, 3, 4, 5, 6, 7, 8
+					0, 1, 2, 3, 4, 5, 6, 7, 8
 				};
 				exp.insert(myints, myints+9);
 			}
@@ -406,7 +406,7 @@ void testIt(MSMetaData& md) {
 					|| *scan==29 || *scan==31
 			) {
 				uInt myints[] = {
-						0, 9, 10, 11, 12, 13, 14, 15, 16
+					0, 9, 10, 11, 12, 13, 14, 15, 16
 				};
 				exp.insert(myints, myints+9);
 			}
@@ -417,11 +417,25 @@ void testIt(MSMetaData& md) {
 					|| *scan==28 || *scan==30 || *scan==32
 			) {
 				uInt myints[] = {
-						0, 17, 18, 19, 20, 21, 22, 23, 24
+					0, 17, 18, 19, 20, 21, 22, 23, 24
 				};
 				exp.insert(myints, myints+9);
 			}
 			AlwaysAssert(md.getSpwsForScan(*scan) == exp, AipsError);
+			for (
+				std::set<uInt>::const_iterator spw=exp.begin();
+				spw!=exp.end(); spw++
+			) {
+				std::set<uInt> exppols;
+				std::set<uInt> pols = md.getPolarizationIDs(*scan, *spw);
+				if (*spw == 0) {
+					exppols.insert(1);
+				}
+				else {
+					exppols.insert(0);
+				}
+				AlwaysAssert(pols == exppols, AipsError);
+			}
 		}
 		cout << "*** test getScansForSpw()" << endl;
 		for (uInt i=0; i<md.nSpw(True); i++) {
@@ -986,7 +1000,6 @@ void testIt(MSMetaData& md) {
 				);
 			}
 			cout << "*** cache size " << md.getCache() << endl;
-
 		}
 		{
 			cout << "*** test getFieldsForTime()" << endl;
@@ -1277,7 +1290,14 @@ void testIt(MSMetaData& md) {
 			cout << "mymap " << mymap[10][17] << endl;
 		}
 		{
-
+			cout << "*** test getUniqueFiedIDs()" << endl;
+			std::set<Int> expec;
+			for (Int i=0; i<6; i++) {
+				expec.insert(i);
+			}
+			AlwaysAssert(md.getUniqueFiedIDs() == expec, AipsError);
+		}
+		{
 			cout << "*** cache size " << md.getCache() << endl;
 		}
 	}

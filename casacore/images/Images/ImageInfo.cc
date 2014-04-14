@@ -106,18 +106,17 @@ GaussianBeam ImageInfo::restoringBeam(
 
 
 void ImageInfo::setRestoringBeam(const GaussianBeam& beam) {
-	if (_beams.hasMultiBeam()) {
-		throw AipsError(
-			"This object has multiple beams. They must be removed before you can define a single global restoring beam"
-		);
-	}
-    if (beam.isNull()) {
-    	throw AipsError("Beam is null and therefore invalid.");
-    }
+	ThrowIf (
+		_beams.hasMultiBeam(),
+		"This object has multiple beams. They must be removed before you can define a single global restoring beam"
+	);
+    ThrowIf(
+    	beam.isNull(),
+    	"Beam is null and therefore invalid."
+    );
     ImageBeamSet bs(beam);
     _beams = bs;
 }
-
 
 void ImageInfo::_setRestoringBeam(const Record& inRecord) {
 	if (_beams.hasMultiBeam()) {
@@ -600,6 +599,10 @@ void ImageInfo::setBeam(
 void ImageInfo::setBeam(
     const Int channel, const Int stokes, const GaussianBeam& beam
 ) {
+	ThrowIf(
+		_beams.empty(),
+		"Logic error: setAllBeams() or setBeams() must be called prior to setBeam()"
+	);
     _beams.setBeam(channel, stokes, beam);
 }
 

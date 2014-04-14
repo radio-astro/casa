@@ -26,6 +26,7 @@
 #include <components/ComponentModels/GaussianBeam.h>
 
 #include <casa/Containers/Record.h>
+#include <casa/Quanta/QC.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>
 
@@ -107,13 +108,12 @@ Quantity GaussianBeam::getPA(const Bool unwrap) const {
 	if (
 		unwrap
 		&& (
-			_pa.getValue("deg") > 90
-			|| _pa.getValue("deg") <= -90
+			_pa > QC::qTurn || _pa <= -QC::qTurn
 		)
 	) {
 		Quantity pa((fmod(_pa.getValue("deg"), 180)), "deg");
-		if (pa.getValue() > 90) {
-			pa -= 180;
+		if (pa > QC::qTurn) {
+			pa -= QC::hTurn;
 			pa.convert(_pa.getUnit());
 			return pa;
 		}
@@ -165,8 +165,6 @@ void GaussianBeam::setPA(const Quantity& pa) {
 	}
 	_pa = pa;
 }
-
-
 
 Bool GaussianBeam::isNull() const {
 	return _major.getValue() == 0 || _minor.getValue() == 0;
@@ -306,6 +304,8 @@ Bool GaussianBeam::deconvolve(
 				Quantity(_minor.get(minorAxisModelUnit)),
 				Quantity(_pa.get(positionAngleModelUnit))
 			);
+			// unwrap
+			deconvolvedSize.setPA(deconvolvedSize.getPA(True));
 			return True;
 		}
 		else {
@@ -323,6 +323,8 @@ Bool GaussianBeam::deconvolve(
 		radians);
 	pa.convert(positionAngleModelUnit);
 	deconvolvedSize = GaussianBeam(majax, minax, pa);
+	// unwrap
+	deconvolvedSize.setPA(deconvolvedSize.getPA(True));
 	return False;
 }
 

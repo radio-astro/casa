@@ -1055,6 +1055,36 @@ std::set<String> MSMetaData::getFieldNamesForSpw(const uInt spw) {
 	return fieldNames;
 }
 
+void MSMetaData::_getScansAndDDIDMaps(
+	std::map<Int, std::set<uInt> >& scanToDDIDMap,
+	vector<std::set<Int> >& ddIDToScanMap
+) {
+	// this method is responsible for setting _scanToDDIDsMap and _ddidToScansMap
+	if (! _scanToDDIDsMap.empty()) {
+		scanToDDIDMap = _scanToDDIDsMap;
+		ddIDToScanMap = _ddidToScansMap;
+		return;
+	}
+	scanToDDIDMap.clear();
+	ddIDToScanMap.clear();
+	ddIDToScanMap.resize(this->nDataDescriptions());
+	std::tr1::shared_ptr<Vector<Int> > allDDIDs = _getDataDescIDs();
+	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	Vector<Int>::const_iterator end = allDDIDs->end();
+	Vector<Int>::const_iterator myscan = allScans->begin();
+	for (
+		Vector<Int>::const_iterator ddID=allDDIDs->begin();
+		ddID!=end; ddID++, myscan++
+	) {
+		scanToDDIDMap[*myscan].insert(*ddID);
+		ddIDToScanMap[*ddID].insert(*myscan);
+	}
+	if (_cacheUpdated(_sizeof(scanToDDIDMap)) + _sizeof(ddIDToScanMap)) {
+		_scanToDDIDsMap = scanToDDIDMap;
+		_ddidToScansMap = ddIDToScanMap;
+	}
+}
+
 void MSMetaData::_getScansAndSpwMaps(
 	std::map<Int, std::set<uInt> >& scanToSpwMap,
 	vector<std::set<Int> >& spwToScanMap
@@ -1065,19 +1095,31 @@ void MSMetaData::_getScansAndSpwMaps(
 		spwToScanMap = _spwToScansMap;
 		return;
 	}
-	std::tr1::shared_ptr<Vector<Int> > allDDIDs = _getDataDescIDs();
-	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	scanToSpwMap.clear();
+	spwToScanMap.clear();
+	spwToScanMap.resize(nSpw(True));
+	std::map<Int, std::set<uInt> > scanToDDIDMap;
+	vector<std::set<Int> > ddIDToScanMap;
+	_getScansAndDDIDMaps(scanToDDIDMap, ddIDToScanMap);
 	std::map<Int, uInt> ddToSpw = _getDataDescIDToSpwMap();
-	Vector<Int>::const_iterator end = allDDIDs->end();
-	Vector<Int>::const_iterator myscan = allScans->begin();
-	spwToScanMap.resize(this->nSpw(True));
-	for (
-		Vector<Int>::const_iterator ddID=allDDIDs->begin();
-		ddID!=end; ddID++, myscan++
+	for(
+		std::map<Int, std::set<uInt> >::const_iterator iter=scanToDDIDMap.begin();
+		iter!=scanToDDIDMap.end(); iter++
 	) {
-		uInt spw = ddToSpw[*ddID];
-		scanToSpwMap[*myscan].insert(spw);
-		spwToScanMap[spw].insert(*myscan);
+		std::set<uInt> ddids = scanToDDIDMap[iter->first];
+		for (
+			std::set<uInt>::const_iterator diter=ddids.begin();
+			diter!= ddids.end(); diter++
+		) {
+			scanToSpwMap[iter->first].insert(ddToSpw[*diter]);
+		}
+	}
+	uInt i = 0;
+	for(
+		vector<std::set<Int> >::const_iterator iter=ddIDToScanMap.begin();
+		iter!=ddIDToScanMap.end(); iter++, i++
+	) {
+		spwToScanMap[ddToSpw[i]].insert(iter->begin(), iter->end());
 	}
 	if (_cacheUpdated(_sizeof(scanToSpwMap)) + _sizeof(spwToScanMap)) {
 		_scanToSpwsMap = scanToSpwMap;
@@ -1716,11 +1758,12 @@ void MSMetaData::_getTimesAndInvervals(
 	if (! _scanToTimeRangeMap.empty()) {
 		scanToTimeRangeMap = _scanToTimeRangeMap;
 		scanSpwToAverageIntervalMap = _scanSpwToIntervalMap;
+		return;
 	}
 	scanToTimeRangeMap.clear();
 	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
 	Vector<Int>::const_iterator sIter = scans->begin();
-		Vector<Int>::const_iterator sEnd = scans->end();
+	Vector<Int>::const_iterator sEnd = scans->end();
 
 	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator dIter = dataDescIDs->begin();
@@ -2789,13 +2832,53 @@ std::map<Int, uInt> MSMetaData::_getDataDescIDToSpwMap() {
 	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::SPECTRAL_WINDOW_ID);
 	ROScalarColumn<Int> spwCol(_ms->dataDescription(), spwColName);
 	std::map<Int, uInt> dataDescToSpwMap = _toUIntMap(spwCol.getColumn());
-
-	//std::map<Int, uInt> dataDescToSpwMap = MSMetaData::_getDataDescIDToSpwMap(*_ms);
 	uInt mysize = sizeof(Int) * dataDescToSpwMap.size();
 	if (_cacheUpdated(mysize)) {
 		_dataDescIDToSpwMap = dataDescToSpwMap;
 	}
 	return dataDescToSpwMap;
+}
+
+std::set<uInt> MSMetaData::getPolarizationIDs(Int scan, uInt spwid) {
+	if (! _scanSpwToPolIDMap.empty()) {
+		return _scanSpwToPolIDMap[std::pair<Int, uInt>(scan, spwid)];
+	}
+	std::map<Int, uInt> ddToPolMap = _getDataDescIDToPolIDMap();
+	std::map<Int, uInt> ddToSpwMap = _getDataDescIDToSpwMap();
+	std::map<Int, std::set<uInt> > scanToDDIDMap;
+	vector<std::set<Int> > ddIDToScanMap;
+	_getScansAndDDIDMaps(scanToDDIDMap, ddIDToScanMap);
+	std::map<std::pair<Int, uInt>, std::set<uInt> > mymap;
+	for (
+		std::map<Int, std::set<uInt> >::const_iterator iter= scanToDDIDMap.begin();
+		iter!=scanToDDIDMap.end(); iter++
+	) {
+		std::set<uInt> ddids = iter->second;
+		for(
+			std::set<uInt>::const_iterator diter=ddids.begin();
+			diter!=ddids.end(); diter++
+		) {
+			std::pair<Int, uInt> key(iter->first, ddToSpwMap[*diter]);
+			mymap[key].insert(ddToPolMap[*diter]);
+		}
+	}
+	if (_cacheUpdated(_sizeof(mymap))) {
+		_scanSpwToPolIDMap = mymap;
+	}
+	return mymap[std::pair<Int, uInt>(scan, spwid)];
+}
+
+uInt MSMetaData::_sizeof(const std::map<std::pair<Int, uInt>, std::set<uInt> >& map) {
+	uInt size = 0;
+	uInt uSize = sizeof(uInt);
+	uInt iSize = sizeof(Int);
+	for (
+		std::map<std::pair<Int, uInt>, std::set<uInt> >::const_iterator iter=map.begin();
+		iter!=map.end(); iter++
+	) {
+		size += iSize + uSize*(iter->second.size() + 1);
+	}
+	return size;
 }
 
 std::map<Int, uInt> MSMetaData::_getDataDescIDToPolIDMap() {
@@ -2872,11 +2955,11 @@ Bool MSMetaData::_hasFieldID(const Int fieldID) {
 		    + ") in this MS's FIELD table"
 		);
 	}
-	std::set<Int> uniqueFields = _getUniqueFiedIDs();
+	std::set<Int> uniqueFields = getUniqueFiedIDs();
 	return uniqueFields.find(fieldID) != uniqueFields.end();
 }
 
-std::set<Int> MSMetaData::_getUniqueFiedIDs() {
+std::set<Int> MSMetaData::getUniqueFiedIDs() {
 	if (_uniqueFieldIDs.empty()) {
 		std::tr1::shared_ptr<Vector<Int> > allFieldIDs = _getFieldIDs();
 		_uniqueFieldIDs.insert(allFieldIDs->begin(), allFieldIDs->end());
@@ -2957,8 +3040,17 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 		    	sqldSpw.insert(i);
 		    }
 		}
-		if (spwInfo[i].nchans==64 || spwInfo[i].nchans==128 || spwInfo[i].nchans==256) {
-			tdmSpw.insert(i);
+		// algorithm from thunter, CAS-5794
+		uInt nchan = spwInfo[i].nchans;
+		if (
+			nchan >= 15
+			&& ! (
+				nchan == 256 || nchan == 128 || nchan == 64 || nchan == 32
+				|| nchan == 16 || nchan == 248 || nchan == 124
+				|| nchan == 62 || nchan == 31
+			)
+		) {
+			fdmSpw.insert(i);
 		}
 		else if (spwInfo[i].nchans==1) {
 			avgSpw.insert(i);
@@ -2967,7 +3059,7 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 			wvrSpw.insert(i);
 		}
 		else {
-			fdmSpw.insert(i);
+			tdmSpw.insert(i);
 		}
 	}
 	return spwInfo;
