@@ -2174,7 +2174,7 @@ class test_spw_poln(test_base):
 #        in_feed_col = th.getVarCol(self.vis+'/FEED', 'SPECTRAL_WINDOW_ID')
 #       out_feed_col = th.getVarCol(self.outputms+'/FEED', 'SPECTRAL_WINDOW_ID')
         
-        self.assertDictEqual(in_feed_col, out_feed_col, 'FEED table differs in input and output')
+#        self.assertDictEqual(in_feed_col, out_feed_col, 'FEED table differs in input and output')
 
     def test_mms_scan_spw_partition(self):
         '''mstransform: Create MMS and part by scan/spw'''
