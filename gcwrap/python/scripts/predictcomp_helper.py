@@ -63,6 +63,7 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
     tmlabel = '%.1fd' % epoch['m0']['value']
     clabel = objname+'_spw0_'+freqlabel+'_'+tmlabel
     clname = clabel+'.cl'
+    if prefix: clname=prefix+clname
 
     if(os.path.exists(clname)):
         print "Removing previous cl file,", clname

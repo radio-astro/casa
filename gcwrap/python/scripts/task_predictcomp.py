@@ -86,7 +86,7 @@ def predictcomp(objname=None, standard=None, epoch=None,
 
         myme = metool()
         mepoch = myme.epoch('UTC', epoch)
-        if not prefix:
+        #if not prefix:
             ## meanfreq = {'value': 0.5 * (minfreqHz + maxfreqHz),
             ##             'unit': frequnit}
             ## prefix = "%s%s_%.7g" % (objname, epoch.replace('/', '-'),
@@ -96,8 +96,30 @@ def predictcomp(objname=None, standard=None, epoch=None,
             ## else:
             ##     prefix += minfreqq['unit']
             ## prefix += "_"
-            prefix = ''
-
+        #    prefix = ''
+        
+        #
+        if not prefix:
+          if not os.access("./",os.W_OK):
+            casalog.post("No write access in the current directory, trying to write cl to /tmp...","WARN")
+            prefix="/tmp/"
+            if not os.access(prefix, os.W_OK):
+              casalog.post("No write access to /tmp to write cl file", "SEVERE")
+              return False
+        else:
+          prefixdir=os.path.dirname(prefix)
+          if not os.path.exists(prefixdir):
+            prefixdirs = prefixdir.split('/')
+            if prefixdirs[0]=="":
+              rootdir = "/" + prefixdirs[1]
+            else:
+              rootdir = "./"
+            if os.access(rootdir,os.W_OK):
+              os.makedirs(prefixdir) 
+            else:
+              casalog.post("No write access to "+rootdir+" to write cl file", "SEVERE")
+              return False
+       
         # Get clist
         myim = imtool()
         if hasattr(myim, 'predictcomp'):
