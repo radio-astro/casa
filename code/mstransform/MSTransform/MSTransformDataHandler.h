@@ -235,9 +235,10 @@ public:
 
 	Bool copyGenericSubtables();
 
-	// To consolidate several SPW sub-tables
+	// To consolidate several sub-tables when dealing with MMS
 	static Bool mergeSpwSubTables(Vector<String> filenames);
 	static Bool mergeDDISubTables(Vector<String> filenames);
+	static Bool mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
 
 	// Accesors for the MS objects
 	MeasurementSet * getInputMS() {return &ms_p;};
