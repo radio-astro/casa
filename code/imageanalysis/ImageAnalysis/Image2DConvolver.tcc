@@ -121,12 +121,14 @@ template <class T> void Image2DConvolver<T>::convolve(
 	const Bool autoScale, const Double scale, const Bool copyMiscellaneous,
 	const Bool targetres
 ) {
-	if (parameters.nelements() != 3) {
-		os << "The world parameters vector must be of length 3" << LogIO::EXCEPTION;
-	}
-	if (pixelAxes.nelements() != 2) {
-		os << "You must give two pixel axes to convolve" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		parameters.nelements() != 3,
+		"The world parameters vector must be of length 3"
+	);
+	ThrowIf(
+		pixelAxes.nelements() != 2,
+		"You must give two pixel axes to convolve"
+	);
 	const Int nDim = imageIn.ndim();
 	ThrowIf(
 		pixelAxes(0) < 0 || pixelAxes(0) >= nDim

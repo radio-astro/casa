@@ -70,16 +70,26 @@ public:
     // columns, to manage multi-plot display parameters.
     bool setGridSize(unsigned int nRows,unsigned int nCols);
 
+    //Returns true if a reasonable row and column location has been
+    //set (nonzero); false otherwise.
+    bool isPlottable() const;
+
+signals:
+	void plottableChanged();
+
 private slots:
 	//Whether to use a single global axis has changed.
 	void globalChanged();
-
+	void locationChanged();
 
 private:
 	void hideGridLocation( bool hide );
 	void setGridIndices( int rowIndex, int colIndex );
-	//The number of rows or columns in the grid has changed
-	void gridChanged( int rowCount, int colCount);
+
+
+	//Location of the plot
+	int gridRow;
+	int gridCol;
 };
     
     

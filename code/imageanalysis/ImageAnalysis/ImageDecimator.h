@@ -40,7 +40,7 @@ public:
 	// destructor
 	~ImageDecimator() {}
 
-	SPIIT decimate(Bool wantReturn) const;
+	SPIIT decimate() const;
 
 	String getClass() const { const static String s = "ImageDecimator"; return s; }
 
@@ -51,7 +51,7 @@ public:
 	void setAxis(uInt n);
 
 	// set the decimation function
-	void setFunction(ImageDecimatorData::Function f) { _function = f; }
+	void setFunction(ImageDecimatorData::Function f);
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
@@ -63,6 +63,8 @@ protected:
 	}
 
     inline Bool _supportsMultipleBeams() {return False;}
+
+    virtual inline Bool _supportsMultipleRegions() {return True;}
 
 private:
 	uInt _axis, _factor;

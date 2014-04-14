@@ -33,6 +33,7 @@
 #include <guitools/Feather/Preferences.qo.h>
 #include <guitools/Feather/PreferencesColor.qo.h>
 #include <guitools/Feather/OverWriteFileDialog.qo.h>
+#include <guitools/Feather/AboutDialog.qo.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/aipstype.h>
@@ -58,6 +59,7 @@ signals:
 	void featherFinished();
 
 private slots:
+	void openAboutDialog();
 	void openFileLoader();
 	void featherImages( bool checkOutput = true );
 	void openPreferences();
@@ -116,6 +118,7 @@ private:
     PlotHolder* plotHolder;
     QProgressDialog progressMeter;
     OverWriteFileDialog overWriteFileDialog;
+    AboutDialog aboutDialog;
     LogIO logger;
 
 };

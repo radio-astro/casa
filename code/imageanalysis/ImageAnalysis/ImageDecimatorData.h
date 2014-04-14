@@ -24,10 +24,12 @@ class ImageDecimatorData {
 
 public:
 
+	// Put new functions before NFUNCS.
 	enum Function {
 		// just copy the nth plane as is, no function applied
-		NONE,
-		MEAN
+		COPY,
+		MEAN,
+		NFUNCS
 	};
 };
 }

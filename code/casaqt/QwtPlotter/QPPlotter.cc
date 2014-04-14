@@ -419,6 +419,23 @@ void QPPlotter::resizeEvent(QResizeEvent* event) {
             m_resizeHandlers[i]->handleResize(e);
         event->accept();
     } else event->ignore();
+    resetCanvasMinSizeHints();
+
+}
+
+void QPPlotter::resetCanvasMinSizeHints(){
+	if ( !m_layout.null() ){
+		pair<int,int> currentSize = size();
+		int rowCount = getRowCount();
+		int colCount = getColCount();
+		int minWidth = currentSize.first / (colCount + 2 );
+		int minHeight = currentSize.second / (rowCount + 2 );
+		vector<PlotCanvasPtr> canvases = m_layout->allCanvases();
+		int canvasCount = canvases.size();
+		for ( int i = 0; i < canvasCount; i++ ){
+			canvases[i]->setMinimumSizeHint( minWidth, minHeight );
+		}
+	}
 }
 
 void QPPlotter::logObject(const String& className, void* address,
@@ -505,6 +522,38 @@ int QPPlotter::getColCount(){
     return colCount;
 }
 
+
+bool QPPlotter::isLeftAxisInternal() const {
+	 bool leftAxisInternal = false;
+	 if ( axisLocationY == Y_LEFT ){
+	     if ( !commonAxisY ){
+	    	 leftAxisInternal = true;
+	     }
+	 }
+	 return leftAxisInternal;
+}
+
+bool QPPlotter::isBottomAxisInternal() const {
+	 bool bottomAxisInternal = false;
+	 if ( axisLocationX == X_BOTTOM ){
+	     if ( !commonAxisX ){
+	    	 bottomAxisInternal = true;
+	     }
+	 }
+	 return bottomAxisInternal;
+}
+
+bool QPPlotter::isRightAxisInternal() const {
+	 bool rightAxisInternal = false;
+	 if ( axisLocationY == Y_RIGHT ){
+	     if ( !commonAxisY ){
+	    	 rightAxisInternal = true;
+	     }
+	 }
+	 return rightAxisInternal;
+}
+
+
 // Private Methods //
 
 void QPPlotter::setupCanvasFrame() {
@@ -541,12 +590,16 @@ void QPPlotter::setupCanvasFrame() {
         int colCount = g->cols();
         int startCols = 0;
         int startRows = 0;
+        bool leftAxisInternal = isLeftAxisInternal();
+        bool bottomAxisInternal = isBottomAxisInternal();
+        bool rightAxisInternal = isRightAxisInternal();
         if ( commonAxisX ){
         	if ( axisLocationX == X_TOP ){
         		startRows = 1;
         		rowCount = rowCount + 1;
         	}
         }
+
 
         if ( commonAxisY ){
         	int axisColumn = colCount;
@@ -569,8 +622,8 @@ void QPPlotter::setupCanvasFrame() {
         		if ( associatedCanvas != NULL ){
 
         			QPLayeredCanvas& associatedPlot = associatedCanvas->asQwtPlot();
-        			//axis->setPlot( &associatedPlot );
-        			QPAxis* axis = new QPAxis( axisLocationY, this, &associatedPlot);
+        			QPAxis* axis = new QPAxis( axisLocationY, this, &associatedPlot,
+        					leftAxisInternal, bottomAxisInternal, rightAxisInternal );
         			associatedCanvas->addAxisListener( axis );
 
         			qgl->addWidget(axis, i, axisColumn );
@@ -610,7 +663,8 @@ void QPPlotter::setupCanvasFrame() {
         		QPCanvas* associatedCanvas = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
         		if ( associatedCanvas != NULL ){
         			QwtPlot& associatedPlot = associatedCanvas->asQwtPlot();
-        			QPAxis* axis = new QPAxis( axisLocationX, this, &associatedPlot );
+        			QPAxis* axis = new QPAxis( axisLocationX, this, &associatedPlot,
+        					leftAxisInternal, bottomAxisInternal, rightAxisInternal );
         			//axis->setPlot( &associatedPlot );
         			associatedCanvas->addAxisListener( axis );
         			qgl->addWidget( axis, axisRow, j );
@@ -638,6 +692,8 @@ void QPPlotter::setupCanvasFrame() {
         m_canvasTools[i]->setBlocking(true);
     }
     
+    resetCanvasMinSizeHints();
+
     // Set the parent of the canvases to this plotter.
     for(unsigned int i = 0; i < canvases.size(); i++)
         dynamic_cast<QPCanvas&>(*canvases[i]).setQPPlotter(this);

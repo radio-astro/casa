@@ -1680,5 +1680,27 @@ void variant::dump() const {
 	}
 }
 
+bool variant::empty() const {
+	switch (typev) {
+	case BOOL:
+	case INT:
+	case LONG:
+	case DOUBLE:
+	case COMPLEX:
+		return false;
+	case STRING:
+		return val.s->empty();
+	case BOOLVEC:
+	case INTVEC:
+	case LONGVEC:
+	case DOUBLEVEC:
+	case COMPLEXVEC:
+	case STRINGVEC:
+		return size() == 0;
+	case RECORD:
+		return val.recordv->empty();
+	}
+}
+
 }	// casac namespace
 

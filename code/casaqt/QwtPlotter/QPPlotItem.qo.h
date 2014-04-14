@@ -322,12 +322,19 @@ public:
     // image is removed from the thread's images.
     QPImageCache drawResult(PlotCanvasLayer layer, bool clearResult = true);
     
+    //Used for identifying threads when debugging.
+    int getId() const {
+    	return id;
+    }
+
 public slots:
     // Cancels this thread.  If the thread is currently running, it will finish
     // the segment it is on and then stop.
     void cancel();
     
 private:
+    int id;
+
     // Items to draw.
     QList<const QPPlotItem*> m_items;
     

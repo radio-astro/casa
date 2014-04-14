@@ -163,10 +163,15 @@ QPLegend::~QPLegend() { }
 
 QSize QPLegend::sizeHint() const {
     QSize size = QwtLegend::sizeHint();
-    if(!size.isValid() || m_line.style() == PlotLine::NOLINE) return size;
+    if(!size.isValid() || m_line.style() == PlotLine::NOLINE){
+    	return size;
+    }
     
     int width = (int)(m_line.width() + 0.5);
-    if(width > 0) size += QSize(width * 2 + 1, width * 2 + 1);
+    if(width > 0){
+    	int verticalOffset = 20;
+    	size += QSize(width * 2 + 1, width * 2 + 1 + verticalOffset );
+    }
     return size;
 }
 
@@ -181,10 +186,13 @@ void QPLegend::setLine(const PlotLine& line) {
 
 const QPAreaFill& QPLegend::areaFill() const { return m_areaFill; }
 const QBrush& QPLegend::brush() const { return m_areaFill.asQBrush(); }
-void QPLegend::setAreaFill(const PlotAreaFill& fill) {
+void QPLegend::setAreaFill(const PlotAreaFill& fill, bool updateLegend) {
     if(fill != m_areaFill) {
         m_areaFill = QPAreaFill(fill);
-        if(isVisible()) update();
+        QBrush fillBrush = m_areaFill.asQBrush();
+        if(isVisible() && updateLegend ){
+        	update();
+        }
     }
 }
 
@@ -196,17 +204,25 @@ void QPLegend::drawOutlineAndBackground(QPainter* painter, const QRect& rect,
     
     painter->save();
     if(m_line.style() != PlotLine::NOLINE) painter->setPen(m_line.asQPen());
-    if(m_areaFill.pattern() != PlotAreaFill::NOFILL)
+    if(m_areaFill.pattern() != PlotAreaFill::NOFILL){
+    	QBrush brush = m_areaFill.asQBrush();
         painter->setBrush(m_areaFill.asQBrush());
-    if(useQwtPainter) QwtPainter::drawRect(painter, rect);
-    else              painter->drawRect(rect);
+    }
+
+    if(useQwtPainter){
+    	QwtPainter::drawRect(painter, rect);
+    }
+    else {
+    	painter->drawRect(rect);
+    }
     painter->restore();
 }
 
 
 void QPLegend::paintEvent(QPaintEvent* event) {
     // Draw outline and background if needed.
-    QRect geom(QPoint(0, 0), size());
+	QSize legendSize = size();
+    QRect geom(QPoint(0, 0), legendSize);
     geom.setRight(geom.right() - 1);   // Compensate for +1 in sizeHint().
     geom.setBottom(geom.bottom() - 1);
     QPainter painter(this);
@@ -219,7 +235,9 @@ void QPLegend::paintEvent(QPaintEvent* event) {
     rect.setBottom(rect.bottom() - 1);
     
     int width = 0;
-    if(m_line.style() != PlotLine::NOLINE) width = (int)(m_line.width() + 0.5);
+    if(m_line.style() != PlotLine::NOLINE){
+    	width = (int)(m_line.width() + 0.5);
+    }
     if(width > 0) {
         rect.setTop(rect.top() + width);
         rect.setLeft(rect.left() + width);

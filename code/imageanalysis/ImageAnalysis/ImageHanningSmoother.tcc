@@ -13,6 +13,7 @@ template<class T> ImageHanningSmoother<T>::ImageHanningSmoother(
 		image, region, mask, outname, overwrite
 	) {
 	this->_construct();
+    this->_setNMinPixels(3);
 }
 
 template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
@@ -21,30 +22,21 @@ template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
 	IPosition inTileShape = image.niceCursorShape();
 	uInt axis = this->_getAxis();
 	TiledLineStepper inNav(image.shape(), inTileShape, axis);
-	RO_MaskedLatticeIterator<Float> inIter(image, inNav);
+	RO_MaskedLatticeIterator<T> inIter(image, inNav);
 	IPosition sliceShape(image.ndim(), 1);
 	sliceShape[axis] = image.shape()[axis];
-	Array<Float> slice(sliceShape);
-	Array<Bool> maskIn(sliceShape, True);
-	Array<Bool> maskOut(sliceShape);
-	//std::auto_ptr<ImageInterface<T> > out(image.cloneII());
+	Array<T> slice(sliceShape);
 	String empty;
 	Record emptyRecord;
 	SPIIT out(
 		SubImageFactory<T>::createImage(
-			image, empty, emptyRecord, empty, False, False, False, False
+			image, empty, emptyRecord, empty,
+			False, False, False, False
 		)
 	);
 
-	Bool isMasked = image.hasPixelMask();
 	while (!inIter.atEnd()) {
-		if (isMasked) {
-			maskIn = inIter.getMask(False);
-		}
-		slice = (isMasked && ! allTrue(maskIn))
-			? _hanningSmooth(inIter.cursor(), maskIn)
-			: _hanningSmooth(inIter.cursor());
-
+		slice = _hanningSmooth(inIter.cursor());
 		out->putSlice(slice, inIter.position());
 		inIter++;
 	}
@@ -53,6 +45,7 @@ template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
 		IPosition shape = out->shape();
 		IPosition blc(shape.size(), 0);
 		blc[axis] = 1;
+		ImageDecimatorData::Function f = this->_getDecimationFunction();
 		IPosition trc = shape - 1;
 		if (shape[axis] % 2 == 0) {
 			trc[axis]--;
@@ -63,31 +56,14 @@ template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
 			SPIIT(out->cloneII()), &x,
 			String(""), String(""), False
 		);
-		decimator.setFunction(ImageDecimatorData::NONE);
+		decimator.setFunction(f);
 		decimator.setAxis(axis);
 		decimator.setFactor(2);
 		decimator.suppressHistoryWriting(True);
-		out = decimator.decimate(True);
+		out = decimator.decimate();
 		this->addHistory(decimator.getHistory());
 	}
 	return out;
-}
-
-template<class T> Array<T> ImageHanningSmoother<T>::_hanningSmooth(
-	const Array<T>& in, const Array<Bool>& mask
-) const {
-	Array<T> xx = in.copy();
-	typename Array<T>::iterator cur = xx.begin();
-	typename Array<T>::const_iterator end = xx.end();
-	Array<Bool>::const_iterator curMask = mask.begin();
-	while (cur != end) {
-		if (! *curMask) {
-			*cur = 0;
-		}
-		cur++;
-		curMask++;
-	}
-	return _hanningSmooth(xx);
 }
 
 template<class T> Array<T> ImageHanningSmoother<T>::_hanningSmooth(
@@ -107,7 +83,7 @@ template<class T> Array<T> ImageHanningSmoother<T>::_hanningSmooth(
 	next++;
 	next++;
 	Bool skip = this->_getDecimate()
-		&& this->_getDecimationFunction() == ImageDecimatorData::NONE;
+		&& this->_getDecimationFunction() == ImageDecimatorData::COPY;
 	uInt inc = skip ? 2 : 1;
 	if (skip && size % 2 == 0) {
 		end--;

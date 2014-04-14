@@ -34,6 +34,7 @@
 #include <display/Display/ColormapDefinition.h>
 #include <display/Display/PixelCanvasColorTable.h>
 #include <display/Display/Colormap.h>
+#include <QtCore/qmath.h>
 #include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -54,6 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsPCColorTables(0, 4) {
 		itsColormapDefinition = new ColormapDefinition(itsName);
 		itsOwnShapingFunction = False;
+		itsLogScale = 0;
 		setShapingFunction(0);
 	}
 
@@ -74,6 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsColormapDefinition = new ColormapDefinition(itsName);
 		itsOwnShapingFunction = False;
 		setShapingFunction(0);
+		itsLogScale = 0;
 	}
 
 // compute the maps
@@ -91,11 +94,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		alphaMap.resize( reqSize );
 
 		Double lenpme = reqSize-1 + 0.00001;
-
+		float divisor = 1;
+		if ( itsLogScale > 0 ){
+			divisor = (reqSize*1.0f) / itsLogScale;
+		}
+		double logNormal = qPow( 2, lenpme / divisor );
 		for (uInt i = 0; i < reqSize; i++) {
+			double lookUpValue = Double(i) / lenpme;
+			if ( itsLogScale > 0 ){
+				lookUpValue = qPow(2, i/divisor) / logNormal;
+			}
+
 			// obtain function values
 			itsColormapDefinition->getValue((*itsShapingFunction)
-			                                (Float(Double(i) / lenpme)),
+			                                (Float(lookUpValue)),
 			                                redMap(i), greenMap(i), blueMap(i));
 
 			// apply contrast correction
@@ -210,6 +222,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsInvertGreen = green;
 		itsInvertBlue = blue;
 		if (doReinstall) {
+			reinstall();
+		}
+	}
+
+	void Colormap::setLogScale( const Int &logScale, const Bool & doReinstall ){
+		itsLogScale = logScale;
+		if ( doReinstall){
 			reinstall();
 		}
 	}

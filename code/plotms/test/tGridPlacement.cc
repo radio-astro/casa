@@ -102,7 +102,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	qDebug() << "tGridPlacement:: Result of save="<<ok;
     
 
-	ok = tUtil::checkFile( outFile, 80000, 100000, -1 );
+	ok = tUtil::checkFile( outFile, 60000, 80000, -1 );
 	qDebug() << "tGridPlacement:: Result of save file check="<<ok;
 
 	tUtil::exitMain( false );

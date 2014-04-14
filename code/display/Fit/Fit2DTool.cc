@@ -53,7 +53,7 @@ namespace casa {
 		modeGroup->addButton( ui.imageRadioButton );
 		modeGroup->addButton( ui.regionRadioButton );
 		ui.imageRadioButton->setChecked( true );
-		connect( ui.imageRadioButton, SIGNAL(toggled(bool)), &findSourcesDialog, SLOT(setImageMode(bool)));
+		connect( ui.imageRadioButton, SIGNAL(toggled(bool)), this, SLOT(imageModeChanged(bool)));
 
 
 		setImageFunctionalityEnabled( false );
@@ -77,7 +77,9 @@ namespace casa {
 		         this, SLOT(fitColorChanged(const QString&)));
 		findSourcesDialog.setOverlayColor( FindSourcesDialog::colorNames[0] );
 
-		QDoubleValidator* validator = new QDoubleValidator( std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), 7, this );
+		double maxValue =std::numeric_limits<double>::max();
+		double minValue = -1 * maxValue;
+		QDoubleValidator* validator = new QDoubleValidator( minValue, maxValue, 7, this );
 		ui.startLineEdit->setValidator( validator );
 		ui.endLineEdit->setValidator( validator );
 		connect( &pixelRangeDialog, SIGNAL(accepted()), this, SLOT(pixelRangeChanged()));
@@ -86,7 +88,7 @@ namespace casa {
 		buttonGroup->addButton( ui.excludeRadioButton );
 		buttonGroup->addButton( ui.noneRadioButton );
 		connect( ui.pixelRangeGroupBox, SIGNAL(toggled(bool)), this, SLOT(pixelRangeEnabledChanged(bool)));
-		connect( ui.excludeRadioButton, SIGNAL(toggled(bool)), this, SLOT(pixelRangeNoneSelected(bool)));
+		connect( ui.noneRadioButton, SIGNAL(toggled(bool)), this, SLOT(pixelRangeNoneSelected(bool)));
 
 		connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(doFit()));
 		connect( ui.findEstimatesButton, SIGNAL(clicked()), this, SLOT(showFindSourcesDialog()));
@@ -113,6 +115,11 @@ namespace casa {
 			addViewerFitMarkers();
 		}
 		findSourcesDialog.setOverlayColor( colorName );
+	}
+
+	void Fit2DTool::imageModeChanged( bool enabled ){
+		findSourcesDialog.setImageMode( enabled );
+		pixelRangeDialog.setImageMode( enabled );
 	}
 
 	void Fit2DTool::residualSupportChanged( bool enable ) {
@@ -166,6 +173,8 @@ namespace casa {
 		if ( !enabled ) {
 			ui.noneRadioButton->setChecked( true );
 		}
+		bool noneChecked = ui.noneRadioButton->isChecked();
+		pixelRangeNoneSelected( noneChecked );
 	}
 
 	void Fit2DTool::pixelRangeNoneSelected( bool selected ) {
@@ -311,8 +320,13 @@ namespace casa {
 
 		String pixelBox = findSourcesDialog.getPixelBox();
 		if ( pixelBox.length() == 0 ) {
-			QMessageBox::warning( this, "Invalid Pixel Box", "Please check that the region is valid in the image.");
-			return;
+			if ( ui.imageRadioButton->isChecked()){
+				pixelBox = findSourcesDialog.getImagePixelBox().toStdString();
+			}
+			if ( pixelBox.length() == 0 ){
+				QMessageBox::warning( this, "Invalid Pixel Box", "Please check that the region is valid in the image.");
+				return;
+			}
 		}
 
 		Vector<Float> includeVector = populateInclude();
@@ -349,6 +363,30 @@ namespace casa {
 	void Fit2DTool::frameChanged( int frame ) {
 		ui.channelLineEdit->setText( QString::number( frame ));
 		findSourcesDialog.setChannel( frame );
+		pixelRangeDialog.setChannelValue( frame );
+	}
+
+	void Fit2DTool::updateFrame(){
+		QString channelStr = ui.channelLineEdit->text();
+		Bool ok = false;
+		int channel = channelStr.toInt( &ok );
+		if ( ok ){
+			findSourcesDialog.setChannel( channel );
+			pixelRangeDialog.setChannelValue( channel );
+		}
+	}
+
+	bool Fit2DTool::setImageRegion( ImageRegion* imageRegion, int id ){
+		bool result = pixelRangeDialog.setImageRegion( imageRegion, id );
+		return result;
+	}
+
+	void Fit2DTool::deleteImageRegion( int id ){
+		pixelRangeDialog.deleteImageRegion( id );
+	}
+
+	void Fit2DTool::imageRegionSelected( int id ){
+		pixelRangeDialog.imageRegionSelected( id );
 	}
 
 	void Fit2DTool::clearFitMarkers() {
@@ -446,20 +484,30 @@ namespace casa {
 	}
 
 	void Fit2DTool::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > image ) {
-		this->image = image;
-		bool enableFunctionality = true;
-		if ( image.get() == NULL ) {
-			enableFunctionality = false;
-			findSourcesDialog.clearImage();
-			image.reset();
-		} else {
-			String imageName = image->name(false);
-			QString imageNameStr( imageName.c_str());
-			ui.fitImageLabel->setText( "Image:" + imageNameStr );
-			findSourcesDialog.setImage( image );
-
+		if ( image.get() != this->image.get() ){
+			this->image = image;
+			QString unitStr;
+			bool enableFunctionality = true;
+			if ( image.get() == NULL ) {
+				enableFunctionality = false;
+				findSourcesDialog.clearImage();
+				image.reset();
+			}
+			else {
+				String imageName = image->name(false);
+				QString imageNameStr( imageName.c_str());
+				ui.fitImageLabel->setText( "Image:" + imageNameStr );
+				findSourcesDialog.setImage( image );
+				Unit unit = this->image->units();
+				unitStr = unit.getName().c_str();
+			}
+			ui.unitsLabel->setText( unitStr );
+			//if ( pixelRangeDialog.isVisible() ){
+				pixelRangeDialog.setImage( this->image );
+			//}
+			updateFrame();
+			setImageFunctionalityEnabled( enableFunctionality );
 		}
-		setImageFunctionalityEnabled( enableFunctionality );
 	}
 
 
@@ -470,7 +518,7 @@ namespace casa {
 	                           const QString & linecolor, const QString & text, const QString & font,
 	                           int fontsize, int fontstyle ) {
 		bool regionSet = false;
-		if ( image != NULL ) {
+		if ( image.get() != NULL ) {
 			regionSet = findSourcesDialog.newRegion( id, shape, name, world_x, world_y, pixel_x,
 			            pixel_y, linecolor, text, font, fontsize, fontstyle );
 			if ( regionSet ) {
@@ -487,7 +535,7 @@ namespace casa {
 	void Fit2DTool::updateRegion( int id, viewer::region::RegionChanges changes,
 	                              const QList<double> & world_x, const QList<double> & world_y,
 	                              const QList<int> &pixel_x, const QList<int> &pixel_y ) {
-		if ( image != NULL ) {
+		if ( image.get() != NULL ) {
 			bool regionUpdate = findSourcesDialog.updateRegion( id, changes, world_x, world_y,
 			                    pixel_x, pixel_y);
 			if ( regionUpdate ) {

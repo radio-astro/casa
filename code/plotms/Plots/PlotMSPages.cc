@@ -144,6 +144,12 @@ void PlotMSPages::disown( PlotMSPlot* plot ){
 	}
 }
 
+void PlotMSPages::clearCanvas( int row, int col ){
+	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
+		itsPages_[i].clearCanvas( row, col );
+	}
+}
+
 PlotMSParameters PlotMSPages::getPageParameters(){
 	return itsManager_->getPageParameters();
 }

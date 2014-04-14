@@ -106,14 +106,24 @@ void PlotMSDataSummaryTab::setGridSize( int rowCount, int colCount ){
 
 	int dataCount = dataList.size();
 
+	bool plottabilityChanged = false;
+	if ( rowLimit != rowCount || colLimit != colCount ){
+		plottabilityChanged = true;
+	}
+
 	//Store the maximum number of plots we can support.
 	rowLimit = rowCount;
 	colLimit = colCount;
+
 
 	//Tell everyone to update their grid size, disabling any whose location
 	//exceeds the current limits.
 	for ( int i = 0; i < dataCount; i++ ){
 		dataList[i]->setGridSize( rowCount, colCount );
+	}
+
+	if ( plottabilityChanged ){
+		this->plottableChanged();
 	}
 
 	//Generate new plots.
@@ -129,7 +139,12 @@ void PlotMSDataSummaryTab::fillLayout(){
 
 
 void PlotMSDataSummaryTab::addSinglePlot(){
-	//Minimize any open plots????
+	//Minimize any open plots so the new one will be seen.
+
+	int dataCount = dataList.size();
+	for ( int i = 0; i < dataCount; i++ ){
+		dataList[i]->minimizeDisplay();
+	}
 	insertData( -1 );
 	plottableChanged();
 }
@@ -149,22 +164,11 @@ bool PlotMSDataSummaryTab::plottableChanged(){
 	int maxPlottable = rowLimit * colLimit;
 	//If we have more than enough subject to plotting, don't
 	//allow others to be selected.
-	if ( plottableCount > maxPlottable ){
-		//Disable all those not plottable.
-		for ( int i = 0; i < dataCount; i++ ){
-			if ( !dataList[i]->isPlottable()){
-				dataList[i]->resetPlottable( false );
-			}
-		}
+	if ( plottableCount >= maxPlottable ){
+		ui.addSingleButton->setEnabled( false );
 	}
 	else {
-		//We haven't exceeded the limit so we can allow the
-		//user to designate some more as plottable.
-		for ( int i = 0; i < dataCount; i++ ){
-			if ( !dataList[i]->isPlottable()){
-				dataList[i]->resetPlottable( true );
-			}
-		}
+		ui.addSingleButton->setEnabled( true );
 		plottableAddAllowed = true;
 	}
 	return plottableAddAllowed;
@@ -227,41 +231,13 @@ void PlotMSDataSummaryTab::close( PlotMSDataCollapsible* collapsible ){
 	delete collapsible;
 }
 
-bool PlotMSDataSummaryTab::isVisibilityChange(){
-	bool plotVisibleChange = false;
-	for ( int i = 0; i < dataList.size(); i++ ){
-		if ( dataList[i] -> isVisibilityChange() ){
-			plotVisibleChange = true;
-			break;
-		}
-	}
-	return plotVisibleChange;
-}
-
-
 void PlotMSDataSummaryTab::plot(){
-	bool plotsChangedVisibility = isVisibilityChange();
-	bool oldForceReload = its_force_reload;
-	if ( plotsChangedVisibility ){
-		its_force_reload = true;
-	}
 	plot( its_force_reload );
-	its_force_reload = oldForceReload;
 }
 
 void PlotMSDataSummaryTab::plot( bool forceIt ){
 	for ( int i = 0; i < dataList.size(); i++ ){
-		if ( dataList[i] -> isPlottable() ){
-			Int plotRow = 0;
-			Int plotCol = 0;
-			dataList[i]->getLocation( plotRow, plotCol );
-			if ( plotRow < rowLimit && plotCol < colLimit ){
-				dataList[i]->plot( forceIt );
-			}
-			else {
-				dataList[i]->setPlottable( false );
-			}
-		}
+		dataList[i]->plot( forceIt );
 	}
 }
 

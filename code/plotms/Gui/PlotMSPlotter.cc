@@ -53,6 +53,8 @@
 #include <QThread>
 #include <QDebug>
 
+#include <stdcasa/version.h>
+
 
 namespace casa {
 
@@ -760,18 +762,7 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
     // CASA info
     ss << "CASA Version:";
     ss << (useHTML ? "</td><td>" : "\t");
-    
-    // Append the result of running "avers"
-    QProcess* avers = new QProcess();
-    avers->start("avers");
-    avers->waitForFinished();
-    ss << QString(avers->readAllStandardOutput()).replace(
-          '\n', "").toStdString();
-    ss << (useHTML ? "<br />" : "\n             \t");
-    avers->start("avers", QStringList() << "-b");
-    avers->waitForFinished();
-    ss << "(" << QString(avers->readAllStandardOutput()).replace(
-          '\n', "").toStdString() << ")";
+    VersionInfo::report( ss );
     ss << (useHTML ? "</td></tr><tr><td>" : "\n");
     
     // Qt info
@@ -779,7 +770,7 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
     ss << (useHTML ? "</td><td>" : "\t");
     ss << qVersion();
     ss << (useHTML ? "</td></tr></table>" : "\n");
-    
+
     // Links
     ss << (useHTML ? "<hr />" : "\n");
     if(useHTML) ss << "<b>";

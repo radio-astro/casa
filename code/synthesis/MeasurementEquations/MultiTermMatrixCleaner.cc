@@ -198,7 +198,8 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   totalIters_p=0;
   prev_max_p = 1e+10;
   min_max_p = 1e+10;
-
+  rmaxval_p = -1.0;
+  
   if(adbg) os << "Finished initializing MultiTermMatrixCleaner" << LogIO::POST;
   return True;
 }
@@ -310,6 +311,7 @@ Bool MultiTermMatrixCleaner::getinvhessian(Matrix<Double> & invhessian)
 	invhessian = (invMatA_p[0]); 
   return True;
 }
+
 
 /* Do the deconvolution */
 Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inputgain, Float userthreshold)
@@ -880,13 +882,14 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
 	      {
                 //(matA_p[scale])(taylor1,taylor2) = (cubeA_p[IND4(taylor1,taylor2,scale,scale)])(itsPositionPeakPsf); // OLD
                 (matA_p[scale])(taylor1,taylor2) = (cubeA_p[IND4(taylor1,taylor2,scale,scale)])(psfpeak_p); // NEW
-		/* Check for exact zeros. Usually indicative of error */
-		if( fabs( (matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = True;
+		/* Check for exact zeros ON MAIN DIAGONAL. Usually indicative of error */
+		if( taylor1==taylor2 &&
+		    fabs( (matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = True;
 	      }
 	      
 	      if(stopnow)
 	      {
-                os << "Multi-Term Hessian has exact zeros. Not proceeding further." << LogIO::WARN << endl;
+                os << "Multi-Term Hessian has exact zeros on its main diagonal. Not proceeding further." << LogIO::WARN << endl;
                 os << "The Matrix [A] is : " << (matA_p[scale]) << LogIO::POST;
 	        return -2;
 	      }
@@ -1322,6 +1325,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit
     findMaxAbsMask((matR_p[IND2(0,0)]),vecScaleMasks_p[0],maxres,maxrespos);
     Float norma = (1.0/(matA_p[0])(0,0));
     rmaxval = abs(maxres*norma);
+    rmaxval_p = fabs(rmaxval);
 
     /* // Calc the max residual across all scales....
     Int maxscale=0;
@@ -1415,8 +1419,10 @@ Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit
 	 //        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << itsThreshold.getValue("Jy")  << LogIO::POST;
 	 LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
 	 os << "Peak convolved residual" ;
-	 if( ! itsMask.null() ){os << " (within mask) " ;}
-	 os << " : " << rmaxval << "    Minor cycle stopping threshold : " << fluxlimit  << LogIO::POST;
+	 if( ! itsMask.null() ){os << " (within mask) ";}
+	 os << " : " << rmaxval;
+	 if( fluxlimit > 0.0 ){ os << "  : Minor cycle stopping threshold : " << fluxlimit;}
+	 os << LogIO::POST;
     }
     else
     {

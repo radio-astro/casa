@@ -247,6 +247,21 @@ namespace casa{
     return found;
   }
   
+  void EVLAAperture::makeFullJones(ImageInterface<Complex>& pbImage,
+				   const VisBuffer& vb,
+				   Bool doSquint, Int& bandID, Double freqVal)
+  {
+
+    if (!isNoOp())
+      {
+	VLACalcIlluminationConvFunc vlaPB;
+	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
+	vlaPB.setMaximumCacheSize(cachesize);
+	bandID=getVisParams(vb,pbImage.coordinates());
+	vlaPB.makeFullJones(pbImage,vb, doSquint, bandID, freqVal);
+      }
+  }
+
   void EVLAAperture::applySky(ImageInterface<Complex>& outImages,
 			      const VisBuffer& vb, 
 			      const Bool doSquint,

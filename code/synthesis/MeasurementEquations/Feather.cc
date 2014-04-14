@@ -319,7 +319,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       getCutXY(ux, xamp, uy, yamp, *cwImage_p);
     }
   }
-  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
+  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial, Bool normalize){
     calcCWeightImage();
     Vector<Float> xampInt, yampInt;
     if(radial){
@@ -332,11 +332,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       getCutXY(ux, xampInt, uy, yampInt, *cwImage_p);
       yamp.resize();
-      yamp=(Float(1.0) - yampInt)*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
+      yamp=(Float(1.0) - yampInt);
+      if(!normalize) 
+	yamp=yamp*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
     }
 
       xamp.resize();
-      xamp=(Float(1.0) - xampInt)*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
+      xamp=(Float(1.0) - xampInt);
+      if(!normalize)
+	xamp=xamp*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
       
 
   }

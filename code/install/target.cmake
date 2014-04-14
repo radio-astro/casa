@@ -61,7 +61,9 @@ macro( casa_add_library module )
 
   target_link_libraries( lib${module} ${${module}_LINK_TO} )
 
-  set_target_properties( lib${module} PROPERTIES SOVERSION ${casa_soversion} )
+  if( NOT NO_SOVERSION )
+      set_target_properties( lib${module} PROPERTIES SOVERSION ${casa_soversion} )
+  endif()
 
   install( TARGETS lib${module} LIBRARY DESTINATION lib )
 

@@ -69,6 +69,7 @@ public:
     static const String PARAM_AVERAGING; // Record (see PlotMSAveraging)
     static const String PARAM_AXIS_X; // String
     static const String PARAM_AXIS_Y; // String
+    static const String PARAM_AXIS_Y_LOCATION;
     static const String PARAM_GRIDROWS; //int
     static const String PARAM_GRIDCOLS; //int
     static const String PARAM_CLEARSELECTIONS; // bool
@@ -93,6 +94,7 @@ public:
     static const String PARAM_COLORIZE;      // bool
     static const String PARAM_COLORAXIS;     // string
     static const String PARAM_CANVASTITLE;    // string
+    static const String PARAM_DATA_INDEX;    //int
     static const String PARAM_XAXISLABEL;    // string
     static const String PARAM_YAXISLABEL;    // string
     static const String PARAM_SHOWMAJORGRID;  // bool
@@ -103,6 +105,8 @@ public:
     static const String PARAM_MINORSTYLE;    // string
     static const String PARAM_MAJORWIDTH;    // int 
     static const String PARAM_MINORWIDTH;    // int 
+    static const String PARAM_SHOWLEGEND;    //bool
+    static const String PARAM_LEGENDPOSITION; //string
     static const String PARAM_XAUTORANGE;    // bool
     static const String PARAM_XMIN;          // double
     static const String PARAM_XMAX;          // double
@@ -204,6 +208,11 @@ public:
     // RETURNS: none.
     static const String METHOD_UPDATE;
     
+    //Existing plots should be removed.
+    //PARAMETERS: none.
+    //RETURNS: none.
+    static const String METHOD_CLEARPLOTS;
+
     // DBus method name for quitting the entire application.
     // PARAMETERS: none.
     // RETURNS: none.

@@ -55,13 +55,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMinorCycleController::~SIMinorCycleController(){}
 
 
-  bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual){
-    if (itsCycleIterDone >= itsCycleNiter ||
-        fabs(currentPeakResidual) <= itsCycleThreshold)
-      return true;
+  bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual)
+  {
+    LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
 
-    /* Otherwise */
+    /*
+    if (itsCycleIterDone >= itsCycleNiter ||
+        fabs(currentPeakResidual) <= itsCycleThreshold ||
+	itsIterDiff==0 )
+      return true;
     return false;
+    */
+    
+    Bool doStop=False;
+
+    if (itsCycleIterDone >= itsCycleNiter ) 
+      { doStop = True; os << "Reached cycleniter." ;  }
+    if( fabs(currentPeakResidual) <= itsCycleThreshold )
+      { doStop = True; os << "Reached cyclethreshold." ; }
+    if( itsIterDiff==0 )
+      { doStop = True; os << "Minor cycle algorithm decided to stop early.";  }
+    
+    if( doStop == True ) {os << " Triggering major cycle." << LogIO::POST;}
+    
+    return doStop;
   }
 
 
@@ -78,6 +95,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMinorCycleController::incrementMinorCycleCount(Int itersDonePerStep)
   {
+    if( itersDonePerStep <= 0 )
+      {
+	LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
+	os << LogIO::WARN << "Zero iterations done after " << itsCycleIterDone << LogIO::POST;
+      }
+
+    itsIterDiff = itersDonePerStep;
     itsIterDone += itersDonePerStep;
     itsTotalIterDone += itersDonePerStep;
     itsCycleIterDone += itersDonePerStep;
@@ -160,6 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Reset Counters and summary for the current set of minorcycle iterations */
     itsIterDone = 0;
+    itsIterDiff = -1;
     itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, 0) , True );
 
     return returnRecord;

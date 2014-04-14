@@ -33,6 +33,7 @@ casa_add_library( synthesis
   TransformMachines/AWConvFuncEPJones.cc
   TransformMachines/AWProjectFT.cc
   TransformMachines/AWProjectWBFT.cc
+  TransformMachines/AWProjectWBFTNew.cc
   TransformMachines/AWVisResampler.cc
   TransformMachines/BeamCalc.cc
   TransformMachines/BeamCalcParams.cc
@@ -44,6 +45,7 @@ casa_add_library( synthesis
   TransformMachines/HetArrayConvFunc.cc
   TransformMachines/MosaicFT.cc
   TransformMachines/MultiTermFT.cc	
+  TransformMachines/MultiTermFTNew.cc	
   TransformMachines/NewMultiTermFT.cc	
   TransformMachines/PBMath1DAiry.cc
   TransformMachines/PBMath1D.cc
@@ -238,6 +240,7 @@ casa_add_library( synthesis
  MeasurementComponents/EJones.cc
  MeasurementComponents/EPJones.cc
  MeasurementComponents/EVLASwPow.cc
+ MeasurementComponents/FJones.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
@@ -329,18 +332,19 @@ casa_add_library( synthesis
  fortran/leakantso.f
  ImagerObjects/SynthesisImager.cc
  ImagerObjects/SIImageStore.cc
+ ImagerObjects/SIImageStoreMultiTerm.cc
  ImagerObjects/SIMapperCollection.cc
- ImagerObjects/SIMapperBase.cc
  ImagerObjects/SIMapper.cc
+ ImagerObjects/SIMapperImageMosaic.cc
  ImagerObjects/SynthesisIterBot.cc
  ImagerObjects/SIMinorCycleController.cc
  ImagerObjects/SIIterBot.cc
  ImagerObjects/SynthesisDeconvolver.cc
  ImagerObjects/SDAlgorithmBase.cc
  ImagerObjects/SDAlgorithmHogbomClean.cc
- ImagerObjects/SDAlgorithmTest.cc
+ ImagerObjects/SDAlgorithmMSMFS.cc
  ImagerObjects/SDMaskHandler.cc
- ImagerObjects/SynthesisParSync.cc
+ ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
   )
 
@@ -533,6 +537,7 @@ install (FILES
 	MeasurementComponents/EJones.h
 	MeasurementComponents/EPJones.h
 	MeasurementComponents/ExpCache.h
+	MeasurementComponents/FJones.h
 	MeasurementComponents/GSpline.h
 	MeasurementComponents/GlobalFTMachineCallbacks.h
 	MeasurementComponents/GridBoth.h
@@ -628,19 +633,20 @@ install (FILES
 install (FILES
 	ImagerObjects/SynthesisImager.h
 	ImagerObjects/SIImageStore.h
+	ImagerObjects/SIImageStoreMultiTerm.h
 	ImagerObjects/SIMapperCollection.h
-	ImagerObjects/SIMapperBase.h
 	ImagerObjects/SIMapper.h
+	ImagerObjects/SIMapperImageMosaic.h
 	ImagerObjects/SynthesisIterBot.h
 	ImagerObjects/SIMinorCycleController.h
 	ImagerObjects/SIIterBot.h
 	ImagerObjects/SynthesisDeconvolver.h
 	ImagerObjects/SDMaskHandler.h
-	ImagerObjects/SynthesisParSync.h
+	ImagerObjects/SynthesisNormalizer.h
 	ImagerObjects/SynthesisUtilMethods.h
 	ImagerObjects/SDAlgorithmBase.h
 	ImagerObjects/SDAlgorithmHogbomClean.h
-	ImagerObjects/SDAlgorithmTest.h
+	ImagerObjects/SDAlgorithmMSMFS.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES
@@ -672,6 +678,7 @@ install (FILES
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
 	TransformMachines/MultiTermFT.h
+	TransformMachines/MultiTermFTNew.h
 	TransformMachines/NewMultiTermFT.h
 	TransformMachines/PBMath.h
 	TransformMachines/PBMath1D.h
@@ -702,6 +709,7 @@ install (FILES
         TransformMachines/AWConvFuncEPJones.h
         TransformMachines/AWProjectFT.h
         TransformMachines/AWProjectWBFT.h
+        TransformMachines/AWProjectWBFTNew.h
 	TransformMachines/AWVisResampler.h
 	TransformMachines/AzElAperture.h
 	TransformMachines/EVLAAperture.h
@@ -747,6 +755,7 @@ casa_add_assay( synthesis MeasurementComponents/test/tEVLAAperture.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tAlgoPClark.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tBeamSquint.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tCalibrater.cc )
+casa_add_assay( synthesis MeasurementComponents/test/tFJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tKJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath2D.cc )

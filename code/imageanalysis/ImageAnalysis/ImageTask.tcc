@@ -1,4 +1,3 @@
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -38,9 +37,10 @@
 #include <images/Images/TempImage.h>
 
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
+#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
-
 #include <imageanalysis/IO/LogFile.h>
+#include <stdcasa/variant.h>
 
 namespace casa {
 
@@ -55,6 +55,7 @@ template <class T> ImageTask<T>::ImageTask(
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
 	_logfileSupport(False), _logfileAppend(False), _suppressHistory(False),
+	_dropDegen(False),
 	_verbosity(NORMAL), _logfile(), _newHistory() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
@@ -145,10 +146,10 @@ template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
 			}
 		}
 		else {
-			LogIO log;
-			log << LogOrigin("ImageTask", __FUNCTION__) << "File " << filename
-				<< " exists but overwrite is false so it cannot be overwritten"
-				<< LogIO::EXCEPTION;
+			ThrowCc(
+				"File " + filename + " exists but overwrite is false "
+				"so it cannot be overwritten"
+			);
 		}
 	}
 }
@@ -171,6 +172,9 @@ template <class T> String ImageTask<T>::_summaryHeader() const {
 }
 
 template <class T> void ImageTask<T>::setLogfile(const String& lf) {
+	if (lf.empty()) {
+		return;
+	}
 	ThrowIf(
 		! _logfileSupport,
 		"Logic Error: This task does not support writing of a log file"
@@ -194,17 +198,16 @@ template <class T> Bool ImageTask<T>::_openLogfile() {
 	if (_logfile.get() == 0) {
 		return False;
 	}
-	*_log << LogOrigin(getClass(), __FUNCTION__);
 	ThrowIf(
 		! _logfileSupport,
 		"Logic Error: This task does not support writing of a log file"
 	);
-	return _logfile->openFile();
+	return _logfile->open();
 }
 
 template <class T> void ImageTask<T>::_closeLogfile() const {
 	if (_logfile) {
-		_logfile->closeFile();
+		_logfile->close();
 	}
 }
 
@@ -260,15 +263,49 @@ template <class T> void ImageTask<T>::addHistory(
 	}
 }
 
+template <class T> void ImageTask<T>::addHistory(
+    const LogOrigin& origin, const String& taskname,
+    const vector<String>& paramNames, const vector<casac::variant>& paramValues
+) const {
+	ThrowIf(
+		paramNames.size() != paramValues.size(),
+		"paramNames and paramValues must have the same number of elements"
+	);
+	std::pair<String, String> x;
+	x.first = origin.fullName();
+	x.second = "Ran " + taskname + " on " + _image->name();
+	_newHistory.push_back(x);
+	vector<std::pair<String, casac::variant> > inputs;
+	vector<String>::const_iterator begin = paramNames.begin();
+	vector<String>::const_iterator name = begin;
+	vector<casac::variant>::const_iterator value = paramValues.begin();
+	vector<String>::const_iterator end = paramNames.end();
+	String out = taskname + "(";
+	String quote;
+	while (name != end) {
+		if (name != begin) {
+			out += ", ";
+		}
+		quote = value->type() == casac::variant::STRING ? "'" : "";
+		out += *name + "=" + quote;
+		out += value->toString();
+		out += quote;
+		name++;
+		value++;
+	}
+	x.second = out + ")";
+	_newHistory.push_back(x);
+}
 
 template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
-    const IPosition *const outShape, const CoordinateSystem *const coordsys
+    const IPosition *const outShape, const CoordinateSystem *const coordsys,
+	const String *const outname, Bool overwrite
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-    SPIIT outImage(
+	std::tr1::shared_ptr<TempImage<T> > tmpImage(
 		new TempImage<T>(
 			TiledShape(oShape), csys
 		)
@@ -291,26 +328,26 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 		mymask.reset(new ArrayLattice<Bool>(maskArray));
 	}
 	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
-		dynamic_cast<TempImage<T> *>(outImage.get())->attachMask(*mymask);
+		tmpImage->attachMask(*mymask);
 	}
-	ImageUtilities::copyMiscellaneous(*outImage, image);
-	if (! _getOutname().empty()) {
-		_removeExistingOutfileIfNecessary();
+	String myOutname = outname ? *outname : _outname;
+	if (! outname) {
+		overwrite = _overwrite;
+	}
+	SPIIT outImage = tmpImage;
+	if (! myOutname.empty()) {
+		_removeExistingFileIfNecessary(myOutname, overwrite);
 		String emptyMask = "";
 		Record empty;
-        PagedImage<T> *tmp = dynamic_cast<PagedImage<T> *>(
-        	SubImageFactory<T>::createImage(
-        		*outImage, _getOutname(), empty, emptyMask,
-        		False, False, True, False
-        	)
+        outImage = SubImageFactory<T>::createImage(
+        	*tmpImage, myOutname, empty, emptyMask,
+        	False, False, True, False
         );
-        ThrowIf(tmp == 0, "Failed dynamic cast")
-		outImage.reset(tmp);
 	}
+	ImageUtilities::copyMiscellaneous(*outImage, image);
 	outImage->put(values == 0 ? image.get() : *values);
 	if (! _suppressHistory) {
 		ImageHistory<T> history(outImage);
-		history.append(_image);
 		vector<std::pair<String, String> >::const_iterator end = _newHistory.end();
 		vector<std::pair<String, String> >::const_iterator iter = _newHistory.begin();
 		while (iter != end) {

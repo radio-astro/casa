@@ -106,12 +106,16 @@ String PlotMSOverPlot::name() const {
 vector<MaskedScatterPlotPtr> PlotMSOverPlot::plots() const {
 	if((itsPlots_.size() == 0) || (itsPlots_[0].size() == 0))
 		return vector<MaskedScatterPlotPtr>();
-	uInt index = 0;
-	uInt nIter = itsCache_->nIter();
-	vector<MaskedScatterPlotPtr> v(nIter);
+	int index = 0;
+
+	int dataCount = itsPlots_.size();
+	int nIter = itsPlots_[0].size();
+
+	int plotCount = nIter * dataCount;
+	vector<MaskedScatterPlotPtr> v( plotCount );
 	for(unsigned int i = 0; i < itsPlots_.size(); i++) {
 		for(unsigned int j = 0; j < itsPlots_[i].size(); j++) {
-			if(index >= nIter) break;
+			if(index >= plotCount) break;
 			v[index] = itsPlots_[i][j];
 			++index;
 		}
@@ -127,7 +131,7 @@ vector<PlotCanvasPtr> PlotMSOverPlot::canvases() const {
 		return vector<PlotCanvasPtr>();
 	}
 	uInt index = 0;
-	uInt nIter = itsCache_->nIter();
+	uInt nIter = itsCache_->nIter(0);
 	int canvasCount = std::min(nIter, uInt(itsCanvases_.size() * itsCanvases_[0].size()));
 	vector<PlotCanvasPtr> v( canvasCount );
 	for(uInt i = 0; i < itsCanvases_.size(); i++) {
@@ -144,20 +148,44 @@ vector<PlotCanvasPtr> PlotMSOverPlot::canvases() const {
 
 void PlotMSOverPlot::attachToCanvases() {
 	Int iter = iter_;
-	Int nIter = itsCache_->nIter();
-	for(uInt r = 0; (r < itsCanvases_.size()); ++r) {
-		for(uInt c = 0; (c < itsCanvases_[r].size()); ++c) {
+	Int nIter = itsCache_->nIter(0);
+	if ( nIter <= 0 ){
+		nIter = 1;
+	}
+	int canvasRows = itsCanvases_.size();
+	for( int r = 0; r < canvasRows; ++r) {
+		int canvasCols = itsCanvases_[r].size();
+		for( int c = 0; c < canvasCols; ++c) {
 			if(!itsCanvases_[r][c].null()) {
-				if(!itsPlots_[r][c].null() &&
-						//We are not iterating OR
-						// the iteration index is less than the iteration count
-						( nIter == 0 || (iter < nIter))) {
-					itsCanvases_[r][c]->plotItem(itsPlots_[r][c]);
-					++iter;
+				if ( ! isIteration() ){
+					//There is just one canvas for this plot, but we may
+					//be adding several sets of data to it.
+					int dataRowCount = itsPlots_.size();
+					for ( int i = 0; i < dataRowCount; i++ ){
+						int dataColCount = itsPlots_[i].size();
+						for ( int j = 0; j < dataColCount; j++ ){
+							itsCanvases_[r][c]->plotItem( itsPlots_[i][j]);
+						}
+					}
 				}
-				((&*itsCanvases_[r][c]))->show();
-				((&*itsCanvases_[r][c]))->setMinimumSize(5,5);
+				else {
+					//For an iteration plot, there is one canvas per iteration.
+					//In the case of overplotting with an iteration, we may be
+					//adding several sets of data to each canvas.
+					int iterationIndex = r * canvasCols + c + iter;
+					if ( iterationIndex < nIter ){
+						int dataRowCount = itsPlots_.size();
+						for ( int i = 0; i < dataRowCount; i++ ){
+							if(!itsPlots_[i][iterationIndex].null()) {
+								itsCanvases_[r][c]->plotItem(itsPlots_[i][iterationIndex]);
+							}
+						}
+					}
+				}
+
 			}
+			((&*itsCanvases_[r][c]))->show();
+			((&*itsCanvases_[r][c]))->setMinimumSize(5,5);
 		}
 	}
 }
@@ -167,8 +195,13 @@ void PlotMSOverPlot::detachFromCanvases() {
 		for(uInt c = 0; c < itsCanvases_[r].size(); ++c) {
 			if(!itsCanvases_[r][c].null()) {
 				if(itsCanvases_[r][c]->numPlotItems() > 0) {
-					//itsCanvases_[r][c]->clearItems();
-					itsCanvases_[r][c]->removePlotItem(itsPlots_[r][c]);
+					int dataRowCount = itsPlots_.size();
+					for ( int i = 0; i < dataRowCount; i++ ){
+						int dataColCount = itsPlots_[i].size();
+						for ( int j = 0; j < dataColCount; j++ ){
+							itsCanvases_[r][c]->removePlotItem( itsPlots_[i][j]);
+						}
+					}
 				}
 				//This is necessary in scripting mode so that we don't see
 				//detached canvases.
@@ -187,24 +220,30 @@ void PlotMSOverPlot::resize(PlotMSPages &pages, uInt rows, uInt cols) {
 	// Resize canvases and plots
 	int plotCanvasRowCount = 1;
 	int plotCanvasColCount = 1;
-	if ( isIteration() ){
+
+	if ( isIteration()  ){
 		plotCanvasRowCount = rows;
 		plotCanvasColCount = cols;
-
 	}
 
+	//Number of canvases is based on the grid.
 	itsCanvases_.resize( plotCanvasRowCount );
-	itsPlots_.resize( plotCanvasRowCount );
 	for( int r = 0; r < plotCanvasRowCount; ++r) {
 		itsCanvases_[r].resize(plotCanvasColCount);
-		itsPlots_[r].resize(plotCanvasColCount);
 	}
+
+	//Number of plots is based on how many overplots we
+	//are supporting (dataCount) and on the iteration count
+	//over the data.
+	Int plotRows = 1;
+	Int plotCols = 1;
+	getPlotSize( plotRows, plotCols );
+	resizePlots( plotRows, plotCols );
+
 
 	// Resize pages
 	iterStep_ = plotCanvasRowCount * plotCanvasColCount;
-	double nIter = itsCache_->nIter();
-	if(nIter == 0) nIter = 1;
-	int pageSize = static_cast<int>(ceil(nIter / iterStep_));
+	int pageSize = static_cast<int>(ceil( (plotCols*1.0f) / iterStep_));
 	pages.resize( pageSize );
 	for(size_t i = 0; i < pages.totalPages(); ++i) {
 		pages[i].resize(rows, cols);
@@ -221,82 +260,98 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 
 	//Resize based on the row and column count
 	PlotMSParameters params = itsParent_->getParameters();
-	uInt rows = params.getRowCount();
-	uInt cols = params.getColCount();
+	int rows = params.getRowCount();
+	int cols = params.getColCount();
 	resize( pages, rows, cols );
 	PlotMSPage& page = pages[pages.currentPageNumber()];
 
 	const PMS_PP_Iteration* iterParams = itsParams_.typedGroup<PMS_PP_Iteration>();
-	uInt rowIndex = 0;
-	uInt colIndex = 0;
+	int rowIndex = 0;
+	int colIndex = 0;
 	if ( iterParams != NULL ){
-		rowIndex = static_cast<uInt>(iterParams->getGridRow());
-		colIndex = static_cast<uInt>(iterParams->getGridCol());
+		rowIndex = iterParams->getGridRow();
+		colIndex = iterParams->getGridCol();
 	}
 
-	//Find a canvas for this plot.
-	for(uInt r = 0; r < rows; ++r) {
-		bool assigned = false;
-		for(uInt c = 0; c < cols; ++c) {
-			if ( isIteration() ){
-				if( !page.isOwned(r, c)) {
-					page.setOwner(r, c, this);
-				}
-				itsCanvases_[r][c] = page.canvas(r, c);
-			}
-			else {
-				//If it is not an iteration plot, there is just
-				//one canvas for this plot.
-				if ( rowIndex == r && colIndex == c){
-					page.disown( this );
-					page.setOwner(r, c, this);
-					itsCanvases_[0][0] = page.canvas(r,c);
-					assigned = true;
-					break;
-				}
-			}
-		}
-		if ( assigned ){
-			break;
-		}
-	}
+	page.disown( this );
+	if ( rowIndex >= 0 && colIndex >= 0 ){
 
+		//Find a canvas for this plot.
+		for(int r = 0; r < rows; ++r) {
+			bool assigned = false;
+			for(int c = 0; c < cols; ++c) {
+				if ( isIteration() ){
+					if( !page.isOwned(r, c)) {
+						page.setOwner(r, c, this);
+					}
+					itsCanvases_[r][c] = page.canvas(r, c);
+				}
+				else {
+					//If it is not an iteration plot, there is just
+					//one canvas for this plot.
+					if ( rowIndex == r && colIndex == c){
+						//page.disown( this );
+
+						page.setOwner(r, c, this);
+						itsCanvases_[0][0] = page.canvas(r,c);
+						assigned = true;
+						break;
+					}
+
+				}
+			}
+			if ( assigned ){
+				break;
+			}
+		}
+
+	}
 	page.setupPage();
 	return true;
+}
+
+void PlotMSOverPlot::resizePlots( int rows, int cols ){
+	itsPlots_.resize( rows );
+	for ( int r = 0; r < rows; ++r) {
+		itsPlots_[r].resize( cols );
+		for ( int c = 0; c < cols; ++c) {
+			//Put empty data into the plot.
+			PlotMaskedPointDataPtr data(&(itsCache_->indexer0()), false);
+			itsPlots_[r][c] = itsFactory_->maskedPlot(data);
+
+			// We want to execute this loop at least once to fill in
+			// a single plot scenario; but after that, if there are
+			// no iterations, break out
+			//if(iter >= nIter) break;
+		}
+		//if(iter >= nIter) break;
+	}
 }
 
 
 void PlotMSOverPlot::getPlotSize( Int& rows, Int& cols ){
 	rows = 1;
 	cols = 1;
-	if ( isIteration() ){
-		PlotMSParameters params = itsParent_->getParameters();
-		rows = params.getRowCount();
-		cols = params.getColCount();
+
+	//Number of plots is based on how many overplots we
+	//are supporting (dataCount) and on the iteration count
+	//over the data.
+	const PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
+	if ( axes != NULL ){
+		rows = axes->numYAxes();
+	}
+
+	int iterationCount = itsCache_->nIter(0);
+	if ( iterationCount > 0 ){
+		cols = iterationCount;
 	}
 }
 
 bool PlotMSOverPlot::initializePlot() {
-
 	Int rows = 1;
 	Int cols = 1;
 	getPlotSize( rows, cols );
-	uInt iter = 0;
-	uInt nIter = itsCache_->nIter();
-	for(Int r = 0; r < rows; ++r) {
-		for(Int c = 0; c < cols; ++c) {
-			PlotMaskedPointDataPtr data(&(itsCache_->indexer0()), false);
-			itsPlots_[r][c] = itsFactory_->maskedPlot(data);
-			++iter;
-
-			// We want to execute this loop at least once to fill in
-			// a single plot scenario; but after that, if there are
-			// no iterations, break out
-			if(iter >= nIter) break;
-		}
-		if(iter >= nIter) break;
-	}
-
+	resizePlots( rows, cols );
 	setColors();
 	return true;
 }
@@ -313,18 +368,20 @@ bool PlotMSOverPlot::isIteration() const {
 void PlotMSOverPlot::updateLocation(){
 
 	PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+
+	//Initializes the canvases for this plot
 	assignCanvases(pages);
+
 	//Put the plot data on the canvas.
 	attachToCanvases();
-	//Put the plot axis on the canvas.  For scripting mode, we get plots without
-	//axes if the call is not preset.
-		//In Gui mode, we get an exception if it is
-	//called for the case where the number of plots in the grid is going down.  We
-	//seem to need it when the number of plots is going up. However, when reload is
-	//checked, it seems to work.
+
+
+	//For scripting mode, we get plots without axes if the call is not preset.
 	if ( !itsParent_->guiShown()  ){
+		//Put the plot axis on the canvas.
 		updateCanvas();
 	}
+
 }
 
 bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
@@ -342,6 +399,7 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	if(data == NULL || iter == NULL || axes == NULL ){
 		return true;
 	}
+
 	itsTCLParams_.releaseWhenDone = releaseWhenDone;
 	itsTCLParams_.updateCanvas = (updateFlag & PMS_PP::UPDATE_AXES) ||
 			(updateFlag & PMS_PP::UPDATE_CACHE) ||
@@ -357,16 +415,20 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	//if(updateFlag & PMS_PP::UPDATE_AXES) {
 	// Apparently UPDATE_AXES is not triggered by anything...
 	// UPDATE_CACHE should be close enough for now (I hope)
-	if(updateFlag & PMS_PP::UPDATE_CACHE) {
+
+	int updateCacheFlag = updateFlag & PMS_PP::UPDATE_CACHE;
+	if( updateCacheFlag ) {
 		for(size_t r = 0; r < itsCanvases_.size(); ++r) {
 			for(size_t c = 0; c < itsCanvases_[r].size(); ++c) {
 				PlotCanvasPtr plotCanvas = itsCanvases_[r][c];
 				if ( ! plotCanvas.null() ){
 					plotCanvas->standardMouseTools()->selectTool()->clearSelectedRects();
 					plotCanvas->clearAnnotations();
+					plotCanvas->clearItems();
 				}
 			}
 		}
+
 	}
 
 	//See if the iteration parameters have changed.
@@ -387,6 +449,8 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	bool locationChange = false;
 	if ( gridRow != displayRow || gridCol != displayCol ){
 		locationChange = true;
+		//This removes the title and axes from its previous plot location.
+		itsParent_->getPlotManager().clearCanvas( gridRow, gridCol );
 	}
 
 	bool updateIter = updateFlag & PMS_PP::UPDATE_ITERATION;
@@ -396,14 +460,32 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 					(itsParent_->getAxisLocationX() != locationAxisX) ||
 					(itsParent_->getAxisLocationY() != locationAxisY) ||
 					locationChange );
+
 	itsParent_->setCommonAxes( commonAxisX, commonAxisY);
 	itsParent_->setAxisLocation( locationAxisX, locationAxisY);
-	gridRow = rows;
-	gridCol = cols;
+	gridRow = displayRow;
+	gridCol = displayCol;
+
+	//We are not plotting this particular plot so just clear it and return.
+	if ( displayRow == -1 || displayCol == -1 ){
+		clearCanvases();
+		return true;
+	}
 
 	bool dataSet = data->isSet();
-
 	bool updateData = (updateFlag & PMS_PP::UPDATE_MSDATA) || (updateFlag & PMS_PP::UPDATE_CACHE);
+
+	//If the iteration count has changed, ie from an iteration to a
+	//non-iteration or just a change in the iteration axis, we may need
+	//to clear the cache and update it.
+	if ( updateIter ){
+		PMS::Axis newAxis = iter->iterationAxis();
+		PMS::Axis cacheIterationAxis = itsCache_->getIterAxis();
+		if ( newAxis != cacheIterationAxis ){
+			updateData = true;
+		}
+	}
+
 
 	// Update cache if needed
 	bool handled = true;
@@ -412,7 +494,6 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 			handled = updateCache();
 		}
 		catch( AipsError& error ){
-			qDebug() <<" Could not update cache";
 			cerr << "Could not update cache: "<<error.getMesg().c_str()<<endl;
 			cacheLoaded_(false);
 			handled = false;
@@ -480,17 +561,19 @@ bool PlotMSOverPlot::updateCache() {
 		return false;
 	}
 
-	vector<PMS::Axis> caxes(cache->numXAxes() + cache->numYAxes());
+	/*vector<PMS::Axis> caxes(cache->numXAxes() + cache->numYAxes());
 	vector<PMS::DataColumn> cdata(cache->numXAxes() + cache->numYAxes());
 	for(uInt i = 0; i < cache->numXAxes(); ++i) {
 		caxes[i] = cache->xAxis(i);
 		cdata[i] = cache->xDataColumn(i);
+		qDebug() <<"x i="<<i<<" caxes[i]="<<caxes[i];
 	}
 
 	for(uInt i = cache->numYAxes(); i < caxes.size(); ++i) {
 		caxes[i] = cache->yAxis(i - cache->numXAxes());
 		cdata[i] = cache->yDataColumn(i - cache->numXAxes());
-	}
+		qDebug() << "i="<<i<<" caxes[i]="<<caxes[i]<<" cdata[i]="<<cdata[i];
+	}*/
 
 	itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
 			PMS::LOG_ORIGIN_LOAD_CACHE,
@@ -536,12 +619,7 @@ bool PlotMSOverPlot::updateCanvas() {
 		return false;
 	}
 
-	PMS::Axis x = cache->xAxis();
-	PMS::Axis y = cache->yAxis();
-	PlotAxis cx = axes->xAxis();
-	PlotAxis cy = axes->yAxis();
-
-	uInt nIter = itsCache_->nIter();
+	uInt nIter = itsCache_->nIter(0);
 	uInt rows = itsCanvases_.size();
 	for(uInt r = 0; r < rows; ++r) {
 		uInt cols = itsCanvases_[r].size();
@@ -555,9 +633,8 @@ bool PlotMSOverPlot::updateCanvas() {
 				clearCanvasProperties( r, c );
 			}
 			else {
-				setCanvasProperties( r, c, cx, cy, x, y, set, canv,
-						rows, cols, axes, iter, iteration );
-
+				setCanvasProperties( r, c, cache, axes, set, canv,
+						rows, cols, iter, iteration );
 			}
 		}
 	}
@@ -574,52 +651,27 @@ void PlotMSOverPlot::clearCanvasProperties( int row, int col){
 	canvas->setCommonAxes( false, false );
 }
 
+void PlotMSOverPlot::clearCanvases() {
+	int rowCount = itsCanvases_.size();
+	for ( int i = 0; i < rowCount; i++ ){
+		int colCount = itsCanvases_[i].size();
+		for ( int j = 0; j < colCount; j++ ){
+			clearCanvasProperties( i, j );
+		}
+	}
+}
+
 void PlotMSOverPlot::setCanvasProperties (int row, int col,
-		PlotAxis cx, PlotAxis cy, PMS::Axis x, PMS::Axis y,
+		PMS_PP_Cache* cacheParams, PMS_PP_Axes* axesParams,
 		bool set, PMS_PP_Canvas *canv, uInt rows, uInt cols,
-		PMS_PP_Axes *axes, PMS_PP_Iteration *iter, uInt iteration) {
+	    PMS_PP_Iteration *iter, uInt iteration) {
+
 	PlotCanvasPtr canvas = itsCanvases_[row][col];
 	if(canvas.null()){
 		return;
 	}
 
-	// Set axes scales
-	canvas->setAxisScale(cx, PMS::axisScale(x));
-	canvas->setAxisScale(cy, PMS::axisScale(y));
 
-	// Set reference values
-	bool xref = itsCache_->hasReferenceValue(x);
-	bool yref = itsCache_->hasReferenceValue(y);
-	double xrefval = itsCache_->referenceValue(x);
-	double yrefval = itsCache_->referenceValue(y);
-	canvas->setAxisReferenceValue(cx, xref, xrefval);
-	canvas->setAxisReferenceValue(cy, yref, yrefval);
-
-	// Set axes labels
-	canvas->clearAxesLabels();
-	if(set) {
-		canvas->setAxisLabel(
-				cx, canv->xLabelFormat().getLabel(x, xref, xrefval));
-		canvas->setAxisLabel(
-				cy, canv->yLabelFormat().getLabel(y, yref, yrefval));
-		PlotFontPtr xFont = canvas->axisFont(cx);
-		PlotFontPtr yFont = canvas->axisFont(cy);
-		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
-		yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
-		canvas->setAxisFont(cx, xFont);
-		canvas->setAxisFont(cy, yFont);
-	}
-
-	// Custom axes ranges
-	canvas->setAxesAutoRescale(true);
-	if(set && axes->xRangeSet() && axes->yRangeSet()) {
-		canvas->setAxesRanges(cx, axes->xRange(),
-				cy, axes->yRange());
-	} else if(set && axes->xRangeSet()) {
-		canvas->setAxisRange(cx, axes->xRange());
-	} else if(set && axes->yRangeSet()) {
-		canvas->setAxisRange(cy, axes->yRange());
-	}
 
 	// Show/hide axes
 	canvas->showAllAxes(false);
@@ -631,8 +683,96 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	canvas->setCommonAxes( commonX, commonY );
 	bool showX = set && canv->xAxisShown();
 	bool showY = set && canv->yAxisShown();
+	PlotAxis cx = axesParams->xAxis();
 	canvas->showAxis(cx, showX);
-	canvas->showAxis(cy, showY);
+	int yAxisCount = axesParams->numYAxes();
+	for ( int i = 0; i < yAxisCount; i++ ){
+		PlotAxis cy = axesParams->yAxis( i );
+		canvas->showAxis(cy, showY);
+	}
+
+	// Set axes scales
+	PMS::Axis x = cacheParams->xAxis();
+	canvas->setAxisScale(cx, PMS::axisScale(x));
+	for ( int i = 0; i < yAxisCount; i++ ){
+		PMS::Axis y = cacheParams->yAxis( i );
+		PlotAxis cy = axesParams->yAxis( i );
+		canvas->setAxisScale(cy, PMS::axisScale(y));
+	}
+
+	// Set reference values
+	bool xref = itsCache_->hasReferenceValue(x);
+	double xrefval = itsCache_->referenceValue(x);
+	canvas->setAxisReferenceValue(cx, xref, xrefval);
+	for ( int i = 0; i < yAxisCount; i++ ){
+		PMS::Axis y = cacheParams->yAxis( i );
+		PlotAxis cy = axesParams->yAxis( i );
+		bool yref = itsCache_->hasReferenceValue(y);
+		double yrefval = itsCache_->referenceValue(y);
+		canvas->setAxisReferenceValue(cy, yref, yrefval);
+	}
+
+
+
+	// Set axes labels
+	canvas->clearAxesLabels();
+	String yLabelLeft;
+	String yLabelRight;
+	if(set) {
+		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
+		String xLabelSingle = canv->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
+		canvas->setAxisLabel(cx, xLabelSingle);
+		PlotFontPtr xFont = canvas->axisFont(cx);
+		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+		canvas->setAxisFont(cx, xFont);
+		for ( int i = 0; i < yAxisCount; i++ ){
+			PMS::Axis y = cacheParams->yAxis( i );
+			PlotAxis cy = axesParams->yAxis( i );
+			bool yref = itsCache_->hasReferenceValue(y);
+			double yrefval = itsCache_->referenceValue(y);
+			PMS::DataColumn yDataColumn = cacheParams->yDataColumn(i);
+			String yLabelSingle = canv->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
+			if ( cy == Y_LEFT ){
+				if ( yLabelLeft.size() > 0 ){
+					yLabelLeft.append( ", ");
+				}
+				yLabelLeft.append( yLabelSingle );
+			}
+			else {
+				if ( yLabelRight.size() > 0 ){
+					yLabelRight.append( ", ");
+				}
+				yLabelRight.append( yLabelSingle );
+			}
+		}
+		if ( yLabelLeft.size() > 0 ){
+			canvas->setAxisLabel(Y_LEFT, yLabelLeft);
+			PlotFontPtr yFont = canvas->axisFont( Y_LEFT);
+			yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+			canvas->setAxisFont(Y_LEFT, yFont);
+		}
+		if ( yLabelRight.size() > 0 ){
+			canvas->setAxisLabel(Y_RIGHT, yLabelRight);
+			PlotFontPtr yFont = canvas->axisFont( Y_RIGHT);
+			yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+			canvas->setAxisFont(Y_RIGHT, yFont);
+		}
+	}
+
+	// Custom axes ranges
+	canvas->setAxesAutoRescale(true);
+	if ( set ){
+		if ( axesParams->xRangeSet() ){
+			canvas->setAxisRange(cx, axesParams->xRange());
+		}
+		for ( int i = 0; i < yAxisCount; i++ ){
+			if ( axesParams->yRangeSet(i) ){
+				PlotAxis cy = axesParams->yAxis( i );
+				canvas->setAxisRange(cy, axesParams->yRange(i));
+			}
+		}
+	}
+
 
 	// Legend
 	canvas->showLegend(set && canv->legendShown(),
@@ -646,14 +786,25 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	// Title
 	bool resetTitle = set || (iter->iterationAxis() != PMS::NONE);
 	String iterTxt;
-	if(iter->iterationAxis() != PMS::NONE &&
-			itsCache_->nIter() > 0) {
-		iterTxt = itsCache_->indexer(iteration).iterLabel();
+	if(iter->iterationAxis() != PMS::NONE && itsCache_->nIter(0) > 0) {
+		iterTxt = itsCache_->indexer(0,iteration).iterLabel();
 	}
 	String title = "";
 	if(resetTitle) {
-		title = canv->titleFormat().getLabel(
-				x, y, xref, xrefval, yref, yrefval) + " " + iterTxt;
+		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
+		vector<PMS::Axis> yAxes (yAxisCount, PMS::DEFAULT_YAXIS);
+		vector<bool> yRefs( yAxisCount, false);
+		vector<double> yRefVals( yAxisCount, 0);
+		vector<PMS::DataColumn> yDatas (yAxisCount, PMS::DATA );
+		for ( int i = 0; i < yAxisCount; i++ ){
+			yAxes[i] = cacheParams->yAxis( i );
+			yRefs[i] = itsCache_->hasReferenceValue(yAxes[i]);
+			yRefVals[i] = itsCache_->referenceValue(yAxes[i]);
+			yDatas[i] = cacheParams->yDataColumn( i );
+		}
+		title = canv->titleFormat().getLabel(x, yAxes, xref,
+				xrefval, yRefs, yRefVals, xDataColumn, yDatas)
+				+ " " + iterTxt;
 	}
 	canvas->setTitle(title);
 
@@ -685,24 +836,28 @@ bool PlotMSOverPlot::updateDisplay() {
 		PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
 		if(cache == NULL || axes == NULL || display == NULL) return false;
 		MaskedScatterPlotPtr plot;
-		uInt nIter = itsCache_->nIter();
+		int nIter = itsCache_->nIter(0);
+		if ( nIter <= 0 ){
+			nIter = 1;
+		}
 		uInt rows = itsPlots_.size();
 		for(uInt row = 0; row < rows; ++row) {
 			uInt cols = itsPlots_[row].size();
-			uInt iter = iter_ + row * cols;
-			if(iter >= nIter) break;
-			for(uInt col = 0; col < itsPlots_[row].size(); ++col) {
-				if(iter >= nIter) break;
+			//uInt iter = iter_ + row * cols;
+			//if(iter >= nIter) break;
+
+			for(uInt col = 0; col < cols; ++col) {
+				//if(iter >= nIter) break;
 				// Set symbols.
-				PlotSymbolPtr unflaggedSym = display->unflaggedSymbol();
+				PlotSymbolPtr unflaggedSym = display->unflaggedSymbol(row);
 				PlotSymbolPtr symbolUnmasked = itsParent_->createSymbol ( unflaggedSym );
-				uInt dataSize = itsCache_->indexer(iter).sizeUnmasked();
+				uInt dataSize = itsCache_->indexer(row,col).sizeUnmasked();
 				customizeAutoSymbol( symbolUnmasked, dataSize );
 
-				PlotSymbolPtr flaggedSym = display->flaggedSymbol();
+				PlotSymbolPtr flaggedSym = display->flaggedSymbol(row);
 				PlotSymbolPtr symbolMasked = itsParent_->createSymbol ( flaggedSym  );
 
-				dataSize = itsCache_->indexer(iter).sizeMasked();
+				dataSize = itsCache_->indexer(row,col).sizeMasked();
 				customizeAutoSymbol( symbolMasked, dataSize );
 
 				plot = itsPlots_[row][col];
@@ -711,25 +866,28 @@ bool PlotMSOverPlot::updateDisplay() {
 				plot->setSymbol(symbolUnmasked);
 				plot->setMaskedSymbol(symbolMasked);
 				// Colorize and set data changed, if redraw is needed
-				if(nIter > 0 && itsCache_->indexer(iter).colorize(
-						display->colorizeFlag(), display->colorizeAxis())) {
+				bool colorizeChanged = itsCache_->indexer(row,col).colorize(display->colorizeFlag(), display->colorizeAxis());
+
+				if(nIter > 0 && colorizeChanged ) {
 					plot->dataChanged();
 				}
 
 				// Set item axes
-				plot->setAxes(axes->xAxis(), axes->yAxis());
+				plot->setAxes(axes->xAxis(row), axes->yAxis(row));
 
 				// Set plot title
-				PMS::Axis x = cache->xAxis();
-				PMS::Axis y = cache->yAxis();
+				PMS::Axis x = cache->xAxis(row);
+				PMS::Axis y = cache->yAxis(row);
+				vector<PMS::Axis> yAxes(1, y);
+				vector<bool> yRefs(1, itsCache_->hasReferenceValue(y));
+				vector<double> yRefValues(1, itsCache_->referenceValue(y));
 				plot->setTitle(display->titleFormat().getLabel(
-						x, y,
+						x, yAxes,
 						itsCache_->hasReferenceValue(x),
 						itsCache_->referenceValue(x),
-						itsCache_->hasReferenceValue(y),
-						itsCache_->referenceValue(y)));
+						yRefs, yRefValues ));
 
-				++iter;
+				//++iter;
 			}
 		}
 	} catch(AipsError &err) {
@@ -747,24 +905,21 @@ bool PlotMSOverPlot::updateDisplay() {
 }
 
 void PlotMSOverPlot::setColors() {
-	uInt nIter = itsCache_->nIter();
+	uInt nIter = itsCache_->nIter(0);
 	uInt rows = itsPlots_.size();
 	itsColoredPlots_.resize(rows);
 	for(uInt row = 0; row < rows; ++row) {
 		uInt cols = itsPlots_[row].size();
 		itsColoredPlots_[row].resize(cols);
 		for(uInt col = 0; col < cols; ++col) {
-			uInt iteration = iter_ + row * cols + col;
+			uInt iteration = row * cols + col;
 			if(iteration >= nIter) break;
 			itsColoredPlots_[row][col] = ColoredPlotPtr(
 					dynamic_cast<ColoredPlot*>(&*itsPlots_[row][col]), false);
-			//dynamic_cast<QPScatterPlot*>(&*itsPlots_[row][col]);
 			if(!itsColoredPlots_[row][col].null()) {
-				//if(itsColoredPlots_[row][col] != NULL) {
 				const vector<String> &colors = PMS::COLORS_LIST();
 				for(uInt i = 0; i < colors.size(); ++i) {
-					itsColoredPlots_[row][col]->setColorForBin(
-							i ,itsFactory_->color(colors[i]));
+					itsColoredPlots_[row][col]->setColorForBin(i ,itsFactory_->color(colors[i]));
 				}
 			} else {
 				std::cout << "Could not convert plot (" << row << ", " << col
@@ -778,7 +933,7 @@ void PlotMSOverPlot::setColors() {
 Int PlotMSOverPlot::nIter() {
 	Int iterationCount = 0;
 	if ( itsCache_ != NULL ){
-		iterationCount = itsCache_->nIter();
+		iterationCount = itsCache_->nIter(0);
 	}
 	return iterationCount;
 }
@@ -786,7 +941,7 @@ Int PlotMSOverPlot::nIter() {
 
 
 bool PlotMSOverPlot::firstIter() {
-	Int nIter = itsCache_->nIter();
+	Int nIter = itsCache_->nIter(0);
 	if( (nIter > 1) && (iter_ != 0) ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.firstPage();
@@ -798,7 +953,7 @@ bool PlotMSOverPlot::firstIter() {
 }
 
 bool PlotMSOverPlot::prevIter() {
-	Int nIter = itsCache_->nIter();
+	Int nIter = itsCache_->nIter(0);
 	if((nIter > 1) && ((iter_ - iterStep_) >= 0)) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.previousPage();
@@ -810,7 +965,7 @@ bool PlotMSOverPlot::prevIter() {
 }
 
 bool PlotMSOverPlot::setIter( int index ){
-	Int nIter = itsCache_->nIter();
+	Int nIter = itsCache_->nIter(0);
 	bool successful = false;
 	if( nIter > 1 && index < nIter && index >= 0) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
@@ -823,7 +978,7 @@ bool PlotMSOverPlot::setIter( int index ){
 }
 
 bool PlotMSOverPlot::nextIter() {
-	Int nIter = itsCache_->nIter();
+	Int nIter = itsCache_->nIter(0);
 	if((nIter > 1) && ((iter_ + iterStep_) < nIter)) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.nextPage();
@@ -835,7 +990,7 @@ bool PlotMSOverPlot::nextIter() {
 }
 
 bool PlotMSOverPlot::lastIter() {
-	Int nIter = itsCache_->nIter();
+	Int nIter = itsCache_->nIter(0);
 	if((nIter > 0) && (iter_ < (nIter - iterStep_))) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.lastPage();
@@ -848,7 +1003,7 @@ bool PlotMSOverPlot::lastIter() {
 }
 
 bool PlotMSOverPlot::resetIter() {
-	Int nIter = itsCache_->nIter();
+	Int nIter = itsCache_->nIter(0);
 	if(nIter > 0 ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.firstPage();
@@ -867,18 +1022,22 @@ void PlotMSOverPlot::recalculateIteration( ) {
 		assignCanvases(pages);
 	}
 
-	uInt nIter = itsCache_->nIter();
+	int nIter = itsCache_->nIter(0);
+	if ( nIter <= 0 ){
+		nIter = 1;
+	}
+
+	//Put the data into the plot
 	uInt rows = itsPlots_.size();
 	for(uInt r = 0; r < rows; ++r) {
 		uInt cols = itsPlots_[r].size();
-		uInt iterationRows = iter_ + r * cols;
-		if(iterationRows >= nIter) break;
 		for(uInt c = 0; c < cols; ++c) {
-			uInt iteration = iterationRows + c;
-			if(iteration >= nIter) break;
-			logIter(iteration, nIter);
-			PlotMaskedPointDataPtr data(&(itsCache_->indexer(iteration)),
-				false);
+			int iterationIndex = c;
+			if(iterationIndex >= nIter ){
+				break;
+			}
+			logIter(iterationIndex, nIter);
+			PlotMaskedPointDataPtr data(&(itsCache_->indexer(r,c)), false);
 			itsPlots_[r][c] = itsFactory_->maskedPlot(data);
 		}
 	}
@@ -886,10 +1045,14 @@ void PlotMSOverPlot::recalculateIteration( ) {
 	setColors();
 	itsTCLParams_.updateDisplay = true;
 
+	//Update display should come before update canvas so that the
+	//legend items get the correct color.
+	updateDisplay();
+	updateCanvas();
+
 	attachToCanvases();
 	updatePlots();
-	updateCanvas();
-	updateDisplay();
+
 	releaseDrawing();
 	logPoints();
 }
@@ -907,9 +1070,17 @@ void PlotMSOverPlot::updatePlots() {
 
 bool PlotMSOverPlot::updateIndexing() {
 	PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
-	itsCache_->setUpIndexer(iter->iterationAxis(),
-			iter->isGlobalScaleX(),
-			iter->isGlobalScaleY());
+	PMS_PP_Axes* axes = itsParams_.typedGroup<PMS_PP_Axes>();
+	int dataCount = axes->numYAxes();
+	itsCache_->clearRanges();
+
+	bool globalX = iter->isGlobalScaleX();
+	bool globalY = iter->isGlobalScaleY();
+
+	//Set up the indexer.
+	for ( int i = 0; i < dataCount; i++ ){
+		itsCache_->setUpIndexer(iter->iterationAxis(), globalX, globalY, i);
+	}
 	return true;
 }
 
@@ -923,8 +1094,8 @@ void PlotMSOverPlot::logPoints() {
 	stringstream ss;
 	ss << "Plotting ";
 	if(showUnflagged) {
-		if ( itsCache_->nIter() > iter_ ){
-			ss << itsCache_->indexer(iter_).sizeUnmasked() << " unflagged"
+		if ( itsCache_->nIter(0) > iter_ ){
+			ss << itsCache_->indexer(0,iter_).sizeUnmasked() << " unflagged"
 					<< (showFlagged ? ", " : "");
 		}
 		else {
@@ -932,8 +1103,8 @@ void PlotMSOverPlot::logPoints() {
 		}
 	}
 	if(showFlagged) {
-		if ( itsCache_->nIter() > iter_ ){
-			ss << itsCache_->indexer(iter_).sizeMasked() << " flagged";
+		if ( itsCache_->nIter(0) > iter_ ){
+			ss << itsCache_->indexer(0,iter_).sizeMasked() << " flagged";
 		}
 		else {
 			ss << "0 flagged";
@@ -952,12 +1123,19 @@ void PlotMSOverPlot::logIter(Int iter, Int nIter) {
 		stringstream ss;
 		ss << "Stepping to iteration = " << iter+1
 				<< " (of " << nIter << "): "
-				<< itsCache_->indexer(iter).iterLabel();
+				<< itsCache_->indexer(0,iter).iterLabel();
 		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
 				PMS::LOG_ORIGIN_PLOT,
 				ss.str(),
 				PMS::LOG_EVENT_PLOT);
 	}
+}
+
+void PlotMSOverPlot::dataMissing(){
+	detachFromCanvases();
+	initializePlot();
+	releaseDrawing();
+	itsCache_->clear();
 }
 
 void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
@@ -966,12 +1144,8 @@ void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	if ( itsCache_ == NULL ){
 		return;
 	}
-
 	if (!itsCache_->cacheReady() || wasCanceled) {
-		detachFromCanvases();
-		initializePlot();
-		releaseDrawing();
-		itsCache_->clear();
+		dataMissing();
 		return;
 	}
 
@@ -990,17 +1164,17 @@ void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	// End cache log as needed.
 	if(itsTCLParams_.endCacheLog)
 		itsParent_->getLogger()->releaseMeasurement();
-// Update canvas as needed.
-	if(itsTCLParams_.updateCanvas){
-		updateCanvas();
-	}
 
-
-	// Update display as needed.
+	// Update display as needed.  Put this before update canvas so
+	// that the legend item keys will have the correct color.
 	if(itsTCLParams_.updateDisplay){
 		updateDisplay();
 	}
 
+	// Update canvas as needed.
+	if(itsTCLParams_.updateCanvas){
+		updateCanvas();
+	}
 
 	// Release drawing if needed.
 	if(itsTCLParams_.releaseWhenDone)

@@ -65,6 +65,7 @@ ImageAnalysis/SpectralFitter.cc
 IO/RegionTextParser.cc
 IO/AsciiAnnotationFileLine.cc
 IO/FitterEstimatesFileParser.cc
+IO/ImageFitterResults.cc
 IO/ImageProfileFitterResults.cc
 IO/LogFile.cc
 IO/OutputDestinationChecker.cc
@@ -101,6 +102,7 @@ install (FILES
 	IO/FitterEstimatesFileParser.h
 	IO/LogFile.h
     IO/OutputDestinationChecker.h
+    IO/ImageFitterResults.h
     IO/ImageProfileFitterResults.h
 	IO/ProfileFitterEstimatesFileParser.h
 	IO/RegionTextParser.h
@@ -115,6 +117,8 @@ install (FILES
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageAnalysis2.tcc
+    ImageAnalysis/ImageBoxcarSmoother.h
+    ImageAnalysis/ImageBoxcarSmoother.tcc
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageCollapser.tcc
 	ImageAnalysis/ImageCollapserData.h
@@ -145,6 +149,8 @@ install (FILES
 	ImageAnalysis/ImageInputProcessor2.tcc
 	ImageAnalysis/ImageMaskAttacher.h
     ImageAnalysis/ImageMaskAttacher.tcc
+    ImageAnalysis/ImageMaskedPixelReplacer.h
+    ImageAnalysis/ImageMaskedPixelReplacer.tcc
 	ImageAnalysis/ImageMetaData.h
     ImageAnalysis/ImageMetaDataBase.h
     ImageAnalysis/ImageMetaDataRW.h
@@ -157,6 +163,8 @@ install (FILES
 	ImageAnalysis/ImagePolProxy.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
+    ImageAnalysis/ImageRebinner.h
+    ImageAnalysis/ImageRebinner.tcc
     ImageAnalysis/ImageRegridder.h
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc

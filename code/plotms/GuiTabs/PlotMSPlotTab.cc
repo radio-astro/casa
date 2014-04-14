@@ -70,13 +70,11 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     // Setup tab widget.
     tabWidget->removeTab(0);
     
-
     // Create the plot for this tab.
     plotIndex = itsPlotManager_.numPlots();
-
+   
     itsPlotManager_.addOverPlot();
     plotsChanged(itsPlotManager_, plotIndex);
-
 }
 
 void PlotMSPlotTab::removePlot(){
@@ -105,8 +103,13 @@ void PlotMSPlotTab::getLocation( Int& rowIndex, Int& colIndex ){
 
 bool PlotMSPlotTab::isPlottable() const {
 	bool plottable = false;
-	if ( !closing && itsCurrentPlot_ != NULL ){
-		plottable = itsPlotManager_.isPlottable( itsCurrentPlot_ );
+	if ( !closing ){
+		if ( itsCurrentPlot_ == NULL ){
+			plottable = true;
+		}
+		else {
+			plottable = itsPlotManager_.isPlottable( itsCurrentPlot_ );
+		}
 	}
 	return plottable;
 }
@@ -126,8 +129,9 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
 	(void)updateFlag;
+
     if(&p == itsCurrentParameters_ && itsCurrentPlot_ != NULL){
-        setupForPlot(/*itsCurrentPlot_*/);
+        setupForPlot();
     }
 }
 
@@ -143,6 +147,7 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager,
         itsCurrentParameters_ = NULL;
     }
     else {
+
     	if ( itsCurrentPlot_ == NULL ){
     		if ( index < 0 ){
     			index = plotIndex;
@@ -151,10 +156,9 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager,
     		if ( 0 <= index && index < plotCount ){
     			itsCurrentPlot_ = const_cast<PlotMSPlot*>(manager.plot(index));
     		}
-
     	}
     	if ( show && !closing ){
-    		setupForPlot();
+        	setupForPlot();
         }
     }
 }
@@ -168,12 +172,17 @@ PlotMSPlot* PlotMSPlotTab::currentPlot() const {
 PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     PlotMSPlotParameters params(itsPlotter_->getPlotFactory());
     if(itsCurrentParameters_ != NULL){
-    	params = *itsCurrentParameters_;
+    	  PMS_PP_Display* currParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
+    	  PlotSymbolPtr currSymbol = currParams->unflaggedSymbol();
+    	  params = *itsCurrentParameters_;
     }
 
     foreach(PlotMSPlotSubtab* tab, itsSubtabs_){
     	tab->getValue(params);
     }
+
+    PMS_PP_Display* currParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
+    PlotSymbolPtr currSymbol = currParams->unflaggedSymbol();
     return params;
 }
 
@@ -208,8 +217,6 @@ String PlotMSPlotTab::getAveragingSummary() const {
 // Public Slots //
 
 void PlotMSPlotTab::plot( bool forceReload ) {
-
-  //  cout << "PlotMSPlotTab::plot()" << endl;
 
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
@@ -256,6 +263,7 @@ void PlotMSPlotTab::plot( bool forceReload ) {
                     }
                     itsPlotter_->getAnnotator().clearAll();
                 }
+
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
@@ -321,11 +329,32 @@ PlotMSAxesTab* PlotMSPlotTab::insertAxesSubtab (int index)
           if (tab != NULL)
                break;
      }
-     if (tab == NULL)
+     if (tab == NULL){
           tab = new PlotMSAxesTab (this, itsPlotter_);
+          connect( tab, SIGNAL(yAxisIdentifierChanged(int,QString)),
+        		  this, SLOT(changeAxisIdentifier(int,QString)));
+          connect( tab, SIGNAL(yAxisIdentifierRemoved(int)),
+        		  this, SLOT(removeAxisIdentifier(int)));
+     }
      insertSubtab (index, tab);
      return tab;
 }
+
+void PlotMSPlotTab::changeAxisIdentifier( int index, QString id ){
+	PlotMSDisplayTab* displayTab = findDisplayTab();
+	if ( displayTab != NULL ){
+		displayTab->setAxisIdentifier( index, id );
+	}
+}
+
+void PlotMSPlotTab::removeAxisIdentifier( int index ){
+	PlotMSDisplayTab* displayTab = findDisplayTab();
+	if ( displayTab != NULL ){
+		displayTab->removeAxisIdentifier( index );
+	}
+}
+
+
 
 void PlotMSPlotTab::insertAxes (int index)
 {
@@ -387,7 +416,7 @@ PlotMSDataTab*  PlotMSPlotTab::addDataSubtab (){
      return insertDataSubtab (itsSubtabs_.size ());
 }
 
-PlotMSIterateTab* PlotMSPlotTab::findIterateTab(){
+PlotMSIterateTab* PlotMSPlotTab::findIterateTab() const {
 	PlotMSIterateTab* tab = NULL;
 	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
 		tab = dynamic_cast < PlotMSIterateTab * >(t);
@@ -442,7 +471,16 @@ PlotMSDisplayTab* PlotMSPlotTab::insertDisplaySubtab (int index){
      return tab;
 }
 
-
+PlotMSDisplayTab* PlotMSPlotTab::findDisplayTab(){
+	PlotMSDisplayTab* tab = NULL;
+	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+		tab = dynamic_cast < PlotMSDisplayTab * >(t);
+		if (tab != NULL){
+			break;
+		}
+	}
+	return tab;
+}
 
 void PlotMSPlotTab::insertDisplay(int index){
 	insertDisplaySubtab( index );
@@ -469,6 +507,7 @@ PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
          Int cols = 1;
          itsPlotManager_.getGridSize( rows, cols );
          tab->setGridSize( rows, cols );
+         connect( tab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
      }
      insertSubtab (index, tab);
      return tab;
@@ -503,6 +542,7 @@ void  PlotMSPlotTab::insertTransformations (int index){
 // Private //
 
 void PlotMSPlotTab::setupForPlot() {
+
     tabWidget->setEnabled(itsCurrentPlot_ != NULL);
     
     if(itsCurrentParameters_ != NULL){
@@ -510,14 +550,19 @@ void PlotMSPlotTab::setupForPlot() {
     }
     itsCurrentParameters_ = NULL;
     
-    if(itsCurrentPlot_ == NULL) return;
+    if(itsCurrentPlot_ == NULL){
+    	return;
+    }
     bool oldupdate = itsUpdateFlag_;
     itsUpdateFlag_ = false;
     
     PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
-    
+   
+    PMS_PP_Display* displayParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
+    PlotSymbolPtr displaySymbol = displayParams->unflaggedSymbol();
+
     insertData(0);
     insertAxes(1);
     insertIterate(2);

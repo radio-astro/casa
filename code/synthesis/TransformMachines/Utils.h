@@ -121,6 +121,8 @@ namespace casa
 			  Float blc[2], Float trc[2]);
     Bool checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2]);
 
+    String mjdToString(Time& mjd);
+
     template<class Iterator>
     Iterator Unique(Iterator first, Iterator last);
 			  

@@ -47,6 +47,7 @@
 
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include<synthesis/ImagerObjects/SIImageStore.h>
+#include<synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -68,37 +69,45 @@ public:
 
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
-  void restore( CountedPtr<SIImageStore> imagestore );
+  virtual void restore( CountedPtr<SIImageStore> imagestore );
+  virtual void pbcor( CountedPtr<SIImageStore> imagestore );
+
+  virtual String getAlgorithmName(){return itsAlgorithmName;};
+
+  virtual uInt getNTaylorTerms(){return 1;};
 
 protected:
 
   // Pure virtual functions to be implemented by various algorithm deconvolvers.
-  virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int& iterdone )=0;
+  virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, 
+			    Float &peakresidual, Float &modelflux, Int& iterdone )=0;
   virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
   virtual void finalizeDeconvolver()=0;
 
   // Base Class implements the option of single-plane images for the minor cycle.
   virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
-  virtual void restorePlane();
+  //  virtual void restorePlane();
 
   // Non virtual. Implemented only in the base class.
   Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  void partitionImages( CountedPtr<SIImageStore> &imagestore );
-  void initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim);
   Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
-  GaussianBeam getPSFGaussian();
+  Bool findMaxAbsMask(const Matrix<Float>& lattice,const Matrix<Float>& mask,
+		      Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name
   String itsAlgorithmName;
 
-  // For debugging.
-  IPosition tmpPos_p;
+  CountedPtr<SIImageStore> itsImages; //sOriginalImages;
 
-  // Image Store
-  //  CountedPtr<SIImageStore> itsImages;
-  Vector<Slicer> itsDecSlices;
-  SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
-  Float itsComp;
+  //    Vector<Slicer> itsDecSlices;
+  //   SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
+  
+  IPosition itsMaxPos;
+  Float itsPeakResidual;
+  Float itsModelFlux;
+
+  SDMaskHandler itsMaskHandler;
+  //  Array<Float> itsMatMask;
 
 };
 

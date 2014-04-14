@@ -169,6 +169,9 @@ public:
     //it can be displayed.
     bool isPlottable() const;
 
+signals:
+	void plottableChanged();
+
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
@@ -193,6 +196,7 @@ protected:
     // <group>
     PlotMSAxesTab* addAxesSubtab();
     PlotMSAxesTab* insertAxesSubtab(int index);
+
     void insertAxes(int index);
     PlotMSCacheTab* addCacheSubtab();
     PlotMSCacheTab* insertCacheSubtab(int index);
@@ -228,7 +232,8 @@ protected:
 private:    
 
     PlotMSDataTab* findOrCreateDataTab();
-    PlotMSIterateTab* findIterateTab();
+    PlotMSIterateTab* findIterateTab() const;
+    PlotMSDisplayTab* findDisplayTab();
 
     // PlotMSPlotSubtab objects in tab widget.
     QList<PlotMSPlotSubtab*> itsSubtabs_;
@@ -252,7 +257,7 @@ private:
     int forceReloadCounter_;
     
     // Sets up the GUI to display the parameters for the given plot.
-    void setupForPlot(/*PlotMSPlot* plot*/);
+    void setupForPlot();
     
     // Returns the axes the user has selected to load or release, depending on
     // the load flag. 
@@ -264,7 +269,11 @@ private slots:
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
 
+    //A y-axis has changed its internal data.
+    void changeAxisIdentifier( int index, QString id );
 
+    //y-axis data has been removed.
+    void removeAxisIdentifier( int index );
 
 };
 

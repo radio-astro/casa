@@ -37,7 +37,7 @@
 
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
 #include<synthesis/ImagerObjects/SDAlgorithmHogbomClean.h>
-#include<synthesis/ImagerObjects/SDAlgorithmTest.h>
+#include<synthesis/ImagerObjects/SDAlgorithmMSMFS.h>
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include <synthesis/ImagerObjects/SIMinorCycleController.h>
 
@@ -72,6 +72,7 @@ class SynthesisDeconvolver
   
   // Restoration (and post-restoration PB-correction)
   void restore();
+  void pbcor();// maybe add a way to take in arbitrary PBs here.
 
   // For interaction
   void getCopyOfResidualAndMask( TempImage<Float> &/*residual*/, TempImage<Float>& /*mask*/ );
@@ -80,6 +81,8 @@ class SynthesisDeconvolver
   void setStartingModel();
 
 protected:
+
+  CountedPtr<SIImageStore> makeImageStore( String imagename );
 
   // Gather all part images to the 'full' one
   //void gatherImages();

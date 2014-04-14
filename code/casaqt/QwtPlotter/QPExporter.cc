@@ -40,9 +40,36 @@ QPExporter::QPExporter() {
 
 }
 
+void QPExporter::findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grabPlotter,
+		Int& width, Int& height, Int& gridRows, Int& gridCols ){
+	//Figure out the grid size
+	width = 0;
+	if ( grabPlotter != NULL ){
+		width = grabPlotter->width();
+	}
+	else if( grabCanvas != NULL ){
+	    width = grabCanvas->canvasWidth();
+	}
+
+	height = 0;
+	if ( grabPlotter != NULL ){
+	   height = grabPlotter->height();
+	}
+	if (grabCanvas != NULL ){
+	   height = grabCanvas->canvasHeight();
+	}
+	gridRows = 1;
+	gridCols = 1;
+	if ( grabPlotter != NULL ){
+		gridRows = grabPlotter->getRowCount();
+	    gridCols = grabPlotter->getColCount();
+	}
+}
+
 bool QPExporter::exportPostscript(
         const PlotExportFormat& format,
-        vector<QPExportCanvas*> &qcanvases){
+        vector<QPExportCanvas*> &qcanvases,
+        QPExportCanvas* grabCanvas, QPPlotter* grabPlotter){
 
     // Set resolution.
     QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
@@ -68,22 +95,22 @@ bool QPExporter::exportPostscript(
     if(format.dpi > 0) printer.setResolution(format.dpi);
         printer.setColorMode(QPrinter::Color);
 
-    // Print each canvas.
-    bool flag = false;
-    bool wasCanceled = false;
-    for(unsigned int i = 0; i < qcanvases.size(); i++) {
+    Int width = 0;
+    Int height = 0;
+    Int gridRows = 1;
+    Int gridCols = 1;
+    findGridProperties( grabCanvas, grabPlotter, width, height, gridRows, gridCols );
 
-        // don't do new page only for first non-null canvas
-        if(flag){
-        	printer.newPage();
-        }
-        flag = true;
-        bool continuePrinting = qcanvases[i]->print( printer );
-        if ( !continuePrinting ){
-        	wasCanceled = true;
-        	break;
-        }
-    }
+    Bool wasCanceled = false;
+
+    // High resolution, or format size larger than widget.
+    QImage image=produceHighResImage(format, qcanvases, width, height, gridRows,
+        		  gridCols, wasCanceled);
+
+    QPainter painter(&printer);
+    painter.drawImage(QPoint(0,0), image );
+    painter.end();
+
     return !wasCanceled;
 }
 
@@ -150,7 +177,7 @@ bool QPExporter::exportCanvases  ( vector<QPExportCanvas*>& canvases,
                 break;
         case PlotExportFormat::PS:
         case PlotExportFormat::PDF:
-                ret=exportPostscript(format, qcanvases);
+                ret=exportPostscript(format, qcanvases, exportCanvas, grabPlotter );
                 break;
         case PlotExportFormat::TEXT:
         case PlotExportFormat::NUM_FMTS:
@@ -176,27 +203,12 @@ bool QPExporter::exportToImageFile(
         QPPlotter* grabPlotter){
 
     QImage image;
-    int width = 0;
-    if ( grabPlotter != NULL ){
-    	width = grabPlotter->width();
-    }
-    else if( grabCanvas != NULL ){
-    	width = grabCanvas->canvasWidth();
-    }
 
-    int height = 0;
-    if ( grabPlotter != NULL ){
-    	height = grabPlotter->height();
-    }
-    if (grabCanvas != NULL ){
-    	height = grabCanvas->canvasHeight();
-    }
-    int gridRows = 1;
-    int gridCols = 1;
-    if ( grabPlotter != NULL ){
-    	gridRows = grabPlotter->getRowCount();
-    	gridCols = grabPlotter->getColCount();
-    }
+    Int width = 0;
+    Int height = 0;
+    Int gridRows = 1;
+    Int gridCols = 1;
+    findGridProperties( grabCanvas, grabPlotter, width, height, gridRows, gridCols );
 
     // Remember the current background color, used for on-screen GUI
     // We want to temporarily change this to white for making the image file.
@@ -321,6 +333,8 @@ QImage QPExporter::produceHighResImage(
     int externalAxisHeight = 0;
     int externalAxisWidth = 0;
     int canvasSize = qcanvases.size();
+    bool topAxis = false;
+    bool leftAxis = false;
     if ( rowCount * colCount < canvasSize){
     	//We are using external axes. Subtract off the size of the external axes
     	//before computing the widget width;
@@ -328,7 +342,30 @@ QImage QPExporter::produceHighResImage(
     	widgetWidth = (width - externalAxisWidth )/ colCount;
     	externalAxisHeight = findAxisHeight( qcanvases );
     	widgetHeight = (height - externalAxisHeight)/rowCount;
+    	if ( qcanvases[0]->isAxis()){
+    		if ( !qcanvases[0]->isVertical()){
+    			topAxis = true;
+    			//We could still have a left axis after we have cycled through
+    			//all the top axes.
+    			for ( int j = 0; j < canvasSize; j++ ){
+    				if ( qcanvases[j]->isAxis() ){
+    					if ( qcanvases[j]->isVertical()){
+    						leftAxis = true;
+    						break;
+    					}
+    				}
+    				else {
+    					//We didn't hit a left axis before proceeding to the plots.
+    					break;
+    				}
+    			}
+    		}
+    		else {
+    			leftAxis = true;
+    		}
+    	}
     }
+
     QImage image = QImage(width, height, QImage::Format_ARGB32);
 
     // Fill with background color.
@@ -349,7 +386,7 @@ QImage QPExporter::produceHighResImage(
     int canvasCount = getCanvasCount( qcanvases );
     int rowDivisor = canvasCount / rowCount;
     int colDivisor = colCount;
-    if ( externalAxisWidth > 0 ){
+    if ( leftAxis ){
     	colDivisor = colCount+1;
     }
 
@@ -357,11 +394,53 @@ QImage QPExporter::produceHighResImage(
     for (int i = 0; i < canvasSize; i++) {
 
     	int rowIndex = canvasIndex / rowDivisor;
+    	int axisWidth = externalAxisWidth;
+    	int axisHeight = externalAxisHeight;
+
+    	int colIndex = i % colDivisor;
+
+    	//Plot
     	if ( !qcanvases[i]->isAxis()){
     	    canvasIndex++;
+    	    if ( !topAxis ){
+    	    	axisHeight = 0;
+    	    }
+
+    	    if ( !leftAxis ){
+    	    	axisWidth = 0;
+    	    }
+
+    	    if ( topAxis && leftAxis ){
+    	    	colIndex = colIndex + 1;
+    	    }
     	}
-    	int colIndex = i % colDivisor;
-        wasCanceled = qcanvases[i]->print(  &painter, paf, widgetWidth, widgetHeight, externalAxisWidth, externalAxisHeight, rowIndex, colIndex, imageRect );
+    	//Axis
+    	else {
+    		if ( !topAxis ){
+    			if ( qcanvases[i]->isVertical()){
+    				axisHeight = 0;
+    			}
+    		}
+    		if ( !leftAxis ){
+    			if ( !qcanvases[i]->isVertical()){
+    				axisWidth = 0;
+
+    			}
+    			else {
+    				//External right axis goes in last column.
+    				colIndex = colCount;
+    				rowIndex = rowIndex - 1;
+    			}
+    		}
+    		else {
+    			//Left axes must go in column 0
+    			if ( qcanvases[i]->isVertical()){
+    				colIndex = 0;
+    			}
+    		}
+    	}
+
+        wasCanceled = qcanvases[i]->print(  &painter, paf, widgetWidth, widgetHeight, axisWidth, axisHeight, rowIndex, colIndex, imageRect );
         if ( wasCanceled ){
         	break;
         }

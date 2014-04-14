@@ -74,7 +74,7 @@ public:
 	void setBinCount( int count );
 	void setChannelRangeDefault();
 	void setIntensityRangeDefault();
-	void setChannelRange( int minChannel, int maxChannel );
+	void setChannelRange( int minChannel, int maxChannel, int spectralIndex=-1 );
 	void setIntensityRange( float minimumIntensity, float maximumIntensity );
 	void setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > image );
 	static double computeYValue( double value, bool useLog );
@@ -97,6 +97,7 @@ private:
     std::tr1::shared_ptr<const ImageInterface<Float> >  image;
 	int channelMin;
 	int channelMax;
+	int specIndex;
 	float intensityMin;
 	float intensityMax;
 	int binCount;

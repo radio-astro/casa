@@ -29,43 +29,25 @@
 // PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
 
 //# put includes here
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <lattices/LatticeMath/Fit2D.h>
-#include <casa/Quanta.h>
-#include <measures/Measures/Stokes.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/ImageInterface.h>
-#include <components/ComponentModels/ComponentType.h>
-#include <casa/Arrays/AxesSpecifier.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <measures/Measures/Stokes.h>
+
+#include <casa/Quanta/Quantum.h>
 
 #include <imageanalysis/ImageTypedefs.h>
 
-#include <memory>
-#include <tr1/memory>
+namespace std {
+template<class T> class auto_ptr;
+}
 
 namespace casa {
 
-class DirectionCoordinate;
-class LogIO;
-class SkyComponent;
-class Record;
-class Fit2D;
-class ImageRegion;
-class ComponentList;
-template<class T> class Array;
-template<class T> class Block;
-template<class T> class PtrBlock; 
-template<class T> class Flux;
-template<class T> class ImageStatistics;
-template<class T> class ImageHistograms;
-template<class T> class MaskedArray;
-template<class T> class Quantum;
-template<class T> class SubLattice;
-template<class T> class SubImage;
-template<class T> class Vector;
+class CoordinateSystem;
 class ImageMomentsProgressMonitor;
+class ImageRegion;
+class LatticeExprNode;
+class LELImageCoord;
+class RecordInterface;
+
+template<class T> class ImageHistograms;
 
 // <summary>
 // Image analysis and handling tool
@@ -87,10 +69,9 @@ class ImageAnalysis
 
     ImageAnalysis();
 
-    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image);
+    ImageAnalysis(SPIIF image);
 
-    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> > image);
-
+    ImageAnalysis(SPIIC image);
 
     virtual ~ImageAnalysis();
 
@@ -104,7 +85,7 @@ class ImageAnalysis
     	const Bool overwrite = False
     );
 
-    std::tr1::shared_ptr<ImageInterface<Float> > imageconcat(const String& outfile, 
+    SPIIF imageconcat(const String& outfile,
                                         const Vector<String>& infiles, 
                                         const Int axis, 
                                         const Bool relax = False, 
@@ -143,7 +124,7 @@ class ImageAnalysis
 
     Record* boundingbox(const Record& region) const;
 
-    String brightnessunit();
+    String brightnessunit() const;
 
     void calc(const String& pixels);
 
@@ -154,14 +135,14 @@ class ImageAnalysis
     	const String& name, const Bool asdefault = True
     );
 
-    tr1::shared_ptr<ImageInterface<Float> > continuumsub(const String& outline,
+    SPIIF continuumsub(const String& outline,
                                          const String& outcont, Record& region,
                                          const Vector<int>& channels, 
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    std::tr1::shared_ptr<ImageInterface<Float> > convolve2d(
+    SPIIF convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
             const Quantity& minor, const Quantity& pa,
@@ -171,8 +152,6 @@ class ImageAnalysis
     );
 
     CoordinateSystem coordsys(const Vector<int>& axes);
-
-    CoordinateSystem csys(const Vector<int>& axes);
 
     Record* coordmeasures(Quantity& intensity, Record& direction, 
                           Record& frequency, Record& velocity, 
@@ -246,14 +225,6 @@ class ImageAnalysis
                      const Vector<Int>& axes, const Vector<Int>& coord, 
                      const Int npts = 0, const String& method = "linear");
 
-    ImageInterface<Float>* hanning(
-    	const String& outfile, Record& region,
-        const String& mask, const Int axis=-10,
-        const Bool drop=True,
-        const bool overwrite=False,
-        const Bool extendMask=True
-    );
-
     Vector<Bool> haslock();
 
     Record histograms(
@@ -307,8 +278,6 @@ class ImageAnalysis
 
     void setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
 
-    String name(const Bool strippath = False);
-
     Bool open(const String& infile);
 
     Record* pixelvalue(const Vector<Int>& pixel);
@@ -332,14 +301,6 @@ class ImageAnalysis
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
-    ImageInterface<Float> * rebin(
-    	const String& outfile,
-        const Vector<Int>& bin, Record& region,
-        const String& mask, const Bool dropdeg,
-        const Bool overwrite=False,
-        const Bool extendMask=False
-    );
-
     ImageInterface<Float>* rotate(
     	const String& outfile,
         const Vector<int>& shape,
@@ -354,12 +315,6 @@ class ImageAnalysis
     );
 
     Bool rename(const String& name, const Bool overwrite = False);
-
-    Bool replacemaskedpixels(
-    	const String& pixels, Record& region,
-        const String& mask, const Bool update=False,
-        const Bool list=False, const Bool extendMask=False
-    );
 
     ImageInterface<Float>* sepconvolve(
     	const String& outfile,
@@ -376,11 +331,7 @@ class ImageAnalysis
     Bool set(const String& pixels, const Int pixelmask, 
              Record& region, const Bool list = false);
 
-    Bool setbrightnessunit(const String& unit);
-
     bool setcoordsys(const Record& csys);
-
-    bool setmiscinfo(const Record& info);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
@@ -427,9 +378,7 @@ class ImageAnalysis
 
     Vector<Double> topixel(Record& value);
 
-    Record toworld(const Vector<double>& value, const String& format = "n");
-
-    Bool unlock();
+    Record toworld(const Vector<double>& value, const String& format = "n") const;
 
     Bool detached();
 
@@ -466,15 +415,50 @@ class ImageAnalysis
                                              const Bool zeroblanks = False, 
                                              const Bool overwrite = False);
 
-    static Record* echo(Record& v, const Bool godeep = False);
 
-
-
-
-    //The parameter shape is used to distinguish between an ellipitcal
-    //region and a rectangular region, both of which have Vectors of size 2.
-    //In other cases, the type of region is determined by the number of points
-    //passed in.
+    /**
+      * Populates two vectors, zxaxisval and zyaxisval, representing
+      * values along an axis (usually the spectral axis) with a corresponding
+      * summary intensity computed based on the region passed in.
+      *
+      * @param x a Vector of x-coordinates describing a region.
+      * @param y a Vector of y-coordinates describing a region.  Together, (x,y)
+      * 		describe the region.  So for a point region, both vectors would have
+      * 		length one.  For a rectangular reqion, they would describe the blc and
+      * 		trc points of the rectangle.  For a polygonal region, the vectors would
+      * 		have undetermined length and together be the coordinates of the corners
+      * 		of the polygon.
+      * @param zxaxisval contains the x-coordinates of the frequency profile.
+      * @param zyaxisval contains the y-coordinates of the frequency profile.
+      * @param xytype the coordinate system used by the input vectors x,y.  "world"
+      *      is the default, but an alternative might be "pixel".
+      * @param specaxis -values include "pixel", "frequency", "radio velocity"
+      *      "optical velocity", "wavelength" or "air wavelength"
+      * @param whichStokes - a parameter that is currently not being used by the
+      * 		profiler (not sure of the purpose).
+      * @param whichTabular - find a frequency profile along a tabular axis instead of
+      * 		the spectral axis.  This one was put in because people wanted to profile
+      * 		images that had tabular axes, but not spectral axes.  The idea is that if
+      * 		it is not at its default value of -1, then the method will use the specified
+      * 		tabular axis.
+      * @param whichLinear - another one that is currently not being used (not sure of the purpose).
+      * @param xunits - the units for the spectral (z) axis.  Possible values are
+      * 	    Hz, MHz, MHz, GHz, m/s, km/s, mm, um, nm, Angstrom
+      * @param specframe - String form of the MFrequency types such as TOPO, BARY, etc
+      * @param combineType - Method used for combining pixels.  Current values are an enum
+      * 	    in the PlotType enum of QtProfile.qo.h: PMEAN, PMEDIAN, PSUM, PFLUX.  For error
+      * 	    plotting and overplotting, the profiler also seems to be passing values in from
+      * 	    the ExtrType enum:  MEAN, MEDIAN, SUM, MSE, RMSE, SQRTSUM, NSQRTSUM, FLUX, EFLUX
+      * @param whichQuality - the profiler is not making any use of this one (passing in a
+      * 	    default value).  Not sure what it is there for.
+      * @param restValue - Specify a different rest frequency.  Currently the user can reset
+      * 	    the rest frequency for the image, and when they do this, a new frequency profile
+      * 	    is computed with the new rest value.
+      * @param beamChannel - currently this is only used when the combine type is FLUX.
+      * @param shape - this was added to distinguish 'rectangle' regions from 'ellipse'
+      * 	       regions (when the vectors x and y both have size 2).  Other types of region
+      * 	       can be distinguished from the size of the x,y vectors.
+      */
     Bool getFreqProfile(const Vector<Double>& x,
 			const Vector<Double>& y,
 			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
@@ -507,7 +491,7 @@ class ImageAnalysis
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
     // misc from inimage.   Returns T if image made, F if not
-    static tr1::shared_ptr<ImageInterface<Float> >	makeExternalImage (
+    static SPIIF makeExternalImage (
     	const String& fileName,
     	const CoordinateSystem& cSys,
     	const IPosition& shape,
@@ -549,8 +533,8 @@ class ImageAnalysis
     		 const Int& whichQuality=0,
     		 const String& restValue="");
     
-    std::tr1::shared_ptr<ImageInterface<Float> > _imageFloat;
-    std::tr1::shared_ptr<ImageInterface<Complex> > _imageComplex;
+    SPIIF _imageFloat;
+    SPIIC _imageComplex;
 
     std::auto_ptr<LogIO> _log;
 
@@ -571,7 +555,7 @@ class ImageAnalysis
                        const casa::IPosition& shape) const;
     
     // Convert types
-    casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
+    //casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
    
     // Delete private ImageStatistics and ImageHistograms objects
     bool deleteHist();
@@ -582,13 +566,6 @@ class ImageAnalysis
     	ImageRegion* pOldRegionRegion,
     	ImageRegion* pOldMaskRegion
     );
-    // Hanning smooth a vector
-    static void _hanning_smooth (casa::Array<casa::Float>& out,
-                         casa::Array<casa::Bool>& maskOut,
-                         const casa::Vector<casa::Float>& in,
-                         const casa::Array<casa::Bool>& maskIn,
-                         casa::Bool isMasked);
-    
     
 // Make a new image with given CS
     void _make_image(
@@ -608,15 +585,11 @@ class ImageAnalysis
     void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
                          const casa::Record& Regions,
                          casa::LogIO& logger);
-    
     // Set the cache
     void set_cache(const casa::IPosition& chunk_shape) const;
     
 
     // Some helper functions that needs to be in casa namespace coordsys
-    
-    Record toWorldRecord (const Vector<Double>& pixel, 
-                       const String& format) const;
 
     Record worldVectorToRecord (const Vector<Double>& world, 
                                 Int c, const String& format, 
@@ -624,9 +597,6 @@ class ImageAnalysis
 
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
-
-    void trim (Vector<Double>& inout, 
-               const Vector<Double>& replace) const;
 
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already.  If a
@@ -639,7 +609,7 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
-    tr1::shared_ptr<ImageInterface<Float> > _fitpolynomial(
+    SPIIF _fitpolynomial(
     	const String& residfile,
     	const String& fitfile,
     	const String& sigmafile,
@@ -669,7 +639,7 @@ class ImageAnalysis
     template<class T> static void _destruct(ImageInterface<T>& image);
 
     template<class T> Bool _setrestoringbeam(
-    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	SPIIT image,
     	const Quantity& major, const Quantity& minor,
     	const Quantity& pa, const Record& rec,
     	const bool deleteIt, const bool log,
@@ -682,7 +652,7 @@ class ImageAnalysis
     	const Bool pixelorder, const Bool verbose
     );
 
-    template<class T> std::tr1::shared_ptr<ImageInterface<T> > _imagecalc(
+    template<class T> SPIIT _imagecalc(
     	const LatticeExprNode& node, const IPosition& shape,
     	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
     	const String& outfile,
@@ -690,12 +660,12 @@ class ImageAnalysis
     );
 
     template<class T> void _calc(
-    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	SPIIT image,
     	const LatticeExprNode& node
     );
 
     template<class T> Bool _calcmask(
-    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	SPIIT image,
     	const LatticeExprNode& node,
     	const String& name, const Bool makedefault
     );

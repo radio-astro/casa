@@ -26,23 +26,23 @@
 #ifndef CASAQT_EXTERNALAXISWIDGETLEFT_H_
 #define CASAQT_EXTERNALAXISWIDGETLEFT_H_
 
-#include <casaqt/QtUtilities/Axis/ExternalAxisWidget.h>
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetVertical.h>
 
 namespace casa {
 
-class ExternalAxisWidgetLeft : public ExternalAxisWidget {
+class ExternalAxisWidgetLeft : public ExternalAxisWidgetVertical {
 public:
-	ExternalAxisWidgetLeft(QWidget* parent, QwtPlot* plot);
+	ExternalAxisWidgetLeft(QWidget* parent, QwtPlot* plot,
+			bool leftAxisInternal, bool bottomAxisInternal,
+			bool rightAxisInternal );
 	virtual ~ExternalAxisWidgetLeft();
 protected:
 	virtual void defineAxis( QLine& axisLine );
-	virtual void drawTicks( QPainter* painter, int tickLength );
+	//virtual void drawTicks( QPainter* painter, int tickLength );
 	virtual void drawAxisLabel( QPainter* painter );
-	virtual int getStartY() const;
-private:
+	virtual void drawTick( QPainter* painter, double yPixel, double value,
+				int tickLength );
 
-	void drawTick( QPainter* painter, float yPixel, double value,
-			int tickLength );
 };
 
 } /* namespace casa */

@@ -34,49 +34,44 @@
 
 namespace casa {
 
-ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent, QwtPlot* plot ) :
-	ExternalAxisWidget( parent, plot ){
+ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent, QwtPlot* plot,
+		bool leftAxisInternal, bool bottomAxisInternal,
+		bool rightAxisInternal ) :
+	ExternalAxisWidgetVertical( parent, plot, leftAxisInternal, bottomAxisInternal,
+			rightAxisInternal ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE);
-	//setMinimumWidth( 2 * AXIS_SMALL_SIDE/3 );
 	scaleDraw = new QPScaleDraw( NULL, QwtPlot::yRight );
 	useLeftScale = false;
+	plotAxis = QwtPlot::yRight;
 }
 
 void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
 	useLeftScale = b;
 }
 
-int ExternalAxisWidgetRight::getStartY() const {
-	int plotHeight = height();
-	int canvasHeight = getCanvasHeight();
-	int heightDiff = plotHeight - canvasHeight;
-	if ( heightDiff < MIN_START_Y ){
-		heightDiff = MIN_START_Y;
-	}
-	return heightDiff;
-}
 
-int ExternalAxisWidgetRight::getCanvasHeight() const {
+
+/*int ExternalAxisWidgetRight::getCanvasHeight() const {
 	//We should use canvas->height()
 	//But because the main canvas is not laid out yet when this
 	//gets drawn, canvas->height gives a bogus value.  Thus, we
 	//are using plot->height() - (height of the plot title plus margins) instead.
 
 	int plotHeight = height();
+
 	QwtTextLabel* titleText = plot->titleLabel();
 	QRect titleRect = titleText->textRect();
 	int titleHeight =  titleRect.height() + 7;
 	int canvasHeight = plotHeight - titleHeight;
 	return canvasHeight;
-}
+}*/
 
 
 void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
-	const int MARGIN = 1;
-	int x = MARGIN;
+	int x = 1;
 	int top = getStartY();
-	int bottom = height() - 2 * MARGIN;
+	int bottom = getEndY();
 	QPoint firstPt( x, top );
 	QPoint secondPt( x, bottom );
 	axisLine.setP1( firstPt );
@@ -93,49 +88,13 @@ void ExternalAxisWidgetRight::drawTick( QPainter* painter, double yPixel, double
 	painter->drawLine( xStart, yPosition, xEnd, yPosition );
 
 	//Draw the tick label
-	QString numberStr = QString::number( value );
-	if ( scaleDraw != NULL ){
-		QwtText tickText = scaleDraw->label( value );
-		numberStr = tickText.text();
-	}
+	QString numberStr = formatLabel( value );
 	QFont font = painter->font();
 	QRect fontBoundingRect = QFontMetrics( font ).boundingRect( numberStr );
 	int labelStart = xEnd + 6;
 	int letterHeight = fontBoundingRect.height();
 	yPosition = static_cast<int>( yPixel + letterHeight/3);
 	painter->drawText( labelStart, yPosition, numberStr);
-}
-
-
-
-void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
-
-	QwtPlot::Axis axisScale = QwtPlot::yRight;
-	if ( useLeftScale ){
-		axisScale = QwtPlot::yLeft;
-	}
-
-	//Figure out how far out to start drawing ticks.
-	double startPixelY = getTickStartPixel(QwtPlot::yRight);
-
-	//We don't want to draw too many ticks so adjust the number
-	//of ticks we draw accordingly.
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axisScale );
-	const QList<double> axisTicks = scaleDiv->ticks( axisScale );
-	int originalTickCount = axisTicks.size();
-	int tickIncrement = getTickIncrement( originalTickCount );
-
-	//Now figure out the yIncrement, how far apart the ticks should be.
-	double tickDistance = getTickDistance( axisScale );
-	double yIncrement = getTickIncrement( tickDistance, axisScale );
-	for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
-		//Sometimes the automatic tick system puts uneven number of ticks in.
-		//Definitely weird - but that is why the incrementCount;
-		int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
-		double tickPosition = startPixelY + incrementCount * yIncrement;
-		int tickIndex = originalTickCount - i - 1;
-		drawTick( painter, tickPosition, axisTicks[tickIndex], tickLength);
-	}
 }
 
 

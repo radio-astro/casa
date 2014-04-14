@@ -107,8 +107,8 @@ public:
     inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes);}
 
     // moved from ImageAnalysis
-    // if messageStore != 0, log messages, stripped of time stampe and priority, will also be placed in this parameter and
-    // retur	ned to caller for eg logging to file.
+    // if messageStore != 0, log messages, stripped of time stampe and priority, will also
+    // be placed in this parameter and returned to caller for eg logging to file.
     Record statistics(
     	 vector<String> *const &messageStore=0
     );

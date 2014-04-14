@@ -75,15 +75,20 @@ bool ActionCache::doActionSpecific( PlotMSApp* plotms ){
 				// given axes are not already loaded.  If releasing, make sure that the
 				// axes are loaded.
 				vector<pair<PMS::Axis, unsigned int> > loaded = cache.loadedAxes();
-				for(unsigned int i = 0; i < axes[k].size(); i++) {
+				int axisCount = axes[k].size();
+
+				for(int i = 0; i < axisCount; i++) {
 					bool valid = true;
-					for(unsigned int j = 0;  j < a.size(); j++){
+					//Should be no duplicates at this point.
+					/*for(unsigned int j = 0;  j < a.size(); j++){
 						if(a[j] == axes[k][i]){
+
 							valid = false;
 							break;
 						}
 					}
-
+					qDebug() << "k="<<k<<" i="<<i<<" axes="<<axes[k][i]<<" valid="<<valid;
+					*/
 					if(valid) {
 						valid = isAxesValid( loaded, k, i );
 					}

@@ -78,9 +78,7 @@ ImageRegridder::ImageRegridder(
 
 ImageRegridder::~ImageRegridder() {}
 
-SPIIF ImageRegridder::regrid(
-	Bool wantReturn
-) const {
+SPIIF ImageRegridder::regrid() const {
 	Bool regridByVel = False;
 	if (
 		_specAsVelocity && _getImage()->coordinates().hasSpectralAxis()
@@ -99,35 +97,23 @@ SPIIF ImageRegridder::regrid(
 			}
 		}
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > workIm;
-	if (regridByVel) {
-		workIm = _regridByVelocity();
-	}
-	else {
-		workIm = _regrid();
-	}
-	SPIIF outImage = _prepareOutputImage(*workIm);
-	if (! wantReturn) {
-		outImage.reset();
-	}
-    return outImage;
+	std::tr1::shared_ptr<ImageInterface<Float> > workIm = regridByVel
+		? _regridByVelocity()
+		: _regrid();
+	return _prepareOutputImage(*workIm);
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
-	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
-	std::tr1::shared_ptr<SubImage<Float> > subImage(
-		new SubImage<Float>(
-			SubImageFactory<Float>::createSubImage(
-				*clone, *_getRegion(), _getMask(), _getLog().get(),
-				False, AxesSpecifier(! _dropdeg), _getStretch()
-			)
-		)
+SPIIF ImageRegridder::_regrid() const {
+	SPIIF subImage = SubImageFactory<Float>::createImage(
+		*_getImage(), "", *_getRegion(), _getMask(),
+		_dropdeg, False, False, _getStretch()
 	);
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	if (! anyTrue(subImage->getMask())) {
-		*_getLog() << "All selected pixels are masked" << LogIO::EXCEPTION;
-	}
-	clone.reset(0);
+	*_getLog() << LogOrigin(_class, __func__);
+	ThrowIf(
+		! anyTrue(subImage->getMask()),
+		"All selected pixels are masked"
+	);
+	//clone.reset(0);
 	const CoordinateSystem csysFrom = subImage->coordinates();
 	CoordinateSystem csysTo = _csysTo;
 	csysTo.setObsInfo(csysFrom.obsInfo());
@@ -136,16 +122,12 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 		*_getLog(), coordsToRegrid, csysTo, csysFrom, _axes,
 		subImage->shape(), False
 	);
-
-	if (csys.nPixelAxes() != _shape.nelements()) {
-		*_getLog()
-			<< "The number of pixel axes in the output shape and Coordinate System must be the same"
-			<< LogIO::EXCEPTION;
-	}
-	_checkOutputShape(*subImage, coordsToRegrid);
-	std::tr1::shared_ptr<ImageInterface<Float> > workIm(
-		new TempImage<Float>(_kludgedShape, csys)
+	ThrowIf(
+		csys.nPixelAxes() != _shape.nelements(),
+		"The number of pixel axes in the output shape and Coordinate System must be the same"
 	);
+	_checkOutputShape(*subImage, coordsToRegrid);
+	SPIIF workIm(new TempImage<Float>(_kludgedShape, csys));
 	workIm->set(0.0);
 	ImageUtilities::copyMiscellaneous(*workIm, *subImage);
 	String maskName("");
@@ -158,17 +140,23 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(! _doRefChange);
+	cout << "*** pixel mask before " << allTrue(workIm->pixelMask().get()) << endl;;
 	ir.regrid(
 		*workIm, _method, _axes, *subImage,
 		_replicate, _decimate, True,
 		_forceRegrid
 	);
 	if (! _outputStokes.empty()) {
-		_decimateStokes(workIm);
+		workIm = _decimateStokes(workIm);
 	}
 	ThrowIf(
 		workIm->hasPixelMask() && ! anyTrue(workIm->pixelMask().get()),
-		"All output pixels are masked."
+		"All output pixels are masked"
+		+ String(
+			_decimate > 1 && _regriddingDirectionAxes()
+			? ". You might want to try decreasing the value of decimate if you are regridding direction axes"
+			: ""
+		)
 	);
 	if (_nReplicatedChans > 1) {
 		// spectral channel needs to be replicated _nReplicatedChans times,
@@ -207,49 +195,80 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	return workIm;
 }
 
-void ImageRegridder::_decimateStokes(
-	std::tr1::shared_ptr<ImageInterface<Float> >& workIm
-) const {
+Bool ImageRegridder::_regriddingDirectionAxes() const {
+	Vector<Int> dirAxesNumbers = _csysTo.directionAxesNumbers();
+	if (! dirAxesNumbers.empty()) {
+		vector<Int> v = dirAxesNumbers.tovector();
+		for (Int i=0; i<(Int)_axes.size(); i++) {
+			if (std::find(v.begin(), v.end(), _axes[i]) != v.end()) {
+				return True;
+			}
+		}
+	}
+	return False;
+}
+
+void ImageRegridder::setDecimate(Int d) {
+	if (d > 1 && _regriddingDirectionAxes()) {
+		Vector<Int> dirAxesNumbers = _csysTo.directionAxesNumbers();
+		vector<Int> v = dirAxesNumbers.tovector();
+		for (Int i=0; i<(Int)_axes.size(); i++) {
+			Int axis = _axes[i];
+			ThrowIf(
+				(Int)_shape[axis] < 3*d
+				&& std::find(v.begin(), v.end(), axis) != v.end(),
+				"The output image has only "
+				+ String::toString(_shape[axis])
+				+ " pixels along axis " + String::toString(axis)
+				+ ", so the maximum value of decimate should "
+				"be " + String::toString(_shape[axis]/3)
+			);
+		}
+	}
+	_decimate = d;
+}
+
+SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 	ImageMetaData md(workIm);
-	if (_outputStokes.size() < md.nStokes()) {
-		CasacRegionManager rm(workIm->coordinates());
-		String diagnostics;
-		uInt nSelectedChannels = 0;
-		if (_outputStokes.size() == 1) {
-			String stokes = _outputStokes[0];
+	if (_outputStokes.size() >= md.nStokes()) {
+		return workIm;
+	}
+	CasacRegionManager rm(workIm->coordinates());
+	String diagnostics;
+	uInt nSelectedChannels = 0;
+	if (_outputStokes.size() == 1) {
+		String stokes = _outputStokes[0];
+		Record region = rm.fromBCS(
+			diagnostics, nSelectedChannels, stokes,
+			"", CasacRegionManager::USE_FIRST_STOKES,
+			"", workIm->shape()
+		).toRecord("");
+		return SubImageFactory<Float>::createImage(
+			*workIm, "", region, "", False, False, False, False
+		);
+	}
+	else {
+		// Only include the wanted stokes
+		std::tr1::shared_ptr<ImageConcat<Float> > concat(
+			new ImageConcat<Float>(
+				workIm->coordinates().polarizationAxisNumber(False)
+			)
+		);
+		foreach_(String stokes, _outputStokes) {
 			Record region = rm.fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				"", CasacRegionManager::USE_FIRST_STOKES,
 				"", workIm->shape()
 			).toRecord("");
-			workIm.reset(SubImageFactory<Float>::createImage(
-				*workIm, "", region, "", False, False, False, False
-			));
-		}
-		else {
-			// Only include the wanted stokes
-			std::tr1::shared_ptr<ImageConcat<Float> > concat(
-				new ImageConcat<Float>(
-					workIm->coordinates().polarizationAxisNumber(False)
-				)
+			concat->setImage(
+				*SubImageFactory<Float>::createImage(
+					*workIm, "", region, "", False, False, False, False
+				), True
 			);
-			foreach_(String stokes, _outputStokes) {
-				Record region = rm.fromBCS(
-					diagnostics, nSelectedChannels, stokes,
-					"", CasacRegionManager::USE_FIRST_STOKES,
-					"", workIm->shape()
-				).toRecord("");
-				concat->setImage(
-					*SubImageFactory<Float>::createImage(
-						*workIm, "", region, "", False, False, False, False
-					), True
-				);
-			}
-			workIm = concat;
 		}
+		return concat;
 	}
 }
-
 
 void ImageRegridder::_checkOutputShape(
 	const SubImage<Float>& subImage,

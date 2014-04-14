@@ -75,9 +75,52 @@ PMS::AxisType PMS::axisType(Axis axis) {
 
 PMS::AxisUnit PMS::axisUnit(Axis axis) {
     switch(axis) {
-    case TIME: return UDATETIME;
     
+    case TIME:
+    case TIME_INTERVAL:
+       	return UDATETIME;
+    case FREQUENCY:
+       	return GHERTZ;
+    case VELOCITY:
+       	return METERS_PER_SECOND;
+    case UVDIST:
+    case U:
+    case V:
+    case W:
+       	return METERS;
+    case UVDIST_L:
+    case UWAVE:
+    case VWAVE:
+    case WWAVE:
+    	//Should be lambda
+    	return WAVELENGTHS;
+    case PHASE:
+    case GPHASE:
+    case ELEVATION:
+    case AZIMUTH:
+    case PARANG:
+    case AZ0:
+    case EL0:
+    case PA0:
+    	return DEGREES;
+    case HA0:
+    	return HOURS;
+   case RADIAL_VELOCITY:
+       	return KILOMETERS_PER_SECOND;
+   case DELAY:
+	   	return NANOSECONDS;
+   case TSYS:
+	   	return KELVIN;
+   case OPAC:
+	   return NEPERS;
+
+    case RHO:
+       	return KILOMETERS;
     default: return UNONE;
+    //The following axis have units which are proportion to Jansky, but are
+    //time varying so Jansky is not accurate.  For now, we are not including
+    //units with them.
+    //AMP, REAL, IMAG, GAMP, GPHASE, GREAL, GIMAG, SWP
     }
 }
 
@@ -217,7 +260,10 @@ const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_REFVALUE()) + " (from " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_REFVALUE()) + ")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE());
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE()) +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT())+" (" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT())+")" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
 const PlotCanvas::LegendPosition PMS::DEFAULT_LEGENDPOSITION =
@@ -238,6 +284,7 @@ PlotSymbolPtr PMS::DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory) {
     static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::AUTOSCALING);
     symbol->setSize(2, 2);
     symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
+    symbol->setColor( "#0000FF");
     symbol->setAreaFill("#0000FF");
     return factory->symbol(*symbol);
 }

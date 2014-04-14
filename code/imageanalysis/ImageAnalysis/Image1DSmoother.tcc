@@ -1,8 +1,7 @@
 #include <imageanalysis/ImageAnalysis/Image1DSmoother.h>
 
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
-
-#include<stdcasa/cboost_foreach.h>
+#include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
 
 namespace casa {
 
@@ -15,8 +14,8 @@ template<class T> Image1DSmoother<T>::Image1DSmoother(
 		image, "", region, "", "", "",
 		maskInp, outname, overwrite
 	),
-	_axis(0), _decimate(False),
-	_decimationFunction(ImageDecimatorData::NONE) {}
+	_axis(0), _nMinPixels(2), _decimate(False),
+	_decimationFunction(ImageDecimatorData::COPY) {}
 
 template<class T> void Image1DSmoother<T>::setAxis(uInt n) {
 	uInt ndim = this->_getImage()->ndim();
@@ -29,21 +28,28 @@ template<class T> void Image1DSmoother<T>::setAxis(uInt n) {
 	_axis = n;
 }
 
-template<class T> SPIIF Image1DSmoother<T>::smooth(Bool wantReturn) const {
+template<class T> SPIIT Image1DSmoother<T>::smooth() const {
 	*this->_getLog() << LogOrigin(getClass(), __FUNCTION__);
-
 	SPIIT subImage(
 		SubImageFactory<T>::createImage(
 			*this->_getImage(), "", *this->_getRegion(),
 			this->_getMask(), False, False, False, this->_getStretch()
 		)
 	);
-	SPIIT out(_smooth(*subImage));
-	SPIIF tmp = this->_prepareOutputImage(*out);
-	if (! wantReturn) {
-		tmp.reset();
-	}
-	return tmp;
+    ThrowIf(
+        subImage->shape()[_axis] < _nMinPixels,
+        "The selected region of the image must have at least "
+        + String::toString(_nMinPixels)
+    	+ " pixels along the axis to be smoothed."
+    );
+    if (subImage->isMasked() || subImage->hasPixelMask()) {
+    	ImageMaskedPixelReplacer<T> impr(
+    		subImage, 0, ""
+    	);
+    	impr.replace("0", False, False);
+    }
+    SPIIT smoothed(_smooth(*subImage));
+	return this->_prepareOutputImage(*smoothed);
 }
 
 }

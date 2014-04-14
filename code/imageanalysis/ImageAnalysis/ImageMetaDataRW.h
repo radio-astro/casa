@@ -79,8 +79,8 @@ class ImageMetaDataRW : public ImageMetaDataBase {
 
 public:
 
-	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<Float> > image);
-	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<Complex> > image);
+	ImageMetaDataRW(SPIIF image);
+	ImageMetaDataRW(SPIIC image);
 
 	// remove, if possible, the specified parameter. Returns True if removal
 	// was successful.
@@ -101,9 +101,9 @@ public:
 
 protected:
 
-	std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const {return _floatImage;}
+	SPCIIF _getFloatImage() const {return _floatImage;}
 
-	std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const {return _complexImage;}
+	SPCIIC _getComplexImage() const {return _complexImage;}
 
 	const ImageInfo& _getInfo() const;
 
@@ -145,9 +145,11 @@ protected:
 
 	Record _getStatistics() const;
 
+	Vector<String> _getStokes() const;
+
 private:
-	std::tr1::shared_ptr<ImageInterface<Float> > _floatImage;
-	std::tr1::shared_ptr<ImageInterface<Complex> > _complexImage;
+	SPIIF _floatImage;
+	SPIIC _complexImage;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere
@@ -156,7 +158,7 @@ private:
 		_reffreqtype, _telescope;
 	mutable MEpoch _obsdate;
 	mutable Quantity _restFreq;
-	mutable Vector<String> _masks;
+	mutable Vector<String> _masks, _stokes;
 	mutable GaussianBeam _beam;
 	mutable Vector<String> _axisNames, _axisUnits;
 	mutable Vector<Double> _refPixel;

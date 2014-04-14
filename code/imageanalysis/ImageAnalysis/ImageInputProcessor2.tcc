@@ -49,7 +49,7 @@ template<class T> void ImageInputProcessor::process(
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
 	const vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
 ) {
-	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+	LogOrigin origin("ImageInputProcessor", __func__);
     *_log << origin;
     ThrowIf(
     	imagename.empty(),
@@ -100,7 +100,7 @@ template<class T> void ImageInputProcessor::_process(
     const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
     Bool verbose
 ) {
-	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+	LogOrigin origin("ImageInputProcessor", __func__);
     *_log << origin;
     if (outputStruct != 0) {
         OutputDestinationChecker::checkOutputs(outputStruct, *_log);
@@ -129,8 +129,11 @@ template<class T> void ImageInputProcessor::_process(
 		stokesControl, box, image->shape(), image->name(),
 		verbose
 	);
+	// FIXME an exception can be incorrectly thrown for a union of two regions
+	// in which one defines a single region in direction space and the
+	// defines spectral extent
     ThrowIf(
-    	!allowMultipleBoxes && regionRecord.isDefined("regions"),
+    	! allowMultipleBoxes && regionRecord.isDefined("regions"),
     	"Only a single n-dimensional rectangular region is supported"
     );
     _processHasRun = True;

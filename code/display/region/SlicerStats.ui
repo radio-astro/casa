@@ -81,7 +81,7 @@
         <string>Display complete 1D slice functionality.</string>
        </property>
        <property name="text">
-        <string>1D Slice Tool...</string>
+        <string>Spatial Profile Tool...</string>
        </property>
       </widget>
      </item>

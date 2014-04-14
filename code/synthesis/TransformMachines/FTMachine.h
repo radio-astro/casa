@@ -53,6 +53,7 @@
 #include <images/Images/SubImage.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
+#include <synthesis/ImagerObjects/SIImageStore.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -154,6 +155,9 @@ public:
 			       Block<Matrix<Float> >& weightsVec,
 			       const VisBuffer& vb);
 
+  virtual void initializeToVisNew(const VisBuffer& vb,
+					     CountedPtr<SIImageStore> imstore);
+
   //-------------------------------------------------------------------------------------
   // Finalize transform to Visibility plane
   // This is mostly a no-op, and is not-even called from CubeSkyEquation.
@@ -172,6 +176,10 @@ public:
 			       const VisBuffer& vb, 
 			       const Bool dopsf=False);
 
+  virtual void initializeToSkyNew(const Bool dopsf, 
+				  const VisBuffer& vb, 
+				  CountedPtr<SIImageStore> imstore);
+
   //-------------------------------------------------------------------------------------
   // Finalize transform to Sky plane
   virtual void finalizeToSky() = 0;
@@ -185,6 +193,10 @@ public:
 			     PtrBlock<SubImage<Float> *>& fluxScaleVec, 
 			     Bool dopsf, 
 			     Block<Matrix<Float> >& weightsVec, const VisBuffer& vb);
+
+  virtual void finalizeToSkyNew(Bool dopsf, 
+					   const VisBuffer& vb,
+					   CountedPtr<SIImageStore> imstore  );
 
   //-------------------------------------------------------------------------------------
 
@@ -226,6 +238,22 @@ public:
 			      ImageInterface<Float>& sensitivityImage,
 			      Bool dopsf, Float pblimit, Int normtype);
 
+
+  // All FTMachines that fill weightimage, need to set this.
+  // TODO : Make this pure virtual.
+  virtual Bool useWeightImage(){return False;}; 
+  virtual Bool isSkyJonesSet(){return (sj_p.nelements()>0) && !(sj_p[0]).null()  ;}
+  virtual Bool isSkyJonesChanged(VisBuffer& vb, Int row){if(sj_p.nelements()>0){return sj_p[0]->changed(vb,row);} else {return False;} };
+
+  // Set SkyJones if image domain corrections /applycation are needed
+  // To reset the the FTMachine for stopping image based correction/applycation
+  // set in a Vector of size 0.
+  // The pointers have to be handled by the caller ..no delete happening here
+  virtual void setSkyJones(Vector<CountedPtr<SkyJones> >& sj);
+  
+  Bool changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow);
+
+
   //-------------------------------------------------------------------------------------
 
   // Get the final image
@@ -251,11 +279,6 @@ public:
 			 ImageInterface<Complex>& image,
 			 Matrix<Float>& weight);
 
-  // Set SkyJones if image domain corrections /applycation are needed
-  // To reset the the FTMachine for stopping image based correction/applycation
-  // set in a Vector of size 0.
-  // The pointers have to be handled by the caller ..no delete happening here
-  virtual void setSkyJones(Vector<SkyJones *>& sj);
   //-------------------------------------------------------------------------------------
 
   // Rotate the uvw from the observed phase center to the
@@ -470,7 +493,8 @@ protected:
 
 
   Float pbLimit_p;
-  Vector<SkyJones *> sj_p;
+  //  Vector<SkyJones *> sj_p;
+  Vector<CountedPtr<SkyJones> > sj_p;
   //A holder for the complex image if nobody else is keeping it
   CountedPtr<ImageInterface<Complex> > cmplxImage_p;
 

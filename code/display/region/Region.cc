@@ -2164,7 +2164,7 @@ namespace casa {
 				}
 
 				// do the fit
-				ComponentList compList = fitter.fit();
+                std::pair<ComponentList, ComponentList> compLists = fitter.fit();
 
 				// fit that did not converge go back immediately
 				if (!fitter.converged(0)) {
@@ -2176,15 +2176,15 @@ namespace casa {
 				Vector<Quantity> pFlux;
 				Vector<Double> pixCen;
 				String errMsg;
-				const uInt ncomponents=compList.nelements();
+				const uInt ncomponents=compLists.first.nelements();
 				for (uInt index=0; index<ncomponents; index++) {
-					const ComponentShape *cShapeShape = compList.getShape(index);
+					const ComponentShape *cShapeShape = compLists.first.getShape(index);
 
 					// the reference direction
 					// contains as .getAngle() ra, dec in [rad]
 					// and as .getRefString() the reference system,
 					// which I think is as default equal to the image
-					const MDirection mDir=compList.getRefDirection(index);
+					const MDirection mDir=compLists.first.getRefDirection(index);
 					Quantum< Vector< Double > >dirAngle=mDir.getAngle();
 
 					// toRecord is the killer and contains
@@ -2293,7 +2293,7 @@ namespace casa {
 					layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
 
 					// get the integrated flux value
-					compList.getFlux(pFlux, index);
+					compLists.first.getFlux(pFlux, index);
 					if (pFlux.size()>0) {
 
 						// get the units of the image

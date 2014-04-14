@@ -105,6 +105,7 @@ void MSTransformManager::initialize()
 	polarizationSelection_p = String("");
 	scanIntentSelection_p = String("");
 	observationSelection_p = String("");
+	taqlSelection_p = String("");
 
 	// Input-Output index maps
 	inputOutputObservationIndexMap_p.clear();
@@ -429,6 +430,14 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 		configuration.get (exists, scanIntentSelection_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "scan intent selection is " << scanIntentSelection_p << LogIO::POST;
+	}
+
+	exists = configuration.fieldNumber ("taql");
+	if (exists >= 0)
+	{
+		configuration.get (exists, taqlSelection_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "TaQL selection is " << taqlSelection_p << LogIO::POST;
 	}
 
 	return;
@@ -794,7 +803,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			timeBin_p=casaQuantity(timebin).get("s").getValue();
 
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "Time bin is " << timeBin_p << LogIO::POST;
+					<< "Time bin is " << timeBin_p << " seconds" << LogIO::POST;
 		}
 		else
 		{
@@ -929,7 +938,7 @@ void MSTransformManager::open()
 							(const String)baselineSelection_p,
 							(const String)scanSelection_p,
 							(const String)uvwSelection_p,
-							dummyExpr, // taqlExpr
+							(const String)taqlSelection_p,
 							chanSpec,
 							(const String)arraySelection_p,
 							(const String)polarizationSelection_p,
@@ -970,6 +979,8 @@ void MSTransformManager::open()
 	}
 
 	// jagonzal (CAS-5076): Reindex state column when there is scan selection
+	// jagonzal (CAS-6351): Removing this fix as only implicit selection-based re-indexing has to be applied
+	/*
 	map<Int, Int> stateRemapper = dataHandler_p->getStateRemapper();
     std::map<Int, Int>::iterator stateRemapperIter;
     for (	stateRemapperIter = stateRemapper.begin();
@@ -978,9 +989,10 @@ void MSTransformManager::open()
     {
     	inputOutputScanIntentIndexMap_p[stateRemapperIter->first] = stateRemapperIter->second;
 
-    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "State " << stateRemapperIter->first << " mapped to " << stateRemapperIter->second << LogIO::POST;
     }
+    */
 
     // jagonzal (CAS-5349): Reindex antenna columns when there is antenna selection
     Vector<Int> antennaRemapper = dataHandler_p->getAntennaRemapper();

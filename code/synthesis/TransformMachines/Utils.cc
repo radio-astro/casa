@@ -162,10 +162,9 @@ namespace casa{
     // 	  {pa += antPA(i); n++;break;}
     //   }
     // //    pa = sum(antPA)/(antPA.nelements()-1);
-    // pa /= n;
     // if (n==0) 
     //   throw(AipsError("No unflagged antenna found in getPA()."));
-    // return pa;
+    // return pa/n;
   }
   //
   //---------------------------------------------------------------------
@@ -1084,6 +1083,20 @@ namespace casa{
   //   return last;
   // }
 
+  String SynthesisUtils::mjdToString(Time& time)
+  {
+    String tStr;
+    tStr = String::toString(time.year()) + "/" +
+      String::toString(time.month()) + "/" +
+      String::toString(time.dayOfMonth()) + "/" +
+      String::toString(time.hours()) + ":" +
+      String::toString(time.minutes()) + ":";
+    ostringstream fsec;
+    fsec << setprecision(2) << time.dseconds();
+    tStr = tStr + String(fsec.str());
+    //      String::toString(time.dseconds());
+    return tStr;
+  }
 
   template <class Iterator>
   Iterator SynthesisUtils::Unique(Iterator first, Iterator last)

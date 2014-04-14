@@ -294,7 +294,9 @@ class ASDM2MSFiller
 		vector<double>            &uvw_,
 		vector<vector<unsigned int> >      &dataShape_,
 		vector<float *>           &data_,
-		vector<unsigned int>      &flag_);
+		vector<unsigned int>      &flag_,
+		vector<double>            &weight_,
+		vector<double>            &sigma_);
   
 
 	       

@@ -183,9 +183,16 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 			return ValueHolder(_getRefPixel()[n-1]);
 		}
 		else if (prefix == _CRVAL) {
-			return ValueHolder(
-				QuantumHolder(_getRefValue()[n-1]).toRecord()
-			);
+			if (_getCoords().polarizationAxisNumber(False) == (Int)(n-1)) {
+				return ValueHolder(
+					_getStokes()
+				);
+			}
+			else {
+				return ValueHolder(
+					QuantumHolder(_getRefValue()[n-1]).toRecord()
+				);
+			}
 		}
 		else if (prefix == _CTYPE) {
 			return ValueHolder(_getAxisNames()[n-1]);
@@ -346,8 +353,8 @@ String ImageMetaDataBase::_getEpochString() const {
 
 IPosition ImageMetaDataBase::_getShape() const {
 	if (_shape.empty()) {
-		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		SPCIIF imf = _getFloatImage();
+		SPCIIC imc = _getComplexImage();
 		_shape = imf ? imf->shape() : imc->shape();
 	}
 	return _shape;
@@ -420,9 +427,11 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 	_fieldToLog(header, _OBSDATE);
 	_fieldToLog(header, _OBSERVER);
 	_fieldToLog(header, _PROJECTION);
-	_log << "        -- " << _RESTFREQ << ": ";
-	_log.output() << std::fixed << std::setprecision(1);
-	_log <<  header.asArrayDouble(_RESTFREQ) << LogIO::POST;
+	if (header.isDefined(_RESTFREQ)) {
+		_log << "        -- " << _RESTFREQ << ": ";
+		_log.output() << std::fixed << std::setprecision(1);
+		_log <<  header.asArrayDouble(_RESTFREQ) << LogIO::POST;
+	}
 	_fieldToLog(header, _REFFREQTYPE);
 	_fieldToLog(header, _TELESCOPE);
 	_fieldToLog(header, _BEAMMAJOR, 12);

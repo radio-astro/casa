@@ -496,7 +496,8 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
   */
 
   // Iterate through in minimum IO/Memory chunks
-  IPosition ncs = in.niceCursorShape();
+  //IPosition ncs = in.niceCursorShape();
+  IPosition ncs=in.shape();
   ncs(2) = 1; ncs(3) = 1;
   RO_LatticeIterator<Complex> li(in, LatticeStepper(in.shape(), ncs, IPosition(4,0,1,2,3) )  );
   LatticeIterator<Complex> oli(out, LatticeStepper(in.shape(), ncs, IPosition(4,0,1,2,3)) );
@@ -566,9 +567,26 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
     for(Int iy=0;iy<itsShape(1);iy++) {
       ry2(iy) =  square( increment(1)*((Double)(iy+iy0) - yPixel) );
     }
+    const Matrix<Complex>& inmat = li.matrixCursor();
+    Matrix<Complex>& outmat=oli.rwMatrixCursor();
 
-    for(Int iy=0;iy<itsShape(1);iy++) {
-      for(Int ix=0;ix<itsShape(0);ix++) {
+    Bool incopy, outcopy, del;
+    const Complex * inpoint = inmat.getStorage(incopy);
+    Complex *outpoint =outmat.getStorage(outcopy);
+    Float * rx2point = rx2.getStorage(del);
+    Float * ry2point= ry2.getStorage(del);
+    Complex* vppoint=vp_p.getStorage(del);
+    Int nx=itsShape(0);
+    Int ny=itsShape(1);
+    Double inverseIncrementRadius=inverseIncrementRadius_p;
+#pragma omp parallel default(none) firstprivate(inpoint, outpoint, rx2point, ry2point, vppoint, iPower, conjugate, inverse, forward, nx, ny, rmax2, factor, inverseIncrementRadius, cutoff)
+    {
+#pragma omp for   
+    for(Int iy=0;iy<ny;iy++) {
+      Float ry2val=ry2point[iy];
+      applyXLine(inpoint, outpoint , rx2point , vppoint , ry2val, iPower, conjugate, inverse, forward, nx, iy, rmax2, 
+		 factor, inverseIncrementRadius, cutoff);
+      /*for(Int ix=0;ix<itsShape(0);ix++) {
 
 	r2 =  rx2(ix) +  ry2(iy);
 	
@@ -607,13 +625,63 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
 	  }
 	}
       }
+      */
     }
+    } //end pragma
+    outmat.putStorage(outpoint, outcopy);
+    inmat.freeStorage(inpoint, incopy);
   }
 
   return out;
 
 };
 
+  void PBMath1D::applyXLine(const Complex*& in, Complex*& out, Float*& rx2, Complex*& vp, const Float ry2, const Int ipower, const Bool conjugate, const Bool inverse, const Bool forward, const Int nx, const Int iy, const Double rmax2, const Double factor, const Double inverseIncrementRadius, const Float cutoff)
+{ 
+  Float r;
+  Int indx;
+  Complex taper;
+  for(Int ix=0;ix<nx;ix++) {
+    
+    Float r2 =  rx2[ix] +  ry2;
+	
+    if (r2 > rmax2){
+      out[ix+iy*nx] = 0.0;
+    } 
+    else {
+      r = sqrt(r2) * factor;
+      indx = Int(r*inverseIncrementRadius);
+      if (norm(vp[indx]) > 0.0) {
+	if(ipower==2) {
+	  taper = vp[indx] * conj(vp[indx]);
+	}
+	else {
+	  taper = vp[indx];
+	}
+      } else {
+	taper = 0.0;
+      }
+      if (conjugate) {
+	taper =  conj(taper);
+      }
+      // Differentiate between forward (Sky->UV) and
+      // inverse (UV->Sky) - these need different
+      // applications of the PB
+      if(!forward) {
+	taper =  conj(taper);
+      }
+      if (inverse) {
+	if (abs(taper) < cutoff ) {
+	  out[ix+iy*nx] = 0.0;
+	} else {
+	  out[ix+iy*nx]  = (in[ix+iy*nx]) / taper ;
+	}
+      } else {  // not inverse!
+	out[ix+iy*nx]  = (in[ix+iy*nx]) * taper ;
+      }
+    }
+  }
+}
 ImageInterface<Float>& 
 PBMath1D::apply(const ImageInterface<Float>& in,
 		ImageInterface<Float>& out,

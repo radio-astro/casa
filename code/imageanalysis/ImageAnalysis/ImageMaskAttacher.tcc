@@ -35,11 +35,11 @@ template<class T> Bool ImageMaskAttacher::makeMask(
 	if (out.canDefineRegion()) {
 
 		// Generate mask name if not given
-		if (maskName.empty())
+		if (maskName.empty()) {
 			maskName = out.makeUniqueRegionName(String("mask"), 0);
-
+		}
 		// Make the mask if it does not exist
-		if (!out.hasRegion(maskName, RegionHandler::Masks)) {
+		if (! out.hasRegion(maskName, RegionHandler::Masks)) {
 			out.makeMask(maskName, True, makeDefault, init, True);
 			if (list) {
 				if (init) {

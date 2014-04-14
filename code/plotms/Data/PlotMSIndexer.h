@@ -35,6 +35,8 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 
+
+
 namespace casa {
 
 //# Forward declarations.
@@ -56,10 +58,10 @@ public:
   PlotMSIndexer();
     
   // Constructor which takes parent PlotMSCache, x and y axes (non-iteration)
-  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis);
+  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis, int index);
   // Constructor which supports iteration
   PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis,
-                PMS::Axis iterAxis, Int iterValue);
+                PMS::Axis iterAxis, Int iterValue, int index);
   
   // Destructor
   ~PlotMSIndexer();
@@ -83,8 +85,7 @@ public:
   // Implemented PlotMaskedPointData methods.
   // <group>
   bool maskedAt(unsigned int index) const;
-  void xyAndMaskAt(unsigned int index, double& x, double& y,
-		   bool& mask) const;
+  void xyAndMaskAt(unsigned int index, double& x, double& y, bool& mask) const;
   // </group>
     
   // Unimplemented PlotMaskedPointData methods.
@@ -106,8 +107,7 @@ public:
   void setUpIndexing();
 
   // Set global min/max flag
-  void setGlobalMinMax(Bool globalX=False,Bool globalY=False) { 
-    globalXMinMax_=globalX; globalYMinMax_=globalY; };
+  void setGlobalMinMax(Bool globalX=False,Bool globalY=False);
 
   // Report per-chunk point counters
   Vector<uInt> nPoints() { return nPoints_; };
@@ -210,6 +210,8 @@ private:
   // (see PlotLogger).
   void log(const String& method, const String& message, int eventType);
 
+
+
   // Private data
    
   // Parent plotms.
@@ -265,6 +267,9 @@ private:
   
   // Cope with const-ness in the get methods
   PlotMSIndexer* self;
+
+
+  int dataIndex;
 
 };
 

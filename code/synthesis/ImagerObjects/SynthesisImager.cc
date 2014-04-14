@@ -38,6 +38,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
+#include <casa/System/ProgressMeter.h>
 
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
@@ -56,7 +57,12 @@
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
+#include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
+//#include <synthesis/ImagerObjects/SIMapperSingle.h>
+//#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+#include <synthesis/ImagerObjects/SIImageStore.h>
+#include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MSVis/VisSetUtil.h>
@@ -66,8 +72,9 @@
 #include <synthesis/TransformMachines/WProjectFT.h>
 
 #include <synthesis/TransformMachines/AWProjectFT.h>
+#include <synthesis/TransformMachines/MultiTermFTNew.h>
 //#include <synthesis/TransformMachines/ProtoVR.h>
-#include <synthesis/TransformMachines/AWProjectWBFT.h>
+#include <synthesis/TransformMachines/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
@@ -89,17 +96,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
-				       itsCurrentFTMachine(NULL), 
-				       itsCurrentImages(NULL),
 				       mss_p(0),vi_p(0), writeAccess_p(True), mss4vi_p(0)
   {
 
-     facetsStore_p=-1;
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
      useScratch_p=False;
      wvi_p=0;
      rvi_p=0;
+
+     facetsStore_p=-1;
+     unFacettedImStore_p=NULL;
+
 
   }
   
@@ -114,7 +122,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       delete mss_p[k];
     }
     if(rvi_p) delete rvi_p;
-    cerr << "IN DESTR"<< endl;
+    //    cerr << "IN DESTR"<< endl;
     //    VisModelData::listModel(mss4vi_p[0]);
   }
 
@@ -325,6 +333,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     writeAccess_p=writeAccess_p && !selpars.readonly;
     createVisSet(writeAccess_p);
 
+    /////// Remove this when the new vi/vb is able to get the full freq range.
+    mssFreqSel_p.resize();
+    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
 
       }
     catch(AipsError &x)
@@ -391,7 +402,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   impars.freqStart=freqStart;
   impars.freqStep=freqStep;
   impars.restFreq=restFreq;
-  impars.facets=facets;
   impars.nTaylorTerms=nTaylorTerms;
   impars.refFreq=refFreq;
   impars.projection=projection;
@@ -407,6 +417,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   gridpars.trackSource=trackSource;
   gridpars.trackDir=trackDir;
   gridpars.padding=padding;
+  gridpars.facets=facets;
   gridpars.useAutoCorr=useAutocorr;
   gridpars.useDoublePrec=useDoublePrec;
   gridpars.wprojplanes=wprojplanes;
@@ -439,25 +450,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(mss_p.nelements() ==0)
       os << "SelectData has to be run before defineImage" << LogIO::EXCEPTION;
 
+    CoordinateSystem csys;
+    CountedPtr<FTMachine> ftm, iftm;
+
     try
       {
 	os << "Adding " << impars.imageName << " (nchan : " << impars.nchan 
-	   << ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
+	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
+	   << ", start:" << impars.start
 	   <<  ", imsize:" << impars.imsize 
 	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
 	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
 	   << "] ) to imager list " 
 	   << LogIO::POST;
 
-	MeasurementSet tms(*mss_p[0]);
-	itsCurrentCoordSys = impars.buildCoordinateSystem( tms );
-	itsCurrentShape = impars.shp();
+	//MeasurementSet tms(*mss_p[0]);
+	//csys = impars.buildCoordinateSystem( tms );
+	csys = impars.buildCoordinateSystem( rvi_p );
+	IPosition imshape = impars.shp();
 
 	if( (itsMappers.nMappers()==0) || 
 	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
 	  {
-	    itsMaxShape=itsCurrentShape;
-	    itsMaxCoordSys=itsCurrentCoordSys;
+	    itsMaxShape=imshape;
+	    itsMaxCoordSys=csys;
 	  }
 
       }
@@ -466,11 +482,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Error in building Coordinate System() : " << x.getMesg() << LogIO::EXCEPTION;
       }
 
-
+	
     try
       {
-
-	// Create FTMachine ? 
+	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.nTaylorTerms, gridpars.mType, 
+			gridpars.facets, gridpars.wprojplanes,
+			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
+			gridpars.convFunc,
+			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
+			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
+			gridpars.doPBCorr,gridpars.conjBeams,
+			gridpars.computePAStep,gridpars.rotatePAStep);
 
       }
     catch(AipsError &x)
@@ -480,24 +502,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	Int facets_l=impars.facets;
-	if(facets_l <1) facets_l=1; // When & why is facets<1?  Going by
-				// the existance of this line of code,
-				// facets<1 does not seem to server
-				// any purpose (SB, 26Jan2014)
-
-	CountedPtr<FTMachine> ftm, iftm;
-	createFTMachine(ftm, iftm, gridpars.ftmachine, facets_l, gridpars.wprojplanes,
-			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
-			gridpars.convFunc,
-			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
-			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
-			gridpars.doPBCorr,gridpars.conjBeams,
-			gridpars.computePAStep,gridpars.rotatePAStep);
-
-	appendToMapperList(impars.imageName,  itsCurrentCoordSys,  
-			   gridpars.ftmachine, ftm, iftm,
-			   gridpars.distance, facets_l, impars.overwrite);
+	appendToMapperList(impars.imageName,  csys,  impars.shp(),
+			   ftm, iftm,
+			   gridpars.distance, gridpars.facets, impars.overwrite,
+			   gridpars.mType, impars.nTaylorTerms);
 	imageDefined_p=True;
       }
     catch(AipsError &x)
@@ -530,17 +538,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     createFTMachine(ftm, iftm, ftmachine);
     
     Int id=itsMappers.nMappers();
-    itsCurrentCoordSys=imstor->residual()->coordinates();
-    itsCurrentShape=imstor->residual()->shape();
-    Int nx=itsCurrentShape[0], ny=itsCurrentShape[1];
+    CoordinateSystem csys =imstor->residual()->coordinates();
+    IPosition imshape=imstor->residual()->shape();
+    Int nx=imshape[0], ny=imshape[1];
     if( (id==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
       {
-	itsMaxShape=itsCurrentShape;
-	itsMaxCoordSys=itsCurrentCoordSys;
+	itsMaxShape=imshape;
+	itsMaxCoordSys=csys;
       }
 
-    CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
-    itsMappers.addMapper(thismap);
+    itsMappers.addMapper(  createSIMapper( "default", imstor, ftm, iftm, id ) );
     
     return True;
   }
@@ -551,9 +558,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  String cft="SimpleComponentFTMachine";
 	  if(sdgrid)
 		  cft="SimpCompGridFTMachine";
-	  Int mapperid=itsMappers.nMappers();
-	  CountedPtr<SIMapperBase> sm=new SIMapper(cl, cft, mapperid);
+	  CountedPtr<SIMapper> sm=new SIMapper(cl, cft);
 	  itsMappers.addMapper(sm);
+	  ////itsMappers.addMapper(  createSIMapper( mappertype, imstor, ftm, iftm, id) );
 
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -570,16 +577,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 /////////////////////////////////////////////
   CountedPtr<SIImageStore> SynthesisImager::imageStore(const Int id)
   {
-	  if(facetsStore_p >1)
+    if(facetsStore_p >1)
+      {
+	if(id==0)
 	  {
-		  if(id==0)
-			  return unFacettedImStore_p;
-		  else
-		  {
-			  return itsMappers.imageStore(facetsStore_p*facetsStore_p+id-1);
-		  }
+	    return unFacettedImStore_p;
 	  }
-	  return itsMappers.imageStore(id);
+	else
+	  {
+	    return itsMappers.imageStore(facetsStore_p*facetsStore_p+id-1);
+	  }
+      }
+    return itsMappers.imageStore(id);
   }
 
 
@@ -617,23 +626,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       try
       {
     	  runMajorCycle(True, useViVb2);
-    	  if(facetsStore_p >1){
-    		  //Facetted image should
-    		  IPosition shape=(unFacettedImStore_p->psf())->shape();
-    		  IPosition blc(4, 0, 0, 0, 0);
-    		  IPosition trc=shape-1;
-    		  TempImage<Float> onepsf((itsMappers.imageStore(0)->psf())->shape(), (itsMappers.imageStore(0)->psf())->coordinates());
-    		  onepsf.copyData(*(itsMappers.imageStore(0)->psf()));
-    		  //now set the original to 0 as we have a copy of one facet psf
-    		  (unFacettedImStore_p->psf())->set(0.0);
-    		  blc[0]=(shape[0]-(onepsf.shape()[0]))/2;
-    		  trc[0]=onepsf.shape()[0]+blc[0]-1;
-    		  blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
-    		  trc[1]=onepsf.shape()[1]+blc[1]-1;
-    		  Slicer sl(blc, trc, Slicer::endIsLast);
-    		  SubImage<Float> sub(*(unFacettedImStore_p->psf()), sl, True);
-    		  sub.copyData(onepsf);
-    	  }
+
+    	  if(facetsStore_p >1)
+	    {
+	      setPsfFromOneFacet();
+	    }
 
     	  itsMappers.releaseImageLocks();
 
@@ -644,10 +641,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     }
-  //////////////////////
-  //////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager::predictCalModel(const Bool useViVb2){
+    LogIO os( LogOrigin("SynthesisImager","predictCalibratorModel ",WHERE) );
+    predictModel( useViVb2 );
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(const Bool useViVb2){
-	  LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+	  LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
 
 	      if(useViVb2){
 	      	vi_p->originChunks();
@@ -693,8 +695,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  //////////////////
-  ////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Bool SynthesisImager::weight(const String& type, const String& rmode,
                    const Quantity& noise, const Double robust,
                    const Quantity& fieldofview,
@@ -822,54 +824,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////
   ////////////This should be called  at each defineimage
-  void SynthesisImager::createIMStore(const String,// imageName, 
-				      const CoordinateSystem&,// cSys,
-				      const Quantity&,// distance, 
-				      Int,// facets, 
-				      const Bool// overwrite
-				      )
+  CountedPtr<SIImageStore> SynthesisImager::createIMStore(String imageName, 
+							  CoordinateSystem& cSys,
+							  IPosition imShape, 
+							  const Bool overwrite,
+							  String mappertype,
+							  uInt ntaylorterms,
+							  Quantity distance,
+							  uInt facets,
+							  Bool useweightimage)
   {
+    LogIO os( LogOrigin("SynthesisImager","createIMStore",WHERE) );
 
-  }
+    CountedPtr<SIImageStore> imstor;
 
-    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
-					     String,// ftmachine, 
-					     CountedPtr<FTMachine>& ftm,
-					     CountedPtr<FTMachine>& iftm,
-					     Quantity distance, 
-					     Int facets, const Bool overwrite
-					     )
-    {
-      LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
-
-      if(facets > 1 && itsMappers.nMappers() > 0)
-	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
-      if(facets <1) facets=1;
-      Int nIm=facets*facets;
-
-      CountedPtr<SIImageStore> imstor;
-    
-
-      if (nIm < 2)
-	imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
-      else
-	{
-	  if(!unFacettedImStore_p.null())
-	    log_l << "A facetted Image has already been set" << LogIO::EXCEPTION;
-	  unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
-	  facetsStore_p=facets;
-	}
-
-      for (Int facet=0; facet< nIm; ++facet){
-	if(nIm > 1) imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
-	Int id=itsMappers.nMappers();
+    try
+      {
+	
+	if( mappertype=="default" || mappertype=="imagemosaic" )
+	  {
+	    //imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, useweightimage);
+	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
+	  }
+	else if (mappertype == "multiterm" )  // Currently does not support imagemosaic.
+	  {
+	    cout << "Making multiterm IS with nterms : " << ntaylorterms << endl;
+	    imstor=new SIImageStoreMultiTerm(imageName, cSys, imShape, facets, overwrite, ntaylorterms, useweightimage);
+	  }
+	else
+	  {
+	    throw(AipsError("Internal Error : Invalid mapper type in SynthesisImager::createIMStore"));
+	  }
+	
+	//	if( ! imstor->checkValidity(True/*psf*/, False/*res*/,False/*wgt*/,False/*model*/,False/*image*/ ) ) 
+	//	  { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
+	
+	
 	// Fill in miscellaneous information needed by FITS
 	ROMSColumns msc(*mss_p[0]);
 	Record info;
 	String objectName=msc.field().name()(msc.fieldId()(0));
-	//ImageInfo iinfo=(imstor->model())->imageInfo();
-	//iinfo.setObjectName(objectName);
-	//(imstor->model())->setImageInfo(iinfo);
 	String telescop=msc.observation().telescopeName()(0);
 	info.define("OBJECT", objectName);
 	info.define("TELESCOP", telescop);
@@ -877,76 +871,207 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	info.define("distance", distance.get("m").getValue());
 	////////////// Send misc info into ImageStore. 
 	imstor->setImageInfo( info );
-	/////////////
-	//(imstor->model())->setMiscInfo(info);
-	////((imstor->model())->table()).tableInfo().setSubType("GENERIC");
-	//(imstor->model())->setUnits(Unit("Jy/pixel"));
-	//(imstor->image())->setUnits(Unit("Jy/beam"));
-	CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
-	itsMappers.addMapper(thismap);
+	
       }
-    }
-
-  void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
-					   String,// ftmachine,
-					   Quantity,// distance, 
-					   Int facets, 
-					   const Bool overwrite)
-    {
-      LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList"));
-
-      if(facets > 1 && itsMappers.nMappers() > 0)
-	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
-      if(facets <1) facets=1;
-      Int nIm=facets*facets;
-
-      CountedPtr<SIImageStore> imstor;
+    catch(AipsError &x)
+      {
+	throw(AipsError("Error in createImStore : " + x.getMesg() ) );
+      }
     
-      if (nIm < 2){
-	imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
-      }
-      else{
-	if(!unFacettedImStore_p.null())
-	  log_l << "A facetted Image has already been set" << LogIO::EXCEPTION;
-	unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
-	facetsStore_p=facets;
-      }
+    
+    return imstor;
+  }
+  
+  CountedPtr<SIMapper> SynthesisImager::createSIMapper(String mappertype,  
+							   CountedPtr<SIImageStore> imagestore,
+							   CountedPtr<FTMachine> ftmachine,
+							   CountedPtr<FTMachine> iftmachine,
+						       uInt /*ntaylorterms*/)
+  {
+    LogIO os( LogOrigin("SynthesisImager","createSIMapper",WHERE) );
+    
+    CountedPtr<SIMapper> localMapper=NULL;
 
-    // CountedPtr<FTMachine> ftm, iftm;
-    // createFTMachine(ftm, iftm, ftmachine, facets);
+    try
+      {
+	/*
+	CountedPtr<VPSkyJones> vp = NULL;
+	if( mappertype == "imagemosaic" || mappertype == "mtimagemosaic" )
+	  {
+	    ROMSColumns msc(*mss_p[0]);
+	    Quantity parang(0.0,"deg");
+	    Quantity skyposthreshold(0.0,"deg");
+	    vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
+	  }
+	*/
+	// Check 'mappertype' for valid types....
 
-    //  for (Int facet=0; facet< nIm; ++facet){
-    //    if(nIm > 1)
-    // 	   imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
-    //    Int id=itsMappers.nMappers();
-    //    // Fill in miscellaneous information needed by FITS
-    //      ROMSColumns msc(*mss_p[0]);
-    //      Record info;
-    //      String objectName=msc.field().name()(msc.fieldId()(0));
-    //      //ImageInfo iinfo=(imstor->model())->imageInfo();
-    //      //iinfo.setObjectName(objectName);
-    //      //(imstor->model())->setImageInfo(iinfo);
-    //      String telescop=msc.observation().telescopeName()(0);
-    //      info.define("OBJECT", objectName);
-    //      info.define("TELESCOP", telescop);
-    //      info.define("INSTRUME", telescop);
-    //      info.define("distance", distance.get("m").getValue());
-    // 	 ////////////// Send misc info into ImageStore. 
-    // 	 imstor->setImageInfo( info );
-    // 	 /////////////
-    //      //(imstor->model())->setMiscInfo(info);
-    //      ////((imstor->model())->table()).tableInfo().setSubType("GENERIC");
-    //      //(imstor->model())->setUnits(Unit("Jy/pixel"));
-    //      //(imstor->image())->setUnits(Unit("Jy/beam"));
-    //    CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
-    //    itsMappers.addMapper(thismap);
-    //  }
+	/*
+	if( mappertype == "default" || mappertype == "imagemosaic"){
+	  localMapper = new SIMapperSingle( imagestore, ftmachine, iftmachine, vp );
+	  }
+	else if( mappertype == "multiterm" || mappertype == "mtimagemosaic" ){
+	  localMapper = new SIMapperMultiTerm( imagestore, ftmachine, iftmachine, vp, ntaylorterms );
+	  }
+	else if( mappertype == "new" ) {
+	  localMapper = new SIMapper( imagestore, ftmachine, iftmachine, vp );
+	}
+	
+	else{
+	    throw ( AipsError("Internal Error : Unrecognized Mapper Type in SynthesisImager::createSIMapper") );
+	  }
+	*/
+	
+	if( mappertype == "default" || mappertype == "multiterm" )
+	  {
+	    localMapper = new SIMapper( imagestore, ftmachine, iftmachine );
+	  }
+	else if( mappertype == "imagemosaic") // || mappertype == "mtimagemosaic" )
+	  {
+	    localMapper = new SIMapperImageMosaic( imagestore, ftmachine, iftmachine );
+	  }
+	else
+	  {
+	    throw(AipsError("Unknown mapper type : " + mappertype));
+	  }
+
+      }
+    catch(AipsError &x) {
+	throw(AipsError("Error in createSIMapper : " + x.getMesg() ) );
+      }
+    return localMapper;
+  }
+  
+
+  Block<CountedPtr<SIImageStore> > SynthesisImager::createFacetImageStoreList(
+									      CountedPtr<SIImageStore> imagestore,
+									      Int facets)
+  {
+    Int nIm=facets*facets;
+    Block<CountedPtr<SIImageStore> > facetList( nIm );
+
+    if( nIm==1 ) { facetList[0] = imagestore;  return facetList; }
+
+    // Remember, only the FIRST field in each run can have facets. So, check for this.
+    if( ! unFacettedImStore_p.null() ) {
+	throw( AipsError("A facetted image has already been set. Facets are supported only for the main (first) field. Please submit a feature-request if you need multiple facets for outlier fields as well. ") );
+      }
+    
+    unFacettedImStore_p = imagestore;
+    facetsStore_p = facets;
+    
+    for (Int facet=0; facet< nIm; ++facet){
+	facetList[facet] = unFacettedImStore_p->getFacetImageStore(facet, nIm);
+      }
+    
+    return facetList;
   }
 
-  /////////////////////////
+  void SynthesisImager::setPsfFromOneFacet()
+  {
+
+    if( unFacettedImStore_p.null() ){
+	throw(AipsError("Internal Error in SynthesisImager : Setting PSF on Null unfacettedimage"));
+      }
+
+    // Copy the PSF from one facet to the center of the full image, to use for the minor cycle
+    //
+    // This code segment will work for single and multi-term 
+    // - for single term, the index will always be 0, and SIImageStore's access functions know this.
+    // - for multi-term, the index will be the taylor index and SIImageStoreMultiTerm knows this.
+      {
+	IPosition shape=(unFacettedImStore_p->psf(0))->shape();
+	IPosition blc(4, 0, 0, 0, 0);
+	IPosition trc=shape-1;
+	for(uInt tix=0; tix<2 * unFacettedImStore_p->getNTaylorTerms() - 1; tix++)
+	  {
+	    TempImage<Float> onepsf((itsMappers.imageStore(0)->psf(tix))->shape(), 
+				    (itsMappers.imageStore(0)->psf(tix))->coordinates());
+	    onepsf.copyData(*(itsMappers.imageStore(0)->psf(tix)));
+	    //now set the original to 0 as we have a copy of one facet psf
+	    (unFacettedImStore_p->psf(tix))->set(0.0);
+	    blc[0]=(shape[0]-(onepsf.shape()[0]))/2;
+	    trc[0]=onepsf.shape()[0]+blc[0]-1;
+	    blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
+	    trc[1]=onepsf.shape()[1]+blc[1]-1;
+	    Slicer sl(blc, trc, Slicer::endIsLast);
+	    SubImage<Float> sub(*(unFacettedImStore_p->psf(tix)), sl, True);
+	    sub.copyData(onepsf);
+	  }
+      }
+
+      cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
+
+  }
   
+  
+  void SynthesisImager::appendToMapperList(String imagename,  
+					   CoordinateSystem& csys, 
+					   IPosition imshape,
+					   CountedPtr<FTMachine>& ftm,
+					   CountedPtr<FTMachine>& iftm,
+					   Quantity distance, 
+					   Int facets, 
+					   const Bool overwrite,
+					   String mappertype,
+					   uInt ntaylorterms  )
+    {
+      LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
+      //---------------------------------------------
+      // Some checks..
+      if(facets > 1 && itsMappers.nMappers() > 0)
+	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
+      
+      AlwaysAssert( ( ( ! (ftm->name()=="MosaicFT" && mappertype=="imagemosaic") )  && 
+      		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
+		    AipsError );
+      //---------------------------------------------
+
+      // Create the ImageStore object
+      CountedPtr<SIImageStore> imstor;
+      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage() );
+
+      // Create the Mappers
+      if( facets<2 ) // One facet. Just add the above imagestore to the mapper list.
+	{
+	  itsMappers.addMapper(  createSIMapper( mappertype, imstor, ftm, iftm, ntaylorterms) );
+	}
+      else // This field is facetted. Make a list of reference imstores, and add all to the mapper list.
+	{
+	  // First, make sure that full images have been allocated before trying to make references.....
+	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
+
+	  // Make and connect the list.
+	  Block<CountedPtr<SIImageStore> > imstorList = createFacetImageStoreList( imstor, facets );
+	  for( uInt facet=0; facet<imstorList.nelements(); facet++)
+	    {
+	      CountedPtr<FTMachine> new_ftm, new_iftm;
+	      if(facet==0){ new_ftm = ftm;  new_iftm = iftm; }
+	      else{ new_ftm=ftm->cloneFTM();  new_iftm=iftm->cloneFTM(); }
+	      itsMappers.addMapper(createSIMapper( mappertype, imstorList[facet], new_ftm, new_iftm, ntaylorterms));
+	    }
+	}
+
+    }
+
+  /////////////////////////
+  /*
+  Bool SynthesisImager::toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype)
+  {
+    if( (ftm->name() == "GridFT" || ftm->name() == "WProjectFT")&&(mappertype!="imagemosaic") )  
+      { return False; }
+    else
+      { return True; }
+  }
+  */
+
   // Make the FT-Machine and related objects (cfcache, etc.)
-  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
+  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, 
+					CountedPtr<FTMachine>& theIFT, 
+					const String& ftname,
+					const uInt nTaylorTerms,
+					const String mType,
 					const Int facets,            //=1
 					//------------------------------
 					const Int wprojplane,        //=1,
@@ -992,15 +1117,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
     }
-    else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft"))
-      createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, padding, useAutocorr, useDoublePrec, gridFunction,
-			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, doPointing, doPBCorr, conjBeams, computePAStep,
+    else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft")) {
+      createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, 
+			 padding, useAutocorr, useDoublePrec, gridFunction,
+			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, 
+			 doPointing, doPBCorr, conjBeams, computePAStep,
 			 rotatePAStep, cache,tile);
-
+    }
     /* else if(ftname== "MosaicFT"){
 
        }*/
     
+
+    ///////// Now, clone and pack the chosen FT into a MultiTermFT if needed.
+    if( mType=="multiterm" )
+      {
+	AlwaysAssert( nTaylorTerms>=1 , AipsError );
+
+	CountedPtr<FTMachine> theMTFT = new MultiTermFTNew( theFT , nTaylorTerms, True/*forward*/ );
+	CountedPtr<FTMachine> theMTIFT = new MultiTermFTNew( theIFT , nTaylorTerms, False/*forward*/ );
+
+	theFT = theMTFT;
+	theIFT = theMTIFT;
+      }
+
+    ////// Now, set the SkyJones if needed, and if not internally generated.
+    if( mType=="imagemosaic" && 
+	(ftname != "awprojectft" && ftname != "mawprojectft" && ftname != "proroft") )
+      {
+	CountedPtr<SkyJones> vp = NULL;
+	ROMSColumns msc(*mss_p[0]);
+	Quantity parang(0.0,"deg");
+	Quantity skyposthreshold(0.0,"deg");
+	vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
+
+	Vector<CountedPtr<SkyJones> > skyJonesList(1);
+	skyJonesList(0) = vp;
+	theFT->setSkyJones(  skyJonesList );
+	theIFT->setSkyJones(  skyJonesList );
+
+      }
+
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1089,7 +1246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Re-sampler objects.  
     //
     Float pbLimit_l=1e-3;
-    theFT = new AWProjectWBFT(wprojPlane, cache/2, 
+    theFT = new AWProjectWBFTNew(wprojPlane, cache/2, 
 			      cfCacheObj, awConvFunc, 
 			      visResampler,
 			      /*True */doPointing, doPBCorr, 
@@ -1097,8 +1254,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      useDoublePrec);
 
     Quantity rotateOTF(rotatePAStep,"deg");
-    static_cast<AWProjectWBFT &>(*theFT).setObservatoryLocation(mLocation_p);
-    static_cast<AWProjectWBFT &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
+    static_cast<AWProjectWBFTNew &>(*theFT).setObservatoryLocation(mLocation_p);
+    static_cast<AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
 
     // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
     // 			       cfCacheObj, awConvFunc, 
@@ -1110,10 +1267,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
     // static_cast<AWProjectWBFT &>(*theIFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
 
-    theIFT = new AWProjectWBFT(static_cast<AWProjectWBFT &>(*theFT));
+    theIFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &>(*theFT));
 
+    //// Send in Freq info.
+    os << "Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
+    theFT->setSpwFreqSelection( mssFreqSel_p );
+    theIFT->setSpwFreqSelection( mssFreqSel_p );
     //    vi_p->getFreqInSpwRange(
-    os << "No frequency selection information has reached the AWP FTM yet" << LogIO::WARN;
 
   }
 
@@ -1177,7 +1337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt k=0; k < msblock.nelements(); ++k){
     	blockGroup[k].resize(blockSpw_p[k].nelements());
     	blockGroup[k].set(1);
-    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
+	//    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
     }
 
     rvi_p->selectChannel(blockGroup, blockStart_p, blockNChan_p,
@@ -1195,15 +1355,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
+    itsMappers.checkOverlappingModels("blank");
+
     if(useViVb2){
     	vi_p->originChunks();
     	vi_p->origin();
     	vi::VisBuffer2* vb=vi_p->getVisBuffer();
     	if(!dopsf) itsMappers.initializeDegrid(*vb);
-    	itsMappers.initializeGrid(*vb);
+    	itsMappers.initializeGrid(*vb,dopsf);
     	for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
     	{
-
     		for (vi_p->origin(); vi_p->more();vi_p->next())
     		{
     			if(!dopsf){
@@ -1223,8 +1384,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	VisBufferAutoPtr vb(rvi_p);
     	rvi_p->originChunks();
     	rvi_p->origin();
+
+	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+	Int cohDone=0;
+
+
     	if(!dopsf)itsMappers.initializeDegrid(*vb);
-    	itsMappers.initializeGrid(*vb);
+    	itsMappers.initializeGrid(*vb,dopsf);
     	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
     	{
 
@@ -1238,6 +1405,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
     			}
     			itsMappers.grid(*vb, dopsf);
+			cohDone += vb->nRow();
+			pm.update(Double(cohDone));
     		}
     	}
     	//cerr << "IN SYNTHE_IMA" << endl;
@@ -1246,53 +1415,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	itsMappers.finalizeGrid(*vb, dopsf);
 
     }
-/*
-    Int nmappers = itsMappers.nMappers();
-    
-    os << "Run major cycle for " << nmappers << " image(s) : " 
-       << itsMappers.getImageNames() << LogIO::POST;
 
-    ///////// (1) Initialize all the FTMs.
-    for(Int mp=0;mp<nmappers;mp++)
-      {
-	// vb.selectChannel(....)
-	itsMappers.initializeDegrid(mp);
-	itsMappers.initializeGrid(mp);
-      }
+    itsMappers.checkOverlappingModels("restore");
 
-    ////////// (2) Iterate through visbuffers, degrid, subtract, grid
-
-    //for ( vi.originChunks(); vi.moreChunks(); vi.nextChunk() )
-      {
-	//for( vi.origin(); vi.more(); vi++ )
-	  {
-//	    for(Int mp=0;mp<nmappers;mp++)
-//	      {
-		// itsMappers.degrid(mp /* ,vb );
-		// resultvb.modelVisCube += vb.modelVisCube()
-//	      }
-	    
-	    // resultvb.visCube -= resultvb.modelvisCube()
-	    
-	    // save model either in the column, or in the record. 
-	    // Access the FTM record as    rec=mappers[mp]->getFTMRecord();
-	    
-//	    for(Int mp=0;mp<nmappers;mp++)
-//	      {
-//		itsMappers.grid(mp /* ,vb );
-//	      }
-//	  }// end of for vb.
- //     }// end of vi.chunk iterations
-      
-
-      /////////// (3) Finalize Mappers.
-//      for(Int mp=0;mp<nmappers;mp++)
-//	{
-//	  itsMappers.finalizeDegrid(mp);
-//	  itsMappers.finalizeGrid(mp);
-//	}
-*/
-  }
+  }// end runMajorCycle
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

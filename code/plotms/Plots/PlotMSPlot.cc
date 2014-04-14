@@ -103,13 +103,15 @@ void PlotMSPlot::customizeAutoSymbol( const PlotSymbolPtr& baseSymbol, uInt data
 
 vector<PMS::DataColumn> PlotMSPlot::getCachedData(){
 	PMS_PP_Cache* cache = itsParams_.typedGroup<PMS_PP_Cache>();
-	int count = cache->numXAxes() + cache->numYAxes();
+	int xAxisCount = cache->numXAxes();
+	int yAxisCount = cache->numYAxes();
+	int count = xAxisCount + yAxisCount;
 	vector<PMS::DataColumn> cdata( count );
-	for(uInt i = 0; i < cache->numXAxes(); ++i) {
+	for( int i = 0; i < xAxisCount; ++i) {
 		cdata[i] = cache->xDataColumn(i);
 	}
-	for( int i = cache->numYAxes(); i < count; ++i) {
-	    cdata[i] = cache->yDataColumn(i - cache->numXAxes());
+	for( int i = xAxisCount; i < count; ++i) {
+	    cdata[i] = cache->yDataColumn(i - xAxisCount);
 	}
 	return cdata;
 }
@@ -119,17 +121,15 @@ vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
 	int xAxisCount = c->numXAxes();
 	int yAxisCount = c->numYAxes();
-	vector<PMS::Axis> axes(xAxisCount + yAxisCount);
-	for(unsigned int i = 0; i < c->numXAxes(); i++){
+	int count = xAxisCount + yAxisCount;
+	vector<PMS::Axis> axes( count );
+	for(int i = 0; i < xAxisCount; i++){
 		axes[i] = c->xAxis(i);
 	}
-	for(unsigned int i = c->numXAxes(); i < axes.size(); i++){
+	for(int i = xAxisCount; i < count; i++){
 		uInt yIndex = i - xAxisCount;
 	    axes[i] = c->yAxis(yIndex);
 	}
-	/*vector<PMS::Axis> axes(2);
-	axes[0] = c->xAxis();
-	axes[1] = c->yAxis();*/
 	return axes;
 }
 
@@ -188,7 +188,7 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
     if(!hold){
     	holdDrawing();
     }
-    
+
     // Initialize plot objects and assign canvases.
     if(!assignCanvases(pages) || !initializePlot()) {
         if(!hold) releaseDrawing();
@@ -197,7 +197,7 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
 
     // Set up page.
     pages.setupCurrentPage();
-    
+
     // Attach plot objects to their assigned canvases.
     attachToCanvases();
     
@@ -212,15 +212,24 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
     return true;
 }
 
-
+bool PlotMSPlot::updateData() {
+	itsCache_->clear();
+	return True;
+};
 
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
 
+
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
-    if ( ! itsParent_->getPlotManager().isPlottable( this ) ){
+
+    //A plot not to be shown.
+    bool plottable = itsParent_->getPlotManager().isPlottable( this );
+    if ( ! plottable ){
+    	//Clear the plot
+    	detachFromCanvases();
     	return;
     }
     vector<String> updates =
@@ -281,6 +290,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone){
         releaseDrawing();
     }
+
 }
 
 void PlotMSPlot::plotDataChanged() {
@@ -306,7 +316,7 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     PlotMSExportParam& exportParams = itsParent_->getExportParameters();
     PMS::ExportRange range = exportParams.getExportRange();
     if ( range == PMS::PAGE_ALL ){
-    	pageCount = itsCache_->nIter();
+    	pageCount = itsCache_->nIter( 0 );
     	float divResult = (pageCount * 1.0f) / canv.size();
     	pageCount = static_cast<int>(ceil( divResult ));
     }
@@ -325,26 +335,15 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	baseFileName = baseFileName.substr(0, periodIndex );
     }
 
-    PlotMSParameters params = itsParent_->getParameters();
-    int rowCount = params.getRowCount();
-    int colCount = params.getColCount();
-    int gridSize = rowCount * colCount;
     for ( int i = 0; i < pageCount; i++ ){
     	if ( i > 0 ){
     		//Remove the last '.' from the storage location.
     		String pageStr = String::toString( i+1 );
     		exportFormat.location = baseFileName + pageStr + suffix;
     	}
-    	if( gridSize == 1 ){
-    		exportSuccess = canv[0]->exportToFile(exportFormat);
-    		break;
-    	}
-    	else if ( gridSize > 1){
-    		exportSuccess = itsParent_->exportToFormat( exportFormat );
-    	}
+    	exportSuccess = itsParent_->exportToFormat( exportFormat );
 
     	nextIter();
-
     }
 
     //Restore the current page

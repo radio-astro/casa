@@ -85,9 +85,9 @@ public:
 	// destructor
 	~PVGenerator();
 
-	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
+	// perform the collapse. Returns a pointer to the
 	// collapsed image.
-	std::tr1::shared_ptr<ImageInterface<Float> > generate(const Bool wantReturn) const;
+	SPIIF generate() const;
 
 	// set the end points of the slice in direction space. Input values represent pixel
 	// coordinates in the input image.
@@ -109,18 +109,18 @@ public:
 	);
 
 	void setEndpoints(
-		const MVDirection& center, const Quantity& length,
+		const MDirection& center, const Quantity& length,
 		const Quantity& pa
 	);
 
 	// <src>length in pixels</src>
 	void setEndpoints(
-		const MVDirection& center, Double length,
+		const MDirection& center, Double length,
 		const Quantity& pa
 	);
 
 	void setEndpoints(
-		const MVDirection& start, const MVDirection& end
+		const MDirection& start, const MDirection& end
 	);
 
 	// Set the number of pixels perpendicular to the slice for which averaging
@@ -168,6 +168,7 @@ private:
 
 	Quantity _increment() const;
 
+	static String _pairToString(const std::pair<Double, Double>& p);
 
 };
 }

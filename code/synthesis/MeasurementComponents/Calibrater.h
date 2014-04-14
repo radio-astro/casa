@@ -168,6 +168,9 @@ class Calibrater
   //  deposit in the MODEL_DATA column
   Bool corrupt();
 
+  // Initialize sigma/weight according to bandwidth/exposure
+  Bool initWeights();
+
   // Solve for a given calibration component
   Bool solve();
 
@@ -187,6 +190,8 @@ class Calibrater
 		 const Bool& append,
                  const Float& inGainThres,
                  const String& antSel,
+                 const String& timerangeSel,
+                 const String& scanSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 		 Vector<Int>& tranidx,
 		 const String& oListFile,
@@ -203,6 +208,8 @@ class Calibrater
 		 const Bool& append,
                  const Float& inGainThres,
                  const String& antSel,
+                 const String& timerangeSel,
+                 const String& scanSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 		 const String& oListFile,
 		 const Bool& incremental,

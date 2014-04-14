@@ -67,8 +67,8 @@ namespace casa {
 		bool logFile;
 		ComponentListWrapper fitResultList;
         std::tr1::shared_ptr<const ImageInterface<Float> > image;
-		Vector<Float> includePixs;
-		Vector<Float> excludePixs;
+		std::tr1::shared_ptr<std::pair<Float, Float> > includePixs;
+		std::tr1::shared_ptr<std::pair<Float, Float> > excludePixs;
 		String pixelBox;
 		String filePath;
 		int channelNumber;

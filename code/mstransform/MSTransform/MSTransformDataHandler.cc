@@ -21,6 +21,9 @@
 //# $Id: $
 
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
+#include <tables/Tables/TableProxy.h>
+#include <tables/Tables/TableParse.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -2463,8 +2466,9 @@ Bool MSTransformDataHandler::copyAntenna()
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::copyFeed()
 {
-	const MSFeed& oldFeed = mssel_p.feed();
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
+	const MSFeed& oldFeed = mssel_p.feed();
 	MSFeed& newFeed = msOut_p.feed();
 	const ROMSFeedColumns incols(oldFeed);
 	MSFeedColumns outcols(newFeed);
@@ -2511,15 +2515,53 @@ Bool MSTransformDataHandler::copyFeed()
 		}
 	}
 
+	// Check if selected spw is WVR data. WVR data does not have FEED data
+	// so it is not a failure if newFeed.nrow == 0
+	if (newFeed.nrow() < 1 and spw_p.size() == 1){
+		Int ddid = spw2ddid_p[0];
+		String inputMSName = ms_p.tableName();
+		Int procid = getProcessorId(ddid, inputMSName);
+
+		const MSProcessor oldProc = mssel_p.processor();
+		if (oldProc.nrow() != 0){
+			const ROMSProcessorColumns proccols(oldProc);
+			const ROScalarColumn<String>& ptype = proccols.type();
+			String proctype = ptype.asString(procid);
+
+			if (proctype.compare("RADIOMETER") == 0)
+				return true;
+		}
+
+	}
+
 	if (newFeed.nrow() < 1)
 	{
-		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+//		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 		os << LogIO::SEVERE << "No feeds were selected." << LogIO::POST;
 		return false;
 	}
 
 	return True;
 }
+
+// -----------------------------------------------------------------------
+//  Get the processorId corresponding to a given DDI
+// -----------------------------------------------------------------------
+Int MSTransformDataHandler::getProcessorId(Int dataDescriptionId, String msname)
+{
+    ostringstream taql;
+    taql << "SELECT PROCESSOR_ID from " << msname;
+    taql << " WHERE DATA_DESC_ID ==" << dataDescriptionId;
+    taql << " LIMIT 1";
+
+    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
+    Record colWrapper = firstSelectedRow->getVarColumn(String("PROCESSOR_ID"),0,1,1);
+    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
+
+    delete firstSelectedRow;
+    return processorId[0];
+}
+
 
 // -----------------------------------------------------------------------
 //
@@ -2635,31 +2677,57 @@ Bool MSTransformDataHandler::copyState()
 
 		if (oldState.nrow() > 0)
 		{
-			MSState& newState = msOut_p.state();
-			const ROMSStateColumns oldStateCols(oldState);
-			MSStateColumns newStateCols(newState);
-
-			// Initialize stateRemapper_p if necessary.
-			if (stateRemapper_p.size() < 1) make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
-
-
-			uInt nStates = stateRemapper_p.size();
-
-			// stateRemapper_p goes from input to output, as is wanted in most
-			// places.  Here we need a map going the other way, so make one.
-			Vector<Int> outStateToInState(nStates);
-			std::map<Int, Int>::iterator mit;
-
-			for (mit = stateRemapper_p.begin(); mit != stateRemapper_p.end(); ++mit)
+			if (!intentString_p.empty())
 			{
-				outStateToInState[(*mit).second] = (*mit).first;
+				MSState& newState = msOut_p.state();
+				const ROMSStateColumns oldStateCols(oldState);
+				MSStateColumns newStateCols(newState);
+
+				// Initialize stateRemapper_p if necessary.
+				// if (stateRemapper_p.size() < 1) make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
+
+				// jagonzal (CAS-6351): Do not apply implicit re-indexing //////////////////////////////////////////////////
+				//
+				// Get list of selected scan intent indexes
+				MSSelection mssel;
+				mssel.setStateExpr(intentString_p);
+				Vector<Int> scanIntentList = mssel.getStateObsModeList(getInputMS());
+				//
+				// Populate state re-mapper using all selected indexes (not only the implicit ones)
+				stateRemapper_p.clear();
+				for (uInt index=0; index < scanIntentList.size(); index++)
+				{
+					stateRemapper_p[scanIntentList(index)] = index;
+				}
+				///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				uInt nStates = stateRemapper_p.size();
+
+				// stateRemapper_p goes from input to output, as is wanted in most
+				// places.  Here we need a map going the other way, so make one.
+				Vector<Int> outStateToInState(nStates);
+				std::map<Int, Int>::iterator mit;
+
+				for (mit = stateRemapper_p.begin(); mit != stateRemapper_p.end(); ++mit)
+				{
+					outStateToInState[(*mit).second] = (*mit).first;
+				}
+
+
+				for (uInt outrn = 0; outrn < nStates; ++outrn)
+				{
+					TableCopy::copyRows(newState, oldState, outrn,outStateToInState[outrn], 1);
+				}
+			}
+			// jagonzal (CAS-6351): Do not apply implicit re-indexing
+			// Therefore just copy the input state sub-table to the output state sub-table
+			else
+			{
+				const MSState& oldState = mssel_p.state();
+				MSState& newState = msOut_p.state();
+				TableCopy::copyRows(newState, oldState);
 			}
 
-
-			for (uInt outrn = 0; outrn < nStates; ++outrn)
-			{
-				TableCopy::copyRows(newState, oldState, outrn,outStateToInState[outrn], 1);
-			}
 		}
 	}
 	return True;
@@ -3016,6 +3084,16 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 			spwCols_0.netSideband().put(rowIndex,spwCols_i.netSideband()(subms_row_index));
 			spwCols_0.numChan().put(rowIndex,spwCols_i.numChan()(subms_row_index));
 			spwCols_0.totalBandwidth().put(rowIndex,spwCols_i.totalBandwidth()(subms_row_index));
+
+			// Optional columns (BBC_NO, ASSOC_SPW_ID, ASSOC_NATURE)
+			if (spwCols_i.bbcNo().isNull()==false and spwCols_i.bbcNo().hasContent()==true)
+				spwCols_0.bbcNo().put(rowIndex,spwCols_i.bbcNo()(subms_row_index));
+
+			if (spwCols_i.assocSpwId().isNull()==false and spwCols_i.assocSpwId().hasContent()==true)
+				spwCols_0.assocSpwId().put(rowIndex,spwCols_i.assocSpwId()(subms_row_index));
+
+			if(spwCols_i.assocNature().isNull()==false and spwCols_i.assocNature().hasContent()==true)
+				spwCols_0.assocNature().put(rowIndex,spwCols_i.assocNature()(subms_row_index));
 
 			rowIndex += 1;
 		}

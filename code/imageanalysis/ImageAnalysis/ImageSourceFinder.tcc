@@ -225,7 +225,7 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
 // Make sure the Image is 2D and that it holds the sky.  Exception if not.
 
    const CoordinateSystem& cSys = image.coordinates();
-   Bool xIsLong = CoordinateUtil::isSky(os, cSys);
+   Bool xIsLong = cSys.isDirectionAbscissaLongitude();
 
 // Width support for fast source finder.
 // Can go to w/off/off2 = 5/2/1 but craps out if bigger.

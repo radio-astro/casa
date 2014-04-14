@@ -83,6 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     String algorithm("test");
 
+    uInt nTaylorTerms=1; // Try to remove....
     try
       {
 
@@ -108,6 +109,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if( decpars.isDefined("startmodel") )  // A single string
 	{ itsStartingModelName = decpars.asString( RecordFieldId("startmodel")); }
 
+      if( decpars.isDefined("ntaylorterms") )
+	{ nTaylorTerms = decpars.asInt( RecordFieldId("ntaylorterms") );}
+      //	{ Int nt; decpars.get( RecordFieldId("ntaylorterms") , nt ); nTaylorTerms=nt;}
+
+
+      // Scale sizes...
+
+
       }
     catch(AipsError &x)
       {
@@ -122,14 +131,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
+	/*
 	if(algorithm==String("test")) 
 	  {
 	    itsDeconvolver = new SDAlgorithmTest(); 
 	  }
-	else if(algorithm==String("hogbom"))
+	
+	  else */ if(algorithm==String("hogbom"))
 	  {
 	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
 	  }
+	  else if(algorithm==String("msmfs"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMSMFS( nTaylorTerms ); 
+	    } 
 	else
 	  {
 	    throw( AipsError("Un-known algorithm : "+algorithm) );
@@ -164,7 +179,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
       //gatherImages();
 
-      itsImages = new SIImageStore( itsImageName );
+      /*
+      if( itsDeconvolver->getAlgorithmName() == "msmfs" )
+	{  itsImages = new SIImageStoreMultiTerm( itsImageName, itsDeconvolver->getNTaylorTerms() ); }
+      else
+	{  itsImages = new SIImageStore( itsImageName ); }
+      */
+
+      itsImages = makeImageStore( itsImageName );
+
       // If a starting model exists, this will initialize the ImageStore with it. Will do this only once.
       setStartingModel();
  
@@ -194,6 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       itsLoopController.setCycleControls(minorCycleControlRec);
+      //   maskHandler.makeAutoMask( itsImages );
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
       returnRecord = itsLoopController.getCycleExecutionRecord();
 
@@ -214,10 +238,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( itsImages.null() )
       {
-	itsImages = new SIImageStore( itsImageName );
+	itsImages = makeImageStore( itsImageName );
       }
 
     itsDeconvolver->restore(itsImages);
+
+  }
+
+  // Restore Image.
+  void SynthesisDeconvolver::pbcor()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","pbcor",WHERE) );
+
+    if( itsImages.null() )
+      {
+	itsImages = makeImageStore( itsImageName );
+      }
+
+    itsDeconvolver->pbcor(itsImages);
 
   }
 
@@ -227,6 +265,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////    Internal Functions start here.  These are not visible to the tool layer.
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  CountedPtr<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
+  {
+    if( itsDeconvolver->getAlgorithmName() == "msmfs" )
+      {  return new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms() ); }
+    else
+      {  return new SIImageStore( imagename ); }
+  }
 
 
   // #############################################

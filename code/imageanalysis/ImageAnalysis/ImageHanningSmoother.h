@@ -51,12 +51,6 @@ private:
 	// disallow default constructor
 	ImageHanningSmoother();
 
-
-
-	Array<T> _hanningSmooth(
-		const Array<T>& in, const Array<Bool>& mask
-	) const ;
-
 	Array<T> _hanningSmooth(const Array<T>& in) const ;
 };
 }

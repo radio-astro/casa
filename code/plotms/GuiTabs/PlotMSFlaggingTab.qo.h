@@ -66,6 +66,8 @@ public:
     
     // See PlotMSFlaggingWidget::setValue().
     void setValue(const PlotMSFlagging& value);
+
+
 };
 
 }

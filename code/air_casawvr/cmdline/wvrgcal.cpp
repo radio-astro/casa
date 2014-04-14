@@ -285,9 +285,24 @@ void flagInterp(const casa::MeasurementSet &ms,
 						3,
 						maxdist_m);
     if(near.size()>= static_cast<unsigned int>(minnumants)){
-      LibAIR::interpBadAntW(d, 
-			    *i, 
-			    near);
+      //LibAIR::interpBadAntW(d, *i, near);
+      const LibAIR::InterpArrayData::wvrdata_t &data(d.g_wvrdata());
+      for(size_t ii=0; ii<d.g_time().size(); ++ii){
+	for(size_t k=0; k < 4; ++k){
+	  double p=0;
+	  for(LibAIR::AntSetWeight::const_iterator j=near.begin(); j!=near.end(); ++j){
+	    double thisData = data[ii][j->second][k];
+	    if(thisData>0){
+	      p+=thisData*j->first;
+	    }
+	    else{ // no good data; set solution to zero => will be flagged later
+	      p=0.;
+	      break;
+	    }
+	  }
+	  d.set(ii, *i, k, p);
+	}
+      }
     }
     else
     { 
@@ -302,7 +317,7 @@ void flagInterp(const casa::MeasurementSet &ms,
       {
         for(size_t k=0; k < 4; ++k)
         {
-          d.set(j, *i, k, 2.7); // set all WVR data of this antenna to a minimum temperature
+          d.set(j, *i, k, 0.); // set all WVR data of this antenna to zero => will be flagged later
         }
       }
       interpImpossibleAnts.insert(*i);
@@ -712,6 +727,8 @@ static void defineOptions(boost::program_options::options_description &desc,
     ("mingoodfrac",
      value<double>()->default_value(0.8),
      "If the fraction of unflagged data for an antenna is below this value (0. to 1.), the antenna is flagged.")
+    ("usefieldtab",
+     "Derive the antenna pointing information from the FIELD table instead of the POINTING table.")
     ;
   p.add("ms", -1);
 }
@@ -798,8 +815,12 @@ int main(int argc,  char* argv[])
 
      std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
      std::set<int> flaggedantsInMain; // the antennas totally flagged in the MS main table
-     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI, flaggedantsInMain,
-								       vm["mingoodfrac"].as<double>()));
+     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, 
+								       sortedI, 
+								       flaggedantsInMain,
+								       vm["mingoodfrac"].as<double>(),
+								       vm.count("usefieldtab")==0)
+						   );
 
      interpwvrs.insert(flaggedantsInMain.begin(),flaggedantsInMain.end()); // for flagInterp()
      wvrflag.insert(flaggedantsInMain.begin(),flaggedantsInMain.end());
@@ -1040,6 +1061,8 @@ int main(int argc,  char* argv[])
      loadSpec(ms, sp);
      std::set<size_t> reverse=reversedSPWs(sp, vm);  
      
+     std::cout << "Writing gain table ..." << std::endl;
+
      // Write new table, including history
      LibAIR::writeNewGainTbl(g,
 			     fnameout.c_str(),

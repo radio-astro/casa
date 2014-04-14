@@ -251,6 +251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayData *regrid_to = 0;
 		invertColorMap = false;
+		logScaleColorMap = 0;
 		std::string method = "";
 
 		if(dataType=="lel") {
@@ -362,7 +363,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
 							regridder.setSpecAsVelocity(True);
-							im_ = regridder.regrid(True);
+							im_ = regridder.regrid();
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
 						std::string slice_description = ddo["slice"];
@@ -1196,8 +1197,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void QtDisplayData::setInvertColorMap( bool invert ) {
+	void QtDisplayData::setHistogramColorProperties( bool invert, int logScale ) {
 		invertColorMap = invert;
+		logScaleColorMap = logScale;
 		setColormap_(clrMapName_, true);
 	}
 
@@ -1391,6 +1393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		clrMap->setInvertFlags( invertColorMap, invertColorMap, invertColorMap );
+		clrMap->setLogScale( logScaleColorMap );
 
 		// clrmap is ok to use.
 

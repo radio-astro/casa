@@ -33,7 +33,7 @@ public:
 	// destructor
 	virtual ~Image1DSmoother() {}
 
-	SPIIF smooth(Bool wantReturn) const;
+	SPIIT smooth() const;
 
 	virtual String getClass() const { const static String s = "Image1DSmoother"; return s; }
 
@@ -77,8 +77,9 @@ protected:
 
     inline uInt _getAxis() const { return _axis; }
 
+    inline void _setNMinPixels(uInt n) { _nMinPixels = n; }
 private:
-	uInt _axis;
+	uInt _axis, _nMinPixels;
 	Bool _decimate;
 	ImageDecimatorData::Function _decimationFunction;
 

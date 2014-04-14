@@ -59,7 +59,8 @@ public:
 private:
 	QPExporter();
 	static bool exportPostscript( const PlotExportFormat& format,
-			vector<QPExportCanvas*> &qcanvases);
+			vector<QPExportCanvas*> &qcanvases,
+			QPExportCanvas* grabCanvas, QPPlotter* grabPlotter);
 
 	static QImage produceHighResImage(
 			const PlotExportFormat& format,
@@ -76,6 +77,11 @@ private:
 	static int findAxisHeight( vector<QPExportCanvas*> &qcanvases );
 	static int findAxisWidth( vector<QPExportCanvas*> &qcanvases );
 	static int getCanvasCount( vector<QPExportCanvas*> &qcanvases );
+
+
+	static void findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grabPlotter,
+			Int& width, Int& height, Int& gridRows, Int& gridCols );
+
 	static const String CLASS_NAME;
 	static const String EXPORT_NAME;
 };

@@ -26,6 +26,8 @@
 
 #include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Regions/ImageRegion.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <QDebug>
 #include <QKeyEvent>
 
@@ -40,12 +42,28 @@ namespace casa {
 		QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
 		plotWidget = new BinPlotWidget( false, true, false, this );
 		plotWidget->setPlotMode( 1 );
+		plotWidget->setDisplayAxisTitles( true );
 		plotWidget->hideMaximumRange();
 		layout->addWidget( plotWidget );
 		ui.plotWidgetHolder->setLayout( layout );
+		spectralIndex = -1;
+		channelIndex = 0;
 
 		connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
 		connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
+	}
+
+	bool PixelRangeDialog::setImageRegion( ImageRegion* imageRegion, int id ){
+		bool imageSet = plotWidget->setImageRegion( imageRegion, id );
+		return imageSet;
+	}
+
+	void PixelRangeDialog::deleteImageRegion( int id ){
+		plotWidget->deleteImageRegion( id );
+	}
+
+	void PixelRangeDialog::imageRegionSelected( int id ){
+		plotWidget->imageRegionSelected( id );
 	}
 
 	void PixelRangeDialog::keyPressEvent( QKeyEvent* event ) {
@@ -59,7 +77,26 @@ namespace casa {
 
 
 	void PixelRangeDialog::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
-		plotWidget->setImage( img );
+		plotWidget->setImage( img, true );
+		spectralIndex = -1;
+
+		if ( img.get() != NULL ){
+			DisplayCoordinateSystem displayCoords = img->coordinates();
+			if ( displayCoords.hasSpectralAxis()){
+				spectralIndex = displayCoords.spectralAxisNumber();
+				setChannelValue( channelIndex );
+			}
+		}
+
+	}
+
+	void PixelRangeDialog::setImageMode( bool imageMode ){
+		if ( imageMode ){
+			plotWidget->imageModeSelected( true );
+		}
+		else {
+			plotWidget->regionModeSelected( true );
+		}
 	}
 
 	pair<double,double> PixelRangeDialog::getInterval() const {
@@ -69,6 +106,14 @@ namespace casa {
 	void PixelRangeDialog::setInterval( double minValue, double maxValue ) {
 		plotWidget->setMinMaxValues( minValue, maxValue );
 	}
+
+	void PixelRangeDialog::setChannelValue( int channel ){
+		channelIndex = channel;
+		plotWidget->setChannelValue( channel );
+		plotWidget->channelRangeChanged( channel, channel, false, true, spectralIndex );
+	}
+
+
 
 	/*void PixelRangeDialog::setRangeMaxEnabled( bool enabled ){
 		plotWidget->setRangeMaxEnabled( enabled );

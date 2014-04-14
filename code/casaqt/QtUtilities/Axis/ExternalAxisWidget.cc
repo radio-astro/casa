@@ -26,17 +26,22 @@
 #include "ExternalAxisWidget.h"
 #include <QPainter>
 #include <QDebug>
+#include <QtCore/qmath.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
 #include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
 namespace casa {
 
-ExternalAxisWidget::ExternalAxisWidget(QWidget* parent, QwtPlot* managedPlot) :QWidget( parent ),
+ExternalAxisWidget::ExternalAxisWidget(QWidget* parent, QwtPlot* managedPlot,
+		bool leftAxisInternal, bool bottomAxisInternal,
+		bool rightAxisInternal ) :QWidget( parent ),
 		plot( managedPlot ), scaleDraw(NULL),
 		AXIS_SMALL_SIDE(100), TICK_LENGTH(5),
 		MARGIN(5), MIN_START_Y(22){
-
+	this->leftAxisInternal = leftAxisInternal;
+	this->bottomAxisInternal = bottomAxisInternal;
+	this->rightAxisInternal = rightAxisInternal;
 }
 
 void ExternalAxisWidget::setDateFormat(const String& newFormat){
@@ -73,6 +78,11 @@ int ExternalAxisWidget::getStartX() const {
 	return 0;
 }
 
+int ExternalAxisWidget::getEndY() const {
+	int canvasBound = getCanvasHeight();
+	return canvasBound;
+}
+
 void ExternalAxisWidget::print( QPainter* painter, QRect imageRect ){
 	QPixmap pm = QPixmap::grabWidget( this );
 	if ( painter != NULL ){
@@ -82,7 +92,7 @@ void ExternalAxisWidget::print( QPainter* painter, QRect imageRect ){
 
 double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 	//Figure out where to start the first tick.  There will be a small distance
-	//between the first tick and the start of the axis do to the difference between
+	//between the first tick and the start of the axis due to the difference between
 	//the upper bound and the first tick location.
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	double upperBound = scaleDiv->upperBound();
@@ -95,10 +105,9 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 		endDistancePercentage = lowerBoundDistance / axisExtent;
 	}
 
-	int canvasBound = width() - getStartX();
-	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
-		canvasBound = getCanvasHeight() - getStartY();
-	}
+	//The length of the axis.
+	int canvasBound = getAxisLength();
+
 	double startPixel = canvasBound * endDistancePercentage;
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
 		startPixel = getStartY() + startPixel;
@@ -127,8 +136,21 @@ double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
 }
 
 int ExternalAxisWidget::getCanvasHeight() const {
+	int canvasHeight = height();
 	QwtPlotCanvas* canvas = plot->canvas();
-	return canvas->height();
+	if ( canvas != NULL ){
+		canvasHeight = canvas->height();
+	}
+	return canvasHeight;
+}
+
+int ExternalAxisWidget::getCanvasWidth() const {
+	int canvasWidth = width();
+	QwtPlotCanvas* canvas = plot->canvas();
+	if ( canvas != NULL ){
+		canvasWidth = canvas->width();
+	}
+	return canvasWidth;
 }
 
 double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
@@ -136,7 +158,7 @@ double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis 
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	double tickPercentage = tickDistance / axisExtent;
 
-	int canvasLimit = width();
+	int canvasLimit = getCanvasWidth() - 2 * MARGIN;
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
 		canvasLimit = getCanvasHeight();
 	}
@@ -191,7 +213,7 @@ void ExternalAxisWidget::paintEvent( QPaintEvent* event ){
 }
 
 void ExternalAxisWidget::drawTicks( QPainter* painter ){
-	axisFont.setBold( false );
+	QFont axisFont = plot->axisFont( plotAxis);
 	painter->setFont( axisFont );
 	drawTicks( painter, TICK_LENGTH  );
 }
@@ -205,10 +227,20 @@ void ExternalAxisWidget::drawBackBone( QPainter* painter ){
 void ExternalAxisWidget::drawLabel( QPainter* painter ){
 	  axisFont.setBold( true );
 	  painter->setFont( axisFont );
+
 	  drawAxisLabel( painter );
 }
 
 
+
+QString ExternalAxisWidget::formatLabel( double value ) const {
+	QString numberStr = QString::number( value, 'g', 3 );
+	if ( scaleDraw != NULL ){
+		QwtText tickText = scaleDraw->label( value );
+		numberStr = tickText.text();
+	}
+	return numberStr;
+}
 
 void ExternalAxisWidget::setAxisLabel( const QString& label ){
 	axisLabel = label;

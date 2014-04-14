@@ -57,7 +57,7 @@ namespace casa{
     // void store(String &fileName);
     void loadFromImage(String &fileName);
     void getIdealConvFunc(Array<Complex>& buf);
-    void ftAperture(TempImage<Complex>& uvgrid);
+    void ftAperture(TempImage<Complex>& uvgrid, Bool makeMueller=True);
     void ftAperture() {ftAperture(convFunc_p); pbRead_p=True;};
     void storePB(String& fileName);
 
@@ -98,6 +98,8 @@ namespace casa{
 		   Bool doSquint=False);
     void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
 		   Bool doSquint=True);
+    void makeFullJones(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint, 
+		       Int bandID, Double freqVal=-1.0);
     void skyMuller(ImageInterface<Complex>& skyJones);
     void skyMuller(Array<Complex>& skyJones, const IPosition& shape, const Int& inStokes);
 

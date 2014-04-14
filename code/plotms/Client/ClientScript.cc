@@ -50,9 +50,11 @@ bool ClientScript::isActionEnabled( PlotMSAction::Type /*type*/ ) const {
 }
 
 void ClientScript::plot() {
-	if ( currentPlots.size() == 0 ){
-		initializeCurrentPlot();
+	if ( currentPlots.size() > 0 ){
+		//initializeCurrentPlot();
+		currentPlots.clear();
 	}
+	initializeCurrentPlot();
 
 	if ( currentPlots.size() > 0 ){
 		//This is present because it forces a hidden widget to update.
@@ -61,6 +63,8 @@ void ClientScript::plot() {
 		itsPlotter_->updateScriptGui();
 	}
 }
+
+
 
 void ClientScript::initializeCurrentPlot() {
 	if ( currentPlots.size() == 0){

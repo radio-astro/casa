@@ -49,6 +49,8 @@
 #include <synthesis/MeasurementComponents/UVMod.h>
 #include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -1305,6 +1307,114 @@ Bool Calibrater::corrupt() {
   return retval;
 }
 
+
+Bool Calibrater::initWeights() {
+
+  logSink() << LogOrigin("Calibrater","initWeights2") << LogIO::NORMAL;
+  Bool retval = true;
+
+  cout << "THIS IS USING VI2/VB2!!" << endl;
+
+  try {
+
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for initWeights!"));
+
+    // Log that we are beginning...
+
+    // Arrange for iteration over data
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    vi::SortColumns sc(columns);
+    vi::VisibilityIterator2 vi2(*ms_p,sc,True);
+    vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+    ROMSColumns mscol(*ms_p);
+    const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
+    uInt nSpw=msspw.nrow();
+    Vector<Double> effChBw(nSpw,0.0);
+    for (uInt ispw=0;ispw<nSpw;++ispw) {
+      effChBw[ispw]=mean(msspw.effectiveBW()(ispw));
+    }
+
+    Int ivb(0);
+    for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
+
+      for (vi2.origin(); vi2.more(); vi2.next()) {
+
+       Int spw = vb->spectralWindows()(0);
+
+       Int nrow=vb->nRows();
+       Int nchan=vb->nChannels();
+       Int ncor=vb->nCorrelations();
+
+       // Detect ACs
+       const Vector<Int> a1(vb->antenna1());
+       const Vector<Int> a2(vb->antenna2());
+       Vector<Bool> ac(a1==a2);
+
+       // XCs need an extra factor of 2
+       Vector<Float> xcfactor(nrow,2.0);
+       xcfactor(ac)=1.0;   // (but not ACs)
+
+       // The row-wise integration time
+       Vector<Float> expo(nrow);
+       convertArray(expo,vb->exposure());
+
+       Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
+       newsig.set(1.0);
+
+       // Set weights to channel bandwidth first.
+       newwt.set(Float(effChBw(spw)));
+
+       // For each correlation, apply exposure and xcfactor
+       for (Int icor=0;icor<ncor;++icor) {
+         Vector<Float> wt(newwt.row(icor));
+         wt*=expo;
+	 wt*=xcfactor;
+       }
+
+       // sig from wt is inverse sqrt
+       newsig=newsig/sqrt(newwt);
+
+       /*
+       cout << ivb << " "
+            << ncor << " " << nchan << " " << nrow << " "
+            << expo(0) << " "
+            << newwt(0,0) << " "
+            << newsig(0,0) << " "
+            << endl;
+       */
+       ++ivb;
+
+       vb->setWeight(newwt);
+       vb->setSigma(newsig);
+       vb->writeChangesBack();
+
+      }
+    }
+  }
+  catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+             << LogIO::POST;
+
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
+    unsetapply();
+
+    throw(AipsError("Error in Calibrater::initWeights."));
+    retval = False;  // Not that it ever gets here...
+  }
+  return retval;
+}
+
+
 Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
 				     const String& origin)
 {
@@ -1721,6 +1831,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Bool& append,
                            const Float& inGainThres,
                            const String& antSel,
+                           const String& timerangeSel,
+                           const String& scanSel,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   Vector<Int>& tranidx,
 			   const String& oListFile,
@@ -1745,8 +1857,8 @@ void Calibrater::fluxscale(const String& infile,
     tranidx=getFieldIdx(tranFields);
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,oFluxScaleFactor,
-    oListFile,incremental,fitorder,display);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,timerangeSel,
+      scanSel,oFluxScaleFactor,oListFile,incremental,fitorder,display);
 
 }
 
@@ -1758,6 +1870,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Bool& append,
                            const Float& inGainThres,
                            const String& antSel,
+                           const String& timerangeSel,
+                           const String& scanSel,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   const String& oListFile,
                            const Bool& incremental,
@@ -1830,8 +1944,8 @@ void Calibrater::fluxscale(const String& infile,
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
       //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
-      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,oFluxScaleFactor,
-        oListFile,incremental,fitorder,display);
+      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,
+        timerangeSel,scanSel,oFluxScaleFactor, oListFile,incremental,fitorder,display);
 //        oListFile);
      
       // If no outfile specified, use infile (overwrite!)
@@ -2112,6 +2226,8 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TOPAC",*vs_p);
     else if (utype.contains("GC") || utype.contains("EFF"))
       cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
+    else if (utype.contains("ZTEC"))
+      cal_ = createSolvableVisCal("ZTEC",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 

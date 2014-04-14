@@ -68,49 +68,67 @@ bool ActionExport::loadParameters(){
 bool ActionExport::exportText( PlotMSApp* plotms ){
 	Record rec;
 	CountedPtr<PlotMSAction> action = ActionFactory::getAction( SEL_INFO, client );
-	//PlotMSAction action(PlotMSAction::SEL_INFO);
 	bool ok = action->doActionWithResponse(plotms, rec);
 	if(rec.nfields() < 1) return ok;
+
 	// Write record data to file
 	ofstream csv_file;
 	csv_file.open(format.location.c_str());
-	String xunit = rec.subRecord(0).asString("xaxis");
-	String yunit = rec.subRecord(0).asString("yaxis");
+	Record firstRecord = rec.subRecord(0);
+	String xunit = "";
+	String yunit = "";
+	const String X_AXIS_UNITS = "xaxis";
+	const String Y_AXIS_UNITS = "yaxis";
+	if ( firstRecord.isDefined( X_AXIS_UNITS )){
+		xunit = firstRecord.asString(X_AXIS_UNITS);
+	}
+	if ( firstRecord.isDefined( Y_AXIS_UNITS)){
+		yunit = rec.subRecord(0).asString(Y_AXIS_UNITS);
+	}
 	csv_file << "# x y chan scan field ant1 ant2 ant1name "
 			<< "ant2name time freq spw corr offset currchunk irel"
 			<< endl;
-	csv_file << "# " << xunit << " " << yunit
+	if ( xunit.length() > 0 || yunit.length() > 0 ){
+		csv_file << "# " << xunit << " " << yunit
 			<< " None None None None None None None "
 			<< "MJD(seconds) GHz None None None None None"
 			<< endl;
-	for(uInt n = 0; n < rec.nfields(); ++n) {
-		Record r = rec.subRecord(n);
+	}
+
+	for(uInt n = 0; n < firstRecord.nfields(); ++n) {
+		Record r = firstRecord.subRecord(n);
 		csv_file << "# From plot " << n << endl;
-		r.removeField("xaxis");
-		r.removeField("yaxis");
+		if ( r.isDefined( X_AXIS_UNITS ) ){
+			r.removeField( X_AXIS_UNITS );
+		}
+		if  ( r.isDefined( Y_AXIS_UNITS ) ){
+			r.removeField( Y_AXIS_UNITS );
+		}
+
 		for(uInt _field = 0; _field < r.nfields(); ++_field) {
 			ostringstream fs;
 			fs << _field;
 			String field_str = fs.str();
-			Double x = r.subRecord(field_str).asDouble("x");
-			Double y = r.subRecord(field_str).asDouble("y");
-			Int chan = r.subRecord(field_str).asInt("chan");
-			Int scan = r.subRecord(field_str).asInt("scan");
-			Int field = r.subRecord(field_str).asInt("field");
-			Int ant1 = r.subRecord(field_str).asInt("ant1");
-			Int ant2 = r.subRecord(field_str).asInt("ant2");
-			String ant1name =
-					r.subRecord(field_str).asString("ant1name");
-			String ant2name =
-					r.subRecord(field_str).asString("ant2name");
+			Record fieldRecord = r.subRecord( field_str );
+			Double x = fieldRecord.asDouble("x");
+			Double y = fieldRecord.asDouble("y");
+			Int chan = fieldRecord.asInt("chan");
+			Int scan = fieldRecord.asInt("scan");
+			Int field = fieldRecord.asInt("field");
+			Int ant1 = fieldRecord.asInt("ant1");
+			Int ant2 = fieldRecord.asInt("ant2");
+			String ant1name =fieldRecord.asString("ant1name");
+			String ant2name =fieldRecord.asString("ant2name");
+
 			//String time = r.subRecord(field_str).asString("time");
-			Double time = r.subRecord(field_str).asDouble("time");
-			Int spw = r.subRecord(field_str).asInt("spw");
-			Double freq = r.subRecord(field_str).asDouble("freq");
-			String corr = r.subRecord(field_str).asString("corr");
-			Int offset = r.subRecord(field_str).asInt("offset");
-			Int currchunk = r.subRecord(field_str).asInt("currchunk");
-			Int irel = r.subRecord(field_str).asInt("irel");
+			Double time = fieldRecord.asDouble("time");
+			Int spw = fieldRecord.asInt("spw");
+			Double freq = fieldRecord.asDouble("freq");
+			String corr = fieldRecord.asString("corr");
+			Int offset = fieldRecord.asInt("offset");
+			Int currchunk = fieldRecord.asInt("currchunk");
+			Int irel = fieldRecord.asInt("irel");
+
 			int precision = csv_file.precision();
 			if(xunit == "Time") {
 				csv_file << std::setprecision(3) << std::fixed
@@ -125,6 +143,7 @@ bool ActionExport::exportText( PlotMSApp* plotms ){
 			} else {
 				csv_file << x << " ";
 			}
+
 			if(yunit == "Time") {
 				csv_file << std::setprecision(3) << std::fixed
 						<< y << " ";
@@ -149,6 +168,7 @@ bool ActionExport::exportText( PlotMSApp* plotms ){
 			csv_file.precision(precision);
 			csv_file << spw << " " << corr << " " << offset << " "
 					<< currchunk << " " << irel << endl;
+
 		}
 	}
 	csv_file.close();

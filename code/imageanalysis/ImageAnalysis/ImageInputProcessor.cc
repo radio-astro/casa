@@ -51,9 +51,9 @@ ImageInputProcessor::~ImageInputProcessor() {
 
 uInt ImageInputProcessor::nSelectedChannels() const {
 	if (! _processHasRun) {
-	    *_log << LogOrigin("ImageInputProcessor", __FUNCTION__);
+	    *_log << LogOrigin("ImageInputProcessor", __func__);
 		*_log << "Programming logic error, ImageInputProcessor::process() must be called "
-			<< "before ImageInputProcessor::" << __FUNCTION__ << "()" << LogIO::EXCEPTION;
+			<< "before ImageInputProcessor::" << __func__ << "()" << LogIO::EXCEPTION;
 	}
 	return _nSelectedChannels;
 }

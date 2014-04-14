@@ -1942,8 +1942,10 @@ void fillField(ASDM* ds_p, bool considerEphemeris) {
  * given :
  * @parameter ds_p a pointer to the ASDM dataset.
  */
-void fillSpectralWindow(ASDM* ds_p) {
+void fillSpectralWindow(ASDM* ds_p, map<unsigned int, double>& effectiveBwPerSpwId_m) {
   LOGENTER("fillSpectralWindow");
+
+  effectiveBwPerSpwId_m.clear();
 
   try {
     SpectralWindowTable& spwT = ds_p->getSpectralWindow();      
@@ -2079,6 +2081,8 @@ void fillSpectralWindow(ASDM* ds_p) {
       }
       //effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
       effectiveBw1D = DConverter::toVectorD<Frequency>(effectiveBwArray);
+
+      effectiveBwPerSpwId_m[r->getSpectralWindowId().getTagValue()] = effectiveBw1D.at(0);
       
       
       /* Processing the resolutionXXX
@@ -2304,7 +2308,7 @@ bool checkForConstantNPolNChan(ASDM* ds_p) {
   SpectralWindowTable&	spwT = ds_p->getSpectralWindow();
   PolarizationTable&	polT = ds_p->getPolarization();
 
-  bool result = true;
+  //bool result = true;
   BOOST_FOREACH (ConfigDescriptionRow* cfgR_p , cfgR_v) {
     vector <Tag> ddId_v = cfgR_p->getDataDescriptionId();
 
@@ -2328,6 +2332,23 @@ bool checkForConstantNPolNChan(ASDM* ds_p) {
     }
   }
   return true;
+}
+
+template<typename T>
+void v2oss(std::vector<T> v,
+	   ostringstream& oss,
+	   const std::string& oChar,
+	   const std::string& cChar,
+	   const std::string& sepChar) {
+  oss << oChar;
+  if (v.size() > 0) {
+    oss << v[0];
+    if (v.size() > 1) {
+      for (unsigned int i = 1; i < v.size(); i++) 
+	oss << sepChar << v[i];
+    }
+  }
+  oss << cChar;
 }
 
 void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   selected_eb_scan_m, const casa::MeasurementSet*  tab_p) {
@@ -2440,19 +2461,27 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	oss.str("");
 	oss << "There are " << numberOfSpectralWindows << " spectral windows." << endl;
 	LOG(oss.str());
-      }
-
-      unsigned numberOfChannels = dataStruct.basebands()[0].spectralWindows()[0].numSpectralPoint();
-      if (debug) {
 	oss.str("");
-	oss << "There are " << numberOfChannels << " channels" << endl;
+	oss << "There are " << dataDescriptionIds.size() << " data descriptions." << endl;
 	LOG(oss.str());
       }
 
-      unsigned int numberOfPolarizations = dataStruct.basebands()[0].spectralWindows()[0].sdPolProducts().size();
+      vector<unsigned int> numberOfChannels_v;
+      vector<unsigned int> numberOfPolarizations_v;
+      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
+	BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+	  numberOfChannels_v.push_back(spw.numSpectralPoint());
+	  numberOfPolarizations_v.push_back(spw.sdPolProducts().size());
+	}
+      }
       if (debug) {
 	oss.str("");
-	oss << "There are " << numberOfPolarizations << " polarizations" << endl;
+	oss << "numbers of Channels : " ;
+	v2oss(numberOfChannels_v, oss, "{", "}", ", "); 
+	LOG(oss.str());
+	oss.str("");
+	oss << "numbers of Polarizations : ";
+	v2oss(numberOfPolarizations_v, oss, "{", "}", ", "); 
 	LOG(oss.str());
       }
 
@@ -2467,18 +2496,53 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	    crossScaleFactors.push_back(spw.scaleFactor());
 	  }
 	}
+	if (debug) {
+	  oss.str("");
+	  oss << "crossScaleFactors : " ;
+	  v2oss(crossScaleFactors, oss, "{", "}", ", "); 
+	  LOG(oss.str());
+	}
       }
       
+
       // The auto data scale factors are fake.
       if (correlationMode != CROSS_ONLY) {
 	for (unsigned int i = 0; i < numberOfSpectralWindows; i++)
 	  autoScaleFactors.push_back(1.0);
+	if (debug) {
+	  oss.str("");
+	  oss << "autoScaleFactors : " ;
+	  v2oss(autoScaleFactors, oss, "{", "}", ", "); 
+	  LOG(oss.str());
+	}
       }
             
+      // 
+      // The number of values between to consecutive baselines, stepBl, is :
       //
-      // Prepare a pair<int, int> to transport the shape of some cells
+      unsigned int stepBl = 0;
+      for (unsigned int i = 0; i < numberOfSpectralWindows; i++)
+	stepBl += numberOfChannels_v[i]*numberOfPolarizations_v[i];
+
+      if (debug) {
+	oss.str("");
+	oss << "stepBl : " << stepBl;
+	LOG(oss.str());
+      }
+
       //
-      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels, numberOfPolarizations);
+      // The offsets to the beginning of the i-th spectral window, spwOffset_v, is:
+      std::vector<uint32_t> spwOffset_v(numberOfSpectralWindows);
+      spwOffset_v[0] = 0;
+      for (uint32_t i = 1; i < numberOfSpectralWindows; i++)
+	spwOffset_v[i] = spwOffset_v[i-1] + numberOfChannels_v[i-1] * numberOfPolarizations_v[i-1];
+
+      if (debug) {
+	oss.str("");
+	oss << "spwOffset_v : " ;
+	v2oss(spwOffset_v, oss, "{", "}", ", "); 
+	LOG(oss.str());
+      }
 
       //
       // Now delegate to bdf2AsdmStManIndex the creation of the AsmdIndex 'es.
@@ -2511,6 +2575,11 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	
 	int k = 0;
 	for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
+	  //
+	  // Prepare a pair<int, int> to transport the shape of some cells
+	  //
+	  pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
+							numberOfPolarizations_v[iDD]);
 	  for (unsigned int itime = 0; itime < sdosr.numTime(); itime++) {
 	    for (unsigned int iA = 0; iA < antennaIds.size(); iA++) {
 	      antenna1_vv[iDD].push_back(antennaIds[iA].getTagValue());
@@ -2531,12 +2600,14 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					      bdfNames[iRow],
 					      numberOfAntennas,
 					      numberOfSpectralWindows,
-					      numberOfChannels,
-					      numberOfPolarizations,
-					      numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
-					      numberOfChannels * numberOfPolarizations,
+					      numberOfChannels_v[iDD],
+					      numberOfPolarizations_v[iDD],
+					      stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
+					      iDD, // this will be used as an index in the seq of windows in the BDFs
 					      autoScaleFactors,
-					      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * numberOfSpectralWindows * numberOfChannels * numberOfPolarizations * sizeof(AUTODATATYPE));
+					      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * stepBl * sizeof(AUTODATATYPE),
+					      spwOffset_v[iDD]);
+	    //	      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * numberOfSpectralWindows * numberOfChannels * numberOfPolarizations * sizeof(AUTODATATYPE));
 	  }
 	}
 
@@ -2642,6 +2713,13 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	    for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
 	      unsigned int uvwIndex = uvwIndexBase + iDD;
 	      unsigned int ddIndex = dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()];
+
+	      //
+	      // Prepare a pair<int, int> to transport the shape of some cells
+	      //
+	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
+							    numberOfPolarizations_v[iDD]);
+
 	      for (unsigned int iA2 = 1; iA2 < antennaIds.size(); iA2++)
 		for (unsigned int iA1 = 0; iA1 < iA2; iA1++) {
 		  cross_antenna1_vv[iDD].push_back(antennaIds[iA1].getTagValue());
@@ -2666,12 +2744,13 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 						  bdfNames[iRow],
 						  numberOfBaselines,
 						  numberOfSpectralWindows,
-						  numberOfChannels,
-						  numberOfPolarizations,
-						  numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
-						  numberOfChannels * numberOfPolarizations,
+						  numberOfChannels_v[iDD],
+						  numberOfPolarizations_v[iDD],
+						  stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
+						  iDD, // this will be used as an index in the seq of windows in the BDFs
 						  crossScaleFactors,
 						  sdmDataSubset.crossDataPosition(),
+						  spwOffset_v[iDD],
 						  sdmDataSubset.crossDataType());
 	    }
 	  }
@@ -2681,6 +2760,13 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	  //
 	  if (correlationMode == CROSS_AND_AUTO || correlationMode == AUTO_ONLY) {
 	    for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
+
+	      //
+	      // Prepare a pair<int, int> to transport the shape of some cells
+	      //
+	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
+							    numberOfPolarizations_v[iDD]);
+
 	      unsigned int ddIndex = dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()];
 	      for (unsigned int iA = 0; iA < antennaIds.size(); iA++) {
 		auto_antenna1_vv[iDD].push_back(antennaIds[iA].getTagValue());
@@ -2702,12 +2788,13 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 						 bdfNames[iRow],
 						 numberOfAntennas,
 						 numberOfSpectralWindows,
-						 numberOfChannels,
-						 numberOfPolarizations,
-						 numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
-						 numberOfChannels * numberOfPolarizations,
+						 numberOfChannels_v[iDD],
+						 numberOfPolarizations_v[iDD],
+						 stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
+						 iDD,
 						 autoScaleFactors,
-						 sdmDataSubset.autoDataPosition());
+						 sdmDataSubset.autoDataPosition(),
+						 spwOffset_v[iDD]);
 	    }	      
 	  }
 	}
@@ -2802,6 +2889,7 @@ void fillMain(int		rowNum,
 	      SDMBinData&	sdmBinData,
 	      const VMSData*	vmsData_p,
 	      UvwCoords&	uvwCoords,
+	      std::map<unsigned int, double>& effectiveBwPerDD_m,
 	      bool		complexData,
 	      bool              mute) {
   
@@ -2853,6 +2941,23 @@ void fillMain(int		rowNum,
     uvw[k++] = vv_uvw[iUvw](1);
     uvw[k++] = vv_uvw[iUvw](2);
   } 
+
+  vector<double> weight(vmsData_p->v_time.size());
+  vector<double> correctedWeight(vmsData_p->v_time.size());
+
+  vector<double> sigma(vmsData_p->v_time.size());
+  vector<double> correctedSigma(vmsData_p->v_time.size());
+  for (unsigned int i = 0; i < weight.size(); i++) {
+    weight[i] = vmsData_p->v_exposure.at(i) * effectiveBwPerDD_m[filteredDD[i]];
+    if (vmsData_p->v_antennaId1[i] != vmsData_p->v_antennaId2[i])
+      weight[i] *= 2.0;
+    correctedWeight[i] = weight[i];
+    
+    if (weight[i] == 0.0) weight[i] = 1.0;
+    sigma[i] = 1.0 / sqrt(weight[i]);
+
+    correctedSigma[i] = sigma[i]; 
+  }
 
   // Here we make the assumption that the State is the same for all the antennas and let's use the first State found in the vector stateId contained in the ASDM Main Row
   // int asdmStateIdx = r_p->getStateId().at(0).getTagValue();  
@@ -2987,7 +3092,9 @@ void fillMain(int		rowNum,
 					 uvw,
 					 filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
 					 uncorrectedData,
-					 (vector<unsigned int>&)vmsData_p->v_flag);
+					 (vector<unsigned int>&)vmsData_p->v_flag,
+					 weight,
+					 sigma);
     }
   }
 
@@ -3012,7 +3119,9 @@ void fillMain(int		rowNum,
 				       correctedUvw,
 				       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
 				       correctedData,
-				       correctedFlag);
+				       correctedFlag,
+				       correctedWeight,
+				       correctedSigma);
     }
   }
   if (debug) cout << "fillMain : exiting" << endl;
@@ -3070,6 +3179,7 @@ void calcUVW(MainRow* r_p,
  * !!!!! One must be carefull to the fact that fillState must have been called before fillMain. During the execution of fillState , the global vector<int> msStateID
  * is filled and will be used by fillMain.
  */ 
+#if 0
 void fillMain_mt(MainRow*	r_p,
 		 const VMSData* vmsData_p,
 		 casa::Double*&   puvw,
@@ -3291,6 +3401,7 @@ void fillMain_mt(MainRow*	r_p,
   }
   if (debug) cout << "fillMain_mt : exiting" << endl;
 }
+#endif
 
 void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
   LOGENTER("fillSysPower_aux");
@@ -3573,6 +3684,7 @@ void MSMainRowsInSubscanChecker::check( const VMSData* vmsData_p,
 const vector<string>& MSMainRowsInSubscanChecker::report() const {
   return report_v;
 }
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -3932,19 +4044,19 @@ int main(int argc, char *argv[]) {
   infostream.str("");
   infostream << "Time spent parsing the ASDM medata : " << cpu_time_parse_xml << " s.";
   info(infostream.str());
-
+  
   //
   // Let's verify immediately that if the lazy option has been set we have constant numPol x numCorr
   // on each Configuration Description.
   //
   if (lazy && !checkForConstantNPolNChan(ds)) {
-    infostream.str("");
-    infostream << "NOTE: This ASDM cannot be imported in 'lazy' mode because it has a varying number of polarizations and/or channels in some configuration description(s)."
-	       << endl << "      *** Will switch to non-lazy import. ***" << endl;
-    warning(infostream.str());
-    lazy = false;
+    //infostream.str("");
+    //infostream << "NOTE: This ASDM cannot be imported in 'lazy' mode because it has a varying number of polarizations and/or channels in some configuration description(s)."
+    //	       << endl << "      *** Will switch to non-lazy import. ***" << endl;
+    //warning(infostream.str());
+    //lazy = false;
   }
-
+  
   //
   // What are the apc literals present in the binary data.
   //
@@ -3961,10 +4073,10 @@ int main(int argc, char *argv[]) {
 
   // Define the SDM Main table subset of rows to be accepted
   sdmBinData.select( es_cm, es_srt, es_ts);   
-
+  
   // Define the subset of data to be extracted from the BLOBs
   sdmBinData.selectDataSubset(e_query_cm, es_query_apc);
-
+  
   //
   // Selection of the scans to consider.
   //
@@ -3972,17 +4084,17 @@ int main(int argc, char *argv[]) {
   map<int, set<int> > all_eb_scan_m;
   for (vector<ScanRow *>::size_type i = 0; i < scanRow_v.size(); i++)
     all_eb_scan_m[scanRow_v[i]->getExecBlockId().getTagValue()].insert(scanRow_v[i]->getScanNumber());
-
+  
   vector<ScanRow *>	selectedScanRow_v;
   map<int, set<int> >   selected_eb_scan_m;
-
+  
   string scansOptionInfo;
   if (vm.count("scans")) {
     string scansOptionValue = vm["scans"].as< string >();
     eb_scan_selection ebs;
-
+    
     int status = parse(scansOptionValue.c_str(), ebs, space_p).full;
-
+    
     if (status == 0) {
       errstream.str("");
       errstream << "'" << scansOptionValue << "' is an invalid scans selection." << endl;
@@ -4391,7 +4503,8 @@ int main(int argc, char *argv[]) {
   //
   // Process the SpectralWindow table.
   //
-  fillSpectralWindow(ds);
+  map<unsigned int, double> effectiveBwPerSpwId_m;
+  fillSpectralWindow(ds, effectiveBwPerSpwId_m);
 
   //
   // Process the Polarization table
@@ -4504,6 +4617,8 @@ int main(int argc, char *argv[]) {
   //
   // Process the DataDescription table.
   //
+
+  std::map<unsigned int, double> effectiveBwPerDD_m;
   try {
     DataDescriptionTable& ddT = ds->getDataDescription();
     DataDescriptionRow* r = 0;
@@ -4525,6 +4640,8 @@ int main(int argc, char *argv[]) {
 						       polarizationIdx2Idx.at(r->getPolOrHoloId().getTagValue()));
       }
       dataDescriptionIdx2Idx.push_back(ddIdx); 
+
+      effectiveBwPerDD_m[ddIdx] = effectiveBwPerSpwId_m[r->getSpectralWindowId().getTagValue()];
     }
     if (nDataDescription) {
       infostream.str("");
@@ -5851,7 +5968,14 @@ int main(int argc, char *argv[]) {
             // }
           }//end of doparallel
           else {
-	    fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	    fillMain(i,
+		     v[i],
+		     sdmBinData,
+		     vmsDataPtr,
+		     uvwCoords,
+		     effectiveBwPerDD_m,
+		     complexData,
+		     mute);
           }
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << mainRowIndex[i] << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
@@ -5899,7 +6023,7 @@ int main(int argc, char *argv[]) {
 	      // }//end of doparallel
             }
             else {
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData,  mute);
             }
 
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
@@ -5929,7 +6053,7 @@ int main(int argc, char *argv[]) {
               // }
             }//end of doparallel
             else {
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, complexData, mute);
+	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData, mute);
             }
 	    infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	    info(infostream.str());

@@ -117,6 +117,7 @@ namespace casa {
 		void drawFrameMarker( QPainter* );
 		QString getUnits( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
 		QList<MolecularLine*> getMolecularLines() const;
+		void setGaussianEstimateCount( int count );
 
 		//Plotting curves
 		void plotPolyLines(QString);
@@ -539,6 +540,10 @@ namespace casa {
 		TaskMode taskMode;
 
 		float channelSelectValue;
+
+		//Needed to determine if we show the gauss estimate context
+		//items.
+		int gaussEstimateCount;
 
 		Annotation* selectedAnnotation;
 		vector<Annotation*> annotations;

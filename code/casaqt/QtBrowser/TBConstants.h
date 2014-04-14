@@ -57,28 +57,29 @@ namespace casa {
 //# Forward Declarations
 class TBTableTabs;
 
+ namespace tb {
+    // Enum listing the possible types of comparisons that can be made in, for
+    // example, a filter rule.
+    enum Comparator {
+        EQUALS, CONTAINS, BETWEEN, CONTAINSBT, LESSTHAN, CONTAINSLT, GREATERTHAN,
+        CONTAINSGT
+    };
 
-// Enum listing the possible types of comparisons that can be made in, for
-// example, a filter rule.
-enum Comparator {
-    EQUALS, CONTAINS, BETWEEN, CONTAINSBT, LESSTHAN, CONTAINSLT, GREATERTHAN,
-    CONTAINSGT
-};
+    // Enum listing the format for boolean values: "true/false", "t/f", "1/0", etc.
+    enum BooleanFormat {
+        DEFAULT, TRUEFALSE, TF, B10
+    };
 
-// Enum listing the format for boolean values: "true/false", "t/f", "1/0", etc.
-enum BooleanFormat {
-    DEFAULT, TRUEFALSE, TF, B10
-};
+    // Enum to indicate the different driver types.
+    enum Driver {
+        DIRECT//, XML
+    };
 
-// Enum to indicate the different driver types.
-enum Driver {
-    DIRECT//, XML
-};
-
-// Enum to indicate the different parsers available for XML drivers.
-enum Parser {
-    HOME, XERCES_DOM, XERCES_SAX
-};
+    // Enum to indicate the different parsers available for XML drivers.
+    enum Parser {
+        HOME, XERCES_DOM, XERCES_SAX
+    };
+ }
 
 
 // <summary>
@@ -189,16 +190,16 @@ public:
     // </group>
 
     // Returns the display value of the given Comparator.
-    static String compToString(Comparator c);
+    static String compToString(tb::Comparator c);
 
     // Returns the Comparator corresponding to the given display value.
-    static Comparator stringToComp(String str);
+    static tb::Comparator stringToComp(String str);
 
     // Returns the display value of the given BooleanFormat.
-    static String bFormToString(BooleanFormat bf);
+    static String bFormToString(tb::BooleanFormat bf);
 
     // Returns the BooleanFormat corresponding to the given display value.
-    static BooleanFormat stringToBForm(String str);
+    static tb::BooleanFormat stringToBForm(String str);
 
     // Constants used for an array slicer.  See TBSlicer.
     // <group>

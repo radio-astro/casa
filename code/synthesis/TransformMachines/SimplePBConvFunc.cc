@@ -157,7 +157,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   void SimplePBConvFunc::toPix(const VisBuffer& vb){
     thePix_p.resize(2);
 
-    if(dc_p.directionType() !=  MDirection::castType(vb.direction1()(0).getRef().getType())){
+    const MDirection& p1=pointingDirAnt1(vb);
+    if(dc_p.directionType() !=  MDirection::castType(p1.getRef().getType())){
       //pointToPix_p.setModel(theDir);
 
     	String tel= csys_p.obsInfo().telescope();
@@ -183,15 +184,18 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       //////////////////////////
       //pointToPix holds pointFrame_p by reference...
       //thus good to go for conversion
-      direction1_p=pointToPix_p(vb.direction1()(0));
-      direction2_p=pointToPix_p(vb.direction2()(0));
+      direction1_p=pointToPix_p(p1);
+      //direction2_p=pointToPix_p(vb.direction2()(0));
+      direction2_p=direction1_p;
       dc_p.toPixel(thePix_p, direction1_p);
 
     }
     else{
-      direction1_p=vb.direction1()(0);
-      direction2_p=vb.direction2()(0);
-      dc_p.toPixel(thePix_p, vb.direction1()(0));
+      direction1_p=p1;
+      //direction2_p=vb.direction2()(0);
+      //For now 
+      direction2_p=direction1_p;
+      dc_p.toPixel(thePix_p, direction1_p);
     }
   }
 
@@ -220,6 +224,28 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	  Int val=vbConvIndex_p.size();
 	  vbConvIndex_p[elkey]=val;
 	  return val;
+  }
+
+  const MDirection& SimplePBConvFunc::pointingDirAnt1(const VisBuffer& vb){
+    std::ostringstream oss;
+    oss << vb.msId() << "_" << vb.antenna1()(0) << "_";
+    oss.precision(13);
+    oss << vb.time()(0);
+    String elkey=oss.str();
+    //  String elkey=String::toString(vb.msId())+String("_")+String::toString(vb.antenna1()(0))+String("_")
+    //									  +String::toString(vb.time()(0));
+
+    //cerr << "key " << elkey << " count " << ant1PointVal_p.count(elkey)  << " size " << ant1PointVal_p.size() << "  " << ant1PointingCache_p.nelements() << endl;
+    if(ant1PointVal_p.count(elkey) > 0){
+      return ant1PointingCache_p[ant1PointVal_p[elkey]];
+
+    }
+    Int val=ant1PointingCache_p.nelements();
+    ant1PointingCache_p.resize(val+1, True);
+    ant1PointingCache_p[val]=vb.firstDirection1();
+    ant1PointVal_p[elkey]=val;
+    return ant1PointingCache_p[val];
+
   }
 void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					const VisBuffer& vb,
@@ -285,11 +311,11 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //convSize_p=4*(sj_p->support(vb, coords));
       convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSamp;
       // Make this a nice composite number, to speed up FFTs
-      cerr << "convSize_p 0 " <<  convSize_p << " convSamp " << convSamp<< endl;
+      //cerr << "convSize_p 0 " <<  convSize_p << " convSamp " << convSamp<< endl;
       CompositeNumber cn(uInt(convSize_p*2.0));  
      
       convSize_p  = cn.nextLargerEven(Int(convSize_p));
-      cerr << "convSize : " << convSize_p << endl;
+      //cerr << "convSize : " << convSize_p << endl;
 
     }
     
@@ -437,8 +463,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       {
 	SubImage<Complex> subtwoDPB(twoDPB, outsl, True);
 	SubImage<Complex> intwoDPB(subim, insl, False);
-	cerr << "inImage shape " << subim.shape() << " outIm " << intwoDPB.shape() 
-	  << endl;
+	//cerr << "inImage shape " << subim.shape() << " outIm " << intwoDPB.shape() 
+	//  << endl;
 	subtwoDPB.copyData(intwoDPB);
       }
       {
@@ -462,7 +488,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	   
 	for (Int kk=0; kk < nBeamChans; ++kk){
 	  Double fratio=beamFreqs(kk)/beamFreqs(nBeamChans-1);
-	  cerr << "fratio " << fratio << endl;
+	  //cerr << "fratio " << fratio << endl;
 	  Float convRatio=convSamp/convSampling;
 	  blcin[3]=kk;
 	  trcin[3]=kk;
@@ -591,7 +617,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	thisScreen.copyData(le);
       }
       */
-      cerr << "twoDPB shape " << twoDPB.shape() << " slice shape " << IPosition(4, tempConvSize, tempConvSize, 1, 1) << endl;
+      //cerr << "twoDPB shape " << twoDPB.shape() << " slice shape " << IPosition(4, tempConvSize, tempConvSize, 1, 1) << endl;
       convFunc_p=twoDPB.getSlice(IPosition(4,0,0,0,0), IPosition(4, tempConvSize, tempConvSize, 1, 1), True);
       
       //convFunc/=max(abs(convFunc));
@@ -685,8 +711,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       IPosition trc(4, (tempConvSize/2)+(newConvSize/2-1),
 		      (tempConvSize/2)+(newConvSize/2-1), 0, nBeamChans-1);
       convFunctions_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
-      cerr << "convFunc shape " << (convFunctions_p[actualConvIndex_p])->shape() << 
-	"  " << " twoDPB shape " <<twoDPB.get(False)(blc,trc).shape() << endl;
+      //cerr << "convFunc shape " << (convFunctions_p[actualConvIndex_p])->shape() << 
+      //"  " << " twoDPB shape " <<twoDPB.get(False)(blc,trc).shape() << endl;
       convFunctions_p[actualConvIndex_p]->copyMatchingPart(twoDPB.get(False)(blc,trc)*Complex(1.0/pbSum,0.0));
       convSize_p=newConvSize;
       convWeights_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
@@ -783,8 +809,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       if(activechan != nchan)
 	chanMap[k]=activechan;
       //////////////////
-      if(chanMap[k] < 0)
-	cerr << "freq diffs " << freq[k]-chanFreqs << "  TOL " << tol/2.0 << endl;
+      //if(chanMap[k] < 0)
+      //cerr << "freq diffs " << freq[k]-chanFreqs << "  TOL " << tol/2.0 << endl;
 
       ///////////////////////////
       activechan=0;
@@ -949,6 +975,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	 rec.get(String("key")+String::toString(k), key);
 	 rec.get(String("val")+String::toString(k), val);
 	 vbConvIndex_p[key]=val;
+	 ant1PointVal_p.clear();
+	 ant1PointingCache_p.resize();
 	 //convFunctionMap_p.define(key,val);
        }
        pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));

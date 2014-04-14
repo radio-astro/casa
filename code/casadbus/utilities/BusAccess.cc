@@ -75,12 +75,12 @@ namespace casa {
 	address::address( const std::string &bus_address, bool unique ) {
 		if ( bus_address.size( ) == 0  ) {
 			if ( unique == false )
-				throw AipsError("no bus address supplied");
+				throw std::runtime_error("no bus address supplied");
 			else {
 				name_ = generate_name("dba");
 			}
 		} else {
-			name_ = generate_name(bus_address);
+			name_ = generate_name(bus_address,unique);
 		}
 	}
 
@@ -88,20 +88,28 @@ namespace casa {
 		name_ = generate_name("dba");
 	}
 
-	std::string address::generate_name( const std::string &base ) {
+	std::string address::generate_name( const std::string &base, bool unique ) {
         casa::DBusSession &session = casa::DBusSession::instance( );
 		std::string result;
 		const int suffix_length = 3;
 		char *buffer = new char[ strlen(CASA_PREFIX) + base.size( ) + suffix_length + 2 ];
-		while ( result.size( ) == 0 ) {
-            char *suffix = generate_proxy_suffix(suffix_length);
-            sprintf( buffer, "%s%s_%s", CASA_PREFIX, base.c_str( ), suffix );
-            try {
-                session.connection( ).request_name( buffer );
-                result = buffer;
-            } catch (...) { }
-			delete [] suffix;
-        }
+		if ( unique ) {
+			while ( result.size( ) == 0 ) {
+				char *suffix = generate_proxy_suffix(suffix_length);
+				sprintf( buffer, "%s%s_%s", CASA_PREFIX, base.c_str( ), suffix );
+				try {
+					session.connection( ).request_name( buffer );
+					result = buffer;
+				} catch (...) { }
+				delete [] suffix;
+			}
+		} else {
+			sprintf( buffer, "%s%s", CASA_PREFIX, base.c_str( ) );
+			try {
+				session.connection( ).request_name( buffer );
+				result = buffer;
+			} catch (...) { throw std::runtime_error("DBus address already in use..."); }
+		}
 		delete [] buffer;
 		return result;
 	}
@@ -149,7 +157,7 @@ namespace casa {
 	    arguments[count++] = strdup("--dbusname");
 	    char *dbus_name = generate_casa_proxy_name(unique_name, dbusname, default_name);
 	    arguments[count++] = strdup(dbus_name);
-	    arguments[count] = '\0';
+	    arguments[count] = 0;
 	    if ( ! fork( ) ) {
 		execvp( args.front( ).c_str( ), (char* const*) arguments );
 		perror( "launch<>(...) child process exec failed" );
@@ -192,7 +200,7 @@ namespace casa {
 				}
 			}
 			if ( objects.size( ) <= 0 ) {
-				throw AipsError("no " + name + "s available");
+				throw std::runtime_error("no " + name + "s available");
 			}
 			cache_time = current_time;
 			cache_input = name;

@@ -62,9 +62,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
-				       itsWeightLimit(0.1)
+				       itsWeightLimit(0.1),
+				       itsMapperType("default"),
+				       itsNTaylorTerms(1),
+                                       itsNFacets(1)
   {
-    
+    itsFacetImageStores.resize(0);
   }
   
   SynthesisParSync::~SynthesisParSync() 
@@ -98,6 +101,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{ itsWeightLimit = 0.1; }
 
+
+      // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
+      if( syncpars.isDefined("mtype") )  // A single string
+	{ itsMapperType = syncpars.asString( RecordFieldId("mtype")); }
+      else
+	{ itsMapperType = "default";}
+
+      if( syncpars.isDefined("ntaylorterms") )  // A single int
+	{ itsNTaylorTerms = syncpars.asuInt( RecordFieldId("ntaylorterms")); }
+      else
+	{ itsNTaylorTerms = 1;}
+
+      if( syncpars.isDefined("facets") )  // A single int
+	{ itsNFacets = syncpars.asuInt( RecordFieldId("facets")); }
+      else
+	{ itsNFacets = 1;}
+
+
       }
     catch(AipsError &x)
       {
@@ -107,25 +128,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of setupParSync
 
 
-  void SynthesisParSync::gatherImages(Bool dopsf, Bool doresidual)
+  void SynthesisParSync::gatherImages(Bool dopsf) //, Bool doresidual)
   {
+
+    //    cout << " partimagenames :" << itsPartImageNames << endl;
 
     Bool needToGatherImages = setupImagesOnDisk();
 
     if( needToGatherImages )
       {
 	LogIO os( LogOrigin("SynthesisParSync", "gatherImages",WHERE) );
-	
-	os << "Gather "<< (doresidual?"residual":"") << ( (dopsf&&doresidual)?",":"")  << (dopsf?"psf, weight":"") << " images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
-	
+
 	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
+	Bool doresidual = !dopsf;
+        Bool doweight = dopsf ; //|| ( doresidual && ! itsImages->hasSensitivity() );
+        //	Bool doweight = dopsf || ( doresidual && itsImages->getUseWeightImage(*(itsPartImages[0]->residual())) );
+	
+	os << "Gather "<< (doresidual?"residual":"") << ( (dopsf&&doresidual)?",":"")  
+	   << (dopsf?"psf":"") << ( (dopsf&&doweight)?",":"")  
+	   << (doweight?"weight":"")<< " images : " << itsPartImageNames 
+	   << " onto :" << itsImageName << LogIO::POST;
 	
 	// Add intelligence to modify all only the first time, but later, only residual;
-	itsImages->resetImages( /*psf*/dopsf, /*residual*/doresidual, /*weight*/dopsf ); 
+	itsImages->resetImages( /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight ); 
 	
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
-	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/dopsf );
+	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight );
 	  }
 
       }// end of image gathering.
@@ -137,8 +166,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SynthesisParSync::scatterModel()
   {
-
-    divideModelByWeight(); // This is currently a no-op
 
     LogIO os( LogOrigin("SynthesisParSync", "scatterModel",WHERE) );
 
@@ -160,27 +187,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisParSync::divideResidualByWeight()
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideResidualByWeight",WHERE) );
+    
+    //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
 
-    itsImages->divideResidualByWeight( itsWeightLimit );
-
+    if( itsNFacets==1) {
+      itsImages->divideResidualByWeight( itsWeightLimit );
+    }
+    else {
+      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
+        { itsFacetImageStores[facet]->divideResidualByWeight( itsWeightLimit ); }
+    }
+    
   }
-
+  
   void SynthesisParSync::dividePSFByWeight()
   {
     LogIO os( LogOrigin("SynthesisParSync", "dividePSFByWeight",WHERE) );
-
-    itsImages->dividePSFByWeight( itsWeightLimit );
+    
+    if( itsNFacets==1) {
+      itsImages->dividePSFByWeight();
+    }
+    else {
+      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
+        { itsFacetImageStores[facet]->dividePSFByWeight( ); }
+    }
+    //    itsImages->divideSensitivityPatternByWeight(); // no-op if already normalized, or if not needed.
 
   }
+
 
   void SynthesisParSync::divideModelByWeight()
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideModelByWeight",WHERE) );
+    if( itsImages.null() ) 
+      {
+	os << LogIO::WARN << "No imagestore yet. Do something to fix the starting model case...." << LogIO::POST;
+	return;
+      }
+    if( itsNFacets==1) {
+      itsImages->divideModelByWeight( itsWeightLimit );
+    }
+    else {
+      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
+        { itsFacetImageStores[facet]->divideModelByWeight( itsWeightLimit ); }
+    }
+ }
 
-    /// This is a no-op here.... Need a way to activate this only for A-Projection.
-    ///    itsImages->divideModelByWeight( itsWeightLimit );
-
-  }
+  void SynthesisParSync::multiplyModelByWeight()
+  {
+    //    LogIO os( LogOrigin("SynthesisParSync", "multiplyModelByWeight",WHERE) );
+    if( itsNFacets==1) {
+      itsImages->multiplyModelByWeight( itsWeightLimit );
+    }
+    else {
+      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
+        { itsFacetImageStores[facet]->multiplyModelByWeight( itsWeightLimit ); }
+    }
+ }
 
 
   CountedPtr<SIImageStore> SynthesisParSync::getImageStore()
@@ -212,7 +275,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool foundFullImage=False;
     try
       {
-	itsImages = new SIImageStore( itsImageName );
+	itsImages = makeImageStore( itsImageName );
 	foundFullImage = True;
       }
     catch(AipsError &x)
@@ -230,7 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	try
 	  {
-	    itsPartImages[part] = new SIImageStore( itsPartImageNames[part] );
+	    itsPartImages[part] = makeImageStore ( itsPartImageNames[part] );
 	    foundPartImages |= True;
 	  }
 	catch(AipsError &x)
@@ -284,11 +347,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
 
 	    // Find an image to open and pick csys,shape from.
-	    String imopen = itsPartImageNames[0]+".residual";
+	    String imopen = itsPartImageNames[0]+".residual"+((itsMapperType=="multiterm")?".tt0":"");
 	    Directory imdir( imopen );
 	    if( ! imdir.exists() )
 	      {
-		imopen = itsPartImageNames[0]+".psf";
+		imopen = itsPartImageNames[0]+".psf"+((itsMapperType=="multiterm")?".tt0":"");
 		Directory imdir2( imopen );
 		if( ! imdir2.exists() )
 		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]));
@@ -298,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IPosition tempshape = temppart.shape();
 	    CoordinateSystem tempcsys = temppart.coordinates();
 
-	    itsImages = new SIImageStore( itsImageName, tempcsys, tempshape );
+	    itsImages = makeImageStore ( itsImageName, tempcsys, tempshape );
 	    foundFullImage = True;
 	  }
 
@@ -318,9 +381,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
     
+    // Set up facet Imstores..... if needed
+    if( itsNFacets>1 )
+      {
+        
+        // First, make sure that full images have been allocated before trying to make references.....
+        if( ! itsImages->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	    { throw(AipsError("Internal Error : Invalid ImageStore for " + itsImages->getName())); }
+
+        //        Array<Float> ttt;
+        //        (itsImages->sumwt())->get(ttt);
+        //        cout << "SUMWT full : " << ttt <<  endl;
+        
+        uInt nIm = itsNFacets * itsNFacets;
+        itsFacetImageStores.resize( nIm );
+        for( uInt facet=0; facet<nIm; ++facet )
+          {
+            itsFacetImageStores[facet] = itsImages->getFacetImageStore(facet, nIm);
+
+            Array<Float> qqq;
+            itsFacetImageStores[facet]->sumwt()->get(qqq);
+            //            cout << "SUMWTs for " << facet << " : " << qqq << endl;
+
+          }
+      }
+
     return needToGatherImages;
   }// end of setupImagesOnDisk
 
+
+  CountedPtr<SIImageStore> SynthesisParSync::makeImageStore( String imagename )
+  {
+    if( itsMapperType == "multiterm" )
+      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms );   }
+    else
+      { return new SIImageStore( imagename );   }
+  }
+
+
+  CountedPtr<SIImageStore> SynthesisParSync::makeImageStore( String imagename, 
+							    CoordinateSystem& csys, 
+                                                             IPosition shp )
+  {
+    if( itsMapperType == "multiterm" )
+      { return new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms );   }
+    else
+      { return new SIImageStore( imagename, csys, shp, itsNFacets, False );   }
+  }
 
 
 

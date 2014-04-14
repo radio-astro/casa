@@ -50,6 +50,9 @@
      </property>
      <item>
       <widget class="QPushButton" name="addSingleButton">
+       <property name="toolTip">
+        <string>Click to add another plot to the page.</string>
+       </property>
        <property name="text">
         <string>Add Plot</string>
        </property>

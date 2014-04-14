@@ -108,7 +108,8 @@ public:
     void removePlot( PlotMSPlot* plot );
     
     // Clears out all plots and canvases.
-    void clearPlotsAndCanvases();
+    void clearPlotsAndCanvases( bool clearCanvases = true );
+    void clearCanvas(int row, int col );
 
     void unassignPlots();
 
@@ -119,7 +120,11 @@ public:
     
     //Returns whether or not a canvas has been allocated
     //for the plot.
-    bool isPlottable( PlotMSPlot* plot ) const;
+    bool isPlottable( PlotMSPlot* plot );
+
+    //Tries to find an empty spot for the plot
+    bool assignEmptySpot( PlotMSPlot* plot );
+
 private:
     // Parent.
     PlotMSApp* itsParent_;
@@ -148,6 +153,11 @@ private:
     
     // Notifies any watchers that the managed plots have changed.
     void notifyWatchers() const;
+
+    //Wait for existing draw threads to finish before we proceed so
+    //we don't get a seg fault from a draw thread hanging onto deleted
+    //data.
+    void waitForDrawing();
 };
 
 

@@ -30,7 +30,7 @@
 #define SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <synthesis/MeasurementComponents/SkyModel.h>
+//#include <synthesis/MeasurementComponents/SkyModel.h>
 #include <casa/Arrays/Matrix.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -70,15 +70,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void updateResidual();
     */
 
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf;
+    /*
+    SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
+    Float itsComp;
+    */
+    //SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
 
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
+
+    /*
     IPosition itsMaxPos;
     Float itsPeakResidual;
     Float itsModelFlux;
 
-    Array<Float> itsMatMask;
+    Matrix<Float> itsMatMask;
+    */
 
-    
   };
 
 } //# NAMESPACE CASA - END

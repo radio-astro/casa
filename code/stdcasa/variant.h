@@ -195,6 +195,10 @@ class variant {
 	void resize( int size );
 	void dump() const;
 
+	// return True if empty string, empty record, or size 0 vector.
+	// always returns false if object is a non-array bool or numerical type
+	bool empty() const;
+
     private:
 
 	// what size does the shape imply

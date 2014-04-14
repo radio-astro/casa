@@ -62,7 +62,7 @@ TBTable::TBTable(String f, DriverParams* dp, bool tql) : dParams(dp),
                                       totalRows, loadedRows, writable, taql,
                                       dp);
 
-    if(dp->type == DIRECT)
+    if(dp->type == tb::DIRECT)
         driver = new TBTableDriverDirect(tp, this);
     /*else if(dp->type == XML)
         driver = new TBTableDriverXML(tp, this);
@@ -392,7 +392,7 @@ TBPlotData* TBTable::plotRows(PlotParams& x, PlotParams& y, int rowFrom,
     if(ready && (x.rowNumbers || x.colIndex < fields.size()) &&
        (y.rowNumbers || y.colIndex < fields.size()) &&
        0<= rowFrom && rowFrom < totalRows && 0 <= rowTo && rowTo < totalRows &&
-       rowFrom <= rowTo && 0 < rowInterval <= (rowTo - rowFrom + 1)) {
+       rowFrom <= rowTo && 0 < rowInterval && rowInterval <= (rowTo - rowFrom + 1)) {
 
         int n = ((rowTo - rowFrom) / rowInterval) + 1;
         int steps = ((rowTo - rowFrom)/rowInterval) + 1;
@@ -523,7 +523,7 @@ TBPlotData* TBTable::plotIndices(PlotParams& dp, int axis, bool x, int row,
     TBPlotData* data = new TBPlotData();
     if(ready && (dp.rowNumbers || dp.colIndex < fields.size()) &&
        0<= row && row < totalRows && 
-       (axis == -1 || 0 <= axis && axis <= static_cast<int>(dp.slice.size()))) {
+       (axis == -1 || (0 <= axis && axis <= static_cast<int>(dp.slice.size())))) {
 
         int n = 1;
         

@@ -117,10 +117,10 @@ public:
 
     // Returns the boolean format.  If this format is not for a boolean value,
     // this operation is undefined.
-    BooleanFormat getBoolFormat();
+    tb::BooleanFormat getBoolFormat();
 
     // Sets the boolean format.
-    void setBoolFormat(BooleanFormat f);
+    void setBoolFormat(tb::BooleanFormat f);
 
     // Returns true if this format's scientific format is on, false otherwise.
     bool getScientificFormat();
@@ -166,7 +166,7 @@ private:
     bool scientificFormat;
 
     // The format for boolean values.
-    BooleanFormat boolFormat;
+    tb::BooleanFormat boolFormat;
 
     // The format for displaying dates.  See TBConstants::dateFormatIsValid().
     String dateFormat;

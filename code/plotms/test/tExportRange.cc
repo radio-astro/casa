@@ -36,6 +36,78 @@
 #include <casa/namespace.h>
 #include <QApplication>
 
+
+void exportPlot(PlotMSApp& app, String outFile, String outFile2,
+		PlotExportFormat::Type type, String strType, int minSize, int maxSize ){
+	tUtil::clearFile( outFile );
+	tUtil::clearFile( outFile2 );
+
+	PlotExportFormat format(type, outFile );
+	format.resolution = PlotExportFormat::SCREEN;
+	bool ok = app.save(format);
+	cout << "tExportRange:: "<<strType.c_str()<<" Result of save="<<ok<<endl;
+
+	ok = tUtil::checkFile( outFile, minSize, maxSize, -1 );
+	cout << "tExportRange:: "<<strType.c_str()<<" Result of first save file check="<<ok<<endl;
+
+	//There should be 2 output files.
+	if ( ok ){
+		ok = tUtil::checkFile( outFile2, minSize, maxSize, -1 );
+		cout << "tExportRange:: "<<strType.c_str()<<" Result of second save file check="<<ok<<endl;
+	}
+}
+
+void exportAsJPG( PlotMSApp& app ){
+
+    String outFile( "/tmp/plotMSExportRangeJPGTest");
+    String outFile2( "/tmp/plotMSExportRangeJPGTest2");
+
+    PlotExportFormat::Type type = PlotExportFormat::JPG;
+    exportPlot( app, outFile, outFile2, type, "JPG", 80000, 110000);
+}
+
+void exportAsPNG( PlotMSApp& app ){
+
+    String outFile( "/tmp/plotMSExportRangePNGTest");
+    String outFile2( "/tmp/plotMSExportRangePNGTest2");
+
+    PlotExportFormat::Type type = PlotExportFormat::PNG;
+    exportPlot(  app, outFile, outFile2, type, "PNG", 20000, 30000 );
+
+}
+
+void exportAsPS( PlotMSApp& app ){
+
+    String outFile( "/tmp/plotMSExportRangePSTest");
+    String outFile2( "/tmp/plotMSExportRangePSTest2");
+
+    PlotExportFormat::Type type = PlotExportFormat::PS;
+    exportPlot(  app, outFile, outFile2, type, "PS", 20000, 30000);
+
+}
+
+void exportAsPDF( PlotMSApp& app ){
+
+    String outFile( "/tmp/plotMSExportRangePDFTest");
+    String outFile2( "/tmp/plotMSExportRangePDFTest2");
+
+    PlotExportFormat::Type type = PlotExportFormat::PDF;
+    cout << "Exporting PDF"<<endl;
+    exportPlot(  app, outFile, outFile2, type, "PDF", 20000, 30000);
+
+}
+
+void exportAsText( PlotMSApp& app ){
+
+    String outFile( "/tmp/plotMSExportRangeTextTest");
+    String outFile2( "/tmp/plotMSExportRangeTextTest2");
+    cout << "Exporting Text"<<endl;
+    PlotExportFormat::Type type = PlotExportFormat::TEXT;
+    exportPlot(  app, outFile, outFile2, type, "TEXT", 20000, 30000 );
+
+}
+
+
 /**
  * Tests whether an iteration plot, with two pages, can be exported
  * in a single pass.
@@ -74,7 +146,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     iterationParams->setIterationAxis( PMS::SCAN );
     iterationParams->setGlobalScaleX( true );
     iterationParams->setGlobalScaleY( true );
-    qDebug() << "Script setting common axis";
+
     iterationParams->setCommonAxisX( true );
     iterationParams->setCommonAxisY( true );
 
@@ -85,25 +157,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Make the plot.
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotMSExportRangeTest.jpg");
-    String outFile2( "/tmp/plotMSExportRangeTest2.jpg");
-    tUtil::clearFile( outFile );
-    tUtil::clearFile( outFile2 );
-    PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
-	format.resolution = PlotExportFormat::SCREEN;
-	bool ok = app.save(format);
-	cout << "tExportRange:: Result of save="<<ok<<endl;
-    
+    exportAsJPG( app );
+    exportAsPNG( app );
 
-	ok = tUtil::checkFile( outFile, 80000, 100000, -1 );
-	cout << "tExportRange:: Result of first save file check="<<ok<<endl;
+    //Too much data to export as text.
+    //exportAsText( app );
+    exportAsPDF( app );
+    exportAsPS( app );
 
-	//There should be 2 output files.
-	if ( ok ){
-		ok = tUtil::checkFile( outFile2, 80000, 100000, -1 );
-		cout << "tExportRange:  Result of second save file check="<<ok<<endl;
-	}
-	return tUtil::exitMain( false );
+    return tUtil::exitMain( false );
 }
 

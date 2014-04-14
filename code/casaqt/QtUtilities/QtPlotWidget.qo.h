@@ -102,7 +102,7 @@ class PlotFillWidget : public QtPlotWidget, Ui::FillWidget {
 public:
     // Constructor which takes a PlotFactory, a flag for whether or not to show
     // an alpha spinner in the color widget, and an optional parent widget.
-    PlotFillWidget(PlotFactoryPtr factory, bool showAlpha = false,
+    PlotFillWidget(PlotFactoryPtr factory, bool showAlpha = false, String fillColor="blue",
             QWidget* parent = NULL);
     
     // Destructor.

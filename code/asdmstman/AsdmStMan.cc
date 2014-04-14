@@ -285,8 +285,6 @@ const AsdmIndex& AsdmStMan::findIndex (Int64 rownr)
 void AsdmStMan::getShort (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  //Short* data = (reinterpret_cast<Short*>(&(itsData[0])) +
-  //             2 * (spw*ix.stepSpw + bl*ix.stepBl));
   Short* data = (reinterpret_cast<Short*>(&itsData[0]));
   data = data + 2 * ix.blockOffset + 2 * bl * ix.stepBl ;  // Michel Caillat - 21  Nov 2012
 
@@ -317,8 +315,6 @@ void AsdmStMan::getShort (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 void AsdmStMan::getInt (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  //Int* data = (reinterpret_cast<Int*>(&(itsData[0])) +
-  //           2 * (spw*ix.stepSpw + bl*ix.stepBl));
   Int* data = (reinterpret_cast<Int*>(&(itsData[0])));
   data = data + 2 * ix.blockOffset + 2 * bl * ix.stepBl;   // 21 Nov 2012 - Michel Caillat
   if (itsDoSwap) {
@@ -346,8 +342,6 @@ void AsdmStMan::getInt (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 void AsdmStMan::getFloat (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  //  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
-  //             2 * (spw*ix.stepSpw + bl*ix.stepBl));
   Float* data = (reinterpret_cast<Float*>(&(itsData[0])));
   data = data + 2 * ix.blockOffset + 2 * bl * ix.stepBl;   // 21 Nov 2012 Michel Caillat
   if (itsDoSwap) {
@@ -372,13 +366,11 @@ void AsdmStMan::getFloat (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
   }
 }
 
-void AsdmStMan::getAuto (const AsdmIndex& ix, Complex* buf, uInt bl, uInt /*spw*/)
+void AsdmStMan::getAuto (const AsdmIndex& ix, Complex* buf, uInt bl)
 {
   // Get pointer to the data in the block.
-  //  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
-  //             spw*ix.stepSpw + bl*ix.stepBl);
   Float* data = (reinterpret_cast<Float*>(&(itsData[0])));
-  data = data + ix.blockOffset + bl * ix.stepBl;   // 21 Nov 2012 . Michel Caillat replaced the 
+  data = data + ix.blockOffset + bl * ix.stepBl;   // 21 Nov 2012 . Michel Caillat
 
   // The autocorr can have 1, 2, 3 or 4 npol.
   // 1 and 2 are XX and/or YY which are real numbers.
@@ -485,8 +477,8 @@ void AsdmStMan::getData (uInt rownr, Complex* buf)
   }
   // Determine the spw and baseline from the row.
   // The rows are stored in order of spw,baseline.
-  uInt spw = 0 ; // 19 Nov 2012 : Michel Caillat changed this assignement : (rownr - ix.row) / ix.nBl;
-  uInt bl  = (rownr - ix.row) - spw*ix.nBl;
+  uInt spw = ix.iSpw ; // 19 Feb 2014 : Michel Caillat changed this assignement;
+  uInt bl  = (rownr - ix.row);
 
   switch (ix.dataType) {
   case 0:
@@ -499,11 +491,38 @@ void AsdmStMan::getData (uInt rownr, Complex* buf)
     getFloat (ix, buf, bl, spw);
     break;
   case 10:
-    getAuto (ix, buf, bl, spw);
+    getAuto (ix, buf, bl);
     break;
   default:
     throw DataManError ("AsdmStMan: Unknown data type");
   }
+}
+
+void AsdmStMan::getBDFNames(Block<String>& bDFNames)
+{
+  bDFNames = itsBDFNames;
+  return;
+}
+
+Bool AsdmStMan::setBDFNames(Block<String>& bDFNames)
+{
+  if(bDFNames.size() == itsBDFNames.size()){
+    itsBDFNames = bDFNames;
+    return True;
+  }
+  else{
+    return False;
+  }
+}
+
+void AsdmStMan::writeIndex(){
+
+  AipsIO aio(fileName() + "asdmindex", ByteIO::New);
+  aio.putstart("AsdmStMan", itsVersion);
+  aio << HostInfo::bigEndian() << itsBDFNames;
+  aio.put(itsIndex);
+  aio.putend();
+
 }
 
 } //# end namespace

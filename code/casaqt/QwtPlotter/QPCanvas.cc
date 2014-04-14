@@ -71,36 +71,29 @@ const String QPCanvas::DRAW_NAME = "drawItems";
 
 
 bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
-		double widgetHeight,int externalAxisWidth, int /*externalAxisHeight*/,
+		double widgetHeight, int externalAxisWidth, int externalAxisHeight,
 		int rowIndex, int colIndex, QRect /*imageRect*/ ){
 	PlotAreaFillPtr originalBackground = background();
 	setBackground(*paf);
+	if ( m_legend != NULL ){
+		PlotColorPtr plotColor = paf->color();
+		m_legend->setAreaFill( *paf, false );
+	}
 
 	//Decide the print rectangle inside the image rectangle.
 	QRect printGeom;
 
-	/*if ( isVisible() ){
-		QRect geom = geometry();
-		double widthRatio = 1;
-		double heightRatio = 1;
-		printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
-	                          (int)((geom.y() * heightRatio) + 0.5),
-	                          (int)((geom.width() * widthRatio) + 0.5),
-	                          (int)((geom.height() * heightRatio) + 0.5));
-		printGeom &= imageRect;
+	int widthMultiplier = colIndex;
+	if ( colIndex >= 1 && commonY && externalAxisWidth > 0 ){
+		widthMultiplier = colIndex - 1;
 	}
-	else {*/
-		//Note we have to get the position and size differently in scripting mode,
-		//because paint calls do not update the widget when it is hidden.
-		int widthMultiplier = colIndex;
-		if ( colIndex >= 1 && commonY ){
-			widthMultiplier = colIndex - 1;
-		}
-		int xPosition = static_cast<int>(widthMultiplier * widgetWidth + externalAxisWidth);
-		int yPosition = static_cast<int>(rowIndex * widgetHeight);
-		printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
+	int heightMultiplier = rowIndex;
+
+	int xPosition = static_cast<int>(widthMultiplier * widgetWidth + externalAxisWidth);
+	int yPosition = static_cast<int>(heightMultiplier * widgetHeight + externalAxisHeight );
+	printGeom = QRect( xPosition, yPosition, static_cast<int>(widgetWidth),
 			static_cast<int>(widgetHeight));
-	//}
+
 
 	QColor titleColor = asQwtPlot().title().color();
 
@@ -119,9 +112,16 @@ bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidt
 	            asQwtPlot().setTitle(title);
 	        }
 
-	        setBackground(originalBackground);
+
+
 
 	        if (!op.null()) wasCanceled |= op->cancelRequested();
+	}
+
+	//Restore the background.
+	setBackground(originalBackground);
+	if ( m_legend != NULL ){
+		m_legend->setAreaFill( *originalBackground, false );
 	}
 	return wasCanceled;
 }
@@ -144,7 +144,8 @@ bool QPCanvas::print( QPrinter& printer ){
 		 continuePrinting = false;
 	 }
 	 else {
-		 print(printer);
+
+		 asQwtPlot().print(printer);
 
 	        // For bug where title color changes after a print.
 		 QwtText title = asQwtPlot().title();
@@ -227,12 +228,12 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_axesRatioLocked(false), m_axesRatios(4, 1), m_stackCache(*this),
         m_autoIncColors(false), m_picker(m_canvas.canvas()),
         m_mouseFilter(m_canvas.canvas()), m_legendFontSet(false),
-        m_inDraggingMode(false)/*, m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL)*/ {
+        m_inDraggingMode(false), minSizeHint(50,50) {
     logObject(CLASS_NAME, this, true);
     
     commonX = false;
     commonY = false;
+
 
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -419,7 +420,7 @@ double QPCanvas::axisReferenceValue(PlotAxis axis) const {
 }
 
 void QPCanvas::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
-    m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); 
+    m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value);
     int axisListenerCount = axisListeners.size();
        for ( int i = 0; i < axisListenerCount; i++ ){
        	axisListeners[i]->setAxisReferenceValue( axis, on, value );
@@ -476,8 +477,9 @@ void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
 
 	QwtPlot::Axis plotAxis = QPOptions::axis( axis );
     m_canvas.setAxisTitle(plotAxis, actualTitle.c_str());
-    enableAxis( plotAxis, true );
-
+    if ( title.length() > 0 ){
+    	enableAxis( plotAxis, true );
+    }
 }
 
 PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
@@ -548,7 +550,9 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
                            QPOptions::rasterMap(*vals));
         delete vals;
     }
+
     enableAxis( QPOptions::axis(axis), true );
+
     if(v.first != v.second) setAxisRange(axis, v.first, v.second);
     else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
 }
@@ -563,6 +567,7 @@ prange_t QPCanvas::axisRange(PlotAxis axis) const {
     return prange_t(div->lowerBound(), div->upperBound());
 #endif
 }
+
 
 
 
@@ -755,6 +760,7 @@ void QPCanvas::setCachedAxesStackImageSize(int width, int height) {
 
 
 bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
+
     logMethod(CLASS_NAME, "plotItem", true);
     if(item.null() || !item->isValid()) {
         logMethod(CLASS_NAME, "plotItem", false);
@@ -811,7 +817,7 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
             contains = (i < m_usedColors.size());
         }
         
-	QString eh = QPPlotter::GLOBAL_COLORS[ri];
+        QString eh = QPPlotter::GLOBAL_COLORS[ri];
         QPColor color(eh);
         line.setColor(color);
         symbol.setColor(color);
@@ -831,21 +837,24 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
         m_legendFontSet = true;
     }
     
-    PlotAxis xAxis = item->xAxis(), yAxis = item->yAxis();
+    PlotAxis xAxis = item->xAxis();
+    PlotAxis yAxis = item->yAxis();
     if(!cartesianAxisShown(xAxis)){
     	enableAxis( QPOptions::axis(xAxis), true );
     }
     if(!cartesianAxisShown(yAxis)){
-    	enableAxis( QPOptions::axis(xAxis), true );
+    	enableAxis( QPOptions::axis(yAxis), true );
     }
     
     qitem->setZ(zOrder++);
     qitem->attach(this, layer);
     
-    if(layer == MAIN)
+    if(layer == MAIN){
         m_plotItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
-    else
+    }
+    else {
         m_layeredItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
+    }
     m_canvas.setLayerChanged(layer);
     
     if(replot) {
@@ -1349,13 +1358,17 @@ void QPCanvas::reinstallTrackerFilter() {
 
 QSize QPCanvas::sizeHint() const { 
 	QSize canvasSize = m_canvas.sizeHint();
-    return m_canvas.sizeHint();
+    return canvasSize;
 }
 
+void QPCanvas::setMinimumSizeHint( int width, int height ) {
+	minSizeHint.setWidth( width );
+	minSizeHint.setHeight( height );
+}
 
 QSize QPCanvas::minimumSizeHint() const {
-	QSize canvasSize = m_canvas.minimumSizeHint();
-    return m_canvas.minimumSizeHint();
+	//QSize canvasSize = m_canvas.minimumSizeHint();
+	return minSizeHint;
 }
 
 // Protected Methods //

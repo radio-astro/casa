@@ -62,6 +62,9 @@ public:
     //Erase all trace of this plot
     void disown( PlotMSPlot* plot );
 
+    //Erase all traces of a plot at the specific location including removing axes and title.
+    void clearCanvas( int row, int col );
+
     // Copy operator.
     PlotMSPage& operator=(const PlotMSPage& copy);
 

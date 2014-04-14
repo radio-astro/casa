@@ -79,8 +79,8 @@ public:
   void setCommonAxisY(Bool commonAxisY ){commonAxisY_ = commonAxisY; };
   void setGlobalScaleX(Bool globalAxisX ){globalScaleX_ = globalAxisX; };
   void setGlobalScaleY(Bool globalAxisY ){globalScaleY_ = globalAxisY; };
-  void setGridRow(Int nx) { gridRow = max(nx,0); };
-  void setGridCol(Int ny) { gridCol = max(ny,0); };
+  void setGridRow(Int nx) { gridRow = max(nx,-1); };
+  void setGridCol(Int ny) { gridCol = max(ny,-1); };
   bool isIteration() const;
   // </group>
   

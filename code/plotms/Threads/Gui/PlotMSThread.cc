@@ -28,6 +28,9 @@
 
 #include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <graphics/GenericPlotter/ProgressMonitor.h>
+
+#include <QTime>
+#include <QDebug>
 namespace casa {
 
 //////////////////////////////
@@ -49,6 +52,10 @@ PlotMSThread::PlotMSThread(QtProgressWidget* progress,
     connect(this, SIGNAL(updateProgress(unsigned int, const QString&)),
             progress, SLOT(setProgress(unsigned int, const QString&)));
     connect(this, SIGNAL(finalizeProgress()), progress, SLOT(finalize()));
+
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+    id = qrand() % 100;
 }
 
 
@@ -92,6 +99,10 @@ void PlotMSThread::resumeThread(){
 // For when the user requests "cancel" for the thread.
 void PlotMSThread::cancelThread(){
 	cancel();
+}
+
+int PlotMSThread::getId(){
+	return id;
 }
 
 PlotMSThread::~PlotMSThread() { }

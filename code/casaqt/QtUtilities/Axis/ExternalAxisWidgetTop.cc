@@ -33,28 +33,23 @@
 
 namespace casa {
 
-ExternalAxisWidgetTop::ExternalAxisWidgetTop( QWidget* parent, QwtPlot* plot ):
-	ExternalAxisWidget( parent, plot ){
-	//setFixedHeight( AXIS_SMALL_SIDE / 2 );
+ExternalAxisWidgetTop::ExternalAxisWidgetTop( QWidget* parent, QwtPlot* plot,
+		bool leftAxisInternal, bool bottomAxisInternal,
+		bool rightAxisInternal):
+	ExternalAxisWidgetHorizontal( parent, plot, leftAxisInternal, bottomAxisInternal,
+			rightAxisInternal ){
 	setMinimumHeight( AXIS_SMALL_SIDE / 2 );
 	scaleDraw = new QPScaleDraw( NULL, QwtPlot::xTop );
 	setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
-
+	plotAxis = QwtPlot::xTop;
 }
 
-int ExternalAxisWidgetTop::getStartX() const {
-	int internalAxisWidth = 0;
-	QwtPlotCanvas* plotCanvas = plot->canvas();
-	if ( plotCanvas != NULL ){
-		internalAxisWidth = width() - plotCanvas->width();
-	}
-	return internalAxisWidth;
-}
+
 
 void ExternalAxisWidgetTop::defineAxis( QLine& axisLine ){
 	int axisStart = getStartX();
 	int left = MARGIN + axisStart;
-	int right = width() - MARGIN;
+	int right = getEndX();
 	int top = height() - 1;
 	int bottom = height() - 1;
 	QPoint firstPt( left, top );
@@ -69,11 +64,7 @@ void ExternalAxisWidgetTop::drawTick( QPainter* painter, double xPixel, double v
 	int xPosition = static_cast<int>(xPixel);
 	painter->drawLine( xPosition, yEnd, xPosition, yEnd - tickLength  );
 	QFont font = painter->font();
-	QString tickLabel( QString::number( value ) );
-	if ( scaleDraw != NULL ){
-		QwtText tickText = scaleDraw->label( value );
-		tickLabel = tickText.text();
-	}
+	QString tickLabel = formatLabel( value );
 	QRect fontBoundingRect = QFontMetrics( font ).boundingRect( tickLabel );
 	int letterWidth = fontBoundingRect.width();
 	int letterHeight = fontBoundingRect.height();
@@ -81,32 +72,6 @@ void ExternalAxisWidgetTop::drawTick( QPainter* painter, double xPixel, double v
 	painter->drawText( xPosition, yEnd - tickLength - letterHeight, tickLabel );
 }
 
-
-
-void ExternalAxisWidgetTop::drawTicks( QPainter* painter, int tickLength ){
-
-	//Figure out how far out to start drawing ticks.
-	double startPixelX = getTickStartPixel(QwtPlot::xTop)-MARGIN;
-
-	//We don't want to draw too many ticks so adjust the number
-	//of ticks we draw accordingly.
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( QwtPlot::xBottom );
-	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::xBottom);
-	int originalTickCount = axisTicks.size();
-	int tickIncrement = getTickIncrement( originalTickCount );
-
-	//Now figure out the xIncrement, how far apart the ticks should be.
-	double tickDistance = getTickDistance( QwtPlot::xBottom);
-	double xIncrement = getTickIncrement( tickDistance, QwtPlot::xBottom );
-
-	for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
-		//Sometimes the automatic tick system puts uneven number of ticks in.
-		//Definitely weird - but that is why the incrementCount;
-		int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
-		double tickPosition = startPixelX + incrementCount * xIncrement;
-		drawTick( painter, tickPosition, axisTicks[i], tickLength);
-	}
-}
 
 void ExternalAxisWidgetTop::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();

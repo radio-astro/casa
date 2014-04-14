@@ -85,7 +85,7 @@ namespace casa {
 				//  Quantity gnu_dev_major (p_r.second(1) < p_r.second(0) ? p_r.second(0) : p_r.second(1));
 				Quantity minor_( p_r.second(1) > p_r.second(0) ? p_r.second(0) : p_r.second(1) );
 				Quantity major_( p_r.second(1) < p_r.second(0) ? p_r.second(0) : p_r.second(1) );
-				ellipse = new AnnEllipse( p_r.first(0), p_r.first(1), major_/2, minor_/2, rot, cs, shape, stokes );
+				ellipse = new AnnEllipse( p_r.first(0), p_r.first(1), major_, minor_, rot, cs, shape, stokes );
 			} catch ( AipsError &e ) {
 				cerr << "Error encountered creating an AnnEllipse:" << endl;
 				cerr << "\t\"" << e.getMesg( ) << "\"" << endl;

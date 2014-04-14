@@ -410,6 +410,12 @@ public:
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
 
+    //Overriden to take into account the screen size available to this canvas
+    //based on how many other canvases, etc are being displayed.  Without this
+    //method, the draw thread hangs when the size available to the canvas is
+    //less that the minimum size hint.
+    virtual void setMinimumSizeHint( int width, int height );
+
     virtual void setCommonAxes( bool commonX, bool commonY );
     void addAxisListener( AxisListener* listener );
     void clearAxisListeners();
@@ -570,6 +576,9 @@ private:
     // </group>
     
     
+    QSize minSizeHint;
+
+
 private slots:    
     // For when the selecter has selected a region; emit a PlotSelectEvent.
     void regionSelected(const QwtDoubleRect&);

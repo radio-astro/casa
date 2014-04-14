@@ -1571,7 +1571,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
     vi.origin();
     time1=vb.time()(0);  // first time in this chunk
-    thisscan=vb.observationId()(0);
+    thisobs=vb.observationId()(0);
     thisscan=vb.scan()(0);
     thisfld=vb.fieldId();
     thisspw=vb.spectralWindow();
@@ -1614,6 +1614,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 	time=vb.time()(0);
 	cout  << "                 " << "vb=" << iter << " ";
 	cout << "ar=" << vb.arrayId() << " ";
+	cout << "ob=" << vb.observationId()(0) << " ";
 	cout << "sc=" << vb.scan()(0) << " ";
 	if (!combfld()) cout << "fl=" << vb.fieldId() << " ";
 	if (!combspw()) cout << "sp=" << vb.spectralWindow() << " ";
@@ -5052,16 +5053,20 @@ void SolvableVisJones::fluxscale(const String& outfile,
 				 const Vector<String>& fldNames,
                                  const Float& inGainThres,
                                  const String& antSel,
+                                 const String& timerangeSel,
+                                 const String& scanSel,
 				 fluxScaleStruct& oFluxScaleStruct,
 				 const String& oListFile,
                                  const Bool& incremental,
                                  const Int& fitorder, 
                                  const Bool& display) {
 
-  //  cout << "REVISED FLUXSCALE" << endl;
   //String outCalTabName="_tmp_testfluxscaletab";
   String outCalTabName=outfile;
 
+  //timerange
+  //String timerange("");
+  //String scanSel("");
   // turn on incremental caltable mode
   //Bool incremental = True;
   //Bool fitperchan = True;
@@ -5152,7 +5157,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
     MaskedArray<Int> mRefFldList(fldList,LogicalArray(refmask));
     Vector<Int> implRefField(mRefFldList.getCompressedArray());
 
-    //    cout << "implRefField = " << implRefField << endl;
     // Check for missing reference fields
     if (Int(ntrue(refmask)) < nRef) {
       ostringstream x;
@@ -5199,15 +5203,21 @@ void SolvableVisJones::fluxscale(const String& outfile,
           }
         }
         String noTranSol=x.str();
+        if (x!="") {
 	logSink() << LogIO::WARN
 		  << " The following transfer fields have no solutions available: "
 		  << noTranSol
 		  << LogIO::POST;
-        tranField.reference(implTranField);
+        }
+        //tranField.reference(implTranField);
       }
     }
     tranField.shape(nTran);
-
+  
+    // make a combined field list 
+    std::vector<Int> allfields(refField.begin(), refField.end());
+    allfields.insert(allfields.end(), tranField.begin(), tranField.end());
+    
     // Report ref, tran field info
     String refNames(fldNames(refField(0)));
     for (Int iRef=1; iRef<nRef; iRef++) {
@@ -5244,12 +5254,11 @@ void SolvableVisJones::fluxscale(const String& outfile,
         }
       }
     }
-
+ 
     // Field names for log messages
 
     //    cout << "Filling mgnorms....";
 
-    //Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
     Matrix<Float> medianGains(nFld,nSpw(),0.0); //keeps median (amplitude) gains for each field for each spw
     { // make an inner scope
     Block<String> cols(4);
@@ -5257,7 +5266,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     cols[1]="TIME";
     cols[2]="FIELD_ID"; // should usually be degenerate with TIME?
     cols[3]="ANTENNA1";
-    ROCTIter ctiter(*ct_,cols);
+    //ROCTIter ctiter(*ct_,cols);
 
     // Loop over solutions and fill the calculation
     Cube<Bool>   mgok;   // For referencing PtrBlocks...
@@ -5275,10 +5284,37 @@ void SolvableVisJones::fluxscale(const String& outfile,
     NewCalTable selct(*ct_);
     CTInterface cti(*ct_);
     Vector<Int> selAntList;
+    Vector<Int> deselAntList;
     Vector<Int> allAntList(nElem());
     indgen(allAntList);
     vector<Int> tmpAllAntList(allAntList.begin(),allAntList.end());
-    //Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
+    // 
+    // Check if antenna specific time/scan selection is needed.
+    // If so get selected time col for later use to flag the data. 
+    // The negation '!' is used as a keyword to trigger such a selection mode. 
+    Bool doPerAntSel(false);
+    Vector<Double> selTime;
+    if (antSel!="" ) {
+      if (antSel.contains(casa::Regex("^!")) && (timerangeSel!="" || scanSel!="")) {
+        doPerAntSel = True;
+      // if doPerAntSel time/scan sel only applied to deselected ant in antSel
+      // so need to construct selected table based on that
+        MSSelection msssub;
+        String antsel=antSel;
+        antsel.ltrim('!');
+        msssub.setAntennaExpr(antsel);
+        if (timerangeSel != "") msssub.setTimeExpr(timerangeSel);
+        if (scanSel != "") msssub.setScanExpr(scanSel);
+        TableExprNode tensub=msssub.toTableExprNode(&cti);
+        getSelectedTable(selct,*ct_,tensub,"");
+        ROCTMainColumns ctmc(selct);
+        selTime=ctmc.time().getColumn();
+        deselAntList=ctmc.antenna1().getColumn();
+	Int ndeselAnt=genSort(deselAntList,(Sort::QuickSort | Sort::NoDuplicates));
+	deselAntList.resize(ndeselAnt,True);
+      }
+    }         
+
     Bool firstpass(true);
     for (Int iFld=0; iFld<nFld; iFld++) {
 
@@ -5288,20 +5324,57 @@ void SolvableVisJones::fluxscale(const String& outfile,
       //String antSel("");
       mss.setFieldExpr(String::toString(iFld));     
       if (antSel!="") {
-        mss.setAntennaExpr(antSel);
+        if (!doPerAntSel) {
+          // applied selections globally 
+          mss.setAntennaExpr(antSel);
+          if (timerangeSel!="")  mss.setTimeExpr(timerangeSel);
+          if (scanSel!="") mss.setScanExpr(scanSel);
+        }
       } else {
         selAntList=allAntList;
       } 
       std::vector<Int> tmpSelAntList;
+      Vector<Bool> validSels(nSpw(),True);
       for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
+        //reset MSSelection
+        mss.clear(MSSelection::SPW_EXPR);
+        //mss.setFieldExpr(String::toString(iFld));     
         mss.setSpwExpr(String::toString(iSpw));     
         try {
           TableExprNode ten=mss.toTableExprNode(&cti);
           getSelectedTable(selct,*ct_,ten,"");
           ROCTMainColumns ctmc(selct);
           Array<Float> outparams;
-          ctmc.fparamArray(outparams);
-
+          Array<Bool> flagcol=ctmc.flag().getColumn();
+          Vector<Double> timecol=ctmc.time().getColumn();
+          Vector<Int> antenna1=ctmc.antenna1().getColumn();
+          // Do antenna-specific the selections in time 
+          IPosition flshp = flagcol.shape();
+          if (doPerAntSel && selTime.nelements()!=0) {
+            for (uInt ifg = 0; ifg < flshp(2); ifg++) {
+              for (Int ipar = 0; ipar < nPar(); ipar++) {
+                if (anyEQ(deselAntList, antenna1(ifg)) && !anyEQ(selTime, timecol(ifg)))
+                  //outflag(IPosition(3,ipar,0,ifg))=false;
+                  flagcol(IPosition(3,ipar,0,ifg))=true;
+              }
+            }
+          }
+          // reverse the flag for a masked array
+          LogicalArray outflag(!flagcol);
+          //cerr<<"ntrue outflag ="<<ntrue(outflag)<<endl;
+          ctmc.fparamArray(outparams,"AP");
+          // get subset (amp only) of the array
+          IPosition arshp = outparams.shape();
+          IPosition start(3,0,0,0);
+          Int pinc = nPar()!=1 ? 2: 1;
+          Int pshp = arshp(0)!=1 ? Int(arshp(0)/2) : 1; 
+          //IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
+          IPosition length(3,pshp,1,arshp(arshp.nelements()-1));
+          IPosition stride(3,pinc,1,1);
+          Slicer slicer(start,length,stride);
+          Array<Float> subarr=outparams(slicer);
+          MaskedArray<Float> moutparams(subarr,outflag);
+          //Vector<Float> subarr2 = moutparams.getCompressedArray();
           // Get selected antenna list in ant ids.
           // While it is applied to all fields and spws
           // the actual selections happen per spw. So we do it here but only for the first
@@ -5313,29 +5386,50 @@ void SolvableVisJones::fluxscale(const String& outfile,
             selAntList=selantlist;
             //cerr<<"selantlist.nelements()="<<selantlist.nelements()<<endl;
             String oMsg( "" );
-            oMsg+=" Selected antennas: "+String::toString(selAntList);
+            if ( doPerAntSel ) {
+              oMsg+="Selected data range for antenna(s): "+String::toString(deselAntList)+",";
+              if ( timerangeSel!="") oMsg+= " time range:"+timerangeSel;
+              if ( scanSel!="") oMsg+= " scan(s):"+scanSel;
+            }
+            else { 
+              oMsg+=" Selected antennas: "+String::toString(selAntList);
+            }
             logSink() << oMsg << LogIO::POST;
             firstpass=false;
           }
 
-          IPosition arshp = outparams.shape();
-          //cerr<<"outparams(1,0,n)="<<outparams(IPosition(3,1,0,arshp(arshp.nelements()-1)-1))<<endl;
-
-          // take out amplitude only
-          IPosition start(3,0,0,0);
-          Int pinc = 2;
-          if (nPar()==1) pinc = 1; 
-          IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
-          IPosition stride(3,pinc,1,1);
-          Slicer slicer(start,length,stride);
-          Array<Float> subarr=outparams(slicer);
-          medianGains(iFld,iSpw)=median(subarr);
+          //medianGains(iFld,iSpw)=median(subarr2);
+          medianGains(iFld,iSpw)=median(moutparams);
+          String oMsg( "" );
+          oMsg+="median(field="+String::toString(iFld)+",spw="+String::toString(iSpw)+")="+\
+             String::toString(medianGains(iFld,iSpw));
+          logSink() << LogIO::NORMAL3<< oMsg << LogIO::POST;
         } catch (AipsError x) {
-         // cerr<<"No selection"<<endl;
-         // no selection for current field ID so ignore to continue
+         if (anyEQ(tranField,iFld)) validSels[iSpw]=false;
         }
       }
+      if (!ntrue(validSels)) 
+            throw(AipsError("The input selections results in empy data selection for the transfer field="
+                  +String::toString(iFld)));
+    } //for-iFld 
+    NewCalTable selct2(*ct_);
+    CTInterface cti2(*ct_);
+    MSSelection mss2;
+    String fieldstr;
+    for (uInt iselfld=0; iselfld<allfields.size();iselfld++) {
+      fieldstr+=String::toString(allfields[iselfld]);
+      if (iselfld!=allfields.size()-1) fieldstr+=',';
+    } 
+    mss2.setFieldExpr(fieldstr);
+    if (!doPerAntSel) {
+      mss2.setAntennaExpr(antSel);
+      mss2.setTimeExpr(timerangeSel);
+      mss2.setScanExpr(scanSel);
     }
+    TableExprNode ten2=mss2.toTableExprNode(&cti2);
+    getSelectedTable(selct2,*ct_,ten2,"");
+
+    ROCTIter ctiter(selct2,cols);
     while (!ctiter.pastEnd()) {
       Int iSpw(ctiter.thisSpw());
       Int iFld(ctiter.thisField());
@@ -5386,14 +5480,23 @@ void SolvableVisJones::fluxscale(const String& outfile,
       for (Int ipar=0; ipar<nPar(); ipar++) {
 	if (!fl(ipar)) {
 	  Double gn=amp(ipar); // converts to Double
+          //cerr<<"gn="<<gn<<" median="<<medianGains(iFld,iSpw)<<endl;
           // evaluate input gain to be within the threshold
           Float lowbound= (inGainThres >0 and inGainThres <1.0)? 1.0 - inGainThres : 0.0;
           if (inGainThres==0) lowbound=1.0;
-          if (anyEQ(selAntList,iAnt) && (inGainThres < 0 || 
+          //if ((anyEQ(selAntList,iAnt) &&  && (inGainThres < 0 || 
+          if (inGainThres < 0 || 
            //     (gn >= lowbound*medianGains(iFld,iSpw)))  { 
            // take both lower and upper bounds
               (gn >= lowbound*medianGains(iFld,iSpw)  and 
-               gn <= (1.0 + inGainThres) * medianGains(iFld,iSpw))))  {
+               gn <= (1.0 + inGainThres) * medianGains(iFld,iSpw)))  {
+              
+            if (doPerAntSel && selTime.nelements() != 0) {
+               if (anyEQ(deselAntList,iAnt) && !anyEQ(selTime,ctiter.thisTime())) {
+                  logSink()<<LogIO::NORMAL3<<"skipped "<<ctiter.thisTime()<<" for iAnt="<<iAnt<<LogIO::POST;
+                  continue;
+               }
+            } 
 	    mgok(ipar,iAnt,iSpw)=True;
 	    mg(ipar,iAnt,iSpw) += (wt*gn);
 	    mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
@@ -5405,15 +5508,18 @@ void SolvableVisJones::fluxscale(const String& outfile,
       }
       lastFld=iFld;
       ctiter.next();
-    }
-    } // scope
-
+    }//end of while
+    } // end inner scope 
+   
     //for reporting only
     if (inGainThres>=0.0) {
       String oMsg( "" );
       oMsg+=" Applying gain threshold="+String::toString(inGainThres);
       logSink() << oMsg << LogIO::POST;
-      for (Int iFld=0; iFld<nFld; iFld++) {
+      //for (Int iFld=0; iFld<nFld; iFld++) {
+      Int iFld;
+      for (int idx=0; idx < (int) allfields.size(); idx++) {
+        iFld = allfields[idx];
         if (MGOK[iFld]!=NULL) {
           Cube<Bool>    mgok;   mgok.reference(*(MGOK[iFld]));
           Cube<Int>    mgn;    mgn.reference(*(MGN[iFld]));
@@ -5430,7 +5536,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
               IPosition stride(3,1,1,1);
               Slicer slicer(start,length,stride);
               if (ntrue(mgok(slicer))) {
-             //cerr<<"iAnt:"<<iAnt<<"sum(mgn)="<<sum(mgn(slicer))<<" sum(mgnall(slicer))="<<sum(mgnall(slicer))<<endl;
+                //cerr<<"iAnt:"<<iAnt<<"sum(mgn)="<<sum(mgn(slicer))<<" sum(mgnall(slicer))="<<sum(mgnall(slicer))<<endl;
                 Float frac=Float (sum(mgn(slicer)))/Float (sum(mgnall(slicer)));
                 ostringstream fracstream;
                 fracstream.precision(3);
@@ -5438,17 +5544,18 @@ void SolvableVisJones::fluxscale(const String& outfile,
                   fracstream << frac*100.0;
                   oMsg="";
                   //cerr<<"iFld="<<iFld<<" iAnt="<<iAnt<<": "<<frac*100.0<<"% of "<<sum(mgnall(slicer))<<" will be used"<<endl;
-                  oMsg+="  Field ID="+String::toString(tranField(iFld))+" Antenna ID="+String::toString(iAnt)+": ";
+                  //oMsg+="  Field ID="+String::toString(tranField(iFld))+" Antenna ID="+String::toString(iAnt)+": ";
+                  oMsg+="  Field ID="+String::toString(allfields[idx])+" Antenna ID="+String::toString(iAnt)+": ";
                   oMsg+=fracstream.str()+" % of ";
                   oMsg+=String::toString(sum(mgnall(slicer)) )+" solutions will be used";
                   logSink() << oMsg << LogIO::POST;
                 }
-              } //ntrue()
+              }//ntrue()
             } //iAnt 
           } //iSpw
         }
       }//iFld
-    }
+    }//gainthreshold 
   /*
 
     // fill per-ant -fld, -spw  mean gain moduli
@@ -5604,20 +5711,19 @@ void SolvableVisJones::fluxscale(const String& outfile,
 //    Matrix<Double> fderr(nSpw(),nFld,-1.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
+      
       Int tranidx=tranField(iTran);
-
+      if (MGOK[tranidx]!=NULL) {
       // References to PBs for syntactical convenience
       Cube<Bool>   mgokT;  mgokT.reference(*(MGOK[tranidx]));
       Cube<Double> mgT;    mgT.reference(*(MG[tranidx]));
       Cube<Double> mgvarT; mgvarT.reference(*(MGVAR[tranidx]));
       Cube<Double> mgwtT;  mgwtT.reference(*(MGWT[tranidx]));
-
       if (report_p) {
         setupPlotter();
       }
       int countvalidspw = 0;
       for (Int ispw=0; ispw<nSpw(); ispw++) {
-
         // Reference spw may be different
         Int refSpw(refSpwMap(ispw));
 
@@ -5754,7 +5860,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 */
 
       } // ispw
-		  
+      }		  
     } // iTran
     // max 3 coefficients
     //Matrix<Double> spidx(nTran,3,0.0);
@@ -5766,7 +5872,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Vector<Double> fitFluxDErr(nFld,0.0);
     Vector<Double> fitRefFreq(nFld,0.0); 
     //Vector<Double> refFreq(nFld,0.0);
-
+   
     for (Int iTran=0; iTran<nTran; iTran++) {
       uInt tranidx=tranField(iTran);
       Int nValidFlux=ntrue(scaleOK.column(tranidx));

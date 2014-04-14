@@ -63,6 +63,14 @@ namespace casa{
 
     virtual String name() {return String("NoOpATerm");}
 
+    virtual void makeFullJones(ImageInterface<Complex>&,// pbImage,
+			       const VisBuffer&,// vb,
+			       Bool,// doSquint, 
+			       Int&,// bandID, 
+			       Double// freqVal
+			       ) 
+    {};
+
     virtual void applySky(ImageInterface<Float>& ,//outputImages,
 			  const VisBuffer& ,//vb, 
 			  const Bool ,//doSquint=True,

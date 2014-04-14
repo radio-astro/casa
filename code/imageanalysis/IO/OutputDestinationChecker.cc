@@ -42,9 +42,9 @@ void OutputDestinationChecker::checkOutput(OutputStruct& output, LogIO& log) {
 	Bool required = output.required;
 	Bool replaceable = output.replaceable;
 	if (name.empty()) {
-		if (required) {
-			log << label << " cannot be blank" << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			required, label + " cannot be blank"
+		);
 		return;
 	}
 	LogIO::Command logLevel = required ? LogIO::SEVERE : LogIO::WARN;

@@ -92,7 +92,6 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/RebinImage.h>
 #include <images/Regions/RegionManager.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -102,7 +101,6 @@
 #include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
-#include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
 #include <lattices/Lattices/LatticeAddNoise.h>
 #include <lattices/Lattices/LatticeExprNode.h>
@@ -147,13 +145,13 @@ ImageAnalysis::ImageAnalysis() :
 
 }
 
-ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image) :
+ImageAnalysis::ImageAnalysis(SPIIF image) :
 	_imageFloat(image),_imageComplex(), _log(new LogIO()), _histograms(0),
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
 
 
-ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> > image) :
+ImageAnalysis::ImageAnalysis(SPIIC image) :
 	_imageFloat(),_imageComplex(image), _log(new LogIO()), _histograms(0),
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
@@ -363,7 +361,7 @@ void ImageAnalysis::imagecalc(
 	makeRegionBlock(tempRegs, Record(), *_log);
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
+SPIIF ImageAnalysis::imageconcat(
 	const String& outfile,
 	const Vector<String>& inFiles, const Int axis, const Bool relax,
 	const Bool tempclose, const Bool overwrite
@@ -791,10 +789,8 @@ Record* ImageAnalysis::boundingbox(
 	return outRec.release();
 }
 
-String ImageAnalysis::brightnessunit() {
-	String rstat;
-	*_log << LogOrigin(className(), __func__);
-	rstat = _imageFloat
+String ImageAnalysis::brightnessunit() const {
+	String rstat = _imageFloat
 		? _imageFloat->units().getName()
 		: _imageComplex->units().getName();
 	return rstat;
@@ -889,7 +885,7 @@ Bool ImageAnalysis::calcmask(
 	return res;
 }
 
-tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
+SPIIF ImageAnalysis::continuumsub(
 	const String& outline, const String& outcont,
 	Record& region, const Vector<Int>& channels, const String& pol,
 	const Int in_fitorder, const Bool overwrite
@@ -907,11 +903,9 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	Bool ledropdeg = False;
 	Bool leoverwrite = False;
 	Bool lelist = False;
-	std::tr1::shared_ptr<ImageInterface<Float> > subim(
-		SubImageFactory<Float>::createImage(
-			*_imageFloat, leoutfile, region, lemask,
-			ledropdeg, leoverwrite, lelist, False
-		)
+	SPIIF subim = SubImageFactory<Float>::createImage(
+		*_imageFloat, leoutfile, region, lemask,
+		ledropdeg, leoverwrite, lelist, False
 	);
 	ThrowIf(
 		!subim,
@@ -993,7 +987,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 			<< "own risk." << LogIO::POST;
 	}
 	ImageAnalysis ia(subim);
-	tr1::shared_ptr<ImageInterface<Float> > rstat = ia._fitpolynomial(
+	SPIIF rstat = ia._fitpolynomial(
 		outline, outcont, sigmafile, spectralPixelAxis,
 		fitorder, fitregion, mask, overwrite
 	);
@@ -1004,7 +998,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	return rstat;
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::convolve2d(
+SPIIF ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
 	const String& kernel, const Quantity& majorKernel,
 	const Quantity& minorKernel,
@@ -1048,7 +1042,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::convolve2d(
 
 	// Create output image and mask
 	IPosition outShape = subImage.shape();
-	std::tr1::shared_ptr<ImageInterface<Float> > pImOut;
+	SPIIF pImOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
@@ -1159,13 +1153,6 @@ CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
 	return cSys2;
 }
 
-CoordinateSystem ImageAnalysis::csys(const Vector<Int>& axes) {
-	_onlyFloat(__func__);
-	//No clue why this was done...just keeping it
-	return coordsys(axes);
-
-}
-
 Record *
 ImageAnalysis::coordmeasures(Quantity& intensity, Record& direction,
 		Record& frequency, Record& velocity, const Vector<Double>& pixel) {
@@ -1182,7 +1169,7 @@ ImageAnalysis::coordmeasures(Quantity& intensity, Record& direction,
 	}
 
 	String format("m");
-	r = new Record(toWorldRecord(vpixel, format));
+	r = new Record(toworld(vpixel, format));
 
 	Vector<Int> ipixel(vpixel.size());
 	convertArray(ipixel, vpixel);
@@ -1409,7 +1396,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
-tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
+SPIIF ImageAnalysis::_fitpolynomial(
 	const String& residFile, const String& fitFile,
 	const String& sigmaFile, const Int axis, const Int order,
 	Record& Region, const String& mask, const Bool overwrite
@@ -1469,7 +1456,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 		  ? pAxis
 		  : subImage.ndim() - 1;
 	// Create output residual image with no mask
-	tr1::shared_ptr<ImageInterface<Float> > pResid, pFit;
+	SPIIF pResid, pFit;
     pResid = makeExternalImage(
                             residFile, cSys, imageShape, subImage,
                                             *_log, overwrite, True, False
@@ -1702,169 +1689,6 @@ ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 	outRec->define("distance", distance);
 	outRec->define("axes", Vector<Int> (axis0, axis1));
 	return outRec;
-}
-
-ImageInterface<Float>* ImageAnalysis::hanning(
-	const String& outFile, Record& Region,
-	const String& mask, const Int axis, const Bool drop,
-	const Bool overwrite, const Bool extendMask
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	// Validate outfile
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	// Deal with axis
-	Int iAxis = axis;
-	const CoordinateSystem csys = _imageFloat->coordinates();
-	if (iAxis < 0) {
-		ThrowIf(
-			! csys.hasSpectralAxis(),
-			"Image does not have a spectral axis"
-		);
-		iAxis = csys.spectralAxisNumber(False);
-	}
-	else if (iAxis > Int(_imageFloat->ndim()) - 1) {
-		ThrowCc(
-			"Specified axis of " + String::toString(iAxis + 1)
-			+ "is greater than input image dimension of "
-			+ String::toString(_imageFloat->ndim())
-		);
-	}
-	else if (
-		csys.hasDirectionCoordinate()
-		&& _imageFloat->imageInfo().hasMultipleBeams()
-	) {
-		Vector<Int> dirAxes = _imageFloat->coordinates().directionAxesNumbers();
-		for (uInt i=0; i<dirAxes.size(); i++) {
-			if (axis == dirAxes[i]) {
-				*_log << LogIO::WARN << "Specified axis " << axis
-					<< " is a direction axis and image has per plane beams. "
-					<< "Care should be used when interpreting the results."
-					<< LogIO::POST;
-			}
-		}
-	}
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *_imageFloat, Region,
-		mask, _log.get(), False, AxesSpecifier(), extendMask
-	);
-	IPosition blc(subImage.ndim(), 0);
-	if (pRegionRegion) {
-		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-			csys, _imageFloat->shape()
-		);
-		blc = latRegion.slicer().start();
-	}
-	delete pRegionRegion;
-	delete pMaskRegion;
-
-	// Work out shape of output image
-	IPosition inShape(subImage.shape());
-	IPosition outShape(inShape);
-	if (drop) {
-		outShape(iAxis) = inShape(iAxis) / 2;
-		if (inShape(iAxis) % 2 == 0) {
-			outShape(iAxis) = outShape(iAxis) - 1;
-		}
-	}
-	*_log << LogIO::NORMAL << "Output image shape = " << outShape
-			<< LogIO::POST;
-
-	// Create output image coordinates.  Account for region selection and if
-	// we drop every other point, the first output point is centred on
-	// the second input pixel.
-	Vector<Float> cInc(_imageFloat->ndim(), 1.0);
-	Vector<Float> cBlc(blc.nelements());
-	for (uInt i = 0; i < cBlc.nelements(); i++)
-		cBlc(i) = Float(blc(i));
-	if (drop) {
-		cInc(iAxis) = 2.0;
-		cBlc(iAxis) += 1.0;
-	}
-	CoordinateSystem cSys = _imageFloat->coordinates().subImage(
-		cBlc, cInc, outShape.asVector()
-	);
-
-	// Make output image and mask if needed
-	PtrHolder<ImageInterface<Float> > imOut;
-	Bool isMasked = False;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(new TempImage<Float> (outShape, cSys));
-	} else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(new PagedImage<Float> (outShape, cSys, outFile));
-	}
-	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
-	if (subImage.isMasked()) {
-		String maskName("");
-		isMasked = ImageMaskAttacher::makeMask(*pImOut, maskName, False, True, *_log, True);
-	}
-
-	// Create input image iterator
-	IPosition inTileShape = subImage.niceCursorShape();
-	TiledLineStepper inNav(subImage.shape(), inTileShape, iAxis);
-	RO_MaskedLatticeIterator<Float> inIter(subImage, inNav);
-
-	// Iterate by profile and smooth
-	//Int nProfiles =
-	//  subImage.shape().product()/inIter.vectorCursor().nelements();
-	//    ProgressMeter clock(0.0, Double(nProfiles), "Hanning smooth", "Profiles smoothed", "", "", True, max(1,Int(nProfiles/20)));
-	//    Double meterValue = 0.0;
-
-	//
-	IPosition outSliceShape(pImOut->ndim(), 1);
-	outSliceShape(iAxis) = pImOut->shape()(iAxis);
-	Array<Float> slice(outSliceShape);
-	//
-	IPosition inSliceShape(subImage.ndim(), 1);
-	inSliceShape(iAxis) = subImage.shape()(iAxis);
-	Array<Bool> maskIn(inSliceShape);
-	Array<Bool> maskOut(outSliceShape);
-	Lattice<Bool>* pMaskOut = 0;
-	if (isMasked) {
-		pMaskOut = &pImOut->pixelMask();
-		if (!pMaskOut->isWritable()) {
-			*_log << LogIO::WARN
-					<< "The output image has a mask but it is not writable"
-					<< endl;
-			*_log << LogIO::WARN
-					<< "So the mask will not be transferred to the output"
-					<< LogIO::POST;
-			isMasked = False;
-		}
-	}
-	//
-	while (!inIter.atEnd()) {
-		if (isMasked) {
-			inIter.getMask(maskIn, False);
-			_hanning_smooth(slice, maskOut, inIter.vectorCursor(), maskIn, True);
-			pMaskOut->putSlice(maskOut, inIter.position());
-		} else {
-			_hanning_smooth(slice, maskOut, inIter.vectorCursor(), maskIn, False);
-		}
-		pImOut->putSlice(slice, inIter.position());
-		//
-		inIter++;
-		// meterValue += 1.0;
-		// clock.update(meterValue);
-	}
-	ImageUtilities::copyMiscellaneous(*pImOut, *_imageFloat);
-
-	// Return handle to new file
-	return pImOut;
 }
 
 Vector<Bool> ImageAnalysis::haslock() {
@@ -2418,17 +2242,17 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	Record r;
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
-        std::tr1::shared_ptr<ImageInterface<Float> >  x;
+        SPIIF  x;
 		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
 					<< "so converting to a CASA temporary paged image named "
 					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
-            x.reset( SubImageFactory<Float>::createImage(
+            x = SubImageFactory<Float>::createImage(
             	*_imageFloat, tmpImageName, r, "", False,
             	False, True, False
-            ));
+            );
             x.reset(
             	SubImageFactory<Float>::createSubImage(
             		*x, Region, mask, _log.get(),
@@ -2571,12 +2395,6 @@ ImageInterface<Float> * ImageAnalysis::moments(
 void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
 	_onlyFloat(__func__);
 	imageMomentsProgressMonitor = progressMonitor;
-}
-
-String ImageAnalysis::name(const Bool strippath) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "name");
-	return _imageFloat->name(strippath);
 }
 
 Record*
@@ -2936,74 +2754,13 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
 	deleteHist();
-
-	return unlock();
-
-}
-
-ImageInterface<Float>* ImageAnalysis::rebin(
-	const String& outFile, const Vector<Int>& factors,
-	Record& Region, const String& mask, const Bool dropdeg,
-	const Bool overwrite, const Bool extendMask
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	// Validate outfile
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
+	if (isFloat()) {
+		_imageFloat->unlock();
 	}
-	if (anyTrue(factors <= 0)) {
-		*_log << "Binning factors must be positive" << LogIO::EXCEPTION;
+	else {
+		_imageComplex->unlock();
 	}
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	AxesSpecifier axesSpecifier;
-	if (dropdeg)
-		axesSpecifier = AxesSpecifier(False);
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region,
-		mask, _log.get(), False, axesSpecifier, extendMask
-	);
-
-	// Convert binning factors
-	IPosition factors2(subImage.ndim());
-	for (uInt i = 0; i < factors.nelements(); i++) {
-		factors2[i] = max(1, factors[i]);
-	}
-
-	// Create rebinner
-	RebinImage<Float> binIm(subImage, factors2);
-	IPosition outShape = binIm.shape();
-	CoordinateSystem cSysOut = binIm.coordinates();
-
-	// Create the image and mask
-	std::auto_ptr<ImageInterface<Float> > pImOut;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< outShape << LogIO::POST;
-		pImOut.reset(new TempImage<Float> (outShape, cSysOut));
-	} else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		pImOut.reset(new PagedImage<Float> (outShape, cSysOut, outFile));
-	}
-	String maskName("");
-	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
-
-	// Do the work
-	LatticeUtilities::copyDataAndMask(*_log, *pImOut, binIm);
-
-	// Copy miscellaneous things over
-	ImageUtilities::copyMiscellaneous(*pImOut, binIm);
-
-	// Return image
-	return pImOut.release();
+	return True;
 }
 
 ImageInterface<Float>* ImageAnalysis::rotate(
@@ -3186,8 +2943,7 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 		return False;
 	}
 
-	Bool strippath(False);
-	String oldName = this->name(strippath);
+	String oldName = _imageFloat->name(False);
 	if (oldName.size() == 0) {
 		return False;
 	}
@@ -3257,69 +3013,6 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 
 	return True;
 
-}
-
-Bool ImageAnalysis::replacemaskedpixels(
-	const String& pixels, Record& pRegion,
-	const String& maskRegion, const Bool updateMask,
-	const Bool list, const Bool extendMask
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	if (pixels.empty()) {
-		*_log << "You must specify an expression" << LogIO::EXCEPTION
-				<< LogIO::POST;
-	}
-	// Whine about no mask if appropriate.
-	if (maskRegion.empty() && !_imageFloat->isMasked()) {
-		*_log << "This image does not have a mask - no action taken"
-				<< LogIO::WARN << LogIO::POST;
-		return False;
-	}
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		pRegion,
-		maskRegion, (list ? _log.get() : 0), True,
-		AxesSpecifier(), extendMask
-	);
-
-	// See if we can write to ourselves
-	if (!subImage.isWritable()) {
-		*_log
-				<< "This image is not writable.  It is probably a reference or expression virtual image"
-				<< LogIO::EXCEPTION;
-	}
-
-	// Get LatticeExprNode (tree) from parser.
-	// Convert the GlishRecord containing regions to a
-	// PtrBlock<const ImageRegion*>.
-	Block<LatticeExprNode> temps;
-	String newexpr = pixels;
-	//  String newexpr = substituteOID (temps, exprName, pixels);
-	Record tempRegions;
-	PtrBlock<const ImageRegion*> tempRegs;
-	makeRegionBlock(tempRegs, tempRegions, *_log);
-	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
-	// Delete the ImageRegions (by using an empty GlishRecord).
-	makeRegionBlock(tempRegs, Record(), *_log);
-	// Create the LEL expression we need.  It's like  replace(lattice, pixels)
-	// where pixels is an expression itself.
-	LatticeExprNode node2 = replace(subImage, node);
-	// Do it
-	subImage.copyData(LatticeExpr<Float> (node2));
-
-	// Update the mask if desired
-	if (updateMask) {
-		Lattice<Bool>& mask = subImage.pixelMask();
-		LatticeExprNode node(iif(!mask, True, mask));
-		LatticeExpr<Bool> expr(node);
-		mask.copyData(expr);
-	}
-	// Ensure that we reconstruct the histograms objects
-	// now that the data/mask have changed
-	deleteHist();
-
-	return True;
 }
 
 ImageInterface<Float>* ImageAnalysis::sepconvolve(
@@ -3490,14 +3183,6 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	return True;
 }
 
-Bool ImageAnalysis::setbrightnessunit(const String& unit) {
-	*_log << LogOrigin(className(), __func__);
-	Bool res = _imageFloat
-		? _imageFloat->setUnits(Unit(unit))
-		: _imageComplex->setUnits(Unit(unit));
-	return res;
-}
-
 Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 	_onlyFloat(__func__);
 	*_log << LogOrigin("ImageAnalysis", "setcoordsys");
@@ -3512,13 +3197,6 @@ Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 		*_log << "Failed to set CoordinateSystem" << LogIO::EXCEPTION;
 	}
 	return ok;
-}
-
-Bool ImageAnalysis::setmiscinfo(const Record& info) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "setmiscinfo");
-
-	return _imageFloat->setMiscInfo(info);
 }
 
 Bool ImageAnalysis::setrestoringbeam(
@@ -3788,25 +3466,6 @@ Vector<Double> ImageAnalysis::topixel(Record&) {
 
 }
 
-Record ImageAnalysis::toworld(const Vector<Double>& value, const String& format) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "toworld");
-	Record bla(toWorldRecord(value, format));
-	return bla;
-
-}
-
-Bool ImageAnalysis::unlock() {
-	*_log << LogOrigin("ImageAnalysis", "unlock");
-	if (_imageFloat) {
-		_imageFloat->unlock();
-	}
-	if (_imageComplex) {
-		_imageComplex->unlock();
-	}
-	return True;
-}
-
 Bool ImageAnalysis::deleteHist() {
 	Bool rstat = False;
 	*_log << LogOrigin("ImageAnalysis", "deleteHistAndStats");
@@ -3883,7 +3542,7 @@ SPIIF ImageAnalysis::makeExternalImage(
 	const IPosition& shape, const ImageInterface<Float>& inImage,
 	LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask
 ) {
-	tr1::shared_ptr<ImageInterface<Float> > image;
+	SPIIF image;
 	if (fileName.empty()) {
 		if (allowTemp) {
 			os << LogIO::NORMAL << "Creating (Temp)Image '" << " of shape "
@@ -3983,87 +3642,6 @@ void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
 		}
 		_imageFloat->setCacheSizeFromPath(chunk_shape, blc, shape, axisPath);
 	}
-}
-
-void ImageAnalysis::_hanning_smooth(Array<Float>& out, Array<Bool>& maskOut,
-		const Vector<Float>& in, const Array<Bool>& maskIn, Bool isMasked) {
-	const uInt nIn = in.nelements();
-	const uInt nOut = out.nelements();
-	Bool deleteOut, deleteIn, deleteMaskIn, deleteMaskOut;
-	//
-	const Float* pDataIn = in.getStorage(deleteIn);
-	const Bool* pMaskIn = 0;
-	if (isMasked) {
-		pMaskIn = maskIn.getStorage(deleteMaskIn);
-	}
-	//
-	Float* pDataOut = out.getStorage(deleteOut);
-	Bool* pMaskOut = 0;
-	if (isMasked) {
-		pMaskOut = maskOut.getStorage(deleteMaskOut);
-	}
-
-	// Zero masked points.
-	Float* pData = 0;
-	if (isMasked) {
-		pData = new Float[in.nelements()];
-		for (uInt i = 0; i < nIn; i++) {
-			pData[i] = pDataIn[i];
-			if (!pMaskIn[i])
-				pData[i] = 0.0;
-		}
-	} else {
-		pData = (Float*) pDataIn;
-	}
-
-	// Smooth
-	if (nIn != nOut) {
-		// Dropping every other pixel.  First output pixel is centred
-		// on the second input pixel.   We discard the last input pixel
-		// if the input spectrum is of an even number of pixels
-		if (isMasked) {
-			Int j = 1;
-			for (uInt i = 0; i < nOut; i++) {
-				pDataOut[i] = 0.25 * (pData[j - 1] + pData[j + 1]) + 0.5
-						* pData[j];
-				pMaskOut[i] = pMaskIn[j];
-				j += 2;
-			}
-		} else {
-			Int j = 1;
-			for (uInt i = 0; i < nOut; i++) {
-				pDataOut[i] = 0.25 * (pData[j - 1] + pData[j + 1]) + 0.5
-						* pData[j];
-				j += 2;
-			}
-		}
-	} else {
-		// All pixels
-		if (isMasked) {
-			for (uInt i = 1; i < nIn - 1; i++) {
-				pDataOut[i] = 0.25 * (pData[i - 1] + pData[i + 1]) + 0.5
-						* pData[i];
-				pMaskOut[i] = pMaskIn[i];
-			}
-			pMaskOut[0] = pMaskIn[0];
-			pMaskOut[nIn - 1] = pMaskIn[nIn - 1];
-		} else {
-			for (uInt i = 1; i < nIn - 1; i++) {
-				pDataOut[i] = 0.25 * (pData[i - 1] + pData[i + 1]) + 0.5
-						* pData[i];
-			}
-		}
-		pDataOut[0] = 0.5 * (pData[0] + pData[1]);
-		pDataOut[nIn - 1] = 0.5 * (pData[nIn - 2] + pData[nIn - 1]);
-	}
-	//
-	if (isMasked) {
-		delete[] pData;
-		maskOut.putStorage(pMaskOut, deleteMaskOut);
-		maskIn.freeStorage(pMaskIn, deleteMaskIn);
-	}
-	in.freeStorage(pDataIn, deleteIn);
-	out.putStorage(pDataOut, deleteOut);
 }
 
 Record ImageAnalysis::setregion(const Vector<Int>& blc, const Vector<Int>& trc,
@@ -4388,36 +3966,6 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
 
 	return outImage;
 }
-
-
-Record*
-ImageAnalysis::echo(Record& v, const bool godeep) {
-
-	Record *inrec = new Record(v);
-	if (godeep) {
-		// FIXME ummm why is this commented out? confusing...
-		/*
-		 String error("");
-		 MeasureHolder mh;
-		 if (! mh.fromRecord(error,*inrec)) {
-		 *_log << LogIO::WARN << error
-		 << "\nInput record cannot be stored in a MeasureHolder"
-		 << LogIO::POST;
-		 } else {
-		 Record outRec;
-		 if (! mh.toRecord(error, outRec) ) {
-		 *_log << LogIO::WARN << error
-		 << "\nOutput record cannot be generated from MeasureHolder"
-		 << LogIO::POST;
-		 } else {
-		 retval=fromRecord(outRec);
-		 }
-		 }
-		 */
-	}
-	return inrec;
-}
-
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		Vector<Float>& specVal, const CoordinateSystem& cs,
@@ -4999,7 +4547,7 @@ Bool ImageAnalysis::getFreqProfile(
 
 // These should really go in a coordsys inside the casa name space
 
-Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
+Record ImageAnalysis::toworld(const Vector<Double>& pixel,
 		const String& format) const {
 
 	*_log << LogOrigin("ImageAnalysis", "toWorldRecord");
@@ -5007,7 +4555,20 @@ Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
 	Vector<Double> pixel2 = pixel.copy();
 	//   if (pixel2.nelements()>0) pixel2 -= 1.0;        // 0-rel
 	CoordinateSystem itsCSys = _imageFloat->coordinates();
-	trim(pixel2, itsCSys.referencePixel());
+	{
+		Vector<Double> replace = itsCSys.referencePixel();
+		const Int nIn = pixel2.nelements();
+		const Int nOut = replace.nelements();
+		Vector<Double> out(nOut);
+		for (Int i = 0; i < nOut; i++) {
+			if (i > nIn - 1) {
+				out(i) = replace(i);
+			} else {
+				out(i) = pixel2(i);
+			}
+		}
+		pixel2.assign(out);
+	}
 
 	// Convert to world
 
@@ -5342,20 +4903,6 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 	return rec;
 }
 
-void ImageAnalysis::trim(Vector<Double>& inout, const Vector<Double>& replace) const {
-	const Int nIn = inout.nelements();
-	const Int nOut = replace.nelements();
-	Vector<Double> out(nOut);
-	for (Int i = 0; i < nOut; i++) {
-		if (i > nIn - 1) {
-			out(i) = replace(i);
-		} else {
-			out(i) = inout(i);
-		}
-	}
-	inout.resize(nOut);
-	inout = out;
-}
 
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");

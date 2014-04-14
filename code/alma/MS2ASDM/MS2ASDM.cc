@@ -659,6 +659,7 @@ namespace casa {
       
       // construct binary parts for dataStruct
       unsigned int bpFlagsSize = numSpectralPoint * numStokes * (numBaselines+numAutoCorrs);
+
       vector<AxisName> bpFlagsAxes;
       bpFlagsAxes.push_back(AxisNameMod::TIM); // order: inner part of loop should be last!!!!!!
       bpFlagsAxes.push_back(AxisNameMod::SPP); 
@@ -780,7 +781,9 @@ namespace casa {
 	
 	// SORT the data by baseline and antenna resp.!!!!!!!!!!!!
 
-	// create a list of the row numbers in this timestamp sorted by baseline
+	// create a list of the row numbers in this timestamp sorted by baseline in BDF style,
+	// i.e., e.g., for antennas (1,2,3,4): ['(1,1)', '(1,2)', '(2,2)', '(1,3)', '(2,3)', '(3,3)', '(1,4)', 
+        //                             '(2,4)', '(3,4)', '(4,4)', '(1,5)', '(2,5)', '(3,5)', '(4,5)', '(5,5)']
 	vector< uInt > rowsSorted;
 	{
 	  vector< uInt > rows;
@@ -799,20 +802,49 @@ namespace casa {
 	    rows.push_back(mainTabRow);
 	    mainTabRow++;
 	  }
+
 	  uInt nRows = rows.size();
-	  Int* bLine = new Int[nRows];
+	  vector<Int> bLine(nRows);
+	  uInt maxAnt = 0;
 	  for(uInt i=0; i<nRows; i++){
-	    bLine[i] = antenna1()(rows[i])*1000 + antenna2()(rows[i]);
-	  }	    
-	  Sort sort;
-	  sort.sortKey(bLine, TpInt);
-	  Vector<uInt> inx(nRows);
-	  sort.sort(inx, nRows);
+	    uInt a2 = antenna2()(rows[i]);
+	    bLine[i] = antenna1()(rows[i])*1000 + a2;
+	    if(maxAnt<a2){
+	      maxAnt=a2;
+	    }
+	  }	
+
 	  rowsSorted.resize(nRows);
-	  for(uInt i=0; i<nRows; i++){
-	    rowsSorted[i] = rows[inx(i)];
-	  }	  
-	  delete[] bLine;
+	  uInt expNRows = maxAnt*(maxAnt+1)/2; // (zero-based counting)
+	  uInt expNRowsWAuto = maxAnt*(maxAnt+1)/2 + maxAnt+1; // (zero-based counting)
+	  Bool haveAuto = False;
+	  if(nRows==expNRowsWAuto){
+	    haveAuto=True;
+	  }
+	  else if(nRows!=expNRows){ 
+	    ostringstream oss;
+	    oss << "Expected " << expNRows << " rows in integration but found " << nRows << endl;
+	    throw(asdmbinaries::SDMDataObjectWriterException(oss.str()));
+	  }
+	  uInt count=0;
+	  for(uInt i= (haveAuto ? 0 : 1) ; i<maxAnt+1; i++){
+	    for(uInt j=0; j< (haveAuto ? i+1 : i); j++){
+	      Int myBLine = j*1000 + i;
+	      for(uInt ii=0; ii<nRows; ii++){
+		if(bLine[ii]==myBLine){
+		  rowsSorted[count] = rows[ii];
+		  break;
+		}
+		if(ii==nRows-1){ // not found
+		  ostringstream oss;
+		  oss << "Baseline " << myBLine << " not found." << endl;
+		  throw(asdmbinaries::SDMDataObjectWriterException(oss.str()));
+		}
+	      }
+	      count++;
+	    }
+	  }
+
 	}
 	
 	for(uInt ii=0; ii<rowsSorted.size(); ii++){
@@ -837,7 +869,11 @@ namespace casa {
 	  }
 	  flagsm.reference(flag()(iRow));
 	  
-	  if(antenna1()(iRow) == antenna2()(iRow)){
+	  //cout << " ii row a1 a2 " << ii << " " << iRow << " " << antenna1()(iRow) << " " << antenna2()(iRow) << endl;
+
+	  Bool haveAuto = (antenna1()(iRow) == antenna2()(iRow));
+
+	  if(haveAuto){
 	    Complex x;  
 	    float a;
 	    for(uInt i=0; i<numSpectralPoint; i++){
@@ -859,23 +895,19 @@ namespace casa {
 	    // int a,b;
 	    for(uInt i=0; i<numSpectralPoint; i++){
 	      for(uInt j=0; j<numStokesMS; j++){
-		if(skipCorr_p[PolId][j]){
-		  continue;
-		}
-		else{
-		  x = dat(j,i);
-		  a = x.real();
-		  b = x.imag();
-		  crossData.push_back( a );
-		  crossData.push_back( b );
-		}
+		x = dat(j,i);
+		a = x.real();
+		b = x.imag();
+		crossData.push_back( a );
+		crossData.push_back( b );
 	      }
 	    }
-	  }	
+	  }
+
 	  unsigned int ul;
 	  for(uInt i=0; i<numSpectralPoint; i++){
 	    for(uInt j=0; j<numStokesMS; j++){
-	      if(skipCorr_p[PolId][j]){
+	      if(haveAuto && skipCorr_p[PolId][j]){
 		continue;
 	      }
 	      else{
@@ -1409,20 +1441,18 @@ namespace casa {
 	Stokes::StokesTypes st = static_cast<Stokes::StokesTypes>(v[i]);
 	if(st == Stokes::LR){ // only add if RL is not also present
 	  if(!stokesTypePresent(v, Stokes::RL)){
-	    corrTypeV.push_back( ASDMStokesParameter( st ) );
 	    skip = False;
 	  }
 	}
 	else if(st == Stokes::YX){ // only add if XY is not also present
 	  if(!stokesTypePresent(v, Stokes::XY)){
-	    corrTypeV.push_back( ASDMStokesParameter( st ) );
 	    skip = False;
 	  }
 	}
 	else{
-	  corrTypeV.push_back( ASDMStokesParameter( st ) );
 	  skip = False;
 	}
+	corrTypeV.push_back( ASDMStokesParameter( st ) );
 	skipCorr.push_back(skip);
       }
       int numCorr = corrTypeV.size(); 
@@ -1909,7 +1939,22 @@ namespace casa {
 	asdmFieldId_p.define(irow, tR->getFieldId());
       }
       else{
-	os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	if(sId == tR2->getSourceId()){ // if also the Source ID agrees, we really have a duplication
+	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	  return False;
+	}
+	fieldName = fieldName+"_B";
+	tR->setFieldName(fieldName);
+	tR2 = tT.add(tR);
+	if(tR2 == tR){ // adding this row caused a new tag to be defined
+	  os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << endl
+	     << "   appended \"_B\" to field name for second occurrence. New field name: " << fieldName << LogIO::POST;
+	  asdmFieldId_p.define(irow, tR->getFieldId());
+	}
+	else{
+	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+	  return False;
+	} 
       }
     } // end loop over MS field table
 
@@ -4518,6 +4563,7 @@ namespace casa {
     for(uInt j=0; j<corrT.size(); j++){
       if(corrT[j]==static_cast<Int>(st)){
 	 rval = True;
+	 break;
       }
     }
     return rval;

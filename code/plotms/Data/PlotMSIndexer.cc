@@ -32,6 +32,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
 #include <measures/Measures/Stokes.h>
+//#include <QtCore/qmath.h>
 #include <QDebug>
 
 namespace casa {
@@ -75,9 +76,12 @@ PlotMSIndexer::PlotMSIndexer():
 		  itsColorize_(false),
 		  itsColorizeAxis_(PMS::DEFAULT_COLOR_AXIS),
 		  self(const_cast<PlotMSIndexer*>(this))
-{}
+{
+	dataIndex = 0;
+	}
 
-PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis, PMS::Axis yAxis):
+PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
+		PMS::Axis yAxis, int index ):
 		  plotmscache_(parent),
 		  currChunk_(0),
 		  irel_(0),
@@ -117,11 +121,12 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis, PMS::Axis
 		  itsColorizeAxis_(PMS::DEFAULT_COLOR_AXIS),
 		  self(const_cast<PlotMSIndexer*>(this))
 {
+	dataIndex = index;
 	setUpIndexing();
 }
 
-PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis, PMS::Axis yAxis,
-		PMS::Axis iterAxis, Int iterValue):
+PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
+		PMS::Axis yAxis, PMS::Axis iterAxis, Int iterValue, int index ):
 		plotmscache_(parent),
 		currChunk_(0),
 		irel_(0),
@@ -161,6 +166,7 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis, PMS::Axis
 		itsColorizeAxis_(PMS::DEFAULT_COLOR_AXIS),
 		self(const_cast<PlotMSIndexer*>(this))
 { 
+	dataIndex = index;
 	setUpIndexing();
 }
 
@@ -173,8 +179,10 @@ unsigned int PlotMSIndexer::size() const {
 
 double PlotMSIndexer::xAt(unsigned int i) const {
 	setChunk(i);  // sets chunk and relative index in chunk
-	return (plotmscache_->*getXFromCache_)(currChunk_,
+
+	double x= (plotmscache_->*getXFromCache_)(currChunk_,
 			(self->*XIndexer_)(currChunk_,irel_));
+	return x;
 }
 double PlotMSIndexer::yAt(unsigned int i) const {
 	setChunk(i);  // sets chunk and relative index in chunk
@@ -189,6 +197,7 @@ void PlotMSIndexer::xAndYAt(unsigned int index,
 	y=(plotmscache_->*getYFromCache_)(currChunk_,
 			(self->*YIndexer_)(currChunk_,irel_));
 }
+
 bool PlotMSIndexer::minsMaxes(double& xMin, double& xMax, 
 		double& yMin, double& yMax) {
 
@@ -205,6 +214,7 @@ bool PlotMSIndexer::minsMaxes(double& xMin, double& xMax,
 		xMin=min(xmin_,xflmin_);
 		xMax=max(xmax_,xflmax_);
 	}
+
 	// Y:
 	if (globalYMinMax_ || (sizeMasked()==0 && sizeUnmasked()==0)) {
 		// calculate global
@@ -215,15 +225,14 @@ bool PlotMSIndexer::minsMaxes(double& xMin, double& xMax,
 		yMin=min(ymin_,yflmin_);
 		yMax=max(ymax_,yflmax_);
 	}
-
 	return True;
 }
 
-bool PlotMSIndexer::maskedAt(unsigned int index) const {
+bool PlotMSIndexer::maskedAt( unsigned int index) const {
 	setChunk(index);
-	return !(*(plotmscache_->plmask_[currChunk_]->data()+irel_));
+	return !(*(plotmscache_->plmask_[dataIndex][currChunk_]->data()+irel_));
 }
-void PlotMSIndexer::xyAndMaskAt(unsigned int index, 
+void PlotMSIndexer::xyAndMaskAt(unsigned int index,
 		double& x, double& y,
 		bool& mask) const {
 	setChunk(index);
@@ -231,8 +240,7 @@ void PlotMSIndexer::xyAndMaskAt(unsigned int index,
 			(self->*XIndexer_)(currChunk_,irel_));
 	y=(plotmscache_->*getYFromCache_)(currChunk_,
 			(self->*YIndexer_)(currChunk_,irel_));
-	mask=!(*(plotmscache_->plmask_[currChunk_]->data()+irel_));
-
+	mask=!(*(plotmscache_->plmask_[dataIndex][currChunk_]->data()+irel_));
 }
 
 bool PlotMSIndexer::maskedMinsMaxes(double& xMin, double& xMax, 
@@ -263,9 +271,6 @@ bool PlotMSIndexer::maskedMinsMaxes(double& xMin, double& xMax,
 		yMin=yflmin_;
 		yMax=yflmax_;
 	}
-
-	//  cout << "Using masked range: " << xMin << " " << xMax << " " << yMin << " " << yMax << endl;
-
 	return True;
 }
 
@@ -280,7 +285,6 @@ bool PlotMSIndexer::maskedMinsMaxesRaw(double& xMin, double& xMax,
 	xMax=xflmax_;
 	yMin=yflmin_;
 	yMax=yflmax_;
-
 	return True;
 }
 
@@ -313,9 +317,6 @@ bool PlotMSIndexer::unmaskedMinsMaxes(double& xMin, double& xMax,
 		yMin=ymin_;
 		yMax=ymax_;
 	}
-
-	//  cout << "Using unmasked range: " << xMin << " " << xMax << " " << yMin << " " << yMax << endl;
-
 	return True;
 }
 
@@ -329,9 +330,10 @@ bool PlotMSIndexer::unmaskedMinsMaxesRaw(double& xMin, double& xMax,
 	xMax=xmax_;
 	yMin=ymin_;
 	yMax=ymax_;
-
 	return True;
 }
+
+
 
 unsigned int PlotMSIndexer::numBins() const {
 	// TODO
@@ -349,15 +351,25 @@ unsigned int PlotMSIndexer::binAt(unsigned int i) const {
 			binValue = val % numBins();
 		}
 		else {
-			double timeInterval = 1;
-			if (plotmscache_->averaging_.time()){
-				timeInterval= plotmscache_->averaging_.timeValue();
+			if ( plotmscache_->averaging_.time() ){
+				double timeInterval= plotmscache_->averaging_.timeValue();
+				double baseTime = plotmscache_->getTime( 0, 0 );
+				Double time = plotmscache_->getTime(currChunk_, 0);
+				Double timeDiff = time - baseTime;
+				int timeIndex = static_cast<int>( timeDiff / timeInterval );
+				binValue = timeIndex % numBins();
 			}
-			double baseTime = plotmscache_->getTime( 0, 0 );
-			Double time = plotmscache_->getTime(currChunk_, 0);
-			Double timeDiff = time - baseTime;
-			int timeIndex = static_cast<int>( timeDiff / timeInterval );
-			binValue = timeIndex % numBins();
+			else {
+				int timeIndex = 0;
+				if ( currChunk_ == 0 ){
+					timeIndex = plotmscache_->findColorIndex( currChunk_, false );
+				}
+				else {
+					timeIndex = plotmscache_->findColorIndex( currChunk_, false );
+				}
+				binValue = timeIndex % numBins();
+
+			}
 		}
 	}
 	return binValue;
@@ -370,7 +382,7 @@ bool PlotMSIndexer::isBinned() const {
 
 bool PlotMSIndexer::colorize(bool doColorize, PMS::Axis colorizeAxis) {
 	// TODO
-	bool changed = doColorize != itsColorize_ ||
+	bool changed = (doColorize != itsColorize_) ||
 			(doColorize && colorizeAxis != itsColorizeAxis_);
 	itsColorize_ = doColorize;
 	itsColorizeAxis_ = colorizeAxis;
@@ -390,32 +402,21 @@ void PlotMSIndexer::setUpIndexing() {
 
 	// Forbid antenna-based/baseline-based combination plots, for now
 	//  (e.g., data vs. _antenna-based_ elevation)
-	if (plotmscache_->netAxesMask_(2)&&plotmscache_->netAxesMask_(3))
+	if (plotmscache_->netAxesMask_[dataIndex](2)&&plotmscache_->netAxesMask_[dataIndex](3))
 		throw(AipsError("Cannot yet support antenna-based and baseline-based data in same plot."));
 
 	// Refer to the chunk shape matrix in the cache
 	Matrix<Int>& chsh(plotmscache_->chunkShapes());
-
-	//  cout << "Set shapes..." << endl;
 
 	icorrmax_.reference(chsh.row(0));
 	ichanmax_.reference(chsh.row(1));
 	ibslnmax_.reference(chsh.row(2));
 	iantmax_.reference(chsh.row(3));
 
-
-  /*cout << "icorrmax_ = " << icorrmax_ << endl;
-  cout << "ichanmax_ = " << ichanmax_ << endl;
-  cout << "ibslnmax_ = " << ibslnmax_ << endl;
-  cout << "iantmax_  = " << iantmax_  << endl;
-*/
-
 	idatamax_.resize(nChunk());
 	idatamax_=chsh.row(0);
 	idatamax_*=chsh.row(1);
 	idatamax_*=chsh.row(2);
-
-	//cout << "idatamax_ = " << idatamax_ << endl;
 
 	ichanbslnmax_.resize(nChunk());
 	ichanbslnmax_=chsh.row(1);
@@ -423,12 +424,12 @@ void PlotMSIndexer::setUpIndexing() {
 
 	nperchan_.resize(nChunk());
 	nperchan_.set(1);
-	if (plotmscache_->netAxesMask_(0)) nperchan_*=chsh.row(0);
+	if (plotmscache_->netAxesMask_[dataIndex](0)) nperchan_*=chsh.row(0);
 
 	nperbsln_.resize(nChunk());
 	nperbsln_.set(1);
-	if (plotmscache_->netAxesMask_(0)) nperbsln_*=chsh.row(0);
-	if (plotmscache_->netAxesMask_(1)) nperbsln_*=chsh.row(1);
+	if (plotmscache_->netAxesMask_[dataIndex](0)) nperbsln_*=chsh.row(0);
+	if (plotmscache_->netAxesMask_[dataIndex](1)) nperbsln_*=chsh.row(1);
 
 	nperant_.reference(nperbsln_);
 
@@ -476,10 +477,20 @@ void PlotMSIndexer::setUpIndexing() {
 			}
 		break;
 	}
+	case PMS::TIME : {
+		nSegment_ = 0;
+		for ( Int ich=0; ich<nChunk();++ich ){
+			if (plotmscache_->goodChunk(ich)){
+				if (plotmscache_->getTime(ich, 0) == plotmscache_->getTime(iterValue_,0)){
+					++nSegment_;
+				}
+			}
+		}
+		break;
+	}
 	default:
 		// most iteration axis have nChunk segments
 		nSegment_=nChunk();
-
 	}
 
 	// Size up and initialize the indexing helpers and counters
@@ -508,11 +519,16 @@ void PlotMSIndexer::setUpIndexing() {
 		break;
 	}
 
-	//  cout << "iterAxisRef = " << iterAxisRef << endl;
-
 	// Count per segment
 	Int iseg(-1);
-	Vector<Bool>& nAM(plotmscache_->netAxesMask_);
+	Vector<Bool>& nAM(plotmscache_->netAxesMask_[dataIndex]);
+	double timeInterval = 1;
+	bool averagingTime = plotmscache_->averaging_.time();
+	if ( averagingTime ){
+		timeInterval = plotmscache_->averaging_.timeValue();
+	}
+	double iterTime = plotmscache_->time_[iterValue_];
+
 	for (Int ic=0;ic<nChunk();++ic) {
 
 		// skip this chunk if empty
@@ -520,8 +536,6 @@ void PlotMSIndexer::setUpIndexing() {
 			continue;
 		}
 
-		//    cout << "Cache chunk = " << ic << endl;
-		//    cout << "plotmscache_->plmask_[ic]->shape() = " << plotmscache_->plmask_[ic]->shape() << endl;
 		switch (iterAxis_) {
 		case PMS::NONE:
 		case PMS::FIELD:
@@ -539,19 +553,28 @@ void PlotMSIndexer::setUpIndexing() {
 			break;
 		}
 		case PMS::TIME: {
-			Vector<double> timeAxisRef;
-			timeAxisRef.reference(plotmscache_->time_);
-			double elapsedTime = timeAxisRef(ic) - timeAxisRef(0);
-			double timeInterval = 1;
-			if ( plotmscache_->averaging_.time()){
-				timeInterval = plotmscache_->averaging_.timeValue();
+
+			bool assignValues = false;
+			if ( averagingTime ){
+				double icTime = plotmscache_->time_[ic];
+				if ( icTime >= iterTime && icTime < iterTime + timeInterval ){
+					assignValues = true;
+				}
 			}
-			int elapsedAmount = static_cast<int>(elapsedTime / timeInterval );
-			if ( elapsedAmount == iterValue_){
+			else {
+				if ( iterTime  == plotmscache_->time_[ic] ){
+					assignValues = true;
+				}
+			}
+
+			if ( assignValues ){
 				++iseg;
 				cacheChunk_(iseg) = ic;
 				cacheOffset_(iseg) = 0;
-				nSegPoints_(iseg) = 1;
+				nSegPoints_(iseg) = ((nAM(0) ? icorrmax_(ic) : 1)*
+						(nAM(1) ? ichanmax_(ic) : 1)*
+						(nAM(2) ? ibslnmax_(ic) : 1)*
+						(nAM(3) ? iantmax_(ic) : 1));
 			}
 			break;
 		}
@@ -610,13 +633,6 @@ void PlotMSIndexer::setUpIndexing() {
 	for (Int iseg=1;iseg<nSegment_;++iseg)
 		nCumulPoints_(iseg)=nCumulPoints_(iseg-1)+nSegPoints_(iseg);
 
-	/*
-  cout << "nSegPoints_   = " << nSegPoints_ << endl;
-  cout << "nCumulPoints_ = " << nCumulPoints_ << endl;
-  cout << "cacheChunk_   = " << cacheChunk_ << endl;
-  cout << "cacheOffset_  = " << cacheOffset_ << endl;
-	 */
-
 	nPoints_.reference(nSegPoints_);
 	nCumulative_.reference(nCumulPoints_);
 
@@ -629,6 +645,11 @@ void PlotMSIndexer::setUpIndexing() {
 	indexerReady_ = true;
 
 }
+
+void PlotMSIndexer::setGlobalMinMax(Bool globalX, Bool globalY ) {
+    globalXMinMax_=globalX;
+    globalYMinMax_=globalY;
+};
 
 void PlotMSIndexer::setChunk(uInt i) const {
 
@@ -1158,11 +1179,11 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	Int ant2=Int( plotmscache_->getAnt2(currChunk_,getIndex0010(currChunk_,irel_)) );
 
 	// Antenna Names
-	if (!plotmscache_->netAxesMask_(2) || ant1<0)
+	if (!plotmscache_->netAxesMask_[dataIndex](2) || ant1<0)
 		ss << "*&";
 	else
 		ss << plotmscache_->antstanames_(ant1) << " & ";
-	if (!plotmscache_->netAxesMask_(2) || ant2<0)
+	if (!plotmscache_->netAxesMask_[dataIndex](2) || ant2<0)
 		ss << "*";
 	else
 		ss << plotmscache_->antstanames_(ant2);
@@ -1170,11 +1191,11 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	// Antenna indices
 	if (showindices) {
 		ss << "[";
-		if (!plotmscache_->netAxesMask_(2) || ant1<0)
+		if (!plotmscache_->netAxesMask_[dataIndex](2) || ant1<0)
 			ss << "*&";
 		else
 			ss << ant1 << "&";
-		if (!plotmscache_->netAxesMask_(2) || ant2<0)
+		if (!plotmscache_->netAxesMask_[dataIndex](2) || ant2<0)
 			ss << "*";
 		else
 			ss << ant2;
@@ -1193,7 +1214,7 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	Int ichan=getIndex0100(currChunk_,irel_);
 
 	ss << "Chan=";
-	if (plotmscache_->netAxesMask_(1)) {
+	if (plotmscache_->netAxesMask_[dataIndex](1)) {
 
 		PlotMSAveraging& pmsave(plotmscache_->averaging());
 		if (pmsave.channel() && pmsave.channelValue()>1) {
@@ -1211,13 +1232,13 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	ss << " ";
 
 	ss << "Freq=";
-	if (plotmscache_->netAxesMask_(1))
+	if (plotmscache_->netAxesMask_[dataIndex](1))
 		ss << plotmscache_->getFreq(currChunk_,ichan) << " ";
 	else
 		ss << "*        ";
 
 	ss << "Corr=";
-	if (plotmscache_->netAxesMask_(0))
+	if (plotmscache_->netAxesMask_[dataIndex](0))
 		ss << plotmscache_->polname(Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_))));
 	else
 		ss << "*";
@@ -1282,7 +1303,7 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 	if (nFound>0) {
 		// Refresh the plot mask to reflect newly flagged data
 		//  TBD: only do chunks that need it!
-		plotmscache_->setPlotMask();
+		plotmscache_->setPlotMask(dataIndex);
 
 		//    cout << "Finished in-memory flagging." << endl;
 
@@ -1296,7 +1317,7 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 		//    cout << "flagindex = " << flagindex << endl;
 
 		// Set the flags in the MS
-		plotmscache_->flagToDisk(flagging, flagchunk, flagindex, flag,this);
+		plotmscache_->flagToDisk(flagging, flagchunk, flagindex, flag, this, dataIndex);
 
 
 		// Recompute ranges
@@ -1329,9 +1350,10 @@ String PlotMSIndexer::iterLabel() {
 	case PMS::FIELD:
 		return itername+": "+plotmscache_->fldnames_(iterValue_);
 		break;
-	case PMS::TIME:
-		return itername + ": "+String::toString(iterValue_);
+	case PMS::TIME:{
+		return ": "+plotmscache_->getTimeBounds( iterValue_);
 		break;
+	}
 	case PMS::BASELINE: {
 		maskedAt(0);  // sets currChunk_ and irel_ for first point so we can get ant indices
 		Int ant1=Int(plotmscache_->getAnt1(currChunk_,getIndex0010(currChunk_,irel_)));
@@ -1361,7 +1383,7 @@ void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 
 	// Set flag range on correlation axis:
 	Int icorr(0);
-	if (plotmscache_->netAxesMask_(0) && !flagging.corrAll()) {
+	if (plotmscache_->netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
 		// specific correlation
 		icorr=getIndex1000(currChunk_,irel_); // (irel_%icorrmax_(currChunk_));
 		corr=Slice(icorr,1,1);
@@ -1372,7 +1394,7 @@ void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 
 	// Set Flag range on channel axis:
 	Int ichan(-1);
-	if (plotmscache_->netAxesMask_(1) && !flagging.channel()) {
+	if (plotmscache_->netAxesMask_[dataIndex](1) && !flagging.channel()) {
 		// specific channel
 		ichan=getIndex0100(currChunk_,irel_); // (irel_%icorrmax_(currChunk_));  //Int(getChan());
 		/* ....old way require convert from chan value to channel index...
@@ -1398,7 +1420,7 @@ void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 
 	// Set Flag range on baseline axis:
 	Int ibsln(-1);
-	if (plotmscache_->netAxesMask_(2)) {
+	if (plotmscache_->netAxesMask_[dataIndex](2)) {
 		// specific correlation
 		ibsln=getIndex0010(currChunk_,irel_);   //(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_);
 		bsln=Slice(ibsln,1,1);

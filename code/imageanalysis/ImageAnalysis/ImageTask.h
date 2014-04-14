@@ -1,18 +1,19 @@
 #ifndef IMAGEANALYSIS_IMAGETASK_H
 #define IMAGEANALYSIS_IMAGETASK_H
 
+#include <casa/Containers/Record.h>
+
 #include <imageanalysis/ImageTypedefs.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
-
-#include <casa/IO/FiledesIO.h>
-
 #include <imageanalysis/IO/OutputDestinationChecker.h>
-#include <casa/namespace.h>
+#include <imageanalysis/Regions/CasacRegionManager.h>
 
-#include <tr1/memory>
+namespace casac {
+class variant;
+}
 
 namespace casa {
 class LogFile;
+template <class T> class ArrayLattice;
 
 template <class T> class ImageTask {
 
@@ -53,6 +54,7 @@ public:
 
     inline void setStretch(const Bool stretch) { _stretch = stretch;}
 
+    // tacitly does nothing if <src>lf</src> is the empty string.
     void setLogfile(const String& lf);
 
     void setLogfileAppend(const Bool a);
@@ -75,6 +77,13 @@ public:
 
     void addHistory(const LogOrigin& origin, const vector<String>& msgs) const;
 
+    // This adds standard history messages regarding the task that was run and
+    // input parameters used. The vectors must have the same length
+    void addHistory(
+    	const LogOrigin& origin, const String& taskname,
+    	const vector<String>& paramNames, const vector<casac::variant>& paramValues
+    ) const;
+
     // suppress writing the history on _prepareOutputImage() call. Useful for
     // not writing history to intermediate image products.
     void suppressHistoryWriting(Bool b) { _suppressHistory = b; }
@@ -82,6 +91,8 @@ public:
     // get the history associated with the task. Does not include the
     // history of the input image.
     vector<std::pair<String, String> > getHistory() {return _newHistory;}
+
+    void setDropDegen(Bool d) { _dropDegen = d; }
 
 protected:
 
@@ -155,15 +166,17 @@ protected:
 
     virtual inline Bool _supportsMultipleBeams() {return True;}
 
-    // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
+    // If outname != NULL, use the value supplied. If is NULL, use the value of _outname.
+    // Create a TempImage or PagedImage depending if outname/_outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
-    // system
+    // system. overwrite is only used if outname != NULL.
     SPIIT _prepareOutputImage(
     	const ImageInterface<T>& image, const Array<T> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
-    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
+    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0,
+    	const String *const outname=0, Bool overwrite=False
     ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }
@@ -172,6 +185,8 @@ protected:
 
     virtual Bool _mustHaveSquareDirectionPixels() const {return False;}
 
+    Bool _getDropDegen() const { return _dropDegen; }
+
 private:
     const SPCIIT _image;
     std::tr1::shared_ptr<LogIO> _log;
@@ -179,7 +194,7 @@ private:
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
-    	_suppressHistory;
+    	_suppressHistory, _dropDegen;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
 	std::tr1::shared_ptr<LogFile> _logfile;

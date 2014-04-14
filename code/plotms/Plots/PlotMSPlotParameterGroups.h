@@ -146,8 +146,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator, operator=(). */
+	PMS_PP_MSData& operator=(const PMS_PP_MSData& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_MSData & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -201,6 +204,9 @@ public:
 	}
 
 private:
+	//Does the work of the operator=()s.
+	PMS_PP_MSData& assign(const PMS_PP_MSData* other);
+
 	/* Parameters' values */
 	PlotMSSelection itsSelection_;
 	String itsFilename_;
@@ -261,8 +267,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator=().*/
+	PMS_PP_Cache& operator=(const PMS_PP_Cache& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Cache & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -276,18 +285,16 @@ public:
 	// </group>
 
 
+	// Setting the data and data columns for the x- and y-axes
+	// <group>
 	void setXAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
-			unsigned int index = 0) {
-		setAxes (axis, yAxis (index), data, yDataColumn (index), index);
-	}
+			unsigned int index = 0);
 	void setYAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
-			unsigned int index = 0) {
-		setAxes (xAxis (index), axis, xDataColumn (index), data, index);
-	}
+			unsigned int index = 0);
 	void setAxes (const PMS::Axis & xAxis, const PMS::Axis & yAxis,
 			const PMS::DataColumn & xData,
 			const PMS::DataColumn & yData, unsigned int index = 0);
-
+	//<group>
 
 	const vector<PMS::Axis> &xAxes() const {
 		return itsXAxes_;
@@ -335,6 +342,7 @@ public:
 			updated();
 		}
 	}
+
 
 
 	const vector<PMS::DataColumn> &xDataColumns() const {
@@ -388,8 +396,12 @@ public:
 		}
 	}
 
+	void resize( int count );
 
 private:
+	//Does the work for the operator=()s.
+	PMS_PP_Cache& assign(const PMS_PP_Cache* o);
+
 	/* Parameters' values */
 	vector<PMS::Axis> itsXAxes_;
 	vector<PMS::Axis> itsYAxes_;
@@ -451,8 +463,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator, operator= */
+	PMS_PP_Axes& operator=(const PMS_PP_Axes& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Axes & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -500,9 +515,12 @@ public:
 		return itsXAxes_[index];
 	}
 	void setXAxis(const PlotAxis & value, unsigned int index = 0) {
-		if (index >= itsXAxes_.size())
+		if (index >= itsXAxes_.size()){
 			itsXAxes_.resize (index + 1);
+
+		}
 		if (itsXAxes_[index] != value) {
+
 			itsXAxes_[index] = value;
 			updated();
 		}
@@ -533,6 +551,15 @@ public:
 			updated();
 		}
 	}
+
+	void setYAxis( String& value, unsigned int index = 0 ){
+		PlotAxis axisLocation = Y_LEFT;
+		if ( value == "right"){
+			axisLocation = Y_RIGHT;
+		}
+		setYAxis( axisLocation, index );
+	}
+
 
 
 	const vector<bool> &xRangesSet() const {
@@ -631,7 +658,14 @@ public:
 		}
 	}
 
+	//Change the size of the vectors.
+	void resize( int count );
+
 private:
+
+	//Does the work for operator=()s.
+	PMS_PP_Axes& assign(const PMS_PP_Axes* o);
+
 	/* Parameters' values */
 	vector<PlotAxis> itsXAxes_;
 	vector<PlotAxis> itsYAxes_;
@@ -699,7 +733,10 @@ public:
 	}
 
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Canvas& operator= (const Group & other);
+
+	/* Overrides the actual operator=(). */
+	PMS_PP_Canvas& operator=(const PMS_PP_Canvas& other );
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -718,6 +755,8 @@ public:
 	void showLegend (const bool & show,
 			const PlotCanvas::LegendPosition & pos,
 			unsigned int index = 0);
+
+	void showLegend( const bool& show, const String& pos, unsigned int index=0);
 
 	void showGridMajor (const bool & show, const PlotLinePtr & line,
 			unsigned int index = 0) {
@@ -853,7 +892,7 @@ public:
 	const vector < PlotCanvas::LegendPosition > &legendPositions() const {
 		return itsLegendsPos_;
 	}
-	void showLegends (const vector < PlotCanvas::LegendPosition > &value) {
+	void setLegendPositions (const vector < PlotCanvas::LegendPosition > &value) {
 		if (itsLegendsPos_ != value) {
 			itsLegendsPos_ = value;
 			updated();
@@ -865,7 +904,7 @@ public:
 		&>(itsLegendsPos_).resize (index + 1);
 		return itsLegendsPos_[index];
 	}
-	void showLegend (const PlotCanvas::LegendPosition & value,
+	void setLegendPosition (const PlotCanvas::LegendPosition & value,
 			unsigned int index = 0) {
 		if (index >= itsLegendsPos_.size())
 			itsLegendsPos_.resize (index + 1);
@@ -996,6 +1035,10 @@ public:
 
 
 private:
+
+	//Does the work for the operator=()s.
+	PMS_PP_Canvas& assign(const PMS_PP_Canvas* o );
+
 	/* Parameters' values */
 	vector<PlotMSLabelFormat> itsXLabels_;
 	vector<PlotMSLabelFormat> itsYLabels_;
@@ -1072,7 +1115,10 @@ public:
 	}
 
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Display & operator= (const Group & other);
+
+	/*  Overrides the actual assignment operator=() */
+	PMS_PP_Display& operator=(const PMS_PP_Display& other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -1095,23 +1141,19 @@ public:
 		}
 	}
 	PlotSymbolPtr unflaggedSymbol (unsigned int index = 0) const {
-		if (index >= itsUnflaggedSymbols_.size())
-			const_cast < vector < PlotSymbolPtr >
-		&>(itsUnflaggedSymbols_).resize (index + 1);
+		if (index >= itsUnflaggedSymbols_.size()){
+			int newSize = index+1;
+			vector<PlotSymbolPtr> & unflaggedSymbols = const_cast < vector <PlotSymbolPtr > &>(itsUnflaggedSymbols_);
+			unflaggedSymbols.resize ( newSize);
+			for ( int j = 0; j < newSize; j++ ){
+				if ( unflaggedSymbols[j].null() ){
+					unflaggedSymbols[j]=PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
+				}
+			}
+		}
 		return itsUnflaggedSymbols_[index];
 	}
-	void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
-			0) {
-		if (index >= itsUnflaggedSymbols_.size())
-			itsUnflaggedSymbols_.resize (index + 1);
-		if (itsUnflaggedSymbols_[index] != value) {
-			Record newValueRecord = value->toRecord();
-			//itsUnflaggedSymbols_[index] = value;
-			itsUnflaggedSymbols_[index]->fromRecord( newValueRecord );
-			updated();
-		}
-	}
-
+	void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =0);
 
 	const vector < PlotSymbolPtr > &flaggedSymbols() const {
 		return itsFlaggedSymbols_;
@@ -1123,23 +1165,19 @@ public:
 		}
 	}
 	PlotSymbolPtr flaggedSymbol (unsigned int index = 0) const {
-		if (index >= itsFlaggedSymbols_.size())
-			const_cast < vector < PlotSymbolPtr >
-		&>(itsFlaggedSymbols_).resize (index + 1);
+		if (index >= itsFlaggedSymbols_.size()){
+			int newSize = index + 1;
+			vector<PlotSymbolPtr> & flaggedSymbols = const_cast < vector <PlotSymbolPtr > &>(itsFlaggedSymbols_);
+			flaggedSymbols.resize( newSize );
+			for ( int j = 0; j < newSize; j++ ){
+				if ( flaggedSymbols[j].null()){
+					flaggedSymbols[j] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
+				}
+			}
+		}
 		return itsFlaggedSymbols_[index];
 	}
-	void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
-			0) {
-		if (index >= itsFlaggedSymbols_.size())
-			itsFlaggedSymbols_.resize (index + 1);
-		if (itsFlaggedSymbols_[index] != value) {
-			//itsFlaggedSymbols_[index] = value;
-			Record valueRecord = value->toRecord();
-			itsFlaggedSymbols_[index]->fromRecord( valueRecord );
-			updated();
-		}
-	}
-
+	void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =0);
 
 	const vector < PlotMSLabelFormat > &titleFormats() const {
 		return itsTitleFormats_;
@@ -1176,15 +1214,7 @@ public:
 			const_cast < vector < bool > &>(itsColorizeFlags_).resize (index + 1);
 		return itsColorizeFlags_[index];
 	}
-	void setColorize (const bool & value, unsigned int index = 0) {
-		if (index >= itsColorizeFlags_.size())
-			itsColorizeFlags_.resize (index + 1);
-		if (itsColorizeFlags_[index] != value) {
-			itsColorizeFlags_[index] = value;
-			updated();
-		}
-	}
-
+	void setColorize (const bool & value, unsigned int index = 0);
 
 	const vector < PMS::Axis > &colorizeAxes() const {
 		return itsColorizeAxes_;
@@ -1214,6 +1244,11 @@ public:
 
 
 private:
+
+	/* Does the work for both versions of operator=() */
+	PMS_PP_Display& assign( const PMS_PP_Display* o );
+
+
 	/* Parameters' values */
 	vector<PlotSymbolPtr> itsUnflaggedSymbols_;
 	vector<PlotSymbolPtr> itsFlaggedSymbols_;
@@ -1278,8 +1313,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real operator=().  */
+	PMS_PP_Iteration& operator=(const PMS_PP_Iteration& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Iteration & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -1385,6 +1423,10 @@ public:
 			}
 		}
 private:
+
+	//Does the work for the operator=()s.
+	PMS_PP_Iteration& assign(const PMS_PP_Iteration* o);
+
 	/* Parameters' values */
 	PlotMSIterParam itsIterParam_;
 	void setDefaults();

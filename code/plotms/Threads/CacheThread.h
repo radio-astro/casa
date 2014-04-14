@@ -34,12 +34,14 @@
 namespace casa {
 
 class PlotMSCacheBase;
+class PlotMSPlot;
 
 class CacheThread : public BackgroundThread {
 public:
 	CacheThread();
 	void setLoad( bool load );
 	void setSetupPlot( bool usePlot );
+	void setPlot( PlotMSPlot* plot );
 	void setCacheBase( PlotMSCacheBase* cacheBase );
 	void setAxes( vector<PMS::Axis> axes );
 	void setAxesData( int size  );
@@ -55,6 +57,11 @@ protected:
 private:
 	CacheThread( const CacheThread& other );
 	CacheThread operator=( const CacheThread& other );
+
+	//Log error, set status, and do clean up when an
+	//exception is thrown.
+	void handleError(String message );
+
 	bool itsLoad;
 	bool itsSetupPlot;
 	PlotMSCacheBase* itsCache;
@@ -64,6 +71,7 @@ private:
 	PlotMSSelection itsSelection;
 	PlotMSAveraging itsAveraging;
 	PlotMSTransformations itsTransformations;
+	PlotMSPlot* itsPlot;
 };
 
 } /* namespace casa */

@@ -59,6 +59,7 @@ namespace casa {
 
 		QString getRegionString() const;
 		String getPixelBox() const;
+		QString getImagePixelBox() const;
 		String getScreenedEstimatesFile( const String& estimatesFileName,
 		                                 bool* errorWritingFile );
 		const static QStringList colorNames;
@@ -100,7 +101,7 @@ namespace casa {
 		//Written because when a fit of a residual image was being done, the region
 		//bounds were larger than the bounds in the residual image.
 		void populateImageBounds();
-		QString getImagePixelBox() const;
+
 		void resetCurrentId( int suggestedId );
 		void resetSourceView();
 		void setSourceResultsVisible( bool visible );

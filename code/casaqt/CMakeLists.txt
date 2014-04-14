@@ -195,6 +195,8 @@ casa_add_library( casaqt
   QtUtilities/Axis/ExternalAxisWidgetRight.cc
   QtUtilities/Axis/ExternalAxisWidgetTop.cc
   QtUtilities/Axis/ExternalAxisWidgetBottom.cc
+  QtUtilities/Axis/ExternalAxisWidgetHorizontal.cc
+  QtUtilities/Axis/ExternalAxisWidgetVertical.cc
   QwtPlotter/QPAnnotation.cc
   QwtPlotter/QPAxis.cc
   QwtPlotter/QPBarPlot.cc
@@ -307,6 +309,8 @@ install (FILES
 	QtUtilities/Axis/ExternalAxisWidgetRight.h
 	QtUtilities/Axis/ExternalAxisWidgetTop.h
 	QtUtilities/Axis/ExternalAxisWidgetBottom.h
+	QtUtilities/Axis/ExternalAxisWidgetVertical.h
+	QtUtilities/Axis/ExternalAxisWidgetHorizontal.h
 	DESTINATION include/casacode/casaqt/QtUtilities
 	)
 install (FILES

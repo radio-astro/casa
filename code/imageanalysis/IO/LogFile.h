@@ -64,17 +64,13 @@ public:
 
     virtual ~LogFile();
 
-    /*
-     * Should file be appended to if it exists?
-     */
+    // Should file be appended to if it exists?
     void setAppend(const Bool a);
 
-    // not called open() because it uses the system's open() call and I can't
-    // figure out what namespace that's in.
-    Bool openFile();
+    // returns True if file successfully opened
+    Bool open();
 
-    void closeFile() const;
-
+    void close() const;
 
     // Write output to file. If open is False, it is assumed there is apriori information
     // that the file is open and no such check will be done before writing. If close is True,

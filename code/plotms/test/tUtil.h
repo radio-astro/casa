@@ -86,7 +86,7 @@ public:
 		bool fileOK = true;
 		ifstream ifile( fileName.c_str() );
 		if ( ! ifile ){
-			cerr<< "FAIL output jpg file did not exist!"<<endl;
+			cerr<< "FAIL output file did not exist!"<<endl;
 			fileOK = false;
 		}
 		else {
@@ -94,11 +94,11 @@ public:
 			stat( fileName.c_str(), &filestatus );
 			cout << "Output file size is "<<filestatus.st_size<<endl;
 			if ( filestatus.st_size < minBytes ){
-				cout << "FAIL output jpg file size was two small min="<<minBytes<<endl;
+				cout << "FAIL output file size was two small min="<<minBytes<<endl;
 				fileOK = false;
 			}
 			else if ( filestatus.st_size > maxBytes ){
-				cout << "FAIL output jpg file size was two large max="<<maxBytes<<endl;
+				cout << "FAIL output file size was two large max="<<maxBytes<<endl;
 				fileOK = false;
 			}
 			else if ( digest > 0 ){

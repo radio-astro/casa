@@ -80,22 +80,21 @@ class ImageMetaData : public ImageMetaDataBase {
 
 public:
 
-	ImageMetaData(std::tr1::shared_ptr<const ImageInterface<Float> > imagef);
-	ImageMetaData(std::tr1::shared_ptr<ImageInterface<Float> > imagef);
+	ImageMetaData(SPCIIF imagef);
+	ImageMetaData(SPIIF imagef);
 
-	ImageMetaData(std::tr1::shared_ptr<const ImageInterface<Complex> > imagec);
-	ImageMetaData(std::tr1::shared_ptr<ImageInterface<Complex> > imagec);
+	ImageMetaData(SPCIIC imagec);
+	ImageMetaData(SPIIC imagec);
 
 	~ImageMetaData() {}
 
 	Record toRecord(Bool verbose) const;
 
-
 protected:
 
-	std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const { return _floatImage; }
+	SPCIIF _getFloatImage() const { return _floatImage; }
 
-	std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const { return _complexImage; }
+	SPCIIC _getComplexImage() const { return _complexImage; }
 
 	ImageMetaData() : ImageMetaDataBase(), _floatImage(), _complexImage() {}
 
@@ -139,10 +138,12 @@ protected:
 
 	String _getTelescope() const;
 
+	Vector<String> _getStokes() const;
+
 private:
 
-	std::tr1::shared_ptr<const ImageInterface<Float> > _floatImage;
-	std::tr1::shared_ptr<const ImageInterface<Complex> > _complexImage;
+	SPCIIF _floatImage;
+	SPCIIC _complexImage;
 	const ImageInfo _info;
 	const CoordinateSystem _csys;
 
@@ -155,7 +156,7 @@ private:
 	mutable MEpoch _obsdate;
 	mutable Quantity _restFreq;
 	mutable GaussianBeam _beam;
-	mutable Vector<String> _masks;
+	mutable Vector<String> _masks, _stokes;
 	mutable Vector<String> _axisNames, _axisUnits;
 	mutable Vector<Double> _refPixel;
 	mutable vector<Quantity> _refVal, _increment;

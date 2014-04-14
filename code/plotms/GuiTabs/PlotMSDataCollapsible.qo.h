@@ -32,8 +32,7 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 #include <plotms/PlotMS/PlotMS.h>
 
-class QLabel;
-class QCheckBox;
+class QLineEdit;
 
 namespace casa {
 
@@ -82,20 +81,17 @@ public:
     //Force (or not) the plots to update their displays.
     void plot( bool forceReload );
 
-    //Returns whether the plotting status has changed.
-    bool isVisibilityChange() const;
-
     vector<PMS::Axis> getSelectedLoadAxes() const;
     vector<PMS::Axis> getSelectedReleaseAxes() const;
 
-    //Returns whether this plot can be plotted.
+    //Returns whether this plot will be plotted, i.e.,
+    //its gridRow and gridCol are nonnegative AND there is an empty location
+    //for the plot, either at its preferred gridRow and gridCol or at an empty
+    //location somewhere else.
     bool isPlottable() const;
 
-    //Sets whether or not this plot is eligible for plotting.
-    void resetPlottable( bool enable);
-
-    //Set whether the plot will be plotted.
-    void setPlottable( bool plottable );
+    //Change to a compact display
+    void minimizeDisplay();
 
 signals:
 	void plottableChanged();
@@ -106,19 +102,17 @@ private slots:
 	void showContextMenu( const QPoint& location );
 
 private:
-
 	bool isMinimized() const;
-    void maximizeDisplay();
-    void minimizeDisplay();
+	void maximizeDisplay();
+
     QAction minimizeAction;
     QAction maximizeAction;
     QAction closeAction;
     const int SIZE_COLLAPSED;
     const int SIZE_EXPANDED;
     int minimumSize;
-    bool prevPlotShown;
-    QLabel* nameLabel;
-    QCheckBox* plotCheck;
+
+    QLineEdit* nameLabel;
     PlotMSPlotTab* plotTab;
     Ui::PlotMSDataCollapsibleClass ui;
 };

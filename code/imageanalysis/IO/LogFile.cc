@@ -40,9 +40,10 @@ namespace casa {
 LogFile::LogFile(const String& filename) :
 	_filename(filename), _append(False), _fileHandle(-1),
 	_fileIO(0) {
-	if (filename.empty()) {
-		throw AipsError("LogFile::LogFile(): file name cannot be empty");
-	}
+	ThrowIf(
+		filename.empty(),
+		"LogFile::LogFile(): file name cannot be empty"
+	);
 	OutputDestinationChecker::OutputStruct logFile;
 	logFile.label = "log file";
 	logFile.outputFile = &_filename;
@@ -50,20 +51,21 @@ LogFile::LogFile(const String& filename) :
 	logFile.replaceable = True;
 	LogIO log;
 	OutputDestinationChecker::checkOutput(logFile, log);
-	if (_filename.empty()) {
-		throw AipsError("Cannot create log file");
-	}
+	ThrowIf(
+		_filename.empty(),
+		"Cannot create log file"
+	);
 }
 
 LogFile::~LogFile() {}
 
-Bool LogFile::openFile() {
+Bool LogFile::open() {
 
 	File log(_filename);
 	switch (File::FileWriteStatus status = log.getWriteStatus()) {
 	case File::OVERWRITABLE:
 		if (_append) {
-			_fileHandle = open(_filename.c_str(), O_RDWR | O_APPEND);
+			_fileHandle = ::open(_filename.c_str(), O_RDWR | O_APPEND);
 		}
 		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
 	case File::CREATABLE:
@@ -74,8 +76,8 @@ Bool LogFile::openFile() {
 		}
 		break;
 	default:
-		throw AipsError(
-			"LogFile::_open(): Programming logic error. This block should never be reached"
+		ThrowCc(
+			"Programming logic error. This block should never be reached"
 		);
 		break;
 	}
@@ -83,23 +85,23 @@ Bool LogFile::openFile() {
 	return True;
 }
 
-void LogFile::closeFile() const {
+void LogFile::close() const {
 	if (_fileHandle > 0) {
 		FiledesIO::close(_fileHandle);
 	}
 }
 
 Bool LogFile::write(
-	const String& output, const Bool open, const Bool close
+	const String& output, const Bool openFile, const Bool closeFile
 ) {
-	if (open) {
-		if (! openFile()) {
+	if (openFile) {
+		if (! open()) {
 			return False;
 		}
 	}
 	_fileIO->write(output.length(), output.c_str());
-	if (close) {
-		closeFile();
+	if (closeFile) {
+		close();
 	}
 	return True;
 }

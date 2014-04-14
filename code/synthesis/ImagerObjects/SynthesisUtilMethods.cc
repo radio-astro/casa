@@ -49,9 +49,16 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MRadialVelocity.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSColumns.h>
-
+#include <ms/MeasurementSets/MSDopplerUtil.h>
+#include <tables/Tables/Table.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+#include <synthesis/TransformMachines/Utils.h>
+
+#include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/MSUtil.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -70,7 +77,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "SynthesisUtilMethods destroyed" << LogIO::POST;
   }
   
-
   // Data partitioning rules for CONTINUUM imaging
   //  ALL members are strings ONLY.
   Record SynthesisUtilMethods::continuumDataPartition(Record &selpars, const Int npart)
@@ -78,47 +84,227 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisUtilMethods","continuumDataPartition",WHERE) );
 
     Record onepart, allparts;
+    Vector<Vector<String> > timeSelPerPart;
+    timeSelPerPart.resize(selpars.nfields());
 
     // Duplicate the entire input record npart times, with a specific partition id.
     // Modify each sub-record according to partition id.
-    for( Int part=0; part < npart; part++)
+    for (uInt msID=0;msID<selpars.nfields();msID++)
       {
+	Record thisMS= selpars.subRecord(RecordFieldId("ms"+String::toString(msID)));
+	String msName = thisMS.asString("msname");
+	timeSelPerPart[msID].resize(npart,True);
+	//
+	// Make a selected MS and extract the time-column information
+	//
+	MeasurementSet ms(msName), selectedMS(ms);
+	MSInterface msI(ms);	MSSelection msSelObj; 
+	msSelObj.reset(msI,MSSelection::PARSE_NOW,
+		       thisMS.asString("timestr"),
+		       thisMS.asString("antenna"),
+		       thisMS.asString("field"),
+		       thisMS.asString("spw"),
+		       thisMS.asString("uvdist"),
+		       thisMS.asString("taql"),
+		       "",//thisMS.asString("poln"),
+		       thisMS.asString("scan"),
+		       "",//thisMS.asString("array"),
+		       thisMS.asString("state"),
+		       thisMS.asString("obs")//observation
+		       );
+	msSelObj.getSelectedMS(selectedMS);
 
-	onepart.assign(selpars);
+	//--------------------------------------------------------------------
+	// Use the selectedMS to generate time selection strings per part
+	//
+	Double Tint;
+	ROMSMainColumns mainCols(selectedMS);
+	Int nRows=selectedMS.nrow(), dRows=nRows/npart;
+	Int rowBeg=0, rowEnd=0;
+	rowEnd = rowBeg + dRows;
 
-	//-------------------------------------------------
-	// WARNING : This is special-case code for two specific datasets
-	for ( uInt msid=0; msid<selpars.nfields(); msid++)
+	MVTime mvInt=mainCols.intervalQuant()(0);
+	Time intT(mvInt.getTime());
+	Tint = intT.modifiedJulianDay();
+
+	Int partNo=0;
+	while(rowEnd < nRows)
 	  {
-	    Record onems = onepart.subRecord( RecordFieldId("ms"+String::toString(msid)) );
-	    String msname = onems.asString("msname");
-	    String spw = onems.asString("spw");
-	    if(msname.matches("DataTest/twopoints_twochan.ms"))
+	    MVTime mvt0=mainCols.timeQuant()(rowBeg), mvt1=mainCols.timeQuant()(rowEnd);
+	    Time t0(mvt0.getTime()), t1(mvt1.getTime());
+	    Double mjdRef=t1.modifiedJulianDay(),
+	      mjdT0=t1.modifiedJulianDay();
+
+	    while((fabs(mjdT0 - mjdRef) <= Tint) && (rowEnd < nRows))
 	      {
-		onems.define("spw", spw+":"+String::toString(part));
+		rowEnd++;
+		MVTime mvt=mainCols.timeQuant()(rowEnd);
+		Time tt(mvt.getTime());
+		mjdT0=tt.modifiedJulianDay();
 	      }
-	    if(msname.matches("DataTest/point_twospws.ms"))
-	      {
-		onems.define("spw", spw+":"+ (((Bool)part)?("10~19"):("0~9"))  );
-	      }
-	    onepart.defineRecord( RecordFieldId("ms"+String::toString(msid)) , onems );
-	  }// end ms loop
-	//-------------------------------------------------
+	    rowEnd--;
+	    MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
+	    Time tB(mvtB.getTime()), tE(mvtE.getTime());
+	    timeSelPerPart[msID][partNo] = SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE);
+	    // cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
+	    // 	 << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	    // 	 << endl;	    
 
-	allparts.defineRecord( RecordFieldId(String::toString(part)), onepart );
+	    partNo++;
+	    rowBeg = rowEnd+1;
+	    rowEnd = min(rowBeg + dRows, nRows-1);
+	    if (rowEnd == nRows-1) break;
+	  }
 
-      }// end partition loop
+	MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
+	Time tB(mvtB.getTime()), tE(mvtE.getTime());
+	timeSelPerPart[msID][partNo] = SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE);
+	// cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
+	//      << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	//      << endl;	    
+      }
+    //
+    // The time selection strings for all parts of the current
+    // msID are in timeSelPerPart.  
+    //--------------------------------------------------------------------
+    //
+    // Now reverse the order of parts and ME loops. Create a Record
+    // per part, get the MS for thisPart.  Put the associated time
+    // selection string in it.  Add the thisMS to thisPart Record.
+    // Finally add thisPart Record to the allparts Record.
+    //
+    for(Int iPart=0; iPart<npart; iPart++)
+      {
+	Record thisPart;
+	thisPart.assign(selpars);
+	for (uInt msID=0; msID<selpars.nfields(); msID++)	  
+	  {
+	    Record thisMS = thisPart.subRecord(RecordFieldId("ms"+String::toString(msID)));
 
+	    thisMS.define("timestr",timeSelPerPart[msID][iPart]);
+	    thisPart.defineRecord(RecordFieldId("ms"+String::toString(msID)) , thisMS);
+	  }
+	allparts.defineRecord(RecordFieldId(String::toString(iPart)), thisPart);
+      }
+    //    cerr << allparts << endl;
     return allparts;
+
+    // for( Int part=0; part < npart; part++)
+    //   {
+
+    // 	onepart.assign(selpars);
+
+
+    // 	//-------------------------------------------------
+    // 	// WARNING : This is special-case code for two specific datasets
+    // 	for ( uInt msid=0; msid<selpars.nfields(); msid++)
+    // 	  {
+    // 	    Record onems = onepart.subRecord( RecordFieldId("ms"+String::toString(msid)) );
+    // 	    String msname = onems.asString("msname");
+    // 	    String spw = onems.asString("spw");
+    // 	    if(msname.matches("DataTest/twopoints_twochan.ms"))
+    // 	      {
+    // 		onems.define("spw", spw+":"+String::toString(part));
+    // 	      }
+    // 	    if(msname.matches("DataTest/point_twospws.ms"))
+    // 	      {
+    // 		onems.define("spw", spw+":"+ (((Bool)part)?("10~19"):("0~9"))  );
+    // 	      }
+    // 	    if(msname.matches("DataTest/reg_mawproject.ms"))
+    // 	      {
+    // 		onems.define("scan", (((Bool)part)?("1~17"):("18~35"))  );
+    // 	      }
+    // 	    onepart.defineRecord( RecordFieldId("ms"+String::toString(msid)) , onems );
+    // 	  }// end ms loop
+    // 	//-------------------------------------------------
+
+    // 	allparts.defineRecord( RecordFieldId(String::toString(part)), onepart );
+
+    //   }// end partition loop
+
+    // return allparts;
   }
 
   // Data partitioning rules for CUBE imaging
-  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, Int npart)
+  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Int npart,
+		  const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype)
   {
     LogIO os( LogOrigin("SynthesisUtilMethods","cubeDataPartition",WHERE) );
     // Temporary special-case code. Please replace with actual rules.
-    return continuumDataPartition( selpars, npart );
+    Vector<Double> fstart(npart);
+    Vector<Double> fend(npart);
+    Double step=(freqEnd-freqBeg)/Double(npart);
+    fstart(0)=freqBeg;
+    fend(0)=freqBeg+step;
+    for (Int k=1; k < npart; ++k){
+    	fstart(k)=fstart(k-1)+step;
+    	fend(k)=fend(k-1)+step;
+    }
+    return cubeDataPartition( selpars, fstart, fend, eltype );
 
+  }
+
+  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>&freqEnd, const MFrequency::Types eltype){
+    Record retRec;
+    Int npart=freqBeg.shape()(0);
+    for (Int k=0; k < npart; ++k){
+      Int nms=selpars.nfields();
+      Record partRec;
+      for(Int j=0; j < nms; ++j){
+    	  if(selpars.isDefined(String("ms"+String::toString(j)))){
+    		  Record msRec=selpars.asRecord(String("ms"+String::toString(j)));
+    		  if(!msRec.isDefined("msname"))
+    			  throw(AipsError("No msname key in ms record"));
+    		  String msname=msRec.asString("msname");
+    		  String userspw=msRec.isDefined("spw")? msRec.asString("spw") : "*";
+    		  String userfield=msRec.isDefined("field") ? msRec.asString("field") : "*";
+    		  MeasurementSet elms(msname);
+    		  Record laSelection=elms.msseltoindex(userspw, userfield);
+    		  Matrix<Int> spwsel=laSelection.asArrayInt("channel");
+    		  Vector<Int> fieldsel=laSelection.asArrayInt("field");
+    		  Vector<Int> freqSpw;
+    		  Vector<Int> freqStart;
+    		  Vector<Int> freqNchan;
+    		  MSUtil::getSpwInFreqRange(freqSpw, freqStart, freqNchan, elms, freqBeg(k), freqEnd(k),0.0, eltype, fieldsel[0]);
+    		  String newspw=mergeSpwSel(freqSpw, freqStart, freqNchan, spwsel);
+    		  msRec.define("spw", newspw);
+    		  partRec.defineRecord(String("ms"+String::toString(j)),msRec);
+    	  }
+
+      }
+      retRec.defineRecord(String::toString(k), partRec);
+    }
+
+
+
+
+    return retRec;
+  }
+
+
+ String  SynthesisUtilMethods::mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel)
+  {
+	 String retval="";
+	 Int cstart, cend;
+  	  for(Int k=0; k < fspw.shape()(0); ++k){
+  		  cstart=fstart(k);
+  		  cend=fstart(k)+fnchan(k)-1;
+  		  for (Int j=0; j < spwsel.shape()(0); ++j){
+  			//need to put this here as multiple rows can have the same spw
+  			cstart=fstart(k);
+  			cend=fstart(k)+fnchan(k)-1;
+  			if(spwsel(j,0)==fspw[k]){
+			  if(cstart < spwsel(j,1)) cstart=spwsel(j,1);
+			  if(cend > spwsel(j,2)) cend= spwsel(j,2);
+  				if(!retval.empty()) retval=retval+(",");
+  				retval=retval+String::toString(fspw[k])+":"+String::toString(cstart)+"~"+String::toString(cend);
+  			}
+  		  }
+  	  }
+
+
+
+  	  return retval;
   }
 
   // Image cube partitioning rules for CUBE imaging
@@ -189,7 +375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else { return String(""); }
   }
-  
+
   // Read Float from Record
   String SynthesisParams::readVal(Record &rec, String id, Float& val)
   {
@@ -220,6 +406,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( rec.dataType( id )==TpArrayInt || rec.dataType( id )==TpArrayUInt ) 
 	  { rec.get( id , val ); return String(""); }
+	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
+	  {
+	    Vector<Bool> vec; rec.get( id, vec );
+	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    else{ return String(id + " must be a vector of strings.\n"); }
+	  }
 	else { return String(id + " must be a vector of integers\n"); }
       }
     else{ return String(""); }
@@ -232,6 +424,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( rec.dataType( id )==TpArrayFloat || rec.dataType( id )==TpArrayDouble ) 
 	  { rec.get( id , val ); return String(""); }
+	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
+	  {
+	    Vector<Bool> vec; rec.get( id, vec );
+	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    else{ return String(id + " must be a vector of strings.\n"); }
+	  }
 	else { return String(id + " must be a vector of floats\n"); }
       }
     else{ return String(""); }
@@ -244,13 +442,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( rec.dataType( id )==TpArrayString || rec.dataType( id )==TpArrayChar ) 
 	  { rec.get( id , val ); return String(""); }
-	else { return String(id + " must be a vector of strings\n"); }
+	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
+	  {
+	    Vector<Bool> vec; rec.get( id, vec );
+	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    else{ return String(id + " must be a vector of strings.\n"); }
+	  }
+	else { return String(id + " must be a vector of strings.\n"); 
+	}
       }
     else{ return String(""); }
   }
 
   // Convert String to Quantity
-  String SynthesisParams::stringToQuantity(String instr, Quantity& qa)
+  String SynthesisParams::stringToQuantity(String instr, Quantity& qa) const
   {
     //QuantumHolder qh;
     //String error;
@@ -329,7 +534,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
   }
-
+  
+  // Convert Record contains Quantity or Measure quantities to String
+  String SynthesisParams::recordQMToString(Record &rec)
+  { 
+     Double val;
+     String unit;
+     if ( rec.isDefined("m0") ) 
+       {
+         Record subrec = rec.subRecord("m0");
+         subrec.get("value",val); 
+         subrec.get("unit",unit);
+       }
+     else if (rec.isDefined("value") )
+       {
+         rec.get("value",val);
+         rec.get("unit",unit);
+       }
+     return String::toString(val) + unit;
+  } 
 
   /////////////////////// Selection Parameters
 
@@ -365,7 +588,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("freqend"), freqend);
 
 	String freqframestr( MFrequency::showType(freqframe) );
-	err += readVal( inrec, String("freqframe"), freqframestr);
+	err += readVal( inrec, String("frame"), freqframestr);
 	if( ! MFrequency::getType(freqframe, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
 	/// -------------------------------------------------------------------------------------
@@ -470,7 +693,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisParamsImage::fromRecord(Record &inrec)
   {
     setDefaults();
-
     String err("");
 
     try
@@ -571,13 +793,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	////nchan
 	err += readVal( inrec, String("nchan"), nchan);
-	
-	//// facets	
-	err += readVal( inrec, String("facets"), facets);
 
 	/// phaseCenter (as a string) . // Add INT support later.
-	err += readVal( inrec, String("phasecenter"), phaseCenter );
+	//err += readVal( inrec, String("phasecenter"), phaseCenter );
+	if( inrec.isDefined("phasecenter") )
+	  {
+	    String pcent("");
+	    if( inrec.dataType("phasecenter") == TpString )
+	      {
+		inrec.get("phasecenter",pcent);
+		if( pcent.length() > 0 ) // if it's zero length, it means 'figure out from first field in MS'.
+		  {
+		    err += readVal( inrec, String("phasecenter"), phaseCenter );
+		    phaseCenterFieldId=-1;
+		    //// Phase Center Field ID.... if explicitly specified, and not via phasecenter.
+		    //   Need this, to deal with a null phase center being translated to a string to go back out.
+		    err += readVal( inrec, String("phasecenterfieldid"), phaseCenterFieldId);
+		  }
+		else {  phaseCenterFieldId=0; } // Take the first field of the MS.
+	      }
+	    if (inrec.dataType("phasecenter")==TpInt 
+		|| inrec.dataType("phasecenter")==TpFloat 
+		|| inrec.dataType("phasecenter")==TpDouble )
+	      {
+		// This will override the previous setting to 0 if the phaseCenter string is zero length.
+		err += readVal( inrec, String("phasecenter"), phaseCenterFieldId );
+	      }
 
+	    if( ( inrec.dataType("phasecenter") != TpString && inrec.dataType("phasecenter")!=TpInt
+		  && inrec.dataType("phasecenter")!=TpFloat && inrec.dataType("phasecenter")!=TpDouble ) )
+	      //		|| ( phaseCenterFieldId==-1 ) )
+	      {
+		err += String("Cannot set phasecenter. Please specify a string or int\n");
+	      }
+	  }
+
+	
 	//// Projection
 	if( inrec.isDefined("projection") )
 	  {
@@ -598,24 +849,248 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }//projection
 
 	// Frequency frame stuff. 
-	err += readVal( inrec, String("freqstart"), freqStart);
-	err += readVal( inrec, String("freqstep"), freqStep);
-	err += readVal( inrec, String("reffreq"), refFreq); 
+	err += readVal( inrec, String("mode"), mode);
+        err += readVal( inrec, String("frame"), frame);
+        qmframe="";
+        //start 
+        if( inrec.isDefined("start") ) 
+          {
+            if( inrec.dataType("start") == TpInt ) 
+              {
+	        err += readVal( inrec, String("start"), chanStart);
+	        start = String::toString(chanStart);
+              }
+            else if( inrec.dataType("start") == TpString ) 
+              {
+	        err += readVal( inrec, String("start"), start);
+                if( start.contains("Hz") ) 
+                  {
+                    stringToQuantity(start,freqStart);
+                  }
+                else if( start.contains("m/s") )
+                  {
+                    stringToQuantity(start,velStart); 
+                  } 
+              }
+            else if ( inrec.dataType("start") == TpRecord ) 
+              {
+                //record can be freq in Quantity or MFreaquency or vel in Quantity or
+                //MRadialVelocity or Doppler (by me.todoppler())
+                // ** doppler => converted to radialvel with frame 
+                startRecord = inrec.subRecord("start");
+                if(startRecord.isDefined("m0") )
+                  { 
+                    //must be a measure
+                    String mtype;
+                    startRecord.get("type", mtype);
+                    if( mtype=="frequency")
+                      { 
+                        //mfrequency
+                        startRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in start:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        start = recordQMToString(startRecord);
+                        stringToQuantity(start,freqStart);
+                      }
+                    else if( mtype=="radialvelocity")
+                      {
+                        //mradialvelocity
+                        startRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in start:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        start = recordQMToString(startRecord);
+                        stringToQuantity(start,velStart);
+                      }
+                    else if( mtype=="doppler") 
+                      {
+                        start = MDopToVelString(startRecord);
+                        stringToQuantity(start,velStart);
+                      }
+                  }
+                else 
+                  {
+                    start = recordQMToString(startRecord);
+                    if( start.contains("Hz") ) { stringToQuantity(start,freqStart);}
+                    else if ( start.contains("m/s") ) { stringToQuantity(start,velStart);}
+                    else { err+= String("Unrecognized Quantity unit for start, must contain m/s or Hz\n"); }
+                  }
+              }
+            else { err += String("start must be an integer, a string, or frequency/velocity in Quantity/Measure\n");}
+           }
 
-	Vector<String> rfreqs(0);
-	err += readVal( inrec, String("restfreq"), rfreqs );
-	restFreq.resize( rfreqs.nelements() );
-	for( uInt fr=0; fr<rfreqs.nelements(); fr++)
-	  {
-	    err += stringToQuantity( rfreqs[fr], restFreq[fr] );
-	  }
+        //step
+        if( inrec.isDefined("step") ) 
+          {
+            if( inrec.dataType("step") == TpInt )
+              {           
+	        err += readVal( inrec, String("step"), chanStep);
+                step = String::toString(chanStep);
+              }
+            else if( inrec.dataType("step") == TpString ) 
+              {
+	        err += readVal( inrec, String("step"), step);
+                if( step.contains("Hz") ) 
+                  {
+                    stringToQuantity(step,freqStep);
+                  }
+                else if( step.contains("m/s") )
+                  {
+                    stringToQuantity(step,velStep); 
+                  } 
+              }
+            else if ( inrec.dataType("step") == TpRecord ) 
+              {
+                //record can be freq in Quantity or MFreaquency or vel in Quantity or
+                //MRadialVelocity or Doppler (by me.todoppler())
+                // ** doppler => converted to radialvel with frame 
+                stepRecord = inrec.subRecord("step");
+                if(stepRecord.isDefined("m0") )
+                  { 
+                    //must be a measure
+                    String mtype;
+                    stepRecord.get("type", mtype);
+                    if( mtype=="frequency")
+                      { 
+                        //mfrequency
+                        stepRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in step:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        step = recordQMToString(stepRecord);
+                        stringToQuantity(step, freqStep);
+                      }
+                    else if( mtype=="radialvelocity")
+                      {
+                        //mradialvelocity
+                        stepRecord.get(String("refer"), qmframe);
+                        if ( frame!="" && frame!=qmframe)
+                          {
+                            // should emit warning to the logger
+                            cerr<<"The frame in step:"<<qmframe<<" Override frame="<<frame<<endl;
+                          }
+                        step = recordQMToString(stepRecord);
+                        stringToQuantity(step,velStep);
+                      }
+                    else if( mtype=="doppler") 
+                      {
+                        step = MDopToVelString(stepRecord);
+                        stringToQuantity(step,velStep);
+                      }
+                  }
+                else 
+                  {
+                    step = recordQMToString(stepRecord);
+                    if( step.contains("Hz") ) { stringToQuantity(step,freqStep);}
+                    else if ( step.contains("m/s") ) { stringToQuantity(step,velStep);}
+                    else { err+= String("Unrecognized Quantity unit for step, must contain m/s or Hz\n"); }
+                  }
+              }
+            else { err += String("step must be an integer, a string, or frequency/velocity in Quantity/Measure\n");}
+            }
 
-	String freqframestr( MFrequency::showType(freqFrame) );
-	err += readVal( inrec, String("freqframe"), freqframestr);
-	if( ! MFrequency::getType(freqFrame, freqframestr) )
+        //reffreq (String, Quantity, or Measure)
+	if( inrec.isDefined("reffreq") )
+          {
+            if( inrec.dataType("reffreq")==TpString ) 
+              {
+	        err += readVal( inrec, String("reffreq"), refFreq); 
+              }
+            else if( inrec.dataType("reffreq")==TpRecord) 
+              {
+                String reffreqstr;
+                reffreqRecord = inrec.subRecord("reffreq"); 
+                if(reffreqRecord.isDefined("m0") )
+                  { 
+                    String mtype;
+                    reffreqRecord.get("type", mtype);
+                    if( mtype=="frequency")
+                      {
+                        reffreqstr = recordQMToString(reffreqRecord);
+                        stringToQuantity(reffreqstr,refFreq);
+                      }
+                    else{ err+= String("Unrecognized Measure for reffreq, must be a frequency measure\n");}
+                  }
+                else  
+                  {
+                    reffreqstr = recordQMToString(reffreqRecord);
+                    if( reffreqstr.contains("Hz") ) { stringToQuantity(reffreqstr,refFreq);}
+                    else { err+= String("Unrecognized Quantity unit for reffreq, must contain Hz\n");}
+                  }
+              }
+            else { err += String("reffreq must be a string, or frequency in Quantity/Measure\n");}
+          }
+   
+	err += readVal( inrec, String("veltype"), veltype); 
+        // sysvel (String, Quantity)
+        if( inrec.isDefined("sysvel") )
+          {
+            if( inrec.dataType("sysvel")==TpString )
+              {
+	        err += readVal( inrec, String("sysvel"), sysvel); 
+              }
+            else if( inrec.dataType("sysvel")==TpRecord )
+              {
+                sysvelRecord = inrec.subRecord("sysvel"); 
+                sysvel = recordQMToString(sysvelRecord);
+                if( sysvel=="" || !sysvel.contains("m/s") )
+                  { err+= String("Unrecognized Quantity unit for sysvel, must contain m/s\n");}
+              }
+            else
+              { err += String("sysvel must be a string, or velocity in Quantity\n");}
+          }
+	err += readVal( inrec, String("sysvelframe"), sysvelframe); 
+
+        // rest frequencies (record or vector of Strings)
+        if( inrec.isDefined("restfreq") )
+          {
+	    Vector<String> rfreqs(0);
+            Record restfreqSubRecord;
+            if( inrec.dataType("restfreq")==TpRecord )
+              {
+                restfreqRecord = inrec.subRecord("restfreq");
+                // assume multiple restfreqs are index as '0','1'..
+                if( restfreqRecord.isDefined("0") )
+                  {
+                    rfreqs.resize( restfreqRecord.nfields() );
+                    for( uInt fr=0; fr<restfreqRecord.nfields(); fr++)
+                      {
+                        restfreqSubRecord = restfreqRecord.subRecord(String::toString(fr));
+                        rfreqs[fr] = recordQMToString(restfreqSubRecord);
+                      }
+                  }
+              }
+            else if( inrec.dataType("restfreq")==TpArrayString ) 
+              {
+	        //Vector<String> rfreqs(0);
+	        err += readVal( inrec, String("restfreq"), rfreqs );
+                // case no restfreq is given: set to
+              }
+       	    restFreq.resize( rfreqs.nelements() );
+	    for( uInt fr=0; fr<rfreqs.nelements(); fr++)
+	      {
+	        err += stringToQuantity( rfreqs[fr], restFreq[fr] );
+	      }
+            } 
+       
+	//String freqframestr( MFrequency::showType(freqFrame) );
+	//err += readVal( inrec, String("frame"), freqframestr);
+	//if( ! MFrequency::getType(freqFrame, freqframestr) )
+	//  { err += "Invalid Frequency Frame " + freqframestr ; }
+
+        String freqframestr = (frame!="" && qmframe!="")? qmframe:frame;
+	if( frame!="" && ! MFrequency::getType(freqFrame, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
-	
 	err += readVal( inrec, String("overwrite"), overwrite );
+
+	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
 
 	err += verify();
 	
@@ -627,6 +1102,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       if( err.length()>0 ) throw(AipsError("Invalid Image Parameter set : " + err));
       
+  }
+
+  String SynthesisParamsImage::MDopToVelString(Record &rec)
+  {
+    if( rec.isDefined("type") ) 
+      {
+        String measType;
+        String unit;
+        Double val;
+        rec.get("type", measType);
+        if(measType=="doppler")
+          {
+            rec.get(String("refer"), mveltype);
+            Record dopRecord = rec.subRecord("m0");
+            String dopstr = recordQMToString(dopRecord);
+            MRadialVelocity::Types mvType;
+            //use input frame
+            qmframe = frame!=""? frame: "LSRK";
+            MRadialVelocity::getType(mvType, qmframe);
+            MDoppler::Types mdType;
+            MDoppler::getType(mdType, mveltype);
+            MDoppler dop(Quantity(val,unit), mdType);
+            MRadialVelocity mRadVel(MRadialVelocity::fromDoppler(dop, mvType));
+            Double velval = mRadVel.get("m/s").getValue();
+            return start = String::toString(velval) + String("m/s");
+          }
+        else
+          { return String("");}
+      }
+      else { return String("");}
   }
 
   String SynthesisParamsImage::verify()
@@ -673,19 +1178,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imsize.resize(2); imsize.set(100);
     cellsize.resize(2); cellsize.set( Quantity(1.0,"arcsec") );
     stokes="I";
-    facets=1;
     phaseCenter=MDirection();
+    phaseCenterFieldId=-1;
     projection=Projection::SIN;
     startModel=String("");
     overwrite=False;
 
     // Spectral coordinates
     nchan=1;
-    freqStart=Quantity(0,"Hz");
-    freqStep=Quantity(0,"Hz");
+    mode="mfs";
+    start="";
+    step="";
+    chanStart=0;
+    chanStep=1;
+    //freqStart=Quantity(0,"Hz");
+    //freqStep=Quantity(0,"Hz");
+    //velStart=Quantity(0,"m/s");
+    //velStep=Quantity(0,"m/s");
+    freqStart=Quantity(0,"");
+    freqStep=Quantity(0,"");
+    velStart=Quantity(0,"");
+    velStep=Quantity(0,"");
+    veltype=String("radio");
     restFreq.resize(0);
     refFreq = Quantity(0,"Hz");
+    frame = "";
     freqFrame=MFrequency::LSRK;
+    sysvel="";
+    sysvelframe="";
     nTaylorTerms=1;
 
     
@@ -703,20 +1223,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("stokes", stokes);
     impar.define("nchan", nchan);
     impar.define("ntaylorterms", nTaylorTerms);
-    impar.define("facets", facets);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
+    impar.define("phasecenterfieldid",phaseCenterFieldId);
     impar.define("projection", projection.name() );
 
-    impar.define("freqstart", QuantityToString( freqStart ));
-    impar.define("freqstep", QuantityToString( freqStep ) );
-    Vector<String> rfs( restFreq.nelements() );
-    for(uInt rf=0; rf<restFreq.nelements(); rf++){rfs[rf] = QuantityToString(restFreq[rf]);}
-    impar.define("restfreq", rfs);
-    impar.define("reffreq", QuantityToString(refFreq));
-    impar.define("freqframe", MFrequency::showType(freqFrame));
+    impar.define("mode", mode );
+    // start and step can be one of these types
+    if( start!="" )
+      { 
+        if(String::toInt(start) == chanStart )
+          {
+            impar.define("start",chanStart); 
+          }
+        else if( startRecord.nfields() > 0 )
+          {
+            impar.defineRecord("start", startRecord ); 
+          }
+        else 
+          {
+            impar.define("start",start);
+        }
+      }
+    else { 
+        impar.define("start", start ); 
+      }
+    if( step!="" )
+      {
+        if( String::toInt(step) == chanStep )
+          {
+            impar.define("step", chanStep);
+          }
+        else if( stepRecord.nfields() > 0 )
+          { 
+            impar.defineRecord("step",stepRecord);
+          }
+        else
+          {
+            impar.define("step",step);
+          }
+      }
+    else 
+      { 
+        impar.define("step", step);
+      }
+    //impar.define("chanstart", chanStart );
+    //impar.define("chanstep", chanStep );
+    //impar.define("freqstart", QuantityToString( freqStart ));
+    //impar.define("freqstep", QuantityToString( freqStep ) );
+    //impar.define("velstart", QuantityToString( velStart ));
+    //impar.define("velstep", QuantityToString( velStep ) );
+    impar.define("veltype", veltype);
+    if (restfreqRecord.nfields() != 0 ) 
+      {
+        impar.defineRecord("restfreq", restfreqRecord);
+      }
+    else
+      {
+        Vector<String> rfs( restFreq.nelements() );
+        for(uInt rf=0; rf<restFreq.nelements(); rf++){rfs[rf] = QuantityToString(restFreq[rf]);}
+        impar.define("restfreq", rfs);
+      }
+    //impar.define("reffreq", QuantityToString(refFreq));
+    //reffreq
+    if( reffreqRecord.nfields() != 0 )  
+      { impar.defineRecord("reffreq",reffreqRecord); }
+    else
+      { impar.define("reffreq",reffreq); }
+    //impar.define("reffreq", reffreq );
+    //impar.define("frame", MFrequency::showType(freqFrame) );
+    impar.define("frame", frame );
+    //sysvel
+    if( sysvelRecord.nfields() != 0 )
+      { impar.defineRecord("sysvel",sysvelRecord); } 
+    else
+      { impar.define("sysvel", sysvel );}
+    impar.define("sysvelframe", sysvelframe );
 
     impar.define("overwrite",overwrite );
-    impar.define("startmodel", startModel);
+    impar.define("startmodel", startModel );
 
     return impar;
   }
@@ -728,13 +1312,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  CoordinateSystem 
-  SynthesisParamsImage::buildCoordinateSystem(MeasurementSet& msobj) const
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi) const
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
+  
+
+    // get the first ms for multiple MSes
+    MeasurementSet msobj=rvi->getMeasurementSet();
+
+    MDirection phaseCenterToUse = phaseCenter;
+
+    if( phaseCenterFieldId != -1 )
+      {
+	ROMSFieldColumns msfield(msobj.field());
+	phaseCenterToUse=msfield.phaseDirMeas( phaseCenterFieldId ); 
+      }
+    // Setup Phase center if it is specified only by field id.
 
     /////////////////// Direction Coordinates
-    MVDirection mvPhaseCenter(phaseCenter.getAngle());
+    MVDirection mvPhaseCenter(phaseCenterToUse.getAngle());
     // Normalize correctly
     MVAngle ra=mvPhaseCenter.get()(0);
     ra(0.0);
@@ -753,24 +1349,157 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Double> xform(2,2);
     xform=0.0;xform.diagonal()=1.0;
     DirectionCoordinate
-      myRaDec(MDirection::Types(phaseCenter.getRefPtr()->getType()),
+      myRaDec(MDirection::Types(phaseCenterToUse.getRefPtr()->getType()),
 	      projection,
 	      refCoord(0), refCoord(1),
 	      deltas(0), deltas(1),
 	      xform,
 	      refPixel(0), refPixel(1));
 
+
+    //defining observatory...needed for position on earth
+    // get the first ms for multiple MSes
+    //    MeasurementSet msobj=rvi->getMeasurementSet();
+    ROMSColumns msc(msobj);
+    String telescop = msc.observation().telescopeName()(0);
+    MEpoch obsEpoch = msc.timeMeas()(0);
+    MPosition obsPosition;
+    if(!(MeasTable::Observatory(obsPosition, telescop)))
+      {
+        os << LogIO::WARN << "Did not get the position of " << telescop
+           << " from data repository" << LogIO::POST;
+        os << LogIO::WARN
+           << "Please contact CASA to add it to the repository."
+           << LogIO::POST;
+        os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+      }
+
+    ObsInfo myobsinfo;
+    myobsinfo.setTelescope(telescop);
+    myobsinfo.setPointingCenter(mvPhaseCenter);
+    myobsinfo.setObsDate(obsEpoch);
+    myobsinfo.setObserver(msc.observation().observer()(0));
+
+    /// Attach obsInfo to the CoordinateSystem
+    ///csys.setObsInfo(myobsinfo);
+
+
     /////////////////// Spectral Coordinate
 
     //Make sure frame conversion is switched off for REST frame data.
     Bool freqFrameValid=(freqFrame != MFrequency::REST);
 
-    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, 
-				  freqStart, freqStep, 0, 
-				  restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
-    for (uInt k=1 ; k < restFreq.nelements(); ++k)
+    // *** get selected spw ids ***
+    Vector<Int> spwids;
+    Vector<Int> nvischan;
+    rvi->allSelectedSpectralWindows(spwids,nvischan);
+    if(spwids.nelements()==0)
+      {
+        Int nspw=msc.spectralWindow().nrow();
+        spwids.resize(nspw);
+        indgen(spwids); 
+      }
+    MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
+    Vector<Double> dataChanFreq, dataChanWidth;
+    if(spwids.nelements()==1)
+      {
+        dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
+        dataChanWidth=msc.spectralWindow().chanWidth()(spwids[0]);
+      }
+    else 
+      {
+        SubMS thems(msobj);
+        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+          {
+            os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
+          }
+      }
+    
+    Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
+    if( qrestfreq.getValue("Hz")==0 ) 
+      {
+        Int fld = rvi->fieldId();
+        MSDopplerUtil msdoppler(msobj);
+        Vector<Double> restfreqvec;
+        msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
+        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
+      }
+    Double refPix;
+    Vector<Double> chanFreq;
+    Vector<Double> chanFreqStep;
+    String specmode;
+
+    Double freqmin=0, freqmax=0;
+    rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+
+    if (!getImFreq(chanFreq, chanFreqStep, refPix, specmode, obsEpoch, 
+		   obsPosition, dataChanFreq, dataChanWidth, dataFrame, qrestfreq, freqmin, freqmax,
+		   phaseCenterToUse))
+      throw(AipsError("Failed to determine channelization parameters"));
+
+    Bool nonLinearFreq(false);
+    String veltype_p=veltype;
+    veltype_p.upcase(); 
+    if(veltype_p.contains("OPTICAL") || veltype_p.matches("Z") || veltype_p.contains("BETA") ||
+         veltype_p.contains("RELATI") || veltype_p.contains("GAMMA")) 
+      {
+        nonLinearFreq= true;
+      }
+
+    SpectralCoordinate mySpectral;
+    Double stepf;
+    if(!nonLinearFreq) 
+    //TODO: velocity mode default start case (use last channels?)
+      {
+        Double startf=chanFreq[0];
+        //Double stepf=chanFreqStep[0];
+        if(chanFreq.nelements()==1) 
+          {
+            stepf=chanFreqStep[0];
+          }
+        else 
+          { 
+            stepf=chanFreq[1]-chanFreq[0];
+          }
+        Double restf=qrestfreq.getValue("Hz");
+        //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
+        // once NOFRAME is implemented do this 
+        //if(mode=="cubedata") 
+        //  {
+        //     mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::NOFRAME : MFrequency::REST, 
+        //	 startf, stepf, refPix, restf);
+        //  }
+        //else 
+        //  {
+        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
+		startf, stepf, refPix, restf);
+        //  }
+      }
+    else 
+      { // nonlinear freq coords - use tabular setting
+        // once NOFRAME is implemented do this 
+        //if(mode=="cubedata") 
+        //  {
+        //    subMS::calcChanFreqs cannot handle NOFRAME  
+        //    mySpectral = SpectralCoordinate(freqFrameValid ? MFrequnecy::NOFRAME : MFrequency::REST,
+        //             chanFreq, (Double)qrestfreq.getValue("Hz"));
+        //  }
+        //else 
+        //  {
+        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
+                 chanFreq, (Double)qrestfreq.getValue("Hz"));
+        //  }
+      }
+    //cout << "Rest Freq : " << restFreq << endl;
+
+    for(uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
 
+    if (freqFrameValid) {
+      mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
+    }
+
+    //    cout << "RF from coordinate : " << mySpectral.restFrequency() << endl;
 
     ////////////////// Stokes Coordinate
    
@@ -785,8 +1514,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     csys.addCoordinate(myRaDec);
     csys.addCoordinate(myStokes);
     csys.addCoordinate(mySpectral);
+    csys.setObsInfo(myobsinfo);
 
     //////////////// Set Observatory info, if MS is provided.
+    // (remove this section after verified...)
+    /***
     if( ! msobj.isNull() )
       {
 	//defining observatory...needed for position on earth
@@ -814,9 +1546,198 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	csys.setObsInfo(myobsinfo);
 
       }// if MS is provided.
+      ***/
 
     return csys;
   }
+
+  Bool SynthesisParamsImage::getImFreq(Vector<Double>& chanFreq, Vector<Double>& chanFreqStep, 
+                                       Double& refPix, String& specmode,
+                                       const MEpoch& obsEpoch, const MPosition& obsPosition, 
+                                       const Vector<Double>& dataChanFreq, 
+                                       const Vector<Double>& dataChanWidth,
+                                       const MFrequency::Types& dataFrame, 
+                                       const Quantity& qrestfreq, const Double& freqmin, const Double& freqmax,
+				       const MDirection& phaseCenter) const
+  {
+
+    String inStart, inStep; 
+    specmode = findSpecMode(mode);
+    String freqframe;
+    Bool verbose("true"); // verbose logging messages from calcChanFreqs
+    LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
+    //cerr<<"qrestfreq="<<qrestfreq<<endl;
+    //cerr<<" freqframe="<<MFrequency::showType(freqFrame)<<endl;
+
+    refPix=0.0; 
+    Bool descendingfreq(false);
+
+    if( mode.contains("cube") )
+      { 
+        String restfreq=String::toString(qrestfreq.getValue(qrestfreq.getUnit()))+qrestfreq.getUnit();
+        // use frame from input start or width in MFreaquency or MRadialVelocity
+        freqframe = qmframe!=""? qmframe: MFrequency::showType(freqFrame);
+        // emit warning here if qmframe is used 
+        //
+        inStart = start;
+        inStep = step;
+        if( specmode=="channel" ) 
+          {
+            inStart = String::toString(chanStart);
+            inStep = String::toString(chanStep); 
+            // negative step -> descending channel indices 
+            if (inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+            // input frame is the data frame
+            freqframe = MFrequency::showType(dataFrame);
+          }
+        else if( specmode=="frequency" ) 
+          {
+            //if ( freqStart.getValue("Hz") == 0 && freqStart.getUnit() != "" ) { // default start
+            //start = String::toString( freqmin ) + freqStart.getUnit();
+            //}
+            //else {
+            //start = String::toString( freqStart.getValue(freqStart.getUnit()) )+freqStart.getUnit();  
+            //}
+            //step = String::toString( freqStep.getValue(freqStep.getUnit()) )+freqStep.getUnit();  
+            // negative freq width -> descending freq ordering
+            if(inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+          }
+        else if( specmode=="velocity" ) 
+          {
+            // if velStart is empty set start to vel of freqmin or freqmax?
+            //if ( velStart.getValue(velStart.getUnit()) == 0 && !(velStart.getUnit().contains("m/s")) ) {
+            //  start = "";
+            //}
+            //else { 
+            //  start = String::toString( velStart.getValue(velStart.getUnit()) )+velStart.getUnit();  
+            //}
+            //step = String::toString( velStep.getValue(velStep.getUnit()) )+velStep.getUnit();  
+            // positive velocity width -> descending freq ordering
+            if (!inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+          }
+
+      if (inStep=='0') inStep="";
+
+      MRadialVelocity mSysVel; 
+      Quantity qVel;
+      MRadialVelocity::Types mRef;
+      if(mode!="cubesrc") 
+        {
+          if(freqframe=="SOURCE") 
+            {
+              os << LogIO::SEVERE << "freqframe=\"SOURCE\" is only allowed for mode=\"cubesrc\""
+                 << LogIO::EXCEPTION;
+              return false; 
+            }
+        }
+      else // only for cubesrc mode: TODO- check for the ephemeris info.
+        {
+          if(sysvel!="") {
+            stringToQuantity(sysvel,qVel);
+            MRadialVelocity::getType(mRef,sysvelframe);
+            mSysVel=MRadialVelocity(qVel,mRef);
+          }
+          else // and if no ephemeris info, issue a warning... 
+            {  mSysVel=MRadialVelocity();}
+        }
+      // cubedata mode: input start, step are those of the input data frame
+      if ( mode=="cubedata" ) freqframe=MFrequency::showType(dataFrame); 
+      
+      // *** NOTE *** 
+      // calcChanFreqs alway returns chanFreq in
+      // ascending freq order. 
+      // for step < 0 calcChanFreqs returns chanFreq that 
+      // contains start freq. in its last element of the vector. 
+      //
+      os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
+         <<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
+         << LogIO::POST;
+      Bool rst=SubMS::calcChanFreqs(os,
+                           chanFreq, 
+                           chanFreqStep,
+                           dataChanFreq,
+                           dataChanWidth,
+                           phaseCenter,
+                           dataFrame,
+                           obsEpoch,
+                           obsPosition,
+                           specmode,
+                           nchan,
+                           inStart,
+                           inStep,
+                           restfreq,
+                           freqframe,
+                           veltype,
+                           verbose, 
+                           mSysVel
+                           );
+
+      if (!rst) {
+        os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
+           << LogIO::EXCEPTION;
+        return False;
+      }
+      os << LogIO::DEBUG1
+         <<"chanFreq 0="<<chanFreq[0]<<" chanFreq last="<<chanFreq[chanFreq.nelements()-1]
+         << LogIO::POST;
+
+      if (descendingfreq) {
+        // reverse the freq vector if necessary so the first element can be
+        // used to set spectralCoordinates in all the cases.
+        //
+        // also do for chanFreqStep..
+        std::vector<Double> stlchanfreq;
+        chanFreq.tovector(stlchanfreq);
+        std::reverse(stlchanfreq.begin(),stlchanfreq.end());
+        chanFreq=stlchanfreq;
+        chanFreqStep=-chanFreqStep;
+      }
+    }
+    else if ( mode=="mfs" ) {
+      chanFreq.resize(1);
+      chanFreqStep.resize(1);
+      chanFreqStep[0] = freqmax - freqmin;
+      Double freqmean = (freqmin + freqmax)/2;
+      if (refFreq.getValue("Hz")==0) {
+        chanFreq[0] = freqmean;
+        refPix = 0.0;
+      }
+      else { 
+        chanFreq[0] = refFreq.getValue("Hz"); 
+        refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
+      }
+    }
+    else {
+       // unrecognized mode, error
+       os << LogIO::SEVERE << "mode="<<mode<<" is unrecognized."
+          << LogIO::EXCEPTION;
+       return False;
+    }
+    return True;
+
+  }//getImFreq
+
+  String SynthesisParamsImage::findSpecMode(const String& mode) const
+  {
+    String specmode;
+    specmode="channel";
+    if ( mode.contains("cube") ) {
+      // if velstart or velstep is defined -> specmode='vel'
+      // else if freqstart or freqstep is defined -> specmode='freq'
+      // velocity: assume unset if velStart => 0.0 with no unit
+      //           assume unset if velStep => 0.0 with/without unit
+      if ( !(velStart.getValue()==0.0 && velStart.getUnit()=="" ) ||
+           !( velStep.getValue()==0.0)) { 
+        specmode="velocity";
+      }
+      else if ( !(freqStart.getValue()==0.0 && freqStart.getUnit()=="") ||
+                !(freqStep.getValue()==0.0)) {
+        specmode="frequency";
+      }
+    }
+    return specmode;
+  }
+
 
   Vector<Int> SynthesisParamsImage::decideNPolPlanes(const String& stokes) const
   {
@@ -892,6 +1813,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("usedoubleprec"), useDoublePrec );
 	err += readVal( inrec, String("wprojplanes"), wprojplanes );
 	err += readVal( inrec, String("convfunc"), convFunc );
+	
+	// facets	
+	err += readVal( inrec, String("facets"), facets);
 
 	// Track moving source ?
 	err += readVal( inrec, String("distance"), distance );
@@ -909,6 +1833,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("conjbeams"), conjBeams );
 	err += readVal( inrec, String("computepastep"), computePAStep );
 	err += readVal( inrec, String("rotatepastep"), rotatePAStep );
+
+	// Single or MultiTerm mapper
+	err += readVal( inrec, String("mtype"), mType );
 
 	err += verify();
 	
@@ -928,7 +1855,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Check for valid FTMachine type.
     // Valid other params per FTM type, etc... ( check about nterms>1 )
- 
+
+    if( ftmachine=="mosaicft" && mType=="imagemosaic"  || 
+	ftmachine=="awprojectft" && mType=="imagemosaic" )
+      {  err +=  "Cannot use " + ftmachine + " with " + mType + " because it is a redundant choice for mosaicing. In the future, we may support the combination to signal the use of single-pointing sized image grids during gridding and iFT, and only accumulating it on the large mosaic image. For now, please set either mappertype='default' to get mosaic gridding  or ftmachine='ft' or 'wprojectft' to get image domain mosaics. \n"; }
+
+    if( facets < 1 )
+      {err += "Must have at least 1 facet\n"; }
+
+    if( ftmachine=="awprojectft" && facets>1 )
+      {err += "The awprojectft gridder supports A- and W-Projection. Instead of using facets>1 to deal with the W-term, please set the number of wprojplanes to a value > 1 to trigger the combined AW-Projection algorithm. \n";  } // Also, the way the AWP cfcache is managed, even if all facets share a common one so that they reuse convolution functions, the first facet's gridder writes out the avgPB and all others see that it's there and don't compute their own. As a result, the code will run, but the first facet's weight image will be duplicated for all facets.  If needed, this must be fixed in the way the AWP gridder manages its cfcache. But, since the AWP gridder supports joint A and W projection, facet support may never be needed in the first place... 
+
+    if( ftmachine=="mosaicft" && facets>1 )
+      { err += "The combination of mosaicft gridding with multiple facets is not supported. Please use the awprojectft gridder instead, and set wprojplanes to a value > 1 to trigger AW-Projection. \n"; }
+
     return err;
   }
 
@@ -941,6 +1881,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     useDoublePrec=True; 
     wprojplanes=1; 
     convFunc="SF"; 
+    
+    // facets
+    facets=1;
 
     // Moving phase center ?
     distance=Quantity(0,"m");
@@ -958,6 +1901,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     conjBeams  = True;
     computePAStep=360.0;
     rotatePAStep=5.0;
+
+    // Mapper type
+    mType = String("default");
     
   }
 
@@ -973,6 +1919,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("wprojplanes", wprojplanes);
     gridpar.define("convfunc", convFunc);
 
+    gridpar.define("facets", facets);
+
     gridpar.define("distance", QuantityToString(distance));
     gridpar.define("tracksource", trackSource);
     gridpar.define("trackdir", MDirectionToString( trackDir ));
@@ -987,6 +1935,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("conjbeams",conjBeams );
     gridpar.define("computepastep", computePAStep);
     gridpar.define("rotatepastep", rotatePAStep);
+
+    gridpar.define("mtype", mType);
 
     return gridpar;
   }

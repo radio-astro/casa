@@ -120,27 +120,66 @@ void PlotMSPlotManager::unassignPlots(){
 	}
 }
 
-void PlotMSPlotManager::clearPlotsAndCanvases() {
-    unassignPlots();
+void PlotMSPlotManager::clearCanvas( int row, int col ){
+	itsPages_.clearCanvas( row, col );
+}
+
+void PlotMSPlotManager::clearPlotsAndCanvases( bool clearCanvases ) {
+
+	//Make sure all drawing is finished before we start clearing
+	//the existing plots and canvases.
+	waitForDrawing();
+
+    //Remove the plots(data) from the canvases.
+	unassignPlots();
+    
+    if ( clearCanvases ){
+    	//Reset the page layout.
+    	itsPages_.clearPages();
+    }
+    else {
+
+    	//Remove all trace of the plots on the pages.
+    	int plotCount = itsPlots_.size();
+    	for ( int i = 0; i < plotCount; i++ ){
+    		itsPages_.disown( itsPlots_[i] );
+    	}
+    }
+
+    //Delete the manager's copy of the plots.
     vector<PlotMSPlot*> plotsCopy = itsPlots_;
     itsPlots_.clear();
-    
     itsPlotParameters_.clear();
-    itsPages_.clearPages();
     for(unsigned int i = 0; i < plotsCopy.size(); i++) {
-        plotsCopy[i]->detachFromCanvases();
         delete plotsCopy[i];
     }
     
     notifyWatchers();
 }
 
+bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
+	bool foundSpot = false;
+	//Try to find an empty spot to put it.
+	pair<int,int> location = itsPages_.findEmptySpot();
+	if ( location.first != -1 && location.second != -1 ){
+		PlotMSPlotParameters& params = plot->parameters();
+	    PMS_PP_Iteration* iterParams = params.typedGroup<PMS_PP_Iteration>();
+		if ( iterParams == NULL ){
+			params.setGroup<PMS_PP_Iteration>();
+			iterParams = params.typedGroup<PMS_PP_Iteration>();
+		}
+		iterParams->setGridRow( location.first );
+		iterParams->setGridCol( location.second );
+		plot->assignCanvases( itsPages_ );
+		foundSpot = true;
+	}
+	return foundSpot;
+}
 
 // Private Methods //
 
 void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
         const PlotMSPlotParameters* params) {
-
     if(plot == NULL) return;
     itsPlots_.push_back(plot);
     if(params != NULL){
@@ -149,39 +188,33 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     itsPlotParameters_.push_back(&plot->parameters());
     itsPages_.setupCurrentPage();
 
-
     bool locationFound = isPlottable( plot );
+    if ( !locationFound ){
+    	locationFound = assignEmptySpot( plot );
+    }
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }
+
 	notifyWatchers();
 }
 
-bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) const {
+bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) {
 	bool locationFound = false;
+
 	 //Before we set up any graphic elements we need to make sure the plot has a
 	//valid location.  First check to see if its current one is valid.
 	PlotMSPlotParameters& plotParams = plot->parameters();
 	PMS_PP_Iteration* iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-	if ( iterParams != NULL ){
-		int desiredRow = iterParams->getGridRow();
-		int desiredCol = iterParams->getGridCol();
+	int desiredRow = iterParams->getGridRow();
+	int desiredCol = iterParams->getGridCol();
+	bool wantsLocation = true;
+	if ( desiredRow < 0 || desiredCol < 0 ){
+		wantsLocation = false;
+	}
+	if ( iterParams != NULL && wantsLocation ){
 		locationFound = itsPages_.isSpot( desiredRow, desiredCol, plot );
 	}
-
-   	if ( !locationFound ){
-   		//Try to find an empty spot to put it.
-   		pair<int,int> location = itsPages_.findEmptySpot();
-   		if ( location.first != -1 && location.second != -1 ){
-   			locationFound = true;
-   			if ( iterParams == NULL ){
-   				plotParams.setGroup<PMS_PP_Iteration>();
-   			    iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-   			}
-   			iterParams->setGridRow( location.first );
-   			iterParams->setGridCol( location.second );
-   		}
-   	}
    	return locationFound;
 }
 
@@ -189,6 +222,7 @@ bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) const {
 void PlotMSPlotManager::removePlot( PlotMSPlot* plot ){
 	std::vector<PlotMSPlot*>::iterator plotLoc = std::find( itsPlots_.begin(), itsPlots_.end(), plot );
 	if ( plotLoc != itsPlots_.end() ){
+		plot->clearCanvases();
 		plot->detachFromCanvases();
 		itsPages_.disown( plot );
 		itsPlots_.erase(plotLoc);
@@ -207,18 +241,24 @@ void PlotMSPlotManager::getGridSize( Int& rows, Int& cols ){
 	}
 }
 
+void PlotMSPlotManager::waitForDrawing(){
+	int plotCount = itsPlots_.size();
+	for ( int i = 0; i < plotCount; i++ ){
+
+		itsPlots_[i]->waitForDrawing( true );
+
+	}
+}
+
+
+
 bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 	//Detach the plots from the canvases
 	bool resized = itsPages_.isGridChanged( rows, cols );
 	if ( resized || override ){
-		bool guiShown = itsParent_->guiShown();
 		int plotCount = itsPlots_.size();
+		waitForDrawing();
 		for ( int i =0; i < plotCount; i++ ){
-
-			//Wait for existing draw threads to finish before we proceed so
-			//we don't get a seg fault from a draw thread hanging onto deleted
-			//data.
-			itsPlots_[i]->waitForDrawing( true );
 
 			//This is needed to avoid a segfault if the grid size is shrinking so
 			//some of the existing plots may no longer be plotted.
@@ -227,12 +267,15 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			itsPages_.disown( itsPlots_[i]);
 
 		}
+
 		//We delete all the plots and canvases in scripting mode because
 		//it is easy enough to script them back in.
+		bool guiShown = itsParent_->guiShown();
 		if ( !guiShown ){
 			clearPlotsAndCanvases();
 			itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
 		}
+
 		//In GUI mode the user has the ability to delete individual plots
 		//as needed and would probably be mad if all the plots disappeared
 		//when the grid size changed.  Instead, we change the grid, and then
@@ -242,8 +285,23 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			itsPages_.setupCurrentPage();
 			for ( int i = 0; i < plotCount; i++ ){
 				bool showPlot = isPlottable( itsPlots_[i]);
+				if ( !showPlot ){
+				   	showPlot = assignEmptySpot( itsPlots_[i] );
+				}
 				if ( showPlot ){
+					//Without this call the plot will appear as a separate window from
+					//plotms.
 					itsPlots_[i]->updateLocation();
+				}
+			}
+		}
+		//For GUI mode, the plots do not redraw themselves in their new grid when
+		//the grid size is changed unless we tell them to redraw.
+		if ( guiShown ){
+			for ( int i = 0; i < plotCount; i++ ){
+				if ( isPlottable( itsPlots_[i])){
+					itsPlots_[i]->parametersHaveChanged( itsPlots_[i]->parameters(),
+							PMS_PP::UPDATE_REDRAW | PMS_PP::UPDATE_ITERATION | PMS_PP::UPDATE_CANVAS);
 				}
 			}
 		}
