@@ -11,6 +11,11 @@ import sha
 import time
 import numpy
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
 from tsdsave import tsdsave
 import asap as sd
 
@@ -930,7 +935,8 @@ class tsdsave_test7( tsdsave_unittest_base, unittest.TestCase ):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Input value is not a quantity: ')
+            #pos=str(e).find('Input value is not a quantity: ')
+            pos = str(e).find('wrong unit of restfreq.')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
@@ -1476,9 +1482,17 @@ class tsdsave_test_splitant(unittest.TestCase,tsdsave_unittest_base):
 ###
 # Test data selection
 ###
-class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
+class tsdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, tsdsave_unittest_base):
     infile = 'data_selection.asap'
     prefix = 'selected.asap'
+
+    @property
+    def task(self):
+        return tsdsave
+
+    @property
+    def spw_channel_selection(self):
+        return True
     
     def setUp(self):
         if (not os.path.exists(self.infile)):
@@ -1490,13 +1504,9 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
             shutil.rmtree(self.infile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def __exec_complex_test(self, params, exprs, values, columns, expected_nrow):
+    def __exec_complex_test(self, params, exprs, values, columns, expected_nrow, regular_test=True):
         num_param = len(params)
-        stack = inspect.stack()
-        x = 0
-        while re.match('^test_.*[0-9]$',stack[x][3]) is None and x < len(stack):
-            x += 1
-        test_name = inspect.stack()[x][3]
+        test_name = self._get_test_name(regular_test)
         outfile = '.'.join([self.prefix, test_name])
         #print 'outfile=%s'%(outfile)
         casalog.post('%s: %s'%(test_name, ','.join(['%s = \'%s\''%(params[i],exprs[i]) for i in xrange(num_param)])))
@@ -1505,7 +1515,11 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
                   'overwrite': True}
         for i in xrange(num_param):
             kwargs[params[i]] = exprs[i]
-        tsdsave(**kwargs)
+
+        if regular_test:
+            self.run_task(**kwargs)
+        else:
+            tsdsave(**kwargs)
 
         tb.open(outfile)
         cols = [tb.getcol(columns[i]) for i in xrange(num_param)]
@@ -1515,34 +1529,16 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
         self.assertEqual(expected_nrow, nrow)
         for i in xrange(num_param):
             casalog.post('expected values = %s, actual values = %s'%(set(values[i]), set(cols[i])))
-            self.assertTrue(set(values[i]) == set(cols[i]))
+            self.assertEqual(set(values[i]), set(cols[i]))
         return outfile
         
-    def __exec_simple_test(self, param, expr, value_list, column, expected_nrow):
+    def __exec_simple_test(self, param, expr, value_list, column, expected_nrow, regular_test=True):
         return self.__exec_complex_test([param], [expr], [value_list], [column],
-                                        expected_nrow)
+                                        expected_nrow, regular_test)
         
-    def exec_spw_test(self, iflist, spw, expected_nrow):
-        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
-
-    def exec_scan_test(self, scanlist, scan, expected_nrow):
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    def exec_pol_test(self, pollist, pol, expected_nrow):
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-                
-    def exec_beam_test(self, beamlist, beam, expected_nrow):
-        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
-
-    def exec_field_test(self, fieldlist, field, expected_nrow):
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    def exec_timerange_test(self, timelist, timerange, expected_nrow):
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    def exec_channelrange_test(self, iflist, channelrange, spw, expected_nrow):
+    def __exec_channelrange_test(self, iflist, channelrange, spw, expected_nrow, regular_test=True):
         outfile = self.__exec_simple_test('spw', spw, iflist, 'IFNO',
-                                          expected_nrow)
+                                          expected_nrow, regular_test)
         s_org = sd.scantable(self.infile, average=True)
         s = sd.scantable(outfile, average=False)
         expected_nchan = channelrange[1] - channelrange[0] + 1
@@ -1551,409 +1547,614 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
         u_org = s.get_unit()
         s_org.set_unit('GHz')
         s.set_unit('GHz')
-        sel = sd.selector()
-        sel.set_ifs(iflist)
-        s_org.set_selection(sel)
-        f_org = s_org._getabcissa(0)
-        f = s._getabcissa(0)
-        s_org.set_selection()
+        if type(channelrange[0]) is not list:
+            channelrange = [channelrange for i in xrange(len(iflist))]
+        for (ifno,chrange) in zip(iflist,channelrange):
+            sel = sd.selector()
+            sel.set_ifs(ifno)
+            s_org.set_selection(sel)
+            s.set_selection(sel)
+            f_org = s_org._getabcissa(0)
+            f = s._getabcissa(0)
+            s.set_selection()
+            s_org.set_selection()
+            casalog.post('left edge expected: %s, actual: %s'%(f_org[chrange[0]],f[0]))
+            casalog.post('right edge expected: %s, actual: %s'%(f_org[chrange[1]],f[-1]))
+            self.assertEqual(f_org[chrange[0]], f[0])
+            self.assertEqual(f_org[chrange[1]], f[-1])
         s_org.set_unit(u_org_org)
         s.set_unit(u_org)
-        casalog.post('left edge expected: %s, actual: %s'%(f_org[channelrange[0]],f[0]))
-        casalog.post('right edge expected: %s, actual: %s'%(f_org[channelrange[1]],f[-1]))
-        self.assertEqual(f_org[channelrange[0]], f[0])
-        self.assertEqual(f_org[channelrange[1]], f[-1])
-        
-    def test_spw0(self):
-        """test_spw0: Test spw selection by syntax 'N'"""
-        iflist = [1]
-        spw = '%s'%(iflist[0])
-        expected_nrow = 16
-        
-        self.exec_spw_test(iflist, spw, expected_nrow)
-        
-    def test_spw1(self):
-        """test_spw1: Test spw selection by syntax 'N~M'"""
-        iflist = [0,1,2]
-        spw = '%s~%s'%(min(iflist),max(iflist))
-        expected_nrow = 48
 
-        self.exec_spw_test(iflist, spw, expected_nrow)
+    def __exec_exception_test(self, spw):
+        # raise exception
+        test_name = inspect.stack()[1][3]
+        outfile = '.'.join([self.prefix, test_name])
+        #spw = ':0~100;200~400'
 
-    def test_spw2(self):
-        """test_spw2: Test spw selection by syntax '<N'"""
-        iflist = [0,1]
-        spw = '<%s'%(max(iflist)+1)
-        expected_nrow = 32
+        try:
+            tsdsave(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            self.assertTrue(isinstance(e, SyntaxError),
+                            msg='Unexpected exception was thrown: %s'%(str(e)))
+            pos = str(e).find('tsdsave doesn\'t support multiple channel range selection for spw.')
+            self.assertNotEqual(pos, -1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))        
 
-        self.exec_spw_test(iflist, spw, expected_nrow)
-
-    def test_spw3(self):
-        """test_spw3: Test spw selection by syntax '>N'"""
-        iflist = [2,3]
-        spw = '>%s'%(min(iflist)-1)
-        expected_nrow = 32
-
-        self.exec_spw_test(iflist, spw, expected_nrow)
-
-    #def test_spw4(self):
-    #    """test_spw4: Test spw selection by syntax '<=N'"""
-    #    iflist = [0,1]
-    #    spw = '<=%s'%(max(iflist))
-    #    expected_nrow = 32
-
-    #    self.exec_spw_test(iflist, spw, expected_nrow)
-
-    #def test_spw5(self):
-    #    """test_spw5: Test spw selection by syntax '>=N'"""
-    #    iflist = [2,3]
-    #    spw = '>=%s'%(min(iflist))
-    #    expected_nrow = 32
-
-    #    self.exec_spw_test(iflist, spw, expected_nrow)
-        
-    def test_spw6(self):
-        """test_spw6: Test spw selection by syntax 'N,M'"""
-        iflist = [1,2,3]
-        spw = ','.join(map(str,iflist))
-        expected_nrow = 48
-
-        self.exec_spw_test(iflist, spw, expected_nrow)
-
-    #def test_spw7(self):
-    #    """test_spw7: Test spw selection by syntax 'N;M'"""
-    #    iflist = [1,2,3]
-    #    spw = ';'.join(map(str,iflist))
-    #    expected_nrow = 48
-
-    #    self.exec_spw_test(iflist, spw, expected_nrow)
-
-    def test_spw8(self):
-        """test_spw8: Test spw selection by syntax 'EXP0,EXP1'"""
-        iflist = [0,2,3]
-        spw='0,2~3'
-        expected_nrow = 48
-
-        self.exec_spw_test(iflist, spw, expected_nrow)
-
-    def test_scan0(self):
-        """test_scan0: Test scan selection by syntax 'N'"""
-        scanlist = [1]
-        scan = '%s'%(scanlist[0])
-        expected_nrow = 16
-        
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-        
-    def test_scan1(self):
-        """test_scan1: Test scan selection by syntax 'N~M'"""
-        scanlist = [0,1,2]
-        scan = '%s~%s'%(min(scanlist),max(scanlist))
-        expected_nrow = 48
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-
-    def test_scan2(self):
-        """test_scan2: Test scan selection by syntax '<N'"""
-        scanlist = [0,1]
-        scan = '<%s'%(max(scanlist)+1)
-        expected_nrow = 32
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-
-    def test_scan3(self):
-        """test_scan3: Test scan selection by syntax '>N'"""
-        scanlist = [2,3]
-        scan = '>%s'%(min(scanlist)-1)
-        expected_nrow = 32
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-
-    def test_scan4(self):
-        """test_scan4: Test scan selection by syntax '<=N'"""
-        scanlist = [0,1]
-        scan = '<=%s'%(max(scanlist))
-        expected_nrow = 32
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-
-    def test_scan5(self):
-        """test_scan5: Test scan selection by syntax '>=N'"""
-        scanlist = [2,3]
-        scan = '>=%s'%(min(scanlist))
-        expected_nrow = 32
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-        
-    def test_scan6(self):
-        """test_scan6: Test scan selection by syntax 'N,M'"""
-        scanlist = [1,2,3]
-        scan = ','.join(map(str,scanlist))
-        expected_nrow = 48
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-
-    def test_scan7(self):
-        """test_scan7: Test scan selection by syntax 'EXP0,EXP1'"""
-        scanlist = [0,2,3]
-        scan='0,2~3'
-        expected_nrow = 48
-
-        self.exec_scan_test(scanlist, scan, expected_nrow)
-
-    def test_pol0(self):
-        """test_pol0: Test pol selection by syntax 'N'"""
-        pollist = [1]
-        pol = '%s'%(pollist[0])
-        expected_nrow = 16
-        
-        self.exec_pol_test(pollist, pol, expected_nrow)
-        
-    def test_pol1(self):
-        """test_pol1: Test pol selection by syntax 'N~M'"""
-        pollist = [0,1,2]
-        pol = '%s~%s'%(min(pollist),max(pollist))
-        expected_nrow = 48
-
-        self.exec_pol_test(pollist, pol, expected_nrow)
-
-    def test_pol2(self):
-        """test_pol2: Test pol selection by syntax '<N'"""
-        pollist = [0,1]
-        pol = '<%s'%(max(pollist)+1)
-        expected_nrow = 32
-
-        self.exec_pol_test(pollist, pol, expected_nrow)
-
-    def test_pol3(self):
-        """test_pol3: Test pol selection by syntax '>N'"""
-        pollist = [2,3]
-        pol = '>%s'%(min(pollist)-1)
-        expected_nrow = 32
-
-        self.exec_pol_test(pollist, pol, expected_nrow)
-
-    def test_pol4(self):
-        """test_pol4: Test pol selection by syntax '<=N'"""
-        pollist = [0,1]
-        pol = '<=%s'%(max(pollist))
-        expected_nrow = 32
-
-        self.exec_pol_test(pollist, pol, expected_nrow)
-
-    def test_pol5(self):
-        """test_pol5: Test pol selection by syntax '>=N'"""
-        pollist = [2,3]
-        pol = '>=%s'%(min(pollist))
-        expected_nrow = 32
-
-        self.exec_pol_test(pollist, pol, expected_nrow)
-        
-    def test_pol6(self):
-        """test_pol6: Test pol selection by syntax 'N,M'"""
-        pollist = [1,2,3]
-        pol = ','.join(map(str,pollist))
-        expected_nrow = 48
-
-        self.exec_pol_test(pollist, pol, expected_nrow)
-
-    def test_pol7(self):
-        """test_pol7: Test pol selection by syntax 'EXP0,EXP1'"""
-        pollist = [0,2,3]
-        pol='0,2~3'
-        expected_nrow = 48
-
-    def test_beam0(self):
-        """test_beam0: Test beam selection by syntax 'N'"""
-        beamlist = [1]
-        beam = '%s'%(beamlist[0])
-        expected_nrow = 16
-        
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-        
-    def test_beam1(self):
-        """test_beam1: Test beam selection by syntax 'N~M'"""
-        beamlist = [0,1,2]
-        beam = '%s~%s'%(min(beamlist),max(beamlist))
-        expected_nrow = 48
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-
-    def test_beam2(self):
-        """test_beam2: Test beam selection by syntax '<N'"""
-        beamlist = [0,1]
-        beam = '<%s'%(max(beamlist)+1)
-        expected_nrow = 32
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-
-    def test_beam3(self):
-        """test_beam3: Test beam selection by syntax '>N'"""
-        beamlist = [2,3]
-        beam = '>%s'%(min(beamlist)-1)
-        expected_nrow = 32
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-
-    def test_beam4(self):
-        """test_beam4: Test beam selection by syntax '<=N'"""
-        beamlist = [0,1]
-        beam = '<=%s'%(max(beamlist))
-        expected_nrow = 32
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-
-    def test_beam5(self):
-        """test_beam5: Test beam selection by syntax '>=N'"""
-        beamlist = [2,3]
-        beam = '>=%s'%(min(beamlist))
-        expected_nrow = 32
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-        
-    def test_beam6(self):
-        """test_beam6: Test beam selection by syntax 'N,M'"""
-        beamlist = [1,2,3]
-        beam = ','.join(map(str,beamlist))
-        expected_nrow = 48
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-
-    def test_beam7(self):
-        """test_beam7: Test beam selection by syntax 'EXP0,EXP1'"""
-        beamlist = [0,2,3]
-        beam='0,2~3'
-        expected_nrow = 48
-
-        self.exec_beam_test(beamlist, beam, expected_nrow)
-
-    def test_field0(self):
-        """test_field0: Test field selection by name"""
-        field = 'M100'
-        expected_nrow = 48
-        fieldlist = ['M100__0', 'M100__1']
-
-        self.exec_field_test(fieldlist, field, expected_nrow)
-
-    def test_field1(self):
-        """test_field1: Test field selection by wildcard"""
-        field = 'M*'
+    ### field selection syntax test ###
+    def test_field_value_default(self):
+        """test_field_value_default: Test default value for field"""
+        field = ''
         expected_nrow = 64
         fieldlist = ['M100__0', 'M100__1', 'M42__2']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
-
-    def test_field2(self):
-        """test_field2: Test field selection by id ('N')"""
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+        
+    def test_field_id_exact(self):
+        """test_field_id_exact: Test field selection by id"""
         field = '1'
         expected_nrow = 16
         fieldlist = ['M100__1']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
-
-    def test_field3(self):
-        """test_field3: Test field selection by id ('N~M')"""
-        field = '1~2'
-        expected_nrow = 32
-        fieldlist = ['M100__1', 'M42__2']
-
-        self.exec_field_test(fieldlist, field, expected_nrow)
-
-    def test_field4(self):
-        """test_field4: Test field selection by id ('<N')"""
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+    
+    def test_field_id_lt(self):
+        """test_field_id_lt: Test field selection by id (<N)"""
         field = '<1'
         expected_nrow = 32
         fieldlist = ['M100__0']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
 
-    def test_field5(self):
-        """test_field5: Test field selection by id ('>N')"""
+    def test_field_id_gt(self):
+        """test_field_id_gt: Test field selection by id (>N)"""
         field = '>1'
         expected_nrow = 16
         fieldlist = ['M42__2']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
 
-    def test_field6(self):
-        """test_field6: Test field selection by id ('<=N')"""
-        field = '<=0'
+    def test_field_id_range(self):
+        """test_field_id_range: Test field selection by id ('N~M')"""
+        field = '1~2'
         expected_nrow = 32
-        fieldlist = ['M100__0']
+        fieldlist = ['M100__1', 'M42__2']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
 
-    def test_field7(self):
-        """test_field7: Test field selection by id ('>=N')"""
-        field = '>=2'
-        expected_nrow = 16
-        fieldlist = ['M42__2']
-
-        self.exec_field_test(fieldlist, field, expected_nrow)
-
-    def test_field8(self):
-        """test_field8: Test field selection by id ('N,M')"""
+    def test_field_id_list(self):
+        """test_field_id_list: Test field selection by id ('N,M')"""
         field = '0,2'
         expected_nrow = 48
         fieldlist = ['M100__0', 'M42__2']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
 
-    def test_field9(self):
-        """test_field3: Test field selection by id ('EXP0,EXP1')"""
+    def test_field_id_exprlist(self):
+        """test_field_id_exprlist: Test field selection by id ('EXPR0,EXPR1')"""
         field = '0,>=2'
         expected_nrow = 48
         fieldlist = ['M100__0', 'M42__2']
 
-        self.exec_field_test(fieldlist, field, expected_nrow)
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+        
+    def test_field_value_exact(self):
+        """test_field_value_exact: Test field selection by name"""
+        field = 'M100'
+        expected_nrow = 48
+        fieldlist = ['M100__0', 'M100__1']
 
-    def test_field10(self):
-        """test_field3: Test field selection by name and id"""
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+
+    def test_field_value_pattern(self):
+        """test_field_value_pattern: Test field selection by pattern match"""
+        field = 'M*'
+        expected_nrow = 64
+        fieldlist = ['M100__0', 'M100__1', 'M42__2']
+
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+
+    def test_field_value_list(self):
+        """test_field_value_list: Test field selection by name list"""
+        field='M100,M42'
+        expected_nrow = 64
+        fieldlist = ['M100__0', 'M100__1', 'M42__2']
+
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+       
+    def test_field_mix_exprlist(self):
+        """test_field_mix_exprlist: Test field selection by name and id"""
         field = '0,M4*'
         expected_nrow = 48
         fieldlist = ['M100__0', 'M42__2']
-
-        self.exec_field_test(fieldlist, field, expected_nrow)
-
-    def test_timerange0(self):
-        """test_timerange0: Test timerange selection by syntax 'T0~T1'"""
-        timerange = '2010/04/24/23:13:00~2010/04/24/23:43:49'
-        expected_nrow = 32
-        timelist = [55310.967928148144, 55310.988761481472]
-
-        self.exec_timerange_test(timelist, timerange, expected_nrow)
         
-    def test_timerange1(self):
-        """test_timerange1: Test timerange selection by syntax 'T0'"""
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+
+    ### spw selection syntax test ###
+    def test_spw_id_default(self):
+        """test_spw_id_default: Test default value for spw"""
+        iflist = [0,1,2,3]
+        spw = ''
+        expected_nrow = 64
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)        
+
+    def test_spw_id_exact(self):
+        """test_spw_id_exact: Test spw selection by id ('N')"""
+        iflist = [1]
+        spw = '%s'%(iflist[0])
+        expected_nrow = 16
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+        
+    def test_spw_id_lt(self):
+        """test_spw_id_lt: Test spw selection by id ('<N')"""
+        iflist = [0,1]
+        spw = '<%s'%(max(iflist)+1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    def test_spw_id_gt(self):
+        """test_spw_id_lt: Test spw selection by id ('>N')"""
+        iflist = [2,3]
+        spw = '>%s'%(min(iflist)-1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    def test_spw_id_range(self):
+        """test_spw_id_range: Test spw selection by id ('N~M')"""
+        iflist = [0,1,2]
+        spw = '%s~%s'%(min(iflist),max(iflist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    def test_spw_id_pattern(self):
+        """test_spw_id_pattern: Test spw selection by wildcard"""
+        iflist = [0,1,2,3]
+        spw = '*'
+        expected_nrow = 64
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)        
+    def test_spw_id_list(self):
+        """test_spw_id_list: Test spw selection by id ('N,M')"""
+        iflist = [1,2,3]
+        spw = ','.join(map(str,iflist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    def test_spw_id_exprlist(self):
+        """test_spw_id_exprlist: Test spw selection by id ('EXP0,EXP1')"""
+        iflist = [0,2,3]
+        spw='0,2~3'
+        expected_nrow = 48
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    def test_spw_value_frequency(self):
+        """test_spw_value_frequency: Test spw selection by frequency range ('FREQ0~FREQ1')"""
+        iflist = [0]
+        spw='114~115GHz'
+        expected_nrow = 16
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    def test_spw_value_velocity(self):
+        """test_spw_value_velocity: Test spw selection by velocity range ('VEL0~VEL1')"""
+        iflist = [1]
+        spw = '-1200~1200km/s'
+        expected_nrow = 16
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+        
+    def test_spw_mix_exprlist(self):
+        """test_spw_mix_exprlist: Test spw selection by id and frequency/velocity range"""
+        iflist = [0,2,3]
+        spw='114~115GHz,>1'
+        expected_nrow = 48
+
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
+
+    ### spw (channel) selection syntax test ###
+    def test_spw_id_default_channel(self):
+        """test_spw_id_default_channel: Test spw selection with channel range (':CH0~CH1')"""
+        iflist = [0,1,2,3]
+        channelrange = [0,100]
+        spw = ':0~100'
+        expected_nrow = 64
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_default_frequency(self):
+        """test_spw_id_default_frequency: Test spw selection with channel range (':FREQ0~FREQ1')"""
+        iflist = [0]
+        channelrange = [0,1919]
+        spw = ':114~115GHz'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_default_velocity(self):
+        """test_spw_id_default_frequency: Test spw selection with channel range (':FREQ0~FREQ1')"""
+        iflist = [1]
+        channelrange = [1904, 1935]
+        spw = ':-10~10km/s'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_default_list(self):
+        """test_spw_id_default_list: Test spw selection with multiple channel range (':CH0~CH1;CH2~CH3')"""
+        # raise exception
+        spw = ':0~100;200~400'
+        self.__exec_exception_test(spw)
+
+    def test_spw_id_exact_channel(self):
+        """test_spw_id_exact_channel: Test spw selection with channel range ('N:CH0~CH1')"""
+        iflist = [2]
+        channelrange = [0,100]
+        spw = '2:0~100'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_exact_frequency(self):
+        """test_spw_id_exact_frequency: Test spw selection with channel range ('N:FREQ0~FREQ1')"""
+        iflist = [2]
+        channelrange = [200,400]
+        spw = '2:116.5802~116.6290GHz'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_exact_velocity(self):
+        """test_spw_id_exact_velocity: Test spw selection with channel range ('N:VEL0~VEL1')"""
+        iflist = [1]
+        channelrange = [200,400]
+        spw = '1:958.7~1085.0km/s'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_exact_list(self):
+        """test_spw_id_exact_list: Test spw selection with channel range ('N:CH0~CH1;CH2~CH3')"""
+        # raise exception
+        spw = '2:0~100;200~400'
+        self.__exec_exception_test(spw)
+
+    def test_spw_id_pattern_channel(self):
+        """test_spw_id_pattern_channel: Test spw selection with channel range ('*:CH0~CH1')"""
+        iflist = [0,1,2,3]
+        channelrange = [0,100]
+        spw = '*:0~100'
+        expected_nrow = 64
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_pattern_frequency(self):
+        """test_spw_id_pattern_frequency: Test spw selection with channel range ('*:FREQ0~FREQ1')"""
+        iflist = [0]
+        channelrange = [0,1919]
+        spw = '*:114~115GHz'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_pattern_velocity(self):
+        """test_spw_id_pattern_frequency: Test spw selection with channel range ('*:VEL0~VEL1')"""
+        iflist = [1]
+        channelrange = [1904, 1935]
+        spw = '*:-10~10km/s'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_id_pattern_list(self):
+        """test_spw_id_pattern_list: Test spw selection with channel range ('*:CH0~CH1;CH2~CH3')"""
+        # raise exception
+        spw = '*:0~100;200~400'
+        self.__exec_exception_test(spw)
+
+    def test_spw_value_frequency_channel(self):
+        """test_spw_value_frequency_channel: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1')"""
+        iflist = [0,1,2]
+        channelrange = [0,100]
+        spw = '113~117GHz:0~100'
+        expected_nrow = 48
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_value_frequency_frequency(self):
+        """test_spw_value_frequency_frequency: Test spw selection with channel range ('FREQ0~FREQ1:FREQ2~FREQ3')"""
+        iflist = [0]
+        channelrange = [0,1919]
+        spw = '113~117GHz:114~115GHz'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_value_frequency_velocity(self):
+        """test_spw_value_frequency_velocity: Test spw selection with channel range ('FREQ0~FREQ1:VEL0~VEL1')"""
+        iflist = [1]
+        channelrange = [1904, 1935]
+        spw = '113~117GHz:-10~10km/s'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_value_frequency_list(self):
+        """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
+        # raise exception
+        spw = '114~115GHz:0~100;200~400'
+        self.__exec_exception_test(spw)
+        
+    def test_spw_value_velocity_channel(self):
+        """test_spw_value_velocity_channel: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1')"""
+        iflist = [0,1,2]
+        channelrange = [0,100]
+        spw = '-2000~2000km/s:0~100'
+        expected_nrow = 48
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_value_velocity_frequency(self):
+        """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ0~FREQ1')"""
+        iflist = [0]
+        channelrange = [0,1919]
+        spw = '-2000~2000km/s:114~115GHz'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_value_velocity_velocity(self):
+        """test_spw_value_velocity_velocity: Test spw selection with channel range ('VEL0~VEL1:VEL2~VEL3')"""
+        iflist = [1]
+        channelrange = [1904, 1935]
+        spw = '-2000~2000km/s:-10~10km/s'
+        expected_nrow = 16
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_spw_value_velocity_list(self):
+        """test_spw_value_velocity_list: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1;CH2~CH3')"""
+        # raise exception
+        spw = '-100~100km/s:0~100;200~400'
+        self.__exec_exception_test(spw)
+
+    def test_spw_id_list_channel(self):
+        """test_spw_id_list_channel: Test spw selection with channnel range ('ID0:CH0~CH1,ID1:CH2~CH3')"""
+        iflist = [1,2]
+        channelrange = [200,400]
+        spw = '1:200~400,2:200~400'
+        expected_nrow = 32
+
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    ### timerange selection syntax test ###
+    def test_timerange_value_default(self):
+        """test_timerange_value_default: Test default value for timerange"""
+        timerange = ''
+        expected_nrow = 64
+        timelist = [55310.94709481481, 55310.967928148144, 55310.98876148147, 55311.00959481481]
+
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
+
+    def test_timerange_value_exact(self):
+        """test_timerange_value_exact: Test timerange selection by syntax 'T0'"""
         timerange = '2010/04/24/23:43:48.5'
         expected_nrow = 16
         timelist = [55310.988761481472]
 
-        self.exec_timerange_test(timelist, timerange, expected_nrow)
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
  
-    def test_timerange2(self):
-        """test_timerange2: Test timerange selection by syntax 'T0+dT'"""
-        timerange = '2010/04/24/22:43:30+0:0:30'
-        expected_nrow = 16
-        timelist = [55310.947094814808]
-
-        self.exec_timerange_test(timelist, timerange, expected_nrow)
-
-    def test_timerange3(self):
-        """test_timerange3: Test timerange selection by syntax '>T0'"""
-        timerange = '>2010/04/24/23:14:00'
+    def test_timerange_value_range(self):
+        """test_timerange_value_range: Test timerange selection by syntax 'T0~T1'"""
+        timerange = '2010/04/24/23:13:00~2010/04/24/23:43:49'
         expected_nrow = 32
-        timelist = [55310.988761481472, 55311.009594814808]
+        timelist = [55310.967928148144, 55310.988761481472]
 
-        self.exec_timerange_test(timelist, timerange, expected_nrow)
-
-    def test_timerange4(self):
-        """test_timerange4: Test timerange selection by syntax '<T0'"""
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
+        
+    def test_timerange_value_lt(self):
+        """test_timerange_value_lt: Test timerange selection by syntax '<T0'"""
         timerange = '<2010/04/24/23:13:00'
         expected_nrow = 16
         timelist = [55310.947094814808]
         
-        self.exec_timerange_test(timelist, timerange, expected_nrow)
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
 
+    def test_timerange_value_gt(self):
+        """test_timerange_value_gt: Test timerange selection by syntax '>T0'"""
+        timerange = '>2010/04/24/23:14:00'
+        expected_nrow = 32
+        timelist = [55310.988761481472, 55311.009594814808]
+
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
+
+    def test_timerange_value_interval(self):
+        """test_timerange_value_interval: Test timerange selection by syntax 'T0+dT'"""
+        timerange = '2010/04/24/22:43:30+0:0:30'
+        expected_nrow = 16
+        timelist = [55310.947094814808]
+
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
+
+    ### scan selection syntax test ###
+    def test_scan_id_default(self):
+        """test_scan_id_default: Test default value for scan"""
+        scanlist = [0,1,2,3]
+        scan = ''
+        expected_nrow = 64
+
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    def test_scan_id_exact(self):
+        """test_scan_id_exact: Test scan selection by id ('N')"""
+        scanlist = [1]
+        scan = '%s'%(scanlist[0])
+        expected_nrow = 16
+        
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+         
+    def test_scan_id_lt(self):
+        """test_scan_id_lt: Test scan selection by id ('<N')"""
+        scanlist = [0,1]
+        scan = '<%s'%(max(scanlist)+1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    def test_scan_id_gt(self):
+        """test_scan_id_gt: Test scan selection by id ('>N')"""
+        scanlist = [2,3]
+        scan = '>%s'%(min(scanlist)-1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    def test_scan_id_range(self):
+        """test_scan_id_range: Test scan selection by id ('N~M')"""
+        scanlist = [0,1,2]
+        scan = '%s~%s'%(min(scanlist),max(scanlist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    def test_scan_id_list(self):
+        """test_scan_id_list: Test scan selection by id ('N,M')"""
+        scanlist = [1,2,3]
+        scan = ','.join(map(str,scanlist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    def test_scan_id_exprlist(self):
+        """test_scan_id_exprlist: Test scan selection by id ('EXPR0,EXPR1')"""
+        scanlist = [0,2,3]
+        scan='0,2~3'
+        expected_nrow = 48
+
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    ### pol selection syntax test ###
+    def test_pol_id_default(self):
+        """test_pol_id_default: Test default value for pol"""
+        pollist = [0,1,2,3]
+        pol = ''
+        expected_nrow = 64
+
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+        
+    def test_pol_id_exact(self):
+        """test_pol_id_exact: Test pol selection by id ('N')"""
+        pollist = [1]
+        pol = '%s'%(pollist[0])
+        expected_nrow = 16
+        
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+        
+    def test_pol_id_lt(self):
+        """test_pol_id_lt: Test pol selection by id ('<N')"""
+        pollist = [0,1]
+        pol = '<%s'%(max(pollist)+1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+
+    def test_pol_id_gt(self):
+        """test_pol_id_gt: Test pol selection by id ('>N')"""
+        pollist = [2,3]
+        pol = '>%s'%(min(pollist)-1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+
+    def test_pol_id_range(self):
+        """test_pol_id_range: Test pol selection by id ('N~M')"""
+        pollist = [0,1,2]
+        pol = '%s~%s'%(min(pollist),max(pollist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+
+    def test_pol_id_list(self):
+        """test_pol_id_list: Test pol selection by id ('N,M')"""
+        pollist = [1,2,3]
+        pol = ','.join(map(str,pollist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+
+    def test_pol_id_exprlist(self):
+        """test_pol_id_exprlist: Test pol selection by id ('EXPR0,EXPR1')"""
+        pollist = [0,2,3]
+        pol='0,2~3'
+        expected_nrow = 48
+
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+
+    ### beam selection syntax test ###
+    def test_beam_id_default(self):
+        """test_beam_id_default: Test default value for beam"""
+        beamlist = [0,1,2,3]
+        beam = ''
+        expected_nrow = 64
+        
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+        
+    def test_beam_id_exact(self):
+        """test_beam_id_exact: Test beam selection by id ('N')"""
+        beamlist = [1]
+        beam = '%s'%(beamlist[0])
+        expected_nrow = 16
+        
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+        
+    def test_beam_id_lt(self):
+        """test_beam_id_lt: Test beam selection by id ('<N')"""
+        beamlist = [0,1]
+        beam = '<%s'%(max(beamlist)+1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+
+    def test_beam_id_gt(self):
+        """test_beam_id_gt: Test beam selection by id ('>N')"""
+        beamlist = [2,3]
+        beam = '>%s'%(min(beamlist)-1)
+        expected_nrow = 32
+
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+
+    def test_beam_id_range(self):
+        """test_beam_id_range: Test beam selection by id ('N~M')"""
+        beamlist = [0,1,2]
+        beam = '%s~%s'%(min(beamlist),max(beamlist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+
+    def test_beam_id_list(self):
+        """test_beam_id_list: Test beam selection by id ('N,M')"""
+        beamlist = [1,2,3]
+        beam = ','.join(map(str,beamlist))
+        expected_nrow = 48
+
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+
+    def test_beam_id_exprlist(self):
+        """test_beam_exprlist: Test beam selection by id ('EXPR0,EXPR1')"""
+        beamlist = [0,2,3]
+        beam='0,2~3'
+        expected_nrow = 48
+
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+
+    ### additional tests ###
     def test_simultaneous0(self):
         """test_simultaneous0: Test simultaneous selection (spw and scan)"""
         iflist = [1]
@@ -1964,7 +2165,7 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
         self.__exec_complex_test(['spw', 'scan'], [spw, scan],
                                  [iflist, scanlist], ['IFNO', 'SCANNO'],
-                                 expected_nrow)
+                                 expected_nrow, regular_test=False)
 
     def test_simultaneous1(self):
         """test_simultaneous1: Test simultaneous selection (spw and field)"""
@@ -1976,7 +2177,7 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
         self.__exec_complex_test(['spw', 'field'], [spw, field],
                                  [iflist, fieldlist], ['IFNO', 'FIELDNAME'],
-                                 expected_nrow)
+                                 expected_nrow, regular_test=False)
 
     def test_simultaneous2(self):
         """test_simultaneous2: Test simultaneous selection (spw and timerange)"""
@@ -1988,7 +2189,7 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
         self.__exec_complex_test(['spw', 'timerange'], [spw, timerange],
                                  [iflist, timelist], ['IFNO', 'TIME'],
-                                 expected_nrow)
+                                 expected_nrow, regular_test=False)
 
 
     def test_simultaneous3(self):
@@ -2001,7 +2202,7 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
         self.__exec_complex_test(['field', 'timerange'], [field, timerange],
                                  [fieldlist, timelist], ['FIELDNAME', 'TIME'],
-                                 expected_nrow)
+                                 expected_nrow, regular_test=False)
         
 
     def test_simultaneous4(self):
@@ -2018,57 +2219,103 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
                                  [spw, field, timerange],
                                  [iflist, fieldlist, timelist],
                                  ['IFNO', 'FIELDNAME', 'TIME'],
-                                 expected_nrow)
+                                 expected_nrow, regular_test=False)
 
-    def test_channelrange0(self):
-        """test_channelrange0: Test channel range selection '0~N'"""
-        iflist = [2]
-        channelrange = [0,100]
-        spw = '2:0~100'
-        expected_nrow = 16
-
-        self.exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
-
-    def test_channelrange1(self):
-        """test_channelrange1: Test channel range selection 'N~M'"""
+    def test_spw_id_exact_channel2(self):
+        """test_spw_id_exact_channel2: Test channel range selection 'N~M'"""
         iflist = [2]
         channelrange = [200,400]
         spw = '2:200~400'
         expected_nrow = 16
 
-        self.exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+        self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow, regular_test=False)
 
-    def test_channelrange2(self):
-        """test_channelrange2: Test channel range selection by frequency 'X~YGHz'"""
-        iflist = [2]
-        channelrange = [200,400]
-        spw = '2:114.5802~114.6290GHz'
-        expected_nrow = 16
 
-        self.exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+class sdsave_scanrate(unittest.TestCase,tsdsave_unittest_base):
+    """
+    Verify that MSWriter handles a conversion from DIRECTION and SCANRATE
+    columns properly
+    """
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    prefix = 'sdsave_scanrate'
 
-    def test_channelrange3(self):
-        """test_channelrange3: Test multiple channel range for one spw (causes error)"""
-        test_name = inspect.stack()[0][3]
-        outfile = '.'.join([self.prefix, test_name])
-        spw = '2:0~100;200~400'
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
 
-        try:
-            tsdsave(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            self.assertTrue(isinstance(e, SyntaxError),
-                            msg='Unexpected exception was thrown: %s'%(str(e)))
-            pos = str(e).find('tsdsave doesn\'t support multiple channel range selection for spw.')
-            self.assertNotEqual(pos, -1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        default(tsdsave)
 
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _run_and_verify(self, infile):
+        outfile = self.prefix + '.asap'
+        self.res = tsdsave(infile=infile, outfile=outfile, outform='MS2', overwrite=True)
+        self.assertIsNone(self.res, msg='invalid return value')
+
+        tb.open(infile)
+        tsel = tb.query('POLNO==0')
+        time_in = tsel.getcol('TIME')
+        _dir_in = tsel.getcol('DIRECTION')
+        scanrate_in = tsel.getcol('SCANRATE')
+        tsel.close()
+        tb.close()
+        num_expected = 0 if all(scanrate_in.flatten() == 0.0) else 1
+        newshape = (_dir_in.shape[0],1,_dir_in.shape[1])
+        if num_expected == 0:
+            dir_in = _dir_in.reshape(newshape)
+        else:
+            dir_in = numpy.concatenate((_dir_in.reshape(newshape), scanrate_in.reshape(newshape)), axis=1)
+        tb.open(os.path.join(outfile, 'POINTING'))
+        time_out = tb.getcol('TIME')
+        num_poly = tb.getcol('NUM_POLY')
+        dir_out = tb.getcol('DIRECTION')
+        casalog.post('dir_in.shape=%s, dir_out.shape=%s'%(list(dir_in.shape),list(dir_out.shape)))
+        tb.close()
+        sort_index = numpy.argsort(time_out)
+        time_out_sorted = time_out.take(sort_index) / 86400.0
+        num_poly_sorted = num_poly.take(sort_index)
+        dir_out_sorted = dir_out.take(sort_index, axis=2)
+
+        self.assertEqual(dir_in.shape, dir_out.shape,
+                         msg='DIRECTION shape is not correct.')
+        self.assertTrue(all(time_in == time_out_sorted),
+                        msg='TIME is not correct.')
+        self.assertTrue(all(num_poly_sorted == num_expected),
+                        msg='NUM_POLY is not correct.')
+        self.assertTrue(all(dir_in.flatten() == dir_out_sorted.flatten()),
+                        msg='DIRECTION value is not correct.')
         
+    def test_zero_scanrate(self):
+        """test_zero_scanrate: Verify DIRECTION column shape is (2,1) if SCANRATE is all zero"""
+        self._run_and_verify(self.infile)
+
+    def test_nonzero_scanrate(self):
+        """test_nonzero_scanrate: Verify DIRECTION column shape is (2,2) if SCANRATE is all nonzero"""
+        tb.open(self.infile, nomodify=False)
+        scanrate = tb.getcol('SCANRATE')
+        scanrate[:] = 1.0
+        tb.putcol('SCANRATE', scanrate)
+        tb.close()
+
+        self._run_and_verify(self.infile)
+
+    def test_any_scanrate(self):
+        """test_any_scanrate: Verify DIRECTION column shape is (2,2) if SCANRATE is partly nonzero"""
+        tb.open(self.infile, nomodify=False)
+        tb.putcell('SCANRATE', 0, [1.0, 0.0])
+        tb.close()
+
+        self._run_and_verify(self.infile)
+
+
 def suite():
     return [tsdsave_test0,tsdsave_test1,tsdsave_test2,
             tsdsave_test3,tsdsave_test4,tsdsave_test5,
             tsdsave_test6,tsdsave_test7,tsdsave_storageTest,
             tsdsave_freq_labeling,tsdsave_flagging,
             tsdsave_scan_number, tsdsave_test_splitant,
-            tsdsave_data_selection]
+            tsdsave_selection_syntax, sdsave_scanrate]

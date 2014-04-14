@@ -11,6 +11,15 @@ import numpy
 import re
 import string
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
+#to rethrow exception
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+g['__rethrow_casa_exceptions'] = True
 from tsdgrid import tsdgrid
 import asap as sd
 
@@ -30,6 +39,38 @@ class tsdgrid_unittest_base(object):
     tolerance=0.01
     outfile='sdgrid.asap.grid'
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+
+    def _getdim( self, sp ):
+        dim = 0
+        import copy
+        a = copy.deepcopy(sp)
+        while isinstance(a, list):
+            dim = dim + 1
+            a = a[0]
+        return dim
+    
+    def _checkshape( self, sp, ref ):
+        # check array dimension
+        self.assertEqual( self._getdim(sp), self._getdim(ref),
+                          msg='array dimension differ' )
+        # check number of spectra
+        self.assertEqual( len(sp), len(ref),
+                          msg='number of spectra differ' )
+        # check number of channel
+        self.assertEqual( len(sp[0]), len(ref[0]),
+                          msg='number of channel differ' )
+    def _diff(self, sp, ref):
+        diff=abs((sp-ref)/ref)
+        idx=numpy.argwhere(numpy.isnan(diff))
+        #print idx
+        if len(idx) > 0:
+            diff[idx]=sp[idx]
+        return diff
+        
     def getdata(self):
         tb.open(self.outfile)
         self.data = tb.getcol('SPECTRA')
@@ -118,7 +159,7 @@ class tsdgrid_failure_case(tsdgrid_unittest_base,unittest.TestCase):
                             msg='The task must throw exception')
         except Exception, e:
             #pos=str(e).find('No corresponding rows for given selection: SPW %s'%(self.badid))
-            pos=str(e).find('No valid spw.')
+            pos=str(e).find('No valid spw')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
@@ -759,7 +800,7 @@ class tsdgrid_dec_correction(tsdgrid_unittest_base,unittest.TestCase):
         dir1=tb.getcell('DIRECTION',2)
         dir2=tb.getcell('DIRECTION',npix*2)
         tb.close()
-        dx=dir1[0]-dir0[0]
+        dx=dir0[0]-dir1[0]
         dy=dir2[1]-dir0[1]
         #print 'dx=',dx,',dy=',dy
         diff=abs((0.5*dx-dy)/dy)
@@ -873,10 +914,444 @@ class tsdgrid_flagging2(tsdgrid_unittest_base,unittest.TestCase):
         self.assertTrue(all(flagtra[1] == 0),
                         msg='Channel 1 should not be flagged')
         
+class tsdgrid_selection(selection_syntax.SelectionSyntaxTest,
+                        tsdgrid_unittest_base,unittest.TestCase):
+    """
+    Test selection syntax. Selection parameters to test are:
+    field, spw (no channel selection), scan, pol
+    
+    Data used for this test are sd_analytic_type1-3.asap (raw data)
+    and sdgrid_selection.asap.ref (reference data).
+    The reference data are generated using the following expr parameter:
+    expr='V1*V1+1.0' where V1='sd_analytic_type1-3.asap'.
+
+    """
+    # Input and output names
+    rawfile='sd_analytic_type1-3.asap'
+    reffile='sdgrid_test_selection.asap.ref'
+    prefix=tsdgrid_unittest_base.taskname+'TestSel'
+    postfix='.grid.asap'
+    field_prefix = 'M100__'
+
+    @property
+    def task(self):
+        return tsdgrid
+    
+    @property
+    def spw_channel_selection(self):
+        return False
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(tsdgrid)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _compare( self, name, ref ):
+        self._checkfile( name )
+        # reference data
+        tb.open(ref)
+        nrow0=tb.nrows()
+        rsp=[]
+        for irow in xrange(nrow0):
+            rsp.append(tb.getcell('SPECTRA',irow))
+        tb.close()
+        # check shape
+        tb.open(name)
+        nrow=tb.nrows()
+        self.assertEqual(nrow,nrow0,msg='number of rows mismatch')
+        sp=[]
+        for irow in xrange(nrow):
+            sp.append(tb.getcell('SPECTRA',irow))
+            self.assertEqual(len(sp[irow]),len(rsp[irow]),
+                             msg='SPECTRA: number of channel mismatch in row%s'%(irow)) 
+        tb.close()
+        # check data
+        valuetype=type(sp[0][0])
+        #print ''
+        for irow in xrange(nrow):
+            #print 'irow=%s'%(irow)
+            #print '  rsp=%s'%(rsp[irow])
+            #print '   sp=%s'%(sp[irow])
+            ret=numpy.allclose(rsp[irow],sp[irow])
+            self.assertEqual(ret,True,
+                             msg='SPECTRA: data differ in row%s'%(irow))
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        scan=''
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='15')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scan15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '15'
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<16')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scan15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '<16'
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>15')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scangt15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '>15'
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_scan_id_range(self):
+        """ test scan selection (scan='15~16')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scan15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '15~16'
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        scan = '15,17'
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='<16, 17')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        scan = '<16, 17'
+        self.res=tsdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol=''
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    @unittest.expectedFailure
+    def test_pol_id_exact(self):
+        """ test pol selection (pol='1')"""
+#        infiles=[self.rawfile]
+#        outname=self.prefix+self.postfix
+#        pol = '1'
+#        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+#        tbsel = {'POLNO': [1]}
+#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+#        self._comparecal_with_selection(outname, tbsel)
+        self._default_test()
+
+    def test_pol_id_lt(self):
+        """ test pol selection (pol='<1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '<1'
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        tbsel = {'POLNO': [0]}
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    @unittest.expectedFailure
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+#        infiles=[self.rawfile]
+#        outname=self.prefix+self.postfix
+#        pol = '>0'
+#        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+#        tbsel = {'POLNO': [1]}
+#        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+#        self._comparecal_with_selection(outname, tbsel)
+        self._default_test()
+    
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '0~1'
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '0,1'
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    @unittest.expectedFailure
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='')"""
+        self._default_test()
+    
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwnullstring.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw=''
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='22')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw22.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='22'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<25')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwlt25.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='<25'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>21')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwgt21.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='>21'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_range(self):
+        """ test spw selection (spw='21~24')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwlt25.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='<25'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,22,23,25')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw21222325.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='21,22,23,25'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='<22,>24')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw21222325.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='<22,>24'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwnullstring.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='*'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300~310GHz')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw300to310ghz.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='300~310GHz'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-50~50km/s')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw-50to50kms.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='-50~50km/s'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='150~500km/s,>23')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw150to500kmsgt23.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='150~500km/s,>23'
+        self.res=tsdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    ####################
+    # Helper functions
+    ####################
+    def _comparecal_with_selection( self, name, tbsel={} ):
+        self._checkfile(name)
+        sp=self._getspectra_selected(name, tbsel)
+        spref=self._getspectra_selected(self.reffile, tbsel)
+
+        self._checkshape( sp, spref )
+        
+        for irow in xrange(len(sp)):
+            diff=self._diff(numpy.array(sp[irow]),numpy.array(spref[irow]))
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def _getspectra_selected( self, name, tbsel={} ):
+        """
+        Returns an array of spectra in rows selected in table.
+        
+        name  : the name of scantable
+        tbsel : a dictionary of table selection information.
+                The key should be column name and the value should be
+                a list of column values to select.
+        """
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp = []
+        if len(tbsel) == 0:
+            for i in range(tb.nrows()):
+                sp.append(tb.getcell('SPECTRA', i).tolist())
+        else:
+            command = ''
+            for key, val in tbsel.items():
+                if len(command) > 0:
+                    command += ' AND '
+                command += ('%s in %s' % (key, str(val)))
+            newtb = tb.query(command)
+            for i in range(newtb.nrows()):
+                sp.append(newtb.getcell('SPECTRA', i).tolist())
+            newtb.close()
+
+        tb.close()
+        return sp
 
 def suite():
     return [tsdgrid_failure_case, tsdgrid_single_integ,
             tsdgrid_clipping, tsdgrid_flagging,
             tsdgrid_weighting, tsdgrid_map,
             tsdgrid_dec_correction, tsdgrid_grid_center,
-            tsdgrid_flagging2]
+            tsdgrid_flagging2,
+            tsdgrid_selection]

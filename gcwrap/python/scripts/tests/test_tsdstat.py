@@ -10,6 +10,11 @@ import listing
 import numpy
 from numpy import array
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
 import asap as sd
 from tsdstat import tsdstat
 
@@ -384,7 +389,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdstat. Test averaging.
 
-    testAve01 --- scanaverage = True
+    testAve01 --- scanaverage = True (timeaverage=True)
     testAve02 --- timeaverage = True, scanaverage=False
     testAve03 --- polaverage = True (this averages all time now)
     #testAve04 --- scanaverage = True, polaverage=True
@@ -409,13 +414,13 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
 
     def testAve01(self):
-        """Test Ave01: scanaverage = True"""
+        """Test Ave01: scanaverage = True  (timeaverage=True)"""
         tid = "Ave01"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
         pol = '0'
         scanaverage=True
-        timeaverage=False
+        timeaverage=True
         tweight = 'tintsys'
         polaverage=False
         pweight = 'tsys'
@@ -588,7 +593,7 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
                                           spw=self.ifno,restfreq=restfreq)
         print "Setting restfreq = %s" % (str(restfreq))
         spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=self.ifno)
-        print "Using spw = %s" % (spw)
+        print "Using spw = '%s'" % (spw)
 
         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
@@ -969,483 +974,6 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT Quantums"
         self._compareStats(currstat,self.minmaxchan_line2)
 
-class sdstat_test_idx_selection( sdstat_unittest_base, unittest.TestCase ):
-    """
-    Test meta-data data selection in sdstat.
-
-    test0* - field selection
-    test1* - spw id selection
-    test2* - timerange selection
-    test3* - scan id selection
-    test4* - pol id selection
-    test5* - beam of selection
-    test6* - combination of selection
-    """
-    infile = 'data_selection.asap'
-    refstat_file = 'refstat_sel'
-    field_prefix01 = 'M100__'
-    field_prefix23 = 'M42__'
-    
-    def setUp( self ):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
-        self.refstats = read_stats(self.datapath+self.refstat_file)
-
-        default(tsdstat)
-
-    def tearDown( self ):
-        if (os.path.exists(self.infile)):
-            shutil.rmtree(self.infile)
-
-    def _get_rowidx_selected( self, name, tbsel={} ):
-        """
-        Returns a list of row idx selected in table.
-        
-        name  : the name of scantable
-        tbsel : a dictionary of table selection information.
-                The key should be column name and the value should be
-                a list of column values to select.
-        """
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='file %s does not exist'%(name))        
-        tb.open(name)
-        if len(tbsel) == 0:
-            idx=range(tb.nrows())
-        else:
-            command = ''
-            for key, val in tbsel.items():
-                if len(command) > 0:
-                    command += ' AND '
-                command += ('%s in %s' % (key, str(val)))
-            newtb = tb.query(command)
-            idx=newtb.rownumbers()
-            newtb.close()
-
-        tb.close()
-        return idx
-
-    ##### Actual Test Methods #####
-    def testSel001(self):
-        """ test field selection (field='1')"""
-        field = '1'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'FIELDNAME': [self.field_prefix01+field]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel002(self):
-        """ test field selection (field='1,2')"""
-        field = '1,2'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'FIELDNAME': [self.field_prefix01+'1', self.field_prefix23+'2']}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel003(self):
-        """ test field selection (field='<2')"""
-        field = '<2'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'FIELDNAME': [ self.field_prefix01+str(idx) for idx in [0,1] ]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel004(self):
-        """ test field selection (field='>1')"""
-        field = '>1'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'FIELDNAME': [ self.field_prefix23+str(idx) for idx in [2,3] ]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel005(self):
-        """ test field selection (field='1~2')"""
-        field = '1~2'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'FIELDNAME': [self.field_prefix01+'1', self.field_prefix23+'2']}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel006(self):
-        """ test field selection (field='M100')"""
-        field = 'M100'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'SRCNAME': [field]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel007(self):
-        """ test field selection (field='M4*')"""
-        field = 'M4*'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'SRCNAME': ['M42']}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel008(self):
-        """ test field selection (field='M4*,0')"""
-        field = 'M4*,0'
-        currstats=tsdstat(infile=self.infile,field=field)
-        tbsel = {'FIELDNAME': [self.field_prefix01+'0', self.field_prefix23+'2', self.field_prefix23+'3']}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel101(self):
-        """ test spw idx selection w/o channel range (spw='1')"""
-        spw = '1'
-        currstats=tsdstat(infile=self.infile,spw=spw)
-        tbsel = {'IFNO': [1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel102(self):
-        """ test spw idx selection w/o channel range (spw='1,2')"""
-        spw = '1,2'
-        currstats=tsdstat(infile=self.infile,spw=spw)
-        tbsel = {'IFNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel103(self):
-        """ test spw idx selection w/o channel range (spw='<2')"""
-        spw = '<2'
-        currstats=tsdstat(infile=self.infile,spw=spw)
-        tbsel = {'IFNO': [0, 1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel104(self):
-        """ test spw idx selection w/o channel range (spw='>1')"""
-        spw = '>1'
-        currstats=tsdstat(infile=self.infile,spw=spw)
-        tbsel = {'IFNO': [2, 3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel105(self):
-        """ test spw idx selection w/o channel range (spw='1~2')"""
-        spw = '1~2'
-        currstats=tsdstat(infile=self.infile,spw=spw)
-        tbsel = {'IFNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel106(self):
-        """ test spw idx selection w/o channel range (spw='0 , >2')"""
-        spw = '0 , >2'
-        currstats=tsdstat(infile=self.infile,spw=spw)
-        tbsel = {'IFNO': [0,3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel201(self):
-        """ test timerange selection (timerange='2010/04/24/23:13:49.0')"""
-        timerange = '2010/04/24/23:13:49.0'
-        currstats=tsdstat(infile=self.infile,timerange=timerange)
-        tbsel = {'SCANNO': [1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel202(self):
-        """ test timerange selection (timerange='2010/04/24/23:13:48.0+00:30:01')"""
-        timerange = '2010/04/24/23:13:48.0+00:30:01'
-        currstats=tsdstat(infile=self.infile,timerange=timerange)
-        tbsel = {'SCANNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel203(self):
-        """ test timerange selection (timerange='<2010/04/24/23:43:48.0')"""
-        timerange = '<2010/04/24/23:43:48.0'
-        currstats=tsdstat(infile=self.infile,timerange=timerange)
-        tbsel = {'SCANNO': [0, 1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel204(self):
-        """ test timerange selection (timerange='>2010/04/24/23:13:50.0')"""
-        timerange = '>2010/04/24/23:13:50.0'
-        currstats=tsdstat(infile=self.infile,timerange=timerange)
-        tbsel = {'SCANNO': [2, 3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel205(self):
-        """ test timerange selection (timerange='2010/04/24/23:13:48.0~2010/04/24/23:43:50.0')"""
-        timerange = '2010/04/24/23:13:48.0~2010/04/24/23:43:50.0'
-        currstats=tsdstat(infile=self.infile,timerange=timerange)
-        tbsel = {'SCANNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel301(self):
-        """ test scanno selection (scan='1')"""
-        scan = '1'
-        currstats=tsdstat(infile=self.infile,scan=scan)
-        tbsel = {'SCANNO': [1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel302(self):
-        """ test scanno selection (scan='1,2')"""
-        scan = '1,2'
-        currstats=tsdstat(infile=self.infile,scan=scan)
-        tbsel = {'SCANNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel303(self):
-        """ test scanno selection (scan='<2')"""
-        scan = '<2'
-        currstats=tsdstat(infile=self.infile,scan=scan)
-        tbsel = {'SCANNO': [0, 1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel304(self):
-        """ test scanno selection (scan='>1')"""
-        scan = '>1'
-        currstats=tsdstat(infile=self.infile,scan=scan)
-        tbsel = {'SCANNO': [2, 3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel305(self):
-        """ test scanno selection (scan='1~2')"""
-        scan = '1~2'
-        currstats=tsdstat(infile=self.infile,scan=scan)
-        tbsel = {'SCANNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel306(self):
-        """ test scanno selection (scan='0 , >2')"""
-        scan = '0 , >2'
-        currstats=tsdstat(infile=self.infile,scan=scan)
-        tbsel = {'SCANNO': [0,3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-    def testSel401(self):
-        """ test polno selection (pol='1')"""
-        pol = '1'
-        currstats=tsdstat(infile=self.infile,pol=pol)
-        tbsel = {'POLNO': [1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel402(self):
-        """ test polno selection (pol='1,2')"""
-        pol = '1,2'
-        currstats=tsdstat(infile=self.infile,pol=pol)
-        tbsel = {'POLNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel403(self):
-        """ test polno selection (pol='<2')"""
-        pol = '<2'
-        currstats=tsdstat(infile=self.infile,pol=pol)
-        tbsel = {'POLNO': [0, 1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel404(self):
-        """ test polno selection (pol='>1')"""
-        pol = '>1'
-        currstats=tsdstat(infile=self.infile,pol=pol)
-        tbsel = {'POLNO': [2, 3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel405(self):
-        """ test polno selection (pol='1~2')"""
-        pol = '1~2'
-        currstats=tsdstat(infile=self.infile,pol=pol)
-        tbsel = {'POLNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel406(self):
-        """ test polno selection (pol='0 , >2')"""
-        pol = '0 , >2'
-        currstats=tsdstat(infile=self.infile,pol=pol)
-        tbsel = {'POLNO': [0,3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel501(self):
-        """ test beamno selection (beam='1')"""
-        beam = '1'
-        currstats=tsdstat(infile=self.infile,beam=beam)
-        tbsel = {'BEAMNO': [1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel502(self):
-        """ test beamno selection (beam='1,2')"""
-        beam = '1,2'
-        currstats=tsdstat(infile=self.infile,beam=beam)
-        tbsel = {'BEAMNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel503(self):
-        """ test beamno selection (beam='<2')"""
-        beam = '<2'
-        currstats=tsdstat(infile=self.infile,beam=beam)
-        tbsel = {'BEAMNO': [0, 1]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel504(self):
-        """ test beamno selection (beam='>1')"""
-        beam = '>1'
-        currstats=tsdstat(infile=self.infile,beam=beam)
-        tbsel = {'BEAMNO': [2, 3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel505(self):
-        """ test beamno selection (beam='1~2')"""
-        beam = '1~2'
-        currstats=tsdstat(infile=self.infile,beam=beam)
-        tbsel = {'BEAMNO': [1, 2]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel506(self):
-        """ test beamno selection (beam='0 , >2')"""
-        beam = '0 , >2'
-        currstats=tsdstat(infile=self.infile,beam=beam)
-        tbsel = {'POLNO': [0,3]}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-    def testSel601(self):
-        """ test combination of field = M4*, spw = '1~2', timerange = '>2010/04/24/23:13:50.0'"""
-        field = 'M4*'
-        spw = '1~2'
-        timerange = '>2010/04/24/23:13:50.0'
-        currstats=tsdstat(infile=self.infile,field=field,spw=spw,timerange=timerange)
-        tbsel = {'SCANNO': [2, 3], 'IFNO': [1, 2], 'SRCNAME': ['M42']}
-
-        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
-        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
-        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
-
-
-class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
-    """
-    Test the case when the task throws exception.
-    """
-    # Data path of input/output
-    datapath = os.environ.get('CASAPATH').split()[0] + \
-               '/data/regression/unittest/sdstat/'
-    taskname = "sdstat"
-    outroot = taskname+'_test'
-    outsuff = ".out"
-    infile = 'OrionS_rawACSmod_calTPave.asap'
-
-    def setUp( self ):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
-
-        default(tsdstat)
-
-    def tearDown( self ):
-        if (os.path.exists(self.infile)):
-            shutil.rmtree(self.infile)
-
-    def testNoData(self):
-        try:
-            res = tsdstat(infile=self.infile,spw='99')
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            pos=str(e).find('No valid spw')
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
-
-def suite():
-    return [sdstat_basicTest, sdstat_averageTest, sdstat_restfreqTest,
-            sdstat_storageTest, sdstat_test_idx_selection, sdstat_exceptions]
-
 def write_stats(stats, name):
     fff = open(name, 'w')
     keys = stats.keys()
@@ -1495,3 +1023,760 @@ def read_stats(name):
         line = fff.readline()
     fff.close()
     return stats
+
+class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Test the case when the task throws exception.
+    """
+    # Data path of input/output
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdstat/'
+    taskname = "sdstat"
+    outroot = taskname+'_test'
+    outsuff = ".out"
+    infile = 'OrionS_rawACSmod_calTPave.asap'
+
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdstat)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    def testNoData(self):
+        try:
+            res = tsdstat(infile=self.infile,spw='99')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Invalid IF value.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unittest_base, unittest.TestCase ):
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
+    datapath_ref = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdstat/'
+    # Input and output names
+    rawfile='sd_analytic_type1-3.cal.asap'
+    refstat_file = 'refstat_sel_new'
+    refstat_file_chan = 'refstat_sel_chan'
+    refstat_file_2chan = 'refstat_sel_2chan'
+    prefix=sdstat_unittest_base.taskname+'TestSel'
+    postfix='.stats'
+    @property
+    def task(self):
+        return tsdstat
+    
+    @property
+    def spw_channel_selection(self):
+        return True
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+        self.refstats = read_stats(self.datapath_ref+self.refstat_file)
+        self.refstats_chan = read_stats(self.datapath_ref+self.refstat_file_chan)
+        self.refstats_2chan = read_stats(self.datapath_ref+self.refstat_file_2chan)
+        default(tsdstat)
+        self.outname=self.prefix+self.postfix
+        
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    ####################
+    # Additional tests
+    ####################
+    #N/A
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        scan = ''
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+        
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='16')"""
+        scan = '16'
+        ref_idx = [1, 2]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<16')"""
+        scan = '<16'
+        ref_idx = [0]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+        
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>16')"""
+        scan = '>16'
+        ref_idx = [3]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res) 
+
+    def test_scan_id_range(self):
+        """ test scan selection (scan='16~17')"""
+        scan = '16~17'
+        ref_idx = [1,2,3]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        scan = '15,17'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='15,>16')"""
+        scan = '15,>16'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,scan=scan)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+
+    ####################
+    # beam
+    ####################
+    def test_beam_id_default(self):
+        """ test beam selection (beam='')"""
+        beam = ''
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+    
+    def test_beam_id_exact(self):
+        """ test beam selection (beam='11')"""
+        beam='11'
+        ref_idx = [0]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+        
+    def test_beam_id_lt(self):
+        """ test beam selection (beam='<13')"""
+        beam='<13'
+        ref_idx = [0,1]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+        
+    def test_beam_id_gt(self):
+        """ test beam selection (beam='>12')"""
+        beam='>12'
+        ref_idx = [2,3]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+    
+    def test_beam_id_range(self):
+        """ test beam selection (beam='12~13')"""
+        beam='12~13'
+        ref_idx = [1,2,3]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)      
+        
+    def test_beam_id_list(self):
+        """ test beam selection (beam='11,13')"""
+        beam='11,13'
+        ref_idx = [0,2,3]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)      
+   
+    def test_beam_id_exprlist(self):
+        """ test beam selection (beam='11,>12')"""
+        beam='11,>12'
+        ref_idx = [0,2,3]
+        currstats=self.run_task(infile=self.rawfile,beam=beam)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)          
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        pol = ''
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+        
+    def test_pol_id_exact(self):
+        """ test polno selection (pol='1')"""
+        pol = '1'
+        ref_idx = [1,3]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+        
+    def test_pol_id_lt(self):
+        """ test polno selection (pol='<1')"""
+        pol = '<1'
+        ref_idx = [0,2]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res) 
+
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+        pol = '>0'
+        ref_idx = [1,3]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res) 
+        
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        pol = '0~1'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        pol = '0,1' 
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='0,>0')"""
+        pol = '0,>0'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,pol=pol)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res) 
+
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='')"""
+        field = ''
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_id_exact(self):
+        """ test field selection (field='6')"""
+        field = '6'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_id_lt(self):
+        """ test field selection (field='<6')"""
+        field = '<6'
+        ref_idx = [0]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_id_gt(self):
+        """ test field selection (field='>7')"""
+        field = '>7'
+        ref_idx = [3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_id_range(self):
+        """ test field selection (field='6~8')"""
+        field = '6~8'
+        ref_idx = [1,2,3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_id_list(self):
+        """ test field selection (field='5,8')"""
+        field = '5,8'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_id_exprlist(self):
+        """ test field selection (field='5,>7')"""
+        field = '5,>7'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_value_exact(self):
+        """ test field selection (field='M30')"""
+        field = 'M30'
+        ref_idx = [2]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_value_pattern(self):
+        """ test field selection (field='M*')"""
+        field = 'M*'
+        ref_idx = [0,1,2]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_value_list(self):
+        """ test field selection (field='3C273,M30')"""
+        field = '3C273,M30'  
+        ref_idx = [2,3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_field_mix_exprlist(self):
+        """ test field selection (field='<6,3*')"""
+        field = '<6,3*'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,field=field)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        spw = ''
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='23')"""
+        spw = '23'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+    
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<23')"""
+        spw = '<23'
+        ref_idx = [2]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+    
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>23')"""
+        spw = '>23'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_spw_id_range(self):
+        """ test spw selection (spw='23~25')"""
+        spw = '23~25'
+        ref_idx = [0,1,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,25')"""
+        spw = '21,25'
+        ref_idx = [1,2]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='23,>24')"""
+        spw = '23,>24'
+        ref_idx = [0,1,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        spw='*'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300.4~300.6GHz')"""
+        spw = '300.4~300.6GHz' # IFNO=25 should be selected
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+    
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-30~30km/s')"""
+        spw = '-30~30km/s'  # IFNO=23 should be selected
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+        
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='25,-30~30km/s')"""
+        spw = '25,-30~30km/s' # IFNO=23,25 should be selected
+        ref_idx = [0,1,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)
+ 
+    ####################
+    # spw (channel)
+    ####################
+    def test_spw_id_default_channel(self):
+        """test spw selection (spw=':40~60')"""
+        spw = ':40~60'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_id_default_frequency(self):
+        """test spw selection (spw=':300.490~300.510GHz')"""
+        spw = ':300.490~300.510GHz'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)  
+
+    def test_spw_id_default_velocity(self):
+        """test spw selection (spw=':-9.993081933332233~9.993081933365517km/s')"""
+        spw = ':-9.993081933332233~9.993081933365517km/s'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_id_default_list(self):
+        """test spw selection (spw=':40~60;61~80')"""
+        spw = ':40~60;61~80'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_2chan,icomp=ref_idx,compstats=self.res)     
+        
+    def test_spw_id_exact_channel(self):
+        """test spw selection (spw='25:40~60')"""
+        spw = '25:40~60'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)   
+
+    def test_spw_id_exact_frequency(self):
+        """test spw selection (spw='25:300.490~300.510GHz')"""
+        spw = '25:300.490~300.510GHz'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)   
+        
+    def test_spw_id_exact_velocity(self):
+        """test spw selection (spw='23:-9.993081933332233~9.993081933365517km/s')"""
+        spw = '23:-9.993081933332233~9.993081933365517km/s'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+        
+    def test_spw_id_exact_list(self):
+        """test spw selection (spw='25:40~60;61~80')"""
+        spw = '25:40~60;61~80'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_2chan,icomp=ref_idx,compstats=self.res) 
+        
+    def test_spw_id_pattern_channel(self):
+        """test spw selection (spw='*:300.490~300.510GHz')"""
+        spw = '*:300.490~300.510GHz'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+    
+    def test_spw_id_pattern_frequency(self):
+        """test spw selection (spw='*:40~60')"""
+        spw = '*:40~60'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)     
+
+    def test_spw_id_pattern_velocity(self):
+        """test spw selection (spw='*:-9.993081933332233~9.993081933365517km/s')"""
+        spw = '*:-9.993081933332233~9.993081933365517km/s'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_id_pattern_list(self):
+        """test spw selection (spw='*:40~60;61~80')"""
+        spw = '*:40~60;61~80'
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_2chan,icomp=ref_idx,compstats=self.res) 
+
+    def test_spw_value_frequency_channel(self):
+        """test spw selection (spw='300.490~300.510GHz:40~60')"""
+        spw = '300.490~300.510GHz:40~60'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_value_frequency_frequency(self):
+        """test spw selection (spw='300.450~300.549GHz:300.490~300.510GHz')"""
+        spw='300.450~300.549GHz:300.490~300.510GHz'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_value_frequency_velocity(self):
+        """test spw selection (spw='299.990~300.010GHz:-9.993081933332233~9.993081933365517km/s')"""
+        spw = '299.990~300.010GHz:-9.993081933332233~9.993081933365517km/s'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_value_frequency_list(self):
+        """test spw selection (spw='300.490~300.510GHz;40~60;61~80')"""
+        spw = '300.490~300.510GHz:40~60;61~80'
+        ref_idx = [1]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_2chan,icomp=ref_idx,compstats=self.res) 
+
+    def test_spw_value_velocity_channel(self):
+        """test spw selection (spw='-9.993081933332233~9.993081933365517km/s:40~60')"""
+        spw = '-9.993081933332233~9.993081933365517km/s:40~60'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+
+    def test_spw_value_velocity_frequency(self):
+        """test spw selection (spw='-9.993081933332233~9.993081933365517km/s:299.990~300.010GHz')"""
+        spw = '-9.993081933332233~9.993081933365517km/s:299.990~300.010GHz'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+        
+    def test_spw_value_velocity_velocity(self):
+        """test spw selection (spw='-50~50km/s:-10~10km/s')"""
+        spw = '-50~50km/s:-10~10km/s'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res)
+  
+    def test_spw_value_velocity_list(self):
+        """test spw selection (spw='-9.993081933332233~9.993081933365517km/s:40~60;61~80')"""
+        spw = '-9.993081933332233~9.993081933365517km/s:40~60;61~80'
+        ref_idx = [0,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_2chan,icomp=ref_idx,compstats=self.res) 
+        
+    def test_spw_id_list_channel(self):
+        """test spw selection (spw='23:40~60,25:40~60')"""
+        spw = '23:40~60,25:40~60'
+        ref_idx = [0,1,3]
+        currstats=self.run_task(infile=self.rawfile,spw=spw)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats_chan,icomp=ref_idx,compstats=self.res) 
+
+    ####################
+    # timerange
+    ####################
+    def test_timerange_value_default(self):
+        """test timerange selection (timerange='')"""
+        timerange=''
+        ref_idx = [0,1,2,3]
+        currstats=self.run_task(infile=self.rawfile,timerange=timerange)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+
+    def test_timerange_value_exact(self):
+        """test timerange selection (timerange='2011/11/11/02:32:03.47')"""
+        timerange='2011/11/11/02:32:03.47'
+        ref_idx = [0]
+        currstats=self.run_task(infile=self.rawfile,timerange=timerange)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+
+    def test_timerange_value_lt(self):
+        """test timerange selection (timerange='<2011/11/11/02:32:03.5')"""
+        timerange='<2011/11/11/02:32:03.5'
+        ref_idx = [0]
+        currstats=self.run_task(infile=self.rawfile,timerange=timerange)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+
+    def test_timerange_value_gt(self):
+        """test timerange selection (timerange='>2011/11/11/02:34:02.47')"""
+        timerange='>2011/11/11/02:34:02.47'
+        ref_idx = [3]
+        currstats=self.run_task(infile=self.rawfile,timerange=timerange)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res) 
+         
+    def test_timerange_value_range(self):
+        """test timerange selection (timerange='2011/11/11/02:32:02.47~2011/11/11/02:32:04.97')"""
+        timerange='2011/11/11/02:32:02.47~2011/11/11/02:32:04.97'
+        ref_idx = [0]
+        currstats=self.run_task(infile=self.rawfile,timerange=timerange)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+
+    def test_timerange_value_interval(self):
+        """test timerange selection (timerange='2011/11/11/02:34:02.5+0:0:01.0')"""
+        timerange='2011/11/11/02:34:02.5+0:0:01.0'
+        ref_idx = [3]
+        currstats=self.run_task(infile=self.rawfile,timerange=timerange)
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        self.res=liststats
+        self._compareStats(currstats,self.refstats,icomp=ref_idx,compstats=self.res)  
+
+    ####################
+    # Helper functions
+    ####################
+    def _get_rowidx_selected( self, name, tbsel={} ):
+        """
+        Returns a list of row idx selected in table.
+        
+        name  : the name of scantable
+        tbsel : a dictionary of table selection information.
+                The key should be column name and the value should be
+                a list of column values to select.
+        """
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        if len(tbsel) == 0:
+            idx=range(tb.nrows())
+        else:
+            command = ''
+            for key, val in tbsel.items():
+                if len(command) > 0:
+                    command += ' AND '
+                command += ('%s in %s' % (key, str(val)))
+            newtb = tb.query(command)
+            idx=newtb.rownumbers()
+            newtb.close()
+
+        tb.close()
+        return idx
+
+def suite():
+    return [sdstat_basicTest, sdstat_averageTest, sdstat_restfreqTest,
+            sdstat_storageTest, sdstat_selection_syntax, sdstat_exceptions]

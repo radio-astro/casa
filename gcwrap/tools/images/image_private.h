@@ -48,8 +48,16 @@ void _reset();
 // the returned value of pixels will have either 0 or two elements, if 0 then the returned
 // value of dir will be set
 void _processDirection(
-	casa::Vector<casa::Double>& pixels, casa::MVDirection& dir, const variant& inputDirection,
+	casa::Vector<casa::Double>& pixels, casa::MDirection& dir, const variant& inputDirection,
 	const casa::String& paramName
+);
+
+template <class T> image* _boxcar(
+	SPCIIT myimage, std::tr1::shared_ptr<const casa::Record> region,
+	const casa::String& mask, const std::string& outfile, bool overwrite,
+	bool stretch, int axis, int width, bool drop,
+	casa::ImageDecimatorData::Function dFunction, const casa::LogOrigin& lor,
+	const std::vector<casa::String> msgs
 );
 
 template<class T, class U> casac::variant* _getchunk(
@@ -87,8 +95,20 @@ template<class T> image* _decimate(
 	const vector<casa::String>& msgs
 ) const;
 
-static casa::String _inputsString(
-	const vector<std::pair<String, casac::variant> >& inputs
+
+template <class T> static image* _hanning(
+	SPCIIT image, std::tr1::shared_ptr<const casa::Record> region,
+	const casa::String& mask, const std::string& outfile, bool overwrite,
+	bool stretch, int axis, bool drop,
+	casa::ImageDecimatorData::Function dFunction,
+	const std::vector<casac::variant> values
 );
+
+static casa::String _inputsString(
+	const std::vector<std::pair<casa::String, casac::variant> >& inputs
+);
+
+// because public method name() is not const
+casa::String _name(bool strippath=false) const;
 
 

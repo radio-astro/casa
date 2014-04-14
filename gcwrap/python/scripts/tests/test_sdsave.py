@@ -1510,6 +1510,86 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
                 self.assertEqual(s0sp0[i], s1sp0[i])
             
             del s0, s1, s2
+
+class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
+    """
+    Verify that MSWriter handles a conversion from DIRECTION and SCANRATE
+    columns properly
+    """
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    prefix = 'sdsave_scanrate'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _run_and_verify(self, infile):
+        outfile = self.prefix + '.asap'
+        self.res = sdsave(infile=infile, outfile=outfile, outform='MS2', overwrite=True)
+        self.assertIsNone(self.res, msg='invalid return value')
+
+        tb.open(infile)
+        tsel = tb.query('POLNO==0')
+        time_in = tsel.getcol('TIME')
+        _dir_in = tsel.getcol('DIRECTION')
+        scanrate_in = tsel.getcol('SCANRATE')
+        tsel.close()
+        tb.close()
+        num_expected = 0 if all(scanrate_in.flatten() == 0.0) else 1
+        newshape = (_dir_in.shape[0],1,_dir_in.shape[1])
+        if num_expected == 0:
+            dir_in = _dir_in.reshape(newshape)
+        else:
+            dir_in = numpy.concatenate((_dir_in.reshape(newshape), scanrate_in.reshape(newshape)), axis=1)
+        tb.open(os.path.join(outfile, 'POINTING'))
+        time_out = tb.getcol('TIME')
+        num_poly = tb.getcol('NUM_POLY')
+        dir_out = tb.getcol('DIRECTION')
+        casalog.post('dir_in.shape=%s, dir_out.shape=%s'%(list(dir_in.shape),list(dir_out.shape)))
+        tb.close()
+        sort_index = numpy.argsort(time_out)
+        time_out_sorted = time_out.take(sort_index) / 86400.0
+        num_poly_sorted = num_poly.take(sort_index)
+        dir_out_sorted = dir_out.take(sort_index, axis=2)
+
+        self.assertEqual(dir_in.shape, dir_out.shape,
+                         msg='DIRECTION shape is not correct.')
+        self.assertTrue(all(time_in == time_out_sorted),
+                        msg='TIME is not correct.')
+        self.assertTrue(all(num_poly_sorted == num_expected),
+                        msg='NUM_POLY is not correct.')
+        self.assertTrue(all(dir_in.flatten() == dir_out_sorted.flatten()),
+                        msg='DIRECTION value is not correct.')
+        
+    def test_zero_scanrate(self):
+        """test_zero_scanrate: Verify DIRECTION column shape is (2,1) if SCANRATE is all zero"""
+        self._run_and_verify(self.infile)
+
+    def test_nonzero_scanrate(self):
+        """test_nonzero_scanrate: Verify DIRECTION column shape is (2,2) if SCANRATE is all nonzero"""
+        tb.open(self.infile, nomodify=False)
+        scanrate = tb.getcol('SCANRATE')
+        scanrate[:] = 1.0
+        tb.putcol('SCANRATE', scanrate)
+        tb.close()
+
+        self._run_and_verify(self.infile)
+
+    def test_any_scanrate(self):
+        """test_any_scanrate: Verify DIRECTION column shape is (2,2) if SCANRATE is partly nonzero"""
+        tb.open(self.infile, nomodify=False)
+        tb.putcell('SCANRATE', 0, [1.0, 0.0])
+        tb.close()
+
+        self._run_and_verify(self.infile)
         
 
 def suite():
@@ -1517,4 +1597,5 @@ def suite():
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
             sdsave_freq_labeling,sdsave_flagging,
-            sdsave_scan_number, sdsave_test_splitant]
+            sdsave_scan_number, sdsave_test_splitant,
+            sdsave_scanrate]

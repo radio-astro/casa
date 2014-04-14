@@ -181,6 +181,9 @@ def cvel(vis, outputvis,
 	
 	if os.path.exists(outputvis):
 	    raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
+
+        if (os.path.exists(outputvis+".flagversions")):
+            raise Exception, "The flagversions \"%s.flagversions\" for the output MS already exist. Please delete." % outputvis
 			    
         # Handle selectdata explicitly
         #  (avoid hidden globals)

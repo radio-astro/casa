@@ -212,9 +212,13 @@ def immath(
                       +" resultant image will be\nsaved on disk in file, " \
                       + outfile, 'WARN' )
     if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        raise Exception, 'Output file, '+outfile+\
-              ' exists. immath can not proceed, please\n'+\
-              'remove it or change the output file name.'
+        casalog.post(
+            'Output file '+outfile+
+            ' exists. immath can not proceed, please '+
+              'remove it or change the output file name.',
+            'SEVERE'
+        )
+        return False
     
     # Find the list of filenames in the expression
     # also do a quick check to see if all of the files
@@ -554,7 +558,7 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
         if (type(stkslist) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
         _myia.open(filenames[0])
-        spixels = _myia.coordsys().findcoordinate('stokes')[1]
+        spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
         if (len(spixels) != 1):
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
         stokesPixel = spixels[0]
@@ -623,7 +627,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
         _myia = iatool()
         _myia.open(filenames[0])
-        spixels = _myia.coordsys().findcoordinate('stokes')[1]
+        spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
         if (len(spixels) != 1):
             _myia.close()
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"

@@ -1,6 +1,8 @@
+import numpy
+import sdutil
+
 from taskinit import casalog
 
-import sdutil
 import asap as sd
 from asap.scantable import is_scantable
 
@@ -100,13 +102,18 @@ class sdbaseline_engine(sdutil.sdtask_engine):
 
         # parse string masklist
         maskdict = scan.parse_spw_selection(self.spw)
+        valid_spw_list = []
+        for (k,v) in maskdict.items():
+            if len(v) > 0 and numpy.all(numpy.array(map(len, v)) > 0):
+                valid_spw_list.append(k)
         
         basesel = scan.get_selection()
 
         # configure baseline function and its parameters
         self.__configure_baseline()
         
-        for ifno, lmask in maskdict.iteritems():
+        for ifno in valid_spw_list:
+            lmask = maskdict[ifno]
             sif = str(ifno)
             if len(sif) > 0:
                 sel = sd.selector(basesel)
@@ -145,6 +152,11 @@ class sdbaseline_engine(sdutil.sdtask_engine):
 
             # reset selection
             if len(sif) > 0: scan.set_selection(basesel)
+
+        ifs_org = basesel.get_ifs()
+        ifs_new = list(set(ifs_org) & set(valid_spw_list))
+        basesel.set_ifs(ifs_new)
+        scan.set_selection(basesel)
             
     def finalize(self):
         if ( abs(self.plotlevel) > 0 ):

@@ -103,6 +103,7 @@ scripts/task_ft.py
 scripts/task_gaincal.py
 scripts/task_gencal.py
 scripts/task_hanningsmooth.py
+scripts/task_hanningsmooth2.py
 scripts/task_help.py
 scripts/task_imcollapse.py
 scripts/task_imcontsub.py
@@ -193,6 +194,7 @@ scripts/task_simanalyze.py
 scripts/task_slsearch.py
 scripts/task_smoothcal.py
 scripts/task_specfit.py
+scripts/task_specsmooth.py
 scripts/task_splattotable.py
 scripts/task_split.py
 scripts/task_spxfit.py

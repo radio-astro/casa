@@ -60,13 +60,13 @@ MS Parameters
   </param>
   
   <param type="int" name="gridrows">
-    <description>The number of rows to display, for multiple plots on a page.</description>
-    <value>1</value>
+    <description>The number of rows to display, for multiple plots on a page. This does not need to be set except in cases where scripts are not using the default 1x1 display.  For multiple plots per page, it should be set once for each change in the number of grid rows.</description>
+  	<value>0</value>
   </param>
   
   <param type="int" name="gridcols">
-    <description>The number of columns to display, for multiple plots on a page.</description>
-    <value>1</value>
+    <description>The number of columns to display, for multiple plots on a page.  This does not need to be set except in cases where scripts are not using the default 1x1 display.  For multiple plots per page, it should be set once for each change in the number of grid columns.</description>
+  	<value>0</value>
   </param>
 
   <param type="string" name="xaxis">
@@ -98,7 +98,9 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
-      <value>wt</value><value>weight</value>
+      <value>wt</value>
+      <value>weight</value>
+      <value>wt*amp</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -134,78 +136,124 @@ MS Parameters
         <value>residual</value>
         <value>corrected-model</value>
         <value>data-model</value>
+        <value>data/model</value>
+        <value>corrected/model</value>
       </allowed>
     </param>    
-
-  <param type="string" name="yaxis">    
+    
+  <param type="any" name="yaxis">    
   <description>plot y-axis (blank for default/current)</description>
-    <value />
-    <allowed kind="enum">
+  <any type="variant" limittype="string stringArray"/>
+   <value type="string" />
+   <value type="stringArray" ><value></value></value>
+   <allowed kind="enum">
       <value />
       <value>scan</value>
       <value>field</value>
       <value>time</value>
-      <value>interval</value><value>time_interval</value><value>timeinterval</value><value>timeint</value>
+      <value>interval</value>
+      <value>time_interval</value>
+      <value>timeinterval</value>
+      <value>timeint</value>
       <value>spw</value>
-      <value>channel</value><value>chan</value>
-      <value>frequency</value><value>freq</value>
-      <value>correlation</value><value>corr</value>
-      <value>antenna1</value><value>ant1</value>
-      <value>antenna2</value><value>ant2</value>
+      <value>channel</value>
+      <value>chan</value>
+      <value>frequency</value>
+      <value>freq</value>
+      <value>correlation</value>
+      <value>corr</value>
+      <value>antenna1</value>
+      <value>ant1</value>
+      <value>antenna2</value>
+      <value>ant2</value>
       <value>baseline</value>
       <value>uvdist</value>
-      <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value>
+      <value>uvwave</value>
+      <value>uvdist_l</value>
+      <value>uvdistl</value>
       <value>u</value>
       <value>v</value>
       <value>w</value>
       <value>uwave</value>
       <value>vwave</value>
       <value>wwave</value>
-      <value>velocity</value><value>vel</value>
-      <value>amp</value><value>amplitude</value>
+      <value>velocity</value>
+      <value>vel</value>
+      <value>amp</value>
+      <value>amplitude</value>
       <value>phase</value>
       <value>real</value>
-      <value>imag</value><value>imaginary</value>
-      <value>wt</value><value>weight</value>
+      <value>imag</value>
+      <value>imaginary</value>
+      <value>wt</value>
+      <value>weight</value>
+      <value>wt*amp</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
       <value>radialvelocity</value>
       <value>rho</value>
-      <value>hourang</value><value>hourangle</value>
-      <value>parang</value><value>parangle</value><value>parallacticangle</value>
+      <value>hourang</value>
+      <value>hourangle</value>
+      <value>parang</value>
+      <value>parangle</value>
+      <value>parallacticangle</value>
       <value>antenna</value><value>ant</value>
       <value>ant-azimuth</value>
       <value>ant-elevation</value>
-      <value>ant-hourang</value><value>ant-hourangle</value>
-      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
+      <value>ant-hourang</value>
+      <value>ant-hourangle</value>
+      <value>ant-parang</value>
+      <value>ant-parangle</value>
+      <value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
-      <value>gainamp</value><value>gamp</value>
-      <value>gainphase</value><value>gphase</value>
-      <value>gainreal</value><value>greal</value>
-      <value>gainimag</value><value>gimag</value>
-      <value>delay</value><value>del</value>
-      <value>opac</value><value>opacity</value>
-      <value>swp</value><value>swpower</value><value>switchedpower</value>
-    </allowed>  
+      <value>gainamp</value>
+      <value>gamp</value>
+      <value>gainphase</value>
+      <value>gphase</value>
+      <value>gainreal</value>
+      <value>greal</value>
+      <value>gainimag</value>
+      <value>gimag</value>
+      <value>delay</value>
+      <value>del</value>
+      <value>opac</value>
+      <value>opacity</value>
+      <value>swp</value>
+      <value>swpower</value>
+      <value>switchedpower</value>
+    </allowed>
     </param>
     
-    <param type="string" name="ydatacolumn" subparam="true">
+    <param type="any" name="ydatacolumn" subparam="true">
       <description>data column to use for y-axis (blank for default/current)</description>
-      <value />
-      <allowed kind="enum">
-        <value />
+      <any type="variant" limittype='string stringArray'/>
+      <value type="string"/>
+      <allowed kind="enum" type="string">
+        <value/>
         <value>data</value>
         <value>corrected</value>
         <value>model</value>
         <value>residual</value>
         <value>corrected-model</value>
         <value>data-model</value>
+        <value>data/model</value>
+        <value>corrected/model</value>
       </allowed>
     </param>
-
+    
+    <param type="any" name="yaxislocation" subparam="true">
+      <description>whether to use a left or right y-axis for the data (blank for default)</description>
+      <any type="variant" limittype='string stringArray'/>
+      <value type="string" />
+      <allowed kind="enum" type="string">
+        <value />
+        <value>left</value>
+        <value>right</value>
+      </allowed>
+    </param>
 <!--
 ###############################################################################
 MS Selection parameters
@@ -445,6 +493,7 @@ Iteration Parameters
         <value>spw</value>
         <value>baseline</value>
         <value>antenna</value>
+        <value>time</value>
       </allowed>
    </param>
 
@@ -486,15 +535,17 @@ Display Parameters
 -->
    
     
-    <param type="bool" name="customsymbol">
-        <description>set a custom symbol for unflagged points</description>
+    <param type="any" name="customsymbol">
+        <description>set a custom symbol(s) for unflagged points</description>
+         <any type="variant" limittype="bool boolArray"/>
         <value>False</value>
     </param>
 
-    <param type="string" name="symbolshape" subparam="true">
+    <param type="any" name="symbolshape" subparam="true">
         <description>shape of plotted unflagged symbols</description>
-        <value>autoscaling</value>
-        <allowed kind="enum">
+        <any type="variant" limittype="string stringArray"/>
+        <value type="string">autoscaling</value>
+        <allowed kind="enum" type="string">
             <value>nosymbol</value>
             <value>autoscaling</value>
             <value>circle</value>
@@ -504,20 +555,23 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="int" name="symbolsize" subparam="true">
+    <param type="any" name="symbolsize" subparam="true">
         <description>size of plotted unflagged symbols</description>
-        <value>2</value>
+         <any type="variant" limittype="int intArray"/>
+        <value type="int">2</value>
     </param>
 
-    <param type="string" name="symbolcolor" subparam="true">
+    <param type="any" name="symbolcolor" subparam="true">
         <description>color of plotted unflagged symbols</description>
-        <value>0000ff</value>
+         <any type="variant" limittype="string stringArray"/>
+        <value type="string">0000ff</value>
     </param>
 
-    <param type="string" name="symbolfill" subparam="true">
+    <param type="any" name="symbolfill" subparam="true">
         <description>fill type of plotted unflagged symbols</description>
-        <value>fill</value>
-        <allowed kind="enum">
+        <any type="variant" limittype="string stringArray"/>
+        <value type="string">fill</value>
+        <allowed kind="enum" type="string">
             <value>fill</value>
             <value>mesh1</value>
             <value>mesh2</value>
@@ -526,15 +580,17 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="bool" name="symboloutline" subparam="true">
+    <param type="any" name="symboloutline" subparam="true">
         <description>selects outlining plotted unflagged points</description>
-        <value>False</value>
+         <any type="variant" limittype="bool boolArray"/>
+        <value type="bool">False</value>
     </param>
 
-    <param type="string" name="coloraxis">
+    <param type="any" name="coloraxis">
         <description>selects which data to use for colorizing</description>
-        <value />
-        <allowed kind="enum">
+        <any type="variant" limittype="string stringArray"/>
+        <value type="string" />
+        <allowed kind="enum" type="string">
             <value />
             <value>scan</value>
             <value>field</value>
@@ -544,18 +600,21 @@ Display Parameters
             <value>baseline</value>
             <value>channel</value><value>chan</value>
             <value>corr</value>
+            <value>time</value>
         </allowed>
     </param>
 
-    <param type="bool" name="customflaggedsymbol">
+    <param type="any" name="customflaggedsymbol">
         <description>set a custom plot symbol for flagged points</description>
-        <value>False</value>
+        <any type="variant" limittype="bool boolArray"/>
+        <value type="bool">False</value>
     </param>
 
-    <param type="string" name="flaggedsymbolshape" subparam="true">
+    <param type="any" name="flaggedsymbolshape" subparam="true">
         <description>shape of plotted flagged symbols</description>
-        <value>nosymbol</value>
-        <allowed kind="enum">
+        <any type="variant" limittype="string stringArray"/>
+        <value type="string">nosymbol</value>
+        <allowed kind="enum" type="string">
             <value>nosymbol</value>
             <value>autoscaling</value>
             <value>circle</value>
@@ -565,20 +624,23 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="int" name="flaggedsymbolsize" subparam="true">
+    <param type="any" name="flaggedsymbolsize" subparam="true">
         <description>size of plotted flagged symbols</description>
-        <value>2</value>
+        <any type="variant" limittype="int intArray"/>
+        <value type="int">2</value>
     </param>
 
-    <param type="string" name="flaggedsymbolcolor" subparam="true">
+    <param type="any" name="flaggedsymbolcolor" subparam="true">
         <description>color of plotted flagged symbols</description>
-        <value>ff0000</value>
+        <any type="variant" limittype="string stringArray"/>
+        <value type="string">ff0000</value>
     </param>
 
-    <param type="string" name="flaggedsymbolfill" subparam="true">
+    <param type="any" name="flaggedsymbolfill" subparam="true">
         <description>fill type of plotted flagged symbols</description>
-        <value>fill</value>
-        <allowed kind="enum">
+        <any type="variant" limittype="string stringArray"/>
+        <value type="string">fill</value>
+        <allowed kind="enum" type="string">
             <value>fill</value>
             <value>mesh1</value>
             <value>mesh2</value>
@@ -587,9 +649,10 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="bool" name="flaggedsymboloutline" subparam="true">
+    <param type="any" name="flaggedsymboloutline" subparam="true">
         <description>selects outlining plotted flagged points</description>
-        <value>False</value>
+        <any type="variant" limittype="bool boolArray"/>
+        <value type="bool">False</value>
     </param>
 
 
@@ -599,15 +662,14 @@ Plot range Parameter
 ###############################################################################
 -->
 
-    <param type="doubleArray" name="plotrange">
+    <param type="doubleArray" name="plotrange">cd
         <description>plot axes ranges: [xmin,xmax,ymin,ymax]</description>
-        <value>
-        </value>
+        <value />
     </param>
 
 <!--
 ###############################################################################
-Label Parameters
+Label Paramlegeters
 ###############################################################################
 -->
 
@@ -629,7 +691,7 @@ Label Parameters
 
 <!--
 ###############################################################################
-Grid Parameters
+Canvas Parameters
 ###############################################################################
 -->
 
@@ -689,6 +751,26 @@ Grid Parameters
 </param>
 
 
+<param type="bool" name="showlegend" subparam="false">
+    <description>Show a legend on the plot.</description>
+    <value>False</value>
+</param>
+
+<param type="string" name="legendposition" subparam="true">
+    <description>Legend position.</description>
+    <value></value>
+    <allowed kind="enum">
+    	<value />
+        <value>upperRight</value>
+        <value>upperLeft</value>
+        <value>lowerRight</value>
+        <value>lowerLeft</value>
+        <value>exteriorRight</value>
+        <value>exteriorLeft</value>
+        <value>exteriorTop</value>
+        <value>exteriorBottom</value>
+    </allowed>
+</param>
 
 <!--
 ###############################################################################
@@ -738,6 +820,11 @@ Export plot as image Parameters
      <param type="bool" name="showgui">
          <description>Show GUI</description>
          <value>True</value>
+     </param>
+     
+     <param type="bool" name="clearplots">
+     	<description>Remove any existing plots so new ones can replace them.</description>
+     	<value>False</value>
      </param>
 
 <!--
@@ -1390,7 +1477,7 @@ Constraints
 
     iteraxis -- axis upon which iterate plots (one plot per page, for now)
                 default: '' (no iteration)
-                options: 'scan','field','spw','baseline','antenna',''
+                options: 'scan','field','spw','baseline','antenna', 'time',''
       &gt;&gt;&gt; iteraxis expandable parameters
       	iternx -- Number of rows per page.
       			default: 1
@@ -1423,7 +1510,7 @@ Constraints
     coloraxis -- axis upon which to colorize the plotted points
                 options (= indicates synonyms):
                     'scan',  'field',  'spw',  'antenna1'='ant1',  'antenna2'='ant2',
-                    'baseline',  'channel'='chan',  'corr'='correlation'
+                    'baseline',  'channel'='chan',  'corr'='correlation', 'time'
                 default: ''  (use a single color for all points)
 
     customflaggedsymbol -- If true, use a custom symbol for drawing flagged points

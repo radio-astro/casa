@@ -1,3 +1,5 @@
+import numpy
+
 from taskinit import casalog
 
 import asap as sd
@@ -140,9 +142,16 @@ class sdsave_worker(sdutil.sdtask_template):
         if len(self.spw) > 0:
             sel_org = scantab.get_selection()
             channelrange_dic = scantab.parse_spw_selection(self.spw)
+            valid_spw_list = []
             for (k,v) in channelrange_dic.items():
+                casalog.post('k=%s, v=%s'%(k,v))
                 if len(v) > 1:
                     raise SyntaxError('tsdsave doesn\'t support multiple channel range selection for spw.')
+                elif len(v) == 0:
+                    raise SyntaxError('Invalid channel range specification')
+                elif numpy.any(numpy.array(map(len, v)) == 0):
+                    # empty channel range
+                    continue
                 nchan = scantab.nchan(k)
                 full_range = [0.0, float(nchan-1)]
                 if v[0] != full_range:
@@ -151,5 +160,11 @@ class sdsave_worker(sdutil.sdtask_template):
                     scantab.set_selection(sel)
                     sdutil.dochannelrange(scantab, v[0])
                     scantab.set_selection()
-            scantab.set_selection(sel_org)
+                valid_spw_list.append(k)
+            sel = sd.selector(sel_org)
+            ifs_org = sel.get_ifs()
+            ifs_new = list(set(ifs_org) & set(valid_spw_list))
+            casalog.post('ifs_new = %s'%(ifs_new))
+            sel.set_ifs(ifs_new)
+            scantab.set_selection(sel)
 

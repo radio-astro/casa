@@ -10,93 +10,101 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tsdsave" startup="false" category="single dish" visibility="experimental">
 
-  <shortdescription>ASAP SD task: save the sd spectra in various format</shortdescription>
+  <shortdescription>Save the sd spectra in various format</shortdescription>
 
   <description>
-        ASAP SD task (based on the ALMATST5 recommendations):
-        save the sd spectra in various format
-
-        Task Version 2008-01-29 TT
-</description>
+Task sdsave writes the single dish data to a disk file in 
+specified format (ASAP, MS2, SDFITS, ASCII). It is possible to 
+save the subset of the data by selecting field names, spw ids,
+time ranges, scan numbers, and polarization ids. The ASAP
+(scantable) format is recommended for further analysis using Sd
+tool or tasks except imaging. For further imaging using imager
+or sdimaging/sdtpimaging, save the data to the Measurement Set
+(MS2).
+  </description>
 
   <input>
 
     <param type="string" name="infile"  mustexist="true">
-    <description>name of input SD dataset</description>
-    <value></value>
+        <description>name of input SD dataset</description>
+        <value></value>
     </param>
 
     <param type="bool" name="splitant">
-            <description>split output file by antenna (True,False) (only effective for MS input and ASAP output)</description>
-            <value>False</value>
+        <shortdescription>split output file by antenna [True, False]</shortdescription>
+        <description>split output file by antenna (only effective for MS input)</description>
+        <value>False</value>
     </param>
 
     <param type="any" name="antenna" subparam="true">
-            <description>antenna name or id (only effective for MS input)</description>
-            <any type="variant" limittype="string int"/>
-            <value type="int">0</value>
+        <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
+        <any type="variant" limittype="string int"/>
+        <value type="int">0</value>
     </param> 
 
     <param type="bool" name="getpt">
-            <description>fill DIRECTION column properly, or reuse POINTING table in original MS (only effective for MS input)</description>
-            <value>True</value>
+        <shortdescription>fill DIRECTION column properly [True, False]</shortdescription>
+        <description>fill DIRECTION column properly (True), or reuse POINTING table in original MS (False) (only effective for MS input)</description>
+        <value>True</value>
     </param>
 
     <param type="string" name="field">
-            <description>string for selection by source name</description>
-            <value></value>
+        <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="string" name="spw">
-            <description>list of IF ids to select (e.g. \'0,1\')</description>
-            <value></value>
+        <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="string" name="timerange">
-	    <description>Time range: \'\' ==> all,timerange=\'09:14:0~09:54:0\'</description>
-	    <value></value>
+        <description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help)</description>
+        <value></value>
     </param>
 
     <param type="string" name="scan">
-	    <description>list of scan to process (e.g. \'20,21,22,23\')</description>
-	    <value></value>
+        <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="string" name="pol">
-            <description>list of polarization ids to select (e.g. \'0,1\')</description>
-            <value></value>
+        <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="string" name="beam">
-	    <description>list of beam ids to select (e.g. \'0,1\')</description>
-	    <value></value>
+        <description>select data by beam IDs, e.g. \'0,1\' (\'\'=all)</description>
+        <value></value>
     </param>
 
     <param type="any" name="restfreq">
-            <description>rest frequency (default unit: Hz)</description>
-            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
-            <value type="string"/>
+        <description>the rest frequency, e.g. \'1.41GHz\' (default unit: Hz) (see examples in help)</description>
+        <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+        <value type="string"/>
     </param>
 
     <param type="string" name="outfile">
-	    <description>output file name</description>
-	    <value></value>
+        <description>name of output file (See a WARNING in help)</description>
+        <value></value>
     </param>
 
     <param type="string" name="outform">
-	    <description>output file format (ASCII,MS2,SDFITS,ASAP)</description>
-	    <value>ASAP</value>
-	    <allowed kind="enum">
-	    <value>ASCII</value>
-	    <value>MS2</value>
-	    <value>SDFITS</value>
-	    <value>ASAP</value>
-	    </allowed>
+        <shortdescription>output file format [\'ASAP\', \'MS2\', \'ASCII\', or \'SDFITS\']</shortdescription>
+        <description>output file format (See a WARNING in help)</description>
+        <value>ASAP</value>
+        <allowed kind="enum">
+            <value>ASCII</value>
+            <value>MS2</value>
+            <value>SDFITS</value>
+            <value>ASAP</value>
+        </allowed>
     </param>
 
     <param type="bool" name="overwrite">
-	    <description>overwrite the output file if already exists</description>
-	    <value>False</value>
+        <shortdescription>overwrite the output file if already exists [True, False] </shortdescription>
+        <description>overwrite the output file if already exists</description>
+        <value>False</value>
     </param>
 
     <constraints>
@@ -113,107 +121,122 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-  Keyword arguments:
-        infile -- name of input SD dataset
-        splitant -- split output file by antenna (True,False) 
-                (only effective for MS input and ASAP output).
-                default: False
-                &gt;&gt;&gt;splitant expandable parameter
-                 antenna -- antenna name or id (only effective for MS input). 
-                         default: 0
-        getpt -- fill DIRECTION column properly, or reuse POINTING table 
-                in original MS (only effective for MS input)
-                default: True
-                options: True (fill DIRECTION column properly)
-                         False (reuse POINTING table in original MS)
-        field -- selection string for selecting scans by name
-                default: '' (no name selection)
-                example: 'FLS3a*'
-                this selection is in addition to spw, timerange, scan,
-                pol, and beam
-        spw -- list of IF id numbers to select
-                default: '' (use all IFs)
-                example: '15', '0~3'
-                this selection is in addition to field, timerange, scan,
-                pol, and beam
-        timerange -- Select data based on time range:
-                default = '' (all); example,
-                timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
-                Note: YYYY/MM/DD can be dropped as needed:
-                timerange='09:14:0~09:54:0' # this time range
-                timerange='09:44:00' # data within one integration of time
-                timerange='&gt;10:24:00' # data after this time
-                timerange='09:44:00+00:13:00' #data 13 minutes after time
-                this selection is in addition to field, spw, scan, pol,
-                and beam
-        scan -- list of to process
-                default: '' (use all scans)
-                example: '21,22,23,24', '21~24'
-                this selection is in addition to field, spw, timerange,
-                pol, and beam
-        pol -- list of polarization id numbers to select
-                default: '' (use all polarizations)
-                example: '1', '0~1'
-                this selection is in addition to field, spw, timerange,
-                scan, and beam
-        beam -- list of beam id numbers to select
-                default: '' (use all beams)
-                example: '1', '0~4'
-                this selection is in addition to field, spw, timerange,
-                scan, and pol
-        restfreq -- rest frequencies of output data
-                Available types are a number, string, a list of numbers or
-                strings (see examples below), and list of dictionaries. 
-                The default unit of restfreq is Hz, if not specified.
-                A list can be used to set different rest frequencies to
-                each IF. the length of list input must be nIF. Dictionary 
-                input should be a pair of molecule name and frequency with 
-                keys of 'name' and 'value', respectively. The 'value's in the 
-                dictionary input follows the same manner as for single 
-                float or string input. 
-                default: '' (use current setting)
-                example: 4.6e10 (float value in Hz),
-                         '46GHz' (string with unit),
-                         ['345.8GHz', '347.0GHz', 356.7e9] (for each IF)
-                         [{'name':'CO','value':345e9}] (a value with name)
-        outfile -- name of output dataset
-                default: '' 
-        outform -- output data format
-                default: 'ASAP'
-                Options: 'ASAP', 'MS2', 'SDFITS', 'ASCII'
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
-                default: False
-                WARNING: if outform='ASCII', this parameter is ignored
+-----------------
+Keyword arguments
+-----------------
+infile -- name of input SD dataset
+splitant -- split output file by antenna. this parameter is only
+            effective for MS input and ASAP output.
+        options: (bool) True, False
+        default: False
+    &gt;&gt;&gt;splitant expandable parameter
+        antenna -- select an antenna name or ID. this parameter is
+                   effective only for MS input.
+                default: 0
+                example: antenna=0 specifies antenna by id
+                         antenna='PM03' specifies antenna by name
+getpt -- fill DIRECTION column properly (True), or reuse POINTING
+         table in original MS (False). this parameter is only
+         effective for MS input.
+    options: (bool) True, False
+    default: True
+field -- select data by field IDs and names
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 0 or field named 3C273)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)/channels
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
+                 spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
+                 spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
+                 spw='1~4;6:15~48' (for channels 15 through 48 for IF IDs 1,2,3,4 and 6)
+        this selection is in addition to the other selections to data
+timerange -- select data by time range
+        default: '' (use all)
+        example: timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                 Note: YYYY/MM/DD can be dropped as needed:
+                 timerange='09:14:00~09:54:00' # this time range
+                 timerange='09:44:00' # data within one integration of time
+                 timerange='&gt;10:24:00' # data after this time
+                 timerange='09:44:00+00:13:00' #data 13 minutes after time
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+beam -- select data by beam IDs
+        default: '' (use all beams)
+        example: beam='0,1' (beam IDs 0,1)
+        this selection is in addition to the other selections to data
+restfreq -- the rest frequency
+            available type includes float, int, string, list of float, 
+            list of int, list of string, and list of dictionary. the 
+            default unit of restfreq in case of float, int, or string 
+            without unit is Hz. string input can be a value only 
+            (treated as Hz) or a value followed by unit for which 'GHz',
+            'MHz','kHz',and 'Hz' are available. 
+            a list can be used to set different rest frequencies for 
+            each IF. the length of list input must be number of IFs. 
+            dictionary input should be a pair of line name and 
+            frequency with keys of 'name' and 'value', respectively. 
+            values in the dictionary input follows the same manner as 
+            as for single float or string input. 
+        example: 345.796
+                 '1420MHz'
+                 [345.8, 347.0, 356.7]
+                 ['345.8MHz', '347.0MHz', '356.7MHz']
+                 [{'name':'CO','value':345}]
+outfile -- name of output file
+        default: '' ((&lt;infile&gt;_saved)
+outform -- output file format
+        options: 'ASAP','MS2', 'ASCII','SDFITS'
+        default: 'ASAP'
+        NOTE the ASAP format is easiest for further sd
+        processing; use MS2 for CASA imaging.
+        If ASCII, then will append some stuff to
+        the outfile name
 
+-----------
+DESCRIPTION
+-----------
+Task sdsave writes the single dish data to a disk file in 
+specified format (ASAP, MS2, SDFITS, ASCII). It is possible to 
+save the subset of the data by selecting field names, spw ids,
+time ranges, scan numbers, and polarization ids. The ASAP
+(scantable) format is recommended for further analysis using Sd
+tool or tasks except imaging. For further imaging using imager
+or sdimaging/sdtpimaging, save the data to the Measurement Set
+(MS2).
 
-        DESCRIPTION:
+Note that setting getpt=False needs a lot of attention.
+If you set getpt=False, the task retrieves pointing direction from 
+MS's FIELD table, which might not be correct for single dish 
+observation, instead to check MS's POINTING table, which is the 
+default behavior of the task (getpt=True). To compensate this, 
+absolute path to MS's POINTING table is stored, and it will be used 
+for POINTING table when the data is converted back to MS format. 
+In general, getpt=False is faster especially for large data. However, 
+MS created from Scantable cannot have correct POINTING table if 
+original MS's POINTING table doesn't exist. Such situation will 
+happen when original MS is removed or renamed, or imported Scantable 
+is moved to other computer alone.
 
-        Task sdsave writes the single dish data to a disk file in 
-        specified format (ASAP, MS2, SDFITS, ASCII). It is possible to 
-        save the subset of the data by selecting scan numbers, 
-        IF ids, polarization ids and field names. The ASAP (scantable) format 
-        is recommended for further analysis using Sd tool. For further 
-        imaging using imager, save the data to the Measurement Set (MS2).
-
-        Note that setting getpt=False needs a lot of attention.
-        If you set getpt=False, the task retrieves pointing direction from 
-        MS's FIELD table, which might not be correct for single dish 
-        observation, instead to check MS's POINTING table, which is the 
-        default behavior of the task (getpt=True). To compensate this, 
-        absolute path to MS's POINTING table is stored, and it will be used 
-        for POINTING table when the data is converted back to MS format. 
-        In general, getpt=False is faster especially for large data. However, 
-        MS created from Scantable cannot have correct POINTING table if 
-        original MS's POINTING table doesn't exist. Such situation will 
-        happen when original MS is removed or renamed, or imported Scantable 
-        is moved to other computer alone.
-
-        WARNING for the GBT raw SDFITS format data as input:
-        SDtasks are able to handle GBT raw SDFITS format data since the 
-        data filler is available. However, the functionality is not well 
-        tested yet, so that there may be unknown bugs.  
-
+-------
+WARNING
+-------
+For the GBT raw SDFITS format data as input:
+SDtasks are able to handle GBT raw SDFITS format data since the data
+filler is available. However, the functionality is not well tested yet,
+so that there may be unknown bugs. 
   </example>
 
 </task>

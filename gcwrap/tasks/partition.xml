@@ -9,11 +9,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <shortdescription>Task to produce multi-MSs using parallelism</shortdescription>
 
 <description>
-	Partition is a task to create a multi-MS out of an MS. General selection
+    Partition is a task to create a multi-MS out of an MS. General selection
     parameters are included, and one or all of the various data columns
     (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
     CORRECTED_DATA) can be selected. It can also be used to create a normal
-	MS, split based on the given data selection parameters.
+    MS, split based on the given data selection parameters.
 
     The partition task creates a multi-MS using the parallelization framework.
     If a cluster is not present, it will create a default cluster based on the
@@ -44,6 +44,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     Inside casapy, one can use the task listpartition to list the information
     from a multi-MS.
+    
+    A task can process an MMS in two ways; in parallel or in sequential. When processing
+    an MMS in parallel, each sub-MS will be processed independently in an engine.
+    The log messages of the engines are not showed in the logger; they are written in
+    the local disk in files called engine-0.log, engine-1.log, etc.
+    
+    When processing an MS in sequential, all the engines log messages are showed in
+    the logger, or terminal. Depending on the way the MMS is partitioned, some sub-MSs
+    may not contain the data selection parameters specified by the task and they will
+    issue a NULL MS selection exception. These exceptions are not cause for concern, unless
+    the master engine exits with a failure too. Watch for the end of the processing to
+    make sure there were no errors in the processing.
   
 </description>
 

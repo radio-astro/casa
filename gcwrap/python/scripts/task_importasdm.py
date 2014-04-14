@@ -33,6 +33,7 @@ def importasdm(
     overwrite=None,
     showversion=None,
     useversion=None,
+    bdfflags=None
     ):
     """Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
@@ -143,6 +144,10 @@ def importasdm(
 
 ....   useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
                      default: v3
+                     
+       bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
+                   default: false
+           
         """
 
     # Python script
@@ -258,9 +263,9 @@ def importasdm(
             if singledish:
                 viso = vis.rstrip('/') + '.importasdm.tmp.ms'
         else:
-            viso = asdm + '.ms'
-            visoc = asdm + '-wvr-corrected.ms'
-            vis = asdm
+            viso = asdm.rstrip("/") + '.ms'
+            visoc = asdm.rstrip("/") + '-wvr-corrected.ms'
+            vis = asdm.rstrip("/")
             if singledish:
                 viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                 vis = asdm.rstrip('/') + '.asap'
@@ -332,7 +337,34 @@ def importasdm(
                              + ' terminated with exit code '
                              + str(exitcode), 'SEVERE')
                 raise Exception, \
-                    'ASDM conversion error, please check if it is a valid ASDM and that data/alma/asdm is up-to-date'
+                    'ASDM conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
+
+        if showversion:
+            return
+
+        # Binary Flag processing
+        if bdfflags:
+            casalog.post('Parameter bdfflags==True: flags from the ASDM binary data will be used to set the MS flags ...')
+
+            bdffexecutable = 'bdflags2MS '
+            bdffexecstring = bdffexecutable+' -f ALL'
+            if len(scans) > 0:
+                bdffexecstring = bdffexecstring + ' --scans ' + scans
+            
+            bdffexecstring = bdffexecstring+' '+ asdm + ' ' + viso
+            
+            casalog.post('Running '+bdffexecutable+' standalone invoked as:')
+            casalog.post(bdffexecstring)
+
+            bdffexitcode = os.system(bdffexecstring)
+            if bdffexitcode != 0:
+                casalog.post(bdffexecutable
+                             + ' terminated with exit code '
+                             + str(bdffexitcode), 'SEVERE')
+                raise Exception, \
+                      'ASDM binary flags conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
+
+        # Compression
         if compression:
                    # viso = viso + '.compressed'
             viso = viso.rstrip('.ms') + '.compressed.ms'
@@ -353,7 +385,6 @@ def importasdm(
                         comment='Original flags at import into CASA',
                         merge='save')
                 aflocal.done()
-                
                 
         # Importasdm Flag Parsing
         if os.access(asdm + '/Flag.xml', os.F_OK):

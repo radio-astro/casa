@@ -13,57 +13,85 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>SD task: imaging for total power and spectral data</shortdescription>
 
   <description>
-Task sdimaging create image from input single-dish data.
+Task sdimaging creates an image from input single-dish data sets.\n
 The input can be either total power and spectral data. Currently,
-this task directly accesses the Measurement Set data only because of 
+this task directly accesses the Measurement Set data because of 
 the data access efficiency. So it differs from other single-dish 
-tasks that mostly operate on the ASAP scantable data format.
+tasks that mostly operate on the ASAP scantable data format.\n
+
+The coordinate of output image is defined by four axes, i.e., two
+spatial axes, frequency and polarization axes.\n
+By default, spatial coordinate of image is defined so that the all
+pointing directions in POINTING tables of input data sets are covered
+with the cell size, 1/3 of FWHM of primary beam of antennas in the
+first MS. Therefore, it is often easiest to leave spatial definitions
+at the default values. It is also possible to define spatial axes of
+the image by specifying the image center direction (phasecenter),
+number of image pixel (imsize) and size of the pixel (cell).\n
+The frequency coordinate of image is defined by three parameters,
+the number of channels (nchan), the channel id/frequency/velocity of
+the first channel (start), and channel width (width).There are three
+modes available to define unit of start and width, i.e., 'channel' (use
+channel indices), 'frequency' (use frequency unit, e.g., 'GHz'),
+and 'velocity' (use velocity unit, e.g., 'km/s'). By default, nchan,
+start, and width are defined so that all selected spectral windows are
+covered with the channel width equal to separation of first two
+channels selected.\n
+Finally, polarizations of image is defined by stokes parameter or
+polarization.For example, stokes='XXYY' produces an image cube with
+each plane contains the image of one of the polarizations, while
+stokes='I' produces a 'total intensity' or Stokes I image.\n
+
+The task also supports various grid function (convolution kernel) to
+weight spectra. See description below for details of gridfunction
+available.
+
   </description>
 
   <input>
     <param type="stringArray" name="infiles"  mustexist="true">
-            <description>a list of names of input MSes (only MS is allowed for this task)</description>
+            <description>a list of names of input SD Measurementsets (only MS is allowed for this task)</description>
             <value></value>
     </param>
 
     <param type="string" name="outfile">
-	    <description>output image name</description>
+	    <description>name of output image</description>
 	    <value></value>
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite option</description>
+            <shortdescription>overwrite the output file if already exists [True, False]</shortdescription>
+            <description>overwrite the output file if already exists [True, False]</description>
             <value>False</value>
     </param>
 
     <param type="any" name="field">
-	    <description>string for selection by field name or id</description>
+	    <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
 	    <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
     </param>
 
     <param type="any" name="spw">
-            <description>Spectral windows e.g. \'0~3\', (\'\'=all)</description>
+            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
     </param>
 
     <param type="any" name="antenna">
-            <description>antenna name(s) or id(s) (e.g., 0, \'PM03\') (\'\' = all antennas)</description>
+            <description>select data by antenna names or IDs, e.g, \'PM03\' (\'\' = all antennas)</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
     </param>
 
     <param type="any" name="scan">
-            <description>Scan number range</description>
-            <description>Scan number range, e.g., \'21~24\' (\'\'=all)</description>
+            <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
     </param>
 
     <param type="string" name="mode">
-            <description>Spectral gridding type</description>
-            <shortdescription>Spectral gridding type [\'channel\', \'frequency\', \'velocity\']</shortdescription>
+            <description>spectral gridding type</description>
+            <shortdescription>spectral gridding type [\'channel\', \'frequency\', \'velocity\']</shortdescription>
             <value>channel</value> 
             <allowed kind="enum">
                     <value>channel</value>
@@ -73,24 +101,24 @@ tasks that mostly operate on the ASAP scantable data format.
     </param>
 
     <param type="int" name="nchan" subparam="true">
-            <description> Number of channels (planes) in output image; -1 = all</description>
+            <description> number of channels (planes) in output image (-1=all)</description>
             <value>-1</value>
     </param>
 
     <param type="any" name="start" subparam="true">
-            <description>start of output spectral dimension</description>
+            <description>start of output spectral dimension, e.g. \'0\', \'110GHz\', \'-20km/s\'</description>
             <any type="variant" limittypes="string int"/>
 	    <value type="int">0</value>
     </param>
 
-    <param type="any" name="step" subparam="true">
+    <param type="any" name="width" subparam="true">
             <description>width of output spectral channels</description>
 	    <any type="variant"  limittypes="string int"/>
 	    <value type="int">1</value>
     </param>
 
     <param type="string" name="veltype" ignorecase="true"  subparam="true">
-            <shortdescription>velocity definition [\'radio\'|\'optical\'|\'true\'|\'relativistic\'] </shortdescription>
+            <shortdescription>velocity definition [\'radio\', \'optical\', \'true\' or \'relativistic\'] </shortdescription>
             <description>velocity definition</description>
             <value>radio</value>
             <allowed kind="enum">
@@ -102,7 +130,7 @@ tasks that mostly operate on the ASAP scantable data format.
     </param>
 
     <param type="string" name="outframe" ignorecase="true">
-            <shortdescription>velocity frame of output image [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame or LSRK for multiple-MS inputs) </shortdescription>
+            <shortdescription>velocity frame of output image [\'lsrk\', \'lsrd\', \'bary\', \'geo\', \'topo\', \'galacto\', \'lgroup\', \'cmb\'] (\'\'=current frame or LSRK for multiple-MS inputs) </shortdescription>
             <description>velocity frame of output image (''=current frame or LSRK for multiple-MS inputs)</description>
             <value></value>
             <allowed kind="enum">
@@ -119,8 +147,8 @@ tasks that mostly operate on the ASAP scantable data format.
     </param>
 
     <param type="string" name ="gridfunction">
-            <shortdescription>gridding function for imaging [\'BOX\'|\'SF\'|\'PB\'|\'GAUSS\'|\'GJINC\']</shortdescription>
-            <description>gridding function for imaging</description>
+            <shortdescription>gridding function for imaging [\'BOX\', \'SF\', \'PB\', \'GAUSS\' or \'GJINC\'] (see description in help)</shortdescription>
+            <description>gridding function for imaging (see description in help)</description>
             <value>BOX</value>
             <allowed kind="enum">
                 <value>BOX</value>
@@ -160,30 +188,30 @@ tasks that mostly operate on the ASAP scantable data format.
     </param>
 
     <param type="intArray" name="imsize">
-            <description>x and y image size in pixels, symmetric for single value (e.g., [128,128])</description>
+            <description>x and y image size in pixels, e.g., [64,64]. Single value: same for both spatial axes ([] = number of pixels to cover whole pointings in MSes)</description>
             <value type="vector">
             </value>
     </param>
 
     <param type="any" name="cell">
-    <description>x and y cell size (e.g., [\'30arcsec\',\'30arcsec\']). default unit arcmin</description>
+    <description>x and y cell size, (e.g., [\'8arcsec\',\'8arcsec\']. default unit arcmin. ('' = 1/3 of FWHM of primary beam)</description>
     <any type="variant" limittypes="string stringArray doubleArray"/>
     <value type="string"></value>
     </param>
 
     <param type="any" name="phasecenter">
-            <description>Image phase center: position or field index (e.g., \'J2000 17:30:15.0 -25.30.00.0\')</description>
+            <description>image center direction: position or field index, e.g., \'J2000 17:30:15.0 -25.30.00.0\'. ('' = the center of pointing directions in MSes)</description>
             <any type="variant"/>
             <value type="string"></value>
     </param>
 
     <param type="string" name="ephemsrcname">
-	    <description>ephemeris source name</description>
+	    <description>ephemeris source name, e.g. \'mars\'</description>
 	    <value></value>
     </param>
 
     <param type="string" name="pointingcolumn">
-            <shortdescription>pointing data column to use [\'direction\'|\'target\'|\'pointing_offset\'|\'source_offset\'|\'encoder\']</shortdescription>
+            <shortdescription>pointing data column to use [\'direction\', \'target\', \'pointing_offset\', \'source_offset\' or \'encoder\']</shortdescription>
             <description>pointing data column to use</description>
             <value>direction</value>
             <allowed kind="enum" ignorecase="True">
@@ -196,13 +224,13 @@ tasks that mostly operate on the ASAP scantable data format.
     </param>
 
     <param type="any" name="restfreq">
-            <description>rest frequency (e.g., \'114.5GHz\')</description>
+            <description>rest frequency to assign to image, e.g., \'114.5GHz\'</description>
             <any type="variant" limittypes="string double"/>
             <value type="string"/>
     </param>
 
     <param type="string" name="stokes">
-            <description>stokes or correlation name (e.g. \'I\', \'XX\')</description>
+            <description>stokes parameters or polarization types to image, e.g. \'I\', \'XX\'</description>
             <value></value>
     </param>
 
@@ -221,7 +249,7 @@ tasks that mostly operate on the ASAP scantable data format.
                     <default param="start"><value type="string"></value>
 		        <description>Begin the output cube at the frequency of this channel in the MS</description>
                     </default>
-                    <default param="step"><value type="string"></value>
+                    <default param="width"><value type="string"></value>
                         <description>Width of output channel relative to MS channel (# to average)(\'\' = 1 channel) </description>
                     </default>
                 </equals>
@@ -230,7 +258,7 @@ tasks that mostly operate on the ASAP scantable data format.
                     <default param="start"><value type="string"></value>
 		        <description>Frequency of first channel: e.g. \'1.4GHz\' (\'\'= first channel in first SpW of MS)</description>
                     </default>
-                    <default param="step"><value type="string"></value>
+                    <default param="width"><value type="string"></value>
                         <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
                     </default>
                 </equals>
@@ -239,7 +267,7 @@ tasks that mostly operate on the ASAP scantable data format.
                     <default param="start"><value type="string"></value>
 		        <description>Velocity of first channel: e.g \'0.0km/s\'(\'\'=first channel in first SpW of MS)</description>
                     </default>
-                    <default param="step"><value type="string"></value>
+                    <default param="width"><value type="string"></value>
                         <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
                     </default>
                     <default param="veltype"><value type="string">radio</value></default>
@@ -281,168 +309,213 @@ tasks that mostly operate on the ASAP scantable data format.
   <returns type="void"/>
 
   <example>
-  Keyword arguments:
-        infiles -- a list of names of input SD (MS) datasets
-                example: 'm100.PM01.ms'
-                         ['m100.PM01.ms','m100.PM03.ms']; multiple MSes
-        outfile -- output image name
-                default: none
-                example: 'mySDimage.im'
-        overwrite -- overwrite option for outfile
-                default: False (not overwrite)
-                options: True, False
-                example: if True, existing file will be overwritten
-        field -- field id or selection string for selecting scans by name
-                default: -1 (all fields)
-                example: 'FLS3a', 0
-                this selection is in addition to scanlist and spw
-        spw -- a list of spectral window id
-                default: 0
-                example: 1
-                         [1, 3, 5]
-                this selection is in addition to scanlist and field
-        antenna -- select data based on antenna name(s) or id(s)
-                default: -1 (all baselines, i.e. all antenna in case of auto data)
-                example: 0, 'DV01'
-        scan -- list of scan numbers to process
-                default: [] (use all scans)
-                example: [21,22,23,24]
-                this selection is in addition to field and spw
-        mode -- spectral gridding type
-                default: 'channel'
-                options: 'channel', 'velocity', 'frequency'
-            &gt;&gt;&gt; mode expandable parameters
-               nchan -- number of spectral channel for created image
-                   default: 1 
-                   example: 100
-               start -- reference value of start channel (in units of specunit)
-                   default: 0 (0th channel if specunit='channel')
-                   example: 100
-               step -- width of each spectral channel for created image
-                   default: 1 (width of 1 channel if specunit='channel')
-                   example: 100
-               veltype -- Velocity reference frame of output image
-                   Options: 'radio','optical','true','relativistic'
-                   default: 'radio'
-        outframe -- Velocity reference frame of output image
-                Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
-                         'LGROUP','CMB'
-                default: ''; same as input data or 'LSRK' for multiple-MS inputs
-                example: frame='bary' for Barycentric frame 
-        gridfunction -- gridding function for imaging
-                options: 'BOX' (Box-car), 'SF' (Spheroidal), 
-                         'PB' (Primary-beam), 'GAUSS' (Gaussian),
-                         'GJINC' (Gaussian*Jinc)
-                default: 'BOX'
-                example: 'SF'
-            &gt;&gt;&gt; gridfunction expandable parameter:
-               convsupport -- convolution support for 'SF' 
-                   default: -1 (use default for each gridfunction)
-                   example: 3
-               truncate -- truncattion radius of convolution kernel.
-                           effective only for 'GAUSS' and 'GJINC'.
-                   default: '-1' (use default for each gridfunction)
-                   example: 3, '20arcsec', '3pixel'
-               gwidth -- HWHM for gaussian. Effective only for 
-                         'GAUSS' and 'GJINC'.
-                   default: '-1' (use default for each gridfunction)
-                   example: 3, '20arcsec', '3pixel'
-               jwidth -- Width of jinc function. Effective only for 
-                         'GJINC'.
-                   default: '-1' (use default for each gridfunction)
-                   example: 3, '20arcsec', '3pixel'
-        imsize -- x and y image size in pixels, symmetric for single value
-                default: [] (=cover all pointings in MS)
-                example: imsize=200 (equivalent to [200,200])
-        cell -- x and y cell size. default unit arcmin
-                default: '' (= 1/3 of FWHM of primary beam)
-                example: cell=['0.2arcmin, 0.2arcmin']
-                         cell='0.2arcmin' (equivalent to example above)
-        phasecenter -- image phase center: direction measure or field id 
-                default: '' (= the center of pointing directions in 
-                             POINTING table of infiles)
-                example: 6 (field id), 'J2000 13h44m00 -17d02m00',
-                         'AZEL -123d48m29 15d41m41'
-        ephemsrcname -- ephemeris source name for moving source
-                default: ''
-                if the source name in the data matches one of the known 
-                solar objects by the system, this task automatically set 
-                the source name. 
-                example: 'moon' 
-        pointingcolumn -- pointing data column to use
-                option: 'direction', 'target', 'pointing_offset', 'source_offset', 'encoder' 
-                default: 'direction'
-        restfreq -- rest frequency
-                default: '' (refer input data)
-                example: 1.0e11, '100GHz'
-        stokes -- select data based on stokes or polarization type 
-                default: '' (use all polarizations)
-                example: 'XX'
-        minweight -- Minimum weight ratio to the median of weight used in 
-                     weight correction and weight based masking
-                default: 0.1
-                example: minweight = 0.
+Keyword arguments:
+infiles -- a list of names of input SD Measurementsets
+        example: 'm100.PM01.ms'
+                 ['m100.PM01.ms','m100.PM03.ms']; multiple MSes
+outfile -- name of output image
+        default: ''
+        example: 'mySDimage.im'
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False (do NOT overwrite)
+        example: if True, existing file will be overwritten
+field -- select data by field IDs and names
+                If field string is a non-negative integer, it is assumed to
+                be a field index otherwise, it is assumed to be a 
+                field name
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 3 or filed named 3C273)
+                 For multiple MS input, a list of field strings can be used:
+                 field = ['0~2','0~4'] (field ids 0-2 for the first MS and 0-4
+                         for the second) 
+                 field = '0~2' (field ids 0-2 for all input MSes)
+        this selection is in addition to the other selections to data
+spw -- select data by spectral window IDs/channels
+       NOTE: channels de-selected here will contain all zeros if
+       selected by the parameter mode subparameters.    
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
+                 spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
+                 spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
+                 spw='1~4;6:15~48' (for channels 15 through 48 for IF IDs 1,2,3,4 and 6)
+                 For multiple MS input, a list of spw strings can be used:
+                 spw=['0','0~3'] (spw ids 0 for the first MS and 0-3 for the second)
+                 spw='0~3' (spw ids 0-3 for all input MSes)
+        this selection is in addition to the other selections to data
+antenna -- select data by antenna names or IDs
+           If antenna string is a non-negative integer, it is 
+           assumed to be an antenna index, otherwise, it is
+           considered an antenna name.
+        default: '' (all baselines, i.e. all antenna in case of auto data)
+        example: antenna='PM03'
+                 For multiple MS input, a list of antenna strings can be used:
+                 antenna=['5','6'] (antenna id5 for the first MS and 6 for the second)
+                 antenna='5' (antenna index 5 for all input MSes)
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+                 For multiple MS input, a list of scan strings can be used:
+                 scan=['0~100','10~200'] (scan ids 0-100 for the first MS
+                 and 10-200 for the second)
+                 scan='0~100 (scan ids 0-100 for all input MSes)
+        this selection is in addition to the other selections to data
+mode -- spectral gridding type
+        options: 'channel', 'velocity', 'frequency'
+        default: 'channel'
+    &gt;&gt;&gt; mode expandable parameters
+       nchan -- Total number of channels in the output image.
+           default: -1; Automatically selects enough channels to cover 
+                    data selected by 'spw' consistent with 'start' and 'width'.
+                    It is often easiest to leave nchan at the default value. 
+           example: nchan=100
+       start -- First channel, velocity, or frequency. 
+                For mode='channel'; This selects the channel index number 
+                from the MS (0 based) that you want to correspond to the
+                first channel of the output cube. The output cube will be
+                in frequency space with the first channel having the
+                frequency of the MS channel selected by start.  start=0
+                refers to the first channel in the first selected spw, even
+                if that channel is de-selected in the spw parameter.
+                Channels de-selected by the spw parameter will be filled with
+                zeros if included by the start parameter. For example,
+                spw=3~8:3~100 and start=2 will produce a cube that starts on
+                the third channel (recall 0 based) of spw index 3, and the
+                first channel will be blank.
+           default: '' (the first input channel of first input spw)
+           example: start=100 (mode='channel')
+                    start='22.3GHz' (mode='frequency')
+                    start='5.0km/s' (mode='velocity')
+       width -- Output channel width
+               For mode='channel', default=1; width&gt;1 indicates channel averaging
+               example: width=4.
+               For mode= 'velocity' or 'frequency', default=''; width of
+               first input channel, or more precisely, the difference 
+               in frequencies between the first two selected channels. 
+               -- For example if channels 1 and 3 are selected with spw, 
+                then the default width will be the difference between their
+                frequencies, and not the width of channel 1. 
+               -- Similarly, if the selected data has uneven channel-spacing,
+                 the default width will be picked from the first two selected
+                 channels. In this case, please specify the desired width.
+               When specifying the width, one must give units
+               examples: width='1.0km/s', or width='24.2kHz'.
+               Setting width>0 gives channels of increasing frequency for 
+               mode='frequency', and increasing velocity for mode='velocity'.
+       veltype -- Velocity reference frame of output image
+           Options: 'radio','optical','true','relativistic'
+           default: 'radio'
+outframe -- velocity reference frame of output image
+        Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
+                 'LGROUP','CMB'
+        default: ''; same as input data or 'LSRK' for multiple-MS inputs
+        example: frame='bary' for Barycentric frame 
+gridfunction -- gridding function for imaging
+        options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                 'PB' (Primary-beam), 'GAUSS' (Gaussian),
+                 'GJINC' (Gaussian*Jinc)
+        default: 'BOX'
+        example: 'SF'
+    &gt;&gt;&gt; gridfunction expandable parameter:
+       convsupport -- convolution support for 'SF' 
+           default: -1 (use default for each gridfunction)
+           example: 3
+       truncate -- truncattion radius of convolution kernel.
+                   effective only for 'GAUSS' and 'GJINC'.
+           default: '-1' (use default for each gridfunction)
+           example: 3, '20arcsec', '3pixel'
+       gwidth -- HWHM for gaussian. Effective only for 
+                 'GAUSS' and 'GJINC'.
+           default: '-1' (use default for each gridfunction)
+           example: 3, '20arcsec', '3pixel'
+       jwidth -- Width of jinc function. Effective only for 
+                 'GJINC'.
+           default: '-1' (use default for each gridfunction)
+           example: 3, '20arcsec', '3pixel'
+imsize -- x and y image size in pixels, symmetric for single value
+        default: [] (=cover all pointings in MS)
+        example: imsize=200 (equivalent to [200,200])
+cell -- x and y cell size. default unit arcmin
+        default: '' (= 1/3 of FWHM of primary beam)
+        example: cell=['0.2arcmin, 0.2arcmin']
+                 cell='0.2arcmin' (equivalent to example above)
+phasecenter -- image phase center: direction measure or field ID
+        default: '' (= the center of pointing directions in 
+                     POINTING table of infiles)
+        example: 6 (field id), 'J2000 13h44m00 -17d02m00',
+                 'AZEL -123d48m29 15d41m41'
+ephemsrcname -- ephemeris source name for moving source
+        default: ''
+        if the source name in the data matches one of the known 
+        solar objects by the system, this task automatically set 
+        the source name. 
+        example: 'mars' 
+pointingcolumn -- pointing data column to use
+        option: 'direction', 'target', 'pointing_offset', 'source_offset', encoder' 
+        default: 'direction'
+restfreq -- specify rest frequency to use for output image
+        default: '' (refer input data)
+        example: 1.0e11, '100GHz'
+stokes -- stokes parameters or polarization types to image
+        default: '' (use all polarizations)
+        example: 'XX'
+minweight -- Minimum weight ratio to the median of weight used in 
+             weight correction and weight based masking
+        default: 0.1
+        example: minweight = 0.
 
 
-        DESCRIPTION:
+-----------------
+Gridding Kernel
+-----------------
+The parameter gridfunction sets gridding function (convolution kernel)
+for imaging. Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate
+Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*Jinc),
+where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order Bessel function
+J_1, and 'PB' (Primary Beam). For 'PB', correct antenna informations
+should be included in input file.
 
-        Units of spectral axis can be specified via a parameter specunit.
-        Allowed values for specunit are 'channel', 'GHz', 'MHz', 'kHz', 'Hz', 
-        and 'km/s'. This parameter is also used as the units of the parameter 
-        start and step that specify reference value of start channel and 
-        width of each spectral channel for channel map, respectively. 
-        The parameter nchan specifies number of channels for created image. 
-        If you set nchan as -1, the task selects existing all channels and 
-        combine those data into one channel to create continuum image.
+There are four subparameters for gridfunction: convsupport, truncate, 
+gwidth, and jwidth. The convsupport is an integer specifying cut-off 
+radius for 'SF' in units of pixel. By default (convsupport=-1), 
+the cut-off radius is set to 3 pixels. The truncate is a cut-off 
+radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
+string values of numeric plus unit. Allowed units are angular 
+units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
+is 'pixel' so that string without unit or numerical values (integer 
+or float) will be interpreted as radius in pixel. Default value 
+for truncate, which is used when negative radius is set, is 3*HWHM 
+for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
+the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
+sqrt(log(2)) pixel for 'GAUSS' and 2.52*sqrt(log(2)) pixel for 
+'GJINC'. The jwidth specifies width of the jinc function (parameter 
+'c' in the definition above). Default is 1.55 pixel. Both gwidth 
+jwidth allows integer, float, or string of numeric plus unit. 
+Default values for gwidth and jwidth are taken from Mangum et al. 
+(2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
+the paper, and are written as below using gwidth and jwidth: 
 
-        You can specify field id or name directly. By default, field is set 
-        to -1 that means the task selects all fields in the data.
+   GAUSS: exp[-log(2)*(|r|/gwidth)**2]
 
-        Selection of the antennas can be made by setting antennaid(s) or 
-        antenna name(s) in string (e.g. '0', 'DV01',etc.) or integer 
-        (e.g. 0). Defalut value, -1, means that the task selects data from 
-        all baseline, i.e., data from all antenna when data only contains 
-        auto-correlation.
-
-        The parameter gridfunction sets gridding function for imaging. 
-        Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
-        Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
-        Jinc), where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order 
-        Bessel function J_1, and 'PB' (Primary Beam). For 'PB', correct 
-        antenna informations should be included in input file. 
-
-        There are four subparameters for gridfunction: convsupport, truncate, 
-        gwidth, and jwidth. The convsupport is an integer specifying cut-off 
-        radius for 'SF' in units of pixel. By default (convsupport=-1), 
-        the cut-off radius is set to 3 pixels. The truncate is a cut-off 
-        radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
-        string values of numeric plus unit. Allowed units are angular 
-        units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
-        is 'pixel' so that string without unit or numerical values (integer 
-        or float) will be interpreted as radius in pixel. Default value 
-        for truncate, which is used when negative radius is set, is 3*HWHM 
-        for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
-        the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
-        sqrt(log(2)) pixel for 'GAUSS' and 2.52*sqrt(log(2)) pixel for 
-        'GJINC'. The jwidth specifies width of the jinc function (parameter 
-        'c' in the definition above). Default is 1.55 pixel. Both gwidth 
-        jwidth allows integer, float, or string of numeric plus unit. 
-        Default values for gwidth and jwidth are taken from Mangum et al. 
-        (2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
-        the paper, and are written as below using gwidth and jwidth: 
-
-           GAUSS: exp[-log(2)*(|r|/gwidth)**2]
-
-           GJINC: J_1(pi*|r|/jwidth)/(pi*|r|/jwidth)
-                     * exp[-log(2)*(|r|/gwidth)^2]  
+   GJINC: J_1(pi*|r|/jwidth)/(pi*|r|/jwidth)
+             * exp[-log(2)*(|r|/gwidth)^2]  
 
 
-        Reference: Mangum, et al. 2007, A&amp;A, 474, 679-687 
+Reference: Mangum, et al. 2007, A&amp;A, 474, 679-687 
 
-        The parameter minweight defines a threshold of weight values 
-        to mask. The pixels in outfile whose weight is smaller than
-        minweight*median(weight) are masked out. The task also creates
-        a weight image with the name outfile.weight.
+--------------------
+Mask in Output Image
+--------------------
+The parameter minweight defines a threshold of weight values 
+to mask. The pixels in outfile whose weight is smaller than
+minweight*median(weight) are masked out. The task also creates
+a weight image with the name outfile.weight.
 
   </example>
 

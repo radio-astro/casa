@@ -82,7 +82,7 @@ class ia_decimate_test(unittest.TestCase):
         self.assertTrue(len(tb.showcache()) == 0)
     
     def test_stretch(self):
-        """ ia.fft(): Test stretch parameter"""
+        """ ia.decimate(): Test stretch parameter"""
         yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [20, 20, 1, 1])
@@ -114,7 +114,7 @@ class ia_decimate_test(unittest.TestCase):
             myia.calcmask(imagename + " < 0")
             factor = 4
             if m == 0:
-                method = "none"
+                method = "copy"
             if m == 1:
                 method = "mean"
             zz = myia.decimate("", axis=2, factor=factor, method=method)
@@ -122,6 +122,7 @@ class ia_decimate_test(unittest.TestCase):
             expec[2] /= factor
             if m == 0:
                 expec[2] += 1
+            print "method ",method
             self.assertTrue((zz.shape() == expec).all())
             
             inc = myia.coordsys()
@@ -162,6 +163,31 @@ class ia_decimate_test(unittest.TestCase):
                 self.assertTrue((expmask == got).all())
             myia.done()
             zz.done()
+            
+    def test_multiple_regions(self):
+        """Test multiple region support"""
+        myia = iatool()
+        myia.fromshape("", [20, 20, 20])
+        r1 = rg.frombcs(
+            box="0, 0, 9, 9", csys=myia.coordsys().torecord(),
+            shape=myia.shape()
+        )
+        r2 = rg.frombcs(
+            box="10, 10, 19, 19", csys=myia.coordsys().torecord(),
+            shape=myia.shape()
+        )
+        regions =  {'region1':r1,  'region2':r2}
+        reg = rg.makeunion(regions)
+        bb = myia.decimate("mregions.im", axis=2, factor=2, region=reg)
+        self.assertTrue(bb.getchunk([0,0,0], [9,9,9], getmask=True).all())
+        self.assertTrue(bb.getchunk([10,10,0], [19,19,9], getmask=True).all())
+        self.assertTrue((bb.getchunk([0,10,0], [9,19,9], getmask=True) == False).all())
+        self.assertTrue((bb.getchunk([10,0,0], [19,9,9], getmask=True) == False).all())
+
+
+        bb.done()
+        myia.done()
+        
         
         
 def suite():

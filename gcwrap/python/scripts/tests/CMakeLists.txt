@@ -41,12 +41,15 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_fixvis.py
   test_flagcmd.py
   test_flagdata.py
+  test_flaghelper.py
   test_fluxscale.py
   test_gaincal.py
   test_getchunk.py
   test_gencal.py
   test_hanningsmooth.py
+  test_hanningsmooth2.py
   test_ia_adddegaxes.py
+  test_ia_boxcar.py
   test_ia_calcmask.py
   test_ia_continuumsub.py
   test_ia_constructors.py
@@ -103,6 +106,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_listpartition.py
   test_listvis.py
   test_makemask.py
+  test_me_shift.py
   test_measures.py
   test_msmoments.py
   test_msmd.py
@@ -188,5 +192,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_visstat.py
   test_vpmanager.py
   test_wvrgcal.py
+  selection_syntax.py
   unittests_list.txt
 )

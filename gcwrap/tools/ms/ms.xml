@@ -702,7 +702,7 @@ the ms definition itself. -->
         </description>
         <input>
               <param name="fitsfile" type ="string">
-                <description>list HDU and typical data rows in a fits file</description>
+                <description>list HDU and typical data rows in a uvfits file</description>
               </param>
         </input>
         <returns type="bool"/>
@@ -1298,6 +1298,10 @@ the ms definition itself. -->
      <param type="double" direction="in" name="cachesize">
         <description>EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
         <value>50</value>
+     </param>
+     <param type="bool" direction="in" name="overwrite">
+        <description>If True, tacitly overwrite listfile if it exists.</description>
+        <value>false</value>
      </param>
   </input>
   <returns type="record">
@@ -4114,6 +4118,47 @@ times this for channels and timeslots.
 </comments>
 </example>
 </method>
+
+   <method type="function" name="asdmref">
+   <shortdescription>Test if the MS was imported with option lazy=True in importasdm and optionally change the ASDM reference</shortdescription>
+   <input>
+     <param type="string" name="abspath">
+       <description>new absolute path of the ASDM to be referenced (empty string = report current setting)</description>
+       <value></value>
+     </param>
+   </input>
+   <returns type="string"/>
+   <description>
+   If the MS is imported from an ASDM  with option lazy=True, the DATA column of the MS is virtual
+   and directly reads the visibilities from the ASDM. A reference to the original ASDM is stored
+   with the MS. If the ASDM needs to be moved to a different path, the reference to it in the MS
+   needs to be updated. This can be achieved with ms.asdmref().
+   When called with an empty string (default), the method just reports the currently set ASDM path.
+
+   Return value is a string containing the new path if the path was successfully set or 
+   (in the case abspath was empty) the MS indeed contains a ASDM reference, i.e. was lazily imported.
+
+   If the ASDM does not contain an ASDM reference, the method returns an empty string.
+   If abspath is not empty and there was an error setting the new reference, the method throws
+   an exception.
+   </description>
+   <example>
+     Set the path to the referenced ASDM to "/home/alma/myanalysis/uid___A12345_X678_X910":     
+        ms.open("uid___A12345_X678_X910.ms",False)
+        ms.asdmref("/home/alma/myanalysis/uid___A12345_X678_X910")
+        ms.close()
+
+     Test if the MS was imported with lazy=True and therefore references an ASDM:
+        ms.open("uid___A12345_X678_X910.ms")
+        myref = ms.asdmref()
+        ms.close()
+        if myref=="":
+          print "This MS does not reference an ASDM."
+        else:
+          print "This MS references the ASDM ", myref
+   </example>
+   </method>
+
 
    <method type="function" name="setbufferflags">
    <shortdescription>Set the flags in the buffer</shortdescription>

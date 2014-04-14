@@ -7,7 +7,8 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdplot(infile, antenna, fluxunit, telescopeparam, specunit, restfreq, frame, doppler, scan, field, spw, pol, beam, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+def tsdplot(infile, antenna, fluxunit, telescopeparam, specunit, restfreq, frame,
+            doppler, field, spw, scan, pol, beam, timeaverage, tweight, scanaverage, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -51,6 +52,8 @@ class sdplot_worker(sdutil.sdtask_template):
         # set various attributes to self.scan
         self.set_to_scan()
 
+        #WORKAROUND for new tasks (in future this should be done in sdutil)
+        if not self.timeaverage: self.scanaverage = False
         # Average data if necessary
         self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight)
 

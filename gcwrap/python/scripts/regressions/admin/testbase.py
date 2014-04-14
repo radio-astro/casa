@@ -241,13 +241,13 @@ class testbase :
                     mycs=ia.coordsys()
                     findstok=mycs.findcoordinate("stokes")
                     findspec=mycs.findcoordinate("spectral")
-                    if findspec[0]:                        
-                        spix=findspec[1]
+                    if findspec['return']:                        
+                        spix=findspec['pixel']
                         if(shp[spix]>5):
                             print 'spectral shape= ', shp[spix],' ', theResult[k], k 
                             self.testList[theResult[k]].append('cube')
-                    if findstok[0]:
-                        kpix=findstok[1]
+                    if findstok['return']:
+                        kpix=findstok['pixel']
                         if(shp[kpix]==1):
                             self.testList[theResult[k]].append('pol1')
                         elif( shp[kpix]==2):

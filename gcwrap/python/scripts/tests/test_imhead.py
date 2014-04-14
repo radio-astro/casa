@@ -1057,32 +1057,32 @@ class imhead_test(unittest.TestCase):
             if xx == 'f':
                 self.assertTrue(got == stats['min'])
             else:
-                self.assertTrue(got == None)
+                self.assertFalse(got)
             got = imhead(imagename=imagename, mode="get", hdkey="datamax")
             if xx == 'f':
                 self.assertTrue(got == stats['max'])
             else:
-                self.assertTrue(got == None)
+                self.assertFalse(got)
             got = imhead(imagename=imagename, mode="get", hdkey="minpos")
             if xx == 'f':
                 self.assertTrue(got == stats['minposf'].translate(None, ","))
             else:
-                self.assertTrue(got == None)
+                self.assertFalse(got)
             got = imhead(imagename=imagename, mode="get", hdkey="maxpos")
             if xx == 'f':
                 self.assertTrue(got == stats['maxposf'].translate(None, ","))
             else:
-                self.assertTrue(got == None)
+                self.assertFalse(got)
             got = imhead(imagename=imagename, mode="get", hdkey="minpixpos")
             if xx == 'f':
                 self.assertTrue((got == stats['minpos']).all())
             else:
-                self.assertTrue(got == None)
+                self.assertFalse(got)
             got = imhead(imagename=imagename, mode="get", hdkey="maxpixpos")
             if xx == 'f':
                 self.assertTrue((got == stats['maxpos']).all())
             else:
-                self.assertTrue(got == None)
+                self.assertFalse(got)
             value = "fred"   
             key = "userkey"     
             imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value)
@@ -1158,7 +1158,7 @@ class imhead_test(unittest.TestCase):
     
             self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="bmaj")) > 0)
             self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bmaj"))
-            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bmaj") == None)
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="bmaj"))
             
             for x in ['datamin', 'minpos', 'minpixpos', 'datamax', 'maxpos', 'maxpixpos']:
                 self.assertFalse(imhead(imagename=imagename, mode="del", hdkey=x))
@@ -1535,6 +1535,46 @@ class imhead_test(unittest.TestCase):
         self.assertTrue(qa.getunit(got) == qa.getunit(exp))
         self.assertTrue(abs(qa.getvalue(got)/qa.getvalue(exp) - 1) < 1e-8)
         
+    def test_put_crval_stokes(self):
+        """Test updating stokes, CAS-6352"""
+        myia = iatool()
+        imagename = "CAS-6352.im"
+        myia.fromshape(imagename, [1, 1, 3])
+        myia.done()
+        self.assertFalse(
+            imhead(
+                imagename=imagename, mode="put", hdkey="crval3",
+                hdvalue="I"
+            )
+        )
+        expec = ["Q", "XX", "LL"]
+        self.assertTrue(
+            imhead(
+                imagename=imagename, mode="put", hdkey="crval3",
+                hdvalue=expec
+            )
+        )
+        self.assertTrue(
+            (
+                imhead(imagename=imagename, mode="get", hdkey="crval3")
+                == expec
+            ).all()
+        )
+        
+    def test_restfreq_failure_modes(self):
+        """Test rest frequency failure modes, CAS-5901"""
+        myia = iatool()
+        imagename = "CAS-5901.im"
+        myia.fromshape(imagename, [1, 1])
+        myia.done()
+        a = imhead(imagename=imagename, mode="list")
+        self.assertTrue(not a.has_key("restfreq") and len(a.keys()) > 0)
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="restfreq"))
+        self.assertFalse(
+            imhead(
+                imagename=imagename, mode="put", hdkey="restfreq", hdvalue="4GHz"
+            )
+        )
         
 def suite():
     return [imhead_test]    

@@ -11,12 +11,16 @@ import numpy
 import re
 import string
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
 # to rethrow exception 
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
-from tsdcal_cli import tsdcal_cli as tsdcal
-#from sdcal import sdcal
+from tsdcal import tsdcal
 import asap as sd
 
 #
@@ -161,26 +165,14 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
     def test000(self):
         """Test 000: Default parameters"""
         # argument verification error
-        try:
-            self.res=tsdcal()
-            #self.assertFalse(self.res)
-            self.fail("The task must throw exception.")
-        except Exception, e:
-            pos=str(e).find("Parameter verification failed")
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        self.res=tsdcal()
+        self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Invalid calibration mode"""
         # argument verification error
-        try:
-            self.res=tsdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
-            #self.assertFalse(self.res)
-            self.fail("The task must throw exception.")
-        except Exception, e:
-            pos=str(e).find("Parameter verification failed")
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        self.res=tsdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
+        self.assertFalse(self.res)
 
     def test002(self):
         """Test 002: Specify existing output file name with overwrite=False"""
@@ -555,415 +547,491 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
 
-class sdcal_test_selection(sdcal_caltest_base,unittest.TestCase):
+class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
+                               sdcal_caltest_base,unittest.TestCase):
     """
-    
-    Data is taken from OrionS_rawACSmod and created by the following
-    script:
-    scan = sd.scantable('OrionS_rawACSmod', average=False)
-    sel.set_cycles([0,4])
-    scan.save('selection.asap')
-    sdcal(infile='selecttion.asap', calmode='ps',outfile='selection.cal.asap')
+    Test selection syntax. Selection parameters to test are:
+    field, spw (no channel selection), scan, pol
+
+    Data is taken from sd_analytic_type1-3.asap and TSYS column is filled
+    by the following script:
+    poly = ( (1.0, ), (0.2, 0.02), (2.44, -0.048, 0.0004),
+           (-3.096, 0.1536, -0.00192, 8.0e-6) )
+    shutil.copytree(os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/sd_analytic_type1-3.asap','sd_analytic_type1-3.filltsys.asap')
+    tb.open('sd_analytic_type1-3.filltsys.asap', nomodify=False)
+    subt = tb.query('SRCTYPE==0')
+    for irow in range(subt.nrows()):
+        nchan = len(subt.getcell('SPECTRA', irow))
+        x = numpy.array(range(nchan))
+        tsys = numpy.zeros(nchan)
+        coeffs = poly[irow]
+        for idim in range(len(coeffs)):
+            tsys += coeffs[idim]*x**idim
+        subt.putcell('TSYS',irow, tsys)
+    subt.flush()
+    tb.flush()
+    subt.close()
+    tb.close()
     """
     # Input and output names
-    rawfile='selection.asap'
-    reffile='selection.cal.asap'
+    rawfile='sd_analytic_type1-3.filltsys.asap'
     prefix=sdcal_unittest_base.taskname+'TestSel'
     calmode='ps'
-    field_prefix = 'OrionS__'
+    line = ({'value': 5,  'channel': (20,20)},
+            {'value': 10, 'channel': (40,40)},
+            {'value': 20, 'channel': (60,60)},
+            {'value': 30, 'channel': (80,80)},)
+    baseline = ( (1.0, ), (0.2, 0.02), (2.44, -0.048, 0.0004),
+                (-3.096, 0.1536, -0.00192, 8.0e-6) )
+    
+    @property
+    def task(self):
+        return tsdcal
+    
+    @property
+    def spw_channel_selection(self):
+        return False
 
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.reffile)):
-            shutil.copytree(self.datapath+self.reffile, self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
 
         default(tsdcal)
-
+        self.outname=self.prefix+self.postfix
+        
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.reffile)):
-            shutil.rmtree(self.reffile)
         os.system( 'rm -rf '+self.prefix+'*' )
+    
+    ####################
+    # Additional tests
+    ####################
+    #N/A
 
-    def testSel000(self):
-        """ test default selection (use whole data)"""
-        outname=self.prefix+self.postfix
-        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        scan = ''
+        ref_idx = []
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,scan=scan,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal(outname)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel101(self):
-        """ test spw selection (spw='1')"""
-        outname=self.prefix+self.postfix
-        spw = '1'
-        self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'IFNO': [1]}
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='16')"""
+        scan = '16'
+        ref_idx = [1, 2]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel102(self):
-        """ test spw selection (spw='1,3')"""
-        outname=self.prefix+self.postfix
-        spw = '1,3'
-        self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'IFNO': [1,3]}
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<16')"""
+        scan = '<16'
+        ref_idx = [0]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel103(self):
-        """ test spw selection (spw='<3')"""
-        outname=self.prefix+self.postfix
-        spw = '<3'
-        self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'IFNO': [0,1,2]}
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>16')"""
+        scan = '>16'
+        ref_idx = [3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel104(self):
-#         """ test spw selection (spw='<=2')"""
-#         outname=self.prefix+self.postfix
-#         spw = '<=2'
-#         self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'IFNO': [0,1,2]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel105(self):
-        """ test spw selection (spw='2~13')"""
-        outname=self.prefix+self.postfix
-        spw = '2~13'
-        self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'IFNO': [2,3,12,13]}
+    def test_scan_id_range(self):
+        """ test scan selection (scan='16~17')"""
+        scan = '16~17'
+        ref_idx = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel106(self):
-        """ test spw selection (spw='>13')"""
-        outname=self.prefix+self.postfix
-        spw = '>13'
-        self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'IFNO': [14,15]}
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        scan = '15,17'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel107(self):
-#         """ test spw selection (spw='>=13')"""
-#         outname=self.prefix+self.postfix
-#         spw = '>=13'
-#         self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'IFNO': [13,14,15]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel108(self):
-        """ test spw selection (spw='<2 , 3~12 , 13, >14')"""
-        outname=self.prefix+self.postfix
-        spw = '<2 , 3~12 , 13, >14'
-        self.res=tsdcal(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'IFNO': [0,1,3,12,13,15]}
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='15,>16')"""
+        scan = '15,>16'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel201(self):
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        pol = ''
+        ref_idx = []
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,pol=pol,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_exact(self):
         """ test pol selection (pol='1')"""
-        outname=self.prefix+self.postfix
         pol = '1'
-        self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'POLNO': [1]}
+        ref_idx = [1,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel202(self):
-        """ test pol selection (pol='0,1')"""
-        outname=self.prefix+self.postfix
-        pol = '0,1'
-        self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {}
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
-
-    def testSel203(self):
+    def test_pol_id_lt(self):
         """ test pol selection (pol='<1')"""
-        outname=self.prefix+self.postfix
         pol = '<1'
-        self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'POLNO': [0]}
+        ref_idx = [0,2]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel204(self):
-#         """ test pol selection (pol='<=0')"""
-#         outname=self.prefix+self.postfix
-#         pol = '<=0'
-#         self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'POLNO': [0]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel205(self):
-        """ test pol selection (pol='0~1')"""
-        outname=self.prefix+self.postfix
-        pol = '0~1'
-        self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {}
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
-
-    def testSel206(self):
+    def test_pol_id_gt(self):
         """ test pol selection (pol='>0')"""
-        outname=self.prefix+self.postfix
         pol = '>0'
-        self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'POLNO': [1]}
+        ref_idx = [1,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel207(self):
-#         """ test pol selection (pol='>=1')"""
-#         outname=self.prefix+self.postfix
-#         pol = '>=1'
-#         self.res=tsdcal(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'POLNO': [1]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-#     def testSel301(self):
-#         """ test scan selection (scan='1')"""
-#         outname=self.prefix+self.postfix
-#         scan = '1'
-#         self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'SCANNO': [1]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel302(self):
-        """ test scan selection (scan='21,22')"""
-        outname=self.prefix+self.postfix
-        scan = '21,22'
-        self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [22]}
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        pol = '0~1'
+        ref_idx = []
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel303(self):
-        """ test scan selection (scan='<23')"""
-        outname=self.prefix+self.postfix
-        scan = '<23'
-        self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [22]}
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        pol = '0,1'
+        ref_idx = []
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel304(self):
-#         """ test scan selection (scan='<=22')"""
-#         outname=self.prefix+self.postfix
-#         scan = '<=22'
-#         self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'SCANNO': [22]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel305(self):
-        """ test scan selection (scan='23~26')"""
-        outname=self.prefix+self.postfix
-        scan = '23~26'
-        self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [24,26]}
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='0,>0')"""
+        pol = '0,>0'
+        ref_idx = []
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel306(self):
-        """ test scan selection (scan='>26')"""
-        outname=self.prefix+self.postfix
-        scan = '>26'
-        self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [28]}
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='')"""
+        field = ''
+        ref_idx = []
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,field=field,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel307(self):
-#         """ test scan selection (scan='>=27')"""
-#         outname=self.prefix+self.postfix
-#         scan = '>=27'
-#         self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'SCANNO': [28]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel308(self):
-        """ test scan selection (scan='<23, 25~26, 27, 28')"""
-        outname=self.prefix+self.postfix
-        scan = '<23, 25~26, 27, 28'
-        self.res=tsdcal(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'SCANNO': [22, 26, 28]}
+    def test_field_id_exact(self):
+        """ test field selection (field='6')"""
+        field = '6'
+        ref_idx = [1]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel401(self):
-#         """ test field selection (field='1')"""
-#         outname=self.prefix+self.postfix
-#         field = '1'
-#         self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'IFNO': [1]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel402(self):
-        """ test field selection (field='0,1')"""
-        outname=self.prefix+self.postfix
-        field = '0,1'
-        self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        fieldid = [1]
-        tbsel = {'FIELDNAME': [self.field_prefix+str(idx) for idx in fieldid]}
+    def test_field_id_lt(self):
+        """ test field selection (field='<6')"""
+        field = '<6'
+        ref_idx = [0]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel403(self):
-        """ test field selection (field='<2')"""
-        outname=self.prefix+self.postfix
-        field = '<2'
-        self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'FIELDNAME': [self.field_prefix+str(1)]}
+    def test_field_id_gt(self):
+        """ test field selection (field='>7')"""
+        field = '>7'
+        ref_idx = [3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel404(self):
-#         """ test field selection (field='<=1')"""
-#         outname=self.prefix+self.postfix
-#         field = '<=1'
-#         self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'FIELDNAME': [self.field_prefix+str(1)]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel405(self):
-        """ test field selection (field='2~3')"""
-        outname=self.prefix+self.postfix
-        field = '2~3'
-        self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'FIELDNAME': [self.field_prefix+str(3)]}
+    def test_field_id_range(self):
+        """ test field selection (field='6~8')"""
+        field = '6~8'
+        ref_idx = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel406(self):
-        """ test field selection (field='>1')"""
-        outname=self.prefix+self.postfix
-        field = '>1'
-        self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'FIELDNAME': [self.field_prefix+str(3)]}
+    def test_field_id_list(self):
+        """ test field selection (field='5,8')"""
+        field = '5,8'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-#     def testSel407(self):
-#         """ test field selection (field='>=2')"""
-#         outname=self.prefix+self.postfix
-#         field = '>=2'
-#         self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-#         tbsel = {'FIELDNAME': [self.field_prefix+str(3)]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
-
-    def testSel408(self):
-        """ test field selection (field='Ori*')"""
-        outname=self.prefix+self.postfix
-        field = 'Ori*'
-        self.res=tsdcal(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {}
+    def test_field_id_exprlist(self):
+        """ test field selection (field='5,>7')"""
+        field = '5,>7'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testSel500(self):
-        """ test field, spw, scan and pol selection (field='2,3', spw='14', scan='27,28', pol='1')"""
-        outname=self.prefix+self.postfix
-        field = '2,3'
-        spw = '14'
-        scan='27, 28'
-        pol='1'
-        self.res=tsdcal(infile=self.rawfile,field=field,spw=spw,scan=scan,pol=pol,calmode=self.calmode,outfile=outname,outform='ASAP')
-        tbsel = {'FIELDNAME': [self.field_prefix+str(3)],
-                 'IFNO': [14], 'SCANNO': [28], 'POLNO': [1]}
+    def test_field_value_exact(self):
+        """ test field selection (field='M30')"""
+        field = 'M30'
+        ref_idx = [2]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel)
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def _comparecal_with_selection( self, name, tbsel={} ):
-        self._checkfile(name)
-        sp=self._getspectra(name)
-        spref=self._getspectra_selected(self.reffile, tbsel)
+    def test_field_value_pattern(self):
+        """ test field selection (field='M*')"""
+        field = 'M*'
+        ref_idx = [0,1,2]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-        self._checkshape( sp, spref )
-        
-        for irow in xrange(sp.shape[0]):
-            diff=self._diff(sp[irow],spref[irow])
-            retval=numpy.all(diff<0.01)
-            maxdiff=diff.max()
-            self.assertEqual( retval, True,
-                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
-        del sp, spref
+    def test_field_value_list(self):
+        """ test field selection (field='3C273,M30')"""
+        field = '3C273,M30'
+        ref_idx = [2,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def _getspectra_selected( self, name, tbsel={} ):
+    def test_field_mix_exprlist(self):
+        """ test field selection (field='<6,3*')"""
+        field = '<6,3*'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        spw = ''
+        ref_idx = []
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='23')"""
+        spw = '23'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<23')"""
+        spw = '<23'
+        ref_idx = [2]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>23')"""
+        spw = '>23'
+        ref_idx = [1]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_id_range(self):
+        """ test spw selection (spw='23~25')"""
+        spw = '23~25'
+        ref_idx = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,25')"""
+        spw = '21,25'
+        ref_idx = [1,2]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='23,>24')"""
+        spw = '23,>24'
+        ref_idx = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        spw='*'
+        ref_idx = []
+        self.res=tsdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300.4~300.6GHz')"""
+        spw = '300.4~300.6GHz' # IFNO=25 should be selected
+        ref_idx = [1]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-30~30km/s')"""
+        spw = '-30~30km/s'  # IFNO=23 should be selected
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='25,-30~30km/s')"""
+        spw = '25,-30~30km/s' # IFNO=23,25 should be selected
+        ref_idx = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    ####################
+    # Helper functions
+    ####################
+    def _compare_with_analytic(self, name, ref_line, ref_bl, ref_idx=[], precision = 1.e-6):
+        self._checkfile( name )
+        sout = sd.scantable(name,average=False)
+        nrow = sout.nrow()
+        if len(ref_idx) == 0:
+            ref_idx = range(nrow)
+
+        self.assertEqual(nrow,len(ref_idx),"The rows in output table differs from the expected value.")
+        for irow in range(nrow):
+            y = sout._getspectrum(irow)
+            nchan = len(y)
+            x = numpy.array( range(nchan) )
+            # analytic solution
+            coeff = ref_bl[ ref_idx[irow] ]
+            yana = self._create_ploynomial_array(coeff, x)
+            curr_line = ref_line[ ref_idx[irow] ]
+            chanlist = curr_line['channel']
+            valuelist = curr_line['value']
+            yana += self._create_tophat_array(nchan, chanlist, valuelist)
+
+            # compare
+            rdiff = self._get_array_relative_diff(y,yana)
+            rdiff_max = max(abs(rdiff))
+            self.assertTrue(rdiff_max < precision, "Maximum relative difference %f > %f" % (rdiff_max, precision))
+    
+    def _create_tophat_array(self, nchan, chanlist, valuelist):
+        array_types = (tuple, list, numpy.ndarray)
+        # check for inputs
+        if nchan < 1:
+            self.fail("Internal error. Number of channels should be > 0")
+        if type(chanlist) not in array_types:
+            self.fail("Internal error. Channel range list for reference data is not an array type")
+        if type(chanlist[0]) not in array_types:
+            chanlist = [ chanlist ]
+        if type(valuelist) not in array_types:
+            valuelist = [ valuelist ]
+        nval = len(valuelist)
+        nrange = len(chanlist)
+        # generate reference data
+        ref_data = numpy.zeros(nchan)
+        for irange in range(nrange):
+            curr_range = chanlist[irange]
+            if type(curr_range) not in array_types or len(curr_range) < 2:
+                self.fail("Internal error. Channel range list  for reference data should be a list of 2 elements arrays.")
+            schan = curr_range[0]
+            echan = curr_range[1]
+            ref_data[schan:echan+1] = valuelist[irange % nval]
+        return ref_data
+
+    def _create_ploynomial_array(self, coeff, x):
+        """ Create an array from a list of polynomial coefficients and x-array"""
+        xarr = numpy.array(x)
+        yarr = numpy.zeros(len(xarr))
+        for idim in range(len(coeff)):
+            ai = coeff[idim]
+            yarr += ai*xarr**idim
+        return yarr
+
+    def _get_array_relative_diff(self, data, ref, precision=1.e-6):
         """
-        Returns an array of spectra in rows selected in table.
-        
-        name  : the name of scantable
-        tbsel : a dictionary of table selection information.
-                The key should be column name and the value should be
-                a list of column values to select.
+        Return an array of relative difference of elements in two arrays
         """
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='file %s does not exist'%(name))        
-        tb.open(name)
-        if len(tbsel) == 0:
-            sp=tb.getcol('SPECTRA').transpose()
-        else:
-            command = ''
-            for key, val in tbsel.items():
-                if len(command) > 0:
-                    command += ' AND '
-                command += ('%s in %s' % (key, str(val)))
-            newtb = tb.query(command)
-            sp=newtb.getcol('SPECTRA').transpose()
-            newtb.close()
-
-        tb.close()
-        return sp
-
+        precision = abs(precision)
+        data_arr = numpy.array(data)
+        ref_arr = numpy.array(ref)
+        ref_denomi = numpy.array(ref)
+        # a threshold to assume the value to be zero.
+        almostzero = min(precision, max(abs(ref_arr))*precision)
+        # set rdiff=0 for elements both data and reference are close to zero
+        idx_ref = numpy.where(abs(ref_arr) < almostzero)
+        idx_data = numpy.where(abs(data_arr) < almostzero)
+        if len(idx_ref[0])>0 and len(idx_data[0])>0:
+            idx = numpy.intersect1d(idx_data[0], idx_ref[0], assume_unique=True)
+            ref_arr[idx] = almostzero
+            data_arr[idx] = almostzero
+        # prevent zero division
+        ref_denomi[idx_ref] = almostzero
+        return (data_arr-ref_arr)/ref_denomi
 
 
 def suite():

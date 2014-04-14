@@ -996,7 +996,37 @@ print me.radialvelocity('lsrk','20km/s')
 </example>
 </method>
 
-
+<method type="function" name="shift">
+    <shortdescription>Shift a direction measure by an offset angle at a position angle.</shortdescription>
+        <input>
+            <param type="record" direction="in" name="v">
+                <description>The direction measure to shift, represented as a record.</description>
+                <value/>
+            </param>
+            <param type="any" direction="in" name="offset">
+                <any type="variant"></any>
+                <description>The angular offset, represented as a quantity record or string.</description>
+                <value>0deg</value>
+            </param>
+            <param type="any" direction="in" name="pa">
+                <any type="variant"></any>
+                <description>Position angle of the offset, measured from the positive latitude axis through the positive longitude axis.</description>
+                <value>0deg</value>
+            </param>
+        </input>
+        <returns type="record">
+            <shortdescription>direction measure</shortdescription>
+        </returns>
+        <description>
+        This method calculates the direction measure located at the specified offset angular amount along the specified
+        position angle from the specified direction measure.
+        </description>
+        <example>
+        v = me.direction("J2000", "13:22:44", "-50.20.20")
+        # shift along 4 arcminues at a pa of 30 degrees.
+        offset = me.shift(v, offset="4arcmin", pa="30deg")
+        </example>
+    </method>
 
  
    <method type="function" name="uvw">

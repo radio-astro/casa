@@ -7,7 +7,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdmath(infiles, expr, varnames, antenna, fluxunit, telescopeparam, scan, field, spw, pol, outfile, outform, overwrite):
+def tsdmath(infiles, expr, varnames, antenna, fluxunit, telescopeparam, field, spw, scan, pol, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdmath_worker, locals()) as worker:
         worker.initialize()
         worker.execute()

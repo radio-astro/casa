@@ -1196,8 +1196,8 @@ collapsed.done()
                 <value>1</value>
             </param>
             <param type="string"  name="method">
-                <description>Method to use for calculating pixel values of output. Supported values are "none" or "mean".</description>
-                <value>None</value>
+                <description>Method to use for calculating pixel values of output. Supported values are "copy" or "mean".</description>
+                <value>copy</value>
             </param>
             	<param type="any" direction="in" name="region">
             	<any type="variant" limittypes="string record"/>
@@ -1224,10 +1224,10 @@ collapsed.done()
 			of planes. 
 			
 			The method parameter represents how to calculate the pixel values of the output image. A
-			value of method="none" means that every factorth plane of the selected region in the input
+			value of method="copy" means that every factorth plane of the selected region in the input
 			image will be directly copied to the corresponding plane in the output image. So, if one
-			wanted to copy every thrid spectral plane in the input image to the output image, one would
-			specify factor=3 and method="none". If the selected region along the specified axis had 11
+			wanted to copy every third spectral plane in the input image to the output image, one would
+			specify factor=3 and method="copy". If the selected region along the specified axis had 11
 			planes, then there would be 4 output planes which would map to planes 0, 3, 6, and 9 of
 			the specified region of input image. A value of method="mean" indicates that each of
 			factor number of planes in the range starting at each factorth plane should be averaged to 
@@ -1254,7 +1254,7 @@ collapsed.done()
 		<example>
 			# Copy verbatim every 5th plane of axis 2 of the input image
 			ia.open("myim.im")
-			decimated = ia.decimate("dec1.im", axis=2, factor=5, method="none")
+			decimated = ia.decimate("dec1.im", axis=2, factor=5, method="copy")
 			# do stuff with decimated and then close it
 			decimated.close()
 			
@@ -2445,6 +2445,146 @@ of the increment (stride).  See also that the trc is modified by
 the increment.
 </example>
 </method>
+
+
+	<method type="function" name="boxcar">
+		<shortdescription>Convolve one axis of image with a boxcar kernel
+		</shortdescription>
+		<input>
+			<param type="string" name="outfile">
+				<description>Output image file name. Default is none.</description>
+				<value />
+			</param>
+			<param type="any" name="region">
+				<any type="variant" limittypes="record, string" />
+				<description>Dictionary or string specifying the region of interest.
+					See help par.region. Default is whole image.</description>
+				<value />
+			</param>
+			<param type="any" name="mask">
+				<any type="variant" />
+				<description>Mask to use. See help par.mask. Default is none.
+				</description>
+				<value />
+			</param>
+			<param type="int" name="axis">
+				<description>Zero-based axis along which to convolve.
+					ia.coordsys().names() gives the order of the axes in the image.
+					Less than 0 means use the spectral axis if there is one, if not an
+					exception is thrown.</description>
+				<value>-1</value>
+			</param>
+			<param type="int" name="width">
+				<description>Width of the boxcar in pixels.</description>
+				<value>2</value>
+			</param>
+			<param type="bool" name="drop">
+				<description>Drop every nth pixel on output, where n is the width of
+					the boxcar?</description>
+				<value>true</value>
+			</param>
+			<param type="string" name="dmethod">
+				<description>If drop=True, method to use in plane decimation.
+					"copy": direct copy of every second plane, "m(ean)": average
+					planes n*i through n*(i+1) - 1 (inclusive) in the smoothed,
+					non-decimated image to form plane i in the output image.
+				</description>
+				<value>copy</value>
+			</param>
+			<param type="bool" name="overwrite">
+				<description>Overwrite (unprompted) pre-existing output file?
+				</description>
+				<value>false</value>
+			</param>
+			<param type="bool" name="stretch">
+				<description>Stretch the mask if necessary and possible? See help
+					par.stretch. Default False</description>
+				<value>false</value>
+			</param>
+		</input>
+		<returns type="image" />
+
+		<description>
+
+			This application performs boxcar convolution of one axis of an image
+			defined by
+
+			z[i] = (y[i] + y[i+i] + ... + y[i+w])/w
+
+			where z[i] is the value at pixel i in the box car smoothed image, y[k]
+			is the pixel value of the input image at pixel k, and w is a postivie integer
+			representing the width of the boxcar in pixels. Both float and complex
+			valued images are supported. The length of the axis along which the
+			convolution is to occur must be at least w pixels in the selected region,
+			unless decimation using the mean function is chosen in which case the axis
+			length must be at least 2*w (see below). Masked pixel values are set to
+			zero prior to convolution. All nondefault pixel masks are ignored during
+			the calculation. The convolution is done in the image domain (i.e., not
+			with an FFT).
+
+			If drop=False (no decimation), the length of the output axis will be equal
+			to the length of the input axis - w + 1. The pixel mask, ORed with the OTF mask
+			if specified, is copied from the selected region of the input image to the
+			output image. Thus for example, if the selected region in the input image has
+			six planes along the convolution axis, if the specified boxcar width is 2,
+			and if the pixel values, which are all unmasked, on a slice along this axis
+			are [1, 2, 5, 10, 17, 26], then the corresponding output slice will be of
+			length five and the output pixel values will be [1.5, 3.5, 7.5, 13.5, 21.5].
+
+			If drop=True and dmethod="copy", the output image is the image calculated
+			if drop=True, except that only every wth plane is kept. Both the pixel and mask
+			values of these planes are copied directly to the output image, without further
+			processing. Thus for example, if the selected region in the input image has six
+			planes along the convolution axis, the boxcar width is chosen to be 2, and if
+			the pixel values, which are all unmasked, on a slice along this axis are [1, 2,
+			5, 10, 17, 26], the corresponding output pixel values will be [1.5, 7.5, 21.5].
+
+			If drop=True and dmethod="mean", first the image described in the drop=False
+			case is calculated. Then, the ith plane of the output image is calculated by
+			averaging the i*w to the (i+1)*w-1  planes of this intermediate image. Thus, for
+			example, if the selected region in the input image has six planes along the
+			convolution axis, the boxcar width is chosen to be 2, and if the pixel values,
+			which are all unmasked, on a slice along this axis are [1, 2, 5, 10, 17, 26],
+			then the corresponding output pixel values will be [2.5, 10.5]. Any pixels at the
+			end of the plane of the intermediate image that do not fall into a complete bin of
+			width w are ignored. Masked values are taken into consideration when forming this
+			average, so if one of the values is masked, it is not used in the average. If at
+			least one of the values	in the intermediate image bin is not masked, the
+			corresponding output pixel will not be masked.
+
+			The smoothed image is written to disk with name {\stfaf outfile}, if specified.
+			If not, no image is written but the image is still accessible via the returned
+			image analysis tool (see below).
+
+			This method always returns an image analysis tool which is attached to the smoothed
+			image. This tool should always be captured and closed after any desired manipulations
+			have been done. Closing the tool frees up system resources (eg memory), eg,
+
+            \begin{verbatim}
+			smoothedim = ia.boxcar(...)
+			# do things (or not) with smoothedim
+			...
+			# close the returned tool promptly upon finishing with it.
+			smoothedim.done()
+			\end{verbatim}
+		</description>
+
+		<example>
+
+			ia.open("mynonsmoothed.im")
+			# smooth the spectral axis by 3 pixels, say it's axis 2 and only
+			# write every other pixel
+			boxcar = ia.boxcar(outfile="myboxcarsmoothed.im", axis=2, drop=True,
+			width=3, dmethod="c" overwrite=True)
+			# done with input
+			ia.done()
+			# do something with the output image, get statistics say
+			stats = boxcar.statistics()
+			# close the result image
+			boxcar.done()
+		</example>
+	</method>
+
 
  
    <method type="function" name="brightnessunit">
@@ -4628,33 +4768,56 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
             <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
             <value>false</value>
         </param>
-        <param type="double" name="rms">
-            <description>RMS to use in calculation of various uncertainties, assumed to have units of the input image. If 0, the rms of the residual image is used.</description>
-            <value>0</value>
+        <param type="any" name="rms">
+            <any type="variant" limittypes="int double record string"/>
+            <description>RMS to use in calculation of uncertainties. Numeric or valid quantity (record or string). If numeric, it is given units of the input image. If quantity, units must conform to image units. If not positive, the rms of the residual image, in the region of the fit, is used.</description>
+            <value type="string"/>
+        </param>
+        <param type="any" name="noisefwhm">
+            <any type="variant" limittypes="int double record string"/>
+            <description>Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If quantity (dictionary, string), it must have angular units.</description>
+            <value type="int">0</value>
         </param>
     </input>
-    <returns type="record">Componentlist tool or fail</returns>
+    <returns type="record">Results dictionary</returns>
     <description>
-    OVERVIEW
 
-This application is used to fit one or more gaussians to sources in an image as
+OVERVIEW
+
+This application is used to fit one or more two dimensional gaussians to sources in an image as
 well as an optional zero-level offset. Fitting is limited to a single polarization
 but can be performed over several contiguous spectral channels.
-If the image has a clean beam, the report will contain both the convolved
+If the image has a clean beam, the report and returned dictionary will contain both the convolved
 and the deconvolved fit results.
 
-When dooff is False, the method returns a dictionary with two keys, 'converged' and 'results'.
-The value of 'converged' is a boolean array which indicates if the fit converged
-on a channel by channel basis.
-The value of 'results' is a dictionary representing a component list reflecting the
-fit results. In the case of a deconvolved image, the sizes and position angles are those
-of the source convolved with the restoring beam. For convenience, the 'results' dictionary can
-be read into a compoenent list tool (default tool is named cl) using the fromrecord() method
+When dooff is False, the method returns a dictionary with three keys, 'converged', 'results',
+and 'deconvolved'. The value of 'converged' is a boolean array which indicates if the fit
+converged on a channel by channel basis. The value of 'results' is a dictionary representing
+a component list reflecting the fit results. In the case of an image containing beam information,
+the sizes and position angles in the 'results' dictionary are those of the source(s) convolved
+with the restoring beam, while the same parameters in the 'deconvolved' dictionary represent the
+source sizes deconvolved from the beam. In the case where the image does not contain a beam,
+'deconvolved' will be absent. Both the 'results' and 'deconvolved' dictionaries can
+be read into a component list tool (default tool is named cl) using the fromrecord() method
 for easier inspection using tool methods, eg
 
 cl.fromrecord(res['results'])
 
 although this currently only works if the flux density units are conformant with Jy.
+
+There are also values in each component subdictionary not used by cl.fromrecord() but meant to
+supply additional information. There is a 'peak' subdictionary for each component that provides the
+peak intensity of the component. It is present for both 'results' and 'deconvolved' components.
+There is also a 'sum' subdictionary for each component indicated the simple sum of pixel values in
+the the original image enclosed by the fitted ellipse. There is a 'channel' entry in the 'spectrum'
+subdictionary which provides the zero-based channel number in the input image for which the solution
+applies. In addtion, if the image has a beam(s), then there will be a 'beam' subdictionary associated
+with each component in both the 'results' and 'deconvolved' dictionaries. This subdictionary will
+have three keys: 'beamarcsec' will be a subdictionary giving the beam dimensions in arcsec,
+'beampixels' will have the value of the beam area expressed in pixels, and 'beamster' will have the
+value of the beam area epressed in steradians. Also, if the image has a beam(s), in the component level
+dictionaries will be an 'ispoint' entry with an associated boolean value describing if the component
+is consistent with a point source.
 
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
@@ -4662,19 +4825,34 @@ offset is specified using the offset parameter. Units are assumed to be the
 same as the image brightness units. The zero level offset can be held constant during
 the fit by specifying fixoffset=True. In the case of dooff=True, the returned
 dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are both
-arrays containing the the fitted zero level offset value and its error, respectively,
-for each channel. Both sets of values are in image brightness units.
-In cases where the fit did not converge, these values are set to NaN.
+dictionaries containing 'unit' and 'value' keys. The values associated with the 'value'
+keys are arrays containing the the fitted zero level offset value and its error, respectively,
+for each channel. In cases where the fit did not converge, these values are set to NaN.
+The value associated with 'unit' is just the image brightness unit.
 
-The region can either be specified by a box(es) or a region (there is no
-garauntee which will be used if both are specified, so be certain that only one is).
+If the input image has units of K, the flux density of components will be reported in units
+of [prefix]K*rad*rad, where prefix is an SI prefix used so that the numerical value is between
+1 and 1000. To convert to units of K*beam, determine the area of the appropriate beam,
+which is given by pi/(4*ln(2))*bmaj*bmin, where bmaj and bmin are the major and minor axes
+of the beam, and convert to steradians (=rad*rad). This value is included in the beam portion
+of the component dictionary (key 'beamster').  Then divide the numerical value of the
+logged flux density by the beam area in steradians. So, for example
+
+\begin{verbatim}
+# run on an image with K brightness units
+res = ia.fitcomponents(...)
+# get the I flux density in K*beam of component 0
+comp = res['results']['component0']
+flux_density_kperbeam = comp['flux']['value'][0]/comp['beam']['beamster']
+\end{verbatim}
+
+The region can either be specified by a box(es) or a region.
 Ranges of pixel values can be included or excluded from the fit. If specified using
 the box parameter, multiple boxes can be given using the format
 box="blcx1, blcy1, trcx1, trcy1, blcx2, blcy2, trcx2, trcy2, ... , blcxN, blcyN, trcxN, trcyN"
 where N is the number of boxes. In this case, the union of the specified boxes will be used.
 
-If specified, the residual and/or model images for
-successful fits will be written.
+If specified, the residual and/or model images for successful fits will be written.
 
 If an estimates file is not specified, an attempt is made to estimate
 initial parameters and fit a single Gaussian. If a multiple Gaussian fit
@@ -4688,14 +4866,28 @@ The user has the option of writing the (convolved) parameters of a successful
 fit to a file which can be fed back to fitcomponents() as the estimates file for a
 subsequent run.
 
+If specified and positive, the value of rms is used to calculate the parameter uncertainties,
+otherwise, the rms in the selected region in the relevant channel is used for these calculations.
+
+The noisefwhm parameter represents the noise-correlation beam FWHM. If specified as a quantity,
+it should have angular units. If specified as a numerical value, it is set equal to that number
+of pixels. If specified and greater than or equal to the pixel size, it is used to calculate
+parameter uncertainties using the correlated noise equations (see below). If it is specified but
+less than a pixel width, the the uncorrelated noise equations (see below) are used to
+compute the parameter uncertainties. If it is not specified and the image has a restoring beam(s),
+the the correlated noise equations are used to compute parameter uncertainties using the
+geometric mean of the relevant beam major and minor axes as the noise-correlation beam FWHM. If
+noisefwhm is not specified and the image does not have a restoring beam, then the uncorrelated
+noise equations are used to compute the parameter uncertainties.
+
 SUPPORTED UNITS
 
-Currently only images with brightness units conformant with Jy, Jy.km/s, and K are fully
+Currently only images with brightness units conformant with Jy/beam, Jy.km/s/beam, and K are fully
 supported for fitting. If your image has some other base brightness unit, imfit will assume
 that unit is equivalent to Jy/pixel and results will be calculated accordingly. For images
 with units of K, the flux density will be reported in the logger in some multiple of 
 K.beam if the image has a beam, but will be converted and written in the returned dictionary
-in units of K.rad.rad. Note also that converting the returned results subdirectionary to a
+in units of K.rad.rad. Note also that converting the returned results subdictionary to a
 component list via cl.fromrecord() currently only works properly if the flux density units
 in the results dictionary are conformant with Jy. If you need to be able to
 run cl.fromrecord() on the resulting dictionary you can first modify the flux density units
@@ -4704,11 +4896,10 @@ your unit conversion.
 
 FITTING OVER MULTIPLE CHANNELS
 
-For fitting over multiple channels, the result
-of the previous successful fit is used as the estimate for the next channel. The number
-of gaussians fit cannot be varied on a channel by channel basis. Thus the variation
-of source structure should be reasonably smooth in frequency to produce reliable fit
-results.
+For fitting over multiple channels, the result of the previous successful fit is used as
+the estimate for the next channel. The number of gaussians fit cannot be varied on a channel
+by channel basis. Thus the variation of source structure should be reasonably smooth in
+frequency to produce reliable fit results.
 
 MASK SPECIFICATION
 
@@ -4757,50 +4948,83 @@ are to be held fixed during the fit.
 
 ERROR ESTIMATES
 
-The reported estimated errors are the maxima from two methods. In the first method, errors are calculated
-according to the description given in AIPS++ Note 224: AIPS++ Least Squares Background available at
-http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (Condon et al
-1998AJ.115.1693; Richards et al. 1999MNRAS.306..954), the following algorithms are used to
-compute the various errors.
+Error estimates are based on the work of Condon 1997, PASP, 109, 166. Key assumptions made are:
+  * The given model (elliptical Gaussian, or elliptical Gaussian plus constant offset) is an
+    adequate representation of the data
+  * An accurate estimate of the pixel noise is provided or can be derived (see above). For the
+    case of correlated noise (e.g., a CLEAN map), the fit region should contain many "beams" or
+    an independent value of rms should be provided.
+  * The signal-to-noise ratio (SNR) or the Gaussian component is large. This is necessary because
+    a Taylor series is used to linearize the problem. Condon (1997) states that the fractional
+    bias in the fitted amplitude due to this assumption is of order 1/(S*S), where S is the overall
+    SNR of the Gaussian with respect to the given data set (defined more precisely below). For a 5
+    sigma "detection" of the Gaussian, this is a 4% effect.
+  * All (or practically all) of the flux in the component being fit falls within the selected region.
+    If a constant offset term is simultaneously fit and not fixed, the region of interest should be
+    even larger. The derivations of the expressions summarized in this note assume an effectively
+    infinite region.
 
-R = user specified rms unless 0, in which case the rms of residual image in the region used for fitting
-P = fitted peak intensity
-S = P/R (signal to noise)
+Two sets of equations are used to calculate the parameter uncertainties, based on if
+the noise is correlated or uncorrelated. The rules governing which set of equations are 
+used have been described above in the description of the noisefwhm parameter. 
 
-longitude error = (FWHM beam width in longitude direction)/(2*S)
-latitude error = (FWHM beam width in latitude direction)/(2*S)
-FWHM of major axis error = (FWHM beam along major axis)/S
-FWHM of minor axis error = (FWHM beam along minor axis)/S
-position angle error is calculated via standard error propogation of the FWHM major and minor axes sizes and errors
-flux error is computed via standard error propogation of the peak intensity and its error and the FWHM major
-and minor axes sizes and their errors.
+In the case of uncorrelated noise, the equations used are
 
-In the case where the image has no beam, the pixel width is used as the diameter of the resolution element.
+f(A) = f(I) = f(M) = f(m) = k*s(x)/M = k*s(y)/m = (s(p)/sqrt(2))*((M*M - m*m)/(M*m))
+   = sqrt(2)/S
 
-In the vast majority of (and perhaps all) cases, the errors reported come from the second method.
+where s(z) is the uncertainty associated with parameter z, f(z) = s(z)/abs(z) is the
+fractional uncertainty associated with parameter z, A is the peak intensity, I is the flux
+density, M  and m are the FWHM major and minor axes, p is the position angle of the
+component, and k = sqrt(8*ln(2)). s(x) and s(y) are the direction
+uncertainties of the component measured along the major and minor axes; the resulting
+uncertainties measured along the principle axes of the image direction coordinate are
+calculated by propagation of errors using the 2D rotation matrix which enacts the rotation through
+the position angle plus 90 degrees. S is the overall signal to noise ratio of the component,
+which, for the uncorrelated noise case is given by
 
-The deconvolved size and position angle errors are computed by taking the maximum of the absolute values of the
-differences of the best fit deconvolved value of the given parameter and the deconvolved size of the eight
-possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
-and (position andle +/- position angle error).
+S = (A/(k*h*r))*sqrt(pi*M*m)
 
-CAUTIONARY NOTES ON ERRORS
-This application makes the following implicit assumptions:
+where h is the pixel width of the direction coordinate and r is the rms noise (see the
+discussion above for the rules governing how the value of r is determined).
 
-1. The noise associated with the pixels it is given to fit is truly random and gaussian
-2. There is no offset (constant (unless one is fit), gradient, or more complex function) in pixel values.
-3. The things that are trying to be fit are bona-fide gaussians.
+For the correlated noise case, the same equations are used to determine the uncertainties
+as in the uncorrelated noise case, except for the uncertainty in I (see below). However,
+S is given by
 
-If any of these assumptions is not true, the errors reported will in general be lower limits. These
-assumptions do not hold if for example, there is structure in the noise of the image (eg the residual image produced
-by deconvolution has structure), the area being fit lies in a negative bowl, in extended emission, or on an image
-artifact (eg ripple), or the source(s) is nongaussian (eg a disk or more complex function convolved with a gaussian;
-just because something looks gaussian to the human image analysis system does not necessarily mean it is).
-In addition, in the case of an image produced from interferometric observations, the errors given are appropriate for
-good uv plane coverage. They may be a factor of two or more higher for sparse arrays or snapshots.
-In short, this application is not a silver bullet for determining parameters in flawed images and reported errors
-should be interpreted cautiously in the vast majority of all "real life" cases. The closer the source being fit is to
-fulfilling these assumptions the more realistic reported errors will be.
+S = (A/(2*r*N)) * sqrt(M*m) * (1 + ((N*N/(M*M)))**(a/2)) * (1 + ((N*N/(m*m)))**(b/2))
+
+where N is the noise-correlation beam FWHM (see discussion of the noisefwhm parameter for 
+rules governing how this value is determined). "**" indicates exponentiation and a and b
+depend on which uncertainty is being calculated. For sigma(A), a = b = 3/2. For M and x,
+a = 5/2 and b = 1/2. For m, y, and p, a = 1/2 and b = 5/2. f(I) is calculated in the
+correlated noise case according to
+
+f(I) = sqrt( f(A)*f(A) + (N*N/(M*m))*(f(M*f(M) + f(m)*f(m))) )
+
+Note well the following caveats:
+  * Fixing Gaussian component parameters will tend to cause the parameter uncertainties reported for free
+    parameters to be overestimated.
+  * Fitting a zero level offset that is not fixed will tend to cause the reported parameter
+    uncertainties to be slightly underestimated.
+  * The parameter uncertainties will be inaccurate at low SNR (a ~10% for SNR = 3).
+  * If the fitted region is not considerably larger than the largest component that is fit,
+    parameter uncertainties may be mis-estimated.
+  * An accurate rms noise measurement, r, for the region in question must be supplied.
+    Alternatively, a sufficiently large signal-free region must be present in the selected region
+    (at least about 25 noise beams in area) to auto-derive such an estimate.
+  * If the image noise is not statistically independent from pixel to pixel, a reasonably accurate noise
+    correlation scale, N, must be provided. If the noise correlation function is not approximately Gaussian,
+    the correlation length can be estimated using
+    
+    N = sqrt(2*ln(2)/pi)* double-integral(dx dy C(x,y))/sqrt(double-integral(dx dy C(x, y) * C(x,y)))
+    
+    where C(x,y) is the associated noise-smoothing function
+  * If fitted model components have significan spatial overlap, the parameter uncertainties are likely to
+    be mis-estimated (i.e., correlations between the parameters of separate components are not accounted
+    for).
+  * If the image being analyzed is an interferometric image with poor uv sampling, the parameter
+    uncertainties may be significantly underestimated.
 
 EXAMPLE: 
 
@@ -5204,27 +5428,70 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
+     <param type="string"  name="dmethod">
+        <description>If drop=True, method to use in plane decimation. "c(opy)": direct copy of every second plane, "m(ean)": average planes 2*i and 2*i+1 in the smoothed, non-decimated image to form plane i in the output image. </description>
+        <value>copy</value>
+     </param>
+
+
 </input>
 <returns type="image"/>
 
 <description>
 
-This function performs Hanning convolution of one axis of an image defined by
+This application performs Hanning convolution of one axis of an image defined by
 
-z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1] 
+z[i] = 0.25*y[i-1] + 0.5*y[i] + 0.25*y[i+1]       (equation 1)
 
 where z[i] is the value at pixel i in the hanning smoothed image, and
 y[i-1], y[i], and y[i+1] are the values of the input image at pixels i-1,
-i, and i+1 respectively.
+i, and i+1 respectively. It supports both float and complex valued images.
+The length of the axis along which the convolution is to occur must be at least
+three pixels in the selected region. Masked pixel values are set to zero prior to
+convolution. All nondefault pixel masks are ignored during the calculation.
 
-The convolution is done in the image domain (i.e., not with an FFT). If drop=True,
-every other pixel is dropped in the output image so that the pixel width and the hanning smoothed resolution 
-are the same. In this case, the first output pixel is centered on the second input pixel, so that the
-(zero-based) jth output pixel is related to the (zero-based) ith input pixel by
+The convolution is done in the image domain (i.e., not with an FFT).
+	
+If drop=False, the length of the output axis will be the same as that of the input
+axis. The output pixel values along the convolution axis will be related to those
+of the input values according to equation 1, except the first and last pixels. In that
+case, 
+    
+    z[0] = 0.5*(y[0] + y[1])
+    
+and,
+    
+    z[N-1] = 0.5*(y[N-2] + y[N-1])
+    
+where N is the number of pixels along the convolution aixs.
+The pixel mask, ORed with the OTF mask if specified, is copied from the selected
+region of the input image to the output image. Thus for example, if the selected
+region in the input image has six planes along the convolution axis, and if the pixel
+values, which are all unmasked, on a slice along this axis are [1, 2, 5, 10, 17, 26],
+the corresponding output pixel values will be [1.5, 2.5, 5.5, 10.5, 17.5, 21.5].
+    
+If drop=True and dmethod="copy", the output image is the image calculated if
+drop=True, except that only the odd-numbered planes are kept. Furthermore, if the
+number of planes along the convolution axis in the selected region of the input image
+is even, the last odd number plane is also discarded. Thus, if the selected region
+has N pixels along the convolution axis in the input image, along the convolution
+axis the output image will have (N-1)/2 planes if N is odd, or (N-2)/2 planes if N
+is even. In this case, the pixel and mask values are copied directly, without further
+processing. Thus for example, if the selected region in the input image has six planes
+along the convolution axis, and if the pixel values, which are all unmasked, on a slice
+along this axis are [1, 2, 5, 10, 17, 26], the corresponding output pixel values will be
+[2.5, 10.5].
 
-j = (i - 1)/2
-
-where i takes on only odd values.
+If drop=True and dmethod="mean", first the image described in the drop=False case
+is calculated. The first plane and last plane(s) of that image are then discarded as
+described in the drop=True, dmethod="copy" case. Then, the ith plane of the output
+image is calculated by averaging the (2*i)th and (2*i + 1)th planes of the intermediate
+image.Thus for example, if the selected region in the input image has six planes
+along the convolution axis, and if the pixel values, which are all unmasked, on a slice
+along this axis are [1, 2, 5, 10, 17, 26], the corresponding output pixel values will be
+[4.0, 14.0]. Masked values are taken into consideration when forming this average, so if
+one of the values is masked, it is not used in the average. If at least one of the values
+in the input pair is not masked, the corresponding output pixel will not be masked.
 
 The hanning smoothed image is written to disk with name {\stfaf outfile}, if
 specified. If not, no image is written but the image is still accessible via
@@ -5242,13 +5509,6 @@ hanning\_image = ia.hanning(...)
 # close the returned tool promptly upon finishing with it.
 \end{verbatim}
 hanning\_image.done()
-
-Masked pixels will be assigned the value 0.0 before convolution. 
-The output mask is the combination (logical OR) of the default input
-\pixelmask\ (if any) and the OTF mask.  Any other input \pixelmasks\
-will not be copied.  Use function
-<link anchor="images:image.maskhandler.function">maskhandler</link> if you need to copy other
-masks too.
 
 See also the other convolution functions
 <link anchor="images:image.convolve2d.function">convolve2d</link>,
@@ -7214,7 +7474,8 @@ ia.close()
      <description>Binning factors for each axis</description>
      </param>
   
-     <param type="record"  name="region">
+     <param type="any"  name="region">
+     <any type="variant" limittypes="string record"/>
      <description>The region of interest.  See help par.region. Default is whole image.</description>
      <value></value>
      </param>
@@ -7244,16 +7505,41 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
-     
+     <param type="bool" name="crop">
+        <description>Remove pixels from the end of an axis to be rebinned if there are not enough to form an integral bin?</description>
+        <value>false</value>
+     </param>
 </input>
 <returns type="image"/>
 
 <description>
 
-This function rebins the current image by the specified integer binning
-factors for each axis.  The output pixel value is just the average of the
+This application rebins the current image by the specified integer binning
+factors for each axis. It supports both float valued and complex valued images.
+The corresponding output pixel value is the average of the
 input pixel values. The output pixel will be masked bad if there
-were no good input pixels.  You cannot rebin a Stokes axis.
+were no good input pixels.  A polarization axis cannot be rebinned.
+
+The binning factors array must contain at least one element and no more
+elements than the number of input image axes. If the number of elements
+specified is less than the number of image axes, then the remaining axes
+not specified are not rebinned. All specified values must be positive. A
+value of one indicates that no rebinning of the associated axis will occur.
+
+Binning starts from the origin pixel of the bounding box of the selected region or
+the origin pixel of the input image if no region is specified. The value of crop
+is used to determine how to handle cases where there are pixels
+at the end of the axis that do not form a complete bin. If crop=True,
+extra pixels at the end of the axis are discarded. If crop=False, the remaining
+pixels are averaged into the final bin along that axis. Should the length
+of the axis to be rebinned be an integral multiple of the associated binning
+factor, the value of crop is irrelevant. 
+
+A value of dropdeg=True will result in the output image not containing
+axes that are degenerate in the specified region or in the input image if no
+region is specified. Note that, however, the binning
+factors array must still account for degenerate axes, and the binning
+factor associated with a degenerate axis must always be 1.
 
 If {\stfaf outfile} is given, the image is written to the specified
 disk file.  If {\stfaf outfile} is unset, the Image \tool\ is
@@ -7262,10 +7548,6 @@ memory or on disk, depending on its size.  When you destroy the
 on-the-fly Image \tool\ returned by this function (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
-
-Sometimes it is useful to drop axes of length one (degenerate axes). 
-Use the {\stfaf dropdeg} argument if you want to do this.  It will
-discard the axes from the input image.  
 
 </description>
 
@@ -7892,9 +8174,10 @@ print ia.name(strippath=T)
      <description>The new value(s), Numeric scalar or LEL expression</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     	<any type="variant"/>
+     	<description>The region of interest. see help par.region.  Default is whole image.</description>
+    	<value/>
      </param>
   
      <param type="any"  name="mask">
@@ -7920,9 +8203,9 @@ print ia.name(strippath=T)
 <returns type="bool">T or fail</returns>
 <description>
 
-This function replaces the values of all
-pixels whose total input mask (default input \pixelmask\ and OTF mask)
-is bad (F) with the specified value.    
+This application replaces the values of all pixels whose total input mask
+	(default input \pixelmask\ and OTF mask) is bad (F) with the specified
+	value. It supports both float valued and compplex valued images. 
 
 If the argument {\stfaf update} is F (the default), the actual \pixelmask\
 is left unchanged.  That is, masked pixels remain masked.   However, if
@@ -9192,7 +9475,7 @@ ia.twopointcorrelation()   # Output image is virtual
      </param>
   
      <param type="any"  name="region">
-     <any type="variant" limittypes="record string"/>
+     <any type="variant" ypes="record string"/>
      <description>Region of interest.  Default is whole image.</description>
      <value type="string"/>
      </param>
@@ -10421,18 +10704,19 @@ used to create a 2D temporary image.
         coordinate or a center, position angle, and length describing the slice. The spectral extent of the resulting image
         will be that provided by the region specification or the entire spectral range of the input image if no region is
         specified. One may not specify a region in direction space; that is accomplished by specifying the start and end
-        points or the center, length, and position angle of the slice. The parameters
-        start and end may be specified as two element arrays of numerical values, in which case these values will be
-        interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
-        each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
-        format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]). The center parameter is specified in the same way.
-        The length parameter may be specified as a single numerical value, in which case it is interpreted as the length in pixels, or
-        a valid quantity, in which case it must have units conformant with the direction axes units. The pa (position angle) parameter
-        must be specified as a valid quantity with angular units. The position angle is interpreted in the usual astronomical sense; ie
-        measured from north through east. Either start/end or center/pa/length must be specified; if a parameter from one of
-        these sets is specified, a parameter from the other set may not be specified. In either case, the end points of the
-        segment must fail within the input image, and they both must be at least 2 pixels from the edge of the input image to facilite
-        rotation (see below).
+        points or the center, length, and position angle of the slice. The parameters start and end may be specified as two
+        element arrays of numerical values, in which case these values will be interpreted as pixel locations in the input
+        image. Alternatively, they may be expressed as arrays of two strings each representing the direction. These strings
+        can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal format (eg ["14h20m20.5s","-30d45m25.4s"],
+        ["14:20:20.5s","-30.45.25.4"]). In addition, they may be expressed as a single string containing the longitude and
+        latitude values and optionally a reference frame value, eg "J2000 14:20:20.5s -30.45.25.4". The center parameter is
+        specified in the same way. The length parameter may be specified as a single numerical value, in which case it is
+        interpreted as the length in pixels, or a valid quantity, in which case it must have units conformant with the direction
+        axes units. The pa (position angle) parameter must be specified as a valid quantity with angular units. The position
+        angle is interpreted in the usual astronomical sense; ie measured from north through east. Either start/end or
+        center/pa/length must be specified; if a parameter from one of these sets is specified, a parameter from the other set may
+        not be specified. In either case, the end points of the segment must fail within the input image, and they both must be at
+        least 2 pixels from the edge of the input image to facilite rotation (see below).
 
         One may specify a width, which is the number of pixels centered along and perpendicular
         to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which
@@ -10568,66 +10852,6 @@ ia.close()
 </method>
 
 
-   <method type="function" name="echo">
-   <shortdescription>returns input record</shortdescription>
-
-<input>
-     <param type="record"  name="v">
-     <description>a measure value</description>
-     </param>
-
-     <param type="bool"  name="godeep">
-     <description>force the use of MeasureHolder record conversions</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="record">
-<shortdescription>input measure</shortdescription>
-</returns>
-<description>
-echo returns input.  This method is for diagnostic purposes only.
-</description>
-<example>
-
-"""
-#
-x=5
-ia.echo(x)
-#
-"""
-
-</example>
-</method>
-
- <!--
-   <method type="function" name="outputvariant">
-   <shortdescription>returns a variant</shortdescription>
-
-<output>
-     <param type="variant" name="v">
-     <description>a variant</description>
-     </param>
-</output>
-
-<returns type="void">
-<shortdescription>for testing variant as output parameter</shortdescription>
-</returns>
-<description>
-returns internally generated v as a variant output parameter.
-Exists for test purposes only.
-</description>
-<example>
-
-"""
-#
-#ia.outputvariant()
-exit() # This is last example so lets exit().
-#
-"""
-
-</example>
-</method>
--->
 <method type="function" name="isconform">
     <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>
 

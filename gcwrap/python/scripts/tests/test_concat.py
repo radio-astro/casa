@@ -87,24 +87,37 @@ class test_concat(unittest.TestCase):
         filespresent = sorted(glob.glob("*.ms"))
         if(datapathmms!=''): 
             print "\nTesting on MMSs ...\n"
+
             nonmmsinput = ['A2256LC2_4.5s-1.ms', 'part1.ms', 'part2-mod2.ms', 'shortpart1.ms', 'sim7.ms']
             os.chdir(datapathmms)
-            for mymsname in sorted(glob.glob("*.ms")):
+            myinputmslist = sorted(glob.glob("*.ms"))
+            os.chdir(cpath)
+
+            for mymsname in myinputmslist:
                 if not ((mymsname in filespresent) or (mymsname in nonmmsinput)):
                     print "Copying MMS", mymsname
-                    shutil.copytree(mymsname, cpath+'/'+mymsname)
-            os.chdir(datapath)
+                    rval = os.system('cp -R '+datapathmms+'/'+mymsname+' .')
+                    if rval!=0:
+                        raise Exception, 'Error while copying input data.'
+
             for mymsname in nonmmsinput:
                 if not mymsname in filespresent:
                     print "Copying non-MMS ", mymsname
-                    shutil.copytree(mymsname, cpath+'/'+mymsname)
+                    rval = os.system('cp -R '+datapath+'/'+mymsname+' .')
+                    if rval!=0:
+                        raise Exception, 'Error while copying input data.'
+                    
         else:
             os.chdir(datapath)
-            for mymsname in sorted(glob.glob("*.ms")):
+            myinputmslist = sorted(glob.glob("*.ms"))
+            os.chdir(cpath)
+            for mymsname in myinputmslist:
                 if not mymsname in filespresent:
                     print "Copying ", mymsname
-                    shutil.copytree(mymsname, cpath+'/'+mymsname)
-                    
+                    rval = os.system('cp -R '+datapath+'/'+mymsname+' .')
+                    if rval!=0:
+                        raise Exception, 'Error while copying input data.'
+
         os.chdir(cpath)
 
         # create MSs with ephemeris use
@@ -210,6 +223,7 @@ class test_concat(unittest.TestCase):
 
 
         default(concat)
+        return True
         
     def tearDown(self):
         shutil.rmtree(msname,ignore_errors=True)

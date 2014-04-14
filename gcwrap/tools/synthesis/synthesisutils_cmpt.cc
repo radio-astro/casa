@@ -54,14 +54,23 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
-  casac::record* synthesisutils::cubedatapartition(const casac::record& selpars, const int npart)
+  casac::record* synthesisutils::cubedatapartition(const casac::record& selpars, const int npart, const ::casac::variant& fstart, const ::casac::variant&  fend, const string& frame)
 {
   casac::record* rstat(0);
 
   try 
     {
       casa::Record recpars = *toRecord( selpars );
-      rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart ) );
+      casa::Quantity qstart(1.0, "GHz");
+      casa::Quantity qend(1.5,"GHz");
+      if( (fstart.toString().size() != 0) && String(fstart.toString()) != String("[]"))
+	qstart=casaQuantity(fstart);
+      if( (fend.toString().size() != 0) && String(fend.toString()) != String("[]"))
+	qend=casaQuantity(fend);
+      
+      casa::MFrequency::Types eltype;
+      casa::MFrequency::getType(eltype, frame);
+      rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart, qstart.getValue("Hz"), qend.getValue("Hz"), eltype ) );
     } 
   catch  (AipsError x) 
     {
@@ -147,9 +156,9 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
-
+/***
  bool 
- synthesisutils::makeimage(const casac::record& impars, const string& msname)
+ synthesisutils::makeimage(const casac::record& impars, const casac::record& selpars, const string& msname)
 {
   bool rstat(0);
 
@@ -162,7 +171,8 @@ synthesisutils::~synthesisutils()
 
       // Construct Coordinate system and make image. 
       MeasurementSet ms;
-      if( msname.length() > 0 && (Directory(msname)).exists() ) { ms = MeasurementSet(msname); }
+      //if( msname.length() > 0 && (Directory(msname)).exists() ) { ms = MeasurementSet(msname); }
+      ms = MeasurementSet(msname);
 
       cout << "Making image : " << pars.imageName << " of shape : " << pars.shp() << endl;
       PagedImage<Float> diskimage( pars.shp(), pars.buildCoordinateSystem(ms), pars.imageName );
@@ -175,6 +185,7 @@ synthesisutils::~synthesisutils()
 
   return rstat;
 }
+***/
 
 
 

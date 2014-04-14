@@ -6,9 +6,9 @@ void setcoordsys(casa::CoordinateSystem &acsys);
 
 private:
 
-casa::LogIO *itsLog;
-casa::CoordinateSystem *itsCoordSys;
-casa::String itsParentImageName;
+casa::LogIO *_log;
+casa::CoordinateSystem *_csys;
+casa::String _imageName;
 
 // private constructor to make components on the fly
 coordsys(const casa::CoordinateSystem * inCS);

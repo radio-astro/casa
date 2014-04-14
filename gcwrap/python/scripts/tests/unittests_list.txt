@@ -30,7 +30,9 @@ test_gaincal			gmoellen@aoc.nrao.edu
 test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
+test_hanningsmooth2             scastro@eso.org
 test_ia_adddegaxes              dmehring@nrao.edu
+test_ia_boxcar                  dmehring@nrao.edu
 test_ia_calcmask                dmehring@nrao.edu
 test_ia_constructors            dmehring@nrao.edu
 test_ia_continuumsub            dmehring@nrao.edu
@@ -86,6 +88,7 @@ test_listobs                    dmehring@nrao.edu
 #test_listvis                    scastro@eso.org
 test_listpartition              scastro@eso.org
 test_makemask                   ttsutsum@nrao.edu
+test_me_shift                   dmehring@nrao.edu
 test_measures			jjacobs@nrao.edu
 test_msmd                       dmehring@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp

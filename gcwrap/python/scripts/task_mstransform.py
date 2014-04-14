@@ -23,7 +23,45 @@ def dump_args(func):
    
     return echo_func
 
+'''
+In order to call MSTHelper from another task, a few things are needed:
+See examples in task_partition.py, task_split2 or task_hanningsmooth2.py
+
+ *  to process another task on a MMS, it is assumed that the task
+    has data selection parameters (or at least spw and scan).
+    
+ * MSTHelper relies on a few parameters to create an MMS. If your task interface
+   does not have them, create the following as hidden sub-parameters in the XML
+   interface of the task:
+   createmms, separationaxis, numsubms, ddistart
+     
+ *  MSTHelper will override the ParallelTaskHelper methods:
+    initialize(), generateJobs() and postExecution()
+    
+ *  Snippet of how to use MSTHelper from another class:
+ 
+    from task_mstransform import MSTHelper
+    
+    # Initiate the helper class    
+    msth = MSTHelper(locals()) 
+    
+    # Validate input and output parameters
+    msth.setupIO()
+    
+    if createmms:   
+        # Get a cluster
+        msth.setupCluster(thistask='othertask')
+        try:
+            msth.go()
+        except Exception, instance:
+            casalog.post('%s'%instance,'ERROR')
+            return False
+                    
+        return True
+
+'''
 class MSTHelper(ParallelTaskHelper):
+#    @dump_args
     def __init__(self, args={}):
         
         # Create a copy of the original local parameters
@@ -33,18 +71,30 @@ class MSTHelper(ParallelTaskHelper):
         self.__isMMS = False
         self._calScanList = None
         self._selectionScanList = None
+        self.taskname = None
+        self.__ddistart = None
+        self._msTool = None
+        self._tbTool = None
+        
+        if not self.__args.has_key('spw'):
+            self.__args['spw'] = ''
+            
         self.__spwSelection = self.__args['spw']
         self.__spwList = None
         # __ddidict contains the names of the subMSs to consolidate
         # the keys are the ddistart and the values the subMSs names
         self.__ddidict = {}
-        self._msTool = None
-        self._tbTool = None
         
         # start parameter for DDI in main table of each sub-MS
         # It should be a counter of spw IDs starting at 0
-        self.__ddistart = self.__origpars['ddistart']
-        
+        if self.__origpars.has_key('ddistart'):
+              self.__ddistart = self.__origpars['ddistart']
+
+
+    def setTaskName(self, thistask=''):
+        '''Setup this run with the task that called self.setupCluster(taskname)'''
+        self.taskname = thistask
+                
 #    @dump_args
     def setupIO(self):
         '''Validate input and output parameters'''
@@ -70,47 +120,55 @@ class MSTHelper(ParallelTaskHelper):
            heuristics associated with the separationaxis and the several
            transformations that the task does.'''
         
-        # can continue in parallel
-        retval = 2
+        # success
+        retval = 1
         
         if (self.__args['separationaxis'] == 'spw'):
-            if self.__args['combinespws'] == True:
+            if self.__args.has_key('combinespws') and self.__args['combinespws'] == True:
                 casalog.post('Cannot partition MS in spw axis when combinespws = True', 'WARN')
                 retval = 0
         
-            elif self.__args['nspw'] > 1:
-                # It will separate spws. Do it in sequential
-                # CANNOT process in sequential either because internally the
+            elif self.__args.has_key('nspw') and self.__args['nspw'] > 1:
+                # CANNOT separate spws because internally the
                 # spws need to be combined first before the separation!!!!!!
-#                casalog.post('Can only process the MS in sequential', 'WARN')
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
                 
         elif (self.__args['separationaxis'] == 'scan'):
-            if self.__args['timespan'] == 'scan':
+            # mstransform parameter
+            if self.__args.has_key('timespan') and self.__args['timespan'] == 'scan':
                 casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
                               'Will reset timespan to None', 'WARN')
-                self.__args['timespan'] == ''
-                retval = 2
+                self.__args['timespan'] = ''
+                retval = 1
+            # split2 parameter
+            elif self.__args.has_key('combine') and self.__args['combine'] == 'scan':
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset combine to None', 'WARN')
+                self.__args['combine'] = ''
+                retval = 1
                 
         elif (self.__args['separationaxis'] == 'both'):
-            if self.__args['combinespws'] == True:
+            if self.__args.has_key('combinespws') and self.__args['combinespws'] == True:
                 casalog.post('Cannot partition MS in spw,scan axes when combinespws = True', 'WARN')
                 retval = 0
-
-            elif self.__args['timespan'] == 'scan':
+            # mstransform parameter
+            elif self.__args.has_key('timespan') and self.__args['timespan'] == 'scan':
                 casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
                               'Will reset timespan to None', 'WARN')
-                self.__args['timespan'] == ''
-                retval = 2
+                self.__args['timespan'] = ''
+                retval = 1
+            # split2 parameter
+            elif self.__args.has_key('combine') and self.__args['combine'] == 'scan':
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset combine to None', 'WARN')
+                self.__args['combine'] = ''
+                retval = 1
                 
-            elif self.__args['nspw'] > 1:
-                # CANNOT process in sequential either because internally the
+            elif self.__args.has_key('nspw') and self.__args['nspw'] > 1:
                 # spws need to be combined first before the separation!!!!!!
-#                casalog.post('Can only process the MS in sequential', 'WARN')
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
-
 
         return retval
         
@@ -120,8 +178,10 @@ class MSTHelper(ParallelTaskHelper):
         if thistask == '':
             thistask = 'mstransform'
             
+        # It needs to use the updated list of parameters!!!
+#        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__origpars)
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
-            
+        self.setTaskName(thistask)            
     
 #    @dump_args
     def setupParameters(self, **pars):
@@ -152,7 +212,7 @@ class MSTHelper(ParallelTaskHelper):
         """Add the full path for the input and output MS.
            This method overrides the one from ParallelTaskHelper."""
         
-                
+        # self._arg is populated inside ParallelTaskHelper._init_()
         self._arg['vis'] = os.path.abspath(self._arg['vis'])
             
         if (self._arg['outputvis'] != ""):
@@ -239,12 +299,12 @@ class MSTHelper(ParallelTaskHelper):
     def generateJobs(self):
         '''This is the method which generates all of the actual jobs to be done.'''
         '''This method overrides the one in ParallelTaskHelper baseclass'''
-        # How about when the input is a list of MMSs? What to do? Nothing!
         
-        if self._arg['outputvis'] != '':
-            casalog.post("Analyzing MS for partitioning")
-            self._createPrimarySplitCommand()
-                                     
+        if self._arg['createmms']:
+            if self._arg['outputvis'] != '':
+                casalog.post("Analyzing MS for partitioning")
+                self._createPrimarySplitCommand()
+                                      
         return True
      
 #    @dump_args
@@ -257,10 +317,14 @@ class MSTHelper(ParallelTaskHelper):
                 self._createSPWSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'both':
                 self._createDefaultSeparationCommands()
+            else:
+                # Use a default
+                self._createDefaultSeparationCommands()
         else:
             # TODO: REVIEW this later. ScanList does not exist!
             # Single mms case
             singleCmd = copy.copy(self._arg)
+            scanList = self._selectionScanList
             if scanList is not None:
                 singleCmd['scan'] = ParallelTaskHelper.\
                                     listToCasaString(scanList)
@@ -612,11 +676,12 @@ class MSTHelper(ParallelTaskHelper):
     def _getSelectionFilter(self):
         ''' This method takes the list of specified selection criteria and
             puts them into a dictionary.  There is a bit of name mangling necessary.
-            The pairs are: (msselection syntax, split task syntanc)'''
+            The pairs are: (msselection syntax, mstransform task syntax)'''
         
         selectionPairs = []
         selectionPairs.append(('field','field'))
         selectionPairs.append(('spw','spw'))
+        selectionPairs.append(('polarization','correlation'))
         selectionPairs.append(('baseline','antenna'))
         selectionPairs.append(('time','timerange'))
         selectionPairs.append(('scan','scan'))
@@ -629,7 +694,7 @@ class MSTHelper(ParallelTaskHelper):
     def __generateFilter(self, selectionPairs):
         filter = None
         for (selSyntax, argSyntax) in selectionPairs:
-            if self._arg[argSyntax] != '':
+            if self._arg.has_key(argSyntax) and self._arg[argSyntax] != '':
                 if filter is None:
                     filter = {}
                 filter[selSyntax] = self._arg[argSyntax]
@@ -715,124 +780,6 @@ class MSTHelper(ParallelTaskHelper):
 
 
         return seldict
-
-#    @dump_args
-    def postExecution(self):
-        '''
-        This overrides the post execution portion of the task helper
-        in this case we probably need to generate the output reference
-        ms.
-        '''
-        if self._arg['createmms']:
-            casalog.post("Finalizing MMS structure")
-            
-            if self._msTool:
-                self._msTool.close()
-
-            # TODO: revise this later                        
-            # restore POINTING and SYSCAL
-#            if self.pwriteaccess and not self.pointingisempty:
-#                print "restoring POINTING"
-#                os.system('rm -rf '+self.ptab) # remove empty copy
-#                os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
-#            if self.swriteaccess and not self.syscalisempty:
-#                print "restoring SYSCAL"
-#                os.system('rm -rf '+self.stab) # remove empty copy
-#                os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
-            
-            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
-                outputList = self._sequential_return_list
-                self._sequential_return_list = {}
-            else:
-                outputList = self._jobQueue.getOutputJobs()
-                
-            # We created a data directory and many SubMSs,
-            # now build the reference MS            
-            subMSList = []
-            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
-                for subMS in outputList:
-                    subMSList.append(subMS)
-            else:
-                for job in outputList:
-                    if job.status == 'done':
-                        subMSList.append(job.getCommandArguments()['outputvis'])
-                        
-            subMSList.sort()
-
-            if len(subMSList) == 0:
-                casalog.post("Error: no subMSs were created.", 'WARN')
-                return False
-            
-            # When separationaxis='scan' there is no need to give ddistart. 
-            # The tool looks at the whole spw selection and
-            # creates the indices from it. After the indices are worked out, 
-            # it applys MS selection. We do not need to consolidate either.
-                                           
-            # If axis is spw or both, give a list of the subMSs
-            # that need to be consolidated. This list is pre-organized
-            # inside the separation functions above.
-            if (self.__origpars['separationaxis'] == 'spw' or 
-                self.__origpars['separationaxis'] == 'both'):                
-                toUpdateList = self.__ddidict.values()
-                                
-                toUpdateList.sort()
-                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
-                                
-                # Consolidate the spw sub-tables to take channel selection
-                # or averages into account.
-                mtTool = casac.mstransformer()
-                try:                        
-                    mtTool.mergespwtables(toUpdateList)
-                    mtTool.done()
-                except Exception, instance:
-                    mtTool.done()
-                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
-                    raise
-                  
-            # Get the first subMS to be as a reference when
-            # copying the sub-tables to the other subMSs  
-            mastersubms = subMSList[0]
-            subtabs_to_omit = []
-
-            # deal with POINTING table
-            if not self.pointingisempty:
-#                print '******Dealing with POINTING table'
-                shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
-                # master subms gets a full copy of the original
-                shutil.copytree(self.ptab, mastersubms+'/POINTING') 
-            if self.makepointinglinks:
-                for i in xrange(1,len(subMSList)):
-                    theptab = subMSList[i]+'/POINTING'
-                    shutil.rmtree(theptab, ignore_errors=True)
-                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
-                    # (link in target will be created by makeMMS)
-                subtabs_to_omit.append('POINTING')
-
-#            # deal with SYSCAL table
-            if not self.syscalisempty:
-#                print '******Dealing with SYSCAL table'
-                shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
-                # master subms gets a full copy of the original
-                shutil.copytree(self.stab, mastersubms+'/SYSCAL') 
-            if self.makesyscallinks:
-                for i in xrange(1,len(subMSList)):
-                    thestab = subMSList[i]+'/SYSCAL'
-                    shutil.rmtree(thestab, ignore_errors=True)
-                    os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
-                    # (link in target will be created my makeMMS)
-                subtabs_to_omit.append('SYSCAL')
-                
-            # Copy sub-tables from first subMS to the others.
-            ph.makeMMS(self._arg['outputvis'], subMSList,
-                       True, # copy subtables
-                       subtabs_to_omit # omitting these
-                       )
-
-            thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
-            
-            os.rmdir(thesubmscontainingdir)
-
-        return True
 
 #    @dump_args 
     def createSPWExpression(self, partdict):
@@ -962,7 +909,126 @@ class MSTHelper(ParallelTaskHelper):
         width = self.__args['width']
         
         return start, width
-           
+
+#    @dump_args
+    def postExecution(self):
+        '''
+        This method overrides the postExecution method of ParallelTaskHelper
+        in this case we probably need to generate the output reference
+        ms.
+        '''
+        if self._arg['createmms']:
+            casalog.post("Finalizing MMS structure")
+            
+            if self._msTool:
+                self._msTool.close()
+
+            # TODO: revise this later                        
+            # restore POINTING and SYSCAL
+#            if self.pwriteaccess and not self.pointingisempty:
+#                print "restoring POINTING"
+#                os.system('rm -rf '+self.ptab) # remove empty copy
+#                os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
+#            if self.swriteaccess and not self.syscalisempty:
+#                print "restoring SYSCAL"
+#                os.system('rm -rf '+self.stab) # remove empty copy
+#                os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
+            
+            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+                outputList = self._sequential_return_list
+                self._sequential_return_list = {}
+            else:
+                outputList = self._jobQueue.getOutputJobs()
+                
+            # We created a data directory and many SubMSs,
+            # now build the reference MS            
+            subMSList = []
+            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+                for subMS in outputList:
+                    subMSList.append(subMS)
+            else:
+                for job in outputList:
+                    if job.status == 'done':
+                        subMSList.append(job.getCommandArguments()['outputvis'])
+                        
+            subMSList.sort()
+
+            if len(subMSList) == 0:
+                casalog.post("Error: no subMSs were created.", 'WARN')
+                return False
+            
+            # When separationaxis='scan' there is no need to give ddistart. 
+            # The tool looks at the whole spw selection and
+            # creates the indices from it. After the indices are worked out, 
+            # it applys MS selection. We do not need to consolidate either.
+                                           
+            # If axis is spw or both, give a list of the subMSs
+            # that need to be consolidated. This list is pre-organized
+            # inside the separation functions above.
+            if (self.__origpars['separationaxis'] == 'spw' or 
+                self.__origpars['separationaxis'] == 'both'):                
+                toUpdateList = self.__ddidict.values()
+                                
+                toUpdateList.sort()
+                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
+                                
+                # Consolidate the spw sub-tables to take channel selection
+                # or averages into account.
+                mtlocal1 = mttool()
+                try:                        
+                    mtlocal1.mergespwtables(toUpdateList)
+                    mtlocal1.done()
+                except Exception, instance:
+                    mtlocal1.done()
+                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
+                    raise
+                  
+            # Get the first subMS to be as a reference when
+            # copying the sub-tables to the other subMSs  
+            mastersubms = subMSList[0]
+            subtabs_to_omit = []
+
+            # deal with POINTING table
+            if not self.pointingisempty:
+#                print '******Dealing with POINTING table'
+                shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
+                # master subms gets a full copy of the original
+                shutil.copytree(self.ptab, mastersubms+'/POINTING') 
+            if self.makepointinglinks:
+                for i in xrange(1,len(subMSList)):
+                    theptab = subMSList[i]+'/POINTING'
+                    shutil.rmtree(theptab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
+                    # (link in target will be created by makeMMS)
+                subtabs_to_omit.append('POINTING')
+
+            # deal with SYSCAL table
+            if not self.syscalisempty:
+#                print '******Dealing with SYSCAL table'
+                shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
+                # master subms gets a full copy of the original
+                shutil.copytree(self.stab, mastersubms+'/SYSCAL') 
+            if self.makesyscallinks:
+                for i in xrange(1,len(subMSList)):
+                    thestab = subMSList[i]+'/SYSCAL'
+                    shutil.rmtree(thestab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
+                    # (link in target will be created my makeMMS)
+                subtabs_to_omit.append('SYSCAL')
+                
+            # Copy sub-tables from first subMS to the others.
+            ph.makeMMS(self._arg['outputvis'], subMSList,
+                       True, # copy subtables
+                       subtabs_to_omit # omitting these
+                       )
+
+            thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+            
+            os.rmdir(thesubmscontainingdir)
+
+        return True
+
+          
 #@dump_args
 def mstransform(
              vis, 
@@ -986,6 +1052,7 @@ def mstransform(
              feed,
              datacolumn,
              realmodelcol,
+             keepflags,
              usewtspectrum,
              combinespws,        # spw combination --> cvel
              chanaverage,        # channel averaging --> split
@@ -1028,18 +1095,17 @@ def mstransform(
     if createmms:
         
         # Validate the combination of some parameters
-        # pval = 0 -> abort
-        # pval = 2 -> run in parallel
+        # pval = 0 -> abort; cannot process
+        # pval = 1 -> success
         pval = mth.validateParams()
         if pval == 0:
             raise Exception, 'Cannot partition using separationaxis=%s with some of the requested transformations.'\
                             %separationaxis
                             
-        # pval == 2, can process in parallel
         # Setup a dictionary of the selection parameters
-        mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
-                            antenna=antenna, uvrange=uvrange, timerange=timerange, 
-                            intent=intent, observation=str(observation),feed=feed)
+#         mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
+#                             antenna=antenna, uvrange=uvrange, timerange=timerange, 
+#                             intent=intent, observation=str(observation),feed=feed)
         
         # The user decides to run in parallel or sequential
         if not parallel:
@@ -1069,12 +1135,17 @@ def mstransform(
     try:
                     
         # Gather all the parameters in a dictionary.
-        
         config = {}
+        
+        if keepflags:
+            taqlstr = ''
+        else:
+            taqlstr = "NOT (FLAG_ROW OR ALL(FLAG))"
+        
         config = mth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
-                    feed=feed)
+                    feed=feed, taql=taqlstr)
         
         # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
@@ -1102,10 +1173,14 @@ def mstransform(
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
             
+        # Only parse chanaverage parameters if chanbin > 1
+        if chanaverage and isinstance(chanbin, int) and chanbin <= 1:
+            raise Exception, 'Parameter chanbin must be > 1 to do channel averaging'
+            
         if chanaverage:
             casalog.post('Parse channel averaging parameters')
             config['chanaverage'] = True
-            # chanbin can be an int or a list of int that will apply one to each spw
+            # chanbin can be an int or a list of int that will apply to each spw
             mth.validateChanBin()
             config['chanbin'] = chanbin
             config['useweights'] = useweights
@@ -1138,13 +1213,18 @@ def mstransform(
                 config['phasecenter'] = phasecenter
             config['veltype'] = veltype
             
+        # Only parse timeaverage parameters when timebin > 0s
+        if timeaverage:
+            tb = qa.convert(qa.quantity(timebin), 's')['value']
+            if not tb > 0:
+                raise Exception, "Parameter timebin must be > '0s' to do time averaging"
+                       
         if timeaverage:
             casalog.post('Parse time averaging parameters')
             config['timeaverage'] = True
             config['timebin'] = timebin
             config['timespan'] = timespan
             config['maxuvwdistance'] = maxuvwdistance
-#            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         

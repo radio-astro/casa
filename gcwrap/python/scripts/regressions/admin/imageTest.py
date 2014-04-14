@@ -24,7 +24,7 @@ class ImageTest:
         # assume for now that direction is in 01 at least, 
         mycs=self.imTool.coordsys()
         findstok=mycs.findcoordinate("stokes")
-        if not findstok[0]:
+        if not findstok['return']:
             myImagename=imageName+".k"
             self.imTool.adddegaxes(stokes=True,outfile=myImagename,overwrite=True)
             mystokpix=self.imTool.summary()['ndim'] # ct from 0
@@ -35,10 +35,10 @@ class ImageTest:
             mycs.done()
             mycs=self.imTool.coordsys()
         else:
-            mystokpix=findstok[1]
+            mystokpix=findstok['pixel']
 
         findspec=mycs.findcoordinate("spectral")    
-        if not findspec[0]:
+        if not findspec['return']:
             myImagename=imageName+".s"
             self.imTool.adddegaxes(spectral=True,outfile=myImagename,overwrite=True)
             myspecpix=self.imTool.summary()['ndim'] # ct from 0
@@ -49,7 +49,7 @@ class ImageTest:
             mycs.done()
             mycs=self.imTool.coordsys()
         else:
-            myspecpix=findspec[1]                    
+            myspecpix=findspec['pixel']                    
 
         curr_order=[mystokpix,myspecpix]
         if curr_order != [2,3]:
@@ -208,9 +208,9 @@ class ImageTest:
         if (a['converged']):
             origName = self.imTool.name()
             self.imTool.open(residual)
-            resid = self.imTool.getchunk()
-            residshape = resid.shape
-            resid = resid.reshape(residshape[0], residshape[1])
+            resid = self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
+            #residshape = resid.shape
+            #resid = resid.reshape(residshape[0], residshape[1])
             self.imTool.open(origName)
         else:
             resid = pylab.array([])

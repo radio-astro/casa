@@ -33,7 +33,8 @@ TASKLIST = [
             'uvcontsub',
             'vishead',
             'wvrgcal',
-            'concat' # shared with virtualconcat
+            'concat', # shared with virtualconcat
+            'hanningsmooth'
             ]
 
 # NOTE: task 'fixplanets' uses data from task 'listvis'

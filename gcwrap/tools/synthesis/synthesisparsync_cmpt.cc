@@ -86,7 +86,7 @@ bool synthesisparsync::gatherpsfweight()
 {
   Bool rstat(False);
   try {
-    itsParSync->gatherImages( /*dopsf*/True, /*doresidual*/False );
+    itsParSync->gatherImages( /*dopsf*/True ); //, /*doresidual*/False );
     rstat=True;
   } catch  (AipsError x) {
     RETHROW(x);
@@ -98,7 +98,7 @@ bool synthesisparsync::gatherresidual()
 {
   Bool rstat(False);
   try {
-    itsParSync->gatherImages( /*dopsf*/False, /*doresidual*/True );
+    itsParSync->gatherImages( /*dopsf*/False) ; //, /*doresidual*/True );
     rstat=True;
   } catch  (AipsError x) {
     RETHROW(x);
@@ -123,6 +123,29 @@ bool synthesisparsync::gatherresidual()
   Bool rstat(False);
   try {
 	itsParSync->divideResidualByWeight( );
+	rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+  bool synthesisparsync::dividemodelbyweight()
+{
+  Bool rstat(False);
+  try {
+	itsParSync->divideModelByWeight( );
+	rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+  bool synthesisparsync::multiplymodelbyweight()
+{
+  Bool rstat(False);
+  try {
+	itsParSync->multiplyModelByWeight( );
 	rstat=True;
   } catch  (AipsError x) {
     RETHROW(x);

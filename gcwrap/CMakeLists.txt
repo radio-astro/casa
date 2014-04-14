@@ -27,7 +27,7 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 4 )
-set( CASA_MINOR_VERSION 3 )
+set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
@@ -356,33 +356,30 @@ endif()
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
 
-set( epochdelta 1385614800 )
-if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
-    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
-                     OUTPUT_VARIABLE __casa_soversion )
-elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
-    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
-                     OUTPUT_VARIABLE __casa_soversion )
+SET(NO_SOVERSION FALSE CACHE BOOL "do not add version information to shared libraries")
+if( NOT NO_SOVERSION )
+    set( epochdelta 1385614800 )
+    if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
+        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
+                         OUTPUT_VARIABLE __casa_soversion )
+    elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
+        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
+                         OUTPUT_VARIABLE __casa_soversion )
+    else( )
+        execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
+                         OUTPUT_VARIABLE __casa_soversion )
+    endif( )
+    set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
+    message( STATUS "Shared object version number ${casa_soversion}" )
 else( )
-    execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
-                     OUTPUT_VARIABLE __casa_soversion )
+    message( STATUS "User disabled shared library versioning" )
 endif( )
-set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
-message( STATUS "shared object version number ${casa_soversion}" )
 
 set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 #
 # Targets for creating doxygen documentation
 #
-
-# strip out TeX/LaTeX with dvi2tty...
-find_program( DVI2TTY NAMES dvi2tty PATHS /usr/lib64/casa/01/bin )
-if ( DVI2TTY )
-    message( STATUS "Found dvi2tty: ${DVI2TTY}" )
-else( )
-    message( STATUS "Could not find dvi2tty, online embedded TeX documentation will be garbled" )
-endif( )
 
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
@@ -638,7 +635,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.231
+           VERSION 1.0.239
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -702,6 +699,7 @@ else()
        spectrallines
        stdcasa
        synthesis
+       asdmstman
        )
 endif()
 
@@ -815,6 +813,7 @@ casa_find( PYTHON
      ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+     /opt/casa/01/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core
      ${python_prefix} # Support the ALMA ACS special case.
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
@@ -1030,10 +1029,6 @@ casa_find( XERCES
   CPP_VERSION XERCES_FULLVERSIONDOT 
   RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
 )
-if( XERCES_VERSION VERSION_EQUAL   3.0 OR
-    XERCES_VERSION VERSION_GREATER 3.0 )
-  message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
-endif()
 
 #
 # Boost

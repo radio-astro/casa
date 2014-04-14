@@ -2,6 +2,7 @@ import shutil
 import unittest
 import os
 import numpy
+import exceptions
 from tasks import *
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
@@ -465,7 +466,7 @@ class test_Regridms3(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
-        os.system('rm -rf cvel31.*ms')
+        os.system('rm -rf cvel31*.*ms')
 
     def test_regrid3_1(self):
         '''mstransform 12: Check that output columns are the same when using mstransform'''
@@ -925,6 +926,7 @@ class test_Columns(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
+        os.system('rm -rf ngc5921Jy.ms')
         
     def test_col1(self):
           """mstransform: try to make real a non-existing virtual MODEL column"""
@@ -1170,6 +1172,17 @@ class test_MMS(test_base):
 
         # spw=5 should be spw=1 after consolidation, with 10 channels
         ret = th.verifyMS(self.outputms, 7, 10, 1, ignoreflags=True)
+        
+    def test_CAS6206(self):
+        '''mstransform: verify that all columns are re-indexed in SPW sub-table'''
+        self.outputmms='test.mms'
+        self.outputms='assoc.ms'
+        self.setUp_CAS_5013()
+        mstransform(vis=self.vis, outputvis=self.outputmms,createmms=True, datacolumn='corrected')
+        
+        # if SPW sub-table is not correct, the next step will fail
+        self.assertTrue(mstransform(vis=self.outputmms, outputvis=self.outputms, hanning=True, datacolumn='data'))
+        
 
 
 class test_Parallel(test_base):
@@ -1261,14 +1274,39 @@ class test_state(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
+        
+    def test_select_by_scan_intent_and_reindex_state_accordingly(self):
+        '''mstransform: select a scan intent and re-index state sub-table'''
+        self.outputms = "test_select_by_scan_intent_and_reindex_state_accordingly.ms"
+        mstransform(vis=self.vis, outputvis=self.outputms, intent='OBSERVE_TARGET*', datacolumn='DATA')
+        self.assertTrue(os.path.exists(self.outputms))
+        
+        # Check that state sub-table has been re-indexed
+        mytb = tbtool()
+        mytb.open(self.outputms + '/STATE')
+        scan_intent = mytb.getcol('OBS_MODE')
+        mytb.close()
+        n_subscans = scan_intent.size
+        check_eq(n_subscans, 12)
+        
+        # listobs checks that re-indexing is consistent
+        listobs(self.outputms)
 
-    def test_CAS_5076(self):
-        '''mstransform: select 2 scans and automatically re-index state sub-table'''
-        self.outputms = "test_state.ms"
+    def test_select_by_scan_but_not_implicit_state_reindex(self):
+        '''mstransform: select 2 scans and do not automatically re-index state sub-table'''
+        self.outputms = "test_select_by_scan_but_not_implicit_state_reindex.ms"
         mstransform(vis=self.vis, outputvis=self.outputms, scan='2,3', datacolumn='DATA')
         self.assertTrue(os.path.exists(self.outputms))
+        
+        # Check that state sub-table has not been re-indexed
+        mytb = tbtool()
+        mytb.open(self.outputms + '/STATE')
+        scan_intent = mytb.getcol('OBS_MODE')
+        mytb.close()
+        n_subscans = scan_intent.size
+        check_eq(n_subscans, 30)        
 
-        ''' listobs should not crash '''
+        # listobs checks that re-indexing is consistent
         listobs(self.outputms)
 
 
@@ -1899,7 +1937,6 @@ class test_spw_poln(test_base):
         self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
-        # Verify that POLARIZATION table is properly re-indexed.
         pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
         self.assertEqual(pol_col['r1'][0], 0,'Error re-indexing POLARIZATION_ID of DATA_DESCRIPTION table')
         self.assertEqual(pol_col['r2'][0], 1,'Error re-indexing POLARIZATION_ID of DATA_DESCRIPTION table')
@@ -2157,6 +2194,72 @@ class test_spw_poln(test_base):
         self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
+    def test_mms_XXYY_selection(self):
+        '''mstransform: correlation='RR,LL' should select and re-index properly'''
+        self.outputms = '3cRRLL.mms'
+        # spw 0 should not be processed. The selection should happen before the MMS work
+        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', correlation='RR,LL',
+                    createmms=True)
+        
+        msmdt = msmdtool()
+        msmdt.open(self.outputms)
+        out_dds = msmdt.datadescids()
+        msmdt.done()
+        
+        ref = [0,1]
+        for i in out_dds:
+            self.assertEqual(out_dds[i], ref[i])
+        
+        pol_col = th.getVarCol(self.outputms+'/POLARIZATION','NUM_CORR')
+        self.assertEqual(pol_col['r1'][0], 0,'Error in NUM_CORR of POLARIZATION table')
+        self.assertEqual(pol_col['r2'][0], 0,'Error in NUM_CORR of POLARIZATION table')
+        self.assertEqual(pol_col['r3'][0], 2,'Error in NUM_CORR of POLARIZATION table')
+        self.assertEqual(pol_col['r4'][0], 2,'Error in NUM_CORR of POLARIZATION table')
+
+        # Verify that POLARIZATION table is not re-sized.
+        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR')
+        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')
+
+class testFlags(test_base):
+    '''Test the keepflags parameter'''
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_split_keepflags_false(self):
+        '''mstransform: split them and do not keep flags in output MS'''
+        self.outputms = 'donotkeepflags.ms'
+        
+        # Unflag and flag spw=4
+        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='4'"])
+        
+        # Split scan=31 out
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='corrected', scan='31', keepflags=False)
+        
+        msmdt = msmdtool()
+        msmdt.open(self.outputms)
+        spws = msmdt.spwsforscan(31)
+        msmdt.close()
+        self.assertEqual(spws.size, 15)
+        
+    def test_select_dropped_spw(self):
+        '''mstransform: keepflags=False and select flagged spw. Expect error.'''        
+        self.outputms = 'donotkeepflags_spw15.ms'
+        
+        # Unflag and flag spw=15
+        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='15'"])
+    
+        try:
+            mstransform(self.vis, outputvis=self.outputms, datacolumn='data', spw='>14', keepflags=False)
+        except exceptions.RuntimeError, instance:
+            print 'Expected Error: %s'%instance
+        
+        print 'Expected Error!'
+        
+
 # Cleanup class
 class Cleanup(test_base):
 
@@ -2165,7 +2268,8 @@ class Cleanup(test_base):
         os.system('rm -rf Four_ants_3C286.*ms* g19_d2usb_targets*')
         os.system('rm -rf comb*.*ms* reg*.*ms hann*.*ms favg*.*ms')
         os.system('rm -rf split*.*ms')
-        os.system('rm -rf 3c84scan1*ms*')
+        os.system('rm -rf 3c84scan1*ms* test.mms')
+        os.system('rm -rf donotkeepflags*')
 
     def test_runTest(self):
         '''mstransform: Cleanup'''
@@ -2195,4 +2299,5 @@ def suite():
             test_float_column,
             test_spw_poln,
             test_regridms_spw_with_different_number_of_channels,
+            testFlags,
             Cleanup]

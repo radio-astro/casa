@@ -708,6 +708,38 @@ uniqueIntV(std::vector<int> &ulist, const Vector<Int> &list) {
   for (li=slist.begin(); li != new_end; ++li) ulist.push_back(*li);
 }
 
+bool
+calibrater::initweights()
+{
+  if (! itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+	    << endl << LogIO::POST;
+    return false;
+  }
+
+  Bool retval = True;
+  
+  try {
+    
+    logSink_p.clearLocally();
+    LogIO os (LogOrigin ("calibrater", "initweights"), logSink_p);
+    os << "Beginning initweights---------------------------" << LogIO::POST;
+    // Update HISTORY table
+    itsCalibrater->writeHistory(os);
+    
+    // Apply the calibration solutions to the uv-data
+    retval = itsCalibrater->initWeights();
+    AlwaysAssert (retval, AipsError);
+    
+    os << "Finished initializing sigmas/weights." << LogIO::POST;
+    
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return retval;
+}
+
 //----------------------------------------------------------------------------
 //Fluxscale - bootstrap the flux density scale from std. amplitude calibrators
 casac::record* calibrater::fluxscale(
@@ -720,6 +752,8 @@ casac::record* calibrater::fluxscale(
 		      const std::vector<int>& refspwmap,
                       const float gainthreshold,
                       const std::string& antenna,
+                      const std::string& timerange,
+                      const std::string& scan,
                       const bool incremental,
                       const int fitorder,
                       const bool display)
@@ -764,6 +798,8 @@ casac::record* calibrater::fluxscale(
 			     append,
                              gainthreshold, 
                              antenna,
+                             timerange,
+                             scan,
 			     oFluxD,
 			     tranidx,
 			     oListFile,

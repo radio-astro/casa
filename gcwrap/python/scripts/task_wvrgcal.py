@@ -6,7 +6,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    sourceflag=None, tie=None, nsol=None, disperse=None, 
 	    wvrflag=None, statfield=None, statsource=None, smooth=None,
 	    scale=None, reversespw=None,  cont=None, maxdistm=None,
-	    minnumants=None, mingoodfrac=None):
+	    minnumants=None, mingoodfrac=None, usefieldtab=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data.
 	Returns a dictionary containing the RMS of the path length variation
@@ -72,9 +72,12 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
           minnumants -- minimum number of near antennas required for interpolation
 	                default: 2
 
-          mingoodfrac --- If the fraction of unflagged data for an antenna is below this value (0. to 1.),
-                          the antenna is flagged.
-			  default: 0.8
+          mingoodfrac -- If the fraction of unflagged data for an antenna is below this value (0. to 1.),
+	                 the antenna is flagged.
+			 default: 0.8
+
+          usefieldtab -- derive the antenna AZ/EL values from the FIELD rather than the POINTING table
+	                 default: False
 
         """
 	#Python script
@@ -89,10 +92,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			raise Exception, 'Visibility data set not found - please verify the name'
 		
 		if (caltable == ""):
-			raise Exception, "Must provide output caltable name in parameter gaintable."            
+			raise Exception, "Must provide output calibration table name in parameter caltable."            
 		
 		if os.path.exists(caltable):
-			raise Exception, "Output gaintable %s already exists - will not overwrite." % caltable
+			raise Exception, "Output caltable %s already exists - will not overwrite." % caltable
 
 		execute_string=  '--ms ' + vis
 
@@ -111,7 +114,6 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 				execute_string+= ' --nsol ' + str(nsol)
 			else:
 				raise Exception, "In order to use nsol>1, segsource must be set to False." % caltable
-				
 		if segsource:
 			execute_string+= ' --segsource'
 
@@ -158,6 +160,9 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			else:
 				raise Exception, "cont and segsource are not permitted to be True at the same time."
 
+		if usefieldtab:
+			execute_string+= ' --usefieldtab'
+				
 		if (len(wvrflag)>0):
 			for ant in wvrflag:
 				if not (type(ant)==int or type(ant)==str):

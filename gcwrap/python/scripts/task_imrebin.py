@@ -1,10 +1,25 @@
 from taskinit import *
 
 def imrebin(
-    imagename, outfile, bin, region, box, chans, stokes, mask,
-    dropdeg, overwrite, stretch
+    imagename, outfile, factor, region, box, chans, stokes, mask,
+    dropdeg, overwrite, stretch, crop
 ):
     casalog.origin('imrebin')
+    valid = True
+    # because there is a bug in the tasking layer that allows float
+    # arrays through when the spec is for intArray
+    for x in factor:
+        if x != int(x):
+            valid = False
+            break
+    if not valid:
+        for i in range(len(factor)):
+            factor[i] = int(factor[i])   
+        casalog.post(
+            "factor is not an int array, it will be adjusted to "
+                + str(factor),
+            'WARN'
+        )
     myia = iatool()
     outia = None
     try:
@@ -18,8 +33,8 @@ def imrebin(
                 chans=chans, stokes=stokes, stokescontrol="a", region=region
             )
         outia = myia.rebin(
-            outfile=outfile, bin=bin, region=region, mask=mask, dropdeg=dropdeg,
-            overwrite=overwrite, stretch=stretch
+            outfile=outfile, bin=factor, region=region, mask=mask, dropdeg=dropdeg,
+            overwrite=overwrite, stretch=stretch, crop=crop
         )
         return True
     except Exception, instance:

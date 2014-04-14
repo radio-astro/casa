@@ -71,6 +71,10 @@ This is used to construct {\tt synthesisutils} tool.
    <shortdescription>Partition data selection parameters for CUBE imaging</shortdescription>
 
 <description>
+  returns a dictionary with data spectral parttiion that maps  data  to  nparts
+  of the input range frequency... usually to be used for doing data selection
+  when imaging a cube from fstart to fend in npart subcubes
+
 </description>
 <input>
      <param type="record" name="selpars">
@@ -83,7 +87,38 @@ This is used to construct {\tt synthesisutils} tool.
      <value>1</value>
      </param>
 
+       <param type="any" name="fstart">
+     <description>start frequency of cube image</description>
+     <any type="variant" />
+     <value>1GHz</value>
+     </param>
+      
+       <param type="any" name="fend">
+     <description>end frequency of cube image</description>
+     <any type="variant" />
+     <value>1.5GHz</value>
+     </param>
+
+       <param type="string" name="frame">
+     <description>frame of fstart and fend</description>
+     <value>LSRK</value>
+     </param>
+      
+
 </input>
+<example>
+##make a synthesisutils tool
+siu=casac.synthesisutils()
+### define first ms parameters
+msrec={"msname":"ngc5921.ms.contsub", "field":"0", "spw":"0"}
+pars={"ms0":msrec}
+##  can add ms1, ms2 etc for multiple ms  into dictionary pars
+
+##now get the data selections for 20 subpart of a cube that 
+## spans from 1.412787GHz to 1.413287GHz
+siu.cubedatapartition(selprs=pars, npart=20, fstart="1.412787GHz", fend="1.413287GHz", frame="LSRK")
+
+</example>
 <returns type="record"/>
 </method>
 
@@ -168,6 +203,7 @@ This is used to construct {\tt synthesisutils} tool.
 <!-- ===================================== -->
 <!-- ===================================== -->
 
+<!---
    <method type="function" name="makeimage">
    <shortdescription>Make an empty image</shortdescription>
 
@@ -187,7 +223,7 @@ This is used to construct {\tt synthesisutils} tool.
 </input>
 <returns type="bool"/>
 </method>
-
+-->
 <!-- ===================================== -->
 <!-- ===================================== -->
 

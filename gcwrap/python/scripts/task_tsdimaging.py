@@ -9,7 +9,7 @@ import sdutil
 from cleanhelper import cleanhelper
 
 @sdutil.sdtask_decorator
-def tsdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, mode, nchan, start, step, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
+def tsdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, mode, nchan, start, width, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -31,14 +31,14 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                                                           self.overwrite)
         # fix spw
         if self.spw.strip() == '*': self.spw = ''
-        # check unit of start and step
+        # check unit of start and width
         # fix default
         if self.mode == 'channel':
             if self.start == '': self.start = 0
-            if self.step == '': self.step = 1
+            if self.width == '': self.width = 1
         else:
             if self.start == 0: self.start = ''
-            if self.step == 1: self.step = ''
+            if self.width == 1: self.width = ''
         # fix unit
         if self.mode == 'frequency':
             myunit = 'Hz'
@@ -47,7 +47,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         else: # channel
             myunit = ''
 
-        for name in ['start', 'step']:
+        for name in ['start', 'width']:
             param = getattr(self, name)
             new_param = self.__format_quantum_unit(param, myunit)
             if new_param == None:
@@ -55,8 +55,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                       (name, self.mode, param)
             setattr(self, name, new_param)
 
-        casalog.post("mode='%s': start=%s, step=%s, nchan=%d" % \
-                     (self.mode, self.start, self.step, self.nchan))
+        casalog.post("mode='%s': start=%s, width=%s, nchan=%d" % \
+                     (self.mode, self.start, self.width, self.nchan))
 
         # check length of selection parameters
         if type(self.infiles) == str:
@@ -174,7 +174,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # Work on selection of the first table in sorted list
         # to get default restfreq and outframe
         imhelper = cleanhelper(self.imager, self.infiles, casalog=casalog)
-        imhelper.sortvislist(self.spw, self.mode, self.step)
+        imhelper.sortvislist(self.spw, self.mode, self.width)
         self.sorted_idx = imhelper.sortedvisindx
         selection_ids = self.get_selection_idx_for_ms(self.sorted_idx[0])
         # field
@@ -340,32 +340,32 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # channel map
         spwsel = str(',').join([str(spwid) for spwid in selection_ids['spw']])
         srestf = self.imager_param['restfreq'] if type(self.imager_param['restfreq'])==str else "%fHz" % self.imager_param['restfreq']
-        (imnchan, imstart, imstep) = imhelper.setChannelizeDefault(self.mode, spwsel, self.field, self.nchan, self.start, self.step, self.imager_param['outframe'], self.veltype,self.imager_param['phasecenter'], srestf)
+        (imnchan, imstart, imwidth) = imhelper.setChannelizeDefault(self.mode, spwsel, self.field, self.nchan, self.start, self.width, self.imager_param['outframe'], self.veltype,self.imager_param['phasecenter'], srestf)
         del imhelper
         
-        # start and step
+        # start and width
         if self.mode == 'velocity':
 #             startval = [self.imager_param['outframe'], self.start]
-#             stepval = self.step
+#             widthval = self.width
             startval = [self.imager_param['outframe'], imstart]
-            stepval = imstep
+            widthval = imwidth
         elif self.mode == 'frequency':
 #             chan0 = "%fHz" % (freq_chan0)
 #             startval = [self.imager_param['outframe'], self.start if self.start!='' else chan0]
-#             step0 = "%fHz" % (freq_inc0)
-#             stepval = self.step if self.step!='' else step0
+#             width0 = "%fHz" % (freq_inc0)
+#             widthval = self.width if self.width!='' else width0
             startval = [self.imager_param['outframe'], imstart]
-            stepval = imstep
+            widthval = imwidth
         else: #self.mode==channel
             startval = int(self.start)
-            stepval = int(self.step)
+            widthval = int(self.width)
 
         #startval = 0
-        #stepval = self.allchannels
+        #widthval = self.allchannels
         #self.nchan = 1
         if self.nchan < 0: self.nchan = self.allchannels
         self.imager_param['start'] = startval
-        self.imager_param['step'] = stepval
+        self.imager_param['step'] = widthval
         self.imager_param['nchan'] = imnchan #self.nchan
         
 

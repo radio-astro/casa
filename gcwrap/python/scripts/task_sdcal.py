@@ -102,7 +102,7 @@ class sdcal_engine(sdutil.sdtask_engine):
 
         # Plot final spectrum
         if ( abs(self.plotlevel) > 0 ):
-            pltfile = project + '_calspec.eps'
+            pltfile = self.project + '_calspec.eps'
             sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel)
 
     def __mark(self):

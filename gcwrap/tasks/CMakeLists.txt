@@ -35,6 +35,7 @@ ft.xml
 gaincal.xml
 gencal.xml
 hanningsmooth.xml
+hanningsmooth2.xml
 imcollapse.xml
 imcontsub.xml
 imfit.xml
@@ -124,6 +125,7 @@ simanalyze.xml
 slsearch.xml
 smoothcal.xml
 specfit.xml
+specsmooth.xml
 splattotable.xml
 split.xml
 spxfit.xml

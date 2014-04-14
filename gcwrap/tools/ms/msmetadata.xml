@@ -474,14 +474,17 @@ windows in the dataset and close the tool.
                 </param>
                 <param type="int" direction="in" name="polid">
                     <description>Polarization ID.</description>
-                    <value>0</value>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="record"/>
             <description>
                 Get the exposure time for the specified scan, spwid, and polarizaiton ID. This is the exposure time
                 of the record with the lowest time stamp of the records associated with these parameters. Returns
-                a quantity dictionary.
+                a quantity dictionary. If polid is not specified (or specified and negative) and there is only one
+                polarization ID in for the specified combination of scan and spwid, then that polarization ID is used.
+                If there are multiple polarization IDs for the specified scan and spwid, a list of these is logged
+                and an empty dictionary is returned.
             </description>
             <example>
     msmd.open("my.ms")
@@ -544,7 +547,8 @@ windows in the dataset and close the tool.
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique, zero-based field IDs for the specified field name.
+                Get an array of the unique, zero-based field IDs for the specified field name. If the field name is the
+                empty string (the default), a list of all unique field IDs in the main table of the MS will be returned.
             </description>
             <example>
     msmd.open("my.ms")

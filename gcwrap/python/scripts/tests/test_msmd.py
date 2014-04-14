@@ -138,7 +138,11 @@ class msmd_test(unittest.TestCase):
         self.assertRaises(Exception,self.md.exposuretime, scan=30, spwid=0, polid=0)
         got = self.md.exposuretime(scan=30, spwid=0, polid=1)
         self.assertTrue(got == qa.quantity("1.152s"))
+        got = self.md.exposuretime(scan=30, spwid=0)
+        self.assertTrue(got == qa.quantity("1.152s"))
         got = self.md.exposuretime(scan=17, spwid=10, polid=0)
+        self.assertTrue(got == qa.quantity("1.008s"))
+        got = self.md.exposuretime(scan=17, spwid=10)
         self.assertTrue(got == qa.quantity("1.008s"))
         
     def test_fdmspws(self):
@@ -183,6 +187,9 @@ class msmd_test(unittest.TestCase):
 
     def test_fieldsforname(self):
         """Test fieldforname()"""
+        got = self.md.fieldsforname()
+        expec = numpy.array([0, 1, 2, 3, 4, 5])
+        self.assertTrue((got == expec).all())
         names = ["3C279", "J1337-129", "Titan", "J1625-254", "V866 Sco", "RNO 90"]
         for i in range(self.md.nfields()):
             expec = numpy.array([i])
@@ -197,6 +204,7 @@ class msmd_test(unittest.TestCase):
             "3C279", "J1337-129", "Titan",
             "J1625-254", "V866 Sco", "RNO 90"
         ])
+        self.assertRaises(Exception, self.md.fieldsforscans)
         for scan in self.md.scannumbers():
             if scan <= 4:
                 expec = numpy.array([0])

@@ -1318,6 +1318,28 @@ cb.close()
 </example>
 </method>
 
+<method type="function" name="initweights">
+   <shortdescription>Initialize sigmas and weights according to
+   bandwidth and integration time</shortdescription>
+
+<returns type="bool"/>
+
+<description>
+
+This function initializes the MS SIGMA and WEIGHT columns according
+to bandwidth and integration time.
+
+</description>
+
+<example>
+
+cb.open('ngc5921.ms')
+cb.initweights()
+cb.close()
+
+</example>
+</method>
+
 
 
 <method type="function" name="fluxscale">
@@ -1370,6 +1392,18 @@ cb.close()
      <param type="string" direction="in" name="antenna">
      <description>antenna selection/de-selection in
      flux scale calculation. Default: ""(include all antennas) </description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="timerange">
+     <description>timerage sub-selection with antenna selection in
+     flux scale calculation. Default: ""(include all) </description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="scan">
+     <description>scan sub-selection with antenna selection in
+     flux scale calculation. Default: ""(include all) </description>
      <value></value>
      </param>
 
@@ -1451,7 +1485,9 @@ outliers. The parameters, {\tt gainthreshold} and {\tt antenna} can be used
 to limit the input gain solutions to be included in the flux scale determination.
 Use the {\tt gainthreshold} is a threshold in \% from the median values of the 
 gain solutions to be used. Use the {\tt antenna} to select or de-selesect (using the
-MSSelection syntax) antenna(s).  
+MSSelection syntax) antenna(s). Futher refinements on the selection based on 
+timerange and scan are possible.
+ 
 The derived flux densities for the transfer fields will be reported in
 the logger, and returned to the Python dictionary specified in {\tt
 fluxd}.  This will be an 2D array of shape [number-of-spectral-windows

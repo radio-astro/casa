@@ -28,31 +28,37 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="kernel">
-        <description>Type of kernel to use: gaussian or boxcar.</description>
+        <description>Type of kernel to use. Acceptable values are "b", "box", or "boxcar" for a boxcar kernel, "g", "gauss", or "gaussian" for a gaussian kernel, "c", "common", or "commonbeam" to use the common beam of an image with multiple beams as the gaussian to which to convolve all the planes.</description>
         <value>gauss</value>
+        <allowed kind="enum">
+            <value>g</value>
+            <value>gauss</value>
+            <value>gaussian</value>
+            <value>b</value>
+            <value>box</value>
+            <value>boxcar</value>
+            <value>commonbeam</value>
+            <value>common</value>
+            <value>c</value>
+        </allowed>
     </param>
 
-    <param type="any" name="major">
+    <param type="any" name="major" subparam="yes">
 	<description>Major axis for the kernels. Standard quantity representation. Must be specified for kernel="boxcar". Example: "4arcsec".</description>
  	<any type='variant' limittype='string int float record'/>
     	<value type="string"/>
     </param>
 
-    <param type="any" name="minor">
+    <param type="any" name="minor" subparam="yes">
 	<description>Minor axis. Standard quantity representation. Must be specified for kernel="boxcar". Example: "2arcsec".</description>
  	<any type='variant' limittype='string int float record'/>
     	<value type="string"/>
     </param>
 
-    <param type="any" name="pa">
+    <param type="any" name="pa" subparam="yes">
 	<description>Position angle used only for gaussian kernel. Standard quantity representation. Example: "40deg".</description>
  	<any type='variant' limittype='string int float record'/>
     	<value type="string"/>
-    </param>
-
-    <param type="bool" name="commonbeam" subparam="yes">
-        <description>If gaussian kernel and the input image has multiple beams, use the smallest beam that encloses all beams in the input image.</description>
-        <value>False</value>
     </param>
     <param type="bool" name="targetres" subparam="yes">
         <description>If gaussian kernel, specified parameters are to be resolution of output image (True) or parameters of gaussian to convolve with input image (False).</description>
@@ -60,7 +66,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             from a usability point of view I'd say the default value should be True,
             but it has to be False for backwards compatibility
         -->
-
         <value type="bool">False</value>
     </param>
 
@@ -119,17 +124,44 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     but it has to be False for backwards compatibility
                 -->
 		        <default param="targetres"><value type="bool">False</value></default>
+		        <default param="major"><value type="string"/></default>
+		        <default param="minor"><value type="string"/></default>
+		        <default param="pa"><value type="string"/></default>
 	        </equals>
             <equals value="gaussian">
                 <default param="beam"><value type="string"></value></default>
-                
                 <!--
                     from a usability point of view I'd say the default value should be True,
                     but it has to be False for backwards compatibility
                 -->
 		        <default param="targetres"><value type="bool">False</value></default>
-                <default param="commonbeam"><value type="bool">False</value></default>
+		        <default param="major"><value type="string"/></default>
+                <default param="minor"><value type="string"/></default>
+                <default param="pa"><value type="string"/></default>
 	        </equals>
+	        <equals value="g">
+                <default param="beam"><value type="string"></value></default>
+                <!--
+                    from a usability point of view I'd say the default value should be True,
+                    but it has to be False for backwards compatibility
+                -->
+                <default param="targetres"><value type="bool">False</value></default>
+                <default param="major"><value type="string"/></default>
+                <default param="minor"><value type="string"/></default>
+                <default param="pa"><value type="string"/></default>
+            </equals>
+	        <equals value="box">
+                <default param="major"><value type="string"/></default>
+                <default param="minor"><value type="string"/></default>
+            </equals>
+            <equals value="boxcar">
+                <default param="major"><value type="string"/></default>
+                <default param="minor"><value type="string"/></default>
+            </equals>
+            <equals value="b">
+                <default param="major"><value type="string"/></default>
+                <default param="minor"><value type="string"/></default>
+            </equals>
 	    </when>
         <when param="mask">
             <notequals type="string" value="">
@@ -149,14 +181,17 @@ Keyword arguments:
 	
 imagename    Input image name. Must be specified.
 outfile      Output smoothed image file name. Must be specified.
-kernel       Type of kernel to use when smoothing (gaussian or boxcar).
+kernel       Type of kernel to use when smoothing ("g", "gauss", or "gaussian" for a gaussian
+             kernel or "b", "box", or "boxcar" for a boxcar kernel), or if the
+             image has multiple channels and kernel="commonbeam" (or "c", or "common"), convolve
+             all channels to the smallest beam that encloses all beams in the input image.
              For boxcar smoothing, the major axis is parallel to the y-axis of the image
              and the minor axis is parallel to the x-axis. For a Gaussian, the
              orientation is specified by a position angle. A value of 0 degrees means
              the major axis is parallel to the y-axis and an increasing value of the
              position angle results in a counter-clockwise rotation of the ellipse.
                 default: 'gauss'; example: kernel='gauss'
-                options: 'gauss' or 'boxcar' 
+                options: 'gauss', 'boxcar', or 'commonbeam'. 
 major        Major axis of kernel which must be specified for boxcar smoothing. For
              Gaussian smoothing, the kernel parameters can alternatively be specified
              in the beam parameter. Standard quantity representations are supported.
@@ -172,10 +207,7 @@ pa           Position angle to use for gaussian kernel, unused for boxcar.
 beam         Record specifying Gaussian beam parameters. Do not specify any of
              major, minor, or pa if you choose to specify this parameter.
              Example: {"major": "5arcsec", "minor": "2arcsec", "pa": "20deg"}
-commonbeam   If gaussian kernel and the input image has multiple beams, use the smallest beam that
-             encloses all beams in the input image. If True do not specify any of major/minor/pa or
-             beam.
-targetres    Boolean used only for gaussian kernels. If True, kernel parameters (major/minor/pa
+targetres    Boolean used only for kernel='gauss'. If True, kernel parameters (major/minor/pa
              or beam) are the resolution of the output image. If false, a gaussian
              with these parameters is convolved with the input image to produce
              the output image.
@@ -214,9 +246,9 @@ beam = {"major": "5arcsec", "minor": "2arcsec", "pa": "20deg"}
 If both beam and any of major, minor, and/or pa is specified for a Gaussian kernel,
 an exception will be thrown.    
 
-Alternatively, if the input image has multiple beams, setting commonbeam=True will result in the
-smallest beam that encloses all beams in the image to be used as the convolving beam. If commonbeam=True,
-specifying any of major/minor/pa or beam will result in an exception being thrown.
+Alternatively, if the input image has multiple beams, setting kernel='commonbeam' will result in the
+smallest beam that encloses all beams in the image to be used as the target resolution to which to
+convolve all planes. 
 
 In addition, the targetres parameter indicates if the specified Gaussian is to be the
 resolution of the final image (True) or if it is to be used to convolve the input image.

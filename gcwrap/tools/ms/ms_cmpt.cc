@@ -34,6 +34,7 @@
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/IO/STLIO.h>
 #include <ms_cmpt.h>
 #include <msmetadata_cmpt.h>
 #include <tools/ms/Statistics.h>
@@ -289,7 +290,7 @@ bool
 ms::open(const std::string& thems, const bool nomodify, const bool lock)
 {
   try {
-      *itsLog << LogOrigin("ms", "open");
+     *itsLog << LogOrigin("ms", "open");
      const Table::TableOption openOption = nomodify ? Table::Old : Table::Update;
      TableLock tl;
      if (lock) tl = TableLock(TableLock::PermanentLocking);
@@ -601,29 +602,33 @@ msmetadata* ms::metadata(const float cachesize) {
 	}
 }
 
-::casac::record*
-ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesize)
-{
+::casac::record* ms::summary(
+	bool verbose, const string& listfile, bool listunfl,
+	double cachesize, bool overwrite
+) {
+	if (detached()) {
+		return 0;
+	}
   ::casac::record *header = 0;
   try {
-     if(!detached()){
-       *itsLog << LogOrigin("ms", "summary");
+
+       *itsLog << LogOrigin("ms", __func__);
        // pass the original MS name to the constructor
        // so that it is correctly printed in the output
        MSSummary mss(itsMS, itsOriginalMS->tableName());
        mss.setListUnflaggedRowCount(listunfl);
        mss.setMetaDataCacheSizeInMB(cachesize);
        casa::Record outRec;
-       if (listfile != ""){
+       if (! listfile.empty()){
     	   File diskfile(listfile);
-    	   if (diskfile.exists()){
-    		   String errmsg = "File: "+ listfile +
-    		   " already exists; delete it or choose another name.";
-    		   throw(AipsError(errmsg));
-    	   }
-    	   else {
-    		   cout << "Writing output to file: " << listfile << endl;
-    	   }
+    	   ThrowIf(
+    			   diskfile.exists() && ! overwrite,
+    			   "File: " + listfile + " already exists; delete "
+    			   "it, choose another name, or set overwrite=True."
+    	   );
+
+    	   *itsLog << LogIO::NORMAL << "Writing output to file: "
+    			   << listfile << LogIO::POST;
 
     	   /* First, save output to a string so that LogMessages
     	      and time stamps can be removed from it */
@@ -663,12 +668,12 @@ ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesiz
     	   mss.list(*itsLog, outRec, verbose, True);
     	   header=fromRecord(outRec);
        }
-     }
-   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks(True);
-       RETHROW(x);
    }
+  	  catch (const AipsError& x) {
+  		  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+  		  Table::relinquishAutoLocks(True);
+  		  RETHROW(x);
+  	  }
    Table::relinquishAutoLocks(True);
    return header;
 }
@@ -3061,6 +3066,80 @@ ms::clipbuffer(const double pixellevel, const double timelevel, const double cha
    return rstat; 
 }
 
+std::string
+ms::asdmref(const std::string& abspath)
+{
+  std::string retval;
+  *itsLog << LogOrigin("ms", "asdmref");
+  try {
+    if(!detached()){
+       // get the data manager of the DATA column
+       TableDesc mSTD(itsMS->actualTableDesc());
+       ColumnDesc myColDesc(mSTD.columnDesc("DATA"));
+       String hcName(myColDesc.dataManagerGroup());
+       DataManager* myDM = itsMS->findDataManager(hcName);
+       String dataManName(myDM->dataManagerName());
+
+       if(dataManName != "AsdmStMan"){
+	 *itsLog << LogIO::NORMAL << "MS does not reference an ASDM." << LogIO::POST;      
+       }
+       else{
+
+	 AsdmStMan* myASTMan = static_cast<AsdmStMan*>(itsMS->findDataManager(hcName));
+	 
+	 Block<String> bDFNames;       
+	 myASTMan->getBDFNames(bDFNames);
+
+	 if(bDFNames.size()!=0){
+	   // from name 0 determine path
+	   Path tmpPath(bDFNames[0]);
+	   tmpPath = Path(tmpPath.dirName()); // remove BLOB name
+	   String binDir(tmpPath.baseName()); // memorize the ASDMBinary dir name
+	   String presentPath(tmpPath.dirName()); // remove ASDMBinary dir name
+	   *itsLog << LogIO::NORMAL << "Present ASDM reference path:\n" 
+		   << presentPath << LogIO::POST;      
+	   if(abspath == ""){
+	     retval = presentPath;
+	   }
+	   else{
+	     if(abspath=="/"){
+	       *itsLog << LogIO::SEVERE << "Choosing abspath==\"/\" is not a good idea ..." << LogIO::POST;
+	       retval = presentPath;
+	     }
+	     else{
+	       String absPath(abspath);
+	       if(absPath.lastchar()!='/'){
+		 absPath += "/";
+	       }
+	       if(!File(absPath).isDirectory()){
+		 *itsLog << LogIO::WARN << "\""+absPath+"\" is presently not a valid path ..." << LogIO::POST;
+	       }
+
+	       // modify the bDFNames and write them back
+	       for(uInt i=0; i<bDFNames.size(); i++){
+		 bDFNames[i] = absPath+binDir+"/"+Path(bDFNames[i]).baseName();
+	       }
+	       myASTMan->setBDFNames(bDFNames);
+	       myASTMan->writeIndex();
+
+	       retval = abspath;
+	       *itsLog << LogIO::NORMAL << "New ASDM reference path:\n" 
+		       << retval << LogIO::POST;
+	     }      
+	   }
+	 }
+       }
+    }
+  } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks(True);
+       RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return retval;
+
+}
+
 bool
 ms::setbufferflags(const ::casac::record& flags)
 {
@@ -3170,7 +3249,7 @@ ms::detached()
   Bool rstat(False);
   try {
      if (itsMS->isNull()) {
-       *itsLog << LogOrigin("ms", "detached");
+       *itsLog << LogOrigin("ms", __func__);
        *itsLog << LogIO::SEVERE
               << "ms is not attached to a file - cannot perform operation.\n"
               << "Call ms.open('filename') to reattach." << LogIO::POST;
@@ -3590,7 +3669,7 @@ ms::addephemeris(const int id,
 	Vector<Int> ids = ephid.getColumn();
 	for(uInt i=0; i<ids.size(); i++){
 	  for(uInt j=0; j<fieldids.size(); j++){
-	    if(i==fieldids[j] && ids[i]>=0){ // these are the ids to be overwritten
+	    if((Int)i==fieldids[j] && ids[i]>=0){ // these are the ids to be overwritten
 	      ids[i] = -1; // exclude them from the search
 	    }
 	  }
@@ -3775,8 +3854,6 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
       // if (doingIterations_p == False) 
       // 	niterorigin();
 
-      
-      ::casac::record *retval(0);
       casa::Record rec;
       Int nItems = items.size();
       for (Int i=0; i<nItems; i++) 
@@ -3840,7 +3917,7 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
 		Vector<uInt> rowIds;
 		rowIds = itsVI->rowIds(rowIds);
 		Vector<Int> tmp(rowIds.shape());
-		for (Int ii=0;ii<tmp.nelements(); ii++)
+		for (Int ii=0;ii<(Int)tmp.nelements(); ii++)
 		  tmp(ii)=rowIds(ii);
 		rec.define(item,tmp);
 		break;

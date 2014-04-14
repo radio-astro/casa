@@ -106,7 +106,12 @@ from callibrary import *
 benchmarking = True
 
 # Run exportuvfits asynchronously (twice)?
-export_asynchronously = True
+# S.Rankin - Shinosuke Kawakami found
+#   1. this test fails when "export_asynchronously = True"
+#   2. this value is used to set "async".
+#   3. no other test scripts set async = True.
+# export_asynchronously = True
+export_asynchronously = False
 
 checklistvis=True
 # 
