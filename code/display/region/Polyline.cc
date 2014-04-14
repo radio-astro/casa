@@ -142,7 +142,8 @@ namespace casa {
 					}
 				}
 			}
-
+			int currentChannel = zIndex();
+			slicePlot->updateChannel( currentChannel );
 			slicePlots.insert( imageName, slicePlot );
 			setPlotLineColor( slicePlot );
 			connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
