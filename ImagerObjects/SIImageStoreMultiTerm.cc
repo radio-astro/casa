@@ -615,7 +615,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	    LatticeExpr<Float> deno;
 	    if( normtype=="flatnoise"){
-	      deno = LatticeExpr<Float> ( sqrt( *(weight(0)) ) * itsPBScaleFactor );
+	      deno = LatticeExpr<Float> ( sqrt( abs(*(weight(0)) ) ) * itsPBScaleFactor );
 	      os << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) ;
 	      os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
 	      os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
@@ -692,7 +692,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
 	    os <<" ] to get to flat sky model before prediction" << LogIO::POST;
 	    
-	    LatticeExpr<Float> deno( sqrt( *(weight(0)) ) / itsPBScaleFactor );
+	    LatticeExpr<Float> deno( sqrt( abs(*(weight(0))) ) / itsPBScaleFactor );
 	    
 	    LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
 	    LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
@@ -739,7 +739,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
 	  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
 	  
-	  LatticeExpr<Float> deno( sqrt( *(weight(0)) ) / itsPBScaleFactor );
+	  LatticeExpr<Float> deno( sqrt( abs(*(weight(0)) ) ) / itsPBScaleFactor );
 
 	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
 	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
