@@ -197,6 +197,7 @@ scripts/task_specfit.py
 scripts/task_specsmooth.py
 scripts/task_splattotable.py
 scripts/task_split.py
+scripts/task_split2.py
 scripts/task_spxfit.py
 scripts/task_statwt.py
 scripts/task_tclean.py

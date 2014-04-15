@@ -181,6 +181,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_specfit.py
   test_splattotable.py
   test_split.py
+  test_split2.py
   test_spxfit.py
   test_statwt.py
   test_testconcat.py

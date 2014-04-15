@@ -128,6 +128,7 @@ specfit.xml
 specsmooth.xml
 splattotable.xml
 split.xml
+split2.xml
 spxfit.xml
 statwt.xml
 tclean.xml

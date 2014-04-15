@@ -145,6 +145,7 @@ from simanalyze import  simanalyze
 from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split
+from split2 import split2
 from uvcontsub import  uvcontsub
 from uvmodelfit import  uvmodelfit
 from uvsub import  uvsub
