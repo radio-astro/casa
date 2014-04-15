@@ -164,6 +164,9 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hifa.tasks.Tsysflagchans:
         return 'Flag channels of Tsys calibration'
 
+    if task_cls is hifa.tasks.Tsysflagspectra:
+        return 'Flag spectra in Tsys calibration'
+
     if task_cls is hifa.tasks.Wvrgcal:
         return 'Calculate wvr calibration'
 
@@ -3265,6 +3268,97 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
 
     def get_display_context(self, context, results):
         super_cls = super(T2_4MDetailsTsyscalFlagRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = self.get_htmlreports(context, results)
+        
+        summary_plots = {}
+        subpages = {}
+        for result in results:
+            if result.flagged() is False:
+                continue
+            
+            plotter = tsys.TsysSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+
+            # generate the per-antenna charts and JSON file
+            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+
+            # write the html for each MS to disk
+            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                # the filename is sanitised - the MS name is not. We need to
+                # map MS to sanitised filename for link construction.
+                subpages[ms] = renderer.filename
+
+        ctx.update({'summary_plots'   : summary_plots,
+                    'summary_subpage' : subpages,
+                    'dirname'         : weblog_dir,
+                    'htmlreports'     : htmlreports})
+
+        return ctx
+
+    def get_htmlreports(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = {}
+        for result in results:
+            if not hasattr(result, 'flagcmdfile'):
+                continue
+
+            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
+            report_abspath = self.write_report_to_disk(weblog_dir, result)
+
+            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+            report_relpath = os.path.relpath(report_abspath, report_dir)
+
+            table_basename = os.path.basename(result.table)
+            htmlreports[table_basename] = (flagcmd_relpath, report_relpath)
+
+        return htmlreports
+
+    def write_flagcmd_to_disk(self, weblog_dir, result):
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        reason = result.reason
+        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        return filename
+
+    def write_report_to_disk(self, weblog_dir, result):
+        # now write printTsysFlags output to a report file
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.report.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+        
+        rendererutils.printTsysFlags(result.table, filename)
+        return filename
+
+
+class T2_4MDetailsTsysFlagSpectraRenderer(T2_4MDetailsDefaultRenderer):
+    '''
+    Renders detailed HTML output for the Tsysflagspectra task.
+    '''
+    def __init__(self, template='t2-4m_details-hif_tsysflagspectra.html',
+                 always_rerender=False):
+        super(T2_4MDetailsTsysFlagSpectraRenderer, self).__init__(template,
+                                                              always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsTsysFlagSpectraRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
         weblog_dir = os.path.join(context.report_dir,
