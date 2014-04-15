@@ -612,7 +612,8 @@ class imagecont():
                     return False
 
             ############
-                rg0=ia.setboxregion(blc=blc,trc=trc)
+                #rg0=ia.setboxregion(blc=blc,trc=trc)
+                rg0 = rg.box(blc=blc, trc=trc)
             ###########
             
             ########

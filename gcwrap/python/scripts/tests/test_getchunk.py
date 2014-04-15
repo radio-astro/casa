@@ -86,7 +86,7 @@ class getchunk_test(unittest.TestCase):
     def test_CAS_2355(self):
         '''getchunk: test 32/64 bit resolution'''
         myia.open(image)
-        bb = myia.boundingbox( myia.setboxregion() )
+        bb = myia.boundingbox()
         trc = bb['trc']
         blc = bb['blc']
         chunk = myia.getchunk(blc=blc, trc=trc)

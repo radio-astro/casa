@@ -381,7 +381,6 @@ print "\t----\t Intro Ex 1 \t----"
 ia.maketestimage('zz',overwrite=true)# Make test image; writes disk file called 'zz'
 print ia.summary()                   # Summarize (to logger)
 print ia.statistics()                # Evaluate statistics over entire image
-#box = ia.setboxregion([10,10],[50,50])  # Make a pixel box region
 box = rg.box([10,10], [50,50])       # Make a pixel box region with regionmanager
 im2 = ia.subimage('zz2', box, overwrite=true)  # Make a subimage  called 'zz2'
 print im2.statistics()                    # Evaluate statistics
@@ -424,7 +423,7 @@ ia.open(datapath2)              # Access casa image
 #ims = ia.newimagefromimage(infile=datapath1, region=rg.quarter())
 # rg.quarter() not implemented yet so has grabbed entire image
 ims = ia.newimagefromimage(infile=datapath1)
-innerquarter=ims.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+innerquarter=rg.box([0.25,0.25],[0.75,0.75],frac=true)
 subim = ims.subimage(region=innerquarter)
 print ia.name()
 print ims.name()
@@ -1866,10 +1865,7 @@ See also the <link anchor="images:image.subimage.function">subimage</link> funct
 """
 #
 print "\t----\t fromimage Ex 1 \t----"
-# Unfortunately, rg.quarter() wasn't implemented when this example was written.
-#ia.fromimage(outfile='image.small', infile='image.large', region=rg.quarter())
-ia.open(infile='test.data')  # needs to be open for ia.setboxregion()
-innerquarter=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+innerquarter = rg.box([0.25,0.25],[0.75,0.75],frac=true)
 ia.close()
 ia.fromimage(outfile='image.small', infile='test.data', region=innerquarter, overwrite=true)
 ia.close()
@@ -2920,7 +2916,7 @@ ia.fromarray(outfile='test.data',
              pixels=ia.makearray(0, [64, 64, 4, 128]), overwrite=true)
 #im1csub=ia.continuumsub(region=rg.quarter(),
 #                        channels=range(3,9)+range(54,61),fitorder=0);
-innerquarter=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+innerquarter= rg.box([0.25,0.25],[0.75,0.75],frac=true)
 im1csub=ia.continuumsub(region=innerquarter,
                         channels=range(3,9)+range(54,61),fitorder=0);
 im1csub.done()      # done the on-the-fly image tool
@@ -5300,7 +5296,7 @@ to recover the pixel from a simple regular region.
 print "\t----\t getregion Ex 1 \t----"
 ia.fromshape('cube', [64,64,64], overwrite=true)
 #r1=rg.box(blc=[10,10,10],trc=[30,40]) # Create region
-r1=ia.setboxregion([10,10,10],[30,40,40]) # Create region
+r1=rg.box([10,10,10],[30,40,40]) # Create region
 pixels=ia.getregion(r1)
 ia.close()
 #
@@ -5960,10 +5956,8 @@ print "\t----\t ispersistent Ex 1 \t----"
 ia.fromshape(outfile='tmp', shape=[10,20], overwrite=true)
 print ia.ispersistent()
 #True
-r = ia.setboxregion()                #rg.box() isn't implemented yet
 ia.close()
-#ia.fromimage(infile='tmp', region=rg.box())
-ia.fromimage(infile='tmp', region=r)
+ia.fromimage(infile='tmp')
 print ia.ispersistent()
 #True
 im3 = ia.subimage()
@@ -8335,7 +8329,7 @@ ia.maketestimage('zz1',overwrite=true)
 ia.calcmask('zz1&lt;0')
 im2 = ia.subimage(outfile='zz2',overwrite=true)
 # r = rg.quarter()
-r=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+r=rg.box([0.25,0.25],[0.75,0.75],frac=true)
 ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'\&gt;0')
 # same as ia.replacemaskedpixels(0.0, region=r, mask='zz2\&gt;0')
 im2.done()
@@ -8671,7 +8665,6 @@ mask is created for you and made the default mask.
 print "\t----\t set Ex 1 \t----"
 ia.maketestimage('yy',overwrite=true)
 ia.fromshape('xx', [10,20], overwrite=true)
-#r1 = ia.setboxregion([2,2],[6,8])
 r1 = rg.box([2,2],[6,8])         # Make a box region
 ia.set(pixels=1.0)               # Set all pixels to 1
 ia.set(pixels='2.0', region=r1)  # Set all pixels to 2 in the region
@@ -10834,6 +10827,7 @@ cube = ia.makearray(0,[4,4,4])
 </example>
 </method>
 
+<!--  
 
    <method type="function" name="setboxregion">
    <shortdescription>DEPRECATED. Use rg.box() instead. Set a pixel box region of interest in the image</shortdescription>
@@ -10874,7 +10868,7 @@ Make region box of inner quarter of the image.
 
 """
 #
-print "\t----\t setboxregion Ex 1 \t----"
+print " setboxregion Ex 1 "
 ia.maketestimage()
 box = ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
 ia.close()
@@ -10884,7 +10878,7 @@ ia.close()
 </example>
 
 </method>
-
+-->
 
 <method type="function" name="isconform">
     <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>

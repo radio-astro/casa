@@ -4324,6 +4324,7 @@ bool image::detached() const {
 	return False;
 }
 
+/*
 ::casac::record*
 image::setboxregion(const std::vector<double>& blc,
 		const std::vector<double>& trc, const bool frac,
@@ -4351,6 +4352,7 @@ image::setboxregion(const std::vector<double>& blc,
 	}
 	return rstat;
 }
+*/
 
 bool image::maketestimage(
 	const std::string& outfile, const bool overwrite
