@@ -1052,7 +1052,7 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Invalid IF value.')
+            pos=str(e).find('No valid spw.')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 

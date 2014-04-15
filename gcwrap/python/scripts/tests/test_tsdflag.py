@@ -202,7 +202,7 @@ class sdflag_test(unittest.TestCase):
         try:
             result = tsdflag(infile=infile, mode=mode, spw=spw)
         except Exception, e:
-            pos = str(e).find('Invalid IF value.')
+            pos = str(e).find('No valid spw.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 class sdflag_test_timerange(unittest.TestCase):
