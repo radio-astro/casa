@@ -1062,7 +1062,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         for name in self.rawfiles:
             if (os.path.exists(name)):
                 shutil.rmtree(name)
-        #os.system( 'rm -rf '+self.prefix+'*' )
+        os.system( 'rm -rf '+self.prefix+'*' )
 
     ####################
     # Additional tests
@@ -1470,7 +1470,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
     #########################
     # spw with channel range
     #########################
-    @unittest.expectedFailure
+    #@unittest.expectedFailure
     def test_spw_id_default_channel(self):
         """test spw selection w/ channel selection (spw=':2~7')"""
         spw = ':2~7'   #chan=2-7 in all spws should be selected
@@ -1509,7 +1509,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection w/ channel selection (spw='X~Ykm/s') NOT SUPPORTED YET"""
         self._default_test()
         
-    @unittest.expectedFailure
+    #@unittest.expectedFailure
     def test_spw_id_default_list(self):
         """test spw selection w/ channel selection (spw=':6~7;2~5')"""
         spw = ':6~7;2~5'   #chan=2-7 in all spws should be selected

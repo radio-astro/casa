@@ -31,6 +31,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                                                           self.overwrite)
         # fix spw
         if self.spw.strip() == '*': self.spw = ''
+        # WORKAROUND for CAS-6422, i.e., ":X~Y" fails while "*:X~Y" works.
+        if self.spw.startswith(":"): self.spw = '*' + self.spw
         # check unit of start and width
         # fix default
         if self.mode == 'channel':
