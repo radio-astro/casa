@@ -1806,8 +1806,9 @@ the example we list the names of the fields in this record.
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -2146,8 +2147,9 @@ In this example, all the images are virtual (temporary images).
      <value type="vector"><value>0.0</value> <value>1.0</value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -2260,8 +2262,9 @@ from a normal distribution added.
      <value>-1.0</value>
      </param>
 
-     <param type="record"  name="region">
-     <description>Region of interest.  The default is the whole image.</description>
+     <param type="variant"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. The default is the whole image.</description>
      <value></value>
      </param>
 
@@ -2367,9 +2370,10 @@ im3.done()
    
 <input>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any" name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
 </input>
 <returns type="record">Record or fail</returns>
@@ -2843,8 +2847,9 @@ ia.close()              # The Image tool is detached from the image again, using
      <value>continuumsub.im</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region over which output is desired.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region over which output is desired. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -3065,8 +3070,9 @@ ia.close()
      <value>-1</value>
      </param>
 
-     <param type="record"  name="region">
-     <description>Region of interest.  The default is the whole image.</description>
+     <param type="any"  name="region">
+     <any limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. The default is the whole image.</description>
      <value></value>
      </param>
 
@@ -3453,8 +3459,9 @@ at a particular location at a particular time.
    
 <input>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is unset.</description>
+     <param type="variant"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is unset.</description>
      <value></value>
      </param>
   
@@ -3939,9 +3946,10 @@ ia.close()
      <value>-1</value>
      </param>
 
-     <param type="record"  name="region">
-     <description>The region of interest.  The default setting is the whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. The default setting is the whole image.</description>
+     <value/>
      </param>
 
      <param type="any"  name="mask">
@@ -4039,9 +4047,10 @@ ia.removefile('p.im')
      <value>0.1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The 2-D region of interest to fit.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The 2-D region of interest to fit. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -4129,7 +4138,7 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="string record"/>
-            <description>Region name, Default: no region ("").</description>
+            <description>Region of interest. See help par.region for details. Default is entire image.</description>
             <value type="string"/>
         </param>
         <param type="string"  name="chans">
@@ -5209,8 +5218,9 @@ ia.close()
 
 <input>
 
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
 
@@ -5403,7 +5413,7 @@ ia.close()
   
      <param type="any"  name="region">
      	<any type="variant" limittypes="record, string"/>
-    	<description>Dictionary or string specifying the region of interest.  Default is whole image.</description>
+    	<description>Region of interest. See help par.region for details. Default is whole image.</description>
      	<value/>
      </param>
   
@@ -5597,9 +5607,10 @@ and acquires just a read lock.
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -5836,8 +5847,9 @@ ia.history(list=T, browse=F)       # List history to logger
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest of the input image.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest of the input image. See help par.region for details.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -6031,8 +6043,9 @@ and acquire a readonly lock.
      <description>Imaginary image file name</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -6302,8 +6315,9 @@ ia.close()
      <description>Record representation of a ComponentList model</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The 2-D region of interest.  Default is whole image.</description>
+     <param type="any" name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The 2-D region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -6380,9 +6394,10 @@ In this example we subtract the model returned by the fitcomponents function.
    
 <input>
   
-     <param type="record"  name="region">
-     <description>The 2-D region of interest to fit.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The 2-D region of interest to fit. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="point">
@@ -6458,8 +6473,9 @@ ia.close()
      <value>-10</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region specification. See help par.region. Default is to not use a region.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region specification. See help par.region for details. Default is entire image.</description>
      <value></value>
      </param>
   
@@ -7014,7 +7030,7 @@ The {\stff open} function first closes the old \imagefile.
             <value>false</value>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="record string"/>
             <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
             <value></value>
         </param>
@@ -7083,7 +7099,7 @@ The {\stff open} function first closes the old \imagefile.
             <value>false</value>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="record string"/>
             <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
             <value></value>
         </param>
@@ -7368,9 +7384,10 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="any" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="list">
@@ -7603,8 +7620,8 @@ ia.close()
      </param>
   
      <param type="any"  name="region">
-        <any type="variant"/>
-        <description>The region of interest.  Default is the whole image.</description>
+        <any type="variant" limittypes="record string"/>
+        <description>The region of interest. See help par.region for details. Default is the whole image.</description>
         <value/>
      </param>
   
@@ -7995,8 +8012,9 @@ ia.done()
      <value>0deg</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -8184,8 +8202,8 @@ print ia.name(strippath=T)
      </param>
   
      <param type="any"  name="region">
-     	<any type="variant"/>
-     	<description>The region of interest. see help par.region.  Default is whole image.</description>
+     	<any type="variant" limittypes="record string"/>
+     	<description>The region of interest. See help par.region for details. Default is whole image.</description>
     	<value/>
      </param>
   
@@ -8457,8 +8475,9 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="region" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -8595,9 +8614,10 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="list">
@@ -9068,8 +9088,9 @@ ib.done()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -9394,9 +9415,10 @@ the the record containing the statistics arrays.
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -9752,9 +9774,10 @@ listed in square brackets.
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -9897,8 +9920,9 @@ ia.close()
      Default is input name + '.ascii'.</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details.
      Default is whole image.</description>
      <value></value>
      </param>
@@ -10373,9 +10397,10 @@ the example we list the names of the fields in this record.
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is the whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is the whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -10576,7 +10601,7 @@ used to create a 2D temporary image.
             <description>One or more boxes to use for fit region(s). Default is to use the entire directional plane.</description>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="record string"/>
             <description>The region to correct. Default is entire image. If both box and region are specified, box is used and region is not.</description>
             <value></value>
         </param>
@@ -10681,9 +10706,9 @@ used to create a 2D temporary image.
             <value>false</value>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
-            <description>Region selection. Default is entire image. No selection is permitted in the direction plane.</description>
-            <value></value>
+            <any type="variant" limittypes="record string"/>
+            <description>Region selection. See help par.region for details. Default is entire image. No selection is permitted in the direction plane.</description>
+            <value/>
         </param>
         <param type="string"  name="chans">
             <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>

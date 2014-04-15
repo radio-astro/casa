@@ -320,10 +320,17 @@ class imstat_test(unittest.TestCase):
             myia.coordsys().torecord(), shape,
             box=box, chans=chans
         )
+        
         bb = myia.statistics(region=reg)
         self.assertTrue(bb["npts"][0] == 126)
         bb = imstat(imagename=myia.name(), chans=chans, box=box)
         self.assertTrue(bb["npts"][0] == 126)
+        
+        rfilename = "myreg.reg"
+        rg.tofile(rfilename, reg)
+        bb = myia.statistics(region=rfilename)
+        self.assertTrue(bb["npts"][0] == 126)
+        
             
     def test012(self):
         """ Test multi beam support"""
