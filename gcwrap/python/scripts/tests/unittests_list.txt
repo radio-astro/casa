@@ -144,6 +144,7 @@ test_smoothcal                  scastro@eso.org
 test_specfit                    dmehring@nrao.edu
 test_splattotable               dmehring@nrao.edu
 test_split                      scastro@eso.org
+test_split2                     scastro@eso.org
 test_spxfit                     dmehring@nrao.edu
 test_statwt                     ttsutsum@nrao.edu
 test_uvcontsub			ttsutsum@nrao.edu
