@@ -253,7 +253,7 @@ class ScantableReader(object):
         spw_for_atmcal = []
         spw_for_target = []
         for spw in st.spectral_window.values():
-            if spw.is_target:
+            if spw.is_target and spw.nchan > 1:
                 spw_for_target.append(spw.id)
             if spw.is_atmcal:
                 spw_for_atmcal.append(spw.id)
@@ -412,7 +412,7 @@ class ScantableReaderFromMS(ScantableReader):
         spw_for_atmcal = []
         spw_for_target = []
         for spw in st.spectral_window.values():
-            if spw.is_target:
+            if spw.is_target and spw.nchan > 1:
                 spw_for_target.append(spw.id)
             if spw.is_atmcal:
                 spw_for_atmcal.append(spw.id)

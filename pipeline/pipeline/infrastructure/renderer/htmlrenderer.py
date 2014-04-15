@@ -4813,8 +4813,6 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
                                     'plot_title': 'Detailed Profile Map'},
                      'channelmap': {'type': 'channel_map',
                                     'plot_title': 'Channel Map'},
-                     'tpmap': {'type': 'sd_channel-averaged',
-                               'plot_title': 'Integrated Intensity Map'},
                      'rmsmap': {'type': 'rms_map',
                                 'plot_title': 'Baseline RMS Map'}}
         for (key, value) in map_types.items():

@@ -50,8 +50,8 @@ class SDApplyCalInputs(common.SingleDishInputs):
 
         # take iflist from observing_run (shouldbe ScantableList object)
         if len(args['iflist']) == 0:
-            # filter out WVR
-            args['iflist'] = self.context.observing_run.get_spw_without_wvr(args['infile'])
+            # only science spws
+            args['iflist'] = self.context.observing_run.get_spw_for_science(args['infile'])
 
         # calmode is always 'apply'
         args['calmode'] = 'apply'

@@ -1330,6 +1330,10 @@ class SDCalLibrary(CalLibrary):
             s = asap.scantable(calto.vis,average=False)
             antenna_name = s.get_antennaname()
             vis = calto.vis.replace(antenna_name+'.asap','ms')
-            return CalTo(vis,antenna=antenna_name)
+            return CalTo(vis,
+                         antenna=antenna_name,
+                         field=calto.field,
+                         intent=calto.intent,
+                         spw=calto.spw)
         else:
             return calto

@@ -90,6 +90,7 @@ def ifmap_to_spwmap(num_spw, ifmap):
 % for vis in calapps:
 	% for calapp in calapps[vis]:
 		<% ca_rowspan = len(calapp.calfrom) %>
+		<% num_spw = len(pcontext.observing_run.get_scantable(os.path.basename(calapp.infile)).spectral_window) %>
 		<tr>
 			<td rowspan="${ca_rowspan}">${vis}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.intent)}</td>
@@ -98,7 +99,7 @@ def ifmap_to_spwmap(num_spw, ifmap):
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.antenna)}</td>
 		% for calfrom in calapp.calfrom:
 			<td>${caltypes[calfrom.gaintable]}</td>
-			<td>${', '.join([str(i) for i in ifmap_to_spwmap(max(calapp.iflist)+1, calfrom.spwmap)])}</td>
+			<td>${', '.join([str(i) for i in ifmap_to_spwmap(num_spw, calfrom.spwmap)])}</td>
 			<td>${space_comma(calfrom.interp if len(calfrom.interp) > 0 else 'linear')}</td>
 			<td><a href="#" class="btn btn-small caltable_popover" data-toggle="popover" data-placement="top" data-content="${os.path.basename(calfrom.gaintable)}" title="" data-original-title="">View...</a></td>
 		</tr>

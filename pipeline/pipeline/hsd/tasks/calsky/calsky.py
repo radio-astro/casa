@@ -35,10 +35,10 @@ class SDCalSkyInputs(common.SingleDishInputs):
 
         # take iflist from observing_run (shouldbe ScantableList object)
         if len(args['iflist']) == 0:
-            # filter out WVR
-            args['iflist'] = self.context.observing_run.get_spw_without_wvr(args['infile'])
+            # only science spws
+            args['iflist'] = self.context.observing_run.get_spw_for_science(args['infile'])
         else:
-            spw_list = set(self.context.observing_run.get_spw_without_wvr(args['infile']))
+            spw_list = set(self.context.observing_run.get_spw_for_science(args['infile']))
             args['iflist'] = list(spw_list.intersection(args['iflist']))
             
 

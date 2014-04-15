@@ -40,7 +40,7 @@ class SDCalTsysInputs(common.SingleDishInputs):
             args['tsysiflist'] = args['iflist'][:]
 
         # filter out WVR
-        args['iflist'] = self.context.observing_run.get_spw_without_wvr(args['infile'])
+        args['iflist'] = self.context.observing_run.get_spw_for_caltsys(args['infile'])
 
         # take calmode
         if args['calmode'] is None or args['calmode'].lower() == 'auto':

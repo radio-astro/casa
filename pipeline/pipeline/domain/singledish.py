@@ -99,21 +99,25 @@ class ScantableList(observingrun.ObservingRun, list):
     def get_spw_for_wvr(self, name):
         st = self.get_scantable(name)
         spw = st.spectral_window
-        returned_list = []
-        for (k,v) in spw.items():
-            if v.type == 'WVR':
-                returned_list.append(k)
-        return returned_list
+        return self.__get_spw_from_condition(spw, lambda v: v.type == 'WVR')
 
     def get_spw_without_wvr(self, name):
         st = self.get_scantable(name)
         spw = st.spectral_window
-        returned_list = []
-        for (k,v) in spw.items():
-            if v.type == 'WVR':
-                continue
-            returned_list.append(k)
-        return returned_list
+        return self.__get_spw_from_condition(spw, lambda v: v.type != 'WVR')
+
+    def get_spw_for_science(self, name):
+        st = self.get_scantable(name)
+        spw = st.spectral_window
+        return self.__get_spw_from_condition(spw, lambda v: v.is_target and v.type != 'WVR' and v.nchan > 1)
+
+    def get_spw_for_caltsys(self, name):
+        st = self.get_scantable(name)
+        spw = st.spectral_window
+        return self.__get_spw_from_condition(spw, lambda v: (v.is_target or v.is_atmcal) and v.type != 'WVR' and v.nchan > 1)
+
+    def __get_spw_from_condition(self, spw_list, condition):
+        return [k for (k,v) in spw_list.items() if condition(v) is True]
 
     def get_calmode(self, name):
         st = self.get_scantable(name)

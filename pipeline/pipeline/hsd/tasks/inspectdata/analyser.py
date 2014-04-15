@@ -39,7 +39,7 @@ class DataTableAnalyser(object):
             # filter out non-target spws
             target_spw = []
             for (k,v) in spw_list.items():
-                if v.type == 'WVR':
+                if v.type == 'WVR' or v.nchan == 1:
                     continue
                 if re.match('TARGET',v.intent):
                     target_spw.append(k)
