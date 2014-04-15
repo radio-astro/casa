@@ -1133,10 +1133,14 @@ class tsdgrid_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
     
-    @unittest.expectedFailure
     def test_pol_id_exprlist(self):
-        """test pol selection (pol='')"""
-        self._default_test()
+        """test pol selection (pol='<1,1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '<1,1'
+        self.res=tsdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
     
     ####################
     # spw 

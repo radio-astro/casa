@@ -1966,10 +1966,18 @@ class tsdplot_selectionTest(selection_syntax.SelectionSyntaxTest,tsdplot_unittes
             ['IF20','IF21','IF22','IF23','IF24','IF25'])
         self._compareDictVal(outinfo, refinfo)
     
-    @unittest.expectedFailure
     def test_pol_id_exprlist(self):
-        """test pol selection (pol='')"""
-        self._default_test()
+        """test pol selection (pol='<1,1')"""
+        pol='<1,1'
+        self.res=tsdplot(pol=pol,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_plot_info()
+        refinfo = self._set_plot_info(
+            [1, 1, 2, 2, 1, 1],
+            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
+            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
+            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        self._compareDictVal(outinfo, refinfo)
 
     ####################
     # field

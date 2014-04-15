@@ -1343,7 +1343,7 @@ class tsdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
-        
+    
     def test_pol_id_range(self):
         """ test pol selection (pol='0~1')"""
         outname=self.prefix+self.postfix
@@ -1353,7 +1353,7 @@ class tsdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
-
+    
     def test_pol_id_list(self):
         """ test pol selection (pol='0,1')"""
         outname=self.prefix+self.postfix
@@ -1363,12 +1363,17 @@ class tsdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
-        
-    @unittest.expectedFailure
+    
     def test_pol_id_exprlist(self):
-        """test pol selection (pol='')"""
-        self._default_test()
-
+        """test pol selection (pol='<1,1')"""
+        outname=self.prefix+self.postfix
+        pol = '0,1'
+        self.res=tsdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
     ####################
     # field
     ####################

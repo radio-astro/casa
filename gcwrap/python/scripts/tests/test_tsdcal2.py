@@ -766,9 +766,11 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     # Input and output names
     rawfile='sd_analytic_type1-3.asap'
     reffile='sdcal2TestSel.pstsysapply.asap.ref'
+    reffile2='sdcal2TestSel.psapply.asap.ref'
     prefix=tsdcal2_unittest_base.taskname+'TestSel'
     postfix='.cal.asap'
     calmode='ps,tsys,apply'
+    calmode2='ps,apply'
     field_prefix = 'M100__'
     
     @property
@@ -785,6 +787,8 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
+        if (not os.path.exists(self.reffile2)):
+            shutil.copytree(self.datapath+self.reffile2, self.reffile2)
 
         default(tsdcal2)
 
@@ -793,6 +797,8 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
             shutil.rmtree(self.rawfile)
         if (os.path.exists(self.reffile)):
             shutil.rmtree(self.reffile)
+        if (os.path.exists(self.reffile2)):
+            shutil.rmtree(self.reffile2)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     ####################
@@ -929,10 +935,15 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
-    @unittest.expectedFailure
     def test_pol_id_exprlist(self):
-        """test pol selection (pol='')"""
-        self._default_test()
+        """test pol selection (pol='1,<1')"""
+        outname=self.prefix+self.postfix
+        pol='1,<1'
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        tbsel = {}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
 
     ####################
     # field
@@ -1061,17 +1072,15 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.reffile)
 
-    @unittest.expectedFailure
     def test_spw_id_exact(self):
         """ test spw selection (spw='21')"""
-        self._default_test()
-#         outname=self.prefix+self.postfix
-#         spw = '21'
-#         self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
-#         tbsel = {'IFNO': [21]}
-#         self.assertEqual(self.res,None,
-#                          msg='Any error occurred during calibration')
-#         self._comparecal_with_selection(outname, tbsel)
+        outname=self.prefix+self.postfix
+        spw = '21'
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode2,outfile=outname)
+        tbsel = {'IFNO': [21]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel, self.reffile2)
 
     def test_spw_id_lt(self):
         """ test spw selection (spw='<25')"""
@@ -1166,10 +1175,13 @@ class tsdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     # Helper functions
     ####################
-    def _comparecal_with_selection( self, name, tbsel={} ):
+    def _comparecal_with_selection( self, name, tbsel={}, ref=None ):
         self._checkfile(name)
         sp=self._getspectra(name)
-        spref=self._getspectra_selected(self.reffile, tbsel)
+        if ref == None:
+            spref=self._getspectra_selected(self.reffile, tbsel)
+        else:
+            spref=self._getspectra_selected(ref, tbsel)
 
         self._checkshape( sp, spref )
         
