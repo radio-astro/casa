@@ -1774,6 +1774,8 @@ class tsdplot_selectionTest(selection_syntax.SelectionSyntaxTest,tsdplot_unittes
         return False
 
     def setUp(self):
+        # switch on/off GUI
+        self._switchPlotterGUI(self.usegui)
         self.res=None
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
@@ -1781,6 +1783,8 @@ class tsdplot_selectionTest(selection_syntax.SelectionSyntaxTest,tsdplot_unittes
         default(tsdplot)
 
     def tearDown(self):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
         os.system( 'rm -rf '+self.prefix+'*' )
