@@ -1470,7 +1470,6 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
     #########################
     # spw with channel range
     #########################
-    #@unittest.expectedFailure
     def test_spw_id_default_channel(self):
         """test spw selection w/ channel selection (spw=':2~7')"""
         spw = ':2~7'   #chan=2-7 in all spws should be selected
@@ -1487,14 +1486,19 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         self._checkstats_new(self.outfile,refstats,atol=1.e-5)
         self._checkstats_box(self.outfile,refstats,box=region,atol=1.e-5)
     
-    @unittest.expectedFailure
     def test_spw_id_default_frequency(self):
         """test spw selection w/ channel selection (spw=':300.4749~300.5251GHz')"""
-        spw = ':300.4749~300.5251GHz'   #chan=2-7 in spw=1 should be selected
-        selspw = [1]
+#         spw = ':300.4749~300.5251GHz'   #chan=2-7 in spw=1 should be selected
+#         selspw = [1]
         region =  self.spw_region_chan1
-        infile = self.spwsel_ms
+#         infile = self.spwsel_ms
+#         flux_list = self.__get_flux_value(infile)
+        ##### TEMPORARY CHANGING INPUT DATA due to seg fault in sdimaging caused by a bug in ms.msseltoindex() #####
+        infile = self.unifreq_ms
+        spw = '*:299.9749~300.0251GHz'   #chan=2-7 of spw=1 should be selected
         flux_list = self.__get_flux_value(infile)
+        selspw = range(len(flux_list))
+        # end of temporal change
         self.res=self.run_task(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
         # Tests
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
@@ -1509,7 +1513,6 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection w/ channel selection (spw='X~Ykm/s') NOT SUPPORTED YET"""
         self._default_test()
         
-    #@unittest.expectedFailure
     def test_spw_id_default_list(self):
         """test spw selection w/ channel selection (spw=':6~7;2~5')"""
         spw = ':6~7;2~5'   #chan=2-7 in all spws should be selected
@@ -1601,12 +1604,13 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         #selspw = [1]
         region =  self.spw_region_chan1
         #infile = self.spwsel_ms
+        #flux_list = self.__get_flux_value(infile)
         ##### TEMPORARY CHANGING INPUT DATA due to seg fault in sdimaging caused by a bug in ms.msseltoindex() #####
         infile = self.unifreq_ms
         spw = '*:299.9749~300.0251GHz'   #chan=2-7 of spw=1 should be selected
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
-        #
+        # end of temporal change
         self.res=self.run_task(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
         # Tests
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
