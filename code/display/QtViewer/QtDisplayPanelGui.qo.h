@@ -83,6 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class ImageManagerDialog;
 	class QtDisplayPanelGui;
     class CursorTrackingHolder;
+    class AboutDialog;
 
 	template <class T> class ImageInterface;
 
@@ -325,7 +326,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void refreshImageProfile();
 		void resetImageProfile();
 
-
 		virtual void hideAllSubwindows();
 		virtual void hideImageMenus();
 
@@ -561,13 +561,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//# GUI LAYOUT
 
-		QMenu *dpMenu_, *ddMenu_, /**ddRegMenu_,*/ *ddCloseMenu_, *tlMenu_, *vwMenu_;
+		QMenu *dpMenu_, *ddMenu_, /**ddRegMenu_,*/ *ddCloseMenu_, *tlMenu_, *vwMenu_, *helpMenu_;
 
 		QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 		        *ddOpenAct_, *ddSaveAct_, *ddAdjAct_,/* *ddRegAct_, *ddCloseAct_,*/ *unzoomAct_,
 		        *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
 		        *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
-		        *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_;
+		        *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_,
+		        *aboutAct_;
 
 		QToolBar* mainToolBar_;
 		QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -603,6 +604,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void profiledImageChange();
 		void generateSliceRegionUpdates();
 		void generateHistogramRegionUpdates();
+
 		void clearTools();
 		unsigned int showdataoptionspanel_enter_count;
 		QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)
@@ -646,6 +648,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Fit2DTool* fitTool;
 		SlicerMainWindow* sliceTool;
 		ImageManagerDialog* imageManagerDialog;
+		AboutDialog* aboutDialog;
 
 		// interactive clean...
 		void initCleanTool( );
@@ -676,15 +679,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void clear_status_bar( );
 		void reset_status_bar( );
 		void controlling_dd_axis_change(String, String, String, std::vector<int> );
-		//void controlling_dd_update(QtDisplayData*);
-		void initializeProfile();
+		void initializeProfile( );
 		void showHistogram();
+		void showAboutDialog();
 		void showSlicer();
 		void resetListenerImage();
 		void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
 		void showFitInteractive();
 		void showCleanTool( );
-		void refreshFit();
 		void addSkyComponentOverlay(String path, const QString& colorName);
 		void removeSkyComponentOverlay( String path );
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );

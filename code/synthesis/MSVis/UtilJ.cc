@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstring>
 #include <errno.h>
+#include <unistd.h>
 
 #include <casa/aips.h>
 #include <casa/aipstype.h>

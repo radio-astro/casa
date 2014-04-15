@@ -258,12 +258,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	Record LatticeAsRaster<T>::getOptions() {
+	Record LatticeAsRaster<T>::getOptions( bool scrub ) const {
 
-		Record rec = LatticePADisplayData<T>::getOptions();
+		Record rec = LatticePADisplayData<T>::getOptions(scrub);
 
-		itsOptionsDataDefault(0) = Float(getDataMin());
-		itsOptionsDataDefault(1) = Float(getDataMax());
+		((LatticeAsRaster<T>*)this)->itsOptionsDataDefault(0) = Float(getDataMin());
+		((LatticeAsRaster<T>*)this)->itsOptionsDataDefault(1) = Float(getDataMax());
 
 		Record minmaxhist;
 		minmaxhist.define("dlformat", HISTOGRAM_RANGE);

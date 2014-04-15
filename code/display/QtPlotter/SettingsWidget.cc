@@ -55,6 +55,8 @@ namespace casa {
 		optical = opt;
 	}
 
+
+
 	void SettingsWidget::setTaskSpecLineFitting( bool specLineFit ) {
 		bool resetNeeded = false;
 		if ( specLineFit != specLineFitting ) {
@@ -82,7 +84,9 @@ namespace casa {
 			if ( taskHelper == NULL || taskChanged ) {
 				if ( specLineFitting ) {
 					taskHelperOptical = new SpecFitSettingsWidgetOptical( this );
-					taskHelperRadio = new SpecFitSettingsWidgetRadio( this );
+					SpecFitSettingsWidgetRadio* radioFit = new SpecFitSettingsWidgetRadio( this );
+					taskHelperRadio = radioFit;
+					connect (radioFit, SIGNAL(gaussEstimateCountChanged(int)), this, SLOT(gaussCountChanged(int)));
 				} else {
 					taskHelperOptical = new MomentSettingsWidgetOptical( this );
 					taskHelperRadio = new MomentSettingsWidgetRadio( this );
@@ -94,6 +98,7 @@ namespace casa {
 			if ( optical ) {
 				dynamic_cast<QStackedLayout*>(stackedLayout)->setCurrentWidget( dynamic_cast<QWidget*>(taskHelperOptical) );
 				taskHelper = taskHelperOptical;
+				gaussCountChanged( 0 );
 			} else {
 				dynamic_cast<QStackedLayout*>(stackedLayout)->setCurrentWidget( dynamic_cast<QWidget*>(taskHelperRadio) );
 				taskHelper = taskHelperRadio;
@@ -107,6 +112,10 @@ namespace casa {
 			taskHelper->reset();
 		}
 		newCollapseVals= true;
+	}
+
+	void SettingsWidget::gaussCountChanged( int count ){
+		pixelCanvas->setGaussianEstimateCount( count );
 	}
 
 	void SettingsWidget::setCollapseVals(const Vector<Float> &spcVals) {

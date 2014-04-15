@@ -40,7 +40,7 @@ namespace casa {
 		: QDialog(parent), POLYGONAL_CHAIN( "Polygonal Chain"),
 		  LINE_SEGMENT( "Line Segment") {
 		ui.setupUi(this);
-		setWindowTitle( "1D Slice Color Preferences");
+		setWindowTitle( "Spatial Profile Color Preferences");
 
 		viewerColors = true;
 		accumulateColorList << "#40E0D0" << "#FF69B4" << "#00FF00" << "#FF8C00" << "#BA55D3" <<

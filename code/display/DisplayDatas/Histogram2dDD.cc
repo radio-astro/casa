@@ -142,8 +142,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record Histogram2dDD::getOptions() {
-		Record rec = ActiveCaching2dDD::getOptions();
+	Record Histogram2dDD::getOptions( bool scrub ) const {
+		Record rec = ActiveCaching2dDD::getOptions(scrub);
 		return rec;
 	}
 

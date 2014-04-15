@@ -668,7 +668,7 @@ namespace casa {
 		pixelBox = pixelBoxStr.toStdString();
 	}
 
-	void FindSourcesDialog::setImage( ImageTask::shCImFloat img ) {
+	void FindSourcesDialog::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
 		image = img;
 		if ( image != NULL ) {
 			const DisplayCoordinateSystem cSys = image->coordinates();
@@ -717,9 +717,9 @@ namespace casa {
 					resetCurrentId( id );
 					populatePixelBox();
 					regionChanged = true;
-				} else {
-					qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
-				}
+				} /*else {
+					qDebug() << "FitSources::updateRegion unrecognized id="<<id;
+				}*/
 			} else {
 				RegionBox* regionToRemove = regions.take(id);
 				delete regionToRemove;
@@ -755,5 +755,6 @@ namespace casa {
 
 	FindSourcesDialog::~FindSourcesDialog() {
 		clearRegions();
+		delete fileModel;
 	}
 }
