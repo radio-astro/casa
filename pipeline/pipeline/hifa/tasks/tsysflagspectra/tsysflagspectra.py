@@ -12,6 +12,7 @@ import pipeline.infrastructure.utils as utils
 
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks.common import commonresultobjects
+from pipeline.hifa.tasks.tsysflag.resultobjects import TsysflagResults
 from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.common import viewflaggers
@@ -338,7 +339,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
 
     def __init__(self, inputs):
         super(TsysflagspectraWorker, self).__init__(inputs)
-        self.result = commonresultobjects.TsysflagResults()
+        self.result = TsysflagResults()
 
     def prepare(self):
         inputs = self.inputs
