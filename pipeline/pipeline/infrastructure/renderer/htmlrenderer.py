@@ -5749,6 +5749,7 @@ renderer_map = {
         hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
         hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
         hifa.tasks.Tsysflagchans : T2_4MDetailsTsyscalFlagchansRenderer(),
+        hifa.tasks.Tsysflagspectra: T2_4MDetailsTsysFlagSpectraRenderer(),
         hifa.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
