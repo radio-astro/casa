@@ -67,6 +67,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
   
+  void SDMaskHandler::resetMask(CountedPtr<SIImageStore> imstore)
+  {
+    imstore->mask()->set(1.0);
+  }
+
   void SDMaskHandler::makeMask()
   {
     LogIO os( LogOrigin("SDMaskHandler","makeMask",WHERE) );

@@ -32,7 +32,7 @@ namespace casac {
     itsIterBot(NULL)
 {
   itsIterBot = new SynthesisIterBot() ;
-  itsIterBot->openDBus( );
+  ////  itsIterBot->openDBus( );
 }
 
 synthesisiterbot::~synthesisiterbot()

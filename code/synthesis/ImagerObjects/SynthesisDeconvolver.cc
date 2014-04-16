@@ -72,8 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisDeconvolver::~SynthesisDeconvolver() 
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver","descructor",WHERE) );
-    os << "SynthesisDeconvolver destroyed" << LogIO::POST;
+    //    LogIO os( LogOrigin("SynthesisDeconvolver","descructor",WHERE) );
+    // os << "SynthesisDeconvolver destroyed" << LogIO::POST;
   }
   
   
@@ -200,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsLoopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
 
-      os << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
+      os << LogIO::DEBUG2 << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
 
     } catch(AipsError &x) {
       throw( AipsError("Error initializing the Minor Cycle for "  + itsImageName + " : "+x.getMesg()) );

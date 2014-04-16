@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///  ----------- do once ----------
     if( itsMTCsetup == False)
       {
-	cout << "Setting up the MT Cleaner once" << endl;
+	//cout << "Setting up the MT Cleaner once" << endl;
 	Vector<Float> scalesizes(1); scalesizes[0]=0.0;
 	itsMTCleaner.setscales( scalesizes );
 	itsMTCleaner.setntaylorterms( itsNTerms );

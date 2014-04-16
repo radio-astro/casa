@@ -73,8 +73,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisUtilMethods::~SynthesisUtilMethods() 
   {
-    LogIO os( LogOrigin("SynthesisUtilMethods","destructor",WHERE) );
-    os << "SynthesisUtilMethods destroyed" << LogIO::POST;
   }
   
   // Data partitioning rules for CONTINUUM imaging
@@ -1819,6 +1817,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// facets	
 	err += readVal( inrec, String("facets"), facets);
 
+	// Spectral interpolation
+	err += readVal( inrec, String("interpolation"), interpolation );// not used in SI yet...
+
 	// Track moving source ?
 	err += readVal( inrec, String("distance"), distance );
 	err += readVal( inrec, String("tracksource"), trackSource );
@@ -1858,6 +1859,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Check for valid FTMachine type.
     // Valid other params per FTM type, etc... ( check about nterms>1 )
 
+    if( ftmachine != "gridft" && ftmachine != "wprojectft" && ftmachine != "mosaicft" && ftmachine != "awprojectft" && ftmachine != "mawprojectft" && ftmachine != "protoft")
+      { err += "Invalid ftmachine name. Must be one of 'gridft', 'wprojectft', 'mosaicft', 'awprojectft', 'mawpojectft'";   }
+
     if( ftmachine=="mosaicft" && mType=="imagemosaic"  || 
 	ftmachine=="awprojectft" && mType=="imagemosaic" )
       {  err +=  "Cannot use " + ftmachine + " with " + mType + " because it is a redundant choice for mosaicing. In the future, we may support the combination to signal the use of single-pointing sized image grids during gridding and iFT, and only accumulating it on the large mosaic image. For now, please set either mappertype='default' to get mosaic gridding  or ftmachine='ft' or 'wprojectft' to get image domain mosaics. \n"; }
@@ -1886,6 +1890,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // facets
     facets=1;
+
+    // Spectral Axis interpolation
+    interpolation=String("nearest");
 
     // Moving phase center ?
     distance=Quantity(0,"m");
@@ -1922,6 +1929,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("convfunc", convFunc);
 
     gridpar.define("facets", facets);
+    
+    gridpar.define("interpolation",interpolation);
 
     gridpar.define("distance", QuantityToString(distance));
     gridpar.define("tracksource", trackSource);

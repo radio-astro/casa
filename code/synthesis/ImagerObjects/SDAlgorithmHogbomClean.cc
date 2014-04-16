@@ -103,7 +103,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 				    Float* fMaxVal) {
   LogMessage message(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
   ostringstream o; 
-  LogSink logSink;
+  LogSink logSink(LogMessage::NORMAL2);
   
   if(*npol<0) {
     StokesVector maxVal(fMaxVal[0], fMaxVal[1], fMaxVal[2], fMaxVal[3]);

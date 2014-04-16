@@ -321,7 +321,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             ngridpars = copy.deepcopy(self.allgridpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
-                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
@@ -349,8 +350,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             normpars = copy.deepcopy( self.allnormpars[str(immod)] )
             partnames = []
             if(self.NN>1):
+                if not shutil.os.path.exists(normpars['workdir']):
+                    shutil.os.system('mkdir '+normpars['workdir'])
                 for node in range(0,self.NN):
-                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
+                    partnames.append( normpars['workdir'] + '/' + self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
+##                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
                 normpars['partimagenames'] = partnames
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
@@ -701,41 +705,45 @@ class PyParallelImagerHelper():
 class ImagerParameters():
 
     def __init__(self,
+                 ## Data Selection
                  msname='',
                  field='',
                  spw='',
+                 timestr='',
+                 uvdist='',
+                 antenna='',
                  scan='',
-                 usescratch=True,
-                 readonly=True,
-                 
-                 imagename='', 
-                 mode='mfs', 
-                 ntaylorterms=1, 
-                 mtype='default',
-                 nchan=1, 
-                 start='', 
-                 step='',
-                 veltype='radio', 
-                 frame='LSRK', 
-                 reffreq='',
-                 restfreq=[''],
-                 sysvel='', 
-                 sysvelframe='',
+                 obs='',
+                 state='',
 
+                 ## Image Definition
+                 imagename='', 
                  imsize=[1,1], 
-                 facets=1, 
                  cellsize=[10.0,10.0],
                  phasecenter='',
                  stokes='I',
-                 outlierfile='',
-                 startmodel='', 
-                 weighting='natural', 
+
+                 ## Spectral Parameters
+                 mode='mfs', 
+                 reffreq='',
+                 nchan=1, 
+                 start='', 
+                 step='',
+                 frame='LSRK', 
+                 veltype='radio', 
+                 restfreq=[''],
+                 sysvel='', 
+                 sysvelframe='',
+                 interpolation='nearest',
 
                  ftmachine='ft', 
+                 facets=1, 
+
+                 wprojplanes=1,
 
                  aterm=True,
                  psterm=True,
-                 mterm=False,
+                 mterm=True,
                  wbawp = True,
                  cfcache = "",
                  dopointing = False,
@@ -747,15 +755,40 @@ class ImagerParameters():
                  pblimit=0.01,
                  normtype='flatnoise',
 
-                 algo='test',
-                 niter=0, cycleniter=0, cyclefactor=1.0,
-                 minpsffraction=0.1,maxpsffraction=0.8,
-                 threshold='0.0Jy',loopgain=0.1,
-                 interactive=False):
+                 outlierfile='',
+                 startmodel='', 
+
+                 weighting='natural', 
+                 robust=0.5,
+                 npixels=0,
+                 outertaper=[],
+                 innertaper=[],
+
+                 niter=0, 
+                 cycleniter=0, 
+                 loopgain=0.1,
+                 threshold='0.0Jy',
+                 cyclefactor=1.0,
+                 minpsffraction=0.1,
+                 maxpsffraction=0.8,
+                 interactive=False,
+
+                 algo='hogbom',
+                 scales=[],
+                 ntaylorterms=1, 
+                 restoringbeam=[],
+                 mtype='default',
+
+                 usescratch=True,
+                 readonly=True,
+
+                 workdir='',
+                 ):
 
         ## Selection params. For multiple MSs, all are lists.
         ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
         self.allselpars = {'msname':msname, 'field':field, 'spw':spw, 'scan':scan,
+                           'timestr':timestr, 'uvdist':uvdist, 'antenna':antenna, 'obs':obs,'state':state,
                            'usescratch':usescratch, 'readonly':readonly}
 
         ## Imaging/deconvolution parameters
@@ -779,28 +812,31 @@ class ImagerParameters():
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
                                    'rotatepastep':rotatepastep, 'mtype':mtype, # 'weightlimit':weightlimit,
-                                   'facets':facets   }     }
+                                   'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes   }     }
         ######### weighting
-        self.weightpars = {'type':weighting } 
+        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels}
+#        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,
+#                           'outertaper':outertaper,'innertaper':innertaper } 
         
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
         self.allnormpars = { '0' : {'imagename':imagename, 'mtype': mtype,
                                  'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
-                                 'normtype':normtype }     }
+                                 'normtype':normtype, 'workdir':workdir }     }
 
         ######### Deconvolution
-        self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
-
+        self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms, 
+                                    'scales':scales, 'restoringbeam':restoringbeam } }
 
         ######### Iteration control. 
-        self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
+        self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 
+                          'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
 
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel',
                              'start','step',
-                             'ntaylorterms','restfreq']
+                             'ntaylorterms','reffreq','mode']
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
         self.outdecparlist=['algo','startmodel','ntaylorterms']
@@ -846,8 +882,8 @@ class ImagerParameters():
         errs = "" 
         errs += self.checkAndFixSelectionPars()
         errs += self.makeImagingParamLists()
-        #errs += self.checkAndFixImagingPars()
         errs += self.checkAndFixIterationPars()
+        errs += self.checkAndFixNormPars()
 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
@@ -956,6 +992,15 @@ class ImagerParameters():
 
         return errs
 
+    def checkAndFixNormPars(self):  
+        errs=""
+
+        for modelid in self.allnormpars.keys():
+            if len(self.allnormpars[modelid]['workdir'])==0:
+                self.allnormpars[modelid]['workdir'] = self.allnormpars['0']['imagename'] + '.workdir'
+
+        return errs
+
     ###### End : Parameter-checking functions ##################
 
     ## Parse outlier file and construct a list of imagedefinitions (dictionaries).
@@ -1019,7 +1064,7 @@ class ImagerParameters():
         returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'normpars', 'ntaylorterms', 'int' )
-        returnlist = self.evalToTarget( returnlist, 'impars', 'restfreq', 'strvec' )
+#        returnlist = self.evalToTarget( returnlist, 'impars', 'reffreq', 'strvec' )
 
         ## Extra parsing for a few parameters.
         ## imsize

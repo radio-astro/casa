@@ -93,8 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     
 	SIIterBot_state::~SIIterBot_state() {
-		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%p)\n", this );
-		fflush( stderr );
+	  //		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%p)\n", this );
+	  //		fflush( stderr );
 	}
 
 	bool SIIterBot_state::interactiveInputRequired( ) {
@@ -201,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 		itsUpdatedModelFlag |=execRecord.asBool( RecordFieldId("updatedmodelflag") );
 
-		os << "Completed " << itsIterDone << " iterations so far" << LogIO::POST;
+		os << "Completed " << itsIterDone << " iterations." << LogIO::POST;
 	}
 
 	void SIIterBot_state::mergeMinorCycleSummary( const Array<Double>& summary ){

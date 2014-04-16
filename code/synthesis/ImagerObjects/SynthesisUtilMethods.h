@@ -137,7 +137,7 @@ public:
 
   String msname, spw, freqbeg, freqend;
   MFrequency::Types freqframe;
-  String field, antenna, timestr, scan, obs, state, uvdist,taql;
+  String field, antenna, timestr, scan, obs, state, uvdist,taql,intent;
   Bool usescratch,readonly,incrmodel;
 
 };
@@ -220,6 +220,9 @@ public:
 
   // Facets for gridding.
   Int facets;
+
+  // Spectral axis interpolation
+  String interpolation;
 
   // Moving phase center ? 
   Quantity distance;

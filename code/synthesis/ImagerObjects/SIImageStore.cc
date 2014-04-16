@@ -765,6 +765,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsPBScaleFactor = getPbMax();
 	cout << " PB Scale factor : " << itsPBScaleFactor << endl;
       }
+
+    /// Calculate and print point source sensitivity (per plane).
+    calcSensitivity();
     // createMask
   }
 
@@ -936,9 +939,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     catch(AipsError &x)
       {
-	LogIO os( LogOrigin("SIImageStore","getPSFGaussian",WHERE) );
-	os << "Error in fitting a Gaussian to the PSF : " << x.getMesg() << LogIO::POST;
-	throw( AipsError("Error in fitting a Gaussian to the PSF" + x.getMesg()) );
+	//	LogIO os( LogOrigin("SIImageStore","getPSFGaussian",WHERE) );
+	//	os << "Error in fitting a Gaussian to the PSF : " << x.getMesg() << LogIO::POST;
+	throw( AipsError("Error in fitting a Gaussian to the PSF : " + x.getMesg()) );
       }
 
     return beam;
@@ -950,34 +953,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIImageStore","restorePlane",WHERE) );
     //     << ". Optionally, PB-correct too." << LogIO::POST;
 
+    Bool validbeam=False;
+    GaussianBeam beam;
     try
       {
 	// Fit a Gaussian to the PSF.
-	GaussianBeam beam = getPSFGaussian();
-
-	os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
-	
-	// Initialize restored image
-	image()->set(0.0);
-	// Copy model into it
-	image()->copyData( LatticeExpr<Float>( *(model()) )  );
-	// Smooth model by beam
-	StokesImageUtil::Convolve( *(image()), beam);
-	// Add residual image
-	image()->copyData( LatticeExpr<Float>( *(image()) + *(residual())  ) );
-	
-	// Set restoring beam into the image
-	ImageInfo ii = image()->imageInfo();
-	//ii.setRestoringBeam(beam);
-	ii.setBeams(beam);
-	image()->setImageInfo(ii);
-
-	return beam;
+	beam = getPSFGaussian();
+	validbeam = True;
+      }
+    catch(AipsError &x)
+      {
+	os << LogIO::WARN << "Beam fit error : " + x.getMesg() << LogIO::POST;
+      }
+    
+    try
+      {
+	if( validbeam==True )
+	  {
+	    //	    os << "[" << itsImageName << "] " ;  // Add when parent image name is available.
+	    os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	    
+	    // Initialize restored image
+	    image()->set(0.0);
+	    // Copy model into it
+	    image()->copyData( LatticeExpr<Float>( *(model()) )  );
+	    // Smooth model by beam
+	    StokesImageUtil::Convolve( *(image()), beam);
+	    // Add residual image
+	    image()->copyData( LatticeExpr<Float>( *(image()) + *(residual())  ) );
+	    
+	    // Set restoring beam into the image
+	    ImageInfo ii = image()->imageInfo();
+	    //ii.setRestoringBeam(beam);
+	    ii.setBeams(beam);
+	    image()->setImageInfo(ii);
+	  }
       }
     catch(AipsError &x)
       {
 	throw( AipsError("Restoration Error : " + x.getMesg() ) );
       }
+	
+    return beam;
 
   }
 
@@ -1036,11 +1053,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    Matrix<Float> lsumwt = getSumWt( target );
 
     Array<Float> lsumwt;
-    sumwt()->get( lsumwt , True ); // For MT, this will always pick the zeroth sumwt, which it should.
+    sumwt()->get( lsumwt , False ); // For MT, this will always pick the zeroth sumwt, which it should.
 
     IPosition imshape = target.shape();
 
-    //    cout << " SumWt  : " << sumwt << " image shape : " << imshape << endl;
+    //cout << " SumWt  : " << lsumwt << " sumwtshape : " << lsumwt.shape() << " image shape : " << imshape << endl;
 
     AlwaysAssert( lsumwt.shape()[2] == imshape[2] , AipsError ); // polplanes
     AlwaysAssert( lsumwt.shape()[3] == imshape[3] , AipsError ); // chanplanes
@@ -1051,7 +1068,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	for(Int chan=0; chan<lsumwt.shape()[3]; chan++)
 	  {
-	    IPosition pos(2,pol,chan);
+	    IPosition pos(4,0,0,pol,chan);
 	    if( lsumwt(pos) != 1.0 )
 	      { 
 		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
@@ -1069,6 +1086,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return div;
   }
+
+  void SIImageStore::calcSensitivity()
+  {
+    LogIO os( LogOrigin("SIImageStore","calcSensitivity",WHERE) );
+
+    Array<Float> lsumwt;
+    sumwt()->get( lsumwt , False ); // For MT, this will always pick the zeroth sumwt, which it should.
+
+    IPosition shp( lsumwt.shape() );
+    //cout << "Sumwt shape : " << shp << " : " << lsumwt << endl;
+    //AlwaysAssert( shp.nelements()==4 , AipsError );
+    
+    os << "[" << itsImageName << "] Theoretical sensitivity (Jy/bm):" ;
+    
+    IPosition it(4,0,0,0,0);
+    for ( it[0]=0; it[0]<shp[0]; it[0]++)
+      for ( it[1]=0; it[1]<shp[1]; it[1]++)
+	for ( it[2]=0; it[2]<shp[2]; it[2]++)
+	  for ( it[3]=0; it[3]<shp[3]; it[3]++)
+	    {
+	      if( shp[0]>1 ){os << "f"<< it[0]+(it[1]*shp[0]) << ":" ;}
+	      if( shp[3]>1 ) { os << "c"<< it[3] << ":"; }
+	      if( shp[2]>1 ) { os << "p"<< it[2]<< ":" ; }
+	      if( lsumwt( it )  > 1e-07 ) 
+		{ 
+		  os << 1.0/(sqrt(lsumwt(it))) << " " ;
+		}
+	      else
+		{
+		  os << "none" << " ";
+		}
+	    }
+    
+    os << LogIO::POST;
+
+    //    Array<Float> sens = 1.0/sqrtsumwt;
+
+
+  }
+
+
   //
   //-------------------------------------------------------------
   // Initialize the internals of the object.  Perhaps other such

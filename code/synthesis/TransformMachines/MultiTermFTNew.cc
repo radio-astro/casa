@@ -442,7 +442,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
   //---------------------------------------------------------------------------------------------------
   Bool MultiTermFTNew::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
   {
-    cout << "MTFTNew :: toRecord for " << subftms_p.nelements() << " subftms" << endl;
+    //    cout << "MTFTNew :: toRecord for " << subftms_p.nelements() << " subftms" << endl;
     Bool retval = True;
 
     outRec.define("nterms",nterms_p);

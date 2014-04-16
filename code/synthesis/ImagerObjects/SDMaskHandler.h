@@ -50,6 +50,8 @@ public:
   SDMaskHandler();
   ~SDMaskHandler();
 
+  void resetMask(CountedPtr<SIImageStore> imstore);
+
   void makeMask();
 
   // Return a reference to an imageinterface for the mask.

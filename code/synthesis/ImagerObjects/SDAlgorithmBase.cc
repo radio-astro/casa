@@ -91,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    False/*image*/, usemask/*mask*/ ) ) 
       { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
 
-    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+    //os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
     os << "Run " << itsAlgorithmName << " minor-cycle on " << nSubChans*nSubPols 
@@ -117,7 +117,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	Bool converged=False;
 
 	    // Or, call this from outside... in SynthesisImager.....
-	    itsMaskHandler.makeAutoMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
+	    //	    itsMaskHandler.makeAutoMask( itsImages );
+	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    
 	    initializeDeconvolver( peakresidual, modelflux );
 	    
@@ -147,7 +148,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // same as checking on itscycleniter.....
 	    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
 	    
-	    os << "[D" << deconvolverid << ":C" << chanid << ":P" << polid << "]"
+	    //	    os << "[D" << deconvolverid 
+	    os << "[" << imagestore->getName()  
+	       << ":C" << chanid << ":P" << polid << "]"
 	       <<" iters=" << startiteration+1 << "-" << loopcontrols.getIterDone()
 	       << ", peakres=" << startpeakresidual << "-" << peakresidual 
 	       << ", model=" << startmodelflux << "-" << modelflux
@@ -195,12 +198,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    itsImages = imagestore->getSubImageStore( chanid, onechan, polid, onepol );
 	    GaussianBeam beam = itsImages->restorePlane();
+	    //	    os << "Setting restoring beam : " << beam.getMajor(Unit("arcmin")) << " arcmin" << endl;
 	    beamset.setBeam( chanid, polid, beam );
 	  }
       }
     ii.setBeams( beamset );
-    (imagestore->image())->setImageInfo(ii);
-
+    try
+      {
+	(imagestore->image())->setImageInfo(ii);
+      }
+    catch( AipsError &x)
+      {
+	os << LogIO::WARN << "Cannot save restoring beams in image header for " << imagestore->getName() <<  " : " << x.getMesg() << LogIO::POST;
+      }
   }
 
  

@@ -35,7 +35,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -56,7 +56,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -73,11 +73,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out16.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -96,11 +96,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        mode='mfs',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        algo='msmfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:58:39.580 +40.55.55.931",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -117,11 +117,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out14.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:58:39.580 +40.55.55.931",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -206,7 +206,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -222,7 +222,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='*',scan='',
                                        spw='*',\
                                        usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,start='1.5GHz', step='1.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -276,7 +276,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.5GHz', step='0.3GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -303,13 +303,13 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='',spw='1',scan='',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.5GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=1,mtype='imagemosaic',restfreq=['1.5GHz'],\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        #phasecenter=1,\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
@@ -325,12 +325,12 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='msmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -345,14 +345,14 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=2,mtype='multiterm',
                                        reffreq='1.6GHz',\
                                        #restfreq=['1.5GHz'],\
                                        imsize=[200,200],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='msmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -367,12 +367,12 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=1,mtype='default',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -387,11 +387,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -403,17 +403,21 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 4 image-fields, one cube, one mfs --- Real Imaging.");
           casalog.post("==================================");
           
-          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
+          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmode=mfs\nstart=1.0GHz\nstep=2.0GHz')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        outlierfile='out4.txt',\
                                        mode='cube',\
-                                       imagename='mytest0', nchan=2, start='1.0GHz', step='1.0GHz',\
+                                       imagename='mytest0', nchan=2,\
+                                       start='1.0GHz', step='1.0GHz',
+                                       #start='1.0GHz', step='2.0GHz',
+                                       #start=0, step=1,
+                                       frame='TOPO',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -432,11 +436,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out3.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -455,7 +459,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -470,7 +474,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[110,110],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        ### center
@@ -478,7 +482,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        ### offset
                                        #phasecenter="J2000 19:59:23.591 +40.44.01.50",\
                                        phasecenter=0,
-                                       ftmachine='GridFT', startmodel='', weighting='briggs',\
+                                       ftmachine='gridft', startmodel='', weighting='briggs',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
