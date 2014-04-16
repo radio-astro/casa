@@ -115,7 +115,9 @@ namespace casa {
 	}
 
 	void SettingsWidget::gaussCountChanged( int count ){
-		pixelCanvas->setGaussianEstimateCount( count );
+		if ( pixelCanvas != NULL ){
+			pixelCanvas->setGaussianEstimateCount( count );
+		}
 	}
 
 	void SettingsWidget::setCollapseVals(const Vector<Float> &spcVals) {
