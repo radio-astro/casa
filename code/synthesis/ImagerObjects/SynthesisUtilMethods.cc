@@ -1231,7 +1231,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // start and step can be one of these types
     if( start!="" )
       { 
-        if(String::toInt(start) == chanStart )
+        if( !start.contains("Hz") && !start.contains("m/s") && 
+           String::toInt(start) == chanStart )
           {
             impar.define("start",chanStart); 
           }
@@ -1249,7 +1250,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     if( step!="" )
       {
-        if( String::toInt(step) == chanStep )
+        if( !step.contains("Hz") && !step.contains("m/s") && 
+           String::toInt(step) == chanStep )
           {
             impar.define("step", chanStep);
           }
@@ -1650,7 +1652,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // contains start freq. in its last element of the vector. 
       //
       os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
-         <<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
+         <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
          << LogIO::POST;
       Bool rst=SubMS::calcChanFreqs(os,
                            chanFreq, 
