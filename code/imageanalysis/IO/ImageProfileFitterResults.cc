@@ -1027,7 +1027,7 @@ String ImageProfileFitterResults::_elementToString(
 
 String ImageProfileFitterResults::_pcfToString(
 	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-	const Vector<Double> world, const IPosition imPos,
+	const Vector<Double>& world, const IPosition& imPos,
 	const Bool showTypeString, const String& indent
 ) const {
 	Vector<Double> myWorld = world;
@@ -1124,6 +1124,11 @@ String ImageProfileFitterResults::_pcfToString(
 	summary << indent << "        Integral : "
 		<< _elementToString(integral, integralErr, integUnit, fixed[0] && fixed[2])
 		<< endl;
+	if (fwhm/increment <= 3) {
+		summary << indent << "WARNING: The FWHM is only " << (fwhm/increment)
+			<< " times the channel width. Be aware that instrumental channelization effects"
+			<< " may be important." << endl;
+	}
 	return summary.str();
 }
 
