@@ -62,10 +62,10 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
-                                               itsLoopController(new SIIterBot_state(actionRequestSync)),
+					       itsLoopController(new SIIterBot_state(actionRequestSync)),
                                                dbus_thread(NULL) {
-		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%p)\n", this );
-		fflush( stderr );
+	  //		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%p)\n", this );
+	  //		fflush( stderr );
 	}
 
 	void SynthesisIterBot::openDBus( ) {
@@ -86,8 +86,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete dbus_thread;
 			dbus_thread = NULL;
 		}
-		LogIO os( LogOrigin("SynthesisIterBot","destructor",WHERE) );
-		os << "SynthesisIterBot destroyed" << LogIO::POST;
+		//		LogIO os( LogOrigin("SynthesisIterBot","destructor",WHERE) );
+		//		os << "SynthesisIterBot destroyed" << LogIO::POST;
 	}
 
 	void SynthesisIterBot::setIterationDetails(Record iterpars) {

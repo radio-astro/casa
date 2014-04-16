@@ -72,8 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisNormalizer::~SynthesisNormalizer() 
   {
-    LogIO os( LogOrigin("SynthesisNormalizer","descructor",WHERE) );
-    os << "SynthesisNormalizer destroyed" << LogIO::POST;
+    //    LogIO os( LogOrigin("SynthesisNormalizer","descructor",WHERE) );
+    //    os << "SynthesisNormalizer destroyed" << LogIO::POST;
   }
   
   
@@ -106,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{ itsNormType = "flatnoise";} // flatnoise, flatsky
 
-      cout << "Chosen normtype : " << itsNormType << endl;
+      //      cout << "Chosen normtype : " << itsNormType << endl;
 
       // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
       if( normpars.isDefined("mtype") )  // A single string
@@ -285,7 +285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     catch(AipsError &x)
       {
 	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
-	cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
+	//cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
 	foundFullImage = False;
       }
 
@@ -330,7 +330,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if ( foundFullImage == True ) // Full image exists. Just check that shapes match with parts.
 	  {
-	    os << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
+	    os << LogIO::DEBUG2 << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
 	    IPosition fullshape = itsImages->getShape();
 	    
 	    for ( uInt part=0; part < itsPartImages.nelements() ; part++ )
@@ -338,16 +338,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		IPosition partshape = itsPartImages[part]->getShape();
 		if( partshape != fullshape )
 		  {
-		    os << "NO" << LogIO::POST;
+		    os << LogIO::DEBUG2<< "NO" << LogIO::POST;
 		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather") );
 		  }
 	      }
-	    os << "Yes" << LogIO::POST;
+	    os << LogIO::DEBUG2 << "Yes" << LogIO::POST;
 
 	  }
 	else // Full image does not exist. Need to make it, using the shape and coords of part[0]
 	  {
-	    os << "Only partial images exist. Need to make full images" << LogIO::POST;
+	    os << LogIO::DEBUG2 << "Only partial images exist. Need to make full images" << LogIO::POST;
 
 	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
 
@@ -380,7 +380,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if ( foundFullImage == True ) 
 	  {
-	    os << "Full images exist : " << itsImageName << LogIO::POST;
+	    os << LogIO::DEBUG2 << "Full images exist : " << itsImageName << LogIO::POST;
 	  }
 	else // No full image on disk either. Error.
 	  {

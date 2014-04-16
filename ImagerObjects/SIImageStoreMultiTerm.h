@@ -121,6 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 protected:
 
   Bool createMask(LatticeExpr<Bool> &lemask, CountedPtr<ImageInterface<Float> >outimage);
+  void calcSensitivity();
 
 private:
 

@@ -172,6 +172,8 @@ protected:
 
   Double getPbMax();
 
+  virtual void calcSensitivity();
+
   ///////////////////// Member Objects
 
   IPosition itsImageShape;

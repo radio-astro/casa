@@ -206,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       thisSelection.setFieldExpr("*");
     if(selpars.spw != ""){
 	thisSelection.setSpwExpr(selpars.spw);
-	os << "Selecting on spectral windows expression :"<< selpars.spw  << " | " ;//LogIO::POST;
+	os << "Selecting on spw :"<< selpars.spw  << " | " ;//LogIO::POST;
     }else
       thisSelection.setSpwExpr("*");
     
@@ -241,12 +241,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	thisSelection.setTaQLExpr(selpars.taql);
 	os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
     }
+    os << LogIO::POST;
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull())){
       mss_p.resize(mss_p.nelements()+1, False, True);
       mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
       mss_p[mss_p.nelements()-1]=new const  MeasurementSet(thisms(exprNode));
       mss4vi_p[mss_p.nelements()-1]=MeasurementSet(thisms(exprNode));
+      os << "  NRows selected : " << (mss_p[mss_p.nelements()-1])->nrow() << LogIO::POST;
     }
     else{
       throw(AipsError("Selection for given MS "+selpars.msname+" is invalid"));
@@ -599,7 +601,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
-    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+    os << "------------------------ Run Major Cycle ---------------------------------------------------------------------------" << LogIO::POST;
 
     try
       {    
@@ -621,7 +623,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       LogIO os( LogOrigin("SynthesisImager","makePSF",WHERE) );
 
-      os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+    os << "------------------------ Make PSF ----------------------------------------------------------------------------------" << LogIO::POST;
     
       try
       {
@@ -1097,7 +1099,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
 
-    if(ftname=="GridFT"){
+    if(ftname=="gridft"){
       if(facets >1){
     	  theFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
     	  theIFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
@@ -1108,7 +1110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  theIFT=new GridFT(cache, tile, gridFunction, mLocation_p, padding, useAutocorr, useDoublePrec);
       }
     }
-    else if(ftname== "WProjectFT"){
+    else if(ftname== "wprojectft"){
       theFT=new WProjectFT(wprojplane,  mLocation_p,
 			   cache/2, tile, useAutocorr, padding, useDoublePrec);
       theIFT=new WProjectFT(wprojplane,  mLocation_p,
@@ -1124,6 +1126,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 doPointing, doPBCorr, conjBeams, computePAStep,
 			 rotatePAStep, cache,tile);
     }
+    else
+      {
+	throw( AipsError( "Invalid FTMachine name : " + ftname ) );
+      }
     /* else if(ftname== "MosaicFT"){
 
        }*/
@@ -1410,7 +1416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		}
     	}
     	//cerr << "IN SYNTHE_IMA" << endl;
-    	VisModelData::listModel(rvi_p->getMeasurementSet());
+    	//VisModelData::listModel(rvi_p->getMeasurementSet());
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
 

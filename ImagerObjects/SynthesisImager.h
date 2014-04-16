@@ -149,7 +149,7 @@ class SynthesisImager
   CountedPtr<SIImageStore> imageStore(const Int id=0);
 
   //Record getMajorCycleControls();
-  void   executeMajorCycle(Record& controls, const Bool useViVB2=False);
+  void executeMajorCycle(Record& controls, const Bool useViVB2=False);
 
   // make the psf images  i.e grid weight rather than data
   void makePSF(const Bool useViVB2=False);

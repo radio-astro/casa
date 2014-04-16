@@ -362,7 +362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  VisibilityIterator * elvi=(dynamic_cast<VisibilityIterator* >(vb.getVisibilityIterator()));
 				  if(elvi)
 					  elvi->putModel(rec, iscomp, True);
-				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
+				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
 			  }
 
 		  }

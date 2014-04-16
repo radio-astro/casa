@@ -55,6 +55,8 @@
 
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
+#include <casa/Arrays/MatrixMath.h>
+#include <scimath/Mathematics/MatrixMathLA.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -520,7 +522,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeExpr<Float> adderPsf( *(psf(tix)) + *(imagestoadd->psf(tix)) ); 
 	    psf(tix)->copyData(adderPsf);	
 
-	    addSumWts( *psf(tix), *(imagestoadd->psf(tix)) );
+	    //	    addSumWts( *psf(tix), *(imagestoadd->psf(tix)) );
 
 	  }
 	if(addweight)
@@ -531,7 +533,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		LatticeExpr<Float> adderWeight( *(weight(tix)) + *(imagestoadd->weight(tix)) ); 
 		weight(tix)->copyData(adderWeight);
 		
-		addSumWts( *weight(tix), *(imagestoadd->weight(tix)) );
+		//		addSumWts( *weight(tix), *(imagestoadd->weight(tix)) );
 	      }
 
 	    LatticeExpr<Float> adderSumWt( *(sumwt(tix)) + *(imagestoadd->sumwt(tix)) ); 
@@ -544,7 +546,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeExpr<Float> adderRes( *(residual(tix)) + *(imagestoadd->residual(tix)) ); 
 	    residual(tix)->copyData(adderRes);
 
-	    addSumWts( *residual(tix), *(imagestoadd->residual(tix)) );
+	    //	    addSumWts( *residual(tix), *(imagestoadd->residual(tix)) );
 
 	  }
 
@@ -581,6 +583,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	*/
       }
+
+    calcSensitivity();
+
     // createMask
   }
 
@@ -767,78 +772,92 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIImageStoreMultiTerm","restorePlane",WHERE) );
 
+    Bool validbeam=False;
+    GaussianBeam beam;
+
     try
       {
 	// Fit a Gaussian to the PSF.
-	GaussianBeam beam = getPSFGaussian();
+	beam = getPSFGaussian();
+	validbeam = True;
+      }
+    catch(AipsError &x)
+      {
+	os << LogIO::WARN << "Beam fit error : " + x.getMesg() << LogIO::POST;
+      }
+    
+    try
+      {
 
-	os << "Restore with beam : " 
-	   << beam.getMajor(Unit("arcmin")) << " arcmin, " 
-	   << beam.getMinor(Unit("arcmin"))<< " arcmin, " 
-	   << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
-	os << "With " << itsNTerms << " Taylor coefficient(s), spectral index " 
-	   << ((itsNTerms>2)?String("and curvature"):String("")) << " will "
-	   << ((itsNTerms>1)?String(""):String("not")) << " be computed." << LogIO::POST;
-
-	/*	
-	// Compute principal solution ( if it hasn't already been done to this ImageStore......  )
-	itsMTCleaner.computeprincipalsolution();
-	for(uInt tix=0; tix<itsNTerms; tix++)
+	if( validbeam==True )
 	  {
+	    os << "Restore with beam : " 
+	       << beam.getMajor(Unit("arcmin")) << " arcmin, " 
+	       << beam.getMinor(Unit("arcmin"))<< " arcmin, " 
+	       << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	    os << "With " << itsNTerms << " Taylor coefficient(s), spectral index " 
+	       << ((itsNTerms>2)?String("and curvature"):String("")) << " will "
+	       << ((itsNTerms>1)?String(""):String("not")) << " be computed." << LogIO::POST;
+	    
+	    /*	
+	    // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
+	    itsMTCleaner.computeprincipalsolution();
+	    for(uInt tix=0; tix<itsNTerms; tix++)
+	    {
 	    Matrix<Float> tempRes;
 	    itsMTCleaner.getresidual(tix,tempRes);
 	    (itsImages->residual(tix))->put( tempRes );
+	    }
+	    */
+	    
+	    
+	    // Restore all terms
+	    ImageInfo ii = image(0)->imageInfo();
+	    //ii.setRestoringBeam( beam );
+	    ii.setBeams( beam );
+	    
+	    for(uInt tix=0; tix<itsNTerms; tix++)
+	      {
+		(image(tix))->set(0.0);
+		(image(tix))->copyData( LatticeExpr<Float>(*(model(tix))) );
+		StokesImageUtil::Convolve( *(image(tix)) , beam);
+		(image(tix))->copyData( LatticeExpr<Float>
+					( *(image(tix)) + *(residual(tix)) )   );
+		//image()->setImageInfo(ii); // no use.... its a reference subimage.
+	      }	
+	    
+	    if( itsNTerms > 1)
+	      {
+		// Calculate alpha and beta
+		LatticeExprNode leMaxRes = max( *( residual(0) ) );
+		Float maxres = leMaxRes.getFloat();
+		Float specthreshold = maxres/10.0;  //////////// do something better here..... 
+		
+		os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
+		LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
+		LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
+		
+		/////// Calculate alpha
+		LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
+		alpha()->copyData(alphacalc);
+		
+		// Set the restoring beam for alpha
+		alpha()->setImageInfo(ii);
+		//alpha()->table().unmarkForDelete();
+		
+		// Make a mask for the alpha image
+		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
+		
+		//      createMask( lemask, (alpha()) );
+	      }
+	    
 	  }
-	*/
-
-
-	// Restore all terms
-	ImageInfo ii = image(0)->imageInfo();
-	//ii.setRestoringBeam( beam );
-	ii.setBeams( beam );
-
-	for(uInt tix=0; tix<itsNTerms; tix++)
-	  {
-	    (image(tix))->set(0.0);
-	    (image(tix))->copyData( LatticeExpr<Float>(*(model(tix))) );
-	    StokesImageUtil::Convolve( *(image(tix)) , beam);
-	    (image(tix))->copyData( LatticeExpr<Float>
-					       ( *(image(tix)) + *(residual(tix)) )   );
-	    //image()->setImageInfo(ii); // no use.... its a reference subimage.
-	  }	
-	
-	if( itsNTerms > 1)
-	  {
-	    // Calculate alpha and beta
-	    LatticeExprNode leMaxRes = max( *( residual(0) ) );
-	    Float maxres = leMaxRes.getFloat();
-	    Float specthreshold = maxres/10.0;  //////////// do something better here..... 
-	    
-	    os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
-	    LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
-	    LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
-	    
-	    /////// Calculate alpha
-	    LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
-	    alpha()->copyData(alphacalc);
-	    
-	    // Set the restoring beam for alpha
-	    alpha()->setImageInfo(ii);
-	    //alpha()->table().unmarkForDelete();
-	    
-	    // Make a mask for the alpha image
-	    LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
-	    
-	    //      createMask( lemask, (alpha()) );
-	  }
-	return beam;
-	
       }
     catch(AipsError &x)
       {
 	throw( AipsError("Multi-Term Restoration Error : " + x.getMesg() ) );
       }
-
+    return beam;
   }
 
   Bool SIImageStoreMultiTerm::createMask(LatticeExpr<Bool> &lemask, 
@@ -860,8 +879,90 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SIImageStoreMultiTerm::calcSensitivity()
+  {
+    LogIO os( LogOrigin("SIImageStore","calcSensitivity",WHERE) );
 
+    // Construct Hessian.
+    
+    Matrix<Float> hess(IPosition(2,itsNTerms,itsNTerms));
+    for(uInt tay1=0;tay1<itsNTerms;tay1++)
+      for(uInt tay2=0;tay2<itsNTerms;tay2++)
+	{
+	  uInt taymin = (tay1<=tay2)? tay1 : tay2;
+	  uInt taymax = (tay1>=tay2)? tay1 : tay2;
+	  uInt ind = (taymax*(taymax+1)/2)+taymin;
+	  AlwaysAssert( ind < 2*itsNTerms-1, AipsError );
 
+	  Array<Float> lsumwt;
+	  sumwt( ind )->get( lsumwt, True );
+	  AlwaysAssert( lsumwt.shape().nelements()==1, AipsError );
+	  AlwaysAssert( lsumwt.shape()[0]>0, AipsError );
+
+	  hess(tay1,tay2) = lsumwt(IPosition(1,0));
+	}
+
+    os << "Multi-Term Hessian Matrix : " << hess << LogIO::POST;
+
+    // Invert Hessian. 
+    try
+      {
+	Float deter=0.0;
+	Matrix<Float> invhess;
+	invertSymPosDef(invhess,deter,hess);
+	os << "Multi-Term Covariance Matrix : " << invhess << LogIO::POST;
+
+	// Just print the sqrt of the diagonal elements. 
+	
+	for(uInt tix=0;tix<itsNTerms;tix++)
+	  {
+	    os << "[" << itsImageName << "][Taylor"<< tix << "] Theoretical sensitivity (Jy/bm):" ;
+	    if( invhess(tix,tix) > 0.0 ) { os << sqrt(invhess(tix,tix)) << LogIO::POST; }
+	    else { os << "none" << LogIO::POST; }
+	  }
+      }
+    catch(AipsError &x)
+      {
+	os << LogIO::WARN << "Cannot invert Hessian Matrix : " << x.getMesg()  << " || Calculating approximate sensitivity " << LogIO::POST;
+	
+	// Approximate : 1/h^2
+	for(uInt tix=0;tix<itsNTerms;tix++)
+	  {
+	    Array<Float> lsumwt;
+	    AlwaysAssert( 2*tix < 2*itsNTerms-1, AipsError );
+	    sumwt(2*tix)->get( lsumwt , False ); 
+	    
+	    IPosition shp( lsumwt.shape() );
+	    //cout << "Sumwt shape : " << shp << " : " << lsumwt << endl;
+	    //AlwaysAssert( shp.nelements()==4 , AipsError );
+	    
+	    os << "[" << itsImageName << "][Taylor"<< tix << "] Approx Theoretical sensitivity (Jy/bm):" ;
+	    
+	    IPosition it(4,0,0,0,0);
+	    for ( it[0]=0; it[0]<shp[0]; it[0]++)
+	      for ( it[1]=0; it[1]<shp[1]; it[1]++)
+		for ( it[2]=0; it[2]<shp[2]; it[2]++)
+		  for ( it[3]=0; it[3]<shp[3]; it[3]++)
+		    {
+		      if( shp[0]>1 ){os << "f"<< it[0]+(it[1]*shp[0]) << ":" ;}
+		      if( lsumwt( it )  > 1e-07 ) 
+			{ 
+			  os << 1.0/(sqrt(lsumwt(it))) << " " ;
+			}
+		      else
+			{
+			  os << "none" << " ";
+			}
+		    }
+	    
+	    os << LogIO::POST;
+	  }
+      }
+  }
+  
+
+  
+  
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getFacetImageStore(const Int facet, const Int nfacets)
   {
     Block<CountedPtr<ImageInterface<Float> > > psflist(2*itsNTerms-1);
