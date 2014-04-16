@@ -18,10 +18,16 @@ class PointingAxesManager(object):
         self._axes = None
         self.is_initialized = False
 
-    def init_axes(self, xlocator, ylocator, xformatter, yformatter, xrotation, yrotation, aspect, reset=False):
+    def init_axes(self, xlocator, ylocator, xformatter, yformatter, xrotation, yrotation, aspect, xlim=None, ylim=None, reset=False):
         if self._axes is None:
             self._axes = self.__axes()
 
+        if xlim is not None:
+            self._axes.set_xlim(xlim)
+
+        if ylim is not None:
+            self._axes.set_ylim(ylim)
+            
         if self.is_initialized == False or reset:
             # 2008/9/20 DEC Effect
             self._axes.set_aspect(aspect)
@@ -140,7 +146,9 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         self.axes_manager.init_axes(RAlocator, DEClocator,
                                     RAformatter, DECformatter,
                                     RArotation, DECrotation,
-                                    Aspect)
+                                    Aspect,
+                                    xlim=(xmin,xmax),
+                                    ylim=(ymin,ymax))
         a = self.axes_manager.axes
         if ObsPattern == False:
             a.title.set_text('Telescope Pointing on the Sky')
