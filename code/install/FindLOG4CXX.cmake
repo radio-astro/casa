@@ -1,3 +1,10 @@
+# - Find log4cxx
+#
+# This script sets the following variables:
+# LOG4CXX_FOUND - true if log4cxx is found
+# LOG4CXX_LIBRARIES - a list of libraries to use log4cxx package
+# LOG4CXX_INCLUDE_DIRS - a list of include directories for header files
+#
 FIND_PATH(LOG4CXX_INCLUDE_DIR log4cxx/logger.h PATHS /usr/include /usr/local/include /opt/log4cxx/include)
 FIND_LIBRARY(LOG4CXX_LIBRARY NAMES log4cxx log4cxxd PATHS /lib64 /lib /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib /opt/log4cxx/lib64 /opt/log4cxx/lib)
 
