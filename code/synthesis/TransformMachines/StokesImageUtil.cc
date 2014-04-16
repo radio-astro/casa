@@ -531,6 +531,11 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
   Matrix<Float> lpsf;
   locatePeakPSF(psf, px, py, bamp, lpsf);
 
+  //check if peak is ZERO
+  if( bamp < 1e-07 ) {
+    throw(AipsError("Psf peak is zero"));
+  }
+
   //check if peak is outside inner quarter
   if(px < nx/4.0 || px > 3.0*nx/4.0 || py < ny/4.0 || py > 3.0*ny/4.0) {    
     throw(AipsError("Peak of psf is outside the inner quarter of defined image"));
