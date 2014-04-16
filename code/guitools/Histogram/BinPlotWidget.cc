@@ -1371,9 +1371,15 @@ void BinPlotWidget::keyPressEvent( QKeyEvent* event ){
 	if (modifiers & Qt::ShiftModifier ){
 		contextMenuMode = DISPLAY_CONTEXT;
 	}
+#if defined(__APPLE__)
+	else if (event->key() & Qt::Key_Meta ){
+		contextMenuMode = FIT_CONTEXT;
+	}
+#else
 	else if ( modifiers & Qt::ControlModifier ){
 		contextMenuMode = FIT_CONTEXT;
 	}
+#endif
 	else {
 		contextMenuMode = ZOOM_CONTEXT;
 	}
