@@ -39,7 +39,10 @@ bool detached() const;
 casac::record* recordFromQuantity(casa::Quantity q);
 casac::record* recordFromQuantity(const casa::Quantum<casa::Vector<casa::Double> >& q);
 casa::Quantity _casaQuantityFromVar(const ::casac::variant& theVar);
-std::tr1::shared_ptr<casa::Record> _getRegion(const variant& region, const bool nullIfEmpty) const;
+std::tr1::shared_ptr<casa::Record> _getRegion(
+	const variant& region, const bool nullIfEmpty,
+	const std::string& otherImageName=""
+) const;
 
 static vector<double> _toDoubleVec(const variant& v);
 

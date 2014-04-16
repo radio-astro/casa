@@ -3519,8 +3519,6 @@ image* image::regrid(
 		Quantum<Double> pa(_casaQuantityFromVar(inpa));
 		//std::auto_ptr<Record> Region(toRecord(region));
 		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
-		cout << *Region << endl;
-
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -4377,7 +4375,6 @@ image* image::newimagefromimage(
 		image *rstat(0);
 		std::auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
-
 		String mask;
 
 		if (vmask.type() == variant::BOOLVEC) {
@@ -4403,8 +4400,7 @@ image* image::newimagefromimage(
 			throw AipsError("Unable to create image");
 			return 0;
 		}
-
-		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, False));
+		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, False, infile));
         std::tr1::shared_ptr<ImageInterface<Float> >outIm(
 			newImage->newimage(
 				infile, outfile,*regionPtr,
@@ -4756,23 +4752,57 @@ bool image::isconform(const string& other) {
 }
 
 std::tr1::shared_ptr<Record> image::_getRegion(
-	const variant& region, const bool nullIfEmpty
+	const variant& region, const bool nullIfEmpty, const string& otherImageName
 ) const {
 	switch (region.type()) {
 	case variant::BOOLVEC:
 		return std::tr1::shared_ptr<Record>(nullIfEmpty ? 0 : new Record());
-	case variant::STRING:
+	case variant::STRING: {
+		IPosition shape;
+		CoordinateSystem csys;
+		if (otherImageName.empty()) {
+			ThrowIf(
+				! _image,
+				"No attached image. Cannot use a string value for region"
+			);
+			if (_image->isFloat()) {
+				shape = _image->getImage()->shape();
+				csys = _image->getImage()->coordinates();
+			}
+			else {
+				shape = _image->getComplexImage()->shape();
+				csys = _image->getComplexImage()->coordinates();
+			}
+		}
+		else {
+			std::auto_ptr<ImageInterface<Float> > image;
+			ImageUtilities::openImage(image, otherImageName);
+			if (image.get()) {
+				shape = image->shape();
+				csys = image->coordinates();
+			}
+			else {
+				std::auto_ptr<ImageInterface<Complex> > imagec;
+				ImageUtilities::openImage(imagec, otherImageName);
+				ThrowIf(
+					! imagec.get(),
+					"Unable to open image " + otherImageName
+				);
+				shape = imagec->shape();
+				csys = imagec->coordinates();
+			}
+		}
 		return std::tr1::shared_ptr<Record>(
 			region.toString().empty()
 				? nullIfEmpty ? 0 : new Record()
 				: new Record(
 					CasacRegionManager::regionFromString(
-						_image->getImage()->coordinates(),
-						region.toString(), _name(False),
-						_image->getImage()->shape()
+						csys, region.toString(),
+						_name(False), shape
 					)
 				)
 		);
+	}
 	case variant::RECORD:
 		{
 			std::tr1::shared_ptr<variant> clon(region.clone());
