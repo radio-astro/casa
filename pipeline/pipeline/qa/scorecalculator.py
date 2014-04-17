@@ -6,13 +6,16 @@ Created on 9 Jan 2014
 import collections
 import datetime
 import operator
+import re
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 
-__all__ = ['score_missing_intents',
+__all__ = ['score_polintents',                                # ALMA specific
+           'score_bands',                                     # ALMA specific
+           'score_missing_intents',
            'score_online_shadow_agents',
            'score_total_data_flagged',
            'score_ms_model_data_column_present',
@@ -241,25 +244,32 @@ def score_bands(mses):
 
     # analyse each MS
     for ms in mses:
-        msbands = set ([str(spw.band) for spw in ms.get_spectral_windows(science_windows_only=True)])
+	msbands = []
+	for spw in ms.get_spectral_windows(science_windows_only=True):
+	    match = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
+	    # Get rid of the leading 0 in the band number
+	    bandnum = str(int(match.groupdict()['band']))
+	    msbands.append(bandnum)
+	msbands = set(msbands)
 	overlap = unsupported.intersection(msbands)
 	if not overlap:
 	    continue
 	all_ok = False
 	for m in overlap:
             score += (score_map[m] / num_mses)
-        longmsg = ('%s contains %s band data'
+        longmsg = ('%s contains band %s data'
             '' % (ms.basename, utils.commafy(overlap, False)))
         complaints.append(longmsg)
 
     if all_ok:
-        longmsg = ('No %s band data were found in %s.' % (list(unsupported),
+        longmsg = ('No high frequency %s band data were found in %s.' % (list(unsupported),
                    utils.commafy([ms.basename for ms in mses], False)))
-        shortmsg = 'No %s band data found' % list(unsupported)
+        shortmsg = 'No high frequency band data found' 
     else:
         longmsg = '%s.' % utils.commafy(complaints, False)
-        shortmsg = '%s band data found' % list(unsupported)
+        shortmsg = 'High frequency band data found' 
         
+    # Make score linear
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
