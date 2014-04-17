@@ -1,2 +1,3 @@
-/* Private parts for sakura */
-casa::LogIO *itsLog;
+private:
+casa::LogIO logger_;
+casa::SakuraUtils sakuraUtils_;

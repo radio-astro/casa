@@ -1,66 +1,99 @@
 /***
  * Tool bindings of sakura module
  *
- * @author kana
+ * @author kana,kawakami,
  * @version 
  ***/
+#include <sakura_cmpt.h>
+#include <casa_sakura/SakuraUtils.h>
 #include <string>
 #include <iostream>
 
 #include <casa/Logging/LogIO.h>
+#include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
-
-#include <sakura_cmpt.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
+#include <casa/namespace.h>
 
 using namespace std;
-using namespace casa;
+
+#define _ORIGIN LogOrigin("sakura", __func__, WHERE)
 
 namespace casac {
 
-sakura::sakura()
+sakura::sakura() : logger_(),sakuraUtils_()
 {
   try {
-    itsLog = new LogIO(LogOrigin("sakura",""));
-    // do initialization here
-    *itsLog << "Constructor of sakura module is called" << LogIO::POST;
+	  logger_ << _ORIGIN;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    RETHROW(x);
+	  logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	  RETHROW(x);
   }
 }
 
 sakura::~sakura()
 {
   try {
-    *itsLog << LogOrigin("sakura", "");
-    // finalizations
-    *itsLog << "Destructor of sakura module is called" << LogIO::POST;
-    if (itsLog) {
-      delete itsLog;
-      itsLog = NULL;
-    }
+	  logger_ << _ORIGIN;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    RETHROW(x);
+	  logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	  RETHROW(x);
   }
 }
 
 void
-sakura::welcome(int number) {
-  *itsLog << LogOrigin("sakura", "welcome");
+sakura::welcome() {
   try {
-    if (number < 0)
-      throw(AipsError("The input number should be >= 0"));
-    // do something here
-    *itsLog << "sakura::welcome is called with the input value, "
-	    << number << ". This function just returns the input value."
-	    << LogIO::POST;
+	  logger_ << _ORIGIN;
+	  logger_ << "Welcome to sakura " << LogIO::POST;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+	  logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg()<< LogIO::POST;
+	  RETHROW(x);
+  }
+}
+
+bool
+sakura::initialize_sakura(const string &loglevel) {
+  try {
+	  logger_ << _ORIGIN;
+	  if(sakuraUtils_.IsSakuraInitialized()){
+		  logger_ << "sakura is already initialized. No need to initialize." << LogIO::POST;
+		  return true;
+	  }
+	  string loglevel_for_init("");
+	  if(!loglevel.empty()) {
+		  if(loglevel != "WARN" && loglevel != "ERROR" && loglevel != "INFO" && loglevel != "DEBUG"){
+			  logger_ << "Available log level is ERROR|WARN|INFO|DEBUG" << LogIO::POST;
+			  return false;
+		  }
+		  loglevel_for_init = loglevel;
+	  }
+	  if(sakuraUtils_.InitializeSakura(loglevel_for_init)){
+		  logger_ << "initialize_sakura is called, log level == "
+				  << loglevel_for_init
+				  << ". sakura is initialized successfully." << LogIO::POST;
+		  return true;
+	  }
+  } catch (AipsError x) {
+	  logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	  RETHROW(x);
+      return false;
+  }
+  return false;
+}
+
+void
+sakura::cleanup_sakura() {
+  try {
+	  logger_ << _ORIGIN;
+	  if(sakuraUtils_.IsSakuraInitialized()){
+		  sakuraUtils_.CleanUpSakura();
+    	  logger_ << "cleanup_sakura is called "<< LogIO::POST;
+	  }else{
+		  logger_ << "No need to cleanup. sakura is not initialized yet."<< LogIO::POST;
+	  }
+  } catch (AipsError x) {
+    logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 }

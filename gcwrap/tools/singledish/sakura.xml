@@ -38,15 +38,8 @@ ssd = casac.sakura()
    <shortdescription>sample function welcome with sakura module
    </shortdescription>
 <description>
-This function simply returns the input value.
+This function simply show welcome message.
 </description>
-<input>
-     <param type="int" direction="in" name="number">
-     <description>An integer to pass to the function and get returned. The value should be zero or positive integer.
-       </description>
-     <value>0</value>
-     </param>
-</input>
    <returns type="void">
    </returns>
 <example>
@@ -56,6 +49,42 @@ ssd.welcome(10)
 </example>
 </method>
 
+<method type="function" name="initialize_sakura">
+   <shortdescription>initializer of sakura with sakura module
+   </shortdescription>
+<description>
+This function returns True/False based on an result of initialize
+</description>
+<input>
+     <param type="string" direction="in" name="level">
+     <description>Log level.
+       </description>
+     <value>WARN</value>
+     </param>
+</input>
+   <returns type="bool">
+   </returns>
+<example>
+
+ssd.initialize_sakura("WARN")
+
+</example>
+</method>
+
+<method type="function" name="cleanup_sakura">
+   <shortdescription>finalizer of sakura with sakura module
+   </shortdescription>
+<description>
+This function returns True/False based on an result of finalize
+</description>
+   <returns type="void">
+   </returns>
+<example>
+
+ssd.cleanup_sakura()
+
+</example>
+</method>
 </tool>
 
 </casaxml>
