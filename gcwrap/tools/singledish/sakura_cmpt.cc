@@ -61,21 +61,19 @@ sakura::initialize_sakura(const string &loglevel) {
 		  return true;
 	  }
 	  string loglevel_for_init("");
-	  if(!loglevel.empty()) {
-		  if (loglevel == "ERROR"){
-		  	  loglevel_for_init = "SEVERE";
-		  }else if (loglevel == "" || loglevel == "WARN"){
-			  loglevel_for_init = "WARN";
-		  }else if (loglevel == "INFO"){
-			  loglevel_for_init = loglevel;
-		  }else if (loglevel == "DEBUG"){
-			  loglevel_for_init = loglevel;
-		  }else{
-			  logger_ << loglevel << "  is undefined. Available log level is ERROR|WARN|INFO|DEBUG" << LogIO::POST;
-			  return false;
-		  }
-		  logger_ << "expected log level == " << loglevel << LogIO::POST;
+	  if (loglevel == "ERROR"){
+		  loglevel_for_init = "SEVERE";
+	  }else if (loglevel == "WARN" || loglevel == ""){
+		  loglevel_for_init = "WARN";
+	  }else if (loglevel == "INFO"){
+		  loglevel_for_init = loglevel;
+	  }else if (loglevel == "DEBUG"){
+		  loglevel_for_init = loglevel;
+	  }else{
+		  logger_ << loglevel << "  is undefined. Available log level is ERROR|WARN|INFO|DEBUG" << LogIO::POST;
+		  return false;
 	  }
+	  logger_ << "expected log level == " << loglevel << LogIO::POST;
 	  if(sakuraUtils_.InitializeSakura(loglevel_for_init)){
 		  logger_ << "initialize_sakura is called. sakura was initialized successfully. " << LogIO::POST;
 		  return true;
