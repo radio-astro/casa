@@ -411,7 +411,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             for ms in context.observing_run.measurement_sets:
                 vis = ms.basename
                 prefix = vis.replace('.ms','')
-                tar_filename = '.'.join([prefix, 'caltables.tar.gz'])
+                tar_filename = '.'.join([vis, 'caltables.tar.gz'])
                 list_of_tarname.append(tar_filename)
                 LOG.info ('caltable_list: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename))
                 tar = tarfile.open(os.path.join(products_dir, tar_filename), 'w:gz')
