@@ -138,7 +138,7 @@ namespace casa {
 				defaultZoomOut();
 			}
 		}
-		emit xRangeChanged(1.0,0.0);
+		//emit xRangeChanged(1.0,0.0);
 	}
 
 	void QtCanvas::defaultZoomOut() {
@@ -165,7 +165,7 @@ namespace casa {
 			xRangeIsShown=false;
 			++curZoom;
 			refreshPixmap();
-			emit xRangeChanged(1.0,0.0);
+			//emit xRangeChanged(1.0,0.0);
 		} else {
 			if (curveMap.size() != 0) {
 				defaultZoomIn();
@@ -238,26 +238,27 @@ namespace casa {
 
 	void QtCanvas::zoomNeutral() {
 		//xRangeIsShown=false;
+		if ( zoomStack.size() != 1 ){
+			zoomStack.resize(1);
+			zoomStack[0] = QtPlotSettings();
+			curZoom = 0;
 
-		zoomStack.resize(1);
-		zoomStack[0] = QtPlotSettings();
-		curZoom = 0;
+			setDataRange();
 
-		setDataRange();
+			if (xRangeIsShown ){
+				QtPlotSettings currSettings = zoomStack[curZoom];
+				double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+				double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
+				double newXStart = currMinX + dx * (xRectStart - MARGIN_LEFT);
+				double newXEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
 
-		if (xRangeIsShown ){
-			QtPlotSettings currSettings = zoomStack[curZoom];
-			double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
-			double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
-			double newXStart = currMinX + dx * (xRectStart - MARGIN_LEFT);
-			double newXEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
-
-			xRangeStart = qMax( newXStart,xRangeStart);
-			xRangeEnd = qMin( newXEnd, xRangeEnd );
-			update();
-			emit xRangeChanged(xRangeStart,xRangeEnd);
+				xRangeStart = qMax( newXStart,xRangeStart);
+				xRangeEnd = qMin( newXEnd, xRangeEnd );
+				update();
+				emit xRangeChanged(xRangeStart,xRangeEnd);
 
 
+			}
 		}
 	}
 
@@ -875,7 +876,7 @@ namespace casa {
 				if (xRangeIsShown) {
 					xRangeIsShown=false;
 					updatexRangeBandRegion();
-					emit xRangeChanged(1.0,0.0);
+					//emit xRangeChanged(1.0,0.0);
 				}
 				currentMode = NULL;
 				break;
