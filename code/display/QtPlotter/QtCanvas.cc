@@ -237,14 +237,28 @@ namespace casa {
 
 
 	void QtCanvas::zoomNeutral() {
-		xRangeIsShown=false;
+		//xRangeIsShown=false;
 
 		zoomStack.resize(1);
 		zoomStack[0] = QtPlotSettings();
 		curZoom = 0;
 
 		setDataRange();
-		emit xRangeChanged(1.0,0.0);
+
+		if (xRangeIsShown ){
+			QtPlotSettings currSettings = zoomStack[curZoom];
+			double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+			double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
+			double newXStart = currMinX + dx * (xRectStart - MARGIN_LEFT);
+			double newXEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
+
+			xRangeStart = qMax( newXStart,xRangeStart);
+			xRangeEnd = qMin( newXEnd, xRangeEnd );
+			update();
+			emit xRangeChanged(xRangeStart,xRangeEnd);
+		}
+
+		//emit xRangeChanged(1.0,0.0);
 	}
 
 	int QtCanvas::getLineCount() {
@@ -404,7 +418,7 @@ namespace casa {
 		curveMap.clear();
 		profileFitMarkers.clear();
 
-		this->xRangeIsShown = false;
+		//this->xRangeIsShown = false;
 		curveCount = 0;
 		curveCountPrimary = 0;
 		curveCountSecondary = 0;
