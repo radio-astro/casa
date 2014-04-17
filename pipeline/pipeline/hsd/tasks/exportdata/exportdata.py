@@ -59,15 +59,10 @@ class SDExportDataInputs(basetask.StandardInputs):
     target images. If defined overrides the list of target images in
     the context.
     
-    .. py:attribute:: skytsyscal_bl
-    the list of flag and bl coefficient to be saved.  Defaults to all
-    target flag and bl coefficient. If defined overrides the list of 
-    flag and bl coefficient in the context.
-    
     """
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,pprfile=None,
-                 targetimages=None,skytsyscal_bl=None,products_dir=None):
+                 targetimages=None,products_dir=None):
         """
         Initialise the Inputs, initialising any property values to those given
         here.
@@ -80,8 +75,6 @@ class SDExportDataInputs(basetask.StandardInputs):
         :type pprfile: a string
         :param targetimages: the list of target images to be saved
         :type targetimages: a list
-        :param skytsyscal_bl: the list of skytsyscal_bl to be saved
-        :type skytsyscal_bl: a list
         :param products_dir: the data products directory for pipeline data
         :type products_dir: string
         """        
@@ -129,17 +122,7 @@ class SDExportDataInputs(basetask.StandardInputs):
     @targetimages.setter
     def targetimages(self, value):
         self._targetimages = value
-     
-    @property
-    def skytsyscal_bl(self):
-        if self._skytsyscal_bl is None:
-            self._skytsyscal_bl = []
-        return self._skytsyscal_bl
-     
-    @skytsyscal_bl.setter
-    def skytsyscal_bl(self, value):
-        self._skytsyscal_bl = value
- 
+      
 class SDExportDataResults(basetask.Results):
     def __init__(self, jobs=[]):
         super(SDExportDataResults,self).__init__()
@@ -212,7 +195,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             # Create fits files from CASA images
             fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
             # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
-            skytsyscal_bl = self._export_skytsyscal_bl(inputs.context, inputs.products_dir, inputs.skytsyscal_bl)
+            caltable_file_list = self._export_caltable_file_list(inputs.context, inputs.products_dir)
             # Export a tar file of the web log
             weblog = self._export_weblog (inputs.context, inputs.products_dir)
             
@@ -224,7 +207,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             'casa_commands.log', inputs.products_dir)
     
             # Export a text format list of files whithin a products directory
-            newlist = [flag_version_list,apply_file_list,fitsfiles,skytsyscal_bl,weblog,pprfiles,casa_commands_file]
+            newlist = [flag_version_list,apply_file_list,fitsfiles,caltable_file_list,weblog,pprfiles,casa_commands_file]
             list_of_locallists = [key for key,value in locals().iteritems()
                                 if type(value) == list]
             self._export_list_txt(inputs.context,inputs.products_dir,newlist,list_of_locallists)
@@ -419,75 +402,43 @@ class SDExportData(basetask.StandardTaskTemplate):
             LOG.info('FITS: There are no CASA image files here')
         return fits_list
      
-    def _export_skytsyscal_bl (self, context, products_dir, skytsyscal_bl):
+    def _export_caltable_file_list (self, context, products_dir):
         """
         Save flag_bl / Antenna are to be tar file
         """
-        cwd = os.getcwd()
-        os.chdir(context.output_dir)
-        producted_filename = 'uid___*_*_*.*'
-        
-        asdm_uidxx = []
-        if len(skytsyscal_bl) == 0:
-            asdm_uidxx = [ fname for fname in os.listdir(context.output_dir)
-                if fnmatch.fnmatch(fname, producted_filename)]
-        elif len(skytsyscal_bl) != 0 :
-            asdm_uidxx = skytsyscal_bl
-            
         list_of_tarname=[]
-        tar_filename=[]
-        if len(asdm_uidxx) != 0:
-            splitwith_dot = [name.split('.')for name in asdm_uidxx]
-            
-            #identifier setting
-            identif_sky_tsys_bl =['skycal','tsyscal','bl']
-            
-            #selection
-            Xasap_outX =[splitwith_dot[i] for i in range(len(splitwith_dot))
-                if identif_sky_tsys_bl[0] == splitwith_dot[i][-2] or identif_sky_tsys_bl[1] == splitwith_dot[i][-2] or identif_sky_tsys_bl[2] == splitwith_dot[i][-2] ]
-            
-            # create tar name
-            outname = []
-            for i in range(len(Xasap_outX)):
-                savename = []
-                savename.append(Xasap_outX[i][0])
-                for nn in savename:
-                    if not nn in outname:
-                        outname.append(nn)
-            
-            # create match number 
-            snum2 =[]
-            for k in range(len(outname)):
-                snum =[i for i in range(len(Xasap_outX))
-                    if fnmatch.fnmatch(Xasap_outX[i][0],outname[k])]
-                snum2.append(snum)
-            
-            # re join Xasa_outX
-            for i in range(len(Xasap_outX)):
-                Xasap_outX[i] = ".".join(Xasap_outX[i])
-                
-            #tar
-            tar_filename = ["".join(outname[i]) + "." + "skycal_tsyscal_bl" + ".tar.gz" for i in range(len(snum2))]
-            list_of_tarname=[]
-            if not self._executor._dry_run and len(Xasap_outX)!=0:
-                for i in range(len(snum2)):
-                    LOG.info ('SKY_TSYSCAL_BL: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename[i]))
-                    tar = tarfile.open (os.path.join(products_dir, tar_filename[i]), "w:gz")
-                    for num in snum2[i]:
-                        tar.add (Xasap_outX[num])
-                    list_of_tarname.append(tar_filename[i])
+        if not self._executor._dry_run:
+            for ms in context.observing_run.measurement_sets:
+                vis = ms.basename
+                prefix = vis.replace('.ms','')
+                tar_filename = '.'.join([prefix, 'caltables.tar.gz'])
+                list_of_tarname.append(tar_filename)
+                LOG.info ('caltable_list: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename))
+                tar = tarfile.open(os.path.join(products_dir, tar_filename), 'w:gz')
+                antenna_list = [a.name for a in ms.antennas]
+                spw_list = [spw.id for spw in ms.spectral_windows
+                            if spw.num_channels > 1 and (spw.intents & set(['TARGET', 'WVR'])) == set(['TARGET'])]
+                LOG.info('spw_list=%s'%(spw_list))
+
+                for antenna in antenna_list:
+                    namer = filenamer.CalibrationTable()
+                    namer.asdm(prefix)
+                    namer.antenna_name(antenna)
+                    namer.tsys_cal()
+                    name = namer.get_filename()
+                    if os.path.exists(name):
+                        tar.add(name)
+                    namer.sky_cal()
+                    name = namer.get_filename()
+                    if os.path.exists(name):
+                        tar.add(name)
+                    namer.bl_cal()
+                    for spw in spw_list:
+                        namer.spectral_window(spw)
+                        name = namer.get_filename()
+                        if os.path.exists(name):
+                            tar.add(name)
                 tar.close()
-            elif self._executor._dry_run and len(Xasap_outX)!=0:
-                for i in range(len(snum2)):
-                    for num in snum2[i]:
-                        LOG.info('SKY_TSYSCAL_BL: Target Calibrated and Flag_BL is %s' % Xasap_outX[num])
-                    LOG.info('SKY_TSYSCAL_BL: Saving final tar file is %s ' % os.path.join (products_dir,tar_filename[i]))
-                    list_of_tarname.append(tar_filename[i])
-                LOG.info('SKY_TSYSCAL_BL: identifier is %s' % "skycal.tbl/tsyscal.tbl/bl.tbl")
-            elif len(Xasap_outX)==0:
-                LOG.info('SKY_TSYSCAL_BL: There are no Cal_Flag_bl_coeff(*.skycal.tbl/*.tsyscal.tbl/*.bl.tbl) in output_dir')
-        else:
-            LOG.info('SKY_TSYSCAL_BL: There are no target files here')
         return list_of_tarname
     
     def _export_weblog (self, context, products_dir):
@@ -533,62 +484,30 @@ class SDExportData(basetask.StandardTaskTemplate):
       
     def _export_list_txt (self,context, products_dir, inputlist=[],name=[]):
         if not self._executor._dry_run:
-            with open(products_dir + '/' + 'list_of_exported_files.txt','a+') as f:
+            with open(os.path.join(products_dir, 'list_of_exported_files.txt'),'a+') as f:
                 for n in name:
+                    pattern = None
                     if fnmatch.fnmatch(n, "fitsfiles"):
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*fits*"):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
-                    if fnmatch.fnmatch(n, "skytsyscal_bl"):
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*" + "skycal_tsyscal_bl" + "*"):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
+                        pattern = '*fits*'
+                    if fnmatch.fnmatch(n, "caltable_file_list"):
+                        pattern = 'caltables.tar.gz'
                     if fnmatch.fnmatch(n, "weblog"):
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*weblog*"):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
+                        pattern = 'weblog'
                     if fnmatch.fnmatch(n, "pprfiles"):
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*PPR*"):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
+                        pattern = 'PPR'
                     if fnmatch.fnmatch(n, "casa_commands_file"):
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*casa_commands*"):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
+                        pattern = 'casa_commands'
                     if fnmatch.fnmatch(n, "flag_version_list"):
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*flagversions.tar.gz*"):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
+                        pattern = 'flagversions.tar.gz'
                     if fnmatch.fnmatch(n, "apply_file_list"):
+                        pattern = 'calapply.txt'
+                        
+                    if pattern is not None:
                         listname_txt = "\n %s : \n --------\n" % n
                         f.write(listname_txt)
                         for i in range(len(inputlist)):
                             for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*calapply.txt*"):
+                                if fnmatch.fnmatch(ln,"*%s*" % pattern):
                                     output_txt = " %s \n" % os.path.basename(ln)
                                     f.write(output_txt)
             

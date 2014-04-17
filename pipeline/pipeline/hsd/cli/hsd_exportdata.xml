@@ -19,11 +19,6 @@
 	<value></value>
     </param>
     
-    <param type="stringArray" name="skytsyscal_bl" subparam="true">
-	<description>List of skycal , tsyscal and bl-subtracted to be exported</description>
-	<value></value>
-    </param>
-
     <param type="string" name="products_dir" subparam="true">
     <description>The data products directory</description>
     <value></value>
@@ -56,7 +51,6 @@
 	    <equals type="string" value="interactive">
 		<default param="pprfile"><value type="string"></value></default>
 		<default param="targetimages"><value type="stringArray"></value></default>
-		<default param="skytsyscal_bl"><value type="stringArray"></value></default>
         <default param="products_dir"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
@@ -64,7 +58,6 @@
 	    <equals type="string" value="getinputs">
 		<default param="pprfile"><value type="string"></value></default>
 		<default param="targetimages"><value type="stringArray"></value></default>
-		<default param="skytsyscal_bl"><value type="stringArray"></value></default>
         <default param="products_dir"><value type="string"></value></default>
 	    </equals>
 	</when>
@@ -110,11 +103,6 @@ targetimages -- List of science target images to be exported. Defaults to all
    science target images recorded in the pipeline context.
    default: []
    example: targetimages=['r_aqr.CM02.spw5.line0.XXYY.sd.im', 'r_aqr.CM02.spw5.XXYY.sd.cont.im']
-
-skytsyscal_bl -- List of skycal ,tsyscal and bl-subtracted to be exported. Defaults to all
-   flag and bl coefficient recorded in the pipeline context.
-   default: []
-   example: skytsyscal_bl=['uid___A002_X3178c7_X31.ms.CM02.skycal', 'uid___A002_X3178c7_X31.ms.CM03.skycal']
 
 products_dir -- Name of the data products subdirectory. Defaults to './'
    default: ''
