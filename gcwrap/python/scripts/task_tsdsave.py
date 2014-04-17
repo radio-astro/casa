@@ -144,21 +144,26 @@ class sdsave_worker(sdutil.sdtask_template):
             channelrange_dic = scantab.parse_spw_selection(self.spw)
             valid_spw_list = []
             for (k,v) in channelrange_dic.items():
-                casalog.post('k=%s, v=%s'%(k,v))
-                if len(v) > 1:
+                casalog.post('k=%s, v=%s'%(k,v), priority='DEBUG')
+                unique_list = []
+                for item in map(list, v):
+                    if not item in unique_list:
+                        unique_list.append(item)
+                casalog.post('unique_list=%s'%(unique_list), priority='DEBUG')
+                if len(unique_list) > 1:
                     raise SyntaxError('tsdsave doesn\'t support multiple channel range selection for spw.')
-                elif len(v) == 0:
+                elif len(unique_list) == 0:
                     raise SyntaxError('Invalid channel range specification')
-                elif numpy.any(numpy.array(map(len, v)) == 0):
+                elif numpy.any(numpy.array(map(len, unique_list)) == 0):
                     # empty channel range
                     continue
                 nchan = scantab.nchan(k)
                 full_range = [0.0, float(nchan-1)]
-                if v[0] != full_range:
+                if unique_list[0] != full_range:
                     sel = sd.selector()
                     sel.set_ifs(k)
                     scantab.set_selection(sel)
-                    sdutil.dochannelrange(scantab, v[0])
+                    sdutil.dochannelrange(scantab, unique_list[0])
                     scantab.set_selection()
                 valid_spw_list.append(k)
             sel = sd.selector(sel_org)
