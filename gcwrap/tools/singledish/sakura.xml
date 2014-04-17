@@ -60,6 +60,12 @@ This function returns True/False based on an result of initialize
      <description>Log level.
        </description>
      <value>WARN</value>
+           <allowed kind="enum">
+                    <value>WARN</value>
+                    <value>ERROR</value>
+                    <value>INFO</value>
+                    <value>DEBUG</value>
+           </allowed>
      </param>
 </input>
    <returns type="bool">
