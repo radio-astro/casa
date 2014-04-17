@@ -1363,7 +1363,7 @@ namespace casa {
 	void QtProfile::setCollapseRange(double xmin, double xmax) {
 		momentSettingsWidget->setRange( xmin, xmax );
 		specFitSettingsWidget->setRange( xmin, xmax );
-		//lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
+		lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
 	}
 
 	void QtProfile::overplot(QList<OverplotInterface> hash) {
