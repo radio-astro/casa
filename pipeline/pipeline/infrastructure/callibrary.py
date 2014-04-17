@@ -977,7 +977,7 @@ class SDCalApplication(object):
     def as_applycal(self):
         args = {'infile'    : self.infile,
                 'calmode'   : 'apply',
-                'field'     : self.field,
+                'field'     : self.field.strip('"'),
                 'scanlist'  : self.scanlist,
                 'iflist'    : self.iflist,
                 'pollist'   : self.pollist,
@@ -992,7 +992,7 @@ class SDCalApplication(object):
         
         return ('sdcal2(infile=\'{infile}\', calmode=\'{calmode}\', applytable={applytable},  '
                 'ifmap={ifmap}, interp={interp}, '
-                'scanlist={scanlist}, field=\'{field}\', iflist={iflist}, pollist={pollist}) '
+                'scanlist={scanlist}, field=\'{field}\', iflist={iflist}, pollist={pollist}, overwrite=True) '
                 ''.format(**args))
 
     @property

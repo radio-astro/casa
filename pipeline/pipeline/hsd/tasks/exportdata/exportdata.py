@@ -29,6 +29,7 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
 
 # the logger for this module
@@ -200,6 +201,14 @@ class SDExportData(basetask.StandardTaskTemplate):
                 inputs.products_dir)
                 flag_version_list.append(flag_version_file)
             
+	    # create the calibration apply file(s) in the products directory. 
+            apply_file_list = []
+            for visfile in vislist:
+                apply_file =  self._export_final_applylist (inputs.context, \
+                                                                visfile, inputs.products_dir)
+                if len(apply_file) > 0:
+                    apply_file_list.append (apply_file)
+
             # Create fits files from CASA images
             fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
             # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
@@ -215,7 +224,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             'casa_commands.log', inputs.products_dir)
     
             # Export a text format list of files whithin a products directory
-            newlist = [fitsfiles,skytsyscal_bl,weblog,pprfiles,casa_commands_file]
+            newlist = [flag_version_list,apply_file_list,fitsfiles,skytsyscal_bl,weblog,pprfiles,casa_commands_file]
             list_of_locallists = [key for key,value in locals().iteritems()
                                 if type(value) == list]
             self._export_list_txt(inputs.context,inputs.products_dir,newlist,list_of_locallists)
@@ -293,6 +302,48 @@ class SDExportData(basetask.StandardTaskTemplate):
         #return os.path.basename(out_casalog_file)
         return out_casalog_file
     
+    def _export_final_applylist (self, context, vis, products_dir):
+
+        """
+	Save the final calibration list to a file. For now this is
+	a text file. Eventually it will be the CASA callibrary file.
+	"""
+        # return '' if vis is not in callibrary applied list
+        if not context.callibrary.applied.has_key(vis):
+            return ''
+
+	applyfile_name = os.path.basename(vis) + '.calapply.txt'
+	LOG.info('Storing calibration apply list for %s in  %s' % \
+	    (os.path.basename(vis), applyfile_name))
+
+	if not self._executor._dry_run:
+
+	    # Get the applied calibration state for the visibility file and
+	    # convert it into a dictionary of apply instructions.
+	    callib = callibrary.SDCalState()
+	    callib[vis] = context.callibrary.applied[vis]
+
+	    # Log the list in human readable form. Better way to do this ?
+	    callib_merged = callib.merged()
+	    for calto, calfrom in callib_merged.iteritems():
+	        LOG.info('Apply to:  Field: %s  Spw: %s  Antenna: %s',
+		    calto.field, calto.spw, calto.antenna)
+		for item in calfrom:
+		    LOG.info ('    Gaintable: %s  Caltype: %s  Spwmap: %s  Interp: %s',
+		        os.path.basename(item.gaintable),
+			item.caltype,
+		        item.spwmap,
+		        item.interp)
+
+	    # Open the file.
+            with open(os.path.join(products_dir, applyfile_name), 'w') as applyfile:
+
+                # Write
+                applyfile.write ('# Apply file for %s\n' % (os.path.basename(vis)))
+                applyfile.write (callib.as_applycal())
+
+	return applyfile_name
+
     def _export_images (self, context, products_dir, images):
         #cwd = os.getcwd()
         os.chdir(context.output_dir)
@@ -482,49 +533,64 @@ class SDExportData(basetask.StandardTaskTemplate):
       
     def _export_list_txt (self,context, products_dir, inputlist=[],name=[]):
         if not self._executor._dry_run:
-            f = open(products_dir + '/' + 'list_of_exported_files.txt','a+')
-            for n in name:
-                if fnmatch.fnmatch(n, "fitsfiles"):
-                    listname_txt = "\n %s : \n --------\n" % n
-                    f.write(listname_txt)
-                    for i in range(len(inputlist)):
-                        for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*fits*"):
-                                output_txt = " %s \n" % os.path.basename(ln)
-                                f.write(output_txt)
-                if fnmatch.fnmatch(n, "skytsyscal_bl"):
-                    listname_txt = "\n %s : \n --------\n" % n
-                    f.write(listname_txt)
-                    for i in range(len(inputlist)):
-                        for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*" + "skycal_tsyscal_bl" + "*"):
-                                output_txt = " %s \n" % os.path.basename(ln)
-                                f.write(output_txt)
-                if fnmatch.fnmatch(n, "weblog"):
-                    listname_txt = "\n %s : \n --------\n" % n
-                    f.write(listname_txt)
-                    for i in range(len(inputlist)):
-                        for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*weblog*"):
-                                output_txt = " %s \n" % os.path.basename(ln)
-                                f.write(output_txt)
-                if fnmatch.fnmatch(n, "pprfiles"):
-                    listname_txt = "\n %s : \n --------\n" % n
-                    f.write(listname_txt)
-                    for i in range(len(inputlist)):
-                        for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*PPR*"):
-                                output_txt = " %s \n" % os.path.basename(ln)
-                                f.write(output_txt)
-                if fnmatch.fnmatch(n, "casa_commands_file"):
-                    listname_txt = "\n %s : \n --------\n" % n
-                    f.write(listname_txt)
-                    for i in range(len(inputlist)):
-                        for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*casa_commands*"):
-                                output_txt = " %s \n" % os.path.basename(ln)
-                                f.write(output_txt)
-            f.close()
+            with open(products_dir + '/' + 'list_of_exported_files.txt','a+') as f:
+                for n in name:
+                    if fnmatch.fnmatch(n, "fitsfiles"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*fits*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
+                    if fnmatch.fnmatch(n, "skytsyscal_bl"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*" + "skycal_tsyscal_bl" + "*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
+                    if fnmatch.fnmatch(n, "weblog"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*weblog*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
+                    if fnmatch.fnmatch(n, "pprfiles"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*PPR*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
+                    if fnmatch.fnmatch(n, "casa_commands_file"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*casa_commands*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
+                    if fnmatch.fnmatch(n, "flag_version_list"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*flagversions.tar.gz*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
+                    if fnmatch.fnmatch(n, "apply_file_list"):
+                        listname_txt = "\n %s : \n --------\n" % n
+                        f.write(listname_txt)
+                        for i in range(len(inputlist)):
+                            for ln in inputlist[i]:
+                                if fnmatch.fnmatch(ln,"*calapply.txt*"):
+                                    output_txt = " %s \n" % os.path.basename(ln)
+                                    f.write(output_txt)
             
     def _save_final_flagversion(self, vis, flag_version_name):
         """
