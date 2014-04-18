@@ -65,7 +65,8 @@ s = sd.scantable('OrionS_rawACSmod', False)#load the data without averaging		# f
 											# fileout,'Orion-S-reduced.fits'
 s.set_fluxunit('K')         		# make 'K' default unit
 
-scal = sd.calps(s, [20,21,22,23])		# Calibrate HC3N scans				# for i=21,24,2 do begin getps,i,ifnum=0,plnum=0,units='Ta*',
+#scal = sd.calps(s, [20,21,22,23])		# Calibrate HC3N scans				# for i=21,24,2 do begin getps,i,ifnum=0,plnum=0,units='Ta*',
+scal = sd.calps(s, [21,22,23,24])		# Calibrate HC3N scans				# for i=21,24,2 do begin getps,i,ifnum=0,plnum=0,units='Ta*',
 #
 del s					# remove s from memory
 antennaname = scal.get_antennaname()

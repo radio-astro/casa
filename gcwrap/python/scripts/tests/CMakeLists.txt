@@ -140,39 +140,39 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_rg_selectedchannels.py
   test_rg_frombcs.py
   test_rg_fromtextfile.py
-  test_sdbaseline.py
-  test_sdcal.py
-  test_sdcal2.py
-  test_sdcoadd.py
-  test_sdfit.py
-  test_sdflag.py
-  test_sdflag2.py
-  test_sdflagmanager.py
-  test_sdgrid.py
-  test_sdimaging.py
-  test_sdimprocess.py
-  test_sdlist.py
-  test_sdmath.py
-  test_sdplot.py
-  test_sdreduce.py
-  test_sdsave.py
-  test_sdscale.py
-  test_sdsmooth.py
-  test_sdstat.py
-  test_sdtpimaging.py
   test_tsdaverage.py
   test_tsdbaseline.py
   test_tsdcal.py
   test_tsdcal2.py
+  test_sdcoadd.py
   test_tsdfit.py
   test_tsdflag.py
+  test_sdflagmanager.py
   test_tsdgrid.py
   test_tsdimaging.py
+  test_sdimprocess.py
+  test_sdlist.py
   test_tsdmath.py
   test_tsdplot.py
   test_tsdreduce.py
   test_tsdsave.py
+  test_sdscale.py
   test_tsdstat.py
+  test_sdtpimaging.py
+  test_sdbaselineold.py
+  test_sdcalold.py
+  test_sdcal2old.py
+  test_sdfitold.py
+  test_sdflagold.py
+  test_sdflag2old.py
+  test_sdgridold.py
+  test_sdimagingold.py
+  test_sdmathold.py
+  test_sdplotold.py
+  test_sdreduceold.py
+  test_sdsaveold.py
+  test_sdsmoothold.py
+  test_sdstatold.py
   test_setjy.py
   test_simobserve.py
   test_simplecluster.py

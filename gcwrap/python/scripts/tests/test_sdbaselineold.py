@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -11,23 +10,17 @@ import listing
 from numpy import array
 
 import asap as sd
-from tsdbaseline import tsdbaseline
+from sdbaselineold import sdbaselineold
 from sdstatold import sdstatold
 
-try:
-    import selection_syntax
-except:
-    import tests.selection_syntax as selection_syntax
-
-
-class tsdbaseline_unittest_base:
+class sdbaselineold_unittest_base:
     """
-    Base class for tsdbaseline unit test
+    Base class for sdbaselineold unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/sdbaseline/'
-    taskname = "tsdbaseline"
+    taskname = "sdbaselineold"
 
     #complist = ['max','min','rms','median','stddev']
 
@@ -177,9 +170,9 @@ class tsdbaseline_unittest_base:
 #                         %(out,reference))
 
 
-class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_basicTest( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Basic unit tests for task tsdbaseline. No interactive testing.
+    Basic unit tests for task sdbaselineold. No interactive testing.
 
     The list of tests:
     test01   --- test polynominal baseline with maskmode = 'auto'
@@ -199,16 +192,16 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = tsdbaseline_unittest_base.taskname+'_test'
-    blrefroot = tsdbaseline_unittest_base.datapath+'refblparam'
-    strefroot = tsdbaseline_unittest_base.datapath+'refstats'
+    outroot = sdbaselineold_unittest_base.taskname+'_test'
+    blrefroot = sdbaselineold_unittest_base.datapath+'refblparam'
+    strefroot = sdbaselineold_unittest_base.datapath+'refstats'
 
     def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(tsdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -220,11 +213,11 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         infile = self.infile
         outfile = self.outroot+tid+".asap"
         mode = "auto"
-        spw = '0,2'
-        pol = '0'
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            blfunc='poly',spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        iflist = [0,2]
+        pollist=[0]
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,
+                            blfunc='poly',iflist=iflist,pollist=pollist)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
@@ -246,11 +239,11 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         infile = self.infile
         outfile = self.outroot+tid+".asap"
         mode = "list"
-        spw = '2'
-        pol = '1'
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        iflist = [2]
+        pollist = [1]
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,
+                            iflist=iflist,pollist=pollist)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
@@ -269,9 +262,10 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         infile = self.infile
         outfile = "Dummy_Empty.asap"
         mode = "list"
+        masklist = []
         os.mkdir(outfile)
         try:
-            result = tsdbaseline(infile=infile, outfile=outfile, overwrite=False, maskmode=mode)
+            result = sdbaselineold(infile=infile, outfile=outfile, overwrite=False, maskmode=mode, masklist=masklist)
         except Exception, e:
             pos = str(e).find("Output file 'Dummy_Empty.asap' exists.")
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
@@ -283,21 +277,21 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         tid = "wp01"
         infile = self.infile
         outfile = self.outroot+tid+".asap"
-        spw = '10' # non-existent IF value
+        iflist = [10] # non-existent IF value
         mode = "list"
+        masklist = []
         try:
-            result = tsdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
+            result = sdbaselineold(infile=infile, outfile=outfile, iflist=iflist, maskmode=mode, masklist=masklist)
         except Exception, e:
-            #pos = str(e).find('Invalid spectral window selection. Selection contains no data.')
-            pos = str(e).find('No valid spw.')
+            pos = str(e).find('Selection contains no data. Not applying it.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 
 
-class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_maskTest( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task tsdbaseline. Test various mask selections.
+    Unit tests for task sdbaselineold. Test various mask selections.
     Polynominal baselining. No interactive testing.
 
     The list of tests:
@@ -318,9 +312,9 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = tsdbaseline_unittest_base.taskname+'_masktest'
-    blrefroot = tsdbaseline_unittest_base.datapath+'refblparam_mask'
-    #strefroot = tsdbaseline_unittest_base.datapath+'refstats_mask'
+    outroot = sdbaselineold_unittest_base.taskname+'_masktest'
+    blrefroot = sdbaselineold_unittest_base.datapath+'refblparam_mask'
+    #strefroot = sdbaselineold_unittest_base.datapath+'refstats_mask'
     tid = None
 
     # Channel range excluding bad edge
@@ -363,7 +357,7 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(tsdbaseline)
+        default(sdbaselineold)
 
 
     def tearDown( self ):
@@ -379,15 +373,15 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         infile = self.infile
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
-        masklist = self._get_range_in_string(self.search[0])
-        spw = '0:%s,2:%s'%(masklist,masklist)
-        pol = '0'
+        masklist = self.search
+        iflist = [0,2]
+        pollist=[0]
 
-        print "spw =", spw
+        print "masklist =", masklist
 
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -405,14 +399,15 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         infile = self.infile
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
-        spw = '2:%s'%(';'.join(map(self._get_range_in_string,self.blchan2)))
-        pol = '0'
+        masklist = self.blchan2
+        iflist = [2]
+        pollist=[0]
 
-        print "spw =", spw
+        print "masklist =", masklist
 
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -428,15 +423,16 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
         #masklist = "0~2:200~7599"
-        range_in_string = self._get_range_in_string(self.search[0])
-        spw = '0:%s,2:%s'%(range_in_string,range_in_string)
-        pol = '0'
+        iflist = [0,2]
+        pollist=[0]
 
-        print "spw =", spw
+        searchrange = self._get_range_in_string(self.search[0])
+        masklist = "0~2:"+searchrange
+        print "masklist =", masklist
 
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -455,15 +451,22 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
         #masklist = "0:200~3979;4152~7599, 2:200~2959;3120~7599"
-        spw = ','.join(['0:%s'%(';'.join(map(self._get_range_in_string,self.blchan0))), '2:%s'%(';'.join(map(self._get_range_in_string,self.blchan2)))])
+        iflist = [0,2]
+        pollist=[0]
 
-        print "spw =", spw
-        
-        pol = '0'
+        sblrange=[]
+        chanlist = (self.blchan0, self.blchan2)
+        for i in xrange(len(iflist)):
+            sblrange.append("")
+            for chanrange in chanlist[i]:
+                if len(sblrange[i]): sblrange[i] += ";"
+                sblrange[i] += self._get_range_in_string(chanrange)
+        masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
+        print "masklist =", masklist
 
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -484,16 +487,15 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         specunit = "GHz"
         #masklist = [[44.0511472,44.0963125]]
         iflist = [2]
+        pollist=[0]
 
         masklist = self._get_chanval(infile,self.search,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
-        spw = '2:%s%s'%(self._get_range_in_string(masklist[0]),specunit)
-        print "spw =", spw
 
-        pol = '0'
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -514,13 +516,10 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         masklist = self._get_chanval(infile,self.blchan2,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
 
-        spw = '2:%s'%(';'.join(map(lambda x: x + specunit, [self._get_range_in_string(m) for m in masklist])))
-        pol = '0'
-        print "spw =", spw
-        
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -549,13 +548,10 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
         print "masklist =", masklist
 
-        pol = '0'
-        spw = ','.join(map(lambda x: x + specunit, masklist.split(',')))
-        print "spw = ", spw
-        
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -587,13 +583,10 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
         print "masklist =", masklist
 
-        pol = '0'
-        spw = ','.join([';'.join(map(lambda x: x + specunit, m.split(';'))) for m in masklist.split(',')])
-        print "spw = ", spw
-
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -616,14 +609,11 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
 
         masklist = self._get_chanval(infile,self.search,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
-        spw = '2:%s'%(';'.join(map(lambda x: x + specunit, [self._get_range_in_string(m) for m in masklist])))
-        pol = '0'
         
-        print "spw =", spw
-        
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -643,16 +633,11 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
 
         masklist = self._get_chanval(infile,self.blchan2,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
-
-        masklist.reverse()
-        spw = '2:%s'%(';'.join(map(lambda x: x + specunit,[self._get_range_in_string(m) for m in masklist])))
-        pol = '0'
-
-        print "spw =", spw
         
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -681,13 +666,10 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
         print "masklist =", masklist
 
-        pol = '0'
-        spw = ','.join(map(lambda x: x + specunit, masklist.split(',')))
-        print "spw =", spw
-
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -719,13 +701,10 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
         print "masklist =", masklist
 
-        pol = '0'
-        spw = ','.join([';'.join(map(lambda x: x + specunit, m.split(';'))) for m in masklist.split(',')])
-        print "spw = ", spw
-
-        result = tsdbaseline(infile=infile,maskmode=mode,
-                            outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        result = sdbaselineold(infile=infile,maskmode=mode,masklist=masklist,
+                            outfile=outfile,iflist=iflist,pollist=pollist,
+                            specunit=specunit)
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -784,9 +763,9 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         return retdic
  
 
-class tsdbaseline_funcTest( unittest.TestCase ):
+class sdbaselineold_funcTest( unittest.TestCase ):
     """
-    Unit tests for task tsdbaseline. No interactive testing.
+    Unit tests for task sdbaselineold. No interactive testing.
 
     The list of tests:
     testCSpline01  --- test cubic spline fitting with maskmode = 'list'
@@ -808,7 +787,7 @@ class tsdbaseline_funcTest( unittest.TestCase ):
     infile_cspline  = 'Artificial_CubicSpline.asap'
     infile_sinusoid = 'Artificial_Sinusoid.asap'
     blparamfile_suffix = '_blparam.txt'
-    outroot = 'tsdbaseline_test'
+    outroot = 'sdbaselineold_test'
     tid = None
 
     def setUp( self ):
@@ -819,7 +798,7 @@ class tsdbaseline_funcTest( unittest.TestCase ):
             shutil.rmtree(self.infile_sinusoid)
         shutil.copytree(self.datapath+self.infile_sinusoid, self.infile_sinusoid)
 
-        default(tsdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if os.path.exists(self.infile_cspline):
@@ -835,7 +814,7 @@ class tsdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
@@ -847,7 +826,7 @@ class tsdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
@@ -859,7 +838,7 @@ class tsdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
@@ -871,7 +850,7 @@ class tsdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
@@ -888,11 +867,11 @@ class tsdbaseline_funcTest( unittest.TestCase ):
         self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
 
 
-class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_multi_IF_test( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task tsdbaseline. No interactive testing.
+    Unit tests for task sdbaselineold. No interactive testing.
 
-    This test intends to check whether tsdbaseline task works fine
+    This test intends to check whether sdbaselineold task works fine
     for data that has multiple IFs whose nchan differ each other. 
 
     The list of tests:
@@ -903,14 +882,14 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     infile = 'testMultiIF.asap'
     blparamfile_suffix = '_blparam.txt'
-    outroot = tsdbaseline_unittest_base.taskname+'_multi'
+    outroot = sdbaselineold_unittest_base.taskname+'_multi'
     refblparamfile = 'refblparam_multiIF'
 
     def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if os.path.exists(self.infile):
@@ -925,7 +904,7 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
         outfile = self.outroot+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(blparamfile,self.datapath+self.refblparamfile)
         reference = {5: {'rms': 1.4250789880752563,
@@ -946,14 +925,14 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
                          'min_abscissa': {'value': 1490.0,
                                           'unit': 'channel'},
                          'stddev': 1.4974949359893799}}
-        # sdstat must run each IF separately
+        # sdstatold must run each IF separately
         for ifno in [5,7]:
             currstat = self._getStats(outfile,[ifno])
             self._compareStats(currstat,reference[ifno])
 
-class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_storageTest( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task tsdbaseline. Test scantable sotrage and insitu
+    Unit tests for task sdbaselineold. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -968,15 +947,13 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = tsdbaseline_unittest_base.taskname+'_store'
+    outroot = sdbaselineold_unittest_base.taskname+'_store'
     mode = "list"
-    #iflist = [2]
-    #pollist = [1]
-    spw = '2'
-    pol = '1'
+    iflist = [2]
+    pollist = [1]
     
     blparamfile_suffix = '_blparam.txt'
-    blreffile = tsdbaseline_unittest_base.datapath+'refblparam02'
+    blreffile = sdbaselineold_unittest_base.datapath+'refblparam02'
 
     # Reference statistic values of IF=2, POL=1
     refstat =  {'rms': 3.4925737380981445,
@@ -991,7 +968,7 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if os.path.exists(self.infile):
@@ -1008,10 +985,10 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = tsdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
-                            spw=self.spw,pol=self.pol)
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
-        # tsdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1033,10 +1010,10 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = tsdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
-                            spw=self.spw,pol=self.pol)
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
-        # tsdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1058,10 +1035,10 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = tsdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
-                            spw=self.spw,pol=self.pol)
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
-        # tsdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1083,10 +1060,10 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = tsdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
-                            spw=self.spw,pol=self.pol)
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
-        # tsdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1109,777 +1086,20 @@ class tsdbaseline_storageTest( tsdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = tsdbaseline(infile=infile,maskmode=self.mode,outfile=outfile,
-                            spw=self.spw,pol=self.pol,overwrite=True)
+        result = sdbaselineold(infile=infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist,overwrite=True)
 
-        # tsdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
         self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
 
-class tsdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
-    
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
-    # Input and output names
-    infile = 'sd_analytic_type1-3.cal.asap'
-    #workfile = 'sd_analytic_type1-3.cal.asap_work'
-    outfile = 'tsdbaseline_selection_syntax.asap'
-    blparamfile = outfile + '_blparam.txt'
-    order = 5
-
-    # line information
-    # | row | line channel | intensity |
-    # | 0   | 20           | 5         |
-    # | 1   | 40           | 10        |
-    # | 2   | 60           | 20        |
-    # | 3   | 80           | 30        |
-    line_location = [20, 40, 60, 80]
-
-    # reference values for baseline fit
-    fit_ref = {(15,11,23,0): [1.0],
-               (16,12,25,1): [0.2, 0.02],
-               (16,13,21,0): [2.44, -0.048, 0.0004],
-               (17,13,23,1): [-3.096, 0.1536, -0.00192, 8.0e-6]}
-
-    # tolerance
-    tol_partial = 1.0e-3
-    tol_full = 1.0e-5
-    tol_coeff = 1.0e-6
-    
-    @property
-    def task(self):
-        return tsdbaseline
-
-    @property
-    def spw_channel_selection(self):
-        return True
-
-    def setUp(self):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
-
-    def tearDown(self):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        #if os.path.exists(self.workfile):
-        #    shutil.rmtree(self.workfile)
-        if os.path.exists(self.outfile):
-            shutil.rmtree(self.outfile)
-        if os.path.exists(self.blparamfile):
-            os.remove(self.blparamfile)
-
-    def _flag_lines(self):
-        s = sd.scantable(self.infile, average=False)
-        nrow = s.nrow()
-        
-        # flag lines
-        self.assertEqual(nrow, len(self.line_location))
-        for i in xrange(nrow):
-            line = self.line_location[i]
-            line_mask = s.create_mask([line,line], row=i)
-            s.flag(line_mask, row=i)
-        s.save(self.infile, format='ASAP', overwrite=True)
-
-        del s
-
-        # check if data is edited as expected
-        s = sd.scantable(self.infile, average=False)
-        self.assertEqual(nrow, s.nrow())
-        for i in xrange(nrow):
-            idx = numpy.where(numpy.array(s.get_mask(i)) == False)[0]
-            self.assertEqual(1, len(idx))
-            self.assertEqual(self.line_location[i], idx[0])
-        del s
-
-    def __test_result(self, spw):
-        # basic check
-        #   - check if self.outfile exists
-        #   - check if self.outfile is a directory
-        #   - check if self.blparamfile exists
-        #   - check if self.blparamfile is a regular file
-        self.assertTrue(os.path.exists(self.outfile))
-        self.assertTrue(os.path.isdir(self.outfile))
-        self.assertTrue(os.path.exists(self.blparamfile))
-        self.assertTrue(os.path.isfile(self.blparamfile))
-        
-        s = sd.scantable(self.outfile, average=False)
-        nrow = s.nrow()
-        spw_selection = s.parse_spw_selection(spw)
-
-        # length check
-        #   - check if length of refids is equal to nrow of self.outfile
-        #self.assertEqual(nrow, len(refids))
-
-        # result check
-        #   - check if resulting spectral data have small value
-        #   - check if fit coefficients are equal to reference values
-        blparam_list = list(self.__read_blparamfile())
-        for i in xrange(nrow):
-            mask = numpy.logical_not(s.get_mask(i))
-            sp = numpy.ma.masked_array(s._getspectrum(i),mask)
-            ifno = s.getif(i)
-            nchan = s.nchan(ifno)
-            chrange = [map(int, l) for l in spw_selection[ifno]]
-            if len(chrange) == 1 and chrange[0] == 0 \
-                    and chrange[1] == nchan - 1:
-                tol = self.tol_full
-            else:
-                tol = self.tol_partial
-            for _chrange in chrange:
-                start = _chrange[0]
-                end = _chrange[1] + 1
-                #self.assertTrue(numpy.all(abs(sp[start:end]) < tol))
-                maxdiff = abs(sp[start:end]).max()
-                casalog.post('maxdiff = %s (tol %s)'%(maxdiff,tol))
-                self.assertLess(maxdiff, tol)
-
-            (key, coeffs) = blparam_list[i]
-            self.assertTrue(self.fit_ref.has_key(key))
-            self.assertEqual(self.order+1, len(coeffs))
-            ref_coeff = self.fit_ref[key]
-            ncoeff = len(ref_coeff)
-            for j in xrange(ncoeff):
-                ref = ref_coeff[j]
-                val = coeffs[j]
-                diff = abs((val - ref)/ref)
-                casalog.post('ref: %s, val: %s, diff: %s'%(ref, val, diff))
-                self.assertLess(diff, tol)
-            casalog.post('coeffs=%s'%(coeffs))
-            for j in xrange(ncoeff, self.order+1):
-                casalog.post('coeffs[%s]: %s (%s)'%(j,coeffs[j],abs(coeffs[j])))
-                self.assertLess(abs(coeffs[j]), self.tol_coeff)
-
-        del s
-
-    def __read_blparamfile(self):
-        with open(self.blparamfile, 'r') as f:
-            for line in f:
-                s = line.split(',')
-                scanno = int(s[0])
-                beamno = int(s[1])
-                ifno = int(s[2])
-                polno = int(s[3])
-                coeffs = map(float, s[6:-2])
-                yield (scanno, beamno, ifno, polno), coeffs
-        
-    def __exec_complex_test(self, params, exprs, values, columns, expected_nrow, regular_test=True):
-        num_param = len(params)
-        test_name = self._get_test_name(regular_test)
-        #outfile = '.'.join([self.prefix, test_name])
-        outfile = self.outfile
-        #print 'outfile=%s'%(outfile)
-        casalog.post('%s: %s'%(test_name, ','.join(['%s = \'%s\''%(params[i],exprs[i]) for i in xrange(num_param)])))
-        kwargs = {'infile': self.infile,
-                  'outfile': self.outfile,
-                  'outform': 'ASAP',
-                  'overwrite': True,
-                  'blfunc': 'poly',
-                  'order': self.order,
-                  'maskmode': 'list',
-                  'bloutput': True,
-                  'blformat': 'csv'}
-        for i in xrange(num_param):
-            kwargs[params[i]] = exprs[i]
-
-        if regular_test:
-            self.run_task(**kwargs)
-        else:
-            tsdbaseline(**kwargs)
-
-        tb.open(outfile)
-        cols = [tb.getcol(columns[i]) for i in xrange(num_param)]
-        nrow = tb.nrows()
-        tb.close()
-        casalog.post('expected nrow = %s, actual nrow = %s'%(expected_nrow, nrow))
-        self.assertEqual(expected_nrow, nrow)
-        for i in xrange(num_param):
-            casalog.post('expected values = %s, actual values = %s'%(set(values[i]), set(cols[i])))
-            self.assertEqual(set(values[i]), set(cols[i]))
-
-        # channel range selection should be taken into account
-        if 'spw' in params:
-            spw = exprs[params.index('spw')]
-        else:
-            spw = ''
-        self.__test_result(spw)
-                          
-        return outfile
-
-    def __exec_simple_test(self, param, expr, value_list, column, expected_nrow, regular_test=True):
-        return self.__exec_complex_test([param], [expr], [value_list], [column],
-                                        expected_nrow, regular_test)
-    
-    def prepare(func):
-        import functools
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # first argument is 'self'
-            obj = args[0]
-            obj._flag_lines()
-            return func(*args, **kwargs)
-        return wrapper
-
-    ### field selection syntax test ###
-    @prepare
-    def test_field_value_default(self):
-        """test_field_value_default: Test default value for field"""
-        field = ''
-        expected_nrow = 4
-        fieldlist = ['M100__5', 'M100__6', 'M30__7', '3C273__8']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-        
-    @prepare
-    def test_field_id_exact(self):
-        """test_field_id_exact: Test field selection by id"""
-        field = '5'
-        expected_nrow = 1
-        fieldlist = ['M100__5']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-        
-    @prepare
-    def test_field_id_lt(self):
-        """test_field_id_lt: Test field selection by id (<N)"""
-        field = '<7'
-        expected_nrow = 2
-        fieldlist = ['M100__5', 'M100__6']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_id_gt(self):
-        """test_field_id_gt: Test field selection by id (>N)"""
-        field = '>6'
-        expected_nrow = 2
-        fieldlist = ['M30__7', '3C273__8']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_id_range(self):
-        """test_field_id_range: Test field selection by id ('N~M')"""
-        field = '6~7'
-        expected_nrow = 2
-        fieldlist = ['M100__6', 'M30__7']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_id_list(self):
-        """test_field_id_list: Test field selection by id ('N,M')"""
-        field = '5,8'
-        expected_nrow = 2
-        fieldlist = ['M100__5', '3C273__8']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_id_exprlist(self):
-        """test_field_id_exprlist: Test field selection by id ('EXPR0,EXPR1')"""
-        field = '<6,7~8'
-        expected_nrow = 3
-        fieldlist = ['M100__5', 'M30__7', '3C273__8']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_value_exact(self):
-        """test_field_value_exact: Test field selection by name"""
-        field = 'M100'
-        expected_nrow = 2
-        fieldlist = ['M100__5', 'M100__6']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_value_pattern(self):
-        """test_field_value_pattern: Test field selection by pattern match"""
-        field = 'M*'
-        expected_nrow = 3
-        fieldlist = ['M100__5', 'M100__6', 'M30__7']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_value_list(self):
-        """test_field_value_list: Test field selection by name list"""
-        field = 'M30,3C273'
-        expected_nrow = 2
-        fieldlist = ['M30__7', '3C273__8']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    @prepare
-    def test_field_mix_exprlist(self):
-        """test_field_mix_list: Test field selection by name and id"""
-        field = 'M1*,7~8'
-        expected_nrow = 4
-        fieldlist = ['M100__5', 'M100__6', 'M30__7', '3C273__8']
-
-        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
-
-    ### spw selection syntax test ###
-    @prepare
-    def test_spw_id_default(self):
-        """test_spw_id_default: Test default value for spw"""
-        spw = ''
-        expected_nrow = 4
-        spwlist = [21, 23, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-        
-    @prepare
-    def test_spw_id_exact(self):
-        """test_spw_id_exact: Test spw selection by id ('N')"""
-        spw = '23'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-        
-    @prepare
-    def test_spw_id_lt(self):
-        """test_spw_id_lt: Test spw selection by id ('<N')"""
-        spw = '<23'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_id_gt(self):
-        """test_spw_id_lt: Test spw selection by id ('>N')"""
-        spw = '>23'
-        expected_nrow = 1
-        spwlist = [25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_id_range(self):
-        """test_spw_id_range: Test spw selection by id ('N~M')"""
-        spw = '22~24'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_id_list(self):
-        """test_spw_id_list: Test spw selection by id ('N,M')"""
-        spw = '21,25'
-        expected_nrow = 2
-        spwlist = [21, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_id_exprlist(self):
-        """test_spw_id_exprlist: Test spw selection by id ('EXP0,EXP1')"""
-        spw = '24~26,<23'
-        expected_nrow = 2
-        spwlist = [21, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_id_pattern(self):
-        """test_spw_id_pattern: Test spw selection by wildcard"""
-        spw = '*'
-        expected_nrow = 4
-        spwlist = [21, 23, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_value_frequency(self):
-        """test_spw_value_frequency: Test spw selection by frequency range ('FREQ0~FREQ1')"""
-        spw = '299~300GHz'
-        expected_nrow = 3
-        spwlist = [21, 23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_value_velocity(self):
-        """test_spw_value_velocity: Test spw selection by velocity range ('VEL0~VEL1')"""
-        spw = '-100~100km/s'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    @prepare
-    def test_spw_mix_exprlist(self):
-        """test_spw_mix_exprlist: Test spw selection by id and frequency/velocity range"""
-        spw = '<23,-100~100km/s'
-        expected_nrow = 3
-        spwlist = [21, 23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    ### spw (channel) selection syntax test ###
-    def test_spw_id_default_channel(self):
-        """test_spw_id_default_channel: Test spw selection with channel range (':CH0~CH1')"""
-        spw = ':0~19'
-        expected_nrow = 4
-        spwlist = [21, 23, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_default_frequency(self):
-        """test_spw_id_default_frequency: Test spw selection with channel range (':FREQ0~FREQ1')"""
-        spw = ':299.45~299.509GHz'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_default_velocity(self):
-        """test_spw_id_default_velocity: Test spw selection with channel range (':VEL0~VEL1')"""
-        spw = ':-28.98~28.98km/s'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_default_list(self):
-        """test_spw_id_default_list: Test spw selection with multiple channel range (':CH0~CH1;CH2~CH3')"""
-        spw = ':0~19;81~100'
-        expected_nrow = 4
-        spwlist = [21, 23, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_exact_channel(self):
-        """test_spw_id_exact_channel: Test spw selection with channel range ('N:CH0~CH1')"""
-        spw = '21:0~59'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_exact_frequency(self):
-        """test_spw_id_exact_frequency: Test spw selection with channel range ('N:FREQ0~FREQ1')"""
-        spw = '21:299.45~299.509GHz'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_exact_velocity(self):
-        """test_spw_id_exact_velocity: Test spw selection with channel range ('N:VEL0~VEL1')"""
-        spw = '23:-28.98~28.98km/s'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_exact_list(self):
-        """test_spw_id_exact_list: Test spw selection with channel range ('N:CH0~CH1;CH2~CH3')"""
-        spw = '21:0~59;61~100'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_pattern_channel(self):
-        """test_spw_id_pattern_channel: Test spw selection with channel range ('*:CH0~CH1')"""
-        spw = '*:0~19'
-        expected_nrow = 4
-        spwlist = [21, 23, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_pattern_frequency(self):
-        """test_spw_id_pattern_frequency: Test spw selection with channel range ('*:FREQ0~FREQ1')"""
-        spw = '*:299.45~299.509GHz'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_pattern_velocity(self):
-        """test_spw_id_pattern_velocity: Test spw selection with channel range ('*:VEL0~VEL1')"""
-        spw = '*:-28.98~28.98km/s'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_pattern_list(self):
-        """test_spw_id_pattern_list: Test spw selection with channel range ('*:CH0~CH1;CH2~CH3')"""
-        spw = '*:0~19;81~100'
-        expected_nrow = 4
-        spwlist = [21, 23, 25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_frequency_channel(self):
-        """test_spw_value_frequency_channel: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1')"""
-        spw = '299.4~299.8GHz:0~59'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_frequency_frequency(self):
-        """test_spw_value_frequency_frequency: Test spw selection with channel range ('FREQ0~FREQ1:FREQ2~FREQ3')"""
-        spw = '299.8~300.0GHz:299.971~300.029GHz'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_frequency_velocity(self):
-        """test_spw_value_frequency_velocity: Test spw selection with channel range ('FREQ0~FREQ1:VEL0~VEL1')"""
-        spw = '299.8~300.0GHz:-28.98~28.98km/s'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_frequency_list(self):
-        """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
-        spw = '299.4~299.8GHz:0~19;81~100'
-        expected_nrow = 1
-        spwlist = [21]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_velocity_channel(self):
-        """test_spw_value_velocity_channel: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1')"""
-        spw = '-50~50km/s:21~79'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_velocity_frequency(self):
-        """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ0~FREQ1')"""
-        spw = '-50~50km/s:299.971~300.029GHz'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_velocity_velocity(self):
-        """test_spw_value_velocity_velocity: Test spw selection with channel range ('VEL0~VEL1:VEL2~VEL3')"""
-        spw = '-50~50km/s:-28.98~28.98km/s'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_value_velocity_list(self):
-        """test_spw_value_velocity_list: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1;CH2~CH3')"""
-        spw = '-50~50km/s:0~19;21~79;81~100'
-        expected_nrow = 2
-        spwlist = [23]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-
-    def test_spw_id_list_channel(self):
-        """test_spw_id_list_channel: Test spw selection with channnel range ('ID0:CH0~CH1,ID1:CH2~CH3')"""
-        spw = '21:0~59;61~100,25:0~39;41~100'
-        expected_nrow = 2
-        spwlist = [21,25]
-
-        self.__exec_simple_test('spw', spw, spwlist, 'IFNO', expected_nrow)
-        
-    ### timerange selection syntax test ###
-    @prepare
-    def test_timerange_value_default(self):
-        """test_timerange_value_default: Test default value for timerange"""
-        timerange = ''
-        expected_nrow = 4
-        timelist = [55876.10559574073, 55876.10629018517, 55876.106984629616]
-
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    @prepare
-    def test_timerange_value_exact(self):
-        """test_timerange_value_exact: Test timerange selection by syntax 'T0'"""
-        timerange = '2011/11/11/02:32:03.5'
-        expected_nrow = 1
-        timelist = [55876.10559574073]
-
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    @prepare
-    def test_timerange_value_range(self):
-        """test_timerange_value_range: Test timerange selection by syntax 'T0~T1'"""
-        timerange = '2011/11/11/02:32:00~02:34:00'
-        expected_nrow = 3
-        timelist = [55876.10559574073, 55876.10629018517]
-
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    @prepare
-    def test_timerange_value_lt(self):
-        """test_timerange_value_lt: Test timerange selection by syntax '<T0'"""
-        timerange = '<2011/11/11/02:33:00'
-        expected_nrow = 1
-        timelist = [55876.10559574073]
-
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    @prepare
-    def test_timerange_value_gt(self):
-        """test_timerange_value_gt: Test timerange selection by syntax '>T0'"""
-        timerange = '>2011/11/11/02:33:00'
-        expected_nrow = 3
-        timelist = [55876.10629018517, 55876.106984629616]
-
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    @prepare
-    def test_timerange_value_interval(self):
-        """test_timerange_value_interval: Test timerange selection by syntax 'T0+dT'"""
-        timerange = '2011/11/11/02:33:00+10:00'
-        expected_nrow = 3
-        timelist = [55876.10629018517, 55876.106984629616]
-
-        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-
-    ### scan selection syntax test ###
-    @prepare
-    def test_scan_id_default(self):
-        """test_scan_id_default: Test default value for scan"""
-        scan = ''
-        expected_nrow = 4
-        scanlist = [15, 16, 17]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    @prepare
-    def test_scan_id_exact(self):
-        """test_scan_id_exact: Test scan selection by id ('N')"""
-        scan = '15'
-        expected_nrow = 1
-        scanlist = [15]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    @prepare
-    def test_scan_id_lt(self):
-        """test_scan_id_lt: Test scan selection by id ('<N')"""
-        scan = '<17'
-        expected_nrow = 3
-        scanlist = [15,16]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    @prepare
-    def test_scan_id_gt(self):
-        """test_scan_id_gt: Test scan selection by id ('>N')"""
-        scan = '>16'
-        expected_nrow = 1
-        scanlist = [17]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    @prepare
-    def test_scan_id_range(self):
-        """test_scan_id_range: Test scan selection by id ('N~M')"""
-        scan = '16~17'
-        expected_nrow = 3
-        scanlist = [16,17]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    @prepare
-    def test_scan_id_list(self):
-        """test_scan_id_list: Test scan selection by id ('N,M')"""
-        scan = '15,17'
-        expected_nrow = 2
-        scanlist = [15,17]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    @prepare
-    def test_scan_id_exprlist(self):
-        """test_scan_id_exprlist: Test scan selection by id ('EXP0,EXP1')"""
-        scan = '<16,>16'
-        expected_nrow = 2
-        scanlist = [15,17]
-
-        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
-
-    ### pol selection syntax test ###
-    @prepare
-    def test_pol_id_default(self):
-        """test_pol_id_default: Test default value for pol"""
-        pol = ''
-        expected_nrow = 4
-        pollist = [0,1]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-        
-    @prepare
-    def test_pol_id_exact(self):
-        """test_pol_id_exact: Test pol selection by id ('N')"""
-        pol = '1'
-        expected_nrow = 2
-        pollist = [1]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-        
-    @prepare
-    def test_pol_id_lt(self):
-        """test_pol_id_lt: Test pol selection by id ('<N')"""
-        pol = '<1'
-        expected_nrow = 2
-        pollist = [0]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-
-    @prepare
-    def test_pol_id_gt(self):
-        """test_pol_id_gt: Test pol selection by id ('>N')"""
-        pol = '>0'
-        expected_nrow = 2
-        pollist = [1]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-
-    @prepare
-    def test_pol_id_range(self):
-        """test_pol_id_range: Test pol selection by id ('N~M')"""
-        pol = '0~1'
-        expected_nrow = 4
-        pollist = [0,1]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-
-    @prepare
-    def test_pol_id_list(self):
-        """test_pol_id_list: Test pol selection by id ('N,M')"""
-        pol = '0,1'
-        expected_nrow = 4
-        pollist = [0,1]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
-
-    @prepare
-    def test_pol_id_exprlist(self):
-        """test_pol_id_exprlist: Test pol selection by id ('EXP0,EXP1')"""
-        pol = '>0,<1'
-        expected_nrow = 4
-        pollist = [0,1]
-
-        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
 
 def suite():
-    return [tsdbaseline_basicTest, tsdbaseline_maskTest, tsdbaseline_funcTest,
-            tsdbaseline_multi_IF_test, tsdbaseline_storageTest,
-            tsdbaseline_selection_syntax]
+    return [sdbaselineold_basicTest, sdbaselineold_maskTest, sdbaselineold_funcTest,
+            sdbaselineold_multi_IF_test, sdbaselineold_storageTest]
 
 ### Utilities for reading blparam file
 class FileReader( object ):

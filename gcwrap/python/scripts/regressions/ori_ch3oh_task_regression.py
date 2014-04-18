@@ -82,11 +82,12 @@ else:
 
 # calibartion and averaging
 # calibrate position-switched CH3OH scans (IF=2) 
-default(sdcal)
+default(sdcalold)
 infile = 'OrionS_rawACSmod'
 fluxunit = 'K' 
 calmode = 'ps'
-scanlist = [20,21,22,23]
+#scanlist = [20,21,22,23]
+scanlist = [21,22,23,24]
 iflist = [2]
 scanaverage = False
 timeaverage = True # average in time
@@ -96,25 +97,25 @@ pweight = 'tsys'   # weighted by Tsys
 tau = 0.09         # do opacity correction 
 overwrite = True
 plotlevel = localplotlevel  
-sdcal() 
+sdcalold() 
 # output
 localoutfile = infile+'_cal'
 
 #smoothing
 # do boxcar smoothing with channel width=5
-default(sdsmooth)
+default(sdsmoothold)
 infile = localoutfile
 kernel = 'boxcar'
 kwidth = 10
 overwrite = True
 plotlevel = localplotlevel
-sdsmooth()
+sdsmoothold()
 localoutfile = infile+'_sm'
 
 #fit and remove baselines
 # do baseline fit with polynomial order of 2
 # automatically detect lines to exclude from fitting
-default(sdbaseline)
+default(sdbaselineold)
 infile = localoutfile
 maskmode = 'list'
 masklist = [[350,2700],[3500,7500]]
@@ -122,41 +123,41 @@ blfunc = 'poly'
 order = 5
 overwrite = True
 plotlevel = localplotlevel
-sdbaseline()
+sdbaselineold()
 localoutfile = infile+'_bs'
 #sd.plotter.plot(spave)			# plot						# baseline
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file 
 if doplot:
-   default(sdplot)
+   default(sdplotold)
    infile = localoutfile
    specunit = 'GHz'
    outfile = 'orions_ch3oh_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplot()
+   sdplotold()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstat)
+default(sdstatold)
 # select line free regions to get rms
 infile = localoutfile
 masklist = [4000,6000]
-xstat = sdstat()
+xstat = sdstatold()
 curr_rms = xstat['rms']
 #rms= 0.092092148959636688  [CASA 2.3(#6654)+ASAP 2.2.0(#1448)]
 #
 # select the line region
 masklist = [2900,3150]
-xstat = sdstat()
+xstat = sdstatold()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
 
 # fitting
-default(sdfit)
+default(sdfitold)
 infile = localoutfile
 #sd.plotter.plot(spave)			# plot spectrum
 fitmode = 'list'
@@ -164,17 +165,17 @@ maskline = [2900,3150]	# create region around line
 nfit = 1
 plotlevel = localplotlevel
 outfile = 'orions_ch3oh_fit.txt'
-xstat = sdfit()
+xstat = sdfitold()
 xstat  # print fit statistics 
 
 # Save the spectrum
 # in different formats
-default(sdsave)
+default(sdsaveold)
 infile = localoutfile
 outfile = 'orions_ch3oh_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsave()
+sdsaveold()
 outfile = 'orions_ch3oh_reduced.ms'
 outform = 'MS2'
 

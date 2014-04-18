@@ -64,7 +64,8 @@ s = sd.scantable('OrionS_rawACSmod', False)#load the data without averaging		# f
 											# fileout,'Orion-S-reduced.fits'
 s.set_fluxunit('K')         		# make 'K' default unit
 
-scal = sd.calps(s, [20,21,22,23])		# Calibrate CH3OH scans				# for i=21,24,2 do begin getps,i,ifnum=2,plnum=0,units='Ta*',
+#scal = sd.calps(s, [20,21,22,23])		# Calibrate CH3OH scans				# for i=21,24,2 do begin getps,i,ifnum=2,plnum=0,units='Ta*',
+scal = sd.calps(s, [21,22,23,24])		# Calibrate CH3OH scans				# for i=21,24,2 do begin getps,i,ifnum=2,plnum=0,units='Ta*',
 del s                                   # remove s from memory
 # recalculate az/el (NOT needed for GBT data)
 antennaname = scal.get_antennaname()

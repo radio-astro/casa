@@ -11,7 +11,7 @@ from numpy import array
 
 import asap as sd
 from sdflagmanager import sdflagmanager
-from sdstat import sdstat
+from sdstatold import sdstatold
 
 class sdflagmanager_test(unittest.TestCase):
     """

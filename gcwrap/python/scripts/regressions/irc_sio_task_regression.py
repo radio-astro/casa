@@ -81,11 +81,12 @@ else:
 
 # calibartion,averaging, smoothing, and baseline removal
 # calibrate nod scans for SiO line (IF=30)
-default(sdreduce)
+default(sdreduceold)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-scanlist = [240,241,242,243,244,245,246,247]
+#scanlist = [240,241,242,243,244,245,246,247]
+scanlist = [241,242,243,244,245,246,247, 248]
 iflist = [30]
 average = True
 scanaverage = False
@@ -106,34 +107,34 @@ blfunc = 'poly'
 order = 1
 overwrite = True
 plotlevel = localplotlevel
-sdreduce()
+sdreduceold()
 localoutfile = infile+'_cal'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplot)
+   default(sdplotold)
    infile = localoutfile
    specunit = 'GHz'
    outfile = 'irc_sio_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplot()
+   sdplotold()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstat)
+default(sdstatold)
 # select line free regions to get rms
 infile = localoutfile
 masklist = [800, 1500]
-xstat = sdstat()
+xstat = sdstatold()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
 masklist = [1850,2300]
-xstat = sdstat()
+xstat = sdstatold()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -142,15 +143,15 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsave)
+default(sdsaveold)
 infile = localoutfile
 outfile = 'irc_sio_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsave()
+sdsaveold()
 #outfile = 'irc_sio_reduced.ms'
 #outform = 'MS2'
-#sdsave()
+#sdsaveold()
 
 #
 endProc = time.clock()
