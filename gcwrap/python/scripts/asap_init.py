@@ -20,24 +20,24 @@ def asap_init():
     import asap as sd
     print('*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__))
     os.environ['CASAPATH']=casapath
-    from tsdaverage_cli import tsdaverage_cli as tsdaverage
-    from tsdbaseline_cli import tsdbaseline_cli as tsdbaseline
-    from tsdcal_cli import tsdcal_cli as tsdcal
-    from tsdcal2_cli import tsdcal2_cli as tsdcal2
+    from sdaverage_cli import sdaverage_cli as sdaverage
+    from sdbaseline_cli import sdbaseline_cli as sdbaseline
+    from sdcal_cli import sdcal_cli as sdcal
+    from sdcal2_cli import sdcal2_cli as sdcal2
     from sdcoadd_cli import sdcoadd_cli as sdcoadd
-    from tsdfit_cli import tsdfit_cli as tsdfit
-    from tsdflag_cli import tsdflag_cli as tsdflag
+    from sdfit_cli import sdfit_cli as sdfit
+    from sdflag_cli import sdflag_cli as sdflag
     from sdflagmanager_cli import sdflagmanager_cli as sdflagmanager
-    from tsdgrid_cli import tsdgrid_cli as tsdgrid
-    from tsdimaging_cli import tsdimaging_cli as tsdimaging
+    from sdgrid_cli import sdgrid_cli as sdgrid
+    from sdimaging_cli import sdimaging_cli as sdimaging
     from sdimprocess_cli import sdimprocess_cli as sdimprocess
     from sdlist_cli import sdlist_cli as sdlist
-    from tsdmath_cli import tsdmath_cli as tsdmath
-    from tsdplot_cli import tsdplot_cli as tsdplot
-    from tsdreduce_cli import tsdreduce_cli as tsdreduce
-    from tsdsave_cli import tsdsave_cli as tsdsave
+    from sdmath_cli import sdmath_cli as sdmath
+    from sdplot_cli import sdplot_cli as sdplot
+    from sdreduce_cli import sdreduce_cli as sdreduce
+    from sdsave_cli import sdsave_cli as sdsave
     from sdscale_cli import sdscale_cli as sdscale
-    from tsdstat_cli import tsdstat_cli as tsdstat
+    from sdstat_cli import sdstat_cli as sdstat
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     from sdbaselineold_cli import sdbaselineold_cli as sdbaselineold
     from sdcalold_cli import sdcalold_cli as sdcalold
@@ -54,24 +54,24 @@ def asap_init():
     from sdsmoothold_cli import sdsmoothold_cli as sdsmoothold
     from sdstatold_cli import sdstatold_cli as sdstatold
     myf['sd']=sd
-    myf['tsdaverage']=tsdaverage
-    myf['tsdbaseline']=tsdbaseline
-    myf['tsdcal']=tsdcal
-    myf['tsdcal2']=tsdcal2
+    myf['sdaverage']=sdaverage
+    myf['sdbaseline']=sdbaseline
+    myf['sdcal']=sdcal
+    myf['sdcal2']=sdcal2
     myf['sdcoadd']=sdcoadd
-    myf['tsdfit']=tsdfit
-    myf['tsdflag']=tsdflag
+    myf['sdfit']=sdfit
+    myf['sdflag']=sdflag
     myf['sdflagmanager']=sdflagmanager
-    myf['tsdgrid']=tsdgrid
-    myf['tsdimaging']=tsdimaging
+    myf['sdgrid']=sdgrid
+    myf['sdimaging']=sdimaging
     myf['sdimprocess']=sdimprocess
     myf['sdlist']=sdlist
-    myf['tsdmath']=tsdmath
-    myf['tsdplot']=tsdplot
-    myf['tsdreduce']=tsdreduce
-    myf['tsdsave']=tsdsave
+    myf['sdmath']=sdmath
+    myf['sdplot']=sdplot
+    myf['sdreduce']=sdreduce
+    myf['sdsave']=sdsave
     myf['sdscale']=sdscale
-    myf['tsdstat']=tsdstat
+    myf['sdstat']=sdstat
     myf['sdtpimaging']=sdtpimaging
     myf['sdbaselineold']=sdbaselineold
     myf['sdcalold']=sdcalold
@@ -87,23 +87,41 @@ def asap_init():
     myf['sdsaveold']=sdsaveold
     myf['sdsmoothold']=sdsmoothold
     myf['sdstatold']=sdstatold
-    ### WARNINGS for interface changes ###
+    ### NOTE on interface changes ###
     print("#"*50)
     print("")
-    print("Major interface changes to SINGLE DISH tasks are")
-    print("planned in CASA 4.2.2 release.")
+    print("Major interface changes to SINGLE DISH tasks have been")
+    print("taken place in CASA 4.2.2 release")
     print("")
-    print("For CASA 4.2.2 these interface changes will be implemented in new versions")
-    print("of the existing tasks: sdbaseline, sdcal, sdcal2, sdfit, sdflag,")
-    print("sdgrid, sdimaging, sdmath, sdplot, sdsave, and sdstat with the")
-    print("current name preceded by the letter 't'. Additionally a new task called")
-    print("tsdaverage will also be available. Task sdsmooth is incorporated in the")
-    print("new task and will be removed. ")
+    print("The interface of the following tasks are modified:")
+    print("sdbaseline, sdcal, sdcal2, sdfit, sdflag, sdgrid,")
+    print("sdimaging, sdmath, sdplot, sdreduce, sdsave, and sdstat.")
+    print("Additionally, a new task called sdaverage is available. Task")
+    print("sdsmooth has been incorporated in the new task and removed.")
     print("")
-    print("The experimental tasks beginning with the letter 't' will replace the")
-    print("current tasks in the next release. The current tasks will be renamed as")
-    print("{taskname}_old and kept for one release period. Users are encouraged to")
-    print("update your existing scripts.")
+    print("The tasks with old interfaces are available with name")
+    print("{taskname}old and kept by CASA 4.3 release. Users are")
+    print("adviced to update existing scripts.")
     print("")
     print("#"*50)
+    
+#     ### WARNINGS for interface changes ###
+#     print("#"*50)
+#     print("")
+#     print("Major interface changes to SINGLE DISH tasks are")
+#     print("planned in CASA 4.2.2 release.")
+#     print("")
+#     print("For CASA 4.2.2 these interface changes will be implemented in new versions")
+#     print("of the existing tasks: sdbaseline, sdcal, sdcal2, sdfit, sdflag,")
+#     print("sdgrid, sdimaging, sdmath, sdplot, sdsave, and sdstat with the")
+#     print("current name preceded by the letter 't'. Additionally a new task called")
+#     print("tsdaverage will also be available. Task sdsmooth is incorporated in the")
+#     print("new task and will be removed. ")
+#     print("")
+#     print("The experimental tasks beginning with the letter 't' will replace the")
+#     print("current tasks in the next release. The current tasks will be renamed as")
+#     print("{taskname}_old and kept for one release period. Users are encouraged to")
+#     print("update your existing scripts.")
+#     print("")
+#     print("#"*50)
 
