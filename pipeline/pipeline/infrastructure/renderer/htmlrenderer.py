@@ -4737,7 +4737,7 @@ class T2_4MDetailsSingleDishCalTsysRenderer(T2_4MDetailsDefaultRenderer):
         if not os.path.exists(stage_dir):
             os.mkdir(stage_dir)
 
-        xaxis_types = ['Frequency', 'Time']
+        xaxis_types = ['All', 'PerSPW']
 
         inputs = sddisplay.SDTsysDisplay.Inputs(context,results)
         task = sddisplay.SDTsysDisplay(inputs)
@@ -4748,8 +4748,12 @@ class T2_4MDetailsSingleDishCalTsysRenderer(T2_4MDetailsDefaultRenderer):
         for (x, _plots) in zip(xaxis_types, plots_per_type):
             plot_group = self._group_by_vis(_plots)
             for (name, _plots) in plot_group.items():
-                renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
-                                                              'Tsys vs %s'%(x))
+                if x == 'All':
+                    renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
+                                                                  'Tsys vs Frequency')
+                else:
+                    renderer = SingleDishGenericPlotsRenderer(context, results, name, _plots,
+                                                              'Tsys vs Freqyency')
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
                 if not plot_list.has_key(name):
@@ -4776,11 +4780,17 @@ class T2_4MDetailsSingleDishCalTsysRenderer(T2_4MDetailsDefaultRenderer):
         return plot_group
     
     def _plots_per_type(self, plots, xaxis_list):
-        plot_group = [[] for x in xaxis_list]
+        plot_group = [[], []]
+        #plot_group = [[] for x in xaxis_list]
         for _plots in plots:
             for p in _plots:
-                index = xaxis_list.index(p.x_axis)
-                plot_group[index].append(p)
+                #index = xaxis_list.index(p.x_axis)
+                #plot_group[index].append(p)
+                spw = p.parameters['spw']
+                if spw == 'all':
+                    plot_group[0].append(p)
+                else:
+                    plot_group[1].append(p)
         return plot_group
 
 class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):

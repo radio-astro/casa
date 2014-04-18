@@ -8,6 +8,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
 from . import utils
+from .utils import sd_polmap as polmap
 
 LOG = logging.get_logger(__name__)
 
@@ -132,15 +133,18 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
     def doplot(self, result, stage_dir):
         
         plots = []
-        plot_list = self._plot_tsys_vs_freq(result, stage_dir)
+        plot_list = self._plot_tsys_vs_freq_summary(result, stage_dir)
         plots.extend(plot_list)
 
-        plot_list = self._plot_tsys_vs_time(result, stage_dir)
+        plot_list = self._plot_tsys_vs_freq(result, stage_dir)
         plots.extend(plot_list)
+        
+        #plot_list = self._plot_tsys_vs_time(result, stage_dir)
+        #plots.extend(plot_list)
 
         return plots
 
-    def _plot_tsys_vs_freq(self, result, stage_dir):
+    def _plot_tsys_vs_freq_summary(self, result, stage_dir):
         table = result.outcome.applytable
         calto = result.outcome.calto
         antenna_name = calto.antenna
@@ -172,8 +176,8 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         
         parameters = {}
         parameters['intent'] = 'ATMCAL'
-        parameters['spw'] = ''
-        parameters['pol'] = ''
+        parameters['spw'] = 'all'
+        parameters['pol'] = 'all'
         parameters['ant'] = antenna_name
         parameters['type'] = 'sd'
         parameters['file'] = os.path.basename(table)
@@ -201,11 +205,11 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                     freq_id = tsel.getcell('FREQ_ID',row)
                     freq = base_freqs[freq_id] * 1.0e-6
                     lines.extend(
-                        pl.plot(freq, tsys, '.-', label='spw%s, pol%s'%(spw,pol))
+                        pl.plot(freq, tsys, '-', label='spw%s, pol%s'%(spw,pol))
                     )
                 pl.title(title)
                 axes.legend(loc='best', numpoints=1, prop={'size':'small'})
-                plotfile='tsys_vs_freq_%s_time%s.png'%(os.path.basename(table),i)
+                plotfile='tsys_vs_freq_summary_%s_time%s.png'%(os.path.basename(table),i)
                 plotfile=os.path.join(stage_dir, plotfile)
                 plot = logger.Plot(plotfile,
                                    x_axis='Frequency', y_axis='Tsys',
@@ -221,6 +225,103 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 axes_manager.reset_color_cycle()
                 
             tsel.close()
+        return plots 
+
+    def _plot_tsys_vs_freq(self, result, stage_dir):
+        table = result.outcome.applytable
+        calto = result.outcome.calto
+        antenna_name = calto.antenna
+        parent_ms = self.inputs.context.observing_run.get_ms(calto.vis)
+        # here, assumed that all rows have same FREQ_ID, which 
+        # is true in almost case, at least for ALMA.
+        with casatools.TableReader(table) as tb:
+            freq_ids = numpy.unique(tb.getcol('FREQ_ID'))
+        nchans = {}
+        with casatools.TableReader(table) as tb:
+            for freq_id in freq_ids:
+                tsel = tb.query('FREQ_ID == %s'%(freq_id))
+                nchans[freq_id] = len(tsel.getcell('TSYS',0))
+                tsel.close()
+            tsys = tb.getcell('TSYS', 0)
+            min_tsys = tsys.min()
+            max_tsys = tsys.max()
+            for irow in xrange(1,tb.nrows()):
+                tsys = tb.getcell('TSYS', irow)
+                min_tsys = min(tsys.min(), min_tsys)
+                max_tsys = max(tsys.max(), max_tsys)
+            dt = max_tsys - min_tsys
+            ylim = (min_tsys - 0.1 * dt, max_tsys + 0.1 * dt)
+        base_freqs = {}
+        for freq_id in freq_ids:
+            base_freqs[freq_id] = common.get_base_frequency(table, freq_id,
+                                                            nchans[freq_id])
+        base_frame = common.get_base_frame(table)
+
+        plots = []
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        pl.clf()
+
+        axes_manager = TsysFreqAxesManager(baseframe=base_frame)
+        axes = axes_manager.axes
+        
+        parameters = {}
+        parameters['intent'] = 'ATMCAL'
+        parameters['spw'] = ''
+        parameters['pol'] = ''
+        parameters['ant'] = antenna_name
+        parameters['type'] = 'sd'
+        parameters['file'] = os.path.basename(table)
+        parameters['vis'] = calto.vis
+        with casatools.TableReader(table) as tb:
+            spw_list = numpy.unique(tb.getcol('IFNO'))
+            pol_list = numpy.unique(tb.getcol('POLNO'))
+            for spw in spw_list:
+                for pol in pol_list:
+                    tsel = tb.query('IFNO==%s&&POLNO==%s'%(spw,pol),sortlist='TIME')
+                    nrow = tsel.nrows()
+                    if nrow == 0:
+                        tsel.close()
+                        continue
+                    
+                    freq_id = tsel.getcell('FREQ_ID', 0)
+                    freq = base_freqs[freq_id] * 1.0e-6
+                    df = max(freq) - min(freq)
+                    xlim = (min(freq) - 0.1 * df, max(freq) + 0.1 * df)
+                    timestamps = tsel.getcol('TIME')
+                    title = 'Tsys vs Frequency (spw %s pol %s)'%(spw,pol)
+                    #title = 'Tsys vs Frequency (%s)'%(utils.mjd_to_datestring(timestamps[start],fmt='%b %d %H:%M:%S %Y UT'))
+                        #print title
+                        #print 'range=',range(start,end)
+                    lines = []
+                    for irow in xrange(nrow):
+                        tsys = tsel.getcell('TSYS', irow)
+                        lines.extend(
+                            pl.plot(freq, tsys, '.-', label='%s'%(utils.mjd_to_datestring(timestamps[irow],fmt='%b %d %H:%M:%S %Y UT')))
+                            )
+                        pl.title(title)
+                    axes.legend(loc='best', numpoints=1, prop={'size':'small'})
+                    plotfile='tsys_vs_freq_%s_spw%s_pol%s_time%s.png'%(os.path.basename(table),spw,pol,irow)
+                    axes.set_xlim(xlim)
+                    axes.set_ylim(ylim)
+                    plotfile=os.path.join(stage_dir, plotfile)
+                    parameters['spw'] = spw
+                    parameters['pol'] = polmap[pol]
+                    plot = logger.Plot(plotfile,
+                                       x_axis='Frequency', y_axis='Tsys',
+                                       field=parent_ms.fields[0].name,
+                                       parameters=parameters.copy())
+                    pl.savefig(plotfile)
+                    if common.ShowPlot: pl.draw()
+                    plots.append(plot)
+                    
+                    for line in lines:
+                        line.remove()
+
+                    axes_manager.reset_color_cycle()
+
+                    tsel.close()
         return plots 
 
     def _plot_tsys_vs_time(self, result, stage_dir):

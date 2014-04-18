@@ -59,7 +59,7 @@ $(document).ready(function() {
     </h4>
     
     <ul class="thumbnails">
-        % for _summary, _subpage, _x in zip(summary[ms], subpage[ms], ['Frequency', 'Time']):
+        % for _summary, _subpage, _x in zip(summary[ms], subpage[ms], ['Frequency', 'Frequency']):
             % if os.path.exists(_summary.thumbnail):
             <li class="span3">
                 <div class="thumbnail">
