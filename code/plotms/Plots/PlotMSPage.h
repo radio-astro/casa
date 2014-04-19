@@ -30,6 +30,7 @@
 #include <graphics/GenericPlotter/PlotCanvas.h>
 
 #include <casa/namespace.h>
+#include <QList>
 
 namespace casa {
 
@@ -86,24 +87,25 @@ private:
     PlotMSPages* itsParent_;
 
     // Canvases grid.
-    vector<vector<PlotCanvasPtr> > itsCanvases_;
+    vector<vector<PlotCanvasPtr > > itsCanvases_;
     
     // Owner grid.
-    vector<vector<PlotMSPlot*> > itsCanvasOwners_;
+    vector<vector<QList<PlotMSPlot*> > > itsCanvasOwners_;
     
     
     // Constructor.
     PlotMSPage(PlotMSPages& parent);
     
-    
-
+    //Returns true if the canvas at the given row and col was disowned; false otherwise.
+    bool disown( int row, int col );
     
     // Returns the canvas at the given row and column, or NULL if invalid.
     PlotCanvasPtr canvas(unsigned int row, unsigned int col);
     
-    // Returns the owner plot at the given row and column, or NULL if invalid
-    // or there is no owner for that canvas.
-    PlotMSPlot* owner(unsigned int row, unsigned int col);
+    // Returns the owner plot(s) at the given row and column, or an empty list if invalid
+    // or there is no owner for that canvas.  For overplotting, there could be multiple owners
+    // of the canvas at the given location.
+    QList<PlotMSPlot*> owner(unsigned int row, unsigned int col) const;
     
     // Sets the owner for the canvas at the given row and column to the given
     // plot; returns true for success, false otherwise.  If the given canvas is
@@ -112,13 +114,13 @@ private:
     
     // Returns true if the canvas at the given row and column exists and is
     // owned, false otherwise.
-    bool isOwned(unsigned int row, unsigned int col) {
-        return owner(row, col) != NULL; }
+    bool isOwned(unsigned int row, unsigned int col);
+
     
     // Sets the canvas at the given row and column to be owned by no one.  All
     // items are removed from the canvas.  Returns true for success, false for
     // failure.
-    bool disown(unsigned int row, unsigned int col);
+    bool disown(unsigned int row, unsigned int col, PlotMSPlot* plot);
     
     // Sets up this page on the plotter.
     void setupPage();

@@ -814,8 +814,7 @@ Record PlotMSDBusApp::_locateInfo(const Record&) {
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	bool ok = true;
 	String methodName = "_savePlot";
-	//CountedPtr<PlotMSAction> action = ActionFactory::getAction( PlotMSAction::PLOT_EXPORT );
-	//PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+
 	String filename;
 	if(parameters.isDefined(PARAM_EXPORT_FILENAME)) {
 		filename = parameters.asString(PARAM_EXPORT_FILENAME);
@@ -925,6 +924,10 @@ bool PlotMSDBusApp::update() {
     			itsPlotms_.addOverPlot(&v[i]);
     		}
     	}
+    }
+    else {
+    	//Clear the failure flag so the next one can start.
+    	itsPlotms_.setOperationCompleted( true );
     }
 
     return successfulUpdate;

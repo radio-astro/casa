@@ -43,8 +43,12 @@ PlotMSPlotManager::PlotMSPlotManager() : itsParent_(NULL), itsPages_(*this) {
 }
 
 PlotMSPlotManager::~PlotMSPlotManager() {
-    if(itsPlots_.size() > 0) clearPlotsAndCanvases();
-    else                     itsPages_.clearPages();
+    if(itsPlots_.size() > 0){
+    	clearPlotsAndCanvases();
+    }
+    else {
+    	itsPages_.clearPages();
+    }
 }
 
 
@@ -83,7 +87,8 @@ unsigned int PlotMSPlotManager::numPlots() const {
 }
 
 const vector<PlotMSPlot*>& PlotMSPlotManager::plots() const {
-    return itsPlots_; }
+    return itsPlots_;
+}
 
 PlotMSPlot* PlotMSPlotManager::plot(unsigned int index) {
     if(index >= itsPlots_.size()){
@@ -153,11 +158,10 @@ void PlotMSPlotManager::clearPlotsAndCanvases( bool clearCanvases ) {
     for(unsigned int i = 0; i < plotsCopy.size(); i++) {
         delete plotsCopy[i];
     }
-    
     notifyWatchers();
 }
 
-bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
+/*bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
 	bool foundSpot = false;
 	//Try to find an empty spot to put it.
 	pair<int,int> location = itsPages_.findEmptySpot();
@@ -174,6 +178,17 @@ bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
 		foundSpot = true;
 	}
 	return foundSpot;
+}*/
+
+QList<PlotMSPlot*> PlotMSPlotManager::getCanvasPlots(int row, int col) const {
+	QList<PlotMSPlot*> canvasPlots;
+	int plotCount = itsPlots_.size();
+	for ( int i = 0; i < plotCount; i++ ){
+		if ( itsPages_.canvasIsOwnedBy( row, col, itsPlots_[i] ) ){
+			canvasPlots.append( itsPlots_[i]);
+		}
+	}
+	return canvasPlots;
 }
 
 // Private Methods //
@@ -189,9 +204,9 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     itsPages_.setupCurrentPage();
 
     bool locationFound = isPlottable( plot );
-    if ( !locationFound ){
+    /*if ( !locationFound ){
     	locationFound = assignEmptySpot( plot );
-    }
+    }*/
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }
@@ -265,7 +280,6 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 
 			//Clears the canvas and sets the owner to NULL
 			itsPages_.disown( itsPlots_[i]);
-
 		}
 
 		//We delete all the plots and canvases in scripting mode because
@@ -285,9 +299,9 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 			itsPages_.setupCurrentPage();
 			for ( int i = 0; i < plotCount; i++ ){
 				bool showPlot = isPlottable( itsPlots_[i]);
-				if ( !showPlot ){
+				/*if ( !showPlot ){
 				   	showPlot = assignEmptySpot( itsPlots_[i] );
-				}
+				}*/
 				if ( showPlot ){
 					//Without this call the plot will appear as a separate window from
 					//plotms.

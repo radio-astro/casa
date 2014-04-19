@@ -28,6 +28,7 @@
 #include <fstream>
 #include <cstdio>
 #include <QApplication>
+#include <QDebug>
 class tUtil {
 public:
 	static String getFullPath( String fileName ){
@@ -37,7 +38,7 @@ public:
 			aipsPath = EnvironmentVariable::get("AIPSPATH");
 		}
 		String dataPath;
-		cout << "Aips path="<<aipsPath.c_str()<<endl;
+		qDebug() << "Aips path="<<aipsPath.c_str();
 		if ( !aipsPath.empty() ){
 			//Last part of path returned appears to be a space rather
 			//than a slash.  "/casa/trunk linux_64b"
@@ -49,7 +50,7 @@ public:
 				dataPath = aipsPath;
 			}
 			dataPath.append( "/data/regression/unittest/plotms/"  );
-			cout << "Datapath="<<dataPath.c_str()<<endl;
+			qDebug() << "Datapath="<<dataPath.c_str();
 			dataPath.append( fileName );
 		}
 		return dataPath;
@@ -68,7 +69,7 @@ public:
 	static int clearFile( const String& fileName ){
 		int result = remove( fileName.c_str());
 		if ( result == 0 ){
-			cout << "File "<<fileName<<" was deleted in preparation for test."<<endl;
+			qDebug() << "File "<<fileName.c_str()<<" was deleted in preparation for test.";
 		}
 		return result;
 	}
@@ -92,13 +93,13 @@ public:
 		else {
 			struct stat filestatus;
 			stat( fileName.c_str(), &filestatus );
-			cout << "Output file size is "<<filestatus.st_size<<endl;
+			qDebug() << "Output file size is "<<filestatus.st_size;
 			if ( filestatus.st_size < minBytes ){
-				cout << "FAIL output file size was two small min="<<minBytes<<endl;
+				qDebug() << "FAIL output file size was two small min="<<minBytes;
 				fileOK = false;
 			}
 			else if ( filestatus.st_size > maxBytes ){
-				cout << "FAIL output file size was two large max="<<maxBytes<<endl;
+				qDebug() << "FAIL output file size was two large max="<<maxBytes;
 				fileOK = false;
 			}
 			else if ( digest > 0 ){

@@ -109,6 +109,8 @@ public:
     //Remove the plot from the canvas.
     void disown( PlotMSPlot* plot );
 
+    bool canvasIsOwnedBy( int row, int col, PlotMSPlot* plot ) const;
+
     PlotMSParameters getPageParameters();
     
     //Returns whether the spot at the given location is available for
@@ -123,6 +125,8 @@ private:
 	//Returns whether or not (rows,cols) would represent
 	//a change in the current page size.
     bool isGridChanged( int rows, int cols ) const;
+
+
 
     // Plot manager.
     PlotMSPlotManager* itsManager_;

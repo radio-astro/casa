@@ -85,6 +85,7 @@ public:
     const vector<PlotMSPlot*>& plots() const;
     PlotMSPlot* plot(unsigned int index);
     const PlotMSPlot* plot(unsigned int index) const;
+    QList<PlotMSPlot*> getCanvasPlots( int row, int col ) const;
     // </group>
     
     //Set the new size of a multi-plot display.
@@ -123,7 +124,7 @@ public:
     bool isPlottable( PlotMSPlot* plot );
 
     //Tries to find an empty spot for the plot
-    bool assignEmptySpot( PlotMSPlot* plot );
+    //bool assignEmptySpot( PlotMSPlot* plot );
 
 private:
     // Parent.

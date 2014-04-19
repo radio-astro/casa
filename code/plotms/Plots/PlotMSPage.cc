@@ -79,7 +79,6 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
     // deleted
     for(unsigned int r = 0; r < itsCanvases_.size(); r++){
     	for(unsigned int c = 0; c < itsCanvases_[r].size(); c++){
-
     		disown(r, c);
     	}
     }
@@ -96,12 +95,10 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
     PlotCanvasPtr canvas;
     for(unsigned int r = 0; r < nrows; r++) {
         itsCanvases_[r].resize(ncols);
-        itsCanvasOwners_[r].resize(ncols, NULL);
+        itsCanvasOwners_[r].resize(ncols);
         for(unsigned int c = 0; c < ncols; c++) {
-
         	canvas = factory->canvas();
         	itsCanvases_[r][c] = canvas;
-
         	plotms->canvasAdded( canvas );
 
         	// set cached image size
@@ -118,27 +115,38 @@ PlotCanvasPtr PlotMSPage::canvas(unsigned int row, unsigned int col) {
     return canvas;
 }
 
-PlotMSPlot* PlotMSPage::owner(unsigned int row, unsigned int col) {
-    if(row >= itsCanvasOwners_.size() || col >= itsCanvasOwners_[row].size())
-        return NULL;
-    else return itsCanvasOwners_[row][col];
+QList<PlotMSPlot*> PlotMSPage::owner(unsigned int row, unsigned int col) const {
+	QList<PlotMSPlot*> owners;
+    if(row < itsCanvasOwners_.size() && col < itsCanvasOwners_[row].size() ){
+        owners = itsCanvasOwners_[row][col];
+    }
+    return owners;
 }
 
-bool PlotMSPage::isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const {
+bool PlotMSPage::isOwned(unsigned int row, unsigned int col) {
+	bool canvasOwned = true;
+	QList<PlotMSPlot*> owners = owner( row, col );
+	if ( owners.isEmpty() ){
+		canvasOwned = false;
+	}
+    return canvasOwned;
+}
+
+bool PlotMSPage::isSpot( int rowIndex, int colIndex, PlotMSPlot* /*plot*/ ) const {
 	bool availableSpace = true;
-	int canvasCount = itsCanvasOwners_.size();
+	int canvasCount = itsCanvases_.size();
 	if ( rowIndex >= canvasCount){
 		availableSpace = false;
 	}
-	else if ( colIndex >= static_cast<int>(itsCanvasOwners_[rowIndex].size())){
+	else if ( colIndex >= static_cast<int>(itsCanvases_[rowIndex].size())){
 		availableSpace = false;
 	}
-	else {
-		if ( itsCanvasOwners_[rowIndex][colIndex] != NULL &&
-				itsCanvasOwners_[rowIndex][colIndex] != plot){
+	/*else {
+		if ( !itsCanvasOwners_[rowIndex][colIndex] .isEmpty() &&
+				!itsCanvasOwners_[rowIndex][colIndex].contains(plot)){
 			availableSpace = false;
 		}
-	}
+	}*/
 	return availableSpace;
 }
 
@@ -148,7 +156,7 @@ pair<int,int> PlotMSPage::findEmptySpot() const {
 	for ( int i = 0; i < ownerRowCount; i++ ){
 		int ownerColCount = itsCanvasOwners_[0].size();
 		for ( int j = 0; j < ownerColCount; j++ ){
-			if ( itsCanvasOwners_[i][j] == NULL ){
+			if ( itsCanvasOwners_[i][j].isEmpty() ){
 				location.first = i;
 				location.second = j;
 			}
@@ -158,15 +166,17 @@ pair<int,int> PlotMSPage::findEmptySpot() const {
 }
 
 bool PlotMSPage::setOwner(unsigned int row, unsigned int col, PlotMSPlot* plot) {
+	bool ownerSet = true;
     if(row >= itsCanvasOwners_.size() ||
     		col >= itsCanvasOwners_[row].size() ||
     		plot == NULL ||
-    		(itsCanvasOwners_[row][col] != NULL && itsCanvasOwners_[row][col] != plot)){
-    	return false;
+    		( !itsCanvasOwners_[row][col].isEmpty() && itsCanvasOwners_[row][col].contains(plot))){
+    	ownerSet = false;
     }
-
-    itsCanvasOwners_[row][col] = plot;
-    return true;
+    else {
+    	itsCanvasOwners_[row][col].append(plot);
+    }
+    return ownerSet;
 }
 
 void PlotMSPage::disown( PlotMSPlot* plot ){
@@ -174,11 +184,27 @@ void PlotMSPage::disown( PlotMSPlot* plot ){
 	for ( int i = 0; i < rowCount; i++ ){
 		int colCount = itsCanvasOwners_[i].size();
 		for ( int j = 0; j < colCount; j++ ){
-			if ( itsCanvasOwners_[i][j] == plot ){
-				disown( i, j );
+			if ( itsCanvasOwners_[i][j].contains( plot ) ){
+				disown( i, j, plot );
 			}
 		}
 	}
+}
+
+bool PlotMSPage::disown( int row, int col ){
+	bool disowned = false;
+	int rowCount = itsCanvasOwners_.size();
+	if ( row < rowCount ){
+		int colCount = itsCanvasOwners_[row].size();
+		if ( col < colCount ){
+			int ownerCount = itsCanvasOwners_[row][col].size();
+			for ( int k = 0; k < ownerCount; k++ ){
+				disown( row, col, itsCanvasOwners_[row][col][k]);
+			}
+		}
+		disowned = true;
+	}
+	return disowned;
 }
 
 
@@ -195,19 +221,25 @@ void PlotMSPage::clearCanvas( int row, int col ){
 	}
 }
 
-bool PlotMSPage::disown(unsigned int row, unsigned int col) {
-    if(row >= itsCanvasOwners_.size() || col >= itsCanvasOwners_[row].size() ){
+bool PlotMSPage::disown(unsigned int row, unsigned int col, PlotMSPlot* plot ) {
+    if(row >= itsCanvases_.size() || col >= itsCanvases_[row].size() ){
     	return false;
     }
-    itsCanvases_[row][col]->clearItems();
-    if ( itsCanvasOwners_[row][col] != NULL ){
-    	itsCanvasOwners_[row][col]->canvasWasDisowned(itsCanvases_[row][col]);
-    	itsCanvasOwners_[row][col] = NULL;
+
+    //itsCanvases_[row][col]->clearItems();
+
+    if ( row < itsCanvasOwners_.size() && col < itsCanvasOwners_[row].size() ){
+    	if ( !itsCanvasOwners_[row][col].isEmpty() && itsCanvasOwners_[row][col].contains(plot) ){
+    		/*int ownerCount = itsCanvasOwners_[row][col].size();
+    		for ( int i = 0; i < ownerCount; i++ ){
+    			itsCanvasOwners_[row][col][i]->canvasWasDisowned(itsCanvases_[row][col]);
+    		}*/
+    		plot->canvasWasDisowned( itsCanvases_[row][col]);
+    		itsCanvasOwners_[row][col].removeOne( plot );
+    	}
     }
     return true;
 }
-
-
 
 
 void PlotMSPage::setupPage() {

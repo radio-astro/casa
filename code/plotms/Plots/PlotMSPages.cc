@@ -187,6 +187,19 @@ bool PlotMSPages::isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const {
 	return itsPages_[itsCurrentPageNum_].isSpot( rowIndex, colIndex, plot );
 }
 
+bool PlotMSPages::canvasIsOwnedBy( int row, int col, PlotMSPlot* plot ) const {
+	bool canvasOwned = false;
+	int pageCount = itsPages_.size();
+	for ( int i = 0; i < pageCount; i++ ){
+		QList<PlotMSPlot*> plotOwners = itsPages_[i].owner(row,col);
+		if ( plotOwners.contains( plot )){
+			canvasOwned = true;
+			break;
+		}
+	}
+	return canvasOwned;
+}
+
 pair<int,int> PlotMSPages::findEmptySpot() const {
 	return itsPages_[itsCurrentPageNum_].findEmptySpot();
 }

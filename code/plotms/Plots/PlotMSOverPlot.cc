@@ -291,7 +291,6 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 					//one canvas for this plot.
 					if ( rowIndex == r && colIndex == c){
 						//page.disown( this );
-
 						page.setOwner(r, c, this);
 						itsCanvases_[0][0] = page.canvas(r,c);
 						assigned = true;
@@ -424,7 +423,8 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 				if ( ! plotCanvas.null() ){
 					plotCanvas->standardMouseTools()->selectTool()->clearSelectedRects();
 					plotCanvas->clearAnnotations();
-					plotCanvas->clearItems();
+					//plotCanvas->clearItems();
+					plotCanvas->clearShapes();
 				}
 			}
 		}
@@ -447,7 +447,7 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 		plotCols = itsPlots_[0].size();
 	}
 	bool locationChange = false;
-	if ( gridRow != displayRow || gridCol != displayCol ){
+	if ( (gridRow != displayRow || gridCol != displayCol) && gridRow != -1 ){
 		locationChange = true;
 		//This removes the title and axes from its previous plot location.
 		itsParent_->getPlotManager().clearCanvas( gridRow, gridCol );
@@ -629,7 +629,7 @@ bool PlotMSOverPlot::updateCanvas() {
 		}
 		for(uInt c = 0; c < cols; ++c) {
 			uInt iteration = iterationRows + c;
-			if(iteration >= nIter){
+			if(iteration >= nIter  ){
 				clearCanvasProperties( r, c );
 			}
 			else {
@@ -663,7 +663,7 @@ void PlotMSOverPlot::clearCanvases() {
 
 void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		PMS_PP_Cache* cacheParams, PMS_PP_Axes* axesParams,
-		bool set, PMS_PP_Canvas *canv, uInt rows, uInt cols,
+		bool set, PMS_PP_Canvas *canvParams, uInt rows, uInt cols,
 	    PMS_PP_Iteration *iter, uInt iteration) {
 
 	PlotCanvasPtr canvas = itsCanvases_[row][col];
@@ -671,18 +671,17 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		return;
 	}
 
-
-
 	// Show/hide axes
 	canvas->showAllAxes(false);
+
 	//ShowX and showY determine whether axes are visible at
 	//all.  For visible axes, there is the option of sharing
 	//them (common) or for each plot to manage its own.
 	bool commonX = iter->isCommonAxisX();
 	bool commonY = iter->isCommonAxisY();
 	canvas->setCommonAxes( commonX, commonY );
-	bool showX = set && canv->xAxisShown();
-	bool showY = set && canv->yAxisShown();
+	bool showX = set && canvParams->xAxisShown();
+	bool showY = set && canvParams->yAxisShown();
 	PlotAxis cx = axesParams->xAxis();
 	canvas->showAxis(cx, showX);
 	int yAxisCount = axesParams->numYAxes();
@@ -713,50 +712,76 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	}
 
 
+	// Legend
+	canvas->showLegend(set && canvParams->legendShown(), canvParams->legendPosition());
 
-	// Set axes labels
+	// Title font
+	PlotFontPtr font = canvas->titleFont();
+	font->setPointSize(std::max(16. - rows*cols+1., 8.));
+	font->setBold(true);
+	canvas->setTitleFont(font);
+	int gridRow = iter->getGridRow();
+	int gridCol = iter->getGridCol();
+	QList<PlotMSPlot*> canvasPlots  = itsParent_->getPlotManager().getCanvasPlots( gridRow, gridCol );
+
+	int canvasPlotCount = canvasPlots.size();
 	canvas->clearAxesLabels();
-	String yLabelLeft;
-	String yLabelRight;
+
+	//x-axis label
 	if(set) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
-		String xLabelSingle = canv->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
+		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
 		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
 		canvas->setAxisFont(cx, xFont);
-		for ( int i = 0; i < yAxisCount; i++ ){
-			PMS::Axis y = cacheParams->yAxis( i );
-			PlotAxis cy = axesParams->yAxis( i );
-			bool yref = itsCache_->hasReferenceValue(y);
-			double yrefval = itsCache_->referenceValue(y);
-			PMS::DataColumn yDataColumn = cacheParams->yDataColumn(i);
-			String yLabelSingle = canv->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
-			if ( cy == Y_LEFT ){
-				if ( yLabelLeft.size() > 0 ){
-					yLabelLeft.append( ", ");
+	}
+
+	String yLabelLeft;
+	String yLabelRight;
+	for ( int j = 0; j < canvasPlotCount; j++ ){
+		// Set axes labels
+		PlotMSPlotParameters plotParams = canvasPlots[j]->parameters();
+		PMS_PP_Cache *plotCacheParams = plotParams.typedGroup<PMS_PP_Cache>();
+		PMS_PP_Axes * plotAxisParams = plotParams.typedGroup<PMS_PP_Axes>();
+		if ( plotCacheParams == NULL || plotAxisParams == NULL ){
+			continue;
+		}
+		if(set) {
+			int plotYAxisCount = plotAxisParams->numYAxes();
+			for ( int i = 0; i < plotYAxisCount; i++ ){
+				PMS::Axis y = plotCacheParams->yAxis( i );
+				PlotAxis cy = plotAxisParams->yAxis( i );
+				bool yref = itsCache_->hasReferenceValue(y);
+				double yrefval = itsCache_->referenceValue(y);
+				PMS::DataColumn yDataColumn = plotCacheParams->yDataColumn(i);
+				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
+				if ( cy == Y_LEFT ){
+					if ( yLabelLeft.size() > 0 ){
+						yLabelLeft.append( ", ");
+					}
+					yLabelLeft.append( yLabelSingle );
 				}
-				yLabelLeft.append( yLabelSingle );
-			}
-			else {
-				if ( yLabelRight.size() > 0 ){
-					yLabelRight.append( ", ");
+				else {
+					if ( yLabelRight.size() > 0 ){
+						yLabelRight.append( ", ");
+					}
+					yLabelRight.append( yLabelSingle );
 				}
-				yLabelRight.append( yLabelSingle );
 			}
 		}
-		if ( yLabelLeft.size() > 0 ){
-			canvas->setAxisLabel(Y_LEFT, yLabelLeft);
-			PlotFontPtr yFont = canvas->axisFont( Y_LEFT);
-			yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
-			canvas->setAxisFont(Y_LEFT, yFont);
-		}
-		if ( yLabelRight.size() > 0 ){
-			canvas->setAxisLabel(Y_RIGHT, yLabelRight);
-			PlotFontPtr yFont = canvas->axisFont( Y_RIGHT);
-			yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
-			canvas->setAxisFont(Y_RIGHT, yFont);
-		}
+	}
+	if ( yLabelLeft.size() > 0 ){
+		canvas->setAxisLabel(Y_LEFT, yLabelLeft);
+		PlotFontPtr yFont = canvas->axisFont( Y_LEFT);
+		yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+		canvas->setAxisFont(Y_LEFT, yFont);
+	}
+	if ( yLabelRight.size() > 0 ){
+		canvas->setAxisLabel(Y_RIGHT, yLabelRight);
+		PlotFontPtr yFont = canvas->axisFont( Y_RIGHT);
+		yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+		canvas->setAxisFont(Y_RIGHT, yFont);
 	}
 
 	// Custom axes ranges
@@ -773,16 +798,6 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 		}
 	}
 
-
-	// Legend
-	canvas->showLegend(set && canv->legendShown(),
-			canv->legendPosition());
-
-	// Title font
-	PlotFontPtr font = canvas->titleFont();
-	font->setPointSize(std::max(16. - rows*cols+1., 8.));
-	font->setBold(true);
-	canvas->setTitleFont(font);
 	// Title
 	bool resetTitle = set || (iter->iterationAxis() != PMS::NONE);
 	String iterTxt;
@@ -792,38 +807,46 @@ void PlotMSOverPlot::setCanvasProperties (int row, int col,
 	String title = "";
 	if(resetTitle) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
-		vector<PMS::Axis> yAxes (yAxisCount, PMS::DEFAULT_YAXIS);
-		vector<bool> yRefs( yAxisCount, false);
-		vector<double> yRefVals( yAxisCount, 0);
-		vector<PMS::DataColumn> yDatas (yAxisCount, PMS::DATA );
-		for ( int i = 0; i < yAxisCount; i++ ){
-			yAxes[i] = cacheParams->yAxis( i );
-			yRefs[i] = itsCache_->hasReferenceValue(yAxes[i]);
-			yRefVals[i] = itsCache_->referenceValue(yAxes[i]);
-			yDatas[i] = cacheParams->yDataColumn( i );
+		vector<PMS::Axis> yAxes;
+		vector<bool> yRefs;
+		vector<double> yRefVals;
+		vector<PMS::DataColumn> yDatas;
+		for ( int j = 0; j < canvasPlotCount; j++ ){
+			PlotMSPlotParameters plotParams = canvasPlots[j]->parameters();
+			PMS_PP_Cache* plotCacheParams = plotParams.typedGroup<PMS_PP_Cache>();
+			PMS_PP_Axes* plotAxisParams = plotParams.typedGroup<PMS_PP_Axes>();
+			if ( plotCacheParams == NULL || plotAxisParams == NULL ){
+				continue;
+			}
+			PlotMSCacheBase& plotCacheBase = canvasPlots[j]->cache();
+			int plotYAxisCount = plotAxisParams->numYAxes();
+			for ( int i = 0; i < plotYAxisCount; i++ ){
+				yAxes.push_back(plotCacheParams->yAxis( i ));
+				yRefs.push_back(plotCacheBase.hasReferenceValue(yAxes[i]));
+				yRefVals.push_back(plotCacheBase.referenceValue(yAxes[i]));
+				yDatas.push_back(plotCacheParams->yDataColumn( i ) );
+			}
 		}
-		title = canv->titleFormat().getLabel(x, yAxes, xref,
+		title = canvParams->titleFormat().getLabel(x, yAxes, xref,
 				xrefval, yRefs, yRefVals, xDataColumn, yDatas)
 				+ " " + iterTxt;
+		canvas->setTitle(title);
 	}
-	canvas->setTitle(title);
 
 	// Grids
-	canvas->showGrid(canv->gridMajorShown(),
-			canv->gridMinorShown(),
-			canv->gridMajorShown(),
-			canv->gridMinorShown());
+	canvas->showGrid(canvParams->gridMajorShown(), canvParams->gridMinorShown(),
+			canvParams->gridMajorShown(), canvParams->gridMinorShown());
 
 	PlotLinePtr major_line =
-			itsFactory_->line(canv->gridMajorLine());
-	if(!canv->gridMajorShown()) {
+			itsFactory_->line(canvParams->gridMajorLine());
+	if(!canvParams->gridMajorShown()) {
 		major_line->setStyle(PlotLine::NOLINE);
 	}
 	canvas->setGridMajorLine(major_line);
 
 	PlotLinePtr minor_line =
-			itsFactory_->line(canv->gridMinorLine());
-	if(!canv->gridMinorShown()) {
+			itsFactory_->line(canvParams->gridMinorLine());
+	if(!canvParams->gridMinorShown()) {
 		minor_line->setStyle(PlotLine::NOLINE);
 	}
 	canvas->setGridMinorLine(minor_line);
