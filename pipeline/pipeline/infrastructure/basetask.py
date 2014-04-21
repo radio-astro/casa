@@ -1286,6 +1286,7 @@ finally:
     h_save()
 ''' % task_string
             
-    f = os.path.join(context.report_dir, 'casatasks.log')
+    #f = os.path.join(context.report_dir, 'casatasks.log')
+    f = os.path.join(context.report_dir, 'casa_pipescript.py')
     with open(f, 'w') as casatask_file: 
         casatask_file.write(template)
