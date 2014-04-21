@@ -110,6 +110,8 @@ install (FILES
 	)
 install (FILES
 	ImageAnalysis/AntennaResponses.h
+	ImageAnalysis/BeamManipulator.h
+	ImageAnalysis/BeamManipulator.tcc
 	ImageAnalysis/ComponentImager.h
 	ImageAnalysis/Image1DSmoother.h
 	ImageAnalysis/Image1DSmoother.tcc

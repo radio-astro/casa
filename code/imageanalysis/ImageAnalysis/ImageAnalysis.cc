@@ -122,6 +122,9 @@
 #include <images/Images/FITSImage.h>
 #include <images/Images/MIRIADImage.h>
 
+#include <casa/OS/PrecTimer.h>
+
+
 #include <casa/namespace.h>
 
 #include <memory>
@@ -404,6 +407,9 @@ SPIIF ImageAnalysis::imageconcat(
 	// Create concatenator.  Use holder so if exceptions, the ImageConcat
 	// object gets cleaned up
 	uInt axis2 = uInt(iAxis);
+	//Time t;
+	//cout << "start " << t. << endl;
+	Timer timer;
 	std::auto_ptr<ImageConcat<Float> > pConcat(
 		new ImageConcat<Float> (axis2, tempclose)
 	);
@@ -436,32 +442,54 @@ SPIIF ImageAnalysis::imageconcat(
 		}
 	}
 	//
+	timer.show("time to concat ");
 	if (!outFile.empty()) {
 		// Construct output image and give it a mask if needed
+		timer.mark();
+
 		_imageFloat.reset(
 			new PagedImage<Float> (
 				pConcat->shape(),
 				pConcat->coordinates(), outFile
 			)
 		);
+		timer.show("Time to construct image ");
+
 		if (! _imageFloat.get()) {
 			*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
 		}
 		*_log << LogIO::NORMAL << "Creating image '" << outfile
 				<< "' of shape " << _imageFloat->shape() << LogIO::POST;
 		//
+		timer.mark();
+
 		if (pConcat->isMasked()) {
 			String maskName("");
 			ImageMaskAttacher::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 		}
-
+		timer.show("Time to make mask ");
 		// Copy to output
+		timer.mark();
+		pConcat->copyDataTo(*_imageFloat);
+		timer.show("Time to copy data 1 ");
+
+		timer.mark();
+
 		LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, *pConcat);
+		timer.show("Time to copy data ");
+
+		timer.mark();
+
 		ImageUtilities::copyMiscellaneous(*_imageFloat, *pConcat);
+		timer.show("Time to copy misc ");
 	}
 	else {
 		_imageFloat.reset(pConcat->cloneII());
 	}
+
+	//cout << "start " << t.seconds() << endl;
+
+	//timer.show(cout, "time ");
 	return _imageFloat;
 }
 
@@ -3197,26 +3225,6 @@ Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 		*_log << "Failed to set CoordinateSystem" << LogIO::EXCEPTION;
 	}
 	return ok;
-}
-
-Bool ImageAnalysis::setrestoringbeam(
-	const Quantity& major, const Quantity& minor,
-	const Quantity& pa, const Record& rec,
-	const bool deleteIt, const bool log,
-    Int channel, Int polarization
-) {
-	if (_imageFloat) {
-		return _setrestoringbeam(
-			_imageFloat, major, minor, pa, rec,
-			deleteIt, log, channel, polarization
-		);
-	}
-	else {
-		return _setrestoringbeam(
-			_imageComplex, major, minor, pa, rec,
-			deleteIt, log, channel, polarization
-		);
-	}
 }
 
 Bool ImageAnalysis::twopointcorrelation(

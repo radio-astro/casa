@@ -154,7 +154,7 @@ template<class T> Bool ImageAnalysis::_calcmask(
     const LatticeExprNode& node,
     const String& maskName, const Bool makeDefault
 ) {
-	*_log << LogOrigin(className(), __FUNCTION__);
+	*_log << LogOrigin(className(), __func__);
 	// Get the shape of the expression and check it matches that
 	// of the output image.  We don't check that the Coordinates
 	// match as that would be an un-necessary restriction.
@@ -241,7 +241,7 @@ template<class T> Bool ImageAnalysis::_getchunk(
 	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
 	const Bool getmask
 ) {
-	*_log << LogOrigin(className(), __FUNCTION__);
+	*_log << LogOrigin(className(), __func__);
 
 	IPosition iblc = IPosition(Vector<Int> (blc));
 	IPosition itrc = IPosition(Vector<Int> (trc));
@@ -272,18 +272,17 @@ template<class T> Bool ImageAnalysis::_getchunk(
 	}
 }
 
-
-template<class T> std::tr1::shared_ptr<ImageInterface<T> > ImageAnalysis::_imagecalc(
+template<class T> SPIIT ImageAnalysis::_imagecalc(
 	const LatticeExprNode& node, const IPosition& shape,
 	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
 	const String& outfile,
 	const Bool overwrite, const String& expr
 ) {
-	*_log << LogOrigin(className(), __FUNCTION__);
+	*_log << LogOrigin(className(), __func__);
 
 	// Create LatticeExpr create mask if needed
 	LatticeExpr<T> latEx(node);
-	std::tr1::shared_ptr<ImageInterface<T> > image;
+	SPIIT image;
 	String exprName;
 	// Construct output image - an ImageExpr or a PagedImage
 	if (outfile.empty()) {
@@ -343,14 +342,13 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > ImageAnalysis::_image
 	return image;
 }
 
-
 template<class T> Bool ImageAnalysis::_putchunk(
 	ImageInterface<T>& image,
 	const Array<T>& pixelsArray, const Vector<Int>& blc,
 	const Vector<Int>& inc, const Bool list,
 	const Bool locking, const Bool replicate
 ) {
-	*_log << LogOrigin(className(), __FUNCTION__);
+	*_log << LogOrigin(className(), __func__);
 	IPosition imageShape = image.shape();
 	uInt ndim = imageShape.nelements();
 	ThrowIf(
@@ -422,143 +420,12 @@ template<class T> Bool ImageAnalysis::_putchunk(
 	return True;
 }
 
-template<class T> Bool ImageAnalysis::_setrestoringbeam(
-	std::tr1::shared_ptr<ImageInterface<T> > image,
-	const Quantity& major, const Quantity& minor,
-	const Quantity& pa, const Record& rec,
-	const bool deleteIt, const bool log,
-    Int channel, Int polarization
-) {
-	*_log << LogOrigin(className(), __FUNCTION__);
-	ImageInfo ii = image->imageInfo();
-	if (deleteIt) {
-		if (log) {
-			if (ii.hasMultipleBeams() && (channel >= 0 || polarization >= 0)) {
-				*_log << LogIO::WARN
-					<< "Delete ignores any channel and/or polarization specification "
-					<< "All per plane beams are being deleted" << LogIO::POST;
-			}
-			*_log << LogIO::NORMAL << "Deleting restoring beam(s)"
-				<< LogIO::POST;
-		}
-		ii.removeRestoringBeam();
-		if (! image->setImageInfo(ii)) {
-			*_log << LogIO::POST << "Failed to remove restoring beam" << LogIO::POST;
-			return False;
-		}
-		deleteHist();
-		return True;
-	}
-	Quantity bmajor, bminor, bpa;
-	if (rec.nfields() != 0) {
-		String error;
-		// instantiating this object will do implicit consistency checks
-		// on the passed-in record
-		GaussianBeam beam = GaussianBeam::fromRecord(rec);
-
-		bmajor = beam.getMajor();
-		bminor = beam.getMinor();
-		bpa = beam.getPA(True);
-	}
-	else {
-		bmajor = major;
-		bminor = minor;
-		bpa = pa;
-	}
-	if (bmajor.getValue() == 0 || bminor.getValue() == 0) {
-		GaussianBeam currentBeam = ii.restoringBeam(channel, polarization);
-		if (! currentBeam.isNull()) {
-			bmajor = major.getValue() == 0 ? currentBeam.getMajor() : major;
-			bminor = minor.getValue() == 0 ? currentBeam.getMinor() : minor;
-			bpa = pa.isConform("rad") ? pa : Quantity(0, "deg");
-		}
-		else {
-			if (ii.hasMultipleBeams()) {
-				*_log
-					<< "This image does not have a corresponding per plane "
-					<< "restoring beam that can be "
-					<< "used to set missing input parameters"
-					<< LogIO::POST;
-			}
-			else {
-				*_log
-					<< "This image does not have a restoring beam that can be "
-					<< "used to set missing input parameters"
-					<< LogIO::POST;
-			}
-			return False;
-		}
-	}
-	if (ii.hasMultipleBeams()) {
-		if (channel < 0 && polarization < 0) {
-			if (log) {
-				*_log << LogIO::WARN << "This image has per plane beams"
-					<< "but no plane (channel/polarization) was specified. All beams will be set "
-					<< "equal to the specified beam." << LogIO::POST;
-			}
-			ImageMetaData md(image);
-			ii.setAllBeams(
-				md.nChannels(), md.nStokes(),
-				GaussianBeam(bmajor, bminor, bpa)
-			);
-		}
-		else {
-			ii.setBeam(channel, polarization, bmajor, bminor, bpa);
-		}
-	}
-	else if (channel >= 0 || polarization >= 0) {
-		if (ii.restoringBeam().isNull()) {
-			if (log) {
-				*_log << LogIO::NORMAL << "This iamge currently has no beams of any kind. "
-					<< "Since channel and/or polarization were specified, "
-					<< "a set of per plane beams, each equal to the specified beam, "
-					<< "will be created." << LogIO::POST;
-			}
-			ImageMetaData md(image);
-			ii.setAllBeams(
-				md.nChannels(), md.nStokes(),
-				GaussianBeam(bmajor, bminor, bpa)
-			);
-		}
-		else {
-			if (log) {
-				*_log << LogIO::WARN << "Channel and/or polarization has "
-					<< "been specified, but this image has a single (global restoring "
-					<< "beam. This beam will not be altered. If you really want to modify "
-					<< "the global beam, rerun setting both channel and "
-					<< "polarization less than zero" << LogIO::POST;
-			}
-			return False;
-		}
-	}
-	else {
-		if (log) {
-			*_log << LogIO::NORMAL
-				<< "Setting (gloal) restoring beam." << LogIO::POST;
-		}
-		ii.setRestoringBeam(GaussianBeam(bmajor, bminor, bpa));
-	}
-	if (! image->setImageInfo(ii)) {
-		*_log << LogIO::POST << "Failed to set restoring beam" << LogIO::POST;
-		return False;
-	}
-	if (log) {
-		*_log << LogIO::NORMAL << "Beam parameters:"
-			<< "  Major          : " << bmajor.getValue() << " " << bmajor.getUnit() << endl
-			<< "  Minor          : " << bminor.getValue() << " " << bminor.getUnit() << endl
-			<< "  Position Angle : " << bpa.getValue() << " " << bpa.getUnit() << endl
-			<< LogIO::POST;
-	}
-	deleteHist();
-	return True;
-}
-
 template<class T> Record ImageAnalysis::_summary(
 	const ImageInterface<T>& image,
 	const String& doppler, const Bool list,
 	const Bool pixelorder, const Bool verbose
 ) {
-	*_log << LogOrigin(className(), __FUNCTION__);
+	*_log << LogOrigin(className(), __func__);
 	Vector<String> messages;
 	Record retval;
 	ImageSummary<T> s(image);
@@ -618,6 +485,5 @@ template<class T> Record ImageAnalysis::_summary(
 	}
 	return retval;
 }
-
 
 } // end of  casa namespace

@@ -335,13 +335,6 @@ class ImageAnalysis
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
-    Bool setrestoringbeam(
-    	const Quantity& major, const Quantity& minor,
-        const Quantity& pa, const Record& beam,
-        const Bool remove = False, const Bool log = True,
-        Int channel=-1, Int polarization=-1
-    );
-
     bool twopointcorrelation(
     	const String& outfile, Record& region,
         const String& mask, const Vector<Int>& axes,
