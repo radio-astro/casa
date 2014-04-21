@@ -61,6 +61,7 @@
 
 #include <components/SpectralComponents/SpectralListFactory.h>
 
+#include <imageanalysis/ImageAnalysis/BeamManipulator.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -3878,8 +3879,9 @@ std::vector<int> image::shape() {
 bool image::setrestoringbeam(
 	const variant& major, const variant& minor,
 	const variant& pa, const record& beam,
-	const bool deleteIt, const bool log,
-	const int channel, const int polarization
+	bool remove, bool log,
+	int channel, int polarization,
+	const string& imagename
 ) {
 	try {
 		_log << _ORIGIN;
@@ -3887,18 +3889,75 @@ bool image::setrestoringbeam(
 			return false;
 		}
 		std::auto_ptr<Record> rec(toRecord(beam));
-		if (
-			_image->setrestoringbeam(
-				_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
-				_casaQuantityFromVar(pa), *rec, deleteIt,
-				log, channel, polarization
-			)
-		) {
-			_log << _ORIGIN;
-			_stats.reset(0);
-			return True;
+		ImageBeamSet bs;
+		if (! imagename.empty()) {
+			ThrowIf(
+				! major.empty() || ! minor.empty() || ! pa.empty(),
+				"Cannot specify both imagename and major, minor, and/or pa"
+			);
+			ThrowIf(
+				remove,	"remove cannot be true if imagename is specified"
+			);
+			ThrowIf(
+				! beam.empty(),
+				"beam must be empty if imagename specified"
+			);
+			ThrowIf(
+				channel >= 0 || polarization >= 0,
+				"Neither channel nor polarization can be non-negative if imagename is specified"
+			);
+			std::auto_ptr<ImageInterface<Float> > k;
+			ImageUtilities::openImage(k, imagename);
+			if (k.get() == 0) {
+				std::auto_ptr<ImageInterface<Float> > c;
+				ImageUtilities::openImage(c, imagename);
+				ThrowIf(
+					c.get() == 0,
+					"Unable to open " + imagename
+				);
+				bs = c->imageInfo().getBeamSet();
+			}
+			else {
+				bs = k->imageInfo().getBeamSet();
+			}
+			ThrowIf(
+				bs.empty(),
+				"Image " + imagename + " has no beam"
+			);
 		}
-		throw AipsError("Error setting restoring beam.");
+		if (_image->isFloat()) {
+			BeamManipulator<Float> bManip(_image->getImage());
+			bManip.setVerbose(log);
+			if (remove) {
+				bManip.remove();
+			}
+			else if (! bs.empty()) {
+				bManip.set(bs);
+			}
+			else {
+				bManip.set(
+					_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
+					_casaQuantityFromVar(pa), *rec, channel, polarization
+				);
+			}
+		}
+		else {
+			BeamManipulator<Complex> bManip(_image->getComplexImage());
+			bManip.setVerbose(log);
+			if (remove) {
+				bManip.remove();
+			}
+			else if (! bs.empty()) {
+				bManip.set(bs);
+			}
+			else {
+				bManip.set(
+					_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
+					_casaQuantityFromVar(pa), *rec, channel, polarization
+				);
+			}
+		}
+		return true;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()

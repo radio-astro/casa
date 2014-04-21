@@ -8935,6 +8935,10 @@ ia.close()
             <description>Zero-based polarization number for which to set a per plane beam. If the image has a traditional beam, set to less than zero. Default -1.</description>
             <value>-1</value>
         </param>
+        <param type="string" name="imagename">
+            <description>Copy the beam(s) from the specified image to this image. If multiple beams, the current image must be able to hold a beam set of the shape in the specified image.</description>
+            <value/>
+        </param>
             
     </input>
 
@@ -9000,6 +9004,10 @@ channel to a negative value. Similarly, in the case where an image has multiple 
 the beams associated with all polarizations for a given spectral channel can be modified to the same
 beam by setting channel equal to the desired spectral channel number and by setting
 polarization to a negative value.
+
+A beam or set of beams can be copied from another image using the imagename parameter to specify
+that image's name. If both the current image and specified image have multiple beams, the current
+image shape must be consistent with the specified image beam set shape.
 
 The traditional beam or a set of multiple beams can be deleted from an image by setting {\stfaf delete=T}. If set
 to true, all other parameters are then ignored; all existing beams
