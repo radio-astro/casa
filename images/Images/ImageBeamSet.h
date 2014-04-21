@@ -256,6 +256,13 @@ public:
 	// the beam in this subset with the smallest area will be returned.
 	const GaussianBeam getSmallestMinorAxisBeam() const;
 
+	// <group>
+	// convert ImageBeamSet to and from record
+	static ImageBeamSet fromRecord(const Record& rec);
+
+	Record toRecord() const;
+	//</group>
+
 private:
 
 	static const String _DEFAULT_AREA_UNIT;
