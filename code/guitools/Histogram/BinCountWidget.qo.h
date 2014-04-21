@@ -44,6 +44,10 @@ public:
 signals:
 	void binCountChanged( int binCount );
 
+private slots:
+	void binValueChanged( int value );
+	void binCountTextChanged( const QString& binCount );
+
 private:
     Ui::BinCountWidgetClass ui;
 };

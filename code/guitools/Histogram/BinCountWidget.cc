@@ -23,6 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "BinCountWidget.qo.h"
+#include <QDebug>
 
 namespace casa {
 
@@ -31,18 +32,36 @@ int BinCountWidget::DEFAULT_COUNT = 25;
 BinCountWidget::BinCountWidget(QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
-	connect( ui.binCountSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(binCountChanged(int)));
+	QIntValidator* intValidator = new QIntValidator(1, 1000, this );
+	ui.binCountLineEdit->setValidator( intValidator );
+	connect( ui.binCountLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(binCountTextChanged(const QString&)));
+	connect( ui.binCountSlider, SIGNAL(valueChanged(int)), this, SLOT(binValueChanged(int)));
 }
 
 int BinCountWidget::getBinCount() const {
-	return ui.binCountSpinBox->value();
+	return ui.binCountSlider->value();
 }
 
 void BinCountWidget::setBinCount( int binCount ){
-	int oldValue = ui.binCountSpinBox->value();
+	int oldValue = ui.binCountSlider->value();
 	if ( oldValue != binCount ){
-		ui.binCountSpinBox->setValue( binCount );
+		ui.binCountSlider->setValue( binCount );
 	}
+}
+
+void BinCountWidget::binCountTextChanged( const QString& binCount ){
+	bool validValue = false;
+	int binCountInt = binCount.toInt(&validValue );
+	if ( validValue ){
+		ui.binCountSlider->setValue( binCountInt );
+	}
+}
+
+void BinCountWidget::binValueChanged( int value ){
+	ui.binCountLineEdit->blockSignals( true );
+	ui.binCountLineEdit->setText( QString::number( value ));
+	ui.binCountLineEdit->blockSignals( false );
+	emit binCountChanged( value );
 }
 
 BinCountWidget::~BinCountWidget(){

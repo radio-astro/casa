@@ -1039,7 +1039,12 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 
 	if ( histColor != fitCurveColor ){
 		if ( stepFunctionFilledAction.isChecked() ){
-			curve->setBaseline( 0 );
+			if( displayLogY ){
+				curve->setBaseline( 1 );
+			}
+			else {
+				curve->setBaseline( 0 );
+			}
 			QBrush brush;
 			brush.setColor( histColor );
 			brush.setStyle( Qt::SolidPattern );
