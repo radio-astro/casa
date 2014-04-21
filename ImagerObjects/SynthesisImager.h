@@ -86,7 +86,7 @@ class SynthesisImager
 			  const Bool readonly=False, 
 			  const Bool incrementModel=False);
 
-  virtual Bool defineImage(const SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
+  virtual Bool defineImage(SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
 
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way

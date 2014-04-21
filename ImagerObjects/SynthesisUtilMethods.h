@@ -158,7 +158,7 @@ public:
 
   // Generate Coordinate System 
   //CoordinateSystem buildCoordinateSystem(MeasurementSet& msobj) const;
-  CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi) const;
+  CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;
   Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, 
@@ -167,7 +167,7 @@ public:
 		 const Vector<Double>& dataChanFreqs, const Vector<Double>& dataFreqRes,
 		 const MFrequency::Types& dataFrame, const Quantity& qrestfreq, 
 		 const Double& freqmin, const Double& freqmax,
-		 const MDirection& phaseCenter ) const;
+		 const MDirection& phaseCenter );
   
   String findSpecMode(const String& mode) const;
   String MDopToVelString(Record &rec);

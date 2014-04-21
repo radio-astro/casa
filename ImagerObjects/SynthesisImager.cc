@@ -444,7 +444,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   return True;
 }
 
-  Bool SynthesisImager::defineImage(const SynthesisParamsImage& impars, 
+  Bool SynthesisImager::defineImage(SynthesisParamsImage& impars, 
 			   const SynthesisParamsGrid& gridpars)
   {
 
@@ -457,14 +457,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	os << "Adding " << impars.imageName << " (nchan : " << impars.nchan 
-	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
-	   << ", start:" << impars.start
-	   <<  ", imsize:" << impars.imsize 
-	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
-	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
-	   << "] ) to imager list " 
-	   << LogIO::POST;
 
 	//MeasurementSet tms(*mss_p[0]);
 	//csys = impars.buildCoordinateSystem( tms );
@@ -478,10 +470,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsMaxCoordSys=csys;
 	  }
 
+	os << "Adding " << impars.imageName << " (nchan : " << impars.nchan 
+	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
+	   << ", start:" << impars.start
+	   <<  ", imsize:" << impars.imsize 
+	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
+	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
+	   << "] ) to imager list " 
+	   << LogIO::POST;
+
       }
     catch(AipsError &x)
       {
-	os << "Error in building Coordinate System() : " << x.getMesg() << LogIO::EXCEPTION;
+	os << "Error in building Coordinate System and Image Shape : " << x.getMesg() << LogIO::EXCEPTION;
       }
 
 	
@@ -601,7 +602,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
-    os << "------------------------ Run Major Cycle ---------------------------------------------------------------------------" << LogIO::POST;
+    os << "----------------------------------------------------------- Run Major Cycle -------------------------------------" << LogIO::POST;
 
     try
       {    
@@ -623,7 +624,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       LogIO os( LogOrigin("SynthesisImager","makePSF",WHERE) );
 
-    os << "------------------------ Make PSF ----------------------------------------------------------------------------------" << LogIO::POST;
+      os << "----------------------------------------------------------- Make PSF ---------------------------------------------" << LogIO::POST;
     
       try
       {
