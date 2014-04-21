@@ -15,6 +15,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
+           'score_bwswitching',                               # ALMA specific
            'score_missing_intents',
            'score_online_shadow_agents',
            'score_total_data_flagged',
@@ -188,17 +189,20 @@ def score_bwswitching(mses):
     # analyse each MS
     for ms in mses:
 
-	# Get phase calibrator spw ids
+	# Get the science spws
+	scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+
+	# Get phase calibrator science spw ids
         phasespws = []
 	for scan in ms.get_scans(scan_intent='PHASE'):
 	    phasespws.extend([spw.id for spw in scan.spws])
-	phasespws = set(phasespws)
+	phasespws = set(phasespws).intersection(scispws)
 
-	# Get science target spw ids
+	# Get science target science spw ids
 	targetspws = []
 	for scan in ms.get_scans(scan_intent='TARGET'):
 	    targetspws.extend([spw.id for spw in scan.spws])
-        targetspws = set(targetspws)
+        targetspws = set(targetspws).intersection(scispws)
 
 	# Determine the difference between the two
 	nophasecals = targetspws.difference(phasespws)
@@ -208,7 +212,7 @@ def score_bwswitching(mses):
 	# Score the difference
 	all_ok = False
 	for m in nophasecals:
-            score += (-1.0 / num_mses)
+            score += (-1.0 / num_mses / len(nophasecals))
         longmsg = ('%s contains no phase calibrations for target spws %s'
             '' % (ms.basename, utils.commafy(nophasecals, False)))
         complaints.append(longmsg)
