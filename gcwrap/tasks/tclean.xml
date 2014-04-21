@@ -114,6 +114,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 <!--============================================== -->
+
+    <param type="string" name="outlierfile">
+      <description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
+
+<!--============================================== -->
 <!--                            Spectral Parameters                                                     -->
 <!--============================================== -->
 
@@ -129,7 +137,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="nchan" subparam="true">
       <description>Number of channels in the output image</description>
-      <value type="int">1</value>
+      <value type="int">-1</value>
     </param>
 
     <param type="any" name="start" subparam="true">
@@ -183,7 +191,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 
     <param type="string" name="gridmode">
-            <description>Gridding options (standard, widefield, mosaic, imagemosaic awproject)</description>
+            <description>Gridding options (standard, widefield, mosaic, imagemosaic, awproject)</description>
 	    <value type="string">standard</value>
 	    <allowed kind="enum">
 	      <value>standard</value>
@@ -240,22 +248,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="pblimit" subparam="true">
-      <description> PB gain level at which to cut off pb-corrections  </description>
+      <description>PB gain level at which to cut off image calculations  </description>
       <value type="double">0.01</value>
     </param>
 
     <param type="string" name="normtype" subparam="true">
-      <description> Normalization type (flatnoise, flatsky) </description>
+      <description>Normalization type (flatnoise, flatsky) </description>
       <value type="string">flatnoise</value>
     </param>
 
-
-<!--============================================== -->
-
-    <param type="string" name="outlierfile">
-      <description>Name of outlier-field image definitions</description>
-      <value type="string"></value>
-    </param>
 
 
 <!--============================================== -->
@@ -295,6 +296,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>1.0</value>
     </param>
 
+<!--============================================== -->
+<!--                            Deconvolution Parameters                                            -->
+<!--============================================== -->
+
+
+    <param type="string" name="decmode">
+            <description>Name of minor cycle algorithm</description>
+	    <value type="string">hogbom</value>
+	    <allowed kind="enum">
+	      <value>hogbom</value>
+              <value>clark</value>
+	      <value>clarkstokes</value>
+	      <value>multiscale</value>
+	      <value>msmfs</value>
+	    </allowed>
+    </param>
+
+    <param type="intArray" name="scales" subparam="true">
+            <description>List of scale sizes (in pixels) for multi-scale cleaning</description>
+	    <value type="intArray">[0,3,10]</value>
+    </param>
+
+    <param type="int" name="ntaylorterms" subparam="true">
+      <description>Number of Taylor coefficients in the spectral model</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="stringArray" name="restoringbeam" subparam="true">
+            <description>Restoring beam shape to use. Default is the PSF main lobe width. </description>
+	    <value type="stringArray">['','','']</value>
+    </param>
+
+
 
 <!--============================================== -->
 <!--                            Iteration Control Parameters                                         -->
@@ -302,7 +336,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     <param type="int" name="niter">
-      <description>Maximum number of iterations</description>
+      <description>Maximum number of iterations (0=psf,dirty -1=psf)</description>
       <value type="int">500</value>
     </param>
 
@@ -349,39 +383,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               <value>virtual</value>
 	      <value>modelcolumn</value>
 	    </allowed>
-    </param>
-
-
-<!--============================================== -->
-<!--                            Deconvolution Parameters                                            -->
-<!--============================================== -->
-
-
-    <param type="string" name="deconvolver">
-            <description>Name of minor cycle algorithm</description>
-	    <value type="string">hogbom</value>
-	    <allowed kind="enum">
-	      <value>hogbom</value>
-              <value>clark</value>
-	      <value>clarkstokes</value>
-	      <value>multiscale</value>
-	      <value>msmfs</value>
-	    </allowed>
-    </param>
-
-    <param type="intArray" name="scales" subparam="true">
-            <description>List of scale sizes (in pixels) for multi-scale cleaning</description>
-	    <value type="intArray">[0,3,10]</value>
-    </param>
-
-    <param type="int" name="ntaylorterms" subparam="true">
-      <description>Number of Taylor coefficients in the spectral model</description>
-      <value type="int">1</value>
-    </param>
-
-    <param type="stringArray" name="restoringbeam" subparam="true">
-            <description>Restoring beam shape to use. Default is the PSF main lobe width. </description>
-	    <value type="stringArray">['','','']</value>
     </param>
 
 
@@ -454,9 +455,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <when param="specmode">
        <equals type="string" value="mfs">
 	 <default param="reffreq"><value>""</value></default>
+<!--	 <default param="ntaylorterms"><value>1</value></default> -->
        </equals>
        <equals type="string" value="cube">
-	 <default param="nchan"><value>1</value></default>
+	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
 	 <default param="step"><value>""</value></default>
 	 <default param="frame"><value>""</value></default>
@@ -464,7 +466,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="restfreq"><value>[]</value></default>
        </equals>
        <equals type="string" value="cubesrc">
-	 <default param="nchan"><value>1</value></default>
+	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
 	 <default param="step"><value>""</value></default>
 	 <default param="frame"><value>""</value></default>
@@ -474,7 +476,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="sysvelframe"><value>""</value></default>
        </equals>
        <equals type="string" value="cubedata">
-	 <default param="nchan"><value>1</value></default>
+	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
 	 <default param="step"><value>""</value></default>
 	 <default param="veltype"><value>"radio"</value></default>
@@ -529,18 +531,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        </equals>
      </when>
 
-     <when param="deconvolver">
+     <when param="decmode">
        <equals type="string" value="hogbom">
        </equals>
        <equals type="string" value="multiscale">
-	 <default param="scales"><value>[0,3,10]</value></default>
+	 <default param="scales"><value>[]</value></default>
        </equals>
        <equals type="string" value="msmfs">
 	 <default param="scales"><value>[]</value></default>
-	 <default param="ntaylorterms"><value>2</value></default>
+	 <default param="ntaylorterms"><value>2</value></default>  
        </equals>
      </when>
-     
 
      <when param="niter">
        <notequals type="int" value="0">

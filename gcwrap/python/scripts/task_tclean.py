@@ -34,6 +34,8 @@ def tclean(
     phasecenter='J2000 19:59:28.500 +40.44.01.50',
     stokes='I',
 
+    outlierfile='',
+
     ## Spectral parameters
     specmode='mfs',
     reffreq='',
@@ -64,8 +66,6 @@ def tclean(
     pblimit=0.01,
     normtype='flatnoise',
 
-    outlierfile='',
-
     #### Weighting
     weighting='natural',
     robust=0.5,
@@ -74,6 +74,12 @@ def tclean(
     outertaper=[],
     innertaper=[],
 
+    ####### Deconvolution parameters
+    decmode='hogbom',
+    scales=[],
+    ntaylorterms=1,
+    restoringbeam=[],
+    
     ##### Iteration control
     niter=0, 
     gain=0.1,
@@ -85,20 +91,34 @@ def tclean(
     interactive=False, 
     savemodel="none",
 
-    ####### Deconvolution parameters
-    deconvolver='hogbom',
-    scales=[],
-    ntaylorterms=1,
-    restoringbeam=[],
-    
     ####### State parameters
     parallel=False,
     clusterdef='',
     workdir=''):
+
+    #####################################################
+    #### Sanity checks and controls
+    #####################################################
     
+    ### TEMP check. Remove
+    if interactive==True:
+        casalog.post( "Interactive clean is not enabled yet." ,"WARN","task_tclean")
+        return
+
+    ### Move these checks elsewhere ? 
+    if specmode=='mfs' and ntaylorterms>1 and decmode != "msmfs":
+        casalog.post( "MSMFS is the only available deconvolution algorithm for ntaylorterms>1.\
+                              Please set decmode='msmfs'.", "WARN", "task_tclean" )
+        return
+
+    if specmode!='mfs' and decmode=="msmfs":
+        casalog.post( "The MSMFS algorithm applies only to specmode='mfs'.", "WARN", "task_tclean" )
+        return
+
     #####################################################
     #### Translate interface-specific parameters into ones used by ImagerParameters
-
+    ####  Try to minimize this section..... ideally should not exist.
+    #####################################################
 
     ### This is temporary..... get rid of it.
     if gridmode=='imagemosaic':
@@ -135,11 +155,6 @@ def tclean(
     elif savemodel=="modelcolumn":
         usescratch=True
         readonly=False
-
-    ### TEMP check. Remove
-    if interactive==True:
-        print "Interactive clean is not enabled yet."
-        return;
 
     #####################################################
 
@@ -216,7 +231,7 @@ def tclean(
         maxpsffraction=maxpsffraction,
         interactive=interactive,
 
-        algo=deconvolver,
+        algo=decmode,
         scales=scales,
         ntaylorterms=ntaylorterms,
         restoringbeam=restoringbeam,
@@ -230,7 +245,7 @@ def tclean(
     if paramList.checkParameters() == False:
         return False
 
-    paramList.printParameters()
+    #paramList.printParameters()
 
     pcube=False
     if parallel==True and nchan>1:
@@ -248,6 +263,7 @@ def tclean(
          print 'Invalid parallel combination in doClean.'
          return False
 
+    retrec={}
     
     ## Init major cycle elements
     imager.initializeImagers()
@@ -261,22 +277,22 @@ def tclean(
     ## Make PSF
     imager.makePSF()
 
-    ## Make dirty image
-    imager.runMajorCycle()
+    if niter >=0 : 
 
-    ## Do deconvolution and iterations
-    if niter>0 :
-        while ( not imager.hasConverged() ):
-            imager.runMinorCycle()
-            imager.runMajorCycle()
+        ## Make dirty image
+        imager.runMajorCycle()
+        
+        ## Do deconvolution and iterations
+        if niter>0 :
+            while ( not imager.hasConverged() ):
+                imager.runMinorCycle()
+                imager.runMajorCycle()
 
-    ## Restore images.
-    if niter>0:
-        imager.restoreImages()
+            ## Restore images.
+            imager.restoreImages()
 
-    retrec={}
-    if niter>0:
-        retrec=imager.getSummary();
+            ## Get summary from iterbot
+            retrec=imager.getSummary();
 
     ## Close tools.
     imager.deleteTools()

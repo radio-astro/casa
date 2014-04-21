@@ -1153,7 +1153,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	! stokes.matches("IQUV") ) 
       { err += "Stokes " + stokes + " is an unsupported option \n";}
 
-    
     ///    err += verifySpectralSetup();  
     
 	return err;
@@ -1312,7 +1311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi) const
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi)
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
@@ -1558,7 +1557,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        const Vector<Double>& dataChanWidth,
                                        const MFrequency::Types& dataFrame, 
                                        const Quantity& qrestfreq, const Double& freqmin, const Double& freqmax,
-				       const MDirection& phaseCenter) const
+				       const MDirection& phaseCenter) 
   {
 
     String inStart, inStep; 
@@ -1652,6 +1651,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
          <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
          << LogIO::POST;
+
       Bool rst=SubMS::calcChanFreqs(os,
                            chanFreq, 
                            chanFreqStep,
@@ -1671,6 +1671,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                            verbose, 
                            mSysVel
                            );
+
+      if( nchan==-1 ) 
+	{ 
+	  nchan = chanFreq.nelements(); 
+	  os << LogIO::DEBUG1 << "Setting nchan to number of selected channels : " << nchan << LogIO::POST;
+	}
 
       if (!rst) {
         os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
@@ -1780,7 +1786,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   IPosition SynthesisParamsImage::shp() const
   {
-    return IPosition( 4, imsize[0], imsize[1], ( decideNPolPlanes(stokes) ).nelements(), nchan );
+    uInt nStokes = ( decideNPolPlanes(stokes) ).nelements();
+
+    if( imsize[0]<=0 || imsize[1]<=0 || nStokes<=0 || nchan<=0 )
+      {
+	throw(AipsError("Internal Error : Image shape is invalid : [" + String::toString(imsize[0]) + "," + String::toString(imsize[1]) + "," + String::toString(nStokes) + "," + String::toString(nchan) + "]" )); 
+      }
+
+    return IPosition( 4, imsize[0], imsize[1], nStokes, nchan );
   }
 
 
