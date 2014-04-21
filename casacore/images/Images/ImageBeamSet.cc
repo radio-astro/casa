@@ -24,6 +24,7 @@
 //#
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Containers/Record.h>
 #include <casa/Quanta/QLogical.h>
 #include <images/Images/ImageBeamSet.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -616,4 +617,63 @@ Bool ImageBeamSet::equivalent(const ImageBeamSet& that) const {
 	}
 	return True;
 }
+
+ImageBeamSet ImageBeamSet::fromRecord(const Record& rec) {
+	ThrowIf(
+		! rec.isDefined("nChannels"),
+		"no nChannels field found"
+	);
+	ThrowIf(
+		! rec.isDefined("nStokes"),
+		"no nStokes field found"
+	);
+	uInt nchan = rec.asuInt("nChannels");
+	ImageBeamSet beams(nchan, rec.asuInt("nStokes"));
+	uInt count = 0;
+	uInt chan = 0;
+	uInt stokes = 0;
+	Array<GaussianBeam>::const_iterator iterend = beams.getBeams().end();
+	for (
+		Array<GaussianBeam>::const_iterator iter =
+		beams.getBeams().begin(); iter != iterend; ++iter, ++count
+	) {
+		String field = "*" + String::toString(count);
+		ThrowIf(
+			! rec.isDefined(field),
+			"Field " + field + " is not defined"
+		);
+		beams.setBeam(
+			chan, stokes,
+			GaussianBeam::fromRecord(rec.asRecord(field))
+		);
+		if (++chan == nchan) {
+			chan = 0;
+			stokes++;
+		}
+	}
+	return beams;
+}
+
+Record ImageBeamSet::toRecord() const {
+	Record perPlaneBeams;
+	perPlaneBeams.define("nChannels", nchan());
+	perPlaneBeams.define("nStokes", nstokes());
+	Record rec;
+	uInt count = 0;
+	const Array<GaussianBeam>& beams = getBeams();
+	Array<GaussianBeam>::const_iterator iterEnd = beams.end();
+	for (
+		Array<GaussianBeam>::const_iterator iter=beams.begin();
+		iter!=iterEnd; ++iter, ++count
+	) {
+		ThrowIf(
+			iter->isNull(),
+            "Invalid per plane beam found"
+        );
+		Record rec = iter->toRecord();
+		perPlaneBeams.defineRecord("*" + String::toString(count), rec);
+	}
+	return perPlaneBeams;
+}
+
 }
