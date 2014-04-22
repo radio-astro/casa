@@ -600,6 +600,20 @@ if( DL_LIBRARIES STREQUAL "dl" )
   set( DL_LIBRARIES "-ldl" CACHE STRING "dl libraries" FORCE )
 endif()
 
+# libsakura
+if( NOT DEFINED LIBSAKURA_ROOT_DIR )
+  # default for NAOJ servers
+  set( LIBSAKURA_ROOT_DIR "$ENV{HOME}/workspace/libsakura/build/installed" )
+endif()
+casa_find( LIBSAKURA
+  VERSION 0.1
+  INCLUDES libsakura/sakura.h libsakura/config.h
+  LIBS sakura
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
+  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+)
+
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
@@ -715,7 +729,7 @@ casa_find( CASACODE
            INCLUDES_SUFFIXES casacode
            LIBS ${casacode_libs}
            PREFIX_HINTS ${casacode_prefix}
-	   DEPENDS CASACORE LAPACK CFITSIO WCSLIB FFTW3 DL )
+	   DEPENDS CASACORE LAPACK CFITSIO WCSLIB FFTW3 DL LIBSAKURA )
 
 
 # ALMAWVR
