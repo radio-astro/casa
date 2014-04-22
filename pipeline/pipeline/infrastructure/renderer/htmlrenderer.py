@@ -4737,31 +4737,21 @@ class T2_4MDetailsSingleDishCalTsysRenderer(T2_4MDetailsDefaultRenderer):
         if not os.path.exists(stage_dir):
             os.mkdir(stage_dir)
 
-        xaxis_types = ['All', 'PerSPW']
-
         inputs = sddisplay.SDTsysDisplay.Inputs(context,results)
         task = sddisplay.SDTsysDisplay(inputs)
         plots = task.plot()
-        plots_per_type = self._plots_per_type(plots, xaxis_types)
+        plots_per_type = self._plots_per_type(plots, None)
         summary_plots = {}
         plot_list = {}
-        for (x, _plots) in zip(xaxis_types, plots_per_type):
-            plot_group = self._group_by_vis(_plots)
-            for (name, _plots) in plot_group.items():
-                if x == 'All':
-                    renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
-                                                                  'Tsys vs Frequency')
-                else:
-                    renderer = SingleDishGenericPlotsRenderer(context, results, name, _plots,
-                                                              'Tsys vs Freqyency')
-                with renderer.get_file() as fileobj:
-                    fileobj.write(renderer.render())
-                if not plot_list.has_key(name):
-                    plot_list[name] = []
-                plot_list[name].append(renderer.filename)
-                if not summary_plots.has_key(name):
-                    summary_plots[name] = []
-                summary_plots[name].append(_plots[0])
+        plot_group = self._group_by_vis(plots_per_type)
+        for (name, _plots) in plot_group.items():
+            summary_plots[name] = _plots['summary']
+            individual_plots = _plots['individual']
+            renderer = SingleDishGenericPlotsRenderer(context, results, name, individual_plots,
+                                                      'Tsys vs Frequency')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            plot_list[name] = renderer.filename
 
         ctx.update({'subpage': plot_list,
                     'summary': summary_plots,
@@ -4771,21 +4761,23 @@ class T2_4MDetailsSingleDishCalTsysRenderer(T2_4MDetailsDefaultRenderer):
 
     def _group_by_vis(self, plots):
         plot_group = {}
-        for p in plots:
+        for p in plots[0]:
             key = p.parameters['vis']
             if plot_group.has_key(key):
-                plot_group[key].append(p)
+                plot_group[key]['summary'].append(p)
             else:
-                plot_group[key] = [p]
+                plot_group[key] = {'summary': [p],
+                                   'individual': []}
+        for p in plots[1]:
+            plot_group[p.parameters['vis']]['individual'].append(p)
         return plot_group
-    
+
+        
+        
     def _plots_per_type(self, plots, xaxis_list):
-        plot_group = [[], []]
-        #plot_group = [[] for x in xaxis_list]
+        plot_group = [[], []] #[summary plots, individual plots]
         for _plots in plots:
             for p in _plots:
-                #index = xaxis_list.index(p.x_axis)
-                #plot_group[index].append(p)
                 spw = p.parameters['spw']
                 if spw == 'all':
                     plot_group[0].append(p)
