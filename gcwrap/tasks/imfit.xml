@@ -457,7 +457,7 @@ are sometimes reported. These limits simply come from the maximum major and mino
 gaussians taken from trying all eight of the aforementioned combinations. In the case none of these combinations
 produces a deconvolved size, no upper limit is reported.
 
-EXAMPLE: 
+EXAMPLE:
 
 Here is how one might fit two gaussians to multiple channels of a cube using the fit
 from the previous channel as the initial estimate for the next. It also illustrates

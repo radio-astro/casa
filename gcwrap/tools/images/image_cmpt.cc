@@ -293,11 +293,7 @@ image * image::collapse(
 		else {
 			ThrowCc("Unsupported type for parameter axes");
 		}
-		String regStr = region.type() == variant::STRING ? region.toString() : "";
-		std::auto_ptr<Record> regRec(
-			region.type() == variant::RECORD
-			? toRecord(region.getRecord()) : 0
-		);
+		std::tr1::shared_ptr<Record> regRec = _getRegion(region, True);
 		String aggString = function;
 		aggString.trim();
 		aggString.downcase();
@@ -305,18 +301,37 @@ image * image::collapse(
 			_log << "avdev currently not supported. Let us know if you have a need for it"
 				<< LogIO::EXCEPTION;
 		}
+		String myStokes = stokes;
 		if (_image->isFloat()) {
+			SPCIIF myimage = _image->getImage();
+			CasacRegionManager rm(myimage->coordinates());
+			String diagnostics;
+			uInt nSelectedChannels;
+			Record myreg = rm.fromBCS(
+				diagnostics, nSelectedChannels, myStokes, regRec.get(),
+				"", chans, CasacRegionManager::USE_ALL_STOKES, box,
+				myimage->shape(), mask, False
+			);
 			ImageCollapser<Float> collapser(
-				aggString, _image->getImage(), regStr, regRec.get(), box,
-				chans, stokes, mask, myAxes, outfile, overwrite
+				aggString, myimage, &myreg,
+				mask, myAxes, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
 			return new image(collapser.collapse(True));
 		}
 		else {
-			ImageCollapser<casa::Complex> collapser(
-				aggString, _image->getComplexImage(), regStr, regRec.get(), box,
-				chans, stokes, mask, myAxes, outfile, overwrite
+			SPCIIC myimage = _image->getComplexImage();
+			CasacRegionManager rm(myimage->coordinates());
+			String diagnostics;
+			uInt nSelectedChannels;
+			Record myreg = rm.fromBCS(
+				diagnostics, nSelectedChannels, myStokes, regRec.get(),
+				"", chans, CasacRegionManager::USE_ALL_STOKES, box,
+				myimage->shape(), mask, False
+			);
+			ImageCollapser<Complex> collapser(
+				aggString, myimage, &myreg,
+				mask, myAxes, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
 			return new image(collapser.collapse(True));
