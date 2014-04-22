@@ -549,3 +549,54 @@ def get_logrecords(result, loglevel):
     # relies on the fact that dset.add() always returns None.
     return [r for r in records if
             r.msg not in dset and not dset.add(r.msg)]
+
+def field_arg_to_id(ms_path, field_arg):
+    """
+    Convert a string to the corresponding field IDs.
+    
+    :param ms_path: the path to the measurement set
+    :param field_arg: the field selection in CASA format
+    :return: a list of field IDs 
+    """
+    all_indices = _convert_arg_to_id('field', ms_path, field_arg)    
+    return all_indices['field'].tolist()
+
+def spw_arg_to_id(ms_path, spw_arg):
+    """
+    Convert a string to spectral window IDs and channels.
+    
+    :param ms_path: the path to the measurement set
+    :param spw_arg: the spw selection in CASA format
+    :return: a list of (spw, chan_start, chan_end, step) lists 
+    """
+    all_indices = _convert_arg_to_id('spw', ms_path, spw_arg)
+    return [x.tolist() for x in all_indices['channel']]
+
+def ant_arg_to_id(ms_path, ant_arg):
+    """
+    Convert a string to the corresponding antenna IDs.
+    
+    :param ms_path: the path to the measurement set
+    :param ant_arg: the antenna selection in CASA format
+    :return: a list of antenna IDs 
+    """
+    all_indices = _convert_arg_to_id('baseline', ms_path, ant_arg)    
+    return all_indices['antenna1'].tolist()
+
+@memoized
+def _convert_arg_to_id(arg_name, ms_path, arg_val):
+    """
+    Parse the CASA input argument and return the matching IDs.
+    
+    :param arg_name: 
+    :param ms_path: the path to the measurement set
+    :param field_arg: the field argument formatted with CASA syntax.
+    :return: a set of field IDs 
+    """
+    # due to memoized decorator we'll only see this log message when a new
+    # msselect is executed
+    LOG.trace('Executing msselect({%r:%r} on %s', arg_name, arg_val, ms_path)
+    taql = {arg_name : str(arg_val)}
+    with open_ms(ms_path) as ms:
+        ms.msselect(taql, onlyparse=True)
+        return ms.msselectedindices()

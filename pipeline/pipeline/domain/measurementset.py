@@ -4,204 +4,18 @@ import contextlib
 import itertools
 import os
 import string
-import re
 import types
 
 import numpy
 
 from . import spectralwindow
 from . import measures
-import pipeline.extern.pyparsing as pyparsing
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
-
-def _parse_spw(task_arg, all_spw_ids=[]):
-    """
-    Convert the CASA-style spw argument to a list of spw IDs.
-        
-    Channel limits are also parsed in this function but are not currently
-    used. The channel limits may be found as the channels property of an
-    atom.
-    
-    Parsing the input '0:0~6^2,2:6~38^4 (0, 1, 4, 5, 6, 7)' results in the
-    following results data structure;
-
-          <result>
-            <atom>
-              <spws>
-                <ITEM>0</ITEM>
-              </spws>
-              <channels>
-                <ITEM>0</ITEM>
-                <ITEM>2</ITEM>
-                <ITEM>4</ITEM>
-                <ITEM>6</ITEM>
-              </channels>
-            </atom>
-            <atom>
-              <spws>
-                <ITEM>2</ITEM>
-              </spws>
-              <channels>
-                <ITEM>6</ITEM>
-                <ITEM>10</ITEM>
-                <ITEM>14</ITEM>
-                <ITEM>18</ITEM>
-                <ITEM>22</ITEM>
-                <ITEM>26</ITEM>
-                <ITEM>30</ITEM>
-                <ITEM>34</ITEM>
-                <ITEM>38</ITEM>
-              </channels>
-            </atom>
-          </result>
-    """
-    if task_arg in (None, ''):
-        return all_spw_ids
-    
-    # recognise but suppress the mode-switching tokens
-    TILDE, LESSTHAN, CARET, COLON, ASTERISK = map(pyparsing.Suppress, '~<^:*')
-
-    # recognise '123' as a number, converting to an integer
-    number = pyparsing.Word(pyparsing.nums).setParseAction(lambda tokens : int(tokens[0]))
-
-    # convert '1~10' to a range
-    rangeExpr = number('start') + TILDE + number('end')
-    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
-
-    # convert '1~10^2' to a range with the given step size
-    rangeWithStepExpr = number('start') + TILDE + number('end') + CARET + number('step')
-    rangeWithStepExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1, tokens.step))
-
-    # convert <10 to a range
-    ltExpr = LESSTHAN + number('max')
-    ltExpr.setParseAction(lambda tokens : range(0, tokens.max))
-
-    # convert * to all spws
-    allExpr = ASTERISK.setParseAction(lambda tokens : all_spw_ids)
-    
-    # spw and channel components can be any of the above patterns    
-    numExpr = rangeWithStepExpr | rangeExpr | ltExpr | allExpr | number
-    
-    # recognise and group multiple channel definitions separated by semi-colons
-    channelsExpr = pyparsing.Group(pyparsing.delimitedList(numExpr, delim=';'))
-
-    # group the number so it converted to a node, spw in this case
-    spwsExpr = pyparsing.Group(numExpr)
-
-    # the complete expression is either spw or spw:chan
-    atomExpr = pyparsing.Group(spwsExpr('spws') + COLON + channelsExpr('channels') | spwsExpr('spws'))
-
-    # and we can have multiple items separated by commas
-    finalExpr = pyparsing.delimitedList(atomExpr('atom'), delim=',')('result')
-
-    parse_result = finalExpr.parseString(str(task_arg))
-
-    results = {}
-    for atom in parse_result.result:
-        for spw in atom.spws:
-            if spw not in results:
-                results[spw] = set(atom.channels)
-            else:
-                results[spw].update(atom.channels)
-
-    Atom = collections.namedtuple('Atom', ['spw', 'channels'])
-    return [Atom(spw=k, channels=v) for k,v in results.items()]
-
-
-def _parse_field(task_arg, fields=[]):
-    if task_arg in (None, ''):
-        return [f.id for f in fields]
-    
-    # recognise but suppress the mode-switching tokens
-    TILDE = pyparsing.Suppress('~')
-
-    # recognise '123' as a number, converting to an integer
-    number = pyparsing.Word(pyparsing.nums).setParseAction(lambda tokens : int(tokens[0]))
-
-    # convert '1~10' to a range
-    rangeExpr = number('start') + TILDE + number('end')
-    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
-
-    boundary = [c for c in pyparsing.printables if c not in (' ', ',')]
-    field_id = pyparsing.WordStart(boundary) + (rangeExpr | number) + pyparsing.WordEnd(boundary)
-    
-    casa_chars = ''.join([c for c in string.printable 
-                          if c not in string.whitespace])
-    field_name = pyparsing.Word(casa_chars + ' ')
-
-    def get_ids_for_matching(tokens):
-        search_term = tokens[0]
-        if '*' in search_term:
-            regex = search_term.replace('*','.*') + '$'
-            return [f.id for f in fields if re.match(regex, f.name)]    
-        return [f.id for f in fields if f.name == search_term]
-        
-    field_name.setParseAction(get_ids_for_matching)        
-    
-    results = set()
-    for atom in pyparsing.commaSeparatedList.parseString(str(task_arg)):
-        for parser in [field_name('fields'), field_id('fields')]:
-            for match in parser.searchString(atom):
-                results.update(match.asList())
-    
-    return sorted(list(results))
-
-
-def _parse_antenna(task_arg, antennas=[]):
-    if task_arg in (None, ''):
-        return [a.id for a in antennas]
-    
-    # recognise but suppress the mode-switching tokens
-    TILDE = pyparsing.Suppress('~')
-
-    # recognise '123' as a number, converting to an integer
-    number = pyparsing.Word(pyparsing.nums).setParseAction(lambda tokens : int(tokens[0]))
-
-    # convert '1~10' to a range
-    rangeExpr = number('start') + TILDE + number('end')
-    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
-
-    # antenna-oriented 'by ID' expressions can be any of the above patterns    
-    boundary = [c for c in pyparsing.printables if c not in (' ', ',')]
-    numExpr = pyparsing.WordStart(boundary) + (rangeExpr | number) + pyparsing.WordEnd(boundary)
-    
-    # group the number so it converted to a node, fields in this case
-    antenna_id_expr = pyparsing.Group(numExpr)
-
-    casa_chars = ''.join([c for c in string.printable 
-                          if c not in ',;"/' + string.whitespace]) 
-    antenna_name = pyparsing.Word(casa_chars)
-
-    def get_antenna(tokens):
-        search_term = tokens[0]
-        if '*' in search_term:
-            regex = search_term.replace('*','.*') + '$'
-            return [a.id for a in antennas if re.match(regex, a.name)]    
-        return [a.id for a in antennas if a.name == search_term]
-
-    antenna_name.setParseAction(get_antenna)        
-    
-    antenna_name_expr = pyparsing.Group(antenna_name)
-
-    # the complete expression
-    atomExpr = pyparsing.Group(antenna_id_expr('antennas') | antenna_name_expr('antennas'))
-
-    # and we can have multiple items separated by commas
-    finalExpr = pyparsing.delimitedList(atomExpr('atom'), delim=',')('result')
-
-    parse_result = finalExpr.parseString(str(task_arg))
-    
-    results = set()
-    for atom in parse_result.result:
-        map(results.add, atom.antennas)
-
-    return sorted(list(results))
-    
 
 class MeasurementSet(object):    
     def __init__(self, name, session=None):
@@ -259,17 +73,11 @@ class MeasurementSet(object):
         return os.path.basename(self.name)
     
     def get_antenna(self, search_term=''):
-        requested_ids = set(_parse_antenna(search_term, self.antennas))
-        present_ids = set([a.id for a in self.antennas])
-        
-        if not requested_ids <= present_ids:
-            missing_ids = requested_ids - present_ids
-            msg = ('Antenna IDs %s not found in %s (search term=\'%s\')'
-                   % (','.join([str(i) for i in missing_ids]), 
-                      self.basename, search_term))
-            LOG.error(msg)
-            raise ValueError(msg)
-        return [a for a in self.antennas if a.id in requested_ids]
+        if search_term == '':
+            return self.antennas
+
+        return [a for a in self.antennas
+                if a.id in utils.ant_arg_to_id(self.name, search_term)]
 
     def get_state(self, state_id=None):
         match = [state for state in self.states if state.id == state_id]
@@ -334,29 +142,9 @@ class MeasurementSet(object):
         pool = self.fields
         #print pool
 
-        if task_arg is not None:
-            requested_ids = set(_parse_field(task_arg, self.fields))
-            present_ids = set([f.id for f in self.fields])
-            
-            if not requested_ids <= present_ids:
-                missing_ids = requested_ids - present_ids
-                
-                # purely numerical field names (eg. field.name='123') will 
-                # return two matches, one for the ID and one for the name. 
-                # In this situation we expect fewer matched IDs than requested
-                # IDs. Remove names from the missing IDs before complaining:
-                missing_ids = set([str(i) for i in missing_ids])
-                names = set([f.name for f in self.fields])
-
-                still_missing = missing_ids - names
-
-                if still_missing:
-                    msg = ('Field IDs %s not found in %s (search term=\'%s\')'
-                           % (','.join(still_missing), 
-                              self.basename, task_arg))
-                    LOG.error(msg)
-                    raise ValueError()
-            pool = [f for f in pool if f.id in requested_ids]
+        if task_arg not in (None, ''):
+            pool = [f for f in pool
+                    if f.id in utils.field_arg_to_id(self.name, task_arg)]
         
         if field_id is not None:
             # encase raw numbers in a tuple
@@ -422,18 +210,18 @@ class MeasurementSet(object):
         if task_arg in (None, ''):
             return list(self.spectral_windows)
 
-        all_spw_ids = [spw.id for spw in self.spectral_windows]
-        atoms = _parse_spw(task_arg, all_spw_ids)
-        
+        selected = collections.defaultdict(set)
+        for (spw, start, end, step) in utils.spw_arg_to_id(self.name, task_arg):
+            selected[spw].update(set(range(start, end, step))) 
+            
         if not with_channels:
-            spw_ids = [atom.spw for atom in atoms]
-            return [self.get_spectral_window(i) for i in spw_ids]
-        
+            return [spw for spw in self.spectral_windows if spw.id in selected]
+
         spws = []
-        for atom in atoms:
-            spw_obj = self.get_spectral_window(atom.spw)
+        for spw_id, channels in selected.items():
+            spw_obj = self.get_spectral_window(spw_id)
             proxy = spectralwindow.SpectralWindowWithChannelSelection(spw_obj, 
-                                                                      atom.channels)
+                                                                      list(channels))
             spws.append(proxy)
         return spws
 
