@@ -111,7 +111,7 @@ public:
 
 	// report on on the last fit to the
 	// internal LogIO
-	void report() const;
+	//void report() const;
 
 	// report on the last fit to a stream
 	String report(LogIO &os, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;

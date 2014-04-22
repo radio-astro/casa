@@ -36,7 +36,7 @@ template <class T> class ImageCollapser : public ImageTask<T> {
 
 	// <example>
 	// <srcblock>
-	// ImageCollapser collapser();
+	// ImageCollapser collapser(...);
 	// collapser.collapse();
 	// </srcblock>
 	// </example>
@@ -51,9 +51,7 @@ public:
 
 	ImageCollapser(
 		String aggString, const SPCIIT image,
-		const String& region, const Record *const regionRec,
-		const String& box,
-		const String& chanInp, const String& stokes,
+		const Record *const regionRec,
 		const String& maskInp, const IPosition& axes,
 		const String& outname, const Bool overwrite
 	);

@@ -440,8 +440,8 @@ SPIIF PVGenerator::generate() const {
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
 	ImageCollapser<Float> collapser(
-		"mean", rotated, "", &lcbox,
-		"", "", "", "", axes, "", False
+		"mean", rotated, &lcbox,
+		"", axes, "", False
 	);
 
 	std::tr1::shared_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));

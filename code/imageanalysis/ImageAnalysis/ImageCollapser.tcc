@@ -42,13 +42,11 @@ template<class T> map<uInt, T (*)(const Array<T>&)> ImageCollapser<T>::_funcMap;
 
 template<class T> ImageCollapser<T>::ImageCollapser(
 	String aggString, const SPCIIT image,
-	const String& region, const Record *const regionRec,
-	const String& box,
-	const String& chanInp, const String& stokes,
+	const Record *const regionRec,
 	const String& maskInp, const IPosition& axes,
 	const String& outname, const Bool overwrite
 ) : ImageTask<T>(
-		image, region, regionRec, box, chanInp, stokes,
+		image, "", regionRec, "", "", "",
 		maskInp, outname, overwrite
 	),
 	_invertAxesSelection(False),

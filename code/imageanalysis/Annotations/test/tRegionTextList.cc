@@ -25,7 +25,7 @@
 
 #include <casa/aips.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
-#include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/AnnEllipse.h>
 #include <casa/OS/EnvVar.h>
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -107,7 +107,6 @@ int main () {
 				IPosition(csys.nPixelAxes(), 2000, 2000, 2000)
 			);
 			Vector<AsciiAnnotationFileLine>  lines2 = list2.getLines();
-			cout << lines2.size() << endl;
 			for ( uInt i=0; i < lines2.size( ); ++i ) {
 				const AnnotationBase* ann = lines2[i].getAnnotationBase();
 				if ( lines2[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) {
@@ -115,9 +114,14 @@ int main () {
 				}
 				AnnotationBase::Type type = ann->getType();
 				switch (type ) {
-				case AnnotationBase::ELLIPSE:
+				case AnnotationBase::ELLIPSE: {
+					const AnnEllipse *ell = dynamic_cast<const AnnEllipse *>(ann);
+					cout << "major" << ell->getSemiMajorAxis().getValue("arcsec") << endl;
+					cout << "minor" << ell->getSemiMinorAxis().getValue("arcsec") << endl;
+					cout << "pa " << ell->getPositionAngle() << endl;
 					throw AipsError("got ellipse");
 					break;
+				}
 				case AnnotationBase::CIRCLE:
 					cout << "circle" << endl;;
 					break;

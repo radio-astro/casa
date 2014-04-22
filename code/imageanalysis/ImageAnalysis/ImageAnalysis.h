@@ -368,9 +368,6 @@ class ImageAnalysis
         const Bool extendMask=False
     );
 
-
-    Vector<Double> topixel(Record& value);
-
     Record toworld(const Vector<double>& value, const String& format = "n") const;
 
     Bool detached();
@@ -534,11 +531,10 @@ class ImageAnalysis
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    std::auto_ptr<ImageHistograms<Float> > _histograms;
+    std::tr1::shared_ptr<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    casa::ImageRegion* pOldHistRegionRegion_p;
-    casa::ImageRegion* pOldHistMaskRegion_p;
+    std::tr1::shared_ptr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
     Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 
@@ -550,14 +546,12 @@ class ImageAnalysis
     // Convert types
     //casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
    
-    // Delete private ImageStatistics and ImageHistograms objects
-    bool deleteHist();
+    // Delete private ImageHistograms objects
+    void deleteHist();
    
-    static Bool _haveRegionsChanged (
+    Bool _haveRegionsChanged (
     	ImageRegion* pNewRegionRegion,
-    	ImageRegion* pNewMaskRegion,
-    	ImageRegion* pOldRegionRegion,
-    	ImageRegion* pOldMaskRegion
+    	ImageRegion* pNewMaskRegion
     );
     
 // Make a new image with given CS

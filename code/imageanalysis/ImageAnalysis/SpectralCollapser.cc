@@ -534,15 +534,19 @@ Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, Str
 
 Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
 		const String& chanInp, const String& outname) const {
+	CasacRegionManager rm(image->coordinates());
+	String diagnostics;
+	uInt nSelectedChannels;
+	String stokes = _all;
+	Record myreg = rm.fromBCS(
+		diagnostics, nSelectedChannels, stokes, 0, "", chanInp,
+		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", False
+	);
 	// create and execute the imcollapse-class
 	ImageCollapser<Float> collapser(
 			aggString,                  // String aggString
 			image,                      // const ImageInterface<Float> *const image
-			"",                         // const String& region
-			0,                          // const Record *const regionRec
-			"",                         // const String& box
-			chanInp,                    // const String& chanInp
-			_all,                       // const String& stokes
+			&myreg,                          // const Record *const regionRec
 			"",                         // const String& maskInp
 			_specAxis,                  // const IPosition& axes
 			outname,                    // String& outname

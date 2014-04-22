@@ -136,8 +136,8 @@ using namespace std;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_imageFloat(), _imageComplex(), _histograms(0),
-			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+	_imageFloat(), _imageComplex(), _histograms(),
+			pOldHistRegionRegion_p(), pOldHistMaskRegion_p(),
 			imageMomentsProgressMonitor(0){
 
 	// Register the functions to create a FITSImage or MIRIADImage object.
@@ -149,14 +149,14 @@ ImageAnalysis::ImageAnalysis() :
 }
 
 ImageAnalysis::ImageAnalysis(SPIIF image) :
-	_imageFloat(image),_imageComplex(), _log(new LogIO()), _histograms(0),
-				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+	_imageFloat(image),_imageComplex(), _log(new LogIO()), _histograms(),
+				pOldHistRegionRegion_p(), pOldHistMaskRegion_p(),
 				imageMomentsProgressMonitor(0) {}
 
 
 ImageAnalysis::ImageAnalysis(SPIIC image) :
-	_imageFloat(),_imageComplex(image), _log(new LogIO()), _histograms(0),
-				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+	_imageFloat(),_imageComplex(image), _log(new LogIO()), _histograms(),
+				pOldHistRegionRegion_p(), pOldHistMaskRegion_p(),
 				imageMomentsProgressMonitor(0) {}
 
 
@@ -1730,17 +1730,22 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::_haveRegionsChanged(ImageRegion* pNewRegionRegion,
-		ImageRegion* pNewMaskRegion, ImageRegion* pOldRegionRegion,
-		ImageRegion* pOldMaskRegion) {
-	Bool regionChanged = (pNewRegionRegion != 0 && pOldRegionRegion != 0
-			&& (*pNewRegionRegion) != (*pOldRegionRegion)) || (pNewRegionRegion
-			== 0 && pOldRegionRegion != 0) || (pNewRegionRegion != 0
-			&& pOldRegionRegion == 0);
-	Bool maskChanged = (pNewMaskRegion != 0 && pOldMaskRegion != 0
-			&& (*pNewMaskRegion) != (*pOldMaskRegion)) || (pNewMaskRegion == 0
-			&& pOldMaskRegion != 0) || (pNewMaskRegion != 0 && pOldMaskRegion
-			== 0);
+Bool ImageAnalysis::_haveRegionsChanged(
+	ImageRegion* pNewRegionRegion,
+	ImageRegion* pNewMaskRegion
+) {
+	Bool regionChanged = (
+			pNewRegionRegion != 0 && pOldHistRegionRegion_p
+			&& *pNewRegionRegion != *pOldHistRegionRegion_p
+		)
+		|| (pNewRegionRegion == 0 && pOldHistRegionRegion_p)
+		|| (pNewRegionRegion != 0 && ! pOldHistRegionRegion_p);
+	Bool maskChanged = (
+			pNewMaskRegion != 0 && pOldHistMaskRegion_p
+			&& *pNewMaskRegion != *pOldHistMaskRegion_p
+		)
+		|| (pNewMaskRegion == 0 && pOldHistMaskRegion_p)
+		|| (pNewMaskRegion != 0 && ! pOldHistMaskRegion_p);
 	return (regionChanged || maskChanged);
 }
 
@@ -1770,10 +1775,7 @@ Record ImageAnalysis::histograms(
 	}
 
 	if (forceNewStorage) {
-		delete pOldHistRegionRegion_p;
-		pOldHistRegionRegion_p = 0;
-		delete pOldHistMaskRegion_p;
-		pOldHistMaskRegion_p = 0;
+		deleteHist();
 		_histograms.reset(
 			new ImageHistograms<Float> (
 				subImage, *_log, True, disk
@@ -1796,29 +1798,24 @@ Record ImageAnalysis::histograms(
 			// changed, _histograms will already have been set to 0
 			_histograms->resetError();
 			if (
-				_haveRegionsChanged(pRegionRegion, pMaskRegion,
-				pOldHistRegionRegion_p, pOldHistMaskRegion_p)
+				_haveRegionsChanged(pRegionRegion, pMaskRegion)
 			) {
 				_histograms->setNewImage(subImage);
 			}
 		}
 	}
 
-	// Assign old regions to current regions
-	delete pOldHistRegionRegion_p;
-	pOldHistRegionRegion_p = 0;
-	delete pOldHistMaskRegion_p;
-	pOldHistMaskRegion_p = 0;
 	//
-	pOldHistRegionRegion_p = pRegionRegion;
-	pOldHistMaskRegion_p = pMaskRegion;
+	pOldHistRegionRegion_p.reset(pRegionRegion);
+	pOldHistMaskRegion_p.reset(pMaskRegion);
 	oldHistStorageForce_p = disk;
 
 	// Set cursor axes
 	Vector<Int> tmpaxes(axes);
-	if (!_histograms->setAxes(tmpaxes)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		!_histograms->setAxes(tmpaxes),
+		_histograms->errorMessage()
+	);
 	if(
 		_imageFloat->coordinates().hasDirectionCoordinate()
 		&& _imageFloat->imageInfo().hasMultipleBeams()
@@ -3459,40 +3456,10 @@ Bool ImageAnalysis::toASCII(
 	return True;
 }
 
-Vector<Double> ImageAnalysis::topixel(Record&) {
-	_onlyFloat(__func__);
-	//getting bored now....
-	//This need to be implemented when coordsys::topixel is
-	//refactored into the casa
-	// name space...right now this is sitting in the casac namespace
-	*_log << LogOrigin("ImageAnalysis", "topixel");
-	*_log << LogIO::EXCEPTION << "This function is not implemented "
-			<< LogIO::POST;
-
-	Vector<Double> leGarbageTotal;
-	return leGarbageTotal;
-
-}
-
-Bool ImageAnalysis::deleteHist() {
-	Bool rstat = False;
-	*_log << LogOrigin("ImageAnalysis", "deleteHistAndStats");
-	try {
-		_histograms.reset(0);
-		if (pOldHistRegionRegion_p != 0) {
-			delete pOldHistRegionRegion_p;
-			pOldHistRegionRegion_p = 0;
-		}
-		if (pOldHistMaskRegion_p != 0) {
-			delete pOldHistMaskRegion_p;
-			pOldHistMaskRegion_p = 0;
-		}
-		rstat = True;
-	} catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-	}
-	return rstat;
+void ImageAnalysis::deleteHist() {
+	_histograms.reset();
+	pOldHistRegionRegion_p.reset();
+	pOldHistMaskRegion_p.reset();
 }
 
 void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,

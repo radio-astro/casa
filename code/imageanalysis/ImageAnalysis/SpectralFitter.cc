@@ -205,10 +205,12 @@ void SpectralFitter::getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit,
 	convertArray(yFit, tmp);
 }
 
+/*
 void SpectralFitter::report() const{
 	String msg;
 	report(*_log);
 }
+*/
 
 String SpectralFitter::report(LogIO &os, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{
 	String resultMsg("");
