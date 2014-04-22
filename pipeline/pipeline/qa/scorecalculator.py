@@ -250,9 +250,11 @@ def score_bands(mses):
     for ms in mses:
 	msbands = []
 	for spw in ms.get_spectral_windows(science_windows_only=True):
-	    match = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
+	    # This does not work for old data
+	    #match = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
 	    # Get rid of the leading 0 in the band number
-	    bandnum = str(int(match.groupdict()['band']))
+	    #bandnum = str(int(match.groupdict()['band']))
+	    bandnum = spw.band.split(' ')[2]
 	    msbands.append(bandnum)
 	msbands = set(msbands)
 	overlap = unsupported.intersection(msbands)
