@@ -998,15 +998,27 @@ casa_find( READLINE
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
-# libsakura
-find_package(LIBSAKURA)
-message( STATUS "LIBSAKURA_INCLUDE_DIRS=${LIBSAKURA_INCLUDE_DIRS}")
-message( STATUS "LIBSAKURA_LIBRARIES=${LIBSAKURA_LIBRARIES}")
-
 # log4cxx
-find_package(LOG4CXX)
-message( STATUS "LOG4CXX_INCLUDE_DIRS=${LOG4CXX_INCLUDE_DIRS}")
-message( STATUS "LOG4CXX_LIBRARIES=${LOG4CXX_LIBRARIES}")
+casa_find( LOG4CXX
+  INCLUDES log4cxx/logger.h
+  LIBS log4cxx
+  PREFIX_HINTS ${LOG4CXX_ROOT_DIR} /usr /usr/local /opt/log4cxx
+)
+
+# libsakura
+if( NOT DEFINED LIBSAKURA_ROOT_DIR )
+  # default for NAOJ servers
+  set( LIBSAKURA_ROOT_DIR "$ENV{HOME}/workspace/libsakura/build/installed" )
+endif()
+casa_find( LIBSAKURA
+  VERSION 0.1
+  INCLUDES libsakura/sakura.h libsakura/config.h
+  LIBS sakura
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
+  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+  DEPENDS LOG4CXX
+  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+)
 
 casa_config_end()
 
