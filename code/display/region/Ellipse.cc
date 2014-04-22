@@ -375,39 +375,51 @@ namespace casa {
 			lin(1) = center_y;
 			if ( ! wc_->linToWorld(center, lin)) return std::pair<Vector<Quantity>,Vector<Quantity> >( );
 
-			MDirection::Types cccs = current_casa_coordsys( );
+			Vector<Quantum<Double> > qcenter, qblc;
+
+			qcenter.resize(2);
+			qblc.resize(2);
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
-			Vector<Quantum<Double> > qblc, qcenter;
-			qblc.resize(2);
-			qcenter.resize(2);
 
 			qcenter[0] = Quantum<Double>(center[0], units[0]);
 			qcenter[1] = Quantum<Double>(center[1], units[1]);
 
-			Vector<Double> center_rad(2);
-			center_rad[0] = qcenter[0].getValue("rad");
-			center_rad[1] = qcenter[1].getValue("rad");
-			MDirection mdcenter( Quantum<Vector<Double> >(center_rad,"rad"), cccs );
-
 			qblc[0] = Quantum<Double>(blc[0], units[0]);
 			qblc[1] = Quantum<Double>(blc[1], units[1]);
 
-			Vector<Double> blc_rad_x(2);
-			blc_rad_x[0] = qblc[0].getValue("rad");
-			blc_rad_x[1] = qcenter[1].getValue("rad");
-			MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,"rad"),cccs );
-
-			Vector<Double> blc_rad_y(2);
-			blc_rad_y[0] = qcenter[0].getValue("rad");
-			blc_rad_y[1] = qblc[1].getValue("rad");
-			MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,"rad"),cccs );
-
 			Vector<Quantity> radii_(2);
-			double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
-			double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
-			radii_[0] = Quantity(xdistance,"rad");
-			radii_[1] = Quantity(ydistance,"rad");
+
+			MDirection::Types cccs = current_casa_coordsys( );
+			if ( cccs == MDirection::N_Types ) {
+				// no direction coordinate was found...
+				radii_[0] = qcenter[0] > qblc[0] ? qcenter[0] - qblc[0] : qblc[0] - qcenter[0];
+				radii_[1] = qcenter[1] > qblc[1] ? qcenter[1] - qblc[1] : qblc[1] - qcenter[1];
+
+			} else {
+				// a direction coordinate was found...
+
+				Vector<Double> center_rad(2);
+				center_rad[0] = qcenter[0].getValue("rad");
+				center_rad[1] = qcenter[1].getValue("rad");
+				MDirection mdcenter( Quantum<Vector<Double> >(center_rad,"rad"), cccs );
+
+				Vector<Double> blc_rad_x(2);
+				blc_rad_x[0] = qblc[0].getValue("rad");
+				blc_rad_x[1] = qcenter[1].getValue("rad");
+				MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,"rad"),cccs );
+
+				Vector<Double> blc_rad_y(2);
+				blc_rad_y[0] = qcenter[0].getValue("rad");
+				blc_rad_y[1] = qblc[1].getValue("rad");
+				MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,"rad"),cccs );
+
+				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
+				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
+				radii_[0] = Quantity(xdistance,"rad");
+				radii_[1] = Quantity(ydistance,"rad");
+            }
+
 			return std::make_pair(qcenter,radii_);
 		}
 
