@@ -150,8 +150,8 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal()
         # Readjust to the true calto.intent
-        targetphaseresult.pool[0].calto.intent = 'PHASE,TARGET'
-        targetphaseresult.final[0].calto.intent = 'PHASE,TARGET'        
+        targetphaseresult.pool[0].calto.intent = 'PHASE,CHECK,TARGET'
+        targetphaseresult.final[0].calto.intent = 'PHASE,CHECK,TARGET'        
         # CalFroms are immutable, so we must replace them with a new 
         # object rather than editing them directly
         self._mod_last_calwt(targetphaseresult.pool[0], False)
@@ -219,7 +219,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'refant'      : inputs.refant,
           'minblperant' : inputs.minblperant,
           'solnorm'     : inputs.solnorm,
-          'to_intent'   : 'PHASE,TARGET,AMPLITUDE,BANDPASS',
+          'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
@@ -249,7 +249,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'refant'      : inputs.refant,
           'minblperant' : inputs.minblperant,
           'solnorm'     : inputs.solnorm,
-          'to_intent'   : 'PHASE,TARGET,AMPLITUDE,BANDPASS',
+          'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
@@ -278,7 +278,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'refant'      : inputs.refant,
           'minblperant' : inputs.minblperant,
           'solnorm'     : inputs.solnorm,
-          'to_intent'   : 'PHASE,TARGET',
+          'to_intent'   : 'PHASE,CHECK,TARGET',
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
@@ -307,7 +307,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'refant'      : inputs.refant,
           'minblperant' : inputs.minblperant,
           'solnorm'     : inputs.solnorm,
-          'to_intent'   : 'PHASE,TARGET,AMPLITUDE,BANDPASS',
+          'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
