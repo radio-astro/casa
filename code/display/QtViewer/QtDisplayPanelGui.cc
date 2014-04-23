@@ -1064,6 +1064,8 @@ void QtDisplayPanelGui::initFit2DTool() {
 
 		//Update the channel for the fit.
 		connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
+		int frameIndex = qdp_->frame();
+		fitTool->frameChanged( frameIndex );
 
 		//Connect drawing tools so that regions are updated for the fit.
 		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
