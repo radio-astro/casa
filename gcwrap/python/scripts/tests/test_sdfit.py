@@ -763,7 +763,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_id_default_list(self):
         """test_spw_id_default_list: Test spw selection with multiple channel range (':CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = ':30~70;55~95'
+        spw = ':40~60;65~85'
         rows = [0,1,2,3]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -795,7 +795,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_id_exact_list(self):
         """test_spw_id_exact_list: Test spw selection with channel range ('N:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '23:30~70;55~95'
+        spw = '23:40~60;65~85'
         rows = [0,3]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -827,7 +827,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_id_pattern_list(self):
         """test_spw_id_pattern_list: Test spw selection with channel range ('*:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '*:30~70;55~95'
+        spw = '*:40~60;65~85'
         rows = [0,1,2,3]
         
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -859,7 +859,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_value_frequency_list(self):
         """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '299.4~299.6GHz:30~70;55~95'
+        spw = '299.4~299.6GHz:40~60;65~85'
         rows = [2]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -891,7 +891,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_value_velocity_list(self):
         """test_spw_value_velocity_list: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '400~600km/s:30~70;55~95'
+        spw = '400~600km/s:40~60;65~85'
         rows = [2]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
