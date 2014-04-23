@@ -79,21 +79,19 @@ template<class T> ImageCollapser<T>::ImageCollapser(
 	_finishConstruction();
 }
 
-template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
-	std::auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
-	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
-		*clone, *this->_getRegion(), this->_getMask(), this->_getLog().get(),
-		False, AxesSpecifier(), this->_getStretch()
+template<class T> SPIIT ImageCollapser<T>::collapse() const {
+	SPIIT subImage = SubImageFactory<T>::createImage(
+		*this->_getImage(), "", *this->_getRegion(),
+		this->_getMask(), False, False, False, this->_getStretch()
 	);
-	*this->_getLog() << LogOrigin("ImageCollapser", __FUNCTION__);
+	*this->_getLog() << LogOrigin(getClass(), __func__);
 	ThrowIf(
-		! anyTrue(subImage.getMask()),
+		! anyTrue(subImage->getMask()),
 		"All selected pixels are masked"
 	);
-	clone.reset(0);
-	IPosition inShape = subImage.shape();
+	IPosition inShape = subImage->shape();
 	// Set the compressed axis reference pixel and reference value
-	CoordinateSystem outCoords(subImage.coordinates());
+	CoordinateSystem outCoords(subImage->coordinates());
 	Vector<Double> blc, trc;
 	IPosition pixblc(inShape.nelements(), 0);
 	IPosition pixtrc = inShape - 1;
@@ -133,7 +131,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 		_doMedian(subImage, tmpIm);
 	}
 	else {
-		if (subImage.getMask().size() > 0 && ! allTrue(subImage.getMask())) {
+		if (subImage->getMask().size() > 0 && ! allTrue(subImage->getMask())) {
 			// mask with one or more False values, must use lower performance methods
 			LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
 			switch(_aggType) {
@@ -170,7 +168,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 			Array<T> data;
 			Array<Bool> mask;
 			LatticeUtilities::collapse(
-				data, mask, _axes, subImage, False,
+				data, mask, _axes, *subImage, False,
 				True, True, lattStatType
 			);
 			Array<T> dataCopy = (_axes.size() <= 1)
@@ -208,7 +206,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 		else {
 			// no mask, can use higher performance method
 			T (*function)(const Array<T>&) = _getFuncMap().find(_aggType)->second;
-			Array<T> data = subImage.get(False);
+			Array<T> data = subImage->get(False);
 			for (uInt i=0; i<outShape.product(); i++) {
 				IPosition start = toIPositionInArray(i, outShape);
 				IPosition end = start + shape - 1;
@@ -217,7 +215,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 			}
 		}
 	}
-	if (subImage.imageInfo().hasMultipleBeams()) {
+	if (subImage->imageInfo().hasMultipleBeams()) {
 		*this->_getLog() << LogIO::WARN << "Input image has per plane beams. "
 			<< "The output image will arbitrarily have a single beam which "
 			<< "is the first beam available in the subimage."
@@ -226,8 +224,8 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 			<< "then run the task imsmooth or the tool method ia.convolve2d() first, "
 			<< "and use the output image of that as the input for collapsing."
 			<< LogIO::POST;
-		ImageUtilities::copyMiscellaneous(tmpIm, subImage, False);
-		ImageInfo info = subImage.imageInfo();
+		ImageUtilities::copyMiscellaneous(tmpIm, *subImage, False);
+		ImageInfo info = subImage->imageInfo();
 		vector<Vector<Quantity> > out;
 		GaussianBeam beam = *(info.getBeamSet().getBeams().begin());
         info.removeRestoringBeam();
@@ -235,13 +233,9 @@ template<class T> SPIIT ImageCollapser<T>::collapse(Bool wantReturn) const {
 		tmpIm.setImageInfo(info);
 	}
 	else {
-		ImageUtilities::copyMiscellaneous(tmpIm, subImage, True);
+		ImageUtilities::copyMiscellaneous(tmpIm, *subImage, True);
 	}
-    SPIIT outImage = this->_prepareOutputImage(tmpIm);
-	if (! wantReturn) {
-		outImage.reset();
-	}
-	return outImage;
+    return this->_prepareOutputImage(tmpIm);
 }
 
 template<class T> void ImageCollapser<T>::_finishConstruction() {
@@ -267,22 +261,22 @@ template<class T> void ImageCollapser<T>::_invert() {
 }
 
 template<class T> void ImageCollapser<T>::_doMedian(
-	const SubImage<T>& subImage, TempImage<T>& outImage
+	SPCIIT image, TempImage<T>& outImage
 ) const {
-	IPosition cursorShape(subImage.ndim(), 1);
+	IPosition cursorShape(image->ndim(), 1);
 	for (uInt i=0; i<cursorShape.size(); i++) {
 		for (uInt j=0; j<_axes.size(); j++) {
 			if (_axes[j] == i) {
-				cursorShape[i] = subImage.shape()[i];
+				cursorShape[i] = image->shape()[i];
 				break;
 			}
 		}
 	}
-	LatticeStepper stepper(subImage.shape(), cursorShape);
-	Array<T> ary = subImage.get(False);
-	Array<Bool> mask = subImage.getMask();
-	if (subImage.hasPixelMask()) {
-		mask = mask && subImage.pixelMask().get(False);
+	LatticeStepper stepper(image->shape(), cursorShape);
+	Array<T> ary = image->get(False);
+	Array<Bool> mask = image->getMask();
+	if (image->hasPixelMask()) {
+		mask = mask && image->pixelMask().get(False);
 	}
 	std::auto_ptr<Array<Bool> > outMask(0);
 	Bool hasMaskedPixels = ! allTrue(mask);

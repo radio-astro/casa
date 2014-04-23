@@ -69,7 +69,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
 	_sigma(), _abscissaDivisor(1.0) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
     if (! estimatesFilename.empty()) {
     	if (spectralList.nelements() > 0) {
     		*_getLog() << "Logic error: both a non-empty estimatesFilename "
@@ -174,7 +174,7 @@ Record ImageProfileFitter::fit() {
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
     _checkNGaussAndPolyOrder();
-    LogOrigin logOrigin(_class, __FUNCTION__);
+    LogOrigin logOrigin(_class, __func__);
     *_getLog() << logOrigin;
     std::auto_ptr<ImageInterface<Float> > originalSigma(0);
     {
@@ -212,12 +212,16 @@ Record ImageProfileFitter::fit() {
 				_subImage, IPosition(1, _fitAxis), True,
 				ImageCollapserData::MEAN, "", True
 			);
-			SPIIF x(collapser.collapse(True));
+			SPIIF x = collapser.collapse();
 			// _subImage needs to be a SubImage<Float> object
-			_subImage.reset(new SubImage<Float>(SubImageFactory<Float>::createSubImage(
-				*x, Record(), "", _getLog().get(),
-				False, AxesSpecifier(), False
-			)));
+			_subImage.reset(
+				new SubImage<Float>(
+					SubImageFactory<Float>::createSubImage(
+						*x, Record(), "", _getLog().get(),
+						False, AxesSpecifier(), False
+					)
+				)
+			);
 			if (_sigma.get()) {
 				Array<Bool> sigmaMask = _sigma->get() != Array<Float>(_sigma->shape(), 0.0);
 				if (anyTrue(! sigmaMask)) {
@@ -233,13 +237,8 @@ Record ImageProfileFitter::fit() {
 					_sigma, IPosition(1, _fitAxis), True,
 					ImageCollapserData::MEAN, "", True
 				);
-				SPIIF collapsed = collapsedSigma.collapse(True);
+				SPIIF collapsed = collapsedSigma.collapse();
 				std::tr1::shared_ptr<TempImage<Float> >ctmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(collapsed);
-				/*
-				TempImage<Float> *ctmp = dynamic_cast<TempImage<Float> *>(
-					collapsed.get()
-				);
-				*/
 				ThrowIf(
 					! ctmp, "Dynamic cast failed"
 				);
@@ -250,8 +249,9 @@ Record ImageProfileFitter::fit() {
 	    *_getLog() << logOrigin;
 	}
 	catch (const AipsError& x) {
-		*_getLog() << "Exception during fit: " << x.getMesg()
-			<< LogIO::EXCEPTION;
+		ThrowCc(
+			"Exception during fit: " + x.getMesg()
+		);
 	}
 	ImageProfileFitterResults resultHandler(
 		_getLog(), _getImage()->coordinates(), &_fitters,
@@ -296,7 +296,7 @@ Record ImageProfileFitter::fit() {
 }
 
 void ImageProfileFitter::setPolyOrder(Int p) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 	if (p < 0) {
 		*_getLog() << "A polynomial cannot have a negative order" << LogIO::EXCEPTION;
 	}
@@ -425,7 +425,7 @@ Record ImageProfileFitter::getResults() const {
 
 void ImageProfileFitter::setAbscissaDivisor(Double d) {
 	if (! _isSpectralIndex) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__);
+		*_getLog() << LogOrigin(_class, __func__);
 		*_getLog() << LogIO::WARN << "This object is not configured to fit a "
 			<< "spectral index function, and so setting the abscissa divisor "
 			<< "will have no effect in the fitting process." << LogIO::POST;
@@ -438,12 +438,12 @@ void ImageProfileFitter::setAbscissaDivisor(Double d) {
 void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 	String fitAxisUnit = _getImage()->coordinates().worldAxisUnits()[_fitAxis];
 	if (! q.isConform(fitAxisUnit)) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__);
+		*_getLog() << LogOrigin(_class, __func__);
 		*_getLog() << "Abscissa divisor unit " << q.getUnit() << " is not consistent with fit axis unit."
 			<< LogIO::EXCEPTION;
 	}
 	if (! _isSpectralIndex) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__);
+		*_getLog() << LogOrigin(_class, __func__);
 		*_getLog() << LogIO::WARN << "This object is not configured to fit a spectral index function "
 			<< "and so setting the abscissa divisor will have no effect in the fitting process."
 			<< LogIO::POST;
@@ -484,7 +484,7 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 		) == 0
 		&& ! _isSpectralIndex
 	) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__)
+		*_getLog() << LogOrigin(_class, __func__)
 			<< "Number of non-polynomials is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
 			<< LogIO::EXCEPTION;
@@ -492,7 +492,7 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 }
 
 void ImageProfileFitter::_finishConstruction() {
-    LogOrigin logOrigin(_class, __FUNCTION__);
+    LogOrigin logOrigin(_class, __func__);
 
     if (_fitAxis >= (Int)_getImage()->ndim()) {
     	*_getLog() << "Specified fit axis " << _fitAxis
@@ -563,7 +563,7 @@ Double ImageProfileFitter::getWorldValue(
 }
 
 void ImageProfileFitter::_fitallprofiles() {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 	IPosition imageShape = _subImage->shape();
 	// Set default axis
 	CoordinateSystem cSys = _subImage->coordinates();
@@ -740,7 +740,7 @@ void ImageProfileFitter::_fitProfiles(
 		yfunc = casa::log;
 	}
 	uInt nOrigComps = newEstimates.nelements();
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 	uInt mark = (uInt)max(1000.0, std::pow(10.0, log10(nPoints/100)));
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {

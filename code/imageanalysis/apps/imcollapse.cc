@@ -47,7 +47,7 @@ Int main(Int argc, char *argv[]) {
 		mask, axes, outname, overwrite
     );
 
-	imCollapser.collapse(False);
+	imCollapser.collapse();
 
     return 0;
 }

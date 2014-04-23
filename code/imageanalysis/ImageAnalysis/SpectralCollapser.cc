@@ -552,7 +552,7 @@ Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
 			outname,                    // String& outname
 			True                        // const Bool overwrite
 		);
-		collapser.collapse(False);
+		collapser.collapse();
 		return True;
 }
 

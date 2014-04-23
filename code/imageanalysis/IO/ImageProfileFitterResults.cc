@@ -452,7 +452,7 @@ void ImageProfileFitterResults::_setResults() {
 		_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
 	);
     std::tr1::shared_ptr<TempImage<Float> > tmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(
-    	collapser.collapse(True)
+    	collapser.collapse()
     );
     ThrowIf(! tmp, "Unable to perform dynamic cast");
 	std::tr1::shared_ptr<TempImage<Float> > myTemplate(tmp);

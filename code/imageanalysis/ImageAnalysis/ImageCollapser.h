@@ -64,14 +64,10 @@ public:
 	);
 	// </group>
 
-	// destructor
 	~ImageCollapser() {}
 
-	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
-	// collapsed image. The returned pointer is created via new(); it is the caller's
-	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
-	// a NULL pointer is returned and pointer deletion is performed internally.
-	SPIIT collapse(const Bool wantReturn) const;
+	// perform the collapse and return the resulting image.
+	SPIIT collapse() const;
 
 	static const map<uInt, T (*)(const Array<T>&)>* funcMap();
 
@@ -102,7 +98,7 @@ private:
 
 	// necessary to improve performance
 	void _doMedian(
-		const SubImage<T>& subImage,
+		SPCIIT image,
 		TempImage<T>& outImage
 	) const;
 
