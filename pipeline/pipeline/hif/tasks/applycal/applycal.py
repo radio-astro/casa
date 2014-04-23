@@ -115,7 +115,7 @@ class ApplycalInputs(basetask.StandardInputs,
     @intent.setter
     def intent(self, value):
         if value is None:
-            value = 'TARGET,PHASE,BANDPASS,AMPLITUDE'
+            value = 'TARGET,PHASE,BANDPASS,AMPLITUDE,CHECK'
         self._intent = value.replace('*', '')
 
     @property
