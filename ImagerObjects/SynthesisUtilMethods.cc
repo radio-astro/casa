@@ -1641,6 +1641,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
       // cubedata mode: input start, step are those of the input data frame
       if ( mode=="cubedata" ) freqframe=MFrequency::showType(dataFrame); 
+      //if ( mode=="cubedata" ) freqframe=MFrequency::REST;
       
       // *** NOTE *** 
       // calcChanFreqs alway returns chanFreq in

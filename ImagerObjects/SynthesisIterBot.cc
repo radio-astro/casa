@@ -86,8 +86,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete dbus_thread;
 			dbus_thread = NULL;
 		}
-		//		LogIO os( LogOrigin("SynthesisIterBot","destructor",WHERE) );
-		//		os << "SynthesisIterBot destroyed" << LogIO::POST;
+		LogIO os( LogOrigin("SynthesisIterBot","destructor",WHERE) );
+		os << LogIO::DEBUG1 << "SynthesisIterBot destroyed" << LogIO::POST;
 	}
 
 	void SynthesisIterBot::setIterationDetails(Record iterpars) {
