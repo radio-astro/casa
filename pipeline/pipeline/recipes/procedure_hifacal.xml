@@ -185,7 +185,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">intent</Keyword>
-                <Value xmlns="">PHASE,BANDPASS</Value>
+                <Value xmlns="">PHASE,BANDPASS,CHECK</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
