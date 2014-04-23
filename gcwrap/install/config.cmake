@@ -656,8 +656,6 @@ macro( casa_find package )
         COMPILE_OUTPUT_VARIABLE _compile_out
         RUN_OUTPUT_VARIABLE _run_out )
 
-      set( ${package}_COMPILE TRUE )
-      
       if( NOT ${package}_COMPILE )
         file( READ ${_try} _prog )
 	message( SEND_ERROR "Could not link to ${package} libraries:" )
