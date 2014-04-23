@@ -73,7 +73,7 @@ public:
      //Tell all of the supported plots to update their displays.
     void plot();
 
-    //Add aplot
+    //Add a plot
     void insertData( int index );
 
     //Return the currently supported plots.
@@ -87,7 +87,6 @@ private slots:
 	void addSinglePlot();
 	void observeModKeys();
 	void close( PlotMSDataCollapsible* collapsible );
-	bool plottableChanged();
 
 private:
 	void emptyLayout();

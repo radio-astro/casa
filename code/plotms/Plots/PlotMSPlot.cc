@@ -287,7 +287,8 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     
     // Let the child handle the rest of the parameter changes, and release
     // drawing if needed.
-    if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone){
+    bool result=parametersHaveChanged_(p,updateFlag,releaseWhenDone);
+    if( result && releaseWhenDone){
         releaseDrawing();
     }
 
@@ -307,6 +308,10 @@ void PlotMSPlot::plotDataChanged() {
     if(!hold) releaseDrawing();
 }
 
+bool PlotMSPlot::isIteration() const {
+	return false;
+}
+
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 	vector<PlotCanvasPtr> canv = canvases();
     bool exportSuccess = true;
@@ -316,16 +321,29 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     PlotMSExportParam& exportParams = itsParent_->getExportParameters();
     PMS::ExportRange range = exportParams.getExportRange();
     if ( range == PMS::PAGE_ALL ){
-    	pageCount = itsCache_->nIter( 0 );
-    	float divResult = (pageCount * 1.0f) / canv.size();
+    	int iterationCount = itsCache_->nIter( 0 );
+    	float divResult = (iterationCount * 1.0f) / canv.size();
     	pageCount = static_cast<int>(ceil( divResult ));
+    	//If we are an iteration plot and we don't own the first few plots on the
+    	//page we may need to bump the page count up by one.
+    	if ( isIteration() ){
+    		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+    		PlotMSPage firstPage = pages.getFirstPage();
+    		int firstPagePlotCount = getPageIterationCount( firstPage );
+    		if ( firstPagePlotCount < static_cast<int>(canv.size()) ){
+    			int notOwnedCount = canv.size() - firstPagePlotCount;
+    			int excessSpace = (pageCount * canv.size()) - (notOwnedCount + iterationCount );
+    			if ( excessSpace < 0 ){
+    				pageCount = pageCount + 1;
+    			}
+    		}
+    	}
     }
 
     //Store the current page.
     Int currentIter = iter();
 
-    //Loop over all the iterations, exporting them
-    firstIter();
+
     PlotExportFormat exportFormat( format );
     String baseFileName = format.location;
     String suffix = "";
@@ -335,14 +353,16 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	baseFileName = baseFileName.substr(0, periodIndex );
     }
 
+    //Loop over all the iterations, exporting them
+    firstIter();
     for ( int i = 0; i < pageCount; i++ ){
     	if ( i > 0 ){
     		//Remove the last '.' from the storage location.
     		String pageStr = String::toString( i+1 );
     		exportFormat.location = baseFileName + pageStr + suffix;
     	}
-    	exportSuccess = itsParent_->exportToFormat( exportFormat );
 
+    	exportSuccess = itsParent_->exportToFormat( exportFormat );
     	nextIter();
     }
 
@@ -404,7 +424,13 @@ bool PlotMSPlot::allDrawingHeld() {
 void PlotMSPlot::holdDrawing() {
    vector<PlotCanvasPtr> canv = canvases();
     for(unsigned int i = 0; i < canv.size(); i++){
-    	canv[i]->holdDrawing();
+    	if ( !canv[i].null() ){
+    		bool canvasDrawing = canv[i]->isDrawing();
+    		if ( canvasDrawing ){
+    		   waitOnCanvas( canv[i]);
+    		}
+    		canv[i]->holdDrawing();
+    	}
     }
 }
 
@@ -412,9 +438,29 @@ void PlotMSPlot::releaseDrawing() {
     vector<PlotCanvasPtr> canv = canvases();
     for(unsigned int i = 0; i < canv.size(); i++){
         if(!canv[i].null()){
+        	bool canvasDrawing = canv[i]->isDrawing();
+        	if ( canvasDrawing ){
+        		waitOnCanvas( canv[i]);
+        	}
         	canv[i]->releaseDrawing();
         }
     }
+}
+
+void PlotMSPlot::waitOnCanvas( const PlotCanvasPtr& canvas ){
+	if ( !canvas.null()){
+		int callIndex = 0;
+		int maxCalls =  5;
+
+		bool canvasDrawing = canvas->isDrawing();
+
+	    while(  canvasDrawing && callIndex < maxCalls ){
+
+	        usleep(1000000);
+	        callIndex++;
+	        canvasDrawing = canvas->isDrawing();
+	    }
+	}
 }
 
 void PlotMSPlot::waitForDrawing( bool holdDrawing ){
@@ -422,14 +468,7 @@ void PlotMSPlot::waitForDrawing( bool holdDrawing ){
 	vector<PlotCanvasPtr> canv = canvases();
 	for (unsigned int i = 0; i < canv.size(); i++ ){
 		if ( !canv[i].null()){
-			int callIndex = 0;
-			int maxCalls =  5;
-			bool canvasDrawing = canv[i]->isDrawing();
-			while(  canvasDrawing && callIndex < maxCalls ){
-				usleep(1000000);
-				callIndex++;
-				canvasDrawing = canv[i]->isDrawing();
-			}
+			waitOnCanvas( canv[i]);
 			if ( holdDrawing ){
 				canv[i]->holdDrawing();
 			}

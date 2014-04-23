@@ -78,6 +78,10 @@ public:
     //  plots.
     pair<int,int> findEmptySpot() const;
 
+    //Returns whether or not the plot is the owner of a canvas located at the given
+    //rowIndex and colIndex.
+    bool isOwner( int rowIndex, int colIndex, PlotMSPlot* plot ) const;
+
 
 private:
     // Resizes the grid to the given number of rows and columns.

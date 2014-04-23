@@ -49,7 +49,7 @@ class PlotMSOverPlot;
 class PlotMSPlotManager {
     
     //# Friend class declarations.
-    friend class PlotMSMultiPlot;
+    friend class PlotMSPlot;
     friend class PlotMSOverPlot;
     
 public:
@@ -111,6 +111,7 @@ public:
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases( bool clearCanvases = true );
     void clearCanvas(int row, int col );
+    bool findEmptySpot( Int& row, Int& col );
 
     void unassignPlots();
 
@@ -123,8 +124,9 @@ public:
     //for the plot.
     bool isPlottable( PlotMSPlot* plot );
 
-    //Tries to find an empty spot for the plot
-    //bool assignEmptySpot( PlotMSPlot* plot );
+    bool isOwner( int row, int col, PlotMSPlot* plot );
+
+
 
 private:
     // Parent.

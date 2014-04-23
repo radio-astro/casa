@@ -94,7 +94,6 @@ public:
     void minimizeDisplay();
 
 signals:
-	void plottableChanged();
 	void close( PlotMSDataCollapsible*);
 
 private slots:

@@ -145,9 +145,32 @@ vector<PlotCanvasPtr> PlotMSOverPlot::canvases() const {
 }
 
 
+int PlotMSOverPlot::getIterationIndex( int r, int c, const PlotMSPage& page ){
+	int iterationIndex = iter_;
+	bool found = false;
+	int rows = page.canvasRows();
+	int cols = page.canvasCols();
+	for ( int i = 0; i < rows; i++ ){
+		for ( int j = 0; j <= cols; j++ ){
+			if ( i == r && j == c ){
+				found =true;
+				break;
+			}
+			else {
+				bool ownsCanvas = page.isOwner(i,j, this);
+				if ( ownsCanvas ){
+					iterationIndex++;
+				}
+			}
+		}
+		if ( found ){
+			break;
+		}
+	}
+	return iterationIndex;
+}
 
 void PlotMSOverPlot::attachToCanvases() {
-	Int iter = iter_;
 	Int nIter = itsCache_->nIter(0);
 	if ( nIter <= 0 ){
 		nIter = 1;
@@ -169,23 +192,27 @@ void PlotMSOverPlot::attachToCanvases() {
 					}
 				}
 				else {
-					//For an iteration plot, there is one canvas per iteration.
-					//In the case of overplotting with an iteration, we may be
-					//adding several sets of data to each canvas.
-					int iterationIndex = r * canvasCols + c + iter;
-					if ( iterationIndex < nIter ){
-						int dataRowCount = itsPlots_.size();
-						for ( int i = 0; i < dataRowCount; i++ ){
-							if(!itsPlots_[i][iterationIndex].null()) {
-								itsCanvases_[r][c]->plotItem(itsPlots_[i][iterationIndex]);
+					QList<PlotMSPlot*> canvasPlots = itsParent_->getPlotManager().getCanvasPlots(r,c);
+					if ( canvasPlots.contains( this )){
+						//For an iteration plot, there is one canvas per iteration.
+						//In the case of overplotting with an iteration, we may be
+						//adding several sets of data to each canvas.
+						PlotMSPage page = itsParent_->getPlotManager().itsPages_.currentPage();
+						int iterationIndex = getIterationIndex (r, c, page );
+						//int iterationIndex = r * canvasCols + c + iter;
+						if ( iterationIndex < nIter ){
+							int dataRowCount = itsPlots_.size();
+							for ( int i = 0; i < dataRowCount; i++ ){
+								if(!itsPlots_[i][iterationIndex].null()) {
+									itsCanvases_[r][c]->plotItem(itsPlots_[i][iterationIndex]);
+								}
 							}
 						}
 					}
 				}
-
+				((&*itsCanvases_[r][c]))->show();
+				((&*itsCanvases_[r][c]))->setMinimumSize(5,5);
 			}
-			((&*itsCanvases_[r][c]))->show();
-			((&*itsCanvases_[r][c]))->setMinimumSize(5,5);
 		}
 	}
 }
@@ -283,8 +310,8 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 				if ( isIteration() ){
 					if( !page.isOwned(r, c)) {
 						page.setOwner(r, c, this);
+						itsCanvases_[r][c] = page.canvas(r, c);
 					}
-					itsCanvases_[r][c] = page.canvas(r, c);
 				}
 				else {
 					//If it is not an iteration plot, there is just
@@ -450,11 +477,28 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	if ( (gridRow != displayRow || gridCol != displayCol) && gridRow != -1 ){
 		locationChange = true;
 		//This removes the title and axes from its previous plot location.
-		itsParent_->getPlotManager().clearCanvas( gridRow, gridCol );
+		QList<PlotMSPlot*> canvasPlots = itsParent_->getPlotManager().getCanvasPlots( gridRow, gridCol);
+		if ( canvasPlots.size() == 1 ){
+			//We are the sole occupant of the old spot (no overplotting) so we
+			//erase all evidence of there being a plot
+			itsParent_->getPlotManager().clearCanvas( gridRow, gridCol );
+		}
+		else if ( canvasPlots.size() > 1 ){
+			//Just erase ourselves from the canvas.
+			itsParent_->getPlotManager().itsPages_.disown( gridRow, gridCol, this );
+			detachFromCanvases();
+			//Tell the other plots to redraw
+			for ( int i = 0; i < canvasPlots.size(); i++ ){
+				if ( canvasPlots[i] != this ){
+					canvasPlots[i]->parametersHaveChanged( canvasPlots[i]->parameters(),PMS_PP::UPDATE_REDRAW );
+				}
+			}
+		}
 	}
 
 	bool updateIter = updateFlag & PMS_PP::UPDATE_ITERATION;
-	itsTCLParams_.updateIteration = ( updateIter || ((plotRows != rows) || (plotCols != cols)) ||
+	itsTCLParams_.updateIteration = ( updateIter ||
+			((plotRows != rows) || (plotCols != cols)) ||
 					(itsParent_->isCommonAxisX() != commonAxisX) ||
 					(itsParent_->isCommonAxisY() != commonAxisY) ||
 					(itsParent_->getAxisLocationX() != locationAxisX) ||
@@ -623,12 +667,13 @@ bool PlotMSOverPlot::updateCanvas() {
 	uInt rows = itsCanvases_.size();
 	for(uInt r = 0; r < rows; ++r) {
 		uInt cols = itsCanvases_[r].size();
-		uInt iterationRows = iter_ + r * cols;
-		if( iterationRows >= nIter  ){
+		//uInt iterationRows = iter_ + r * cols;
+		/*if( iterationRows >= nIter  ){
 			break;
-		}
+		}*/
 		for(uInt c = 0; c < cols; ++c) {
-			uInt iteration = iterationRows + c;
+			PlotMSPage page = itsParent_->getPlotManager().itsPages_.currentPage();
+			uInt iteration = getIterationIndex( r, c, page );
 			if(iteration >= nIter  ){
 				clearCanvasProperties( r, c );
 			}
@@ -977,10 +1022,12 @@ bool PlotMSOverPlot::firstIter() {
 
 bool PlotMSOverPlot::prevIter() {
 	Int nIter = itsCache_->nIter(0);
-	if((nIter > 1) && ((iter_ - iterStep_) >= 0)) {
+	if( nIter > 1 && iter_ > 0 ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+
+		//iter_ -= iterStep_;
+		iter_ -= getPageIterationCount( pages.currentPage() );
 		pages.previousPage();
-		iter_ -= iterStep_;
 		recalculateIteration();
 		return true;
 	}
@@ -1000,12 +1047,24 @@ bool PlotMSOverPlot::setIter( int index ){
 	return successful;
 }
 
+int PlotMSOverPlot::getPageIterationCount( const PlotMSPage& page ) {
+	int rows = itsCanvases_.size();
+	int cols = 0;
+	if ( rows > 0 ){
+		cols = itsCanvases_[0].size();
+	}
+	int iterationCanvasCount = getIterationIndex(rows,cols,page);
+	iterationCanvasCount = iterationCanvasCount - iter_;
+	return iterationCanvasCount;
+}
+
 bool PlotMSOverPlot::nextIter() {
 	Int nIter = itsCache_->nIter(0);
-	if((nIter > 1) && ((iter_ + iterStep_) < nIter)) {
+	if( nIter > 1 &&  iter_  < nIter - 1 ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+		int pageIterCount = getPageIterationCount( pages.currentPage() );
+		iter_ += pageIterCount;
 		pages.nextPage();
-		iter_ += iterStep_;
 		recalculateIteration();
 		return true;
 	}
@@ -1016,9 +1075,17 @@ bool PlotMSOverPlot::lastIter() {
 	Int nIter = itsCache_->nIter(0);
 	if((nIter > 0) && (iter_ < (nIter - iterStep_))) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
-		pages.lastPage();
+		int firstPageIterCount = getPageIterationCount( pages.getFirstPage() );
 		iter_ = int(double(nIter-1) / iterStep_) * iterStep_;
-		if(iterStep_ == 1) iter_ = nIter - 1;
+		if(iterStep_ == 1){
+			iter_ = nIter - 1;
+		}
+		else {
+			if ( firstPageIterCount < iterStep_ ){
+				iter_ = iter_ - (iterStep_ - firstPageIterCount );
+			}
+		}
+		pages.lastPage();
 		recalculateIteration();
 		return true;
 	}

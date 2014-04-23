@@ -28,6 +28,7 @@
 #define PLOTMSOVERPLOT_H_
 
 #include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPage.h>
 #include <plotms/Data/PlotMSIndexer.h>
 
 #include <casa/namespace.h>
@@ -98,6 +99,10 @@ public:
     //The cache load did not succeed so clear the plot and the cache.
     virtual void dataMissing();
 
+    //Returns true if the plot is an iteration plot.
+    virtual bool isIteration() const;
+
+
 protected:
 
     bool initializePlot();
@@ -123,7 +128,7 @@ protected:
     bool setIter( int index );
     void recalculateIteration();
     virtual Int nIter();
-    bool isIteration() const;
+
 
     void updatePlots();
     bool updateIndexing();
@@ -131,7 +136,7 @@ protected:
     void logPoints();
     void logIter(Int iter, Int nIter);
 
-
+    virtual int getPageIterationCount( const PlotMSPage& page );
 
 private:
     //Adjust the amount of plot data that this plot is holding.
@@ -139,6 +144,11 @@ private:
 
     //Return the dimensions of the plot data that this plot should hold.
     void getPlotSize( Int& rows, Int& cols );
+
+    //Returns the iteration for the canvas located at row, r, and column, c.
+    int getIterationIndex( int r, int c, const PlotMSPage& page );
+
+
 
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.

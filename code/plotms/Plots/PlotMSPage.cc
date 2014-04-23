@@ -132,6 +132,15 @@ bool PlotMSPage::isOwned(unsigned int row, unsigned int col) {
     return canvasOwned;
 }
 
+bool PlotMSPage::isOwner( int rowIndex, int colIndex, PlotMSPlot* plot ) const {
+	bool canvasOwner = false;
+	QList<PlotMSPlot*> canvasOwners = owner( rowIndex, colIndex );
+	if ( canvasOwners.contains( plot )){
+		canvasOwner = true;
+	}
+	return canvasOwner;
+}
+
 bool PlotMSPage::isSpot( int rowIndex, int colIndex, PlotMSPlot* /*plot*/ ) const {
 	bool availableSpace = true;
 	int canvasCount = itsCanvases_.size();
@@ -153,13 +162,19 @@ bool PlotMSPage::isSpot( int rowIndex, int colIndex, PlotMSPlot* /*plot*/ ) cons
 pair<int,int> PlotMSPage::findEmptySpot() const {
 	pair<int,int> location(-1,1);
 	int ownerRowCount = itsCanvasOwners_.size();
+	bool locationFound = false;
 	for ( int i = 0; i < ownerRowCount; i++ ){
 		int ownerColCount = itsCanvasOwners_[0].size();
 		for ( int j = 0; j < ownerColCount; j++ ){
 			if ( itsCanvasOwners_[i][j].isEmpty() ){
 				location.first = i;
 				location.second = j;
+				locationFound = true;
+				break;
 			}
+		}
+		if ( locationFound ){
+			break;
 		}
 	}
 	return location;
@@ -208,25 +223,11 @@ bool PlotMSPage::disown( int row, int col ){
 }
 
 
-void PlotMSPage::clearCanvas( int row, int col ){
-	bool canvasDisowned = disown( row, col );
-	if ( canvasDisowned ){
-		PlotCanvasPtr canvas = itsCanvases_[row][col];
-		if(canvas.null()){
-			return;
-		}
-		canvas->showAllAxes( false );
-		canvas->setTitle( "" );
-		canvas->setCommonAxes( false, false );
-	}
-}
 
 bool PlotMSPage::disown(unsigned int row, unsigned int col, PlotMSPlot* plot ) {
     if(row >= itsCanvases_.size() || col >= itsCanvases_[row].size() ){
     	return false;
     }
-
-    //itsCanvases_[row][col]->clearItems();
 
     if ( row < itsCanvasOwners_.size() && col < itsCanvasOwners_[row].size() ){
     	if ( !itsCanvasOwners_[row][col].isEmpty() && itsCanvasOwners_[row][col].contains(plot) ){
@@ -240,6 +241,20 @@ bool PlotMSPage::disown(unsigned int row, unsigned int col, PlotMSPlot* plot ) {
     }
     return true;
 }
+
+void PlotMSPage::clearCanvas( int row, int col ){
+	bool canvasDisowned = disown( row, col );
+	if ( canvasDisowned ){
+		PlotCanvasPtr canvas = itsCanvases_[row][col];
+		if(canvas.null()){
+			return;
+		}
+		canvas->showAllAxes( false );
+		canvas->setTitle( "" );
+		canvas->setCommonAxes( false, false );
+	}
+}
+
 
 
 void PlotMSPage::setupPage() {

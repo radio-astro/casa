@@ -60,6 +60,10 @@ PlotMSPage PlotMSPages::currentPage() const {
     return itsPages_[itsCurrentPageNum_];
 }
 
+PlotMSPage PlotMSPages::getFirstPage() const {
+	return itsPages_[0];
+}
+
 unsigned int PlotMSPages::totalPages() const {
 	return itsPages_.size();
 }
@@ -144,6 +148,12 @@ void PlotMSPages::disown( PlotMSPlot* plot ){
 	}
 }
 
+void PlotMSPages::disown( int row, int col, PlotMSPlot* plot ){
+	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
+		itsPages_[i].disown( row, col, plot );
+	}
+}
+
 void PlotMSPages::clearCanvas( int row, int col ){
 	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
 		itsPages_[i].clearCanvas( row, col );
@@ -189,14 +199,14 @@ bool PlotMSPages::isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const {
 
 bool PlotMSPages::canvasIsOwnedBy( int row, int col, PlotMSPlot* plot ) const {
 	bool canvasOwned = false;
-	int pageCount = itsPages_.size();
-	for ( int i = 0; i < pageCount; i++ ){
-		QList<PlotMSPlot*> plotOwners = itsPages_[i].owner(row,col);
+	//int pageCount = itsPages_.size();
+	//for ( int i = 0; i < pageCount; i++ ){
+		QList<PlotMSPlot*> plotOwners = itsPages_[/*i*/itsCurrentPageNum_].owner(row,col);
 		if ( plotOwners.contains( plot )){
 			canvasOwned = true;
-			break;
+			//break;
 		}
-	}
+	//}
 	return canvasOwned;
 }
 

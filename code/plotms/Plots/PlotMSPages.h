@@ -59,6 +59,8 @@ public:
     // Returns a COPY of the current page.
     PlotMSPage currentPage() const;
 
+    PlotMSPage getFirstPage() const;
+
     void setCurrentPageNum(uInt num);
 
     // Accessor
@@ -108,6 +110,7 @@ public:
 
     //Remove the plot from the canvas.
     void disown( PlotMSPlot* plot );
+    void disown( int row, int col, PlotMSPlot* plot );
 
     bool canvasIsOwnedBy( int row, int col, PlotMSPlot* plot ) const;
 

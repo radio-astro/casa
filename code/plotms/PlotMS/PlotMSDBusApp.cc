@@ -413,6 +413,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 
     else if (methodName == METHOD_SETPLOTPARAMS)  {
         bool resized = plotParameters(index);
+
         PlotMSPlotParameters& ppp = itsPlotParams_[index];
 
         PMS_PP_Axes* ppaxes = ppp.typedGroup<PMS_PP_Axes>();
@@ -481,6 +482,8 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             PlotMSIterParam iter = ppiter->iterParam();
             iter.fromRecord(parameters.asRecord(PARAM_ITERATE));
             ppiter->setIterParam(iter);
+            qDebug()<<"DBUS iterater row="<<ppiter->getGridRow()
+            		<<" col="<<ppiter->getGridCol()<<" index="<<index;
         }
         
         bool ok;
@@ -881,16 +884,15 @@ void PlotMSDBusApp::log(const String& m) {
 
 bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
     if(plotIndex < 0) plotIndex = 0;
-    if((unsigned int)plotIndex > itsPlotParams_.size())
+    if((unsigned int)plotIndex > itsPlotParams_.size()){
         plotIndex = itsPlotParams_.size();
-
+    }
     bool resized = false;
     if((unsigned int)plotIndex >= itsPlotParams_.size()) {
         resized = true;
         const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(plotIndex + 1,
                 PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
     }
-
     return resized;
 }
 
@@ -898,20 +900,30 @@ bool PlotMSDBusApp::update() {
 	// single threaded here
     itsUpdateFlag_ = false;
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
-
+    qDebug()<<"DBUS::update plotManager plotparameter count="<<n;
     // update plot parameters
     PlotMSPlotParameters* p;
     for(unsigned int i = 0; i < n; i++) {
         p = itsPlotms_.getPlotManager().plotParameters(i);
         if(p == NULL) continue;
-
-        if(*p != itsPlotParams_[i]) {
-            p->holdNotification(this);
-            *p = itsPlotParams_[i];
-            p->releaseNotification();
+        try {
+        	if(*p != itsPlotParams_[i]) {
+        		p->holdNotification(this);
+        		*p = itsPlotParams_[i];
+        		p->releaseNotification();
+        		qDebug()<<":uppate i="<<i;
+        	}
+        }
+        catch( AipsError& error ){
+        	qDebug()<<"::update AIPS error="<<error.getMesg().c_str();
+        }
+        catch( ... ){
+        	qDebug()<<":update unknown";
         }
     }
+    qDebug()<<"DBUS::finished update plot params";
     bool successfulUpdate = itsPlotms_.isOperationCompleted();
+    qDebug()<<"DBUS::update success="<<successfulUpdate;
     if ( successfulUpdate ){
     	// check for added plots
     	if(itsPlotParams_.size() > n) {

@@ -137,7 +137,6 @@ void PlotMSPlotManager::clearPlotsAndCanvases( bool clearCanvases ) {
 
     //Remove the plots(data) from the canvases.
 	unassignPlots();
-    
     if ( clearCanvases ){
     	//Reset the page layout.
     	itsPages_.clearPages();
@@ -161,24 +160,10 @@ void PlotMSPlotManager::clearPlotsAndCanvases( bool clearCanvases ) {
     notifyWatchers();
 }
 
-/*bool PlotMSPlotManager::assignEmptySpot( PlotMSPlot* plot ){
-	bool foundSpot = false;
-	//Try to find an empty spot to put it.
-	pair<int,int> location = itsPages_.findEmptySpot();
-	if ( location.first != -1 && location.second != -1 ){
-		PlotMSPlotParameters& params = plot->parameters();
-	    PMS_PP_Iteration* iterParams = params.typedGroup<PMS_PP_Iteration>();
-		if ( iterParams == NULL ){
-			params.setGroup<PMS_PP_Iteration>();
-			iterParams = params.typedGroup<PMS_PP_Iteration>();
-		}
-		iterParams->setGridRow( location.first );
-		iterParams->setGridCol( location.second );
-		plot->assignCanvases( itsPages_ );
-		foundSpot = true;
-	}
-	return foundSpot;
-}*/
+bool PlotMSPlotManager::isOwner( int row, int col, PlotMSPlot* plot ){
+	return itsPages_.canvasIsOwnedBy( row, col, plot );
+}
+
 
 QList<PlotMSPlot*> PlotMSPlotManager::getCanvasPlots(int row, int col) const {
 	QList<PlotMSPlot*> canvasPlots;
@@ -200,13 +185,27 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     if(params != NULL){
     	plot->parameters() = *params;
     }
+
     itsPlotParameters_.push_back(&plot->parameters());
+    if ( params == NULL ){
+    	//We don't have a location preset for the plot so try to find an empty one.
+    	Int availableRow = 1;
+    	Int availableCol = 1;
+    	bool emptySpot = findEmptySpot( availableRow, availableCol );
+    	if ( emptySpot ){
+    	   PlotMSPlotParameters& params = plot->parameters();
+    	   PMS_PP_Iteration* iterParams = params.typedGroup<PMS_PP_Iteration>();
+    	   if ( iterParams == NULL ){
+    	       params.setGroup<PMS_PP_Iteration>();
+    	       iterParams = params.typedGroup<PMS_PP_Iteration>();
+    	   }
+    	   iterParams->setGridRow( availableRow);
+    	   iterParams->setGridCol( availableCol);
+    	}
+    }
     itsPages_.setupCurrentPage();
 
     bool locationFound = isPlottable( plot );
-    /*if ( !locationFound ){
-    	locationFound = assignEmptySpot( plot );
-    }*/
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }
@@ -231,6 +230,17 @@ bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) {
 		locationFound = itsPages_.isSpot( desiredRow, desiredCol, plot );
 	}
    	return locationFound;
+}
+
+bool PlotMSPlotManager::findEmptySpot( Int& row, Int& col ){
+	bool emptySpot = false;
+	pair<int,int> spot = itsPages_.findEmptySpot();
+	if ( spot.first >= 0 && spot.second >= 0 ){
+		row = spot.first;
+		col = spot.second;
+		emptySpot = true;
+	}
+	return emptySpot;
 }
 
 

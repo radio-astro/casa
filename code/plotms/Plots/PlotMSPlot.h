@@ -31,6 +31,7 @@
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
+#include <plotms/Plots/PlotMSPage.h>
 
 #include <casa/namespace.h>
 
@@ -158,6 +159,8 @@ public:
     // cause a redraw of the affected canvases.
     virtual void plotDataChanged();
     
+    virtual bool isIteration() const;
+
     // Exports canvases associated with this plot to the given format.  Exports
     // to multiple files if the plot has more than one canvas.
     virtual bool exportToFormat(const PlotExportFormat& format);
@@ -229,6 +232,7 @@ protected:
     // Releases drawing on all plot canvases, which will also cause a redraw.
     virtual void releaseDrawing();
     
+    virtual int getPageIterationCount( const PlotMSPage& page )=0;
 
     // MEMBERS //
     
@@ -245,6 +249,8 @@ protected:
     PlotMSCacheBase* itsCache_;
     
 private:
+    void waitOnCanvas( const PlotCanvasPtr& canvas );
+
     // Disable copy constructor and operator for now.
     // <group>
     PlotMSPlot(const PlotMSPlot& copy);

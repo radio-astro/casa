@@ -104,13 +104,6 @@ void PlotMSDataSummaryTab::emptyLayout(){
 
 void PlotMSDataSummaryTab::setGridSize( int rowCount, int colCount ){
 
-	int dataCount = dataList.size();
-
-	bool plottabilityChanged = false;
-	if ( rowLimit != rowCount || colLimit != colCount ){
-		plottabilityChanged = true;
-	}
-
 	//Store the maximum number of plots we can support.
 	rowLimit = rowCount;
 	colLimit = colCount;
@@ -118,12 +111,9 @@ void PlotMSDataSummaryTab::setGridSize( int rowCount, int colCount ){
 
 	//Tell everyone to update their grid size, disabling any whose location
 	//exceeds the current limits.
+	int dataCount = dataList.size();
 	for ( int i = 0; i < dataCount; i++ ){
 		dataList[i]->setGridSize( rowCount, colCount );
-	}
-
-	if ( plottabilityChanged ){
-		this->plottableChanged();
 	}
 
 	//Generate new plots.
@@ -146,34 +136,7 @@ void PlotMSDataSummaryTab::addSinglePlot(){
 		dataList[i]->minimizeDisplay();
 	}
 	insertData( -1 );
-	plottableChanged();
 }
-
-bool PlotMSDataSummaryTab::plottableChanged(){
-	bool plottableAddAllowed = false;
-	int dataCount = dataList.size();
-
-	//Figure out how many are plottable
-	int plottableCount = 0;
-	for ( int i = 0; i < dataCount; i++ ){
-		if ( dataList[i]->isPlottable()){
-			plottableCount++;
-		}
-	}
-
-	int maxPlottable = rowLimit * colLimit;
-	//If we have more than enough subject to plotting, don't
-	//allow others to be selected.
-	if ( plottableCount >= maxPlottable ){
-		ui.addSingleButton->setEnabled( false );
-	}
-	else {
-		ui.addSingleButton->setEnabled( true );
-		plottableAddAllowed = true;
-	}
-	return plottableAddAllowed;
-}
-
 
 
 void PlotMSDataSummaryTab::insertData( int index ){
@@ -193,7 +156,6 @@ void PlotMSDataSummaryTab::insertData( int index ){
 		plotTab = new PlotMSDataCollapsible( itsPlotter_, scrollWidget );
 		connect(  plotTab, SIGNAL( close(PlotMSDataCollapsible*)),
 				this, SLOT( close(PlotMSDataCollapsible*)));
-		connect( plotTab, SIGNAL( plottableChanged()), this, SLOT(plottableChanged()));
 		plotTab->setGridSize( rowLimit, colLimit );
 		dataList.append( plotTab );
 		scrollLayout->addWidget( plotTab );
@@ -227,7 +189,7 @@ void PlotMSDataSummaryTab::close( PlotMSDataCollapsible* collapsible ){
 	if ( collapseIndex >= 0 ){
 		dataList.removeAt( collapseIndex );
 	}
-	plottableChanged();
+	//plottableChanged();
 	delete collapsible;
 }
 

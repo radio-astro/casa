@@ -54,7 +54,6 @@ PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,
 	setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
 	ui.widgetLayout->setContentsMargins(2,2,2,2);
 	plotTab = new PlotMSPlotTab( plotter );
-	connect( plotTab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
 
 	maximizeDisplay();
 

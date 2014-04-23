@@ -507,6 +507,7 @@ PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
          Int cols = 1;
          itsPlotManager_.getGridSize( rows, cols );
          tab->setGridSize( rows, cols );
+
          connect( tab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
      }
      insertSubtab (index, tab);
