@@ -317,7 +317,7 @@ image * image::collapse(
 				mask, myAxes, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
-			return new image(collapser.collapse(True));
+			return new image(collapser.collapse());
 		}
 		else {
 			SPCIIC myimage = _image->getComplexImage();
@@ -334,7 +334,7 @@ image * image::collapse(
 				mask, myAxes, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
-			return new image(collapser.collapse(True));
+			return new image(collapser.collapse());
 		}
 	}
 	catch (const AipsError& x) {
