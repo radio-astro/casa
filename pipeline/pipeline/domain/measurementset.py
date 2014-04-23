@@ -14,7 +14,105 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 
+# Added back in temporarily
+import re
+import pipeline.extern.pyparsing as pyparsing
+
 LOG = infrastructure.get_logger(__name__)
+
+# Temporarily restored ?
+def _parse_spw(task_arg, all_spw_ids=[]):
+    """
+    Convert the CASA-style spw argument to a list of spw IDs.
+
+    Channel limits are also parsed in this function but are not currently
+    used. The channel limits may be found as the channels property of an
+    atom.
+
+    Parsing the input '0:0~6^2,2:6~38^4 (0, 1, 4, 5, 6, 7)' results in the
+    following results data structure;
+
+          <result>
+            <atom>
+              <spws>
+                <ITEM>0</ITEM>
+              </spws>
+              <channels>
+                <ITEM>0</ITEM>
+                <ITEM>2</ITEM>
+                <ITEM>4</ITEM>
+                <ITEM>6</ITEM>
+              </channels>
+            </atom>
+            <atom>
+              <spws>
+                <ITEM>2</ITEM>
+              </spws>
+              <channels>
+                <ITEM>6</ITEM>
+                <ITEM>10</ITEM>
+                <ITEM>14</ITEM>
+                <ITEM>18</ITEM>
+                <ITEM>22</ITEM>
+                <ITEM>26</ITEM>
+                <ITEM>30</ITEM>
+                <ITEM>34</ITEM>
+                <ITEM>38</ITEM>
+              </channels>
+            </atom>
+          </result>
+    """
+    if task_arg in (None, ''):
+        return all_spw_ids
+
+    # recognise but suppress the mode-switching tokens
+    TILDE, LESSTHAN, CARET, COLON, ASTERISK = map(pyparsing.Suppress, '~<^:*')
+
+    # recognise '123' as a number, converting to an integer
+    number = pyparsing.Word(pyparsing.nums).setParseAction(lambda tokens : int(tokens[0]))
+
+    # convert '1~10' to a range
+    rangeExpr = number('start') + TILDE + number('end')
+    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
+
+    # convert '1~10^2' to a range with the given step size
+    rangeWithStepExpr = number('start') + TILDE + number('end') + CARET + number('step')
+    rangeWithStepExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1, tokens.step))
+
+    # convert <10 to a range
+    ltExpr = LESSTHAN + number('max')
+    ltExpr.setParseAction(lambda tokens : range(0, tokens.max))
+
+    # convert * to all spws
+    allExpr = ASTERISK.setParseAction(lambda tokens : all_spw_ids)
+
+    # spw and channel components can be any of the above patterns
+    numExpr = rangeWithStepExpr | rangeExpr | ltExpr | allExpr | number
+
+    # recognise and group multiple channel definitions separated by semi-colons
+    channelsExpr = pyparsing.Group(pyparsing.delimitedList(numExpr, delim=';'))
+
+    # group the number so it converted to a node, spw in this case
+    spwsExpr = pyparsing.Group(numExpr)
+
+    # the complete expression is either spw or spw:chan
+    atomExpr = pyparsing.Group(spwsExpr('spws') + COLON + channelsExpr('channels') | spwsExpr('spws'))
+
+    # and we can have multiple items separated by commas
+    finalExpr = pyparsing.delimitedList(atomExpr('atom'), delim=',')('result')
+
+    parse_result = finalExpr.parseString(str(task_arg))
+
+    results = {}
+    for atom in parse_result.result:
+        for spw in atom.spws:
+            if spw not in results:
+                results[spw] = set(atom.channels)
+            else:
+                results[spw].update(atom.channels)
+
+    Atom = collections.namedtuple('Atom', ['spw', 'channels'])
+    return [Atom(spw=k, channels=v) for k,v in results.items()]
 
 
 class MeasurementSet(object):    
@@ -197,12 +295,14 @@ class MeasurementSet(object):
             return spws
         
         if self.antenna_array.name == 'ALMA':
-            science_intents = set(['TARGET','PHASE','BANDPASS','AMPLITUDE', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE'])
+            science_intents = set(['TARGET','PHASE','BANDPASS','AMPLITUDE', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE', 'CHECK'])
             return [w for w in spws if w.num_channels not in (1,4)
                     and not science_intents.isdisjoint(w.intents)]
 
         return spws
 
+    # Temporarily restored old code
+    # Commented out lines are the new code.
     def get_all_spectral_windows(self, task_arg='', with_channels=False):
         """Return the spectral windows corresponding to the given CASA-style
         spw argument.
@@ -210,19 +310,40 @@ class MeasurementSet(object):
         if task_arg in (None, ''):
             return list(self.spectral_windows)
 
-        selected = collections.defaultdict(set)
-        for (spw, start, end, step) in utils.spw_arg_to_id(self.name, task_arg):
-            selected[spw].update(set(range(start, end, step))) 
-            
-        if not with_channels:
-            return [spw for spw in self.spectral_windows if spw.id in selected]
+	# Restored
+	all_spw_ids = [spw.id for spw in self.spectral_windows]
+	atoms = _parse_spw(task_arg, all_spw_ids)
+
+	# New
+        #selected = collections.defaultdict(set)
+        #for (spw, start, end, step) in utils.spw_arg_to_id(self.name, task_arg):
+            #selected[spw].update(set(range(start, end, step))) 
+
+	# Restored.
+	if not with_channels:
+	    spw_ids = [atom.spw for atom in atoms]
+	    return [self.get_spectral_window(i) for i in spw_ids]
+
+	# New
+	#if not with_channels:
+            #return [spw for spw in self.spectral_windows if spw.id in selected]
 
         spws = []
-        for spw_id, channels in selected.items():
-            spw_obj = self.get_spectral_window(spw_id)
-            proxy = spectralwindow.SpectralWindowWithChannelSelection(spw_obj, 
-                                                                      list(channels))
-            spws.append(proxy)
+
+	# Restored.
+	for atom in atoms:
+	    spw_obj = self.get_spectral_window(atom.spw)
+	    proxy = spectralwindow.SpectralWindowWithChannelSelection(spw_obj,
+	        atom.channels)
+	    spws.append(proxy)
+
+	# New
+        #for spw_id, channels in selected.items():
+            #spw_obj = self.get_spectral_window(spw_id)
+            #proxy = spectralwindow.SpectralWindowWithChannelSelection(spw_obj, 
+                                                                      #list(channels))
+            #spws.append(proxy)
+
         return spws
 
     def get_frequency_groups_for_intent(self, intent):

@@ -36,6 +36,8 @@ class State(object):
 
         # translate these into intents understood by the pipeline
         red_intents = set()
+        if 'CHECK' in raw_intents:
+            red_intents.update(['CHECK'])
         if 'POLARIZATION' in raw_intents:
             red_intents.update(['POLARIZATION'])
         if 'POLANGLE' in raw_intents:
@@ -113,6 +115,12 @@ class StateALMA(State):
         'CALIBRATE_SIDEBAND_RATIO#ON_SOURCE' : 'SIDEBAND',
         'CALIBRATE_SIDEBAND_RATIO.ON_SOURCE' : 'SIDEBAND',
         'CALIBRATE_SIDEBAND_RATIO_ON_SOURCE' : 'SIDEBAND',
+        'CALIBRATE_DELAY#ON_SOURCE'          : 'CHECK',
+        'CALIBRATE_DELAY.ON_SOURCE'          : 'CHECK',
+        'CALIBRATE_DELAY_ON_SOURCE'          : 'CHECK',
+        'OBSERVE_CHECK_SOURCE#ON_SOURCE'     : 'CHECK',
+        'OBSERVE_CHECK_SOURCE.ON_SOURCE'     : 'CHECK',
+        'OBSERVE_CHECK_SOURCE_ON_SOURCE'     : 'CHECK',
         'OBSERVE_TARGET#ON_SOURCE'           : 'TARGET',
         'OBSERVE_TARGET.ON_SOURCE'           : 'TARGET',
         'OBSERVE_TARGET_ON_SOURCE'           : 'TARGET',
