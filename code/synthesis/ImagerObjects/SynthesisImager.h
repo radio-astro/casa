@@ -189,6 +189,7 @@ protected:
 		       const Bool conjBeams  = True,
 		       const Float computePAStep   = 360.0,
 		       const Float rotatePAStep    = 5.0,
+		       const String interpolation = String("linear"),
 		       const Int cache=1000000000,
 		       const Int tile=16);
 

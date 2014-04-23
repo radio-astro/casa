@@ -117,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisImager::~SynthesisImager() 
   {
     LogIO os( LogOrigin("SynthesisImager","destructor",WHERE) );
-    os << LogIO::DEBUGGING << "SynthesisImager destroyed" << LogIO::POST;
+    os << LogIO::DEBUG1 << "SynthesisImager destroyed" << LogIO::POST;
     for (uInt k=0; k < mss_p.nelements(); ++k){
       delete mss_p[k];
     }
@@ -495,7 +495,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
 			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
 			gridpars.doPBCorr,gridpars.conjBeams,
-			gridpars.computePAStep,gridpars.rotatePAStep);
+			gridpars.computePAStep,gridpars.rotatePAStep,
+			gridpars.interpolation);
 
       }
     catch(AipsError &x)
@@ -1093,6 +1094,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const Bool conjBeams,        //= True,
 					const Float computePAStep,         //=360.0
 					const Float rotatePAStep,          //=5.0
+					const String interpolation,  //="linear"
 					const Int cache,             //=1000000000,
 					const Int tile               //=16
 					)
@@ -1164,6 +1166,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	theIFT->setSkyJones(  skyJonesList );
 
       }
+
+    //// For mode=cubedata, set the freq frame to invalid..
+    Vector<Int> tspws(0);
+    theFT->setSpw( tspws, False );
+    theIFT->setSpw( tspws, False );
+
+    //// Set interpolation mode
+    theFT->setFreqInterpolation( interpolation );
+    theIFT->setFreqInterpolation( interpolation );
 
   }
 

@@ -248,7 +248,7 @@ def tclean(
     #paramList.printParameters()
 
     pcube=False
-    if parallel==True and nchan>1:
+    if parallel==True and specmode!='mfs':
         pcube=True
         parallel=False
 

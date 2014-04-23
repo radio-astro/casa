@@ -755,7 +755,7 @@ def checkDataPartitioningCode():
      ## Sync input lists to the same size.
      #paramList.checkParameters()
 
-     params = getparams( testnum=3 ,parallelmajor=True )
+     params = getparams( testnum=2 ,parallelmajor=True )
      paramList = params[0]
      clusterdeffile = params[1]
 
