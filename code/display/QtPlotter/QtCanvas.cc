@@ -50,7 +50,7 @@ namespace casa {
 	const QString QtCanvas::FONT_NAME = "Helvetica [Cronyx]";
 
 	QtCanvas::~QtCanvas() {
-		this->clearCurve();
+		this->clearCurve(true);
 		delete modeFactory;
 	}
 
@@ -414,7 +414,7 @@ namespace casa {
 		curveCountSecondary = 0;
 	}
 
-	void QtCanvas::clearCurve() {
+	void QtCanvas::clearCurve( bool inDtor ) {
 		curveMap.clear();
 		profileFitMarkers.clear();
 
@@ -430,8 +430,10 @@ namespace casa {
 		}
 		delete selectedAnnotation;
 		selectedAnnotation = NULL;
-		emit curvesChanged();
-		refreshPixmap();
+		if ( ! inDtor ) {
+			emit curvesChanged();
+			refreshPixmap();
+		}
 	}
 
 	void QtCanvas::clearEverything(){

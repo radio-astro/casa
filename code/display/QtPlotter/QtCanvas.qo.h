@@ -105,7 +105,7 @@ namespace casa {
 		CanvasCurve getCurve( const QString& curveName );
 		int getLineCount();
 		void curveLabelsChanged();
-		void clearCurve();
+		void clearCurve( bool inDtor=false );
 		void clearFitCurves();
 		void clearEverything();
 		void clearMolecularLines( bool refresh = true );
