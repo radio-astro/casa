@@ -984,6 +984,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     return;
   }
 
+
   Int flparmod=nFPar_/nPar_;    // for indexing the flag Matrices on the par axis
 
   Bool unWrapPhase=flparmod>1;
@@ -1028,14 +1029,10 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
       }
     }
 
+    // Set flags carefully
+    resampleFlagsInFreq(fflgi,fout,tflgi,fin);
 
-    // TBD: ensure phases tracked on freq axis...
 
-    // TBD: handle flags carefully!
-    //      (i.e., flag gaps larger than user's "freach")
-    // For now,just unset them
-    fflgi.set(False);
-    
     // Always use nearest on edges
     // TBD: trap cases where frequencies don't overlap at all
     //     (fout(hi)<mfin(0) || fout(lo)> mfin(ihi))..... already OK (lo>hi)?
@@ -1087,6 +1084,105 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
   }
 }
 
+void CTPatchedInterp::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Double>& fout,
+					  Vector<Bool>& flgin,const Vector<Double>& fin) {
+
+  //  cout << "resampleFlagsInFreq" << endl;
+
+#define NEAREST InterpolateArray1D<Double,Float>::nearestNeighbour
+#define LINEAR InterpolateArray1D<Double,Float>::linear
+#define CUBIC InterpolateArray1D<Double,Float>::cubic
+#define SPLINE InterpolateArray1D<Double,Float>::spline
+
+  Vector<Double> finGHz=fin/1e9;
+
+  // Handle chan-dep flags
+  if (freqType_.contains("flag")) {
+    
+    // Determine implied mode-dep flags indexed by channel registration
+    uInt nflg=flgin.nelements();
+    Vector<Bool> flreg(nflg,False);
+    switch (ia1dmethod_) {
+    case NEAREST: {
+      // Just use input flags
+      flreg.reference(flgin);
+      break;
+    }
+    case LINEAR: {
+      for (uInt i=0;i<nflg-1;++i)
+	flreg[i]=(flgin[i] || flgin[i+1]);
+      flreg[nflg-1]=flreg[nflg-2];
+      break;
+    }
+    case CUBIC:
+    case SPLINE: {
+      for (uInt i=1;i<nflg-2;++i)
+	flreg[i]=(flgin[i-1] || flgin[i] || flgin[i+1] || flgin[i+2]);
+      flreg[0]=flreg[1];
+      flreg[nflg-2]=flreg[nflg-3];
+      flreg[nflg-1]=flreg[nflg-3];
+      break;
+    }
+    }
+    
+    // Now step through requested chans, setting flags
+    uInt ireg=0;
+    uInt nflgout=flgout.nelements();
+    for (uInt iflgout=0;iflgout<nflgout;++iflgout) {
+      
+      // Find nominal registration (the _index_ just left)
+      Bool exact(False);
+      ireg=binarySearch(exact,finGHz,fout(iflgout),nflg,0);
+      if (ireg>0)
+	ireg-=1;
+      ireg=min(ireg,nflg-1);
+
+      //while (finGHz(ireg)<=fout(iflgout) && ireg<nflg-1) {
+      //  ireg+=1;  // USB specific!
+      //}
+      //if (ireg>0 && finGHz(ireg)!=fout(iflgout)) --ireg;  // registration is one sample prior
+
+      // refine registration by interp type
+      switch (ia1dmethod_) {
+      case NEAREST: {
+	// nearest might be forward sample
+	if ( ireg<(nflg-1) &&
+	     abs(fout[iflgout]-finGHz[ireg])>abs(finGHz[ireg+1]-fout[iflgout]) )
+	  ireg+=1;
+	break;
+      }
+      case LINEAR: {
+	if (ireg==(nflg-1)) // need one more sample to the right
+	  ireg-=1;
+	break;
+      }
+      case CUBIC:
+      case SPLINE: {
+	if (ireg==0) ireg+=1;  // need one more sample to the left
+	if (ireg>(nflg-3)) ireg=nflg-3;  // need two more samples to the right
+	break;
+      }
+      }
+	
+      // Assign effective flag
+      flgout[iflgout]=flreg[ireg];
+
+      /*
+      cout << iflgout << " "
+	   << ireg << " "
+	   << flreg[ireg] 
+	   << endl;
+      */
+
+    }
+
+  }
+  else 
+    // We are interp/extrap-olating gaps absolutely
+    flgout.set(False);
+
+}
+
 void CTPatchedInterp::setElemMap() {
  
   // Ensure the antMap_ is set
@@ -1136,13 +1232,13 @@ void CTPatchedInterp::setElemMap() {
 
 
 InterpolateArray1D<Double,Float>::InterpolationMethod CTPatchedInterp::ftype(String& strtype) {
-  if (strtype=="nearest")
+  if (strtype.contains("nearest"))
     return InterpolateArray1D<Double,Float>::nearestNeighbour;
-  if (strtype=="linear")
+  if (strtype.contains("linear"))
     return InterpolateArray1D<Double,Float>::linear;
-  if (strtype=="cubic")
+  if (strtype.contains("cubic"))
     return InterpolateArray1D<Double,Float>::cubic;
-  if (strtype=="spline")
+  if (strtype.contains("spline"))
     return InterpolateArray1D<Double,Float>::spline;
 
   //  cout << "Using linear for freq interpolation as last resort." << endl;
