@@ -126,13 +126,15 @@ another visibility file.
 	</param>
 
 	<param type="string" name="applymode">
-		<description>Calibration mode: ""="calflag","trial","flagonly", or "calonly"</description>
+		<description>Calibration mode: ""="calflag","calflagstrict","trial","flagonly","flagonlystrict", or "calonly"</description>
 		<value></value>
 		<allowed kind="enum">
               		<value></value>
 			<value>calflag</value>
+			<value>calflagstrict</value>
 			<value>trial</value>
 			<value>flagonly</value>
+			<value>flagonlystrict</value>
 			<value>calonly</value>
 		</allowed>
 	</param>
@@ -287,19 +289,27 @@ another visibility file.
                 For multi-obsId datasets, 'perobs' can be appended to
                 the time-dependent interpolation specification to
                 enforce obsId boundaries when interpolating in time.
+                Add 'flag' to the freq-dependent interpolation options
+                to enforce channel-dependent flagging (rather than
+                interpolation/extrapolation).
                 default: '' --&gt; 'linear,linear' for all gaintable(s)
                 example: interp='nearest'   (in time, freq-dep will be
                                              linear, if relevant)
                          interp='linear,cubic'  (linear in time, cubic
                                                  in freq)
-                         interp='linearperobs,spline' (linear in time
-                                                       per obsId,
-                                                       spline in freq)
+                         interp='linearperobs,splineflag' (linear in time
+                                                          per obsId,
+                                                          spline in
+                                                          freq with
+                                                          channelized
+                                                          flagging)
                          interp=',spline'  (spline in freq; linear in
                                             time by default)
                          interp=['nearest,spline','linear']  (for multiple gaintables)
                 Options: Time: 'nearest', 'linear', 'nearestPD', 'linearPD'
-                         Freq: 'nearest', 'linear', 'cubic', 'spline'
+                         Freq: 'nearest', 'linear', 'cubic', 'spline',
+                               'nearestflag', 'linearflag', 'cubicflag', 'splineflag',
+
        spwmap -- Spectral windows combinations to form for gaintable(s)
                default: [] (apply solutions from each spw to that spw only)
                Example:  spwmap=[0,0,1,1] means apply the caltable solutions
@@ -333,7 +343,14 @@ another visibility file.
                ''='calflag' (default) calibrate data and apply flags from solutions
                'trial' report on flags from solutions, dataset entirely unchanged
                'flagonly' apply flags from solutions only, data not calibrated
-               'calonly' calibrate data only, flags from solutions NOT applied (use with extreme caution!)
+               'calonly' calibrate data only, flags from solutions NOT
+                    applied (use with extreme caution!)
+               'calflagstrict' or 'flagonlystrict' same as above
+                    except flag spws for which calibration is
+                    unavailable in one or more tables (instead of 
+                    allowing them to pass uncalibrated and
+                    unflagged)
+
        flagbackup -- Back up the state of the flags before applying calibration
                      default: True
        async -- Run task in a separate process 
