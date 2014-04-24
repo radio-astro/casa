@@ -33,6 +33,7 @@
 #include <tables/Tables/TableIter.h>
 #include <synthesis/CalTables/CTGlobals.h>
 
+#include <casa/Arrays/MaskArrMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
@@ -273,6 +274,40 @@ void StandardTsys::calcAllJones() {
   // Antenna-based factors are the sqrt(Tsys)
   convertArray(currJElem(),sqrt(currRPar()));
   currJElemOK()=currParOK();
+
+}
+
+// Calculate weight update
+void StandardTsys::calcWtScale() {
+
+  // Initialize  to 1.0
+  //   (will only be replaced if a valid calculation is possible)
+  currWtScale().set(1.0);
+
+  IPosition ash(currRPar().shape());
+  ash(1)=1;  // only on channel weight (so far)
+  Cube<Float> cWS;
+  cWS.reference(currWtScale().reform(ash));
+
+
+  // For each pol and antenna, form 1/mean(Tsys(f))
+  IPosition it3(2,0,2);
+  ArrayIterator<Float> Tsys(currRPar(),it3,False);
+  ArrayIterator<Bool> Tok(currParOK(),it3,False);
+  ArrayIterator<Float> cWSi(cWS,it3,False);
+  while (!Tsys.pastEnd()) {
+
+    // mask out flagged channels
+    MaskedArray<Float> Tsysm(Tsys.array()(Tok.array()));
+    Float meanTsys=mean(Tsysm);
+    if (meanTsys>0.0)
+      cWSi.array().set(1./meanTsys);
+    
+    Tsys.next();
+    Tok.next();
+    cWSi.next();
+
+  }
 
 }
 

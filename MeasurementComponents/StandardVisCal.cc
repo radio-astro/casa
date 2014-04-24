@@ -958,10 +958,10 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
 
 void BJones::syncWtScale() {
 
-  if (cpp_) {
+  if (True || cpp_) {
     VisJones::syncWtScale();
     //cout << "currWtScale().shape() = " << currWtScale().shape() << endl;
-    //    cout << "currWtScale() = " << currWtScale() << endl;
+    cout << "BJones by VisJones: currWtScale() = " << currWtScale() << endl;
     return;
   }
 
@@ -1001,9 +1001,59 @@ void BJones::syncWtScale() {
   // Assign to currWtScale
   currWtScale().assign(newWtSc);
 
+  cout << "BJones local: currWtScale() = " << currWtScale() << endl;
 
 }
 
+void BJones::calcWtScale() {
+
+  //  cout << "BJones::calcWtScale()" << endl;
+
+
+  // Access pre-chan-interp'd bandpass amplitude/flags
+  Cube<Float> amps;
+  Cube<Bool> ampfl;
+
+
+  if (cpp_)
+    throw(AipsError("Can't BJones::calcWtScale with callib yet."));
+  else if (ci_) {
+    amps=Cube<Float>(ci_->tresultF(currObs(),currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
+    ampfl=ci_->tresultFlag(currObs(),currField(),currSpw());
+  }
+  else
+    // BPOLY?
+    throw(AipsError("Can't BJones::calcWtScale because there is no solution interpolation...."));
+    
+
+  // Initialize
+  currWtScale()=1.0;
+
+  
+  IPosition ash(amps.shape());
+  ash(1)=1;  // only one channel in the weights
+  Cube<Float> cWS;
+  cWS.reference(currWtScale().reform(ash));
+  cWS.set(1.0);
+
+  IPosition it3(2,0,2);
+  ArrayIterator<Float> A(amps,it3,False);
+  ArrayIterator<Bool> Aok(ampfl,it3,False);
+  ArrayIterator<Float> cWSi(cWS,it3,False);
+    
+  while (!A.pastEnd()) {
+
+    // the weight scale factor is just the square of the 
+    //   freq-dep normalization
+    cWSi.array()*=pow(calcPowerNorm(A.array(),!Aok.array()),2);
+
+    A.next();
+    Aok.next();
+    cWSi.next();
+
+  }
+
+}
 
 
 
