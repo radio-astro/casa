@@ -1613,6 +1613,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
       for (vi.origin(); vi.more();vi++,iter++) {
 	time=vb.time()(0);
 	cout  << "                 " << "vb=" << iter << " ";
+	cout << "ob=" << vb.observationId()(0) << " ";
 	cout << "ar=" << vb.arrayId() << " ";
 	cout << "ob=" << vb.observationId()(0) << " ";
 	cout << "sc=" << vb.scan()(0) << " ";
@@ -3359,9 +3360,15 @@ void SolvableVisCal::normSolnArray(Array<Complex>& sol,
       factor/=abs(factor);
     }
 
-    // Determine amplitude normalization
-    amp(!solOK)=0.0f;
-    factor*=Complex(sum(amp)/Float(ntrue(solOK)));
+#define NEWWTSCALE True
+
+    // Determine amplitude normalization factor
+    if (NEWWTSCALE) 
+      factor*=calcPowerNorm(amp,solOK);
+    else {
+      amp(!solOK)=0.0f;
+      factor*=Complex(sum(amp)/Float(ntrue(solOK)));
+    }
     
     // Apply the normalization factor, if non-zero
     if (abs(factor) > 0.0)
@@ -3782,6 +3789,21 @@ void SolvableVisMueller::stateSVM(const Bool& doVC) {
     
     cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
   }
+}
+
+Float SolvableVisMueller::calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok) {
+
+  // SVM version assumes amp already in power units
+  Array<Float> a2;
+  a2.assign(amp);
+  a2(!ok)=0.0; // zero flagged samples
+
+  Float norm(1.0);
+  Float n=Float(ntrue(ok));
+  if (n>0.0)
+    norm=sum(a2)/n;
+
+  return norm;
 }
 
 
@@ -4702,6 +4724,21 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
 	 << " (" << diffJElem().data() << ")" << endl;
     cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
   }
+}
+
+Float SolvableVisJones::calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok) {
+
+  // SVJ version asumes amps are voltages, so square them
+  Array<Float> a2(square(amp));
+  a2(!ok)=0.0; // zero flagged samples
+
+  Float norm2(1.0);
+  Float n=ntrue(ok);
+  if (n>0.0)
+    norm2=(sum(a2)/n);
+
+  // Return sqrt, because Jones are voltages
+  return sqrt(norm2); 
 }
 
 void SolvableVisJones::globalPostSolveTinker() {

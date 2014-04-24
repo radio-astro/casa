@@ -95,6 +95,7 @@ protected:
   // Calculate weight scale
   //  For now, just call VisJones version (BJones version is experimental)
   virtual void syncWtScale() { VisJones::syncWtScale(); };
+  virtual void calcWtScale();
 
 private:
 

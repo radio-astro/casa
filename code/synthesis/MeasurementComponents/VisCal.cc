@@ -832,6 +832,9 @@ void VisMueller::syncMueller(const Bool& doInv) {
 
   }
 
+  // weight calibration
+  if (calWt()) syncWtScale2();
+
   // Ensure Mueller matrix renderer is correct
   createMueller();
 
@@ -997,6 +1000,47 @@ void VisMueller::syncWtScale() {
   LogicalArray mask((currWtScale()>0.0f));
   MaskedArray<Float> nz(currWtScale(),mask);
   nz=Float(1.0)/nz;
+
+}
+
+void VisMueller::syncWtScale2() {
+
+
+  // Ensure proper size according to Mueller matrix type
+  switch (this->muellerType()) {
+  case Mueller::Scalar: 
+  case Mueller::Diagonal: {
+    Int nWtScale=muellerNPar(muellerType());
+    currWtScale().resize(nWtScale,nBln());
+    break;
+  }
+  default: {
+    // Only diag and scalar versions can adjust weights
+    //    cout<< "Turning off calWt()" << endl;
+    calWt()=False;
+    return;
+    break;
+  }
+  }
+
+  // Calculate the weight scaling
+  calcWtScale();
+}
+
+
+void VisMueller::calcWtScale() {
+
+  // Assumes currMElem hasn't yet been inverted
+
+  // Insist on single channel operation
+  AlwaysAssert( (nChanMat()==1), AipsError );
+
+  Cube<Float> cWS;
+  cWS.reference(currWtScale().reform(currMElem().shape()));
+
+  // Simple pre-inversion square of currMElem
+  cWS=real(currMElem()*conj(currMElem()));
+  cWS(!currMElemOK())=1.0;
 
 }
 
@@ -1292,6 +1336,11 @@ void VisJones::syncJones(const Bool& doInv) {
 
   }
 
+#define NEWWTSCALE True
+
+  // New pre-inv syncWtScale:
+  if (NEWWTSCALE && calWt()) syncWtScale2();
+
   // Ensure Jones Matrix renders are ok
   this->createJones();
 
@@ -1302,7 +1351,7 @@ void VisJones::syncJones(const Bool& doInv) {
   setMatByOk();
 
   // Form weight update factors, if necessary
-  if (calWt()) syncWtScale();
+  if (!NEWWTSCALE && calWt()) syncWtScale();
 
   // Jones matrices now valid
   validateJ();
@@ -1505,6 +1554,57 @@ void VisJones::syncWtScale() {
   LogicalArray mask((currWtScale()>0.0f));
   MaskedArray<Float> nz(currWtScale(),mask);
   nz=Float(1.0)/nz;
+
+}
+
+void VisJones::syncWtScale2() {
+
+  //  cout << "VJ::syncWtScale2 (" << typeName() << ")" << endl;
+
+
+  // Ensure proper size according to Jones matrix type
+  switch (this->jonesType()) {
+  case Jones::Scalar: 
+  case Jones::Diagonal: {
+    Int nWtScale=jonesNPar(jonesType());
+    currWtScale().resize(nWtScale,nAnt());
+    break;
+  }
+  default: {
+    // Only diag and scalar versions can adjust weights
+    //    cout<< "Turning off calWt()" << endl;
+    calWt()=False;
+    return;
+    break;
+  }
+  }
+
+   // Calculate the weight scale factors (specializable)
+  calcWtScale();
+
+
+  //  cout << "VJ::syncWtScale2: currWtScale() = " << currWtScale() << endl;
+
+}
+
+void VisJones::calcWtScale() {
+
+  // Assumes currJElem has not yet been inverted!
+
+  // Insist on single channel operation
+  AlwaysAssert( (nChanMat()==1), AipsError );
+
+  // Realize currWtScale w/ degenerate channel axis
+  Cube<Float> cWS;
+  //  IPosition blc(3,0,0,0);
+  //  Int nWtScale=jonesNPar(jonesType());
+  //  IPosition trc(3,nWtScale-1,0,nAnt()-1);
+  //  cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
+  cWS.reference(currWtScale().reform(currJElem().shape()));
+
+  // We use simple (pre-inversion) square of currJElem
+  cWS=real(currJElem()*conj(currJElem()));
+  cWS(!currJElemOK())=1.0;
 
 }
 
