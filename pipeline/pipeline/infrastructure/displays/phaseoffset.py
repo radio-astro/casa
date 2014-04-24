@@ -3,6 +3,7 @@ import os
 
 import matplotlib
 import matplotlib.pyplot as pyplot
+import matplotlib.gridspec as gridspec
 import numpy
 
 import pipeline.infrastructure as infrastructure
@@ -166,7 +167,18 @@ class PhaseOffsetPlot(object):
         
         autoscale_yaxis_range = [-200, 200]
 
-        fig, axes = common.subplots(1, num_scans, sharey=True)
+        fig = pyplot.figure()
+
+        # size subplots proportional to the scan time
+        integration_times = [int(s.time_on_source.total_seconds()) for s in scans]        
+        gs = gridspec.GridSpec(1, num_scans, width_ratios=integration_times)
+        ax0 = fig.add_subplot(gs[0])
+        axes = [fig.add_subplot(gs[i], sharey=ax0) for i in range(1, num_scans)]
+        for axis in axes:
+            for label in axis.get_yticklabels():
+                label.set_visible(False)
+
+        axes.insert(0, ax0)
         
         # if num_scans is 1, axes will be a scalar instead of a list
         if not isinstance(axes, (tuple, list, numpy.ndarray)):
