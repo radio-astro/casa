@@ -3141,7 +3141,7 @@ void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, 
 		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
 		const QString& lineColor, const QString&, const QString&, int, int) {
 	if ( shape == "polyline") {
-		if (qdp_ != NULL ){
+		if ( qdp_ != NULL ){
 			int currentChannel = qdp_->zIndex();
 			sliceTool->updateChannel( currentChannel );
 		}
