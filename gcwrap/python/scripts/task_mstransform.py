@@ -10,6 +10,7 @@ import simple_cluster
 import partitionhelper as ph
 from update_spw import update_spwchan
 import inspect
+from numpy.f2py.auxfuncs import throw_error
 
 
 # Decorator function to print the arguments of a function
@@ -100,18 +101,21 @@ class MSTHelper(ParallelTaskHelper):
     def setupIO(self):
         '''Validate input and output parameters'''
         
-        for k,v in self.__args.items():
-            if k == 'vis' and isinstance(v, str):
-                # only one input MS
-                if not os.path.exists(v):
-                    raise Exception, 'Visibility data set not found - please verify the name.'
-                
-            elif k == 'outputvis' and isinstance(v, str):
-                # only one output MS
-                if v.isspace() or v.__len__() == 0:
-                    raise ValueError, 'Please specify outputvis.'
-                elif os.path.exists(v):
-                    raise ValueError, "Output MS %s already exists - will not overwrite it."%v                    
+        if isinstance(self.__args['vis'], str):
+            if not os.path.exists(self.__args['vis']):
+                raise IOError, 'Visibility data set not found - please verify the name.'
+
+        if isinstance(self.__args['outputvis'], str):
+            # only one output MS
+            if self.__args['outputvis'].isspace() or self.__args['outputvis'].__len__() == 0:
+                raise IOError, 'Please specify outputvis.'
+            
+            elif os.path.exists(self.__args['outputvis']):
+                raise IOError, "Output MS %s already exists - will not overwrite it."%self.__args['outputvis']
+            
+        flagversions = self.__args['outputvis']+".flagversions"
+        if os.path.exists(flagversions):
+            raise IOError, "The flagversions %s for the output MS already exist. Please delete it."%flagversions                                     
         
         return True 
 

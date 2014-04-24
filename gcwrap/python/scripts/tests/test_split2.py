@@ -24,6 +24,7 @@ import numpy
 import re
 import sys
 import shutil
+import exceptions
 from __main__ import default
 from recipes.listshapes import listshapes
 import testhelper as th
@@ -1889,6 +1890,24 @@ class splitFlags(test_base):
         split2(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='2',
                     createmms=True, separationaxis='scan', timebin='120s', combine='scan',
                     parallel=False)
+        
+    def test_flagversions(self):
+        '''split2: raise an error when .flagversions exist'''
+        self.outputms = 'spw0.ms'
+        
+        os.system('cp -RL ' + self.vis + ' ' + self.outputms)
+        
+        # First, create a .flagversions file
+        flagdata(vis=self.outputms, flagbackup=True, spw='0', mode='unflag')
+        self.assertTrue(os.path.exists(self.outputms+'.flagversions'))
+        
+        # Now, delete only the MS and leave the .flagversions in disk
+        os.system('rm -rf '+self.outputms)
+        self.assertFalse(split2(vis=self.vis, outputvis=self.outputms, spw='0'),'Expected task to fail.')
+        # The next code doesn't work with the __rethrow_casa_exceptions=False in prelude.py
+#         with self.assertRaises(IOError):
+#             split2(vis=self.vis, outputvis=self.outputms, spw='0')
+#         print 'Expected Error!'
         
         
 class splitSpwPoln(test_base):
