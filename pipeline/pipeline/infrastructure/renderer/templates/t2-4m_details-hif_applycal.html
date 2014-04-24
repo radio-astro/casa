@@ -6,6 +6,7 @@ import string
 import types
 
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 
@@ -36,6 +37,8 @@ def template_agent_header2(agent):
 def get_template_agents(agents):
 	return [a for a in agents if a in ('online', 'template')]
 
+def sanitise(url):
+	return filenamer.sanitize(url)
 
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -245,7 +248,7 @@ def space_comma(s):
 	% for ms in amp_vs_freq_plots:
 	    <h4>
 			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_freq_%s.html' % ms), pcontext.report_dir)}">
+	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}">
 	            ${ms}
 	        </a>
 		</h4>
@@ -266,7 +269,7 @@ def space_comma(s):
 		
 		                    <div class="caption">
 								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_freq_%s.html' % ms), pcontext.report_dir)}"
+				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}"
 				                       class="replace"
 				                       data-field="${cgi.escape(plot.parameters['field'], True)}"
 				                       data-spw="${plot.parameters['spw']}">
@@ -295,7 +298,7 @@ def space_comma(s):
 	% for ms in phase_vs_freq_plots:
 	    <h4>
 			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_freq_%s.html' % ms), pcontext.report_dir)}">
+	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}">
 	            ${ms}
 	        </a>
 		</h4>
@@ -316,7 +319,7 @@ def space_comma(s):
 		
 		                    <div class="caption">
 								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_freq_%s.html' % ms), pcontext.report_dir)}"
+				                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}"
 				                       class="replace"
 				                       data-field="${cgi.escape(plot.parameters['field'], True)}"
 				                       data-spw="${plot.parameters['spw']}">
@@ -346,7 +349,7 @@ def space_comma(s):
 	% for ms in amp_vs_uv_plots:
 	    <h4>
 			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % ms), pcontext.report_dir)}">
+	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}">
 	            ${ms}
 	        </a>
 		</h4>
@@ -366,7 +369,7 @@ def space_comma(s):
 		
 		                    <div class="caption">
 								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % ms), pcontext.report_dir)}"
+				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}"
 				                       class="replace"
 				                       data-spw="${plot.parameters['spw']}">
 					                   Spectral Window ${plot.parameters['spw']}
@@ -390,7 +393,7 @@ def space_comma(s):
 	% for ms in amp_vs_time_plots:
 	    <h4>
 			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}">
+	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}">
 	            ${ms}
 	        </a>
 		</h4>
@@ -410,7 +413,7 @@ def space_comma(s):
 		
 		                    <div class="caption">
 								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}"
+				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}"
 				                       class="replace"
 				                       data-spw="${plot.parameters['spw']}">
 					                   Spectral Window ${plot.parameters['spw']}
@@ -434,7 +437,7 @@ def space_comma(s):
 	% for ms in phase_vs_time_plots:
 	    <h4>
 			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % ms), pcontext.report_dir)}">
+	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}">
 	            ${ms}
 	        </a>
 		</h4>
@@ -454,7 +457,7 @@ def space_comma(s):
 		
 		                    <div class="caption">
 								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % ms), pcontext.report_dir)}"
+				                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}"
 				                       class="replace"
 				                       data-spw="${plot.parameters['spw']}">
 					                   Spectral Window ${plot.parameters['spw']}
