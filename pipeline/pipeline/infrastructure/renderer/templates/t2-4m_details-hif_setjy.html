@@ -18,6 +18,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	        <th scope="col" rowspan="2">Field</th>
 	        <th scope="col" rowspan="2">SpW</th>
 	        <th scope="col" rowspan="2">Centre Freq.</th>
+	        <th scope="col" rowspan="2">Band</th>
 	        <th scope="col" colspan="4">Flux Density</th>
 		</tr>
 		<tr>
@@ -42,6 +43,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 			<td>${field}</td>
 			<td>${flux.spw_id}</td>
 			<td>${[str(spw.centre_frequency) for spw in spws if spw.id == int(flux.spw_id)][0]}</td>
+			<td>${[str(spw.band) for spw in spws if spw.id == int(flux.spw_id)][0]}</td>
 			<td>${str(flux.I)}</td>
 			<td>${str(flux.Q)}</td>
 			<td>${str(flux.U)}</td>
