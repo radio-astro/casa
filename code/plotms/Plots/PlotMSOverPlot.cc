@@ -232,7 +232,7 @@ void PlotMSOverPlot::detachFromCanvases() {
 				}
 				//This is necessary in scripting mode so that we don't see
 				//detached canvases.
-				if ( ! itsParent_->guiShown() ){
+				if ( ! itsParent_->guiShown() || itsCanvases_[r][c]->numPlotItems() ==0 ){
 					((&*itsCanvases_[r][c]))->hide();
 				}
 

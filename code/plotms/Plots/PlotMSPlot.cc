@@ -318,6 +318,9 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 
     //Determine how many pages we need to print.
     int pageCount = 1;
+    //Store the current page.
+    Int currentIter = iter();
+
     PlotMSExportParam& exportParams = itsParent_->getExportParameters();
     PMS::ExportRange range = exportParams.getExportRange();
     if ( range == PMS::PAGE_ALL ){
@@ -338,10 +341,8 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     			}
     		}
     	}
+    	firstIter();
     }
-
-    //Store the current page.
-    Int currentIter = iter();
 
 
     PlotExportFormat exportFormat( format );
@@ -354,7 +355,6 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     }
 
     //Loop over all the iterations, exporting them
-    firstIter();
     for ( int i = 0; i < pageCount; i++ ){
     	if ( i > 0 ){
     		//Remove the last '.' from the storage location.
@@ -363,7 +363,10 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	}
 
     	exportSuccess = itsParent_->exportToFormat( exportFormat );
-    	nextIter();
+
+    	if ( i < pageCount - 1 ){
+    		nextIter();
+    	}
     }
 
     //Restore the current page
