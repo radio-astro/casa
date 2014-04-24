@@ -321,6 +321,10 @@ class ExportData(basetask.StandardTaskTemplate):
 	casa_commands_file = self._export_casa_commands_log (inputs.context,
 	    'casa_commands.log', inputs.products_dir)
 
+	# Export the processing script independently of the web log
+	casa_pipescript = self._export_casa_commands_log (inputs.context,
+	    'casa_pipescript.py', inputs.products_dir)
+
 	# Export calibrator images to FITS
 	LOG.info ('Exporting calibrator source images')
 	if inputs.calintents == '':
@@ -657,6 +661,32 @@ class ExportData(basetask.StandardTaskTemplate):
 	    shutil.copy (casalog_file, out_casalog_file)
 
 	return os.path.basename(out_casalog_file)
+
+    def _export_casa_script (self, context, casascript_name, products_dir):
+
+	"""
+	Save the CASA script.
+	"""
+
+	ps = context.project_structure
+	if ps is None:
+	    casascript_file = os.path.join (context.report_dir, casascript_name)
+	    out_casascript_file = os.path.join (products_dir, casascript_name) 
+	elif ps.ousstatus_entity_id == 'unknown':
+	    casascript_file = os.path.join (context.report_dir, casascript_name)
+	    out_casascript_file = os.path.join (products_dir, casascript_name) 
+	else:
+	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+	    casascript_file = os.path.join (context.report_dir, casascript_name)
+	    out_casascript_file = os.path.join (products_dir, ousid + '.' + casascript_name)
+
+	LOG.info('Copying casa script file %s to %s' % \
+	        (casascript_file, out_casascript_file))
+	if not self._executor._dry_run:
+	    shutil.copy (casascript_file, out_casascript_file)
+
+	return os.path.basename(out_casascript_file)
+
 
     def _export_images (self, context, calimages, intents, images,
         products_dir):
