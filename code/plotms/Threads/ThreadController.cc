@@ -26,6 +26,7 @@
 #include "ThreadController.h"
 #include <plotms/Threads/BackgroundThread.h>
 #include <graphics/GenericPlotter/ProgressMonitor.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -39,10 +40,10 @@ ThreadController::ThreadController(ProgressMonitor* progress,
 }
 
 void ThreadController::cancel(){
-	if ( bgThread != NULL ){
+	/*if ( bgThread != NULL ){
 		bgThread->terminate();
 		bgThread->cancel();
-	}
+	}*/
 	wasCanceled_ = true;
 }
 
@@ -76,7 +77,8 @@ String ThreadController::getError() const {
 }
 
 void ThreadController::startThread(){
-	bgThread->run();
+	//bgThread->run();
+	bgThread->startThread();
 }
 
 void ThreadController::setWorkThread( BackgroundThread* workThread ){

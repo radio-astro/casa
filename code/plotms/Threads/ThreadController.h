@@ -112,7 +112,7 @@ protected:
 	void startThread();
 
 	// Flag for whether thread was canceled or not.
-	bool wasCanceled_;
+	volatile bool wasCanceled_;
 
 	//Holds error messages
 	String error;
