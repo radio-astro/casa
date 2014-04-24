@@ -54,10 +54,11 @@ class SDFlagSummary(object):
         flagRule = self.flagRule
         #userFlag = self.userFlag
         # output directory
-        if self.context.subtask_counter is 0: 
-            stage_number = self.context.task_counter - 1
-        else:
-            stage_number = self.context.task_counter 
+#         if self.context.subtask_counter is 0: 
+#             stage_number = self.context.task_counter - 1
+#         else:
+#             stage_number = self.context.task_counter
+        stage_number = self.context.task_counter
         FigFileDir = (self.context.report_dir+"/stage%d" % stage_number)
         ### WORKAROUND to GENERATE stage# dir manually
         if not os.path.exists(FigFileDir):
