@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+import itertools
+import operator
+
 from . import measures
 import pipeline.infrastructure as infrastructure
 
@@ -153,16 +156,32 @@ class SpectralWindowWithChannelSelection(object):
     SpectralWindowWithChannelSelection decorates a SpectralWindow so that the
     spectral window ID also contains a channel selection.
     """
-    def __init__( self, subject, channels):
+    def __init__(self, subject, channels):
         self._subject = subject
-        self._channels = [str(channel) for channel in sorted(list(channels))]
 
-    def __getattr__( self, name ):
-        return getattr( self._subject, name )
+        channels = sorted(list(channels))
+
+        # prepare a string representation of the number of channels. If all
+        # channels are specified for this spw, just specify the spw in the
+        # string representation
+        if set(channels).issuperset(set(range(0, subject.num_channels))):
+            ranges = []
+        else:
+            ranges = []
+            for _, g in itertools.groupby(enumerate(channels),
+                                          lambda (i, x):i - x):
+                rng = map(operator.itemgetter(1), g)
+                if len(rng) is 1:
+                    ranges.append('%s' % rng[0])
+                else:
+                    ranges.append('%s~%s' % (rng[0], rng[-1]))
+        self._channels = ';'.join(ranges)
+
+    def __getattr__(self, name):
+        return getattr(self._subject, name)
 
     @property
     def id(self):
-        channels = ';'.join(self._channels)
-        channels = ':' + channels if channels else ''
+        channels = ':%s' % self._channels if self._channels else ''
         return '{spw}{channels}'.format(spw=self._subject.id,
                                         channels=channels)

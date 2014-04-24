@@ -223,8 +223,9 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
             antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
               if antenna.id==antenna_id][0]
 
-        spwids = self.inputs.spw.split(',')
-        spwids = map(int, spwids)
+        # spw arg may contain channel specification. Let MS parse input and
+        # read spw ID from the SpectralWindow domain objects that are returned
+        spwids = [spw.id for spw in self.inputs.ms.get_spectral_windows(self.inputs.spw)]
 
         # get range of times covered
         times = set()

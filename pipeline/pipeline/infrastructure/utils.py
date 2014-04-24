@@ -570,7 +570,10 @@ def spw_arg_to_id(ms_path, spw_arg):
     :return: a list of (spw, chan_start, chan_end, step) lists 
     """
     all_indices = _convert_arg_to_id('spw', ms_path, spw_arg)
-    return [x.tolist() for x in all_indices['channel']]
+    # filter out channel tuples whose spw is not in the spw entry
+    return [(spw, start, end, step) 
+            for (spw, start, end, step) in all_indices['channel']
+            if spw in all_indices['spw']]
 
 def ant_arg_to_id(ms_path, ant_arg):
     """

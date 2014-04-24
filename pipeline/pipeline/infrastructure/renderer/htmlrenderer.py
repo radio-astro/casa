@@ -2021,7 +2021,9 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
                 pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
                 scans = ms.get_scans(scan_intent=pipeline_intent)
 
-                spw_ids = [int(spw) for spw in calapp.spw.split(',')]                
+                # let CASA parse spw arg in case it contains channel spec
+                spw_ids = [spw_id for (spw_id, _, _, _) 
+                           in utils.spw_arg_to_id(calapp.vis, calapp.spw)]
                 
                 all_solints = set()
                 for spw_id in spw_ids:                    
@@ -2307,7 +2309,9 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
                 pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
                 scans = ms.get_scans(scan_intent=pipeline_intent)
 
-                spw_ids = [int(spw) for spw in result.inputs['spw'].split(',')]                
+                # let CASA parse spw arg in case it contains channel spec
+                spw_ids = [spw_id for (spw_id, _, _, _) 
+                           in utils.spw_arg_to_id(calapp.vis, result.inputs['spw'])]
                 
                 all_solints = set()
                 for spw_id in spw_ids:                    
@@ -2360,7 +2364,9 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
                 pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
                 scans = ms.get_scans(scan_intent=pipeline_intent)
 
-                spw_ids = [int(spw) for spw in calapp.spw.split(',')]                
+                # let CASA parse spw arg in case it contains channel spec
+                spw_ids = [spw_id for (spw_id, _, _, _) 
+                           in utils.spw_arg_to_id(calapp.vis, calapp.spw)]
                 
                 all_solints = set()
                 for spw_id in spw_ids:                    
