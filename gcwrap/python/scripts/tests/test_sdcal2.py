@@ -165,7 +165,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
     outfile=prefix+'.asap.out'
     skytable=prefix+'.sky'
     tsystable=prefix+'.tsys'
-    ifmap={1:[5,6]}
+    spwmap={1:[5,6]}
 
     def setUp(self):
         self.res=None
@@ -214,7 +214,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception02: invalid interp string"""
         interp='invalid_interpolation'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,spwmap=self.spwmap)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -255,7 +255,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception06: Non-existing sky table"""
         dummytable='dummy.sky'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',ifmap=self.ifmap,applytable=[dummytable,self.tsystable],outfile=self.outfile)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',spwmap=self.spwmap,applytable=[dummytable,self.tsystable],outfile=self.outfile)
             #self.assertFalse(self.res)
             self.fail("The task must throw exception.")
         except Exception, e:
@@ -267,7 +267,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception07: Non-existing tsys table"""
         dummytable='dummy.tsys'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',ifmap=self.ifmap,applytable=[self.skytable,dummytable],outfile=self.outfile)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',spwmap=self.spwmap,applytable=[self.skytable,dummytable],outfile=self.outfile)
             #self.assertFalse(self.res)
             self.fail("The task must throw exception.")
         except Exception, e:
@@ -279,7 +279,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception08: Invalid interp string format (more than one comma)"""
         interp='linear,linear,linear'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,spwmap=self.spwmap)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -290,7 +290,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
     def test_exception09(self):
         """test_exception09: Update infile without setting overwrite to False"""
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],ifmap=self.ifmap)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],spwmap=self.spwmap)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -673,7 +673,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     reftables=[prefix+'.asap.ref',prefix+'.asap.noTsys.ref',prefix+'.asap.cspline.ref']
     calmode='apply'
     tsysspw='1'#[1]
-    ifmap={1:[5,6]}
+    spwmap={1:[5,6]}
     
     def setUp(self):
         self.res=None
@@ -696,25 +696,25 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
 
     def test_applycal00(self):
         """test_applycal00: apply existing sky table and Tsys table"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], True)
         
     def test_applycal01(self):
         """test_applycal01: apply existing skytable (ps)"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=self.skytable,ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=self.skytable,spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[1], False)
 
     def test_applycal02(self):
         """test_applycal02: apply existing sky table and Tsys table with cubic spline interpolation along frequency axis"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],interp='linear,cspline',ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],interp='linear,cspline',spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[2], True)
 
     def test_applycal03(self):
         """test_applycal03: test update mode (overwrite infile)"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],ifmap=self.ifmap,overwrite=True)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],spwmap=self.spwmap,overwrite=True)
 
         tb.open(self.rawfile)
         tsel=tb.query('IFNO IN [5,6] && SRCTYPE==0')
@@ -734,14 +734,14 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     def test_applycal05(self):
         """test_applycal05: calibrate sky and apply it on-the-fly with existing Tsys table"""
         self.calmode='ps,apply'
-        sdcal2(infile=self.rawfile,calmode=self.calmode,ifmap=self.ifmap,applytable=self.tsystable,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,spwmap=self.spwmap,applytable=self.tsystable,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 
     def test_applycal06(self):
         """test_applycal06: calibrate sky as well as Tsys and apply them on-the-fly"""
         self.calmode='ps,tsys,apply'
-        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 
@@ -749,7 +749,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
         """test_applycal07: overwrite existing scantable"""
         if not os.path.exists(self.outfile):
             shutil.copytree(self.rawfile, self.outfile)
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],ifmap=self.ifmap,outfile=self.outfile,overwrite=True)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],spwmap=self.spwmap,outfile=self.outfile,overwrite=True)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 

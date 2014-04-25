@@ -127,7 +127,7 @@ spectrum is
       <value></value>
     </param>
 
-    <param type="any" name="ifmap" subparam="true">
+    <param type="any" name="spwmap" subparam="true">
       <description>A dictionary indicating IFNO combinations to apply Tsys calibration to target. The key should be IFNO for Tsys calibration and its associated value must be a list of science IFNOs to be applied.</description>
       <any type="variant"/>
       <value type="dict">{}</value>
@@ -183,19 +183,19 @@ spectrum is
         <equals value="apply">
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,apply">
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,tsys,apply">
           <default param="tsysavg"><value type="bool">False</value></default>
           <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otf,apply">
           <default param="fraction"><value type="string">10%</value></default>
@@ -203,7 +203,7 @@ spectrum is
           <default param="elongated"><value type="bool">False</value></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otf,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
@@ -213,14 +213,14 @@ spectrum is
           <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otfraster,apply">
           <default param="fraction"><value type="string">10%</value></default>
           <default param="noff"><value type="int">-1</value></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otfraster,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
@@ -229,7 +229,7 @@ spectrum is
           <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
       </when>
     </constraints>
@@ -339,9 +339,9 @@ calmode -- Calibration mode. If you want to generate calibration table
                          'linear,3' (linear in time, third order 
                                      polynomial in frequency)
                          'nearest' (nearest in time and frequency)
-        ifmap -- Dictionary defining transfer of Tsys calibration. 
-                 Key must be IFNO for Tsys and its value must be 
-                 a list of IFNOs for science target.
+        spwmap -- Dictionary defining transfer of Tsys calibration. 
+                  Key must be IFNO for Tsys and its value must be 
+                  a list of IFNOs for science target.
                 default: {}
                 example: {1: [5,6], 3: [7,8]}
                          Tsys in IFNO1 is transferred to IFNO5, 6 
