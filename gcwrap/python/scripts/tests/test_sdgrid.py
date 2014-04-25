@@ -1286,13 +1286,13 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
             shutil.rmtree(reffile0)
     
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='150~500km/s,>23')"""
+        """test spw selection (spw='150~550km/s,>23')"""
         infiles=[self.rawfile]
         outname=self.prefix+self.postfix
         reffile0='sdgrid_test_selection_spw150to500kmsgt23.asap.ref'
         if (not os.path.exists(reffile0)):
             shutil.copytree(self.datapath+reffile0, reffile0)
-        spw='150~500km/s,>23'
+        spw='150~550km/s,>23'
         self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, reffile0)
