@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.47 2014/04/11 19:12:41 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.49 2014/04/25 21:31:53 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.47 2014/04/11 19:12:41 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.49 2014/04/25 21:31:53 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -521,7 +521,8 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                     if (debug):
                         print "3)setting myUniqueTime to %d" % (myUniqueTime)
             if (debug): print "----> Drawing legendString: %s" % (legendString)
-            if (len(fieldsToPlot) > 1 or len(timerangeList) > 1):
+            if ((len(fieldsToPlot) > 1 or len(timerangeList) > 1) and overlayAntennas==False):
+                # having overlayAntennas==False here will force all time labels to be black (as desired)
                 if (debug):
                     print "len(uTPFPS)=%d, a=%d, len(myUniqueColor)=%d" % (len(uTPFPS),a,len(myUniqueColor))
 #                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[a]],fontsize=mysize,
@@ -2602,7 +2603,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       spwctr = 0
       spwctrFirstToPlot = 0
       antstring, Antstring = buildAntString(xant,msFound,msAnt)
-#      while (bbctr < len(spwsToPlotInBaseband)):
+      finalSpwWasFlagged = False   # inserted on 22-Apr-2014 for g25.27
       while ((bbctr < len(spwsToPlotInBaseband) and groupByBaseband) or
              (spwctr < len(spwsToPlot) and groupByBaseband==False)
              ):
@@ -3104,33 +3105,41 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           print "Skip %s spw%d (%s) all data flagged" % (antstring, ispw, titleString)
                           if ((overlaySpws or overlayBasebands) and spwctr==spwctrFirstToPlot):
                               spwctrFirstToPlot += 1
+                          if ((overlaySpws or overlayBasebands) and ispw==spwsToPlotInBaseband[bbctr][-1]):
+                              if (debug): print "The final spw was flagged!!!!!!!!!!!!!!"
+                              finalSpwWasFlagged =  True  # inserted on 22-Apr-2014 for g25.27
                           if (myinput == 'b'):
                               redisplay = False # This prevents infinite loop when htting 'b' on first screen when ant0 flagged. 2013-03-08
                       if (overlayAntennas==False):
                         if (doneOverlayTime==False or overlayTimes==False):  # added on 08-Nov-2012
-                          mytime += 1
-                          if (debug):
-                              print "F) incrementing mytime to %d" % mytime
+                            finalSpwWasFlagged = False # Added on 23-Apr-2014 for regression61
+                            mytime += 1
+                            if (debug):
+                                print "F) all solutions flagged --> incrementing mytime to %d" % mytime
                       if (overlayAntennas):
                           if (xctr == firstUnflaggedAntennaToPlot):
                               firstUnflaggedAntennaToPlot += 1
                               if (firstUnflaggedAntennaToPlot >= len(antennasToPlot)):
                                   firstUnflaggedAntennaToPlot = 0
-                                  mytime += 1
+                                  if not finalSpwWasFlagged: # Added on 23-Apr-2014 for regression61
+                                      mytime += 1
                               if (debug):
                                   print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d = %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot, antennasToPlot[firstUnflaggedAntennaToPlot])
-                              continue # Try this on Apr 2, 2012 to fix bug.
+                              continue
                       if (overlaySpws or overlayBasebands):
                           if (xctr == firstUnflaggedAntennaToPlot):
                               firstUnflaggedAntennaToPlot += 1
                               if (firstUnflaggedAntennaToPlot >= len(antennasToPlot)):
                                   firstUnflaggedAntennaToPlot = 0
-                                  mytime += 1
+                                  if not finalSpwWasFlagged: # Added on 22-Apr-2014 for g25.27 dataset antenna='4'
+                                      mytime += 1
                               if (debug):
                                   print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot)
                                   print "-----    = antenna %d" % (antennasToPlot[firstUnflaggedAntennaToPlot])
-                              continue
-                      if (overlayAntennas==False and subplot==11):
+                              if (not finalSpwWasFlagged): # add this test on Apr 22, 2014 to prevent crash on g25.27 dataset with antenna='4,5'
+                                  continue # Try this 'continue' on Apr 2, 2012 to fix bug -- works.
+                      if (overlayAntennas==False and subplot==11
+                          and not finalSpwWasFlagged): # inserted on 22-Apr-2014 for g25.27
                             # added the case (subplot==11) on April 22, 2012 to prevent crash on multi-antenna subplot=421
                             if (debug):
                                 print "#######  removing [%d,%d,%d,%d]" % (pages[len(pages)-1][PAGE_ANT],
@@ -3140,15 +3149,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                             pages = pages[0:len(pages)-1]
                             newpage = 1
                       if (overlayAntennas==False):
-                          if (doneOverlayTime==False):  # inserted on 08-Nov-2012
+                          if (doneOverlayTime==False  # inserted on 08-Nov-2012
+                              and not finalSpwWasFlagged):  # inserted on 22-Apr-2014 for g25.27
                               continue
                           elif (debug):
                               print "=========== Not continuing because doneOverlayTime=%s" % (str(doneOverlayTime))
                       
                   if (firstTimeMatch == -1):
-                        firstTimeMatch = mytime
-                        if (debug):
-                            print "Setting firstTimeMatch from -1 to %s" % (str(firstTimeMatch))
+                      firstTimeMatch = mytime
+                      if (debug):
+                          print "Setting firstTimeMatch from -1 to %s" % (str(firstTimeMatch))
           
 ################### Here is the amplitude plotting ############    stopping here Sep 4, 2013
                   if (yaxis.find('amp')>=0 or yaxis.find('both')>=0 or yaxis.find('ap')>=0) and doneOverlayTime==False:
@@ -3351,8 +3361,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                         elif (overlayTimes and overlayAntennas): # try to support time,antenna
                                             if (debug):
                                                 print "p=%d, len(fieldsToPlot)=%d, len(timerangeList)=%d" % (p,len(fieldsToPlot),len(timerangeList))
-                                            if (myUniqueTime != [] and (len(fieldsToPlot) > 1 or len(timerangeList)>1)):
-                                                pb.setp(pdesc, color=overlayColors[myUniqueTime])
+                                            if (len(fieldsToPlot) > 1 or len(timerangeList)>1):
+#                                                pb.setp(pdesc, color=overlayColors[myUniqueTime])
 # #     # #                                      print "pb.setp: myUniqueTime, overlayColors = ", myUniqueTime, overlayColors[myUniqueTime]
                                                 # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12
                                                 if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
