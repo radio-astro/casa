@@ -1985,8 +1985,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300.4~300.5GHz', polaverage)"""
-        spw = '300.4~300.5GHz'
+        """test spw selection (spw='300.03~300.50GHz', polaverage)"""
+        spw = '300.03~300.50GHz' # IFNO=25 will be selected
         mode = 'polaverage'
         ref_idx = [2]
         self._set_average_mode(mode)
@@ -1994,8 +1994,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-500~-450km/s', polaverage)"""
-        spw = '-500~-450km/s'
+        """test spw selection (spw='-510~-30km/s', polaverage)"""
+        spw = '-510~-30km/s'  # IFNO=25 will be selected
         mode = 'polaverage'
         ref_idx = [2]
         self._set_average_mode(mode)
@@ -2003,8 +2003,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='23,450~500km/s', timeaverage)"""
-        spw = '23,450~500km/s'
+        """test spw selection (spw='23,500~501km/s', timeaverage)"""
+        spw = '23,500~501km/s'   #IFNO=23,25 will be selected
         mode = 'timeaverage'
         ref_idx = [0,1]
         self._set_average_mode(mode)
@@ -2346,22 +2346,22 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~300.1GHz', boxcar)"""
-        spw = '300~300.1GHz' # IFNO=23 will be selected
+        """test spw selection (spw='299.52~300.47GHz', boxcar)"""
+        spw = '299.52~300.47GHz' # IFNO=23 will be selected
         ref_idx = [0,3]
         self.res=self.run_task(infile=self.rawfile, spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-450.~0.km/s', boxcar)"""
-        spw = '-450.~0km/s' # IFNO=23,25 will be selected
+        """test spw selection (spw='-510.~470.km/s', boxcar)"""
+        spw = '-510.~470km/s' # IFNO=23,25 will be selected
         ref_idx = [0,1,3]
         self.res=self.run_task(infile=self.rawfile, spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='25,0~500km/s', boxcar)"""
-        spw = '25,0~500km/s' # all IFs will be selected
+        """test spw selection (spw='25,0~501km/s', boxcar)"""
+        spw = '25,0~501km/s' # all IFs will be selected
         ref_idx = []
         self.res=self.run_task(infile=self.rawfile, spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.refval, ref_idx)

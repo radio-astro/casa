@@ -1453,8 +1453,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
 
     @unittest.expectedFailure
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='300~300.01GHz,0')"""
-        spw = '300~300.01GHz,0'
+        """test spw selection (spw='299.99~300.01GHz,0')"""
+        spw = '299.99~300.01GHz,0'
         selspw = [0,1]
         region =  self.spw_region_all
         infile = self.unifreq_ms
@@ -1682,8 +1682,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         
     @unittest.expectedFailure
     def test_spw_value_frequency_list(self):
-        """test spw selection w/ channel selection (spw='300~300.1GHz:6~7;2~5')"""
-        spw = '300~300.1GHz:6~7;2~5'
+        """test spw selection w/ channel selection (spw='299.9~300.1GHz:6~7;2~5')"""
+        spw = '299.9~300.1GHz:6~7;2~5'
         selspw = [0]
         region =  self.spw_region_chan1
         infile = self.spwsel_ms

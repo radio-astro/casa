@@ -925,8 +925,8 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300.4~300.6GHz')"""
-        spw = '300.4~300.6GHz' # IFNO=25 should be selected
+        """test spw selection (spw='300.49~300.50GHz')"""
+        spw = '300.49~300.50GHz' # IFNO=25 should be selected
         ref_idx = [1]
         self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
@@ -934,8 +934,8 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-30~30km/s')"""
-        spw = '-30~30km/s'  # IFNO=23 should be selected
+        """test spw selection (spw='-470~470km/s')"""
+        spw = '-470~470km/s'  # IFNO=23 should be selected
         ref_idx = [0,3]
         self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
