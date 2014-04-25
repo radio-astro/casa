@@ -19,12 +19,17 @@
 #
 
 casa_add_library( casa_sakura
+    SakuraAlignedArray.cc
     SakuraUtils.cc
-  )
+    )
 
 install (FILES
-        SakuraUtils.h
-	DESTINATION include/casacode/casa_sakura
-	)
+    SakuraAlignedArray.h
+    SakuraUtils.h
+    DESTINATION include/casacode/casa_sakura
+    )
 
-casa_add_assay( casa_sakura test/tSakuraUtils.cc )
+casa_add_assay( casa_sakura
+    test/tSakuraAlignedArray.cc
+    test/tSakuraUtils.cc
+    )
