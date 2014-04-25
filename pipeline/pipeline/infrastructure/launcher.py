@@ -14,6 +14,7 @@ import pprint
 import casadef
 
 from . import callibrary
+from . import casatools
 from . import imagelibrary
 from . import logging
 from . import project
@@ -100,8 +101,13 @@ class Context(object):
         pickled state 
 
     """
-    def __init__(self, measurement_sets=[], sessions=[], output_dir=None,
+    def __init__(self, measurement_sets=None, sessions=None, output_dir=None,
                  name=None):
+        if measurement_sets is None:
+            measurement_sets = []
+        if sessions is None:
+            sessions = []
+            
         # initialise the context name with something reasonable: a current
         # timestamp
         now = datetime.datetime.utcnow()
@@ -225,14 +231,14 @@ class Pipeline(object):
                                                casadef.casa_version,
                                                casadef.subversion_revision))
                 LOG.critical(msg)
-                raise EnvironmentError, msg
+                raise EnvironmentError(msg)
             if MAX_CASA_REVISION and MAX_CASA_REVISION < revision:
                 msg = ('Maximum CASA revision for the pipeline is r%s, '
                        'got CASA %s (r%s).' % (MAX_CASA_REVISION, 
                                                casadef.casa_version,
                                                casadef.subversion_revision))
                 LOG.critical(msg)
-                raise EnvironmentError, msg
+                raise EnvironmentError(msg)
 
         # if no previous context was specified, create a new context for the
         # given measurement set
@@ -250,6 +256,15 @@ class Pipeline(object):
                 LOG.info ('Reading context from file {0}'.format(context))          
                 last_context = pickle.load(context_file)
                 self.context = last_context
+
+        self._link_casa_log(self.context.report_dir)
+
+    def _link_casa_log(self, report_dir):
+        # create a hard-link to the current CASA log in the report directory 
+        src = casatools.log.logfile()
+        dst = os.path.join(report_dir, os.path.basename(src))
+        if not os.path.exists(dst):
+            os.link(src, dst)
     
     def _find_most_recent_session(self, directory='./'):
         # list all the files in the directory..
