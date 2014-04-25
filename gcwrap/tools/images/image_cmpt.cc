@@ -81,6 +81,7 @@
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
@@ -2119,15 +2120,33 @@ variant* image::getchunk(
 		if (detached()) {
 			return 0;
 		}
+		Record ret;
 		if (_image->isFloat()) {
-			return _getchunk<Float, double>(
-				blc, trc, inc, axes, list, dropdeg, getmask
+			ret = _getchunk<Float>(
+				_image->getImage(), blc, trc, inc,
+				axes, list, dropdeg
 			);
+			if (! getmask) {
+				Array<Float> vals = ret.asArrayFloat("values");
+				vector<double> v(vals.begin(), vals.end());
+				return new variant(v, vals.shape().asStdVector());
+			}
 		}
 		else {
-			return _getchunk<Complex, std::complex<double> > (
-				blc, trc, inc, axes, list, dropdeg, getmask
+			ret = _getchunk<Complex> (
+				_image->getComplexImage(), blc, trc, inc,
+				axes, list, dropdeg
 			);
+			if (! getmask) {
+				Array<Complex> vals = ret.asArrayComplex("values");
+				vector<std::complex<double> > v(vals.begin(), vals.end());
+				return new variant(v, vals.shape().asStdVector());
+			}
+		}
+		if (getmask) {
+			Array<Bool> pixelMask = ret.asArrayBool("mask");
+			std::vector<bool> s_pixelmask(pixelMask.begin(), pixelMask.end());
+			return new variant(s_pixelmask, pixelMask.shape().asStdVector());
 		}
 	}
 	catch (const AipsError& x) {
@@ -2137,10 +2156,11 @@ variant* image::getchunk(
 	}
 }
 
-template<class T, class U> casac::variant* image::_getchunk(
+template<class T> Record image::_getchunk(
+	SPCIIT myimage,
 	const vector<int>& blc, const vector<int>& trc,
 	const vector<int>& inc, const vector<int>& axes,
-	bool list, bool dropdeg, bool getmask
+	bool list, bool dropdeg
 ) {
 	Array<T> pixels;
 	Array<Bool> pixelMask;
@@ -2149,25 +2169,68 @@ template<class T, class U> casac::variant* image::_getchunk(
 	if (iaxes.size() == 1 && iaxes[0] < 0) {
 		iaxes.resize();
 	}
-	_image->getchunk(
-		pixels, pixelMask, Vector<Int>(blc), Vector<Int>(trc),
-		Vector<Int>(inc), iaxes, list, dropdeg, getmask
-	);
-	std::vector<int> s_shape;
-	if (getmask) {
-		std::vector<bool> s_pixelmask;
-		pixelMask.tovector(s_pixelmask);
-		pixelMask.shape().asVector().tovector(s_shape);
-		return new variant(s_pixelmask, s_shape);
+	uInt ndim = myimage->ndim();
+
+	if (iaxes.size() == 1 && iaxes[0] < 0) {
+		iaxes.resize();
+	}
+	vector<int> mblc = blc;
+	vector<int> mtrc = trc;
+	vector<int> minc = inc;
+	if (blc.size() == 1 && blc[0] < 0) {
+		IPosition x(ndim, 0);
+		mblc = x.asStdVector();
 	}
 	else {
-		pixels.shape().asVector().tovector(s_shape);
-		std::vector<U> d_pixels;
-		foreach_(U v, pixels) {
-			d_pixels.push_back(v);
-		}
-		return new variant(d_pixels, s_shape);
+		ThrowIf(blc.size() != ndim, "blc has wrong number of values");
 	}
+	IPosition shape = myimage->shape();
+	if (trc.size() == 1 && trc[0] < 0) {
+		mtrc = (shape - 1).asStdVector();
+	}
+	else {
+		ThrowIf(trc.size() != ndim, "trc has wrong number of values");
+	}
+	if (inc.size() == 1 && inc[0] == 1) {
+		IPosition x(ndim, 1);
+		minc = x.asStdVector();
+	}
+	else if (inc.size() > ndim) {
+		minc.resize(ndim);
+		for (uInt i=0; i<ndim; i++) {
+			minc[i] = inc[i];
+		}
+	}
+	else if(inc.size() < ndim) {
+		minc.resize(ndim);
+		for (uInt i = 0; i<ndim; i++) {
+			minc[i] = i < inc.size() ? inc[i] : 1;
+		}
+	}
+	for (uInt i=0; i<ndim; i++) {
+		if (mblc[i] > mtrc[i]) {
+			mblc[i] = 0;
+			mtrc[i] = shape[i] - 1;
+		}
+		if (inc[i] > shape[i]) {
+			minc[i] = 1;
+		}
+	}
+	Vector<Double> vblc(mblc);
+	Vector<Double> vtrc(mtrc);
+	Vector<Double> vinc(minc);
+	LCSlicer slicer(vblc, vtrc, vinc);
+	Record rec;
+	rec.assign(slicer.toRecord(""));
+	PixelValueManipulator<T> pvm(myimage, &rec, "");
+	if (axes.size() != 1 || axes[0] >= 0) {
+		pvm.setAxes(IPosition(axes));
+	}
+	pvm.setVerbosity(
+		list ? ImageTask<T>::DEAFENING : ImageTask<T>::QUIET
+	);
+	pvm.setDropDegen(dropdeg);
+	return pvm.get();
 }
 
 image* image::pbcor(
@@ -2258,18 +2321,14 @@ image* image::pbcor(
 
 ::casac::variant* image::getregion(
 	const variant& region, const std::vector<int>& axes,
-	const ::casac::variant& mask, const bool list, const bool dropdeg,
-	const bool getmask, const bool stretch
+	const ::casac::variant& mask, bool list, bool dropdeg,
+	bool getmask, bool stretch
 ) {
-	// Recover some pixels and their mask from a region in the image
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return false;
 		}
-		Array<Float> pixels;
-		Array<Bool> pixelmask;
-
 		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
@@ -2292,28 +2351,46 @@ image* image::pbcor(
 		if (iaxes.size() == 1 && iaxes[0] < 0) {
 			iaxes.resize();
 		}
-		_image->getregion(
-			pixels, pixelmask, *Region, iaxes,
-			Mask, list, dropdeg, getmask, stretch
-		);
-		if (getmask) {
-			std::vector<bool> s_pixelmask;
-			std::vector<int> s_shape;
-			pixelmask.tovector(s_pixelmask);
-			pixels.shape().asVector().tovector(s_shape);
-			return new ::casac::variant(s_pixelmask, s_shape);
+		Record ret;
+		if (_image->isFloat()) {
+			PixelValueManipulator<Float> pvm(
+				_image->getImage(), Region.get(), Mask
+			);
+			pvm.setAxes(IPosition(iaxes));
+			pvm.setVerbosity(
+				list ? ImageTask<Float>::DEAFENING : ImageTask<Float>::QUIET
+			);
+			pvm.setDropDegen(dropdeg);
+			pvm.setStretch(stretch);
+			ret = pvm.get();
 		}
 		else {
-			std::vector<int> s_shape;
-			pixels.shape().asVector().tovector(s_shape);
-			std::vector<double> d_pixels(pixels.nelements());
-			int i(0);
-			for (
-				Array<Float>::iterator iter = pixels.begin();
-				iter != pixels.end(); iter++
-			) {
-				d_pixels[i++] = *iter;
-			}
+			PixelValueManipulator<Complex> pvm(
+				_image->getComplexImage(), Region.get(), Mask
+			);
+			pvm.setAxes(IPosition(iaxes));
+			pvm.setVerbosity(
+				list ? ImageTask<Complex>::DEAFENING : ImageTask<Complex>::QUIET
+			);
+			pvm.setDropDegen(dropdeg);
+			pvm.setStretch(stretch);
+			ret = pvm.get();
+		}
+		Array<Bool> pixelmask = ret.asArrayBool("mask");
+		std::vector<int> s_shape = pixelmask.shape().asStdVector();
+		if (getmask) {
+			pixelmask.shape().asVector().tovector(s_shape);
+			std::vector<bool> s_pixelmask(pixelmask.begin(), pixelmask.end());
+			return new ::casac::variant(s_pixelmask, s_shape);
+		}
+		else if (_image->isFloat()) {
+			Array<Float> pixels = ret.asArrayFloat("values");
+			std::vector<double> d_pixels(pixels.begin(), pixels.end());
+			return new ::casac::variant(d_pixels, s_shape);
+		}
+		else {
+			Array<Complex> pixels = ret.asArrayComplex("values");
+			std::vector<std::complex<double> > d_pixels(pixels.begin(), pixels.end());
 			return new ::casac::variant(d_pixels, s_shape);
 		}
 	}

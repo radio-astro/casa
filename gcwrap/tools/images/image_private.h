@@ -63,10 +63,11 @@ template <class T> image* _boxcar(
 	const std::vector<casa::String> msgs
 );
 
-template<class T, class U> casac::variant* _getchunk(
+template<class T> casa::Record _getchunk(
+	SPCIIT myimage,
 	const std::vector<int>& blc, const std::vector<int>& trc,
 	const std::vector<int>& inc, const std::vector<int>& axes,
-	const bool list, const bool dropdeg, const bool getmask
+	bool list, bool dropdeg
 );
 
 template<class T> bool _putchunk(
