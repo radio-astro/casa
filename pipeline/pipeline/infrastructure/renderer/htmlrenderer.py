@@ -5500,6 +5500,13 @@ class WebLogGenerator(object):
                     renderer.render(context, hardcopy)
                 except Exception as e:
                     LOG.exception('Error generating weblog: %s', e)
+
+            # create symlink to t1-1.html 
+            link_relsrc = T1_1Renderer.output_file
+            link_abssrc = os.path.join(context.report_dir, link_relsrc)
+            link_dst = os.path.join(context.report_dir, 'index.html')
+            if os.path.exists(link_abssrc) and not os.path.exists(link_dst):
+                os.symlink(link_relsrc, link_dst)
         finally:
             context.results = proxies
 
@@ -5752,7 +5759,7 @@ renderer_map = {
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
-        hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html', always_rerender=True),
+        hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
         hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
