@@ -339,7 +339,7 @@ spw -- select data by spectral window IDs/channels
         default: '' (use all IFs and channels)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
-                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
                  spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
                  spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
                  spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)

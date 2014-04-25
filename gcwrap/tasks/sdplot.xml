@@ -455,7 +455,7 @@ spw -- select data by IF IDs (spectral windows)
         default: '' (use all IFs and channels)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
-                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
         this selection is in addition to the other selections to data
 scan -- select data by scan numbers
         default: '' (use all scans)
