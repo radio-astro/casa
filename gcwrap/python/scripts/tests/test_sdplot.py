@@ -2233,8 +2233,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~310GHz')"""
-        spw = '300~310GHz'
+        """test spw selection (spw='299.5~310GHz')"""
+        spw = '299.5~310GHz'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_plot_info()
@@ -2259,8 +2259,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='150~500km/s,>23')"""
-        spw = '150~500km/s,>23'
+        """test spw selection (spw='150~550km/s,>23')"""
+        spw = '150~550km/s,>23'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_plot_info()

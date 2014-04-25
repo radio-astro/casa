@@ -1565,9 +1565,9 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self._compare(outname, self.reffile)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~310GHz')"""
+        """test spw selection (spw='299.5~310GHz')"""
         outname=self.prefix+self.postfix
-        spw = '300~310GHz'
+        spw = '299.5~310GHz'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [23,25]}
         self.assertEqual(self.res,None,
@@ -1585,9 +1585,9 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal_with_selection(outname, tbsel)
     
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='150~500km/s,>23')"""
+        """test spw selection (spw='150~550km/s,>23')"""
         outname=self.prefix+self.postfix
-        spw = '150~500km/s,>23'
+        spw = '150~550km/s,>23'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [21,25]}
         self.assertEqual(self.res,None,
