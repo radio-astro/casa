@@ -233,44 +233,6 @@ template<class T> void ImageAnalysis::_destruct(ImageInterface<T>& image) {
 	}
 }
 
-template<class T> Bool ImageAnalysis::_getchunk(
-	Array<T>& pixels, Array<Bool>& pixelMask,
-	const ImageInterface<T>& image,
-	const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
-	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
-	const Bool getmask
-) {
-	*_log << LogOrigin(className(), __func__);
-
-	IPosition iblc = IPosition(Vector<Int> (blc));
-	IPosition itrc = IPosition(Vector<Int> (trc));
-	IPosition imshape = image.shape();
-
-	// Verify region.
-	IPosition iinc = IPosition(inc.size());
-	for (uInt i = 0; i < inc.size(); i++) {
-		iinc(i) = inc[i];
-	}
-	LCBox::verify(iblc, itrc, iinc, imshape);
-	if (list) {
-		*_log << LogIO::NORMAL << "Selected bounding box " << iblc << " to "
-				<< itrc << LogIO::POST;
-	}
-
-	// Get the chunk.  The mask is not returned. Leave that to getRegion
-	IPosition curshape = (itrc - iblc + iinc) / iinc;
-	Slicer sl(iblc, itrc, iinc, Slicer::endIsLast);
-	SubImage<T> subImage(image, sl);
-	IPosition iAxes = IPosition(Vector<Int> (axes));
-	if (getmask) {
-		LatticeUtilities::collapse(pixels, pixelMask, iAxes, subImage, dropdeg);
-		return True;
-	} else {
-		LatticeUtilities::collapse(pixels, iAxes, subImage, dropdeg);
-		return True;
-	}
-}
-
 template<class T> SPIIT ImageAnalysis::_imagecalc(
 	const LatticeExprNode& node, const IPosition& shape,
 	const CoordinateSystem& csys, const LELImageCoord* const imCoord,

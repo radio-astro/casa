@@ -101,6 +101,7 @@
 #include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <lattices/LatticeMath/LatticeFit.h>
 #include <lattices/Lattices/LatticeAddNoise.h>
 #include <lattices/Lattices/LatticeExprNode.h>
@@ -1557,40 +1558,6 @@ SPIIF ImageAnalysis::_fitpolynomial(
 	return pResid;
 }
 
-Bool ImageAnalysis::getchunk(
-	Array<Float>& pixels, Array<Bool>& pixelMask,
-	const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
-	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
-	const Bool getmask
-) {
-	ThrowIf(
-		! _imageFloat,
-		"The array passed has Float values, but the "
-		"associated image is not Float valued"
-	);
-	return _getchunk(
-		pixels, pixelMask, *_imageFloat, blc, trc,
-		inc, axes, list, dropdeg, getmask
-	);
-}
-
-Bool ImageAnalysis::getchunk(
-	Array<Complex>& pixels, Array<Bool>& pixelMask,
-	const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
-	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
-	const Bool getmask
-) {
-	ThrowIf(
-		! _imageComplex,
-			"The array passed has Complex values, but the "
-			"associated image is not Complex valued"
-		);
-	return _getchunk(
-		pixels, pixelMask, *_imageComplex, blc, trc,
-		inc, axes, list, dropdeg, getmask
-	);
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
@@ -1642,35 +1609,6 @@ SPCIIF ImageAnalysis::getImage() const {
 	);
 	return _imageFloat;
 }
-
-Bool ImageAnalysis::getregion(
-	Array<Float>& pixels, Array<Bool>& pixelmask,
-	Record& Region, const Vector<Int>& axes, const String& Mask,
-	const Bool list, const Bool dropdeg, const Bool getmask,
-	const bool extendMask
-) {
-	_onlyFloat(__func__);
-	// Recover some pixels and their mask from a region in the image
-	*_log << LogOrigin(className(), __func__);
-
-	// Get the region
-	pixels.resize(IPosition(0, 0));
-	pixelmask.resize(IPosition(0, 0));
-
-	// Drop degenerate axes
-	IPosition iAxes = IPosition(Vector<Int> (axes));
-
-    SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, Region, Mask, (list ? _log.get() : 0),
-		False, AxesSpecifier(), extendMask
-	);
-	if (getmask) {
-        LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
-	} else {
-		LatticeUtilities::collapse(pixels, iAxes, subImage, dropdeg);
-	}
-    return True;
- }
 
 Record*
 ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
@@ -3405,18 +3343,17 @@ Bool ImageAnalysis::toASCII(
 	String fileName = filePath.expandedName();
 
 	ofstream outFile(fileName.c_str());
-	if (!outFile) {
-		*_log << "Cannot open file " << outfile << LogIO::EXCEPTION;
-	}
+	ThrowIf(! outFile, "Cannot open file " + outfile);
 
-	Vector<Int> axes;
-	Array<Float> pixels;
-	Array<Bool> pixmask;
-	getregion(
-		pixels, pixmask, region, axes, mask,
-		False, False, False, extendMask
+	PixelValueManipulator<Float> pvm(
+		_imageFloat, &region, mask
 	);
+	pvm.setVerbosity(ImageTask<Float>::QUIET);
+	pvm.setStretch(extendMask);
+	Record ret = pvm.get();
 
+	Array<Float> pixels = ret.asArrayFloat("values");
+	Array<Bool> pixmask = ret.asArrayBool("mask");
 	IPosition shp = pixels.shape();
 	IPosition vshp = pixmask.shape();
 	uInt nx = shp(0);
@@ -3452,7 +3389,6 @@ Bool ImageAnalysis::toASCII(
 		idx += nx;
 		nline += 1;
 	}
-	//
 	return True;
 }
 

@@ -181,6 +181,8 @@ install (FILES
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h
+	ImageAnalysis/PixelValueManipulator.h
+	ImageAnalysis/PixelValueManipulator.tcc
 	ImageAnalysis/ProfileFitResults.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h

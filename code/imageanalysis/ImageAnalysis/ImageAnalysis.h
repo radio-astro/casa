@@ -197,30 +197,6 @@ class ImageAnalysis
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
 
-    // Recover some pixels from the image from a simple strided box
-    Bool getchunk(
-    	Array<Float>& pixel, Array<Bool>& pixmask,
-    	const Vector<Int>& blc, const Vector<Int>& trc,
-    	const Vector<Int>& inc, const Vector<Int>& axes,
-    	const Bool list = False, const Bool dropdeg = False,
-    	const bool getmask = False
-    );
-
-    Bool getchunk(
-    	Array<Complex>& pixel, Array<Bool>& pixmask,
-    	const Vector<Int>& blc, const Vector<Int>& trc,
-    	const Vector<Int>& inc, const Vector<Int>& axes,
-    	const Bool list = False, const Bool dropdeg = False,
-    	const bool getmask = False
-    );
-
-    Bool getregion(
-    	Array<Float>& pixels, Array<Bool>& pixmask, Record& region,
-        const Vector<Int>& axes, const String& mask,
-        const Bool list=False, const Bool dropdeg=False,
-        const Bool getmask=False, const Bool extendMask=False
-    );
-
     Record* getslice(const Vector<Double>& x, const Vector<Double>& y, 
                      const Vector<Int>& axes, const Vector<Int>& coord, 
                      const Int npts = 0, const String& method = "linear");
@@ -606,15 +582,6 @@ class ImageAnalysis
     );
 
     void _onlyFloat(const String& method) const;
-
-    template<class T> Bool _getchunk(
-       	Array<T>& pixel, Array<Bool>& pixmask,
-       	const ImageInterface<T>& image,
-       	const Vector<Int>& blc, const Vector<Int>& trc,
-       	const Vector<Int>& inc, const Vector<Int>& axes,
-       	const Bool list, const Bool dropdeg,
-       	const bool getmask
-    );
 
     template<class T> Bool _putchunk(
         ImageInterface<T>& image,

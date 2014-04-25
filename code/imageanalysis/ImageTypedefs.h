@@ -43,4 +43,4 @@ namespace casa {
 	typedef std::tr1::shared_ptr<ImageInterface<Complex> > SPIIC;
 }
 
-#endif /* IMAGETYPEDEFS_H_ */
+#endif
