@@ -1738,7 +1738,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def test_spw_value_frequency(self):
         """test_spw_value_frequency: Test spw selection by frequency range ('FREQ0~FREQ1')"""
         iflist = [0]
-        spw='114~115GHz'
+        spw='114.5~115.5GHz'
         expected_nrow = 16
 
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
@@ -1754,7 +1754,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def test_spw_mix_exprlist(self):
         """test_spw_mix_exprlist: Test spw selection by id and frequency/velocity range"""
         iflist = [0,2,3]
-        spw='114~115GHz,>1'
+        spw='114.5~115.5GHz,>1'
         expected_nrow = 48
 
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
@@ -1863,7 +1863,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_frequency_channel: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1')"""
         iflist = [0,1,2]
         channelrange = [0,100]
-        spw = '113~117GHz:0~100'
+        spw = '113.5~117.5GHz:0~100'
         expected_nrow = 48
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1872,7 +1872,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_frequency_frequency: Test spw selection with channel range ('FREQ0~FREQ1:FREQ2~FREQ3')"""
         iflist = [0]
         channelrange = [0,1919]
-        spw = '113~117GHz:114~115GHz'
+        spw = '113.5~117.5GHz:114~115GHz'
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1881,7 +1881,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_frequency_velocity: Test spw selection with channel range ('FREQ0~FREQ1:VEL0~VEL1')"""
         iflist = [1]
         channelrange = [1904, 1935]
-        spw = '113~117GHz:-10~10km/s'
+        spw = '113.5~117.5GHz:-10~10km/s'
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1889,14 +1889,14 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def test_spw_value_frequency_list(self):
         """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
         # raise exception
-        spw = '114~115GHz:0~100;200~400'
+        spw = '114.5~115.5GHz:0~100;200~400'
         self.__exec_exception_test(spw)
         
     def test_spw_value_velocity_channel(self):
         """test_spw_value_velocity_channel: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1')"""
         iflist = [0,1,2]
         channelrange = [0,100]
-        spw = '-2000~2000km/s:0~100'
+        spw = '-3000~3000km/s:0~100'
         expected_nrow = 48
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1905,7 +1905,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ0~FREQ1')"""
         iflist = [0]
         channelrange = [0,1919]
-        spw = '-2000~2000km/s:114~115GHz'
+        spw = '1000~3000km/s:114~115GHz'
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
