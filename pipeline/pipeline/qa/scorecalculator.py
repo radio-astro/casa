@@ -6,7 +6,6 @@ Created on 9 Jan 2014
 import collections
 import datetime
 import operator
-import re
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
@@ -82,7 +81,7 @@ def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     return m*clipped_x + c
 
 def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, 
-                                 agents=[]):
+                                 agents=None):
     """
     Calculate a score for the agentflagger summaries based on the fraction of
     data flagged by certain flagging agents.
@@ -91,6 +90,8 @@ def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac,
     """
     agent_stats = calc_flags_per_agent(summaries)
 
+    if agents is None:
+        agents = []
     match_all_agents = True if len(agents) is 0 else False
 
     # sum the number of flagged rows for the selected agents     
@@ -189,29 +190,29 @@ def score_bwswitching(mses):
     # analyse each MS
     for ms in mses:
 
-	# Get the science spws
-	scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+        # Get the science spws
+        scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
 
-	# Get phase calibrator science spw ids
+        # Get phase calibrator science spw ids
         phasespws = []
-	for scan in ms.get_scans(scan_intent='PHASE'):
-	    phasespws.extend([spw.id for spw in scan.spws])
-	phasespws = set(phasespws).intersection(scispws)
+        for scan in ms.get_scans(scan_intent='PHASE'):
+            phasespws.extend([spw.id for spw in scan.spws])
+        phasespws = set(phasespws).intersection(scispws)
 
-	# Get science target science spw ids
-	targetspws = []
-	for scan in ms.get_scans(scan_intent='TARGET'):
-	    targetspws.extend([spw.id for spw in scan.spws])
+        # Get science target science spw ids
+        targetspws = []
+        for scan in ms.get_scans(scan_intent='TARGET'):
+            targetspws.extend([spw.id for spw in scan.spws])
         targetspws = set(targetspws).intersection(scispws)
 
-	# Determine the difference between the two
-	nophasecals = targetspws.difference(phasespws)
-	if len(nophasecals) == 0:
-	    continue
+        # Determine the difference between the two
+        nophasecals = targetspws.difference(phasespws)
+        if len(nophasecals) == 0:
+            continue
 
-	# Score the difference
-	all_ok = False
-	for m in nophasecals:
+        # Score the difference
+        all_ok = False
+        for _ in nophasecals:
             score += (-1.0 / num_mses / len(nophasecals))
         longmsg = ('%s contains no phase calibrations for target spws %s'
             '' % (ms.basename, utils.commafy(nophasecals, False)))
@@ -248,20 +249,20 @@ def score_bands(mses):
 
     # analyse each MS
     for ms in mses:
-	msbands = []
-	for spw in ms.get_spectral_windows(science_windows_only=True):
-	    # This does not work for old data
-	    #match = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
-	    # Get rid of the leading 0 in the band number
-	    #bandnum = str(int(match.groupdict()['band']))
-	    bandnum = spw.band.split(' ')[2]
-	    msbands.append(bandnum)
-	msbands = set(msbands)
-	overlap = unsupported.intersection(msbands)
-	if not overlap:
-	    continue
-	all_ok = False
-	for m in overlap:
+        msbands = []
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            # This does not work for old data
+            #match = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
+            # Get rid of the leading 0 in the band number
+            #bandnum = str(int(match.groupdict()['band']))
+            bandnum = spw.band.split(' ')[2]
+            msbands.append(bandnum)
+        msbands = set(msbands)
+        overlap = unsupported.intersection(msbands)
+        if not overlap:
+            continue
+        all_ok = False
+        for m in overlap:
             score += (score_map[m] / num_mses)
         longmsg = ('%s contains band %s data'
             '' % (ms.basename, utils.commafy(overlap, False)))
@@ -303,10 +304,10 @@ def score_polintents(mses):
     for ms in mses:
         # are these intents present in the ms
         overlap = unsupported.intersection(ms.intents)
-	if not overlap:
-	    continue
-	all_ok = False
-	for m in overlap:
+        if not overlap:
+            continue
+        all_ok = False
+        for m in overlap:
             score += (score_map[m] / num_mses)
 
         longmsg = ('%s contains %s polarization calibration intents'
