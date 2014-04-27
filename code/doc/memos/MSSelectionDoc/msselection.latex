@@ -810,28 +810,26 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 
 \end{itemize}          
 
-Figure~\ref{FIG:SPW} shows an example frequency setup which makes
-clear the need to separate the full frequency selection expression
-into SPWSPEC and CHANSPEC parts.  SPW0 covers the frequency range
-1.0--2.0~GHz with SPW1 overlapping in the range 1.6--1.7~GHz, with a
-reference frequency of 1.5~GHz and 1.65~GHz respectively.  Even for
-the overlapping range of frequencies, the selection syntax must allow
-selection of channels from only SPW0 or only SPW1 or channels from
-both.  With independent specifications for SPW and channel selection,
-selection expressions can be constructed to select channels from SPW0
-\underline{\bf or} SPW1 or from SPW0 \underline{\bf and} SPW1. E.g.
+Figure~\ref{FIG:SPW} shows an example frequency setup to motivate the
+need to separate the full frequency selection expression into SPWSPEC
+and CHANSPEC parts.  SPW0 covers the frequency range 1.0--2.0~GHz with
+SPW1 overlapping in the range 1.6--1.7~GHz, with a reference frequency
+of 1.5~GHz and 1.65~GHz respectively.  With independent specifications
+for SPW and channel selection, selection expressions can be
+constructed to select channels from SPW0 \underline{\bf or} SPW1 or
+from SPW0 \underline{\bf and} SPW1. E.g.
 \begin{itemize}
-\item spw= ``{\tt * : 1.6$\sim$1.7GHz}'' will select all channels from
+\item freq= ``{\tt * : 1.6$\sim$1.7GHz}'' will select all channels from
   SPW0 \underline{\it and} SPW1 that are in the range
-\item spw= ``{\tt 1.5$\sim$1.65GHz : 1.6$\sim$1.7GHz}'' is the same as
+\item freq= ``{\tt 1.5$\sim$1.65GHz : 1.6$\sim$1.7GHz}'' is the same as
   above (selecting SPWs via reference frequency specification)
-\item spw=``{\tt 1.5MHz : 1.6$\sim$1.7GHz}'' will select all channels
+\item freq=``{\tt 1.5MHz : 1.6$\sim$1.7GHz}'' will select all channels
   from \underline{only} SPW0 that are in the range
-\item spw=``{\tt 0 : 1.6$\sim$1.7GHz}'' will select all channels
+\item freq=``{\tt 0 : 1.6$\sim$1.7GHz}'' will select all channels
   from \underline{only} SPW0 that are in the range
-\item spw=``{\tt 1.65MHz : 1.6$\sim$1.7GHz}'' same as above, with SPW0
+\item freq=``{\tt 1.65MHz : 1.6$\sim$1.7GHz}'' same as above, with SPW0
   selected via integer ID
-\item spw=``{\tt 1 : 1.6$\sim$1.7GHz}'' same as above, with SPW1
+\item freq=``{\tt 1 : 1.6$\sim$1.7GHz}'' same as above, with SPW1
   selected via integer ID
 
 \end{itemize}
@@ -1069,11 +1067,9 @@ specifications.  E.g.
 \item scan={\tt $<$5}       selects all scans less than 5
 \end{itemize}
 
-\newpage
 \appendix{}
-\section{Appendix: Using the {\tt MSSelection} module for other MS-like Tables}
 \newpage
-\section{Appendix: General Error Handling}
+\section{Appendix: API Note -- General Error Handling}
 
 The \MSS\ sub-system reports errors via the C++ exception
 mechanism.  The objects thrown have the following inheritance
@@ -1119,7 +1115,7 @@ character.  E.g.
 
  Spw Expression: No match found for "LBAN" (near char. 4 in string "LBAN")
 
-\subsection{Error Handlers}
+\subsection{Installing Error Handlers}
 
 The normal (default) behavior of the parsers is to throw an exception
 when an error is encountered during parsing cycle or in the
@@ -1140,8 +1136,21 @@ To collect errors (and the error messages generated in the process) as
 they occur for later resolution, the client-side code can install a
 specialization of the error handler of type {\tt MSSelectionLogError},
 a derivative of the {\tt MSSelectionErrorHandler}, using the {\tt
-  MSSelection::setErrorHandler()} method.  At the appropriate place in
-the client code, a call to {\tt
+  MSSelection::setErrorHandler()} method, as shown in code snippet below.  
+\begin{verbatim}
+      MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
+      //
+      // Setup the MSSelection thingi
+      //
+      MSSelection msSelection;
+      MSSelectionLogError mssLE;
+      msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
+      msSelection.reset(ms,MSSelection::PARSE_NOW,
+                        timeStr,baselineStr,fieldStr,spwStr,
+                        uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+                        stateObsModeStr,observationStr);
+\end{verbatim}
+At the appropriate place in the client code, a call to {\tt
   MSSelectionErrorHandler::reportError()} can be made to display the
 collected error messages as warning messages. This behavior can be
 changed in a specialization of the {\tt MSSelectionErrorHandler} class
@@ -1151,7 +1160,10 @@ This mechanism of error handling is currently available for ANTENNA
 and STATE (a.k.a. ``intent selection'') selection expressions only.
 
 \newpage
-\section{Appendix: Examples}
+\section{Appendix: API Note -- Using the {\tt MSSelection} module for other MS-like Tables}
+
+\newpage
+\section{Appendix: User Examples}
 
 \begin{table}[h!]
 \caption{Summary of the MS used}
