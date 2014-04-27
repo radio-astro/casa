@@ -105,6 +105,11 @@ int PlotMSThread::getId(){
 	return id;
 }
 
+bool PlotMSThread::isCacheThread() const {
+	return false;
+}
+
+
 PlotMSThread::~PlotMSThread() { }
 
 }

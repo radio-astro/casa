@@ -67,6 +67,7 @@ public:
 	virtual void initializeProgress(const String& operationName);
 	virtual void setProgress(unsigned int progress, const String& status);
 	virtual void finishProgress();
+
 	// </group>
 
 	// Work classes can specify whether they support background operation, pause/resume,
@@ -105,6 +106,8 @@ public:
 
 	//Returns any error from the background operation.
 	String getError() const;
+	bool isErrorWarning() const;
+	String getErrorTitle() const;
 
 protected:
 
@@ -116,6 +119,8 @@ protected:
 
 	//Holds error messages
 	String error;
+	String errorTitle;
+	bool errorWarning;
 
 
 
@@ -132,6 +137,7 @@ protected:
 private:
 	ThreadController( const ThreadController& controller );
 	ThreadController operator=( const ThreadController& other );
+
 	BackgroundThread* bgThread;
 
 };

@@ -638,10 +638,12 @@ bool PlotMSOverPlot::updateCache() {
 
 	bool result = true;
 	try {
+		cacheUpdating = true;
 		result = itsParent_->updateCachePlot( this,
 			PlotMSOverPlot::cacheLoaded, true );
 	}
 	catch( AipsError& error ){
+		cacheUpdating = false;
 		String errorMsg = error.getMesg();
 		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
 					PMS::LOG_ORIGIN_PLOT,
@@ -1222,6 +1224,7 @@ void PlotMSOverPlot::logIter(Int iter, Int nIter) {
 }
 
 void PlotMSOverPlot::dataMissing(){
+	cacheUpdating = false;
 	detachFromCanvases();
 	initializePlot();
 	releaseDrawing();
@@ -1231,6 +1234,7 @@ void PlotMSOverPlot::dataMissing(){
 void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	// Ensure we fail gracefully if cache loading yielded nothing
 	// or was cancelled
+	cacheUpdating = false;
 	if ( itsCache_ == NULL ){
 		return;
 	}

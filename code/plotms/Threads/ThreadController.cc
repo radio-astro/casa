@@ -26,6 +26,7 @@
 #include "ThreadController.h"
 #include <plotms/Threads/BackgroundThread.h>
 #include <graphics/GenericPlotter/ProgressMonitor.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <QDebug>
 
 namespace casa {
@@ -76,6 +77,14 @@ String ThreadController::getError() const {
 	return error;
 }
 
+bool ThreadController::isErrorWarning() const {
+	return errorWarning;
+}
+
+String ThreadController::getErrorTitle() const {
+	return errorTitle;
+}
+
 void ThreadController::startThread(){
 	//bgThread->run();
 	bgThread->startThread();
@@ -89,6 +98,8 @@ void ThreadController::postThreadMethod() {
     if(itsPostThreadMethod_ != NULL && itsPostThreadObject_ != NULL)
         (*itsPostThreadMethod_)(itsPostThreadObject_, wasCanceled());
 }
+
+
 
 //---------------------------------------------------------------------------
 //                 ThreadCommunication Interface

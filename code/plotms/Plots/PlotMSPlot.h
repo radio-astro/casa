@@ -166,6 +166,8 @@ public:
     virtual bool exportToFormat(const PlotExportFormat& format);
     void exportToFormatCancel();
     
+    virtual void cacheLoaded_(bool wasCanceled) = 0;
+
     // This method should be called when the given canvas (which was owned by
     // this plot) was disowned.
     virtual void canvasWasDisowned(PlotCanvasPtr canvas);
@@ -192,6 +194,9 @@ public:
       //Clear the title and axes from all this plots canvases.
       virtual void clearCanvases()=0;
 
+      //Whether a thread is currently updating the cache.
+      bool isCacheUpdating() const;
+      void setCacheUpdating( bool updating );
 protected:
     // ABSTRACT METHODS //
     
@@ -205,7 +210,7 @@ protected:
     // Returns true if the drawing should be released right away; if false is
     // returned, the child class is expect to release drawing when finished.
     virtual bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
-            int updateFlag, bool releaseWhenDone) = 0;
+            int updateFlag, bool releaseWhenDone ) = 0;
     
     // Helper method for selectedRegions() and visibleSelectedRegions() that
     // returns the selected regions for plots in the given canvases.
@@ -248,6 +253,9 @@ protected:
     // Cache.
     PlotMSCacheBase* itsCache_;
     
+    //Used to determine if a thread is running to update the cache.
+    volatile bool cacheUpdating;
+
 private:
     void waitOnCanvas( const PlotCanvasPtr& canvas );
 

@@ -216,8 +216,8 @@ String PlotMSPlotTab::getAveragingSummary() const {
 
 // Public Slots //
 
-void PlotMSPlotTab::plot( bool forceReload ) {
-
+bool PlotMSPlotTab::plot( bool forceReload ) {
+	Bool plotCompleted = true;
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
@@ -267,16 +267,40 @@ void PlotMSPlotTab::plot( bool forceReload ) {
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
-            } else if (cancelledCache) {
+                plotCompleted = !itsCurrentPlot_->isCacheUpdating();
+                if ( plotCompleted ){
+                	completePlotting( true );
+                }
+                return plotCompleted;
+            }
+            else if (cancelledCache) {
                 // Tell the plot to redraw itself because of the cache.
                 itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
                         PMS_PP::UPDATE_REDRAW & PMS_PP::UPDATE_CACHE);
+                plotCompleted = itsCurrentPlot_->isCacheUpdating();
             }
             plotsChanged(itsPlotManager_);
         }
     }
+    return plotCompleted;
 }
 
+void PlotMSPlotTab::completePlotting( bool success ){
+	if ( itsCurrentPlot_ != NULL ){
+		if ( !success ){
+			itsCurrentPlot_->dataMissing();
+		}
+		else {
+			itsCurrentPlot_->cacheLoaded_( false );
+		}
+	}
+}
+
+void PlotMSPlotTab::clearData(){
+	if ( itsCurrentPlot_ != NULL ){
+		itsCurrentPlot_->detachFromCanvases();
+	}
+}
 
 // Protected //
 
@@ -560,10 +584,7 @@ void PlotMSPlotTab::setupForPlot() {
     PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
-   
-    PMS_PP_Display* displayParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
-    PlotSymbolPtr displaySymbol = displayParams->unflaggedSymbol();
-
+  
     insertData(0);
     insertAxes(1);
     insertIterate(2);

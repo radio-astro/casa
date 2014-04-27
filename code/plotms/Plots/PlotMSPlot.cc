@@ -64,7 +64,7 @@ PlotMSPlot::PlotMSPlot(PlotMSApp* parent) :
   itsCache_(NULL) { 
   
   itsCache_ = new MSCache(itsParent_);
-
+  cacheUpdating = false;
 }
 
 PlotMSPlot::~PlotMSPlot() {
@@ -191,7 +191,9 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
 
     // Initialize plot objects and assign canvases.
     if(!assignCanvases(pages) || !initializePlot()) {
-        if(!hold) releaseDrawing();
+        if(!hold){
+        	releaseDrawing();
+        }
         return false;
     }
 
@@ -217,10 +219,19 @@ bool PlotMSPlot::updateData() {
 	return True;
 };
 
+bool PlotMSPlot::isCacheUpdating() const {
+	return cacheUpdating;
+}
+
+void PlotMSPlot::setCacheUpdating( bool updating ){
+	cacheUpdating = updating;
+}
+
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag) {
+        int updateFlag ) {
 
+	cacheUpdating = false;
 
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
@@ -289,7 +300,13 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // drawing if needed.
     bool result=parametersHaveChanged_(p,updateFlag,releaseWhenDone);
     if( result && releaseWhenDone){
-        releaseDrawing();
+    	//Note::this was put in because when reload was checked from the gui
+    	//we were getting a segfault because the plot was redrawing before the cache
+    	//was loaded from a thread.  There seems to be a mechanism in place to release
+    	//the drawing later after the cache is loaded.
+    	if ( ! itsParent_->guiShown() ){
+    		releaseDrawing();
+    	}
     }
 
 }
@@ -305,7 +322,9 @@ void PlotMSPlot::plotDataChanged() {
         }
     }
     
-    if(!hold) releaseDrawing();
+    if(!hold){
+    	releaseDrawing();
+    }
 }
 
 bool PlotMSPlot::isIteration() const {
@@ -430,7 +449,7 @@ void PlotMSPlot::holdDrawing() {
     	if ( !canv[i].null() ){
     		bool canvasDrawing = canv[i]->isDrawing();
     		if ( canvasDrawing ){
-    		   waitOnCanvas( canv[i]);
+    			waitOnCanvas( canv[i]);
     		}
     		canv[i]->holdDrawing();
     	}
@@ -441,11 +460,9 @@ void PlotMSPlot::releaseDrawing() {
     vector<PlotCanvasPtr> canv = canvases();
     for(unsigned int i = 0; i < canv.size(); i++){
         if(!canv[i].null()){
-        	bool canvasDrawing = canv[i]->isDrawing();
-        	if ( canvasDrawing ){
-        		waitOnCanvas( canv[i]);
+        	if ( canv[i]->drawingIsHeld()){
+        		canv[i]->releaseDrawing();
         	}
-        	canv[i]->releaseDrawing();
         }
     }
 }

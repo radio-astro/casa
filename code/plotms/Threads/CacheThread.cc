@@ -147,11 +147,7 @@ void CacheThread::handleError(String message ){
 	if ( message.length() > 0 ){
 		error += ": " + message;
 	}
-	//Cleanup the plot so the data is not left in an
-	//inconsistent state.
-	if ( itsPlot != NULL ){
-		itsPlot->dataMissing();
-	}
+
 	//Notify that an error has ocurred.
 	if ( threadController != NULL ){
 		threadController->setError( error );

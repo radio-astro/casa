@@ -115,7 +115,7 @@ protected:
 
     void constructorSetup();
     void updatePages();
-    bool updateCache();
+    bool updateCache( );
     bool updateCanvas();
     bool updateDisplay();
     void setColors();
@@ -186,8 +186,7 @@ public:
             cobj->cacheLoaded_(wasCanceled);
         }
     }
-private:
-    void cacheLoaded_(bool wasCanceled);
+    virtual void cacheLoaded_(bool wasCanceled);
 
 };
 

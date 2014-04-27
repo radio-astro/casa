@@ -37,7 +37,6 @@
 namespace casa {
 
 
-
 // Constructors/Destructors//
 
 PlotMSDataSummaryTab::PlotMSDataSummaryTab(PlotMSPlotter* parent) :
@@ -89,6 +88,8 @@ PlotMSDataSummaryTab::PlotMSDataSummaryTab(PlotMSPlotter* parent) :
 
      // Synchronize plot button.  This makes the reload/replot happen.
      itsPlotter_->synchronizeAction(PlotMSAction::PLOT, ui.plotButton);
+
+     plotIndex = 0;
 }
 
 PlotMSDataSummaryTab::~PlotMSDataSummaryTab() {
@@ -189,17 +190,49 @@ void PlotMSDataSummaryTab::close( PlotMSDataCollapsible* collapsible ){
 	if ( collapseIndex >= 0 ){
 		dataList.removeAt( collapseIndex );
 	}
-	//plottableChanged();
 	delete collapsible;
 }
 
 void PlotMSDataSummaryTab::plot(){
-	plot( its_force_reload );
+	plotIndex = 0;
+	completePlots.clear();
+	doPlotting();
 }
 
-void PlotMSDataSummaryTab::plot( bool forceIt ){
-	for ( int i = 0; i < dataList.size(); i++ ){
-		dataList[i]->plot( forceIt );
+void PlotMSDataSummaryTab::doPlotting(){
+	for ( int i = plotIndex; i < dataList.size(); i++ ){
+		bool plotCompleted = dataList[i]->plot( its_force_reload );
+		if ( !plotCompleted ){
+			plotIndex = i;
+			break;
+		}
+	}
+}
+
+void PlotMSDataSummaryTab::completePlotting( bool success ){
+	int dataCount = dataList.size();
+	if ( plotIndex < dataCount ){
+		completePlots[dataList[plotIndex]] = success;
+	}
+	plotIndex = plotIndex + 1;
+	if ( plotIndex < dataCount){
+		//We haven't finished telling all the threads to update their data.
+		doPlotting();
+	}
+	if ( plotIndex == dataCount){
+		//All the threads have finished updating their data.
+		QList<PlotMSDataCollapsible*> plotKeys = completePlots.keys();
+		int plotKeyCount = plotKeys.size();
+
+		//Clear out any old data in case one canvas has two sets of data (overplot)
+		//and a redraw of the first plot has old data from the second plot.
+		for ( int i = 0; i < plotKeyCount; i++ ){
+			plotKeys[i]->clearData();
+		}
+		//Trigger redraws
+		for ( int i = 0; i < plotKeyCount; i++ ){
+			plotKeys[i]->completePlotting( completePlots[ plotKeys[i] ]);
+		}
 	}
 }
 

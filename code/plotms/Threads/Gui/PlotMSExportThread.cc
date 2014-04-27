@@ -82,6 +82,9 @@ void PlotMSExportThread::startOperation() {
     //threadFinished();
 }
 
+QString PlotMSExportThread::getName() const {
+	return "Export Thread";
+}
 void PlotMSExportThread::operationChanged(const PlotOperation& operation) {
     if(!itsMutex_.tryLock()) return; // Only happens on a cancel.
 

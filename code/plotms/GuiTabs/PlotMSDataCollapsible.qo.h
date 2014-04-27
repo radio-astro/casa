@@ -79,7 +79,7 @@ public:
     PlotMSPlot* getPlot();
 
     //Force (or not) the plots to update their displays.
-    void plot( bool forceReload );
+    bool plot( bool forceReload );
 
     vector<PMS::Axis> getSelectedLoadAxes() const;
     vector<PMS::Axis> getSelectedReleaseAxes() const;
@@ -93,6 +93,11 @@ public:
     //Change to a compact display
     void minimizeDisplay();
 
+    //This was put in to support overplotting.  When two plots are sharing the
+    //same canvas, we don't want to trigger a redraw until all the plots sharing
+    //the same canvas are done updating their data in background threads.
+    void completePlotting( bool success );
+    void clearData();
 signals:
 	void close( PlotMSDataCollapsible*);
 

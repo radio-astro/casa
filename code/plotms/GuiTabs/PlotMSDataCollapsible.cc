@@ -180,11 +180,26 @@ PlotMSPlot* PlotMSDataCollapsible::getPlot(){
 }
 
 
-void PlotMSDataCollapsible::plot( bool forceReload){
+bool PlotMSDataCollapsible::plot( bool forceReload){
+	Bool plottingCompleted = true;
 	if ( plotTab != NULL ){
-		plotTab->plot( forceReload );
+		plottingCompleted = plotTab->plot( forceReload );
+	}
+	return plottingCompleted;
+}
+
+void PlotMSDataCollapsible::completePlotting( bool success ){
+	if ( plotTab != NULL ){
+		plotTab->completePlotting( success);
 	}
 }
+
+void PlotMSDataCollapsible::clearData(){
+	if ( plotTab != NULL ){
+		plotTab->clearData();
+	}
+}
+
 
 
 void PlotMSDataCollapsible::setGridSize( int rowCount, int colCount ){

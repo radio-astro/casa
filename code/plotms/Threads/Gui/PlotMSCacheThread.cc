@@ -27,7 +27,6 @@
 #include <plotms/Threads/Gui/PlotMSCacheThread.qo.h>
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
-//#include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <QDebug>
@@ -48,6 +47,9 @@ PlotMSCacheThread::PlotMSCacheThread(QtProgressWidget* progress, PlotMSPlotter* 
 
 PlotMSCacheThread::~PlotMSCacheThread() { }
 
+QString PlotMSCacheThread::getName() const {
+	return "Cache Thread";
+}
 
 void PlotMSCacheThread::startOperation() {
 
@@ -57,16 +59,6 @@ void PlotMSCacheThread::startOperation() {
     initializeProgress(itsLoad_ ? PMS::LOG_ORIGIN_LOAD_CACHE :
                                         PMS::LOG_ORIGIN_RELEASE_CACHE);
     setAllowedOperations(false, false, true);
-    
-    /*PlotMSCacheThreadHelper* th = new PlotMSCacheThreadHelper(*this);
-    
-    // Connect QThread signals.
-    connect(th, SIGNAL(finished()), SLOT(threadFinished()));
-    connect(th, SIGNAL(terminated()), SLOT(threadFinished()));
-    connect(th, SIGNAL(finished()), th, SLOT(deleteLater()));
-    connect(th, SIGNAL(terminated()), th, SLOT(deleteLater()));
-    
-    th->start();*/
     startThread();
 }
 
@@ -83,7 +75,9 @@ void PlotMSCacheThread::setProgressAndStatus(unsigned int progress,
     }
 }
 
-
+bool PlotMSCacheThread::isCacheThread() const {
+	return true;
+}
 
 
 void PlotMSCacheThread::threadFinished() {
@@ -92,19 +86,14 @@ void PlotMSCacheThread::threadFinished() {
     // that the plot won't update the display.
     bool success = getResult();
     if( !success ) {
-    	String errorOperation( "Load Error ");
+    	errorTitle = "Load Error ";
     	if ( !itsLoad_ ){
-    		errorOperation = "ReleaseError";
+    		errorTitle = "ReleaseError";
     	}
-        //itsPlot_->parent()->showError(error,
-        //        itsLoad_ ? "Load Error" : "Release Error");
-    	if ( itsPlotter_ != NULL ){
-    		itsPlotter_->showError( error, errorOperation, false);
-    	}
+        errorWarning = true;
         wasCanceled_ = true;
     }
     
-    //emit finishedOperation(this);
     signalFinishedOperation( this );
 }
 

@@ -199,7 +199,7 @@ public slots:
     virtual void showError(const String& message, const String& title, bool isWarning);
     
     // Shows the given informational message in a GUI window.
-    virtual void showMessage(const String& message, const String& title);
+    virtual void showMessage(const String& message, const String& title, bool warning = false);
     
     // Slot for showing an "about" dialog.
     void showAbout();
@@ -252,8 +252,6 @@ private:
     
     // Options tab.
     PlotMSOptionsTab* itsOptionsTab_;
-    
-
 
     // Tool buttons on the tabs.
     QList<QToolButton*> itsToolButtons_;

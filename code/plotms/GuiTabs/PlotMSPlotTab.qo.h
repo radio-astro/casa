@@ -169,13 +169,21 @@ public:
     //it can be displayed.
     bool isPlottable() const;
 
+    //This was put in to support overplotting.  When two plots are sharing the
+    //same canvas, we don't want to trigger a redraw until all the plots sharing
+    //the same canvas are done updating their data in background threads.
+    void completePlotting( bool success );
+
+    //Remove old data from the plot.
+    void clearData();
+
 signals:
 	void plottableChanged();
 
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
-    void plot( bool forceReload );
+    bool plot( bool forceReload);
     
     
 protected:
