@@ -124,13 +124,16 @@ namespace casa {
 		MRadialVelocity::Types getReferenceFrame() const;
 		~SearchMoleculesWidget();
 		static const QString SPLATALOGUE_UNITS;
+		static const QString SEARCH_DEFAULT_UNITS;
 
 	signals:
 		void searchCompleted();
+		void redshiftChanged();
 
 	private slots:
 		void search();
 		void searchUnitsChanged( const QString& searchUnits );
+		void redshiftChanged( const QString& redshiftStr );
 		void dopplerShiftChanged();
 		void dopplerVelocityUnitsChanged();
 		void searchFinished();
