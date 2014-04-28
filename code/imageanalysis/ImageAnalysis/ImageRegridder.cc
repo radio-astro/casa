@@ -140,7 +140,6 @@ SPIIF ImageRegridder::_regrid() const {
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(! _doRefChange);
-	cout << "*** pixel mask before " << allTrue(workIm->pixelMask().get()) << endl;;
 	ir.regrid(
 		*workIm, _method, _axes, *subImage,
 		_replicate, _decimate, True,
