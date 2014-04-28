@@ -186,12 +186,13 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	TempImage<T> newImage(
 		TiledShape(image.shape()), image.coordinates()
 	);
-	if (image.hasPixelMask()) {
-		ArrayLattice<Bool> mymask(
-			image.pixelMask().get()
-		);
-		if (! allTrue(mymask.get())) {
-			newImage.attachMask(mymask);
+	{
+		Array<Bool> mymask = image.getMask();
+		if (image.hasPixelMask()) {
+			mymask = mymask && image.pixelMask().get();
+		}
+		if (! allTrue(mymask)) {
+			newImage.attachMask(ArrayLattice<Bool>(mymask));
 		}
 	}
 	ImageUtilities::copyMiscellaneous(newImage, image);
