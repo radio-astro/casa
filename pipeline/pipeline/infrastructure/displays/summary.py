@@ -21,7 +21,7 @@ import pipeline.infrastructure.utils as utils
 import shutil
 
 LOG = infrastructure.get_logger(__name__)
-DISABLE_PLOTMS = False
+DISABLE_PLOTMS = True
 
 ticker.TickHelper.MAXTICKS = 10000
 
