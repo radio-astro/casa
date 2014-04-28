@@ -195,7 +195,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             for ichan in range(nchan):
                 for ipol in range(npol):
                     pixmsk = self.image.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                    pixsmo = self.convimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan,ipol] )
+                    pixsmo = self.convimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
                     pixsub = pixmsk - pixsmo
                     self.convimage.putchunk( pixsub, [0,0,ichan,ipol] )
         elif len(imshape) == 3:
@@ -542,6 +542,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                     if os.path.exists(f):
                         existing_files.append(f)
         # CAS-5410 Use private tools inside task scripts
-        cu = utilstool()
-        cu.removetable(existing_files)
+        if len(existing_files) > 0:
+            cu = utilstool()
+            cu.removetable(existing_files)
     
