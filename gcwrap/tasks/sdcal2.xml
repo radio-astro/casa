@@ -471,6 +471,27 @@ Allowed calibration modes in this task is as follows:
 There are several control parameters for sky/Tsys calibration and 
 application of caltables. See the above parameter description.
 
+In ALMA, Tsys measurement is usually done using different spectral
+setup from spectral windows for science target. In this case, sdcal2
+transfers Tsys values to science spectral windows in the application
+stage. To do that, the user has to give a list of spectral windows for
+Tsys measurement as well as mapping between spectral windows for Tsys
+measurement and scicence target. These can be specified by parameters
+'tsysspw' and 'spwmap', which are defined as subparameters of 'calmode'.
+For example, Tsys measurement is done in spw 0 and corresponding
+science spws are 1 and 2, these parameters should be specified as follows:
+
+    tsysspw = '0'
+    spwmap = {0: [1,2]}
+
+Note that, in contrast to applycal task, spwmap must be a dictionary
+with Tsys spectral window as key and a list of corresponding science
+spectral window as value. Note also that the parameter 'spw' should
+not be used to specify a list of spectral windows for Tsys measurement.
+It is intended to select data to be calibrated so that the list should
+contain spectral windows for both science target and Tsys measurement.
+The task will fail if you use 'spw' instead of 'tsysspw'. 
+
 For Tsys calibration, the user is able to choose whether Tsys is
 averaged in spectral axis or not. If tsysavg is False (default),
 resulting Tsys is spectral value. On the other hand, when tsysavg
