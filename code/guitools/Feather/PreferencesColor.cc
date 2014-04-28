@@ -111,7 +111,7 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setName( "Weight Low" );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setName( "Weight High" );
 	curvePreferences[FeatherCurveType::LOW_ORIGINAL]->setName( "Low Data" );
-	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low Data, Scaled");
+	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low Data, Weighted & Scaled");
 	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setName("Low Data x High Beam");
 	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setName("Low Data x High Beam, Scaled");
 	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setName("Low x Dirty");
