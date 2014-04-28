@@ -2174,40 +2174,45 @@ template<class T> Record image::_getchunk(
 	if (iaxes.size() == 1 && iaxes[0] < 0) {
 		iaxes.resize();
 	}
-	vector<int> mblc = blc;
-	vector<int> mtrc = trc;
-	vector<int> minc = inc;
+	// We have to support handling of sloppy inputs for backwards
+	// compatibility. Ugh.
+	vector<int> mblc(ndim);
+	vector<int> mtrc(ndim);
+	vector<int> minc(ndim);
 	if (blc.size() == 1 && blc[0] < 0) {
 		IPosition x(ndim, 0);
 		mblc = x.asStdVector();
 	}
 	else {
-		ThrowIf(blc.size() != ndim, "blc has wrong number of values");
+		for (uInt i=0; i<ndim; i++) {
+			mblc[i] = i < blc.size() ? blc[i] : 0;
+		}
 	}
 	IPosition shape = myimage->shape();
 	if (trc.size() == 1 && trc[0] < 0) {
 		mtrc = (shape - 1).asStdVector();
 	}
 	else {
-		ThrowIf(trc.size() != ndim, "trc has wrong number of values");
+		for (uInt i=0; i<ndim; i++) {
+			mtrc[i] = i < trc.size() ? trc[i] : shape[i] - 1;
+		}
 	}
 	if (inc.size() == 1 && inc[0] == 1) {
 		IPosition x(ndim, 1);
 		minc = x.asStdVector();
 	}
-	else if (inc.size() > ndim) {
-		minc.resize(ndim);
+	else {
 		for (uInt i=0; i<ndim; i++) {
-			minc[i] = inc[i];
-		}
-	}
-	else if(inc.size() < ndim) {
-		minc.resize(ndim);
-		for (uInt i = 0; i<ndim; i++) {
 			minc[i] = i < inc.size() ? inc[i] : 1;
 		}
 	}
 	for (uInt i=0; i<ndim; i++) {
+		if (mblc[i] < 0 || mblc[i] > shape[i] - 1) {
+			mblc[i] = 0;
+		}
+		if (mtrc[i] < 0 || mtrc[i] > shape[i] - 1) {
+			mtrc[i] = shape[i] - 1;
+		}
 		if (mblc[i] > mtrc[i]) {
 			mblc[i] = 0;
 			mtrc[i] = shape[i] - 1;
