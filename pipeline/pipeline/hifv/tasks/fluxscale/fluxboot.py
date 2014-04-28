@@ -155,10 +155,14 @@ class Fluxboot(basetask.StandardTaskTemplate):
         context = self.inputs.context
         LOG.info("Doing flux density bootstrapping")
         #LOG.info("Flux densities will be written to " + fluxscale_output)
-        fluxscale_result = self._do_fluxscale(context)
-        LOG.info("Fitting data with power law")
-        powerfit_results, weblog_results, spindex_results = self._do_powerfit(context, fluxscale_result)
-        setjy_result = self._do_setjy('calibrators.ms', powerfit_results)
+        try:
+            fluxscale_result = self._do_fluxscale(context)
+            LOG.info("Fitting data with power law")
+            powerfit_results, weblog_results, spindex_results = self._do_powerfit(context, fluxscale_result)
+            setjy_result = self._do_setjy('calibrators.ms', powerfit_results)
+        except Exception as e:
+            LOG.warning(e.message)
+            LOG.warning("A problem was detected while running fluxscale.  Please review the CASA log.")
 
         return FluxbootResults(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities, spws=self.inputs.spws, weblog_results=weblog_results, spindex_results=spindex_results)                        
 

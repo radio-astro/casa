@@ -582,6 +582,7 @@ class T1_3MRenderer(RendererBase):
         scores = {}
         tablerows = []
         results_list = []
+        flagtable = {}
         for result in context.results:
             scores[result.stage_number] = result.qa.representative
             results_list = result
@@ -605,11 +606,33 @@ class T1_3MRenderer(RendererBase):
             tablerows.extend(cls._logrecords_to_tablerows(warning_msgs,
                                                               results_list,
                                                               'Warning'))
+            
+            if 'applycal' in get_task_description(result):
+                try:
+                    for field in result[0].flagsummary.keys():
+                        #each field
+                        flagsummary = result[0].flagsummary[field]
+                    
+                        fieldtable = {}
+                        for k,v in flagsummary.iteritems():
+                            myname = v['name']
+                            myspw = v['spw']
+                            myant = v['antenna']
+                            antkeys = myant.keys()
+                            spwkey = myspw.keys()[0]
+                        
+                            fieldtable.update({myname:{spwkey:myant}})
+                            
+                        flagtable[field] = fieldtable
+                except:
+                    LOG.debug("No flag summary table available yet from applycal")
+                 
 
         return {'pcontext' : context,
                 'registry' : registry,
                 'scores'   : scores,
-                'tablerows': tablerows}
+                'tablerows': tablerows,
+                'flagtable': flagtable}
 
 
     @classmethod

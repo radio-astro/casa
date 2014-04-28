@@ -244,6 +244,30 @@ class Applycal(basetask.StandardTaskTemplate):
         result = ApplycalResults(applied)
         result.summaries = [stats_before, stats_after]
 
+        ################################################
+        #Flagging stats by spw and antenna
+
+        ms = self.inputs.context.observing_run.get_ms(inputs.vis)
+        spws = ms.get_spectral_windows()
+        spwids = [spw.id for spw in spws]
+        
+        fields = ms.get_fields()
+        flagsummary = {}
+        
+        for field in fields:
+            
+            flagkwargs = []
+            for spwid in spwids:
+                flagline = "field='" + str(field.id) + "' spw='" + str(spwid) + "' mode='summary' name='AntSpw" + str(spwid).zfill(3) + "Field" + str(field.id) + "'"
+                flagkwargs.append(flagline)
+                       
+            flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
+        
+            flagdict = self._executor.execute(flaggingjob)
+            flagsummary[field.name] = flagdict
+            
+        result.flagsummary = flagsummary
+
         return result
 
     def analyse(self, result):
