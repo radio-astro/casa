@@ -132,7 +132,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="any" name="noisefwhm">
         <any type="variant" limittypes="int double record string"/>
         <description>Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If quantity (dictionary, string), it must have angular units.</description>
-        <value type="int">0</value>
+        <value type="string"/>
     </param>
     <constraints>
         <when param="mask">

@@ -1593,7 +1593,8 @@ class imfit_test(unittest.TestCase):
         myia = iatool()
         myia.open(decon_im)
         myia.setrestoringbeam("3arcmin", "3arcmin", "0deg")
-        zz = imfit(imagename=decon_im)
+        # force use of uncorrelated noise
+        zz = imfit(imagename=decon_im, noisefwhm=0)
         [decon, con] = _comp_lists(zz)
         dshape = decon.getshape(0)
         cshape = con.getshape(0)
@@ -1739,7 +1740,7 @@ class imfit_test(unittest.TestCase):
                     
                 noisefwhm = "-1arcmin"        
         
-        # correlated noise
+        # correlated noise for rms = 0.1 and noisefwhm="4arcmin"
         # sqrt(2)/rho(1.5, 1.5) = 0.069498
         # sqrt(2)/rho(2.5, 0.5) = 0.073398
         # sqrt(2)/rho(0.5, 2.5) = 0.065805
@@ -1776,6 +1777,49 @@ class imfit_test(unittest.TestCase):
                 if chans == 2:
                     self.assertTrue(near(qa.getvalue(longerr), 33.46, 1e-3))
                     self.assertTrue(near(qa.getvalue(laterr), 23.68, 1e-3))
+                    
+        # correlated noise for rms = 0.1 and noisefwhm not specified, image has beam
+        # so noisefwhm used is sqrt(12.0) arcmin
+        # sqrt(2)/rho(1.5, 1.5) = 0.062241
+        # sqrt(2)/rho(2.5, 0.5) = 0.064904
+        # sqrt(2)/rho(0.5, 2.5) = 0.059688
+        
+        noisefwhm = ""
+        for chans in range(3):
+            for code in [run_fitcomponents, run_imfit]:
+                res = code()
+                mycl.fromrecord(res['results'])
+                got = mycl.getfluxerror(0)[0]
+                print "*** got", got
+                self.assertTrue(near(got, 1.09766, 1e-3))
+                shape = mycl.getshape(0)
+                mj = qa.quantity(shape['majoraxis'])
+                mjerr = qa.quantity(shape['majoraxiserror'])
+                f = frac(mj, mjerr)
+                self.assertTrue(near(f, 0.064904, 1e-3))
+                mn = qa.quantity(shape['minoraxis'])
+                mnerr = qa.quantity(shape['minoraxiserror'])
+                f = frac(mn, mnerr)
+                self.assertTrue(near(f, 0.059688, 1e-3))
+                paerr = qa.quantity(shape['positionangleerror'])
+                paerr = qa.convert(paerr,"rad")
+                paerr = qa.getvalue(paerr)
+                self.assertTrue(near(paerr, 0.0562746, 1e-3))
+                direrr = res['results']['component0']['shape']['direction']['error']
+                longerr = qa.convert(direrr['longitude'], "arcsec")
+                laterr = qa.convert(direrr['latitude'], "arcsec")
+                if chans == 0:
+                    
+                    self.assertTrue(near(qa.getvalue(longerr), 33.0745, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 15.2083, 1e-3))
+                if chans == 1:
+                    self.assertTrue(near(qa.getvalue(longerr), 15.2083, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 33.0745, 1e-3))
+                if chans == 2:
+                    print "long ", qa.getvalue(longerr)
+                    print "lat ", qa.getvalue(laterr)
+                    self.assertTrue(near(qa.getvalue(longerr), 29.6355, 1e-3))
+                    self.assertTrue(near(qa.getvalue(laterr), 21.1412, 1e-3))
 
 def suite():
     return [imfit_test]
