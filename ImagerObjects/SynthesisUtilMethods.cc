@@ -65,7 +65,7 @@
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  
+ 
   SynthesisUtilMethods::SynthesisUtilMethods()
   {
     
@@ -530,7 +530,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Convert Quantity to String
   String SynthesisParams::QuantityToString(Quantity val)
   {
-    return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
+    std::ostringstream ss;
+    //use digits10 to ensure the conersions involve use full decimal digits guranteed to be 
+    //correct plus extra digits to deal with least significant digits (or replace with
+    // max_digits10 when it is available)
+    ss.precision(std::numeric_limits<double>::digits10+2);
+    ss << val;
+    return ss.str();
+    //return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
   }
   
   // Convert Record contains Quantity or Measure quantities to String
@@ -1077,7 +1084,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        err += stringToQuantity( rfreqs[fr], restFreq[fr] );
 	      }
             } 
-       
+	
 	//String freqframestr( MFrequency::showType(freqFrame) );
 	//err += readVal( inrec, String("frame"), freqframestr);
 	//if( ! MFrequency::getType(freqFrame, freqframestr) )
@@ -1587,7 +1594,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             // negative step -> descending channel indices 
             if (inStep.contains(casa::Regex("^-"))) descendingfreq=true;
             // input frame is the data frame
-            freqframe = MFrequency::showType(dataFrame);
+            //freqframe = MFrequency::showType(dataFrame);
           }
         else if( specmode=="frequency" ) 
           {
