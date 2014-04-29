@@ -1851,7 +1851,7 @@ class test_base(unittest.TestCase):
         default(mstransform)
 
 
-class splitFlags(test_base):
+class splitTests(test_base):
     '''Test the keepflags parameter'''
     
     def setUp(self):
@@ -1909,6 +1909,20 @@ class splitFlags(test_base):
 #             split2(vis=self.vis, outputvis=self.outputms, spw='0')
 #         print 'Expected Error!'
         
+    def test_numpy_width(self):
+        '''split2: Automatically convert numpy type to Python type'''
+        self.outputms = "split_numpytype.ms"
+        bin1 = numpy.int32(64)
+        split2(vis=self.vis, outputvis=self.outputms, spw='10', datacolumn='data',
+                    width=bin1)
+        
+        self.assertTrue(os.path.exists(self.outputms))
+
+        # Output should be:
+        # spw=0 1 channel
+        ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+
         
 class splitSpwPoln(test_base):
     '''tests for spw with different polarization shapes
@@ -2031,7 +2045,7 @@ def suite():
             split_test_almapol,
 #            split_test_wttosig, 
 #            split_test_fc
-            splitFlags,
+            splitTests,
             splitSpwPoln
             ]
     

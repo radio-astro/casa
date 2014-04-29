@@ -2,10 +2,12 @@ import os, re
 import string
 import time
 import shutil
+import numpy as np
 from taskinit import *
 from update_spw import update_spwchan
 from task_mstransform import MSTHelper
 import testhelper as th
+import flaghelper as fh
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 def split2(vis, 
@@ -119,12 +121,6 @@ def split2(vis,
                 
             if chanbin > 1:
                 chanaverage = True
-                
-        # Int type
-        elif isinstance(width, int):
-            chanbin = width
-            if chanbin > 1:
-                chanaverage = True
             
         # List type
         elif isinstance(width, list):
@@ -134,24 +130,26 @@ def split2(vis,
                 else:
                     casalog.post('Parameter width is invalid. Using 1 as default', 'WARN')
                     chanbin = width = 1
-                    
-            elif isinstance(width[0],int):
-                chanbin = width
-                
+                                    
             # If any chanbin in list is > 1, chanaverage=True
             testbin = [i for i in chanbin if i > 1]
             if len(testbin) > 0:
                 chanaverage = True
-                
-        else:
-            casalog.post('Parameter width is invalid. Using 1 as default', 'WARN')
-            chanbin = width = 1
+            
+        # Any other type
+        if not isinstance(chanbin,str) and not isinstance(chanbin,list):
+            casalog.post('Original type(width) is %s'%type(chanbin),'DEBUG')
+            if chanbin > 1:
+                chanaverage = True
         
         if chanaverage:
             casalog.post('Parse channel averaging parameters')
             config['chanaverage'] = True
             # verify that the number of spws is the same of the number of chanbin
             msth.validateChanBin()
+            # convert numpy types, until CAS-6493 is not fixed
+            chanbin = fh.evaluateNumpyType(chanbin)
+            casalog.post('Converted type(width) is %s'%type(chanbin),'DEBUG')
             config['chanbin'] = chanbin
             config['useweights'] = 'flags'            
         
