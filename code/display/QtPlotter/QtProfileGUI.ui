@@ -130,9 +130,9 @@
          </property>
         </item>
         <item>
-        	<property name="text">
-          		<string>REST</string>
-         	</property>
+         <property name="text">
+          <string>REST</string>
+         </property>
         </item>
        </widget>
       </item>
@@ -170,7 +170,7 @@
     <item>
      <widget class="QStackedWidget" name="purposeStackedLayout">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
         <horstretch>255</horstretch>
         <verstretch>241</verstretch>
        </sizepolicy>
@@ -260,7 +260,7 @@
             <property name="minimumSize">
              <size>
               <width>747</width>
-              <height>0</height>
+              <height>180</height>
              </size>
             </property>
            </widget>
