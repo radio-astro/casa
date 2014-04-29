@@ -88,7 +88,6 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	*_getLog() << origin;
 	Bool converged;
 	SPIIF modelImage, residualImage, templateImage;
-	//std::auto_ptr<LCMask> completePixelMask;
 	Bool doResid = ! _residual.empty();
 	Bool doModel = ! _model.empty();
 	if (doResid || doModel) {
