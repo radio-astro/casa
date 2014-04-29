@@ -1015,8 +1015,11 @@ void BJones::calcWtScale() {
   Cube<Bool> ampfl;
 
 
-  if (cpp_)
-    throw(AipsError("Can't BJones::calcWtScale with callib yet."));
+  if (cpp_) {
+    Cube<Float> tr;
+    cpp_->getTresult(tr,ampfl,currObs(),currField(),-1,currSpw());
+    amps.reference(tr(Slice(0,2,2),Slice(),Slice()));
+  }
   else if (ci_) {
     amps=Cube<Float>(ci_->tresultF(currObs(),currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
     ampfl=ci_->tresultFlag(currObs(),currField(),currSpw());
