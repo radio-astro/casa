@@ -19,7 +19,8 @@ def sanitize(text):
 _known_intents = {'BANDPASS'  : 'bp',
                   'AMPLITUDE' : 'flux',
                   'PHASE'     : 'ph',
-                  'TARGET'    : 'sci'  }
+                  'TARGET'    : 'sci',
+		  'CHECK'     : 'chk' }
 
 
 class FileNameComponentBuilder(object):
