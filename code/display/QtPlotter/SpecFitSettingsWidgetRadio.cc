@@ -128,7 +128,7 @@ namespace casa {
 		ui.maxLineEdit->setValidator(validator);
 
 		ui.estimateTable->setColumnCount( END_COLUMN );
-		QStringList tableHeaders =(QStringList()<< "  Peak  " << " Center " << "  FWHM  " << "          Fixed          ");
+		QStringList tableHeaders =(QStringList()<< "  Peak  " << " Center " << "  FWHM  " << "       Fixed       ");
 		ui.estimateTable->setHorizontalHeaderLabels( tableHeaders );
 		ui.estimateTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 		ui.estimateTable->setSelectionMode( QAbstractItemView::SingleSelection );

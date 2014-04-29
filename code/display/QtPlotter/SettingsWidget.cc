@@ -79,7 +79,8 @@ namespace casa {
 			QLayout* stackedLayout = layout();
 			if ( stackedLayout == NULL ) {
 				stackedLayout = new QStackedLayout( this );
-				stackedLayout->setContentsMargins( 2, 1, 2, 1 );
+				stackedLayout->setContentsMargins( 1, 1, 1, 1 );
+				stackedLayout->setSpacing(1);
 			}
 			if ( taskHelper == NULL || taskChanged ) {
 				if ( specLineFitting ) {
