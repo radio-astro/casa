@@ -8,6 +8,7 @@ from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 import simple_cluster
 import partitionhelper as ph
+import flaghelper as fh
 from update_spw import update_spwchan
 import inspect
 from numpy.f2py.auxfuncs import throw_error
@@ -1209,6 +1210,9 @@ def mstransform(
         if chanaverage and mth.validateChanBin():
             casalog.post('Parse channel averaging parameters')
             config['chanaverage'] = True
+            
+            # convert numpy types, until CAS-6493 is not fixed
+            chanbin = fh.evaluateNumpyType(chanbin)
             config['chanbin'] = chanbin
             config['useweights'] = useweights
             

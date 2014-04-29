@@ -850,6 +850,20 @@ class test_FreqAvg(test_base):
         self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
         self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
 
+    def test_freqavg11(self):
+        '''mstransform: Automatically convert numpy type to Python type'''
+        self.outputms = "freqavg_numpytype.ms"
+        bin1 = numpy.int32(128)
+        mstransform(vis=self.vis, outputvis=self.outputms, spw='10', chanaverage=True,
+                    chanbin=bin1)
+        
+        self.assertTrue(os.path.exists(self.outputms))
+
+        # Output should be:
+        # spw=0 1 channel
+        ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+        
 
 class test_Shape(test_base):
     '''Test the tileshape parameter'''
