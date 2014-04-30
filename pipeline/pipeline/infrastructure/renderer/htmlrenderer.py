@@ -27,6 +27,7 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.applycal as applycal
+import pipeline.infrastructure.displays.setjy as setjy
 import pipeline.infrastructure.displays.bandpass as bandpass
 import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
@@ -2643,6 +2644,78 @@ class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
                     'num_mses'      : num_mses})
 
         return ctx
+
+
+class T2_4MDetailsSetjyRenderer(T2_4MDetailsDefaultRenderer):
+
+    def __init__(self, template='t2-4m_details-hif_setjy.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsSetjyRenderer, self).__init__(template,
+                                                           always_rerender)
+
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsSetjyRenderer, self)
+        ctx = super_cls.get_display_context(context, result)
+        
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % result.stage_number)
+                                  
+        ctx.update({'dirname'  : weblog_dir})
+        
+        '''
+        amp_vs_uv_summary_plots = self.create_plots(context, 
+                                                    result, 
+                                                    setjy.AmpVsUVSummaryChart, 
+                                                    'AMPLITUDE')
+        '''
+        
+        amp_vs_uv_summary_plots = collections.defaultdict(dict)
+        for intents in ['AMPLITUDE']:
+            plots = self.create_plots(context, 
+                                      result, 
+                                      setjy.AmpVsUVSummaryChart, 
+                                      intents)
+            self.sort_plots_by_baseband(plots)
+
+            key = intents
+            for vis, vis_plots in plots.items():
+                amp_vs_uv_summary_plots[vis][key] = vis_plots
+
+        ctx.update({'amp_vs_uv_plots'     : amp_vs_uv_summary_plots})
+        
+        return ctx
+
+    def sort_plots_by_baseband(self, d):
+        for vis, plots in d.items():
+            plots = sorted(plots, 
+                           key=lambda plot: plot.parameters['baseband'])
+            d[vis] = plots
+
+    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None):
+        """
+        Create plots and return a dictionary of vis:[Plots].
+        """
+        d = {}
+        for result in results:
+            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls)
+            d = utils.dict_merge(d, plots)
+        return d
+
+    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None):
+        vis = os.path.basename(result.inputs['vis'])
+        
+        plotter = plotter_cls(context, result, intents)
+        plots = plotter.plot()
+
+        d = collections.defaultdict(dict)
+        d[vis] = plots
+
+        if renderer_cls is not None:
+            renderer = renderer_cls(context, result, plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())        
+
+        return d
 
     
 class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
@@ -5782,7 +5855,7 @@ renderer_map = {
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
-        hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
+        hif.tasks.Setjy          : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html', always_rerender=True),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
         hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
@@ -5807,7 +5880,7 @@ renderer_map = {
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
-        hifv.tasks.setmodel.VLASetjy : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html', always_rerender=True),
+        hifv.tasks.setmodel.VLASetjy : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailspriorcalsRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
         hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=True),
         hifv.tasks.testBPdcals                   : T2_4MDetailstestBPdcalsRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),
