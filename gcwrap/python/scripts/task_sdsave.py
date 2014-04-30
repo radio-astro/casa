@@ -133,7 +133,8 @@ class sdsave_worker(sdutil.sdtask_template):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
-        os.system('rm -rf %s*' % self.temp_prefix)
+        if hasattr(self,'temp_prefix') and self.splitant:
+            os.system('rm -rf %s*' % self.temp_prefix)
 
     def __dochannelrange(self, scantab):
         if len(self.spw) > 0:
