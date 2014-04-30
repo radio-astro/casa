@@ -107,7 +107,7 @@ class sdsave_worker(sdutil.sdtask_template):
     def save(self):
         if self.splitant:
             outfile_ext = ''
-            elem_outfilename = self.outfile.split('.')
+            elem_outfilename = self.project.split('.')
             len_elem = len(elem_outfilename)
             if (len_elem > 1):
                 outfile_ext = elem_outfilename.pop().lower()
@@ -131,7 +131,7 @@ class sdsave_worker(sdutil.sdtask_template):
             
         else:
             # save
-            sdutil.save(self.scan, self.outfile, self.outform, self.overwrite)
+            sdutil.save(self.scan, self.project, self.outform, self.overwrite)
         
     def cleanup(self):
         if hasattr(self,'restore') and self.restore:
