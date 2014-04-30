@@ -194,6 +194,8 @@ public:
   String tststr;
   // for holding quantity or measure records
   Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
+  //freqframe coversion?
+  Bool freqFrameValid;
 
   Bool overwrite;
 

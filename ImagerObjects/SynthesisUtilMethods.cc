@@ -1393,7 +1393,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /////////////////// Spectral Coordinate
 
     //Make sure frame conversion is switched off for REST frame data.
-    Bool freqFrameValid=(freqFrame != MFrequency::REST);
+    //Bool freqFrameValid=(freqFrame != MFrequency::REST);
+    freqFrameValid=(freqFrame != MFrequency::REST);
 
     // *** get selected spw ids ***
     Vector<Int> spwids;
@@ -1647,7 +1648,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             {  mSysVel=MRadialVelocity();}
         }
       // cubedata mode: input start, step are those of the input data frame
-      if ( mode=="cubedata" ) freqframe=MFrequency::showType(dataFrame); 
+      if ( mode=="cubedata" ) 
+        {
+          freqframe=MFrequency::showType(dataFrame);
+          freqFrameValid=False; // no conversion for vb.lsrfrequency()
+        }
       //if ( mode=="cubedata" ) freqframe=MFrequency::REST;
       
       // *** NOTE *** 

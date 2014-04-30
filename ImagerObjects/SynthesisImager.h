@@ -300,6 +300,8 @@ protected:
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
   Bool useScratch_p;
+  //
+  Bool freqFrameValid_p;
 
 };
 
