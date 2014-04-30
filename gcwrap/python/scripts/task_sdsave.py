@@ -227,17 +227,11 @@ def _fillweight(vis):
 
 def _resetweight(vis):
     # work with private tb tool
-    casalog.post('reset all WEIGHT and SIGMA to 1.0...')
+    casalog.post('fill WEIGHT and SIGMA failed. reset all WEIGHT and SIGMA to 1.0...', priority='WARN')
     with toolmanager(vis, 'tb', nomodify=False) as tb:
-        ddids = numpy.unique(tb.getcol('DATA_DESC_ID'))
-        for ddid in ddids:
-            try:
-                tsel = tb.query('DATA_DESC_ID == %s'%(ddid))
-                for col in ['WEIGHT', 'SIGMA']:
-                    w = tsel.getcol(col)
-                    w[:] = 1.0
-                    tsel.putcol(col, w)
-            except Exception, e:
-                raise e
-            finally:
-                tsel.close()
+        for column in ['WEIGHT', 'SIGMA']:
+            values = tb.getvarcol(column)
+            for v in values.values():
+                v[:] = 1.0
+            tb.putvarcol(column, values)
+
