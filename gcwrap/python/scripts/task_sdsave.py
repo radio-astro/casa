@@ -191,20 +191,53 @@ def _fillweight(vis):
     # work with private cb tool
     with toolmanager(vis, 'cb', compress=False, addcorr=False, addmodel=False) as cb:
         status = cb.initweights()
-    
-    if status == False:
-        # initweights failed so set WEIGHT and SIGMA to 1.0
-        # work with private tb tool
-        with toolmanager(vis, 'tb', nomodify=False) as tb:
-            ddids = numpy.unique('DATA_DESC_ID')
-            for ddid in ddids:
-                try:
-                    tsel = tb.query('DATA_DESC_ID == %s'%(ddid))
-                    for col in ['WEIGHT', 'SIGMA']:
-                        w = tsel.getcol(col)
-                        w[:] = 1.0
-                        tsel.putcol(col, w)
-                except Exception, e:
-                    raise e
-                finally:
-                    tsel.close()
+
+    if status:
+        # cb.initweights() succeeded so try to apply Tsys to
+        # weight column
+        # procedure:
+        # 1. generate temporary Tsys caltable
+        # 2. apply temporary Tsys caltable to vis
+        # 3. remove temporary Tsys caltable
+        import time
+        from gencal import gencal
+        from applycal import applycal
+        caltable = 'temporary_caltable%s.tsys'%(str(time.time()).replace('.',''))
+        casalog.post('tempolary caltable name: %s'%(caltable))
+        try:
+            gencal(vis=vis, caltable=caltable, caltype='tsys')
+            applycal(vis=vis, docallib=False, gaintable=[caltable], applymode='calonly')
+        except Exception, e:
+            # Tsys application failed so that reset WEIGHT and SIGMA to 1.0
+            _resetweight(vis)
+            raise e
+        finally:
+            if os.path.exists(caltable):
+                casalog.post('remove %s...'%(caltable))
+                os.system('rm -rf %s'%(caltable))
+            # remove CORRECTED_DATA column
+            casalog.post('remove CORRECTED_DATA from %s...'%(vis))
+            with toolmanager(vis, 'tb', nomodify=False) as tb:
+                if 'CORRECTED_DATA' in tb.colnames():
+                    tb.removecols('CORRECTED_DATA')
+        
+    else:
+        # initweights failed so reset WEIGHT and SIGMA to 1.0
+        _resetweight(vis)
+
+def _resetweight(vis):
+    # work with private tb tool
+    casalog.post('reset all WEIGHT and SIGMA to 1.0...')
+    with toolmanager(vis, 'tb', nomodify=False) as tb:
+        ddids = numpy.unique(tb.getcol('DATA_DESC_ID'))
+        for ddid in ddids:
+            try:
+                tsel = tb.query('DATA_DESC_ID == %s'%(ddid))
+                for col in ['WEIGHT', 'SIGMA']:
+                    w = tsel.getcol(col)
+                    w[:] = 1.0
+                    tsel.putcol(col, w)
+            except Exception, e:
+                raise e
+            finally:
+                tsel.close()
