@@ -484,6 +484,24 @@ science spws are 1 and 2, these parameters should be specified as follows:
     tsysspw = '0'
     spwmap = {0: [1,2]}
 
+Another example for multiple Tsys spws is,
+
+    tsysspw = '0,1'
+    spwmap = {0: [3], 1: [4]}
+
+where it assumes that Tsys is transferred from 0 to 3 and 1 to 4,
+respectively. Below is an example of full specification of task
+parameters for calmode of 'ps,tsys,apply':
+
+    default(sdcal2)
+    infile = 'foo.asap'
+    calmode = 'ps,tsys,apply'
+    spw = ''
+    tsysspw = '0,1'
+    spwmap = {0:[3], 1:[4]}
+    outfile = 'bar.asap'
+    sdcal2()
+
 Note that, in contrast to applycal task, spwmap must be a dictionary
 with Tsys spectral window as key and a list of corresponding science
 spectral window as value. Note also that the parameter 'spw' should
