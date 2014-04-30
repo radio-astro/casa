@@ -138,7 +138,7 @@ Keyword arguments
 -----------------
 infile -- name of input SD dataset
 splitant -- split output file by antenna. this parameter is only
-            effective for MS input and ASAP output.
+            effective for MS input.
         options: (bool) True, False
         default: False
     &gt;&gt;&gt;splitant expandable parameter
@@ -209,6 +209,11 @@ restfreq -- the rest frequency
                  [{'name':'CO','value':345}]
 outfile -- name of output file
         default: '' ((&lt;infile&gt;_saved)
+        NOTE actual output file name(s) will be modified if splitant 
+        is True as antenna names are to be included. If outfile has a 
+        suffix '.asap' or '.ASAP', antenna name will be inserted before 
+        the suffix like 'out.antName.asap', otherwise, antenna name 
+        will be simply appended to outfile like 'out.sdfits.antName'. 
 outform -- output file format
         options: 'ASAP','MS2', 'ASCII','SDFITS'
         default: 'ASAP'
