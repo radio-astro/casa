@@ -462,6 +462,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//csys = impars.buildCoordinateSystem( tms );
 	csys = impars.buildCoordinateSystem( rvi_p );
 	IPosition imshape = impars.shp();
+        freqFrameValid_p = impars.freqFrameValid;
 
 	if( (itsMappers.nMappers()==0) || 
 	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
@@ -1168,9 +1169,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     //// For mode=cubedata, set the freq frame to invalid..
+    // get this info from buildCoordSystem
     Vector<Int> tspws(0);
-    theFT->setSpw( tspws, False );
-    theIFT->setSpw( tspws, False );
+    //theFT->setSpw( tspws, False );
+    //theIFT->setSpw( tspws, False );
+    theFT->setSpw( tspws, freqFrameValid_p );
+    theIFT->setSpw( tspws, freqFrameValid_p );
 
     //// Set interpolation mode
     theFT->setFreqInterpolation( interpolation );
