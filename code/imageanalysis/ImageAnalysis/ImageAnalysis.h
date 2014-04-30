@@ -28,8 +28,6 @@
 
 // PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
 
-//# put includes here
-
 #include <casa/Quanta/Quantum.h>
 
 #include <imageanalysis/ImageTypedefs.h>
