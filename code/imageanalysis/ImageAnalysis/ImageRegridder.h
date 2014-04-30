@@ -1,4 +1,3 @@
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,7 +22,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGEANALYSIS_IMAGEREGRIDDER_H
 #define IMAGEANALYSIS_IMAGEREGRIDDER_H
