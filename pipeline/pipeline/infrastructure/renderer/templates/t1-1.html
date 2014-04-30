@@ -1,13 +1,14 @@
 <%!
 navbar_active='Home'
 
+import collections
 import datetime
+import itertools
+import operator
+import os
+
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
-import collections
-import operator
-import itertools
-
 %>
 <%inherit file="base.html"/>
 
@@ -104,12 +105,6 @@ import itertools
 					<td></td>
 					<td></td>
 				</tr>
-				<tr>
-					<th></th>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
 <%doc>
 				<tr>
 					<th>QA Total</th>
@@ -200,7 +195,7 @@ import itertools
 			                % for row in sorted(sessiongroup, key=lambda y: y.ms):
 					    <tr>
 				                <td><a href="${row.href}">${row.ms}</a></td>
-				                <td>${utils.commafy(row.receivers)}</td>
+				                <td>${utils.commafy(row.receivers, quotes=False)}</td>
 				                <td>${row.num_antennas}</td>
 				                <td>${row.time_start}</td>
 				                <td>${row.time_end}</td>
@@ -224,4 +219,16 @@ import itertools
 	    </table>
 
 
-
+% if 'casalogs' in pcontext.logs:
+<h4>CASA logs</h4>
+<ul>
+%for log_url in pcontext.logs['casalogs']:
+<% 
+   fp = os.path.join(pcontext.report_dir, log_url)
+   total_bytes = os.path.getsize(fp)
+   filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
+%>
+	<li>download <a href="${log_url}" download="${log_url}">${log_url}</a> (${str(filesize)})</li>
+%endfor
+</ul>
+%endif 

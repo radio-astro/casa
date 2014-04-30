@@ -123,6 +123,7 @@ class Context(object):
         self.task_counter = 0
         self.subtask_counter = 0
         self.results = []
+        self.logs = {}
 
         # domain depends on infrastructure.casatools, so infrastructure cannot
         # depend on domain hence the run-time import
@@ -257,14 +258,24 @@ class Pipeline(object):
                 last_context = pickle.load(context_file)
                 self.context = last_context
 
-        self._link_casa_log(self.context.report_dir)
+        self._link_casa_log(self.context)
 
-    def _link_casa_log(self, report_dir):
+    def _link_casa_log(self, context):
+        report_dir = context.report_dir
+        
         # create a hard-link to the current CASA log in the report directory 
         src = casatools.log.logfile()
         dst = os.path.join(report_dir, os.path.basename(src))
         if not os.path.exists(dst):
             os.link(src, dst)
+
+        # the web log creates links to each casa log. The name of each CASA
+        # log is appended to the context.
+        if 'casalogs' not in context.logs:
+            # list as one casa log will be created per CASA session 
+            context.logs['casalogs'] = []
+        if src not in context.logs['casalogs']:
+            context.logs['casalogs'].append(os.path.basename(dst))
     
     def _find_most_recent_session(self, directory='./'):
         # list all the files in the directory..
@@ -276,7 +287,7 @@ class Pipeline(object):
                                  for f in files])
  
         # .. then return the file with the most recent timestamp
-        return max(name_n_timestamp, key=lambda k: name_n_timestamp.get(k))
+        return max(name_n_timestamp, key=name_n_timestamp.get)
     
     def __repr__(self):
         ms_names = [ms.name 
