@@ -1,14 +1,15 @@
 import os
 import numpy
+import contextlib
 
-from taskinit import casalog
+from taskinit import casalog, gentools
 
 import asap as sd
 from asap.scantable import is_scantable, is_ms
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdsave(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, overwrite):
+def sdsave(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, fillweight, overwrite):
     with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -128,7 +129,10 @@ class sdsave_worker(sdutil.sdtask_template):
         else:
             # save
             sdutil.save(self.scan, self.project, self.outform, self.overwrite)
-        
+
+            if self.outform == 'MS2' and self.fillweight:
+                _fillweight(self.project)
+            
     def cleanup(self):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
@@ -171,3 +175,36 @@ class sdsave_worker(sdutil.sdtask_template):
             sel.set_ifs(ifs_new)
             scantab.set_selection(sel)
 
+@contextlib.contextmanager
+def toolmanager(vis, tooltype, *args, **kwargs):
+    tool = gentools([tooltype])[0]
+    tool.open(vis, *args, **kwargs)
+    yield tool
+    tool.close()
+
+def _fillweight(vis):
+    if not os.path.exists(vis):
+        return
+
+    casalog.post('fill WEIGHT and SIGMA columns for %s ...'%(vis))
+
+    # work with private cb tool
+    with toolmanager(vis, 'cb', compress=False, addcorr=False, addmodel=False) as cb:
+        status = cb.initweights()
+    
+    if status == False:
+        # initweights failed so set WEIGHT and SIGMA to 1.0
+        # work with private tb tool
+        with toolmanager(vis, 'tb', nomodify=False) as tb:
+            ddids = numpy.unique('DATA_DESC_ID')
+            for ddid in ddids:
+                try:
+                    tsel = tb.query('DATA_DESC_ID == %s'%(ddid))
+                    for col in ['WEIGHT', 'SIGMA']:
+                        w = tsel.getcol(col)
+                        w[:] = 1.0
+                        tsel.putcol(col, w)
+                except Exception, e:
+                    raise e
+                finally:
+                    tsel.close()
