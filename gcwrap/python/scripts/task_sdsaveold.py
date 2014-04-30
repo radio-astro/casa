@@ -1,3 +1,4 @@
+import os
 from taskinit import casalog
 
 import asap as sd
@@ -32,6 +33,7 @@ class sdsave_worker(sdutil.sdtask_template):
             import datetime
             dt = datetime.datetime.now()
             self.temp_prefix = "temp-sdsave" + dt.strftime("%Y%m%d%H%M%S")
+
             self.split_infiles = sd.splitant(filename=self.infile,
                                              outprefix=self.temp_prefix,
                                              overwrite=self.overwrite,
@@ -44,8 +46,8 @@ class sdsave_worker(sdutil.sdtask_template):
                 # scantable selection
                 work_scan.set_selection(self.get_selector_by_list())
                 self.scans.append(work_scan)
-
-                #retrieve antenna names
+                
+                # retrieve antenna names
                 self.antenna_names.append(split_infile.split('.')[1])
             
         else:
@@ -102,7 +104,7 @@ class sdsave_worker(sdutil.sdtask_template):
                     elem_outfilename.append(outfile_ext)
                     outfile_ext = ''
 
-            outfile_prefix = '.'.join(elem_outfilename) + '_'
+            outfile_prefix = '.'.join(elem_outfilename) + '.'
 
             i = 0
             for work_scan in self.scans:
@@ -110,10 +112,6 @@ class sdsave_worker(sdutil.sdtask_template):
                 sdutil.save(work_scan, split_outfile, self.outform, self.overwrite)
                 i += 1
 
-            for tempfile in self.split_infiles:
-                import os
-                os.system('rm -rf %s' % tempfile)
-            
         else:
             # save
             sdutil.save(self.scan, self.outfile, self.outform, self.overwrite)
@@ -122,3 +120,4 @@ class sdsave_worker(sdutil.sdtask_template):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
+        os.system('rm -rf %s*' % self.temp_prefix)
