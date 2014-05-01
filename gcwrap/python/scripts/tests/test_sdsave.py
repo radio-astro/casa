@@ -17,6 +17,7 @@ except:
     import tests.selection_syntax as selection_syntax
 
 from sdsave import sdsave
+from task_sdsave import toolmanager
 import asap as sd
 
 # Unit test of sdsave task.
@@ -2311,11 +2312,106 @@ class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
 
         self._run_and_verify(self.infile)
 
+class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
+    """
+    Verify that fillweight option works fine.
+    """
+    infile = 'weighttest.asap'
+    outfile = 'weighttest.ms'
+    tol = 1.0e-5
 
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.outfile)):
+            shutil.rmtree(self.outfile)
+
+    def test_weigting(self):
+        """
+        Test fillweight=True
+        """
+        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=True)
+        self.verify()
+
+    def test_noweighting(self):
+        """
+        Test fillweight=False
+        """
+        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
+        with toolmanager(self.outfile, 'tb') as tb:
+            weight = tb.getvarcol('WEIGHT')
+            sigma  = tb.getvarcol('SIGMA')
+            for key in weight.keys():
+                self.assertTrue(all(weight[key] == 1.0),
+                                msg = 'Failed for weight at %s'%(key))
+                self.assertTrue(all(sigma[key] == 1.0),
+                                msg = 'Failed for sigma at %s'%(key))
+    
+    def verify(self):
+        datadesc = 'DATA_DESCRIPTION'
+        syscal = 'SYSCAL'
+        spwin = 'SPECTRAL_WINDOW'
+        # DATA_DESC_ID mapping from DATA_DESCRIPTION table
+        with toolmanager(os.path.join(self.outfile, datadesc), 'tb') as tb:
+            spwmap = {}
+            for irow in xrange(tb.nrows()):
+                spwmap[irow] = tb.getcell('SPECTRAL_WINDOW_ID', irow)
+        
+        # Tsys from SYSCAL table
+        with toolmanager(os.path.join(self.outfile, syscal), 'tb') as tb:
+            tsys = {}
+            for irow in xrange(tb.nrows()):
+                tsys[tb.getcell('SPECTRAL_WINDOW_ID', irow)] = tb.getcell('TSYS_SPECTRUM', irow)
+            #print tsys
+                
+        # bandwidth from SPECTRAL_WINDOW table
+        with toolmanager(os.path.join(self.outfile, spwin), 'tb') as tb:
+            channelwidth = {}
+            for irow in xrange(tb.nrows()):
+                channelwidth[irow] = tb.getcell('EFFECTIVE_BW', irow)
+            #print channelwidth
+                
+        # test MAIN
+        with toolmanager(self.outfile, 'tb') as tb:
+            for irow in xrange(tb.nrows()):
+                ddid = tb.getcell('DATA_DESC_ID', irow)
+                spwid = spwmap[ddid]
+                (npol,nchan) = tb.getcell('FLAG', irow).shape
+
+                dt = tb.getcell('EXPOSURE', irow)
+                df = channelwidth[spwid].mean()
+
+                weight_ref = numpy.ones(npol, dtype=float) * (df * dt)
+                sigma_ref = 1.0 / numpy.sqrt(weight_ref)
+                # apply Tsys correction
+                if tsys.has_key(spwid):
+                    meantsys = tsys[spwid].mean(axis=1)
+                    weight_ref /= (meantsys * meantsys)
+
+                weight = tb.getcell('WEIGHT', irow)
+                sigma = tb.getcell('SIGMA', irow)
+
+                diff_weight = numpy.abs((weight - weight_ref) / weight_ref)
+                diff_sigma = numpy.abs((sigma - sigma_ref) / sigma_ref)
+
+                #print 'weight(%s) = %s (ref %s), diff_weight(%s) = %s'%(irow,weight,weight_ref,irow,diff_weight)
+                #print 'sigma(%s) = %s (ref %s), diff_sigma(%s) = %s'%(irow,sigma,sigma_ref,irow,diff_sigma)
+                
+                self.assertTrue(all(diff_weight < self.tol))
+                self.assertTrue(all(diff_sigma < self.tol))        
+                
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
             sdsave_freq_labeling,sdsave_flagging,
             sdsave_scan_number, sdsave_test_splitant,
-            sdsave_selection_syntax, sdsave_scanrate]
+            sdsave_selection_syntax, sdsave_scanrate,
+            sdsave_weighting]
