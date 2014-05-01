@@ -304,7 +304,9 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         caltables = []
         for spw in science_spwids:
             if inputs.hm_smooth == 'automatic':
-                smooth = wvrheuristics.smooth(spw)
+                #smooth = wvrheuristics.smooth(spw)
+		# Force the smooth heuristics to a single value
+                smooth = wvrheuristics.smoothall(science_spwids)
             else:
                 smooth = inputs.smooth
 
