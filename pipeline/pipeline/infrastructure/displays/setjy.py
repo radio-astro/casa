@@ -174,7 +174,7 @@ class BasebandComposite(common.LeafComposite):
             for fluxm in result.measurements[fieldname]:
                 spws.append(fluxm.spw_id)
         
-        spwlist = ','.join(spws)
+        spwlist = ','.join([str(i) for i in spws])
         
         for spw in ms.get_spectral_windows(spwlist):
             if intent != '':
