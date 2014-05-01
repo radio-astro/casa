@@ -43,9 +43,9 @@ VISLIST_RESET_KEY = '_do_not_reset_vislist'
 
 def timestamp(method):
     def attach_timestamp_to_results(self, *args, **kw):
-        start = datetime.datetime.now();
+        start = datetime.datetime.utcnow()
         result = method(self, *args, **kw)
-        end = datetime.datetime.now()
+        end = datetime.datetime.utcnow()
 
         if result is not None:
             result.timestamps = Timestamps(start, end)

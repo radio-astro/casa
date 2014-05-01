@@ -143,7 +143,7 @@ def unix_seconds_to_datetime(unix_secs):
     If given a list, a list is returned. If given a scalar, a scalar is
     returned.
     """
-    datetimes = [datetime.datetime.fromtimestamp(s) for s in unix_secs]
+    datetimes = [datetime.datetime.utcfromtimestamp(s) for s in unix_secs]
     return datetimes if len(unix_secs) > 1 else datetimes[0]
 
 def mjd_seconds_to_datetime(mjd_secs):

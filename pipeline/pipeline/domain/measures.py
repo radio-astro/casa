@@ -1058,13 +1058,15 @@ class TemporalCollection(object):
     def __getitem__(self, i):
         return self.__milestones()[i]
 
-    def get(self, when=datetime.datetime.now()):
+    def get(self, when=None):
         """Returns the value that was effective on the given date
         """
+        if when is None:
+            when = datetime.datetime.utcnow()
         for m in self.__milestones():
             thisDate = m
             if thisDate <= when:
-                return self.__contents.get(thisDate);
+                return self.__contents.get(thisDate)
         raise LookupError("No records that early")
 
     def put(self, at, item):
@@ -1082,8 +1084,7 @@ class TemporalCollection(object):
 
     def __calculateMilestones(self):
         self.__milestoneCache = self.__contents.keys()
-        self.__milestoneCache.sort(cmp=lambda x, y: cmp(x, y),
-                                   reverse=True)
+        self.__milestoneCache.sort(cmp=cmp, reverse=True)
 
     def __clearMilestoneCache(self):
         self.__milestoneCache = None
@@ -1163,7 +1164,7 @@ class TimeInterval(object):
     def startingFromNow():
         """Returns an open-ended TimeInterval starting from now.
         """ 
-        return TimeInterval(datetime.datetime.now(), TimeInterval.FOREVER)
+        return TimeInterval(datetime.datetime.utcnow(), TimeInterval.FOREVER)
 
     FOREVER = datetime.datetime(9999,12,31)
     startingFrom = staticmethod(startingFrom)
