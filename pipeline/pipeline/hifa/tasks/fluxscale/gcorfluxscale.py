@@ -300,11 +300,25 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         inputs = self.inputs
 
+        # Get the science spws
+        sci_spwids = [spw.id for spw in inputs.ms.get_spectral_windows(science_windows_only=True)]
+
+	# Use only valid spws
+	spw_ids = []
+	fieldlist = inputs.ms.get_fields(task_arg=field)
+	for fld in fieldlist:
+	   for spw in fld.valid_spws:
+               if spw.id not in sci_spwids:
+                   continue
+	       spw_ids.append(str(spw.id))
+	spw_ids = ','.join(list(set(spw_ids)))
+
         task_args = {'output_dir'  : inputs.output_dir,
                      'vis'         : inputs.vis,
                      'caltable'    : caltable,
                      'field'       : field,
                      'intent'      : intent,
+		     'spw'         : spw_ids,
                      'solint'      : solint,
                      'gaintype'    : gaintype,
                      'calmode'     : calmode,
