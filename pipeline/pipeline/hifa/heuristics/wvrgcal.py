@@ -191,6 +191,16 @@ class WvrgcalHeuristics(object):
     def segsource(self):
         return self._segsource
 
+    def smoothall (self, allspws):
+        if self.hm_smooth == 'automatic':
+	    temp = 0.0
+	    for spw in allspws:
+               temp = max(temp, self.science_integration[spw],
+	           self.wvr_integration)
+            return '%ss' % temp        
+        else:
+            return self._smooth
+
     def smooth(self, spw):
         if self.hm_smooth == 'automatic':
             # the wvr integration time is the minimum sensible value for smooth
