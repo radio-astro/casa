@@ -336,6 +336,10 @@ class Setjy(basetask.StandardTaskTemplate):
                 field_is_unique = True if len(fields) is 1 else False
                         
             for field in fields:
+
+		# determine the valid spws for that field
+		valid_spwids = [spw.id for spw in field.valid_spws]
+
                 field_identifier = field.name if field_is_unique else str(field.id)
                 # we're specifying field PLUS intent, so we're unlikely to
                 # have duplicate data selections. We ensure no duplicate
@@ -345,6 +349,10 @@ class Setjy(basetask.StandardTaskTemplate):
                 inputs.field = field_identifier
 
                 for spw in spws:  
+
+		    # Skip invalid spws 
+		    if spw.id not in valid_spwids:
+		        continue
                     inputs.spw = spw.id
     
                     orig_intent = inputs.intent
