@@ -56,7 +56,7 @@ template<typename T> SakuraAlignedArray<T>::~SakuraAlignedArray() {
 
 template<typename T>
 Vector<T> SakuraAlignedArray<T>::getAlignedVector() {
-  return Vector<T>(IPosition(1, num_data_), data_);
+  return Vector<T>(IPosition(1, num_data_), data_, SHARE);
 }
 
 }  // End of casa namespace.
