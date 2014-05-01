@@ -47,6 +47,12 @@ public:
 	// 'mask'   => Array<Bool> of pixel mask values
 	Record get() const;
 
+	static void put(
+		SPIIT image, const Array<T>& pixelsArray, const Vector<Int>& blc,
+		const Vector<Int>& inc, Bool list,
+		Bool locking, Bool replicate
+	);
+
 	String getClass() const { const static String name = "PixelValueManipulator"; return name; }
 
 protected:
@@ -61,10 +67,13 @@ protected:
     inline Bool _supportsMultipleRegions() {return True;}
 
 private:
-    IPosition _axes;
+    IPosition _axes, _lastChunkShape;
 
 	// disallow default constructor
 	PixelValueManipulator();
+
+    // void _setCache(const casa::IPosition& chunk_shape);
+
 
 };
 

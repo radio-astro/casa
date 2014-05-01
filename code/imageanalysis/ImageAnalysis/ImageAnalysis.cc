@@ -2441,39 +2441,6 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 	mask = maskPixels(shp - 1);
 }
 
-
-Bool ImageAnalysis::putchunk(
-	const Array<Complex>& pixelsArray,
-	const Vector<Int>& blc, const Vector<Int>& inc, const Bool list,
-	const Bool locking, const Bool replicate
-) {
-	ThrowIf(
-		! _imageComplex,
-		"The array has Complex values, but the "
-		"associated image is not Complex valued"
-	);
-	return _putchunk(
-		*_imageComplex, pixelsArray, blc, inc, list,
-		locking, replicate
-	);
-}
-
-Bool ImageAnalysis::putchunk(
-	const Array<Float>& pixelsArray,
-	const Vector<Int>& blc, const Vector<Int>& inc, const Bool list,
-	const Bool locking, const Bool replicate
-) {
-	ThrowIf(
-		! _imageFloat,
-		"The array has Float values, but the "
-		"associated image is not Float valued"
-	);
-	return _putchunk(
-		*_imageFloat, pixelsArray, blc, inc, list,
-		locking, replicate
-	);
-}
-
 Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		const Array<Bool>& mask, Record& region, const Bool list,
 		const Bool usemask, const Bool, const Bool replicateArray) {
@@ -3530,29 +3497,6 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 			refPix(i) = Double(shape(i) / 2);
 	}
 	cSys.setReferencePixel(refPix);
-}
-
-void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
-	if (_imageFloat.get() == 0) {
-		return;
-	}
-	if (chunk_shape.nelements() != last_chunk_shape_p.nelements()
-			|| chunk_shape != last_chunk_shape_p) {
-		ImageAnalysis *This = (ImageAnalysis *) this;
-		This->last_chunk_shape_p.resize(chunk_shape.nelements());
-		This->last_chunk_shape_p = chunk_shape;
-
-		// Assume that we will keep getting similar sized chunks filling up
-		// the whole image.
-		IPosition shape(_imageFloat->shape());
-		IPosition blc(shape.nelements());
-		blc = 0;
-		IPosition axisPath(shape.nelements());
-		for (uInt i = 0; i < axisPath.nelements(); i++) {
-			axisPath(i) = i;
-		}
-		_imageFloat->setCacheSizeFromPath(chunk_shape, blc, shape, axisPath);
-	}
 }
 
 Record ImageAnalysis::setregion(const Vector<Int>& blc, const Vector<Int>& trc,

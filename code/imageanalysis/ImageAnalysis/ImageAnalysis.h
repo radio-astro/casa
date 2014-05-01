@@ -258,18 +258,6 @@ class ImageAnalysis
     void pixelValue (Bool& offImage, Quantum<Double>& value, Bool& mask,
                      Vector<Int>& pos) const;
 
-    Bool putchunk(
-    	const Array<Float>& pixels, const Vector<Int>& blc,
-    	const Vector<Int>& inc, const Bool list = False,
-    	const Bool locking = True, const Bool replicate = False
-    );
-
-    Bool putchunk(
-    	const Array<Complex>& pixels, const Vector<Int>& blc,
-    	const Vector<Int>& inc, const Bool list = False,
-    	const Bool locking = True, const Bool replicate = False
-    );
-
     Bool putregion(const Array<Float>& pixels, const Array<Bool>& pixelmask, 
                    Record& region, const Bool list = False, 
                    const Bool usemask = True, 
@@ -546,9 +534,6 @@ class ImageAnalysis
     void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
                          const casa::Record& Regions,
                          casa::LogIO& logger);
-    // Set the cache
-    void set_cache(const casa::IPosition& chunk_shape) const;
-    
 
     // Some helper functions that needs to be in casa namespace coordsys
 
@@ -580,13 +565,6 @@ class ImageAnalysis
     );
 
     void _onlyFloat(const String& method) const;
-
-    template<class T> Bool _putchunk(
-        ImageInterface<T>& image,
-    	const Array<T>& pixels, const Vector<Int>& blc,
-    	const Vector<Int>& inc, const Bool list,
-    	const Bool locking, const Bool replicate
-    );
 
     template<class T> static void _destruct(ImageInterface<T>& image);
 

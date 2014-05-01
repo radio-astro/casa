@@ -35,8 +35,8 @@ template<class T> PixelValueManipulator<T>::PixelValueManipulator(
 	const Record *const regionRec,
 	const String& mask
 ) : ImageTask<T>(
-		image, "", regionRec, "", "", "",
-		mask, "", False
+	image, "", regionRec, "", "", "",
+	mask, "", False
 ), _axes() {
 	this->_construct();
 }
@@ -67,8 +67,9 @@ template<class T> void PixelValueManipulator<T>::setAxes(
 }
 
 template<class T> Record PixelValueManipulator<T>::get () const {
+	SPCIIT myimage = this->_getImage();
 	SPCIIT subImage = SubImageFactory<T>::createImage(
-		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+		*myimage, "", *this->_getRegion(), this->_getMask(),
 		False, False,
 		(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
 		this->_getStretch()
@@ -92,45 +93,81 @@ template<class T> Record PixelValueManipulator<T>::get () const {
     ret.define("mask", pixelMask);
     return ret;
 }
-/*
-template<class T> Bool ImageAnalysis::_getchunk(
-	Array<T>& pixels, Array<Bool>& pixelMask,
-	const ImageInterface<T>& image,
-	const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
-	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
-	const Bool getmask
+
+template<class T> void PixelValueManipulator<T>::put(
+	SPIIT image, const Array<T>& pixelsArray, const Vector<Int>& blc,
+	const Vector<Int>& inc, Bool list, Bool locking, Bool replicate
 ) {
-	*_log << LogOrigin(className(), __func__);
+	IPosition imageShape = image->shape();
+	uInt ndim = imageShape.nelements();
+	ThrowIf(
+		pixelsArray.ndim() > ndim,
+		"Pixel array cannot have more dimensions than the image!"
+	);
 
-	IPosition iblc = IPosition(Vector<Int> (blc));
-	IPosition itrc = IPosition(Vector<Int> (trc));
-	IPosition imshape = image.shape();
-
-	// Verify region.
-	IPosition iinc = IPosition(inc.size());
+	// Verify blc value. Fill in values for blc and inc.  trc set to shape-1
+	IPosition iblc = IPosition(blc);
+	IPosition itrc = imageShape - 1;
+	IPosition iinc(inc.size());
 	for (uInt i = 0; i < inc.size(); i++) {
 		iinc(i) = inc[i];
 	}
-	LCBox::verify(iblc, itrc, iinc, imshape);
+	LCBox::verify(iblc, itrc, iinc, imageShape);
+
+	// Create two slicers; one describing the region defined by blc + shape-1
+	// with extra axes given length 1. The other we extend with the shape
+	IPosition len = pixelsArray.shape();
+	len.resize(ndim, True);
+	for (uInt i = pixelsArray.shape().nelements(); i < ndim; i++) {
+		len(i) = 1;
+		itrc(i) = imageShape(i) - 1;
+	}
+	Slicer sl(iblc, len, iinc, Slicer::endIsLength);
+	ThrowIf(
+		sl.end() + 1 > imageShape,
+		"Pixels array, including inc, extends beyond edge of image."
+	);
+	Slicer sl2(iblc, itrc, iinc, Slicer::endIsLast);
+
 	if (list) {
-		*_log << LogIO::NORMAL << "Selected bounding box " << iblc << " to "
-				<< itrc << LogIO::POST;
+		LogIO log;
+		log << LogOrigin("PixelValueManipulator", __func__)
+			<< LogIO::NORMAL << "Selected bounding box " << sl.start()
+			<< " to " << sl.end() << LogIO::POST;
 	}
 
-	// Get the chunk.  The mask is not returned. Leave that to getRegion
-	IPosition curshape = (itrc - iblc + iinc) / iinc;
-	Slicer sl(iblc, itrc, iinc, Slicer::endIsLast);
-	SubImage<T> subImage(image, sl);
-	IPosition iAxes = IPosition(Vector<Int> (axes));
-	if (getmask) {
-		LatticeUtilities::collapse(pixels, pixelMask, iAxes, subImage, dropdeg);
-		return True;
-	} else {
-		LatticeUtilities::collapse(pixels, iAxes, subImage, dropdeg);
-		return True;
+	// Put the pixels
+	if (pixelsArray.ndim() == ndim) {
+		// _setCache(pixelsArray.shape());
+		if (replicate) {
+			LatticeUtilities::replicate(*image, sl2, pixelsArray);
+		}
+		else {
+			image->putSlice(pixelsArray, iblc, iinc);
+		}
+	}
+	else {
+		// Pad with extra degenerate axes if necessary (since it is somewhat
+		// costly).
+		Array<T> pixelsref(
+			pixelsArray.addDegenerate(
+				ndim - pixelsArray.ndim()
+			)
+		);
+		// _setCache(pixelsref.shape());
+		if (replicate) {
+			LatticeUtilities::replicate(*image, sl2, pixelsref);
+		}
+		else {
+			image->putSlice(pixelsref, iblc, iinc);
+		}
+	}
+	// Ensure that we reconstruct the  histograms objects
+	// now that the data have changed
+	if (locking) {
+		image->unlock();
 	}
 }
-*/
 
 }
 
