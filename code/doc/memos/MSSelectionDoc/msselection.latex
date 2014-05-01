@@ -9,6 +9,10 @@
 \usepackage{txfonts}
 %\usepackage{MnSymbol,wasysym}
 \usepackage{marvosym}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\colorlet{light-gray}{gray!20}
 
 \markboth{S. Bhatnagar}{MeasurementSet Selection Syntax}
 \pagestyle{myheadings}
@@ -36,6 +40,7 @@
 \newcommand{\MSSelectionError} {\htmladdnormallinkfoot{{\tt MSSelectionError}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionError.html}}
 \newcommand{\MSSelectionErrorHandler} {\htmladdnormallinkfoot{{\tt MSSelectionErrorHandler}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionErrorHandler.html}}
 \newcommand{\CalTables} {\htmladdnormallinkfoot{{\tt CalTables}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1CalTable.html}}
+\newcommand{\MSSelectableTable} {\htmladdnormallinkfoot{{\tt MSSelectableTable}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectableTable.html}}
 \newcommand{\PDFVersion} {\htmladdnormallinkfoot{PDF Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}}
 
 
@@ -819,17 +824,17 @@ for SPW and channel selection, selection expressions can be
 constructed to select channels from SPW0 \underline{\bf or} SPW1 or
 from SPW0 \underline{\bf and} SPW1. E.g.
 \begin{itemize}
-\item freq= ``{\tt * : 1.6$\sim$1.7GHz}'' will select all channels from
+\item freq= {\tt * : 1.6$\sim$1.7GHz} will select all channels from
   SPW0 \underline{\it and} SPW1 that are in the range
-\item freq= ``{\tt 1.5$\sim$1.65GHz : 1.6$\sim$1.7GHz}'' is the same as
+\item freq= {\tt 1.5$\sim$1.65GHz : 1.6$\sim$1.7GHz} is the same as
   above (selecting SPWs via reference frequency specification)
-\item freq=``{\tt 1.5MHz : 1.6$\sim$1.7GHz}'' will select all channels
+\item freq={\tt 1.5GHz : 1.6$\sim$1.7GHz} will select all channels
   from \underline{only} SPW0 that are in the range
-\item freq=``{\tt 0 : 1.6$\sim$1.7GHz}'' will select all channels
+\item freq={\tt 0 : 1.6$\sim$1.7GHz} will select all channels
   from \underline{only} SPW0 that are in the range
-\item freq=``{\tt 1.65MHz : 1.6$\sim$1.7GHz}'' same as above, with SPW0
+\item freq={\tt 1.65GHz : 1.6$\sim$1.7GHz} same as above, with SPW1
   selected via integer ID
-\item freq=``{\tt 1 : 1.6$\sim$1.7GHz}'' same as above, with SPW1
+\item freq={\tt 1 : 1.6$\sim$1.7GHz} same as above, with SPW1
   selected via integer ID
 
 \end{itemize}
@@ -1069,29 +1074,40 @@ specifications.  E.g.
 
 \appendix{}
 \newpage
-\section{Appendix: API Note -- General Error Handling}
+\section{API Note: General Error Handling}
 
-The \MSS\ sub-system reports errors via the C++ exception
-mechanism.  The objects thrown have the following inheritance
-hierarchy:
+The \MSS\ sub-system reports errors via the C++ exception mechanism.
+\MSSelectionError\ is the base class of the objects used to report
+exceptions.  The class diagram for the objects thrown is shown in
+Fig.~\ref{FIG:MSSERROR}.
 
-\begin{center}
-\begin{verbatim}
-                             AipsError
-                                 o
-                                 |
-                                 |
-                          MSSelectionError
-                                 o
-                                 |
-                                 |
-  MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}Error
-                                 o
-                                 |
-                                 |
-MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}ParseError
-\end{verbatim}
-\end{center}
+\begin{figure}[hb!]
+\centerline{
+  \includegraphics[width=15cm]{MSSError.png}\qquad
+}
+
+\caption{Class diagram for the objects used for error reporting via
+  C++ exceptions in the MSSelection module.}
+\label{FIG:MSSERROR}
+\end{figure}
+
+% \begin{center}
+% \begin{verbatim}
+%                              AipsError
+%                                  o
+%                                  |
+%                                  |
+%                           MSSelectionError
+%                                  o
+%                                  |
+%                                  |
+%   MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}Error
+%                                  o
+%                                  |
+%                                  |
+% MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}ParseError
+% \end{verbatim}
+% \end{center}
 
 All parsing errors are reported by throwing the {\tt
   MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
@@ -1102,7 +1118,7 @@ by throwing an exception of type {\tt MSSelection\{Time, Spw, Field,
   UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
 Hence, to catch all errors thrown from the \MSS\ sub-system,
-catch the \MSSelectionError\ object.  For more specific exception
+catch the {\tt MSSelectionError} object.  For more specific exception
 handling, catch the more qualified MSSelection*Error objects.  For
 catching only parsing errors, catch the MSSelection*ParseError object.
 As is obvious, any un-caught exception from the \MSS\ sub-system
@@ -1112,8 +1128,9 @@ The exceptional error message consists of a human understandable
 one-line description of the error, the string which caused the error
 and the possible location in the string of the erroneous
 character.  E.g.
-
+\begin{verbatim}
  Spw Expression: No match found for "LBAN" (near char. 4 in string "LBAN")
+\end{verbatim}
 
 \subsection{Installing Error Handlers}
 
@@ -1122,22 +1139,24 @@ when an error is encountered during parsing cycle or in the
 rule-resolution code.  However there are cases where instead of
 throwing an exception, the errors must be collected as they occur and
 resolution of the error done at the end of the parsing cycle.  In the
-\MSS\ module, this is achieved by installing an error handler
-object of type \MSSelectionErrorHandler\footnote{This is also the
-  base-class from which all specializations of the error handlers must
-  be derived.} in the instance of the \MSS\ object.  This is the
-object that is used internally to handle errors in the \MSS\
-module.  The default error handler that comes pre-installed simply
-throws an exception of the appropriate kind when an error is
-encountered, recreating the normal behaviour of the C++ exception
-handling mechanism.
+\MSS\ module, this is achieved by installing an error handler object
+of type \MSSelectionErrorHandler (the base-class) in the
+instance of the \MSS\ object.  This is the object that is used
+internally to handle errors in the \MSS\ module.  The default error
+handler that comes pre-installed simply throws an exception of the
+appropriate kind when an error is encountered, recreating the normal
+behaviour of the C++ exception handling mechanism.
 
 To collect errors (and the error messages generated in the process) as
 they occur for later resolution, the client-side code can install a
 specialization of the error handler of type {\tt MSSelectionLogError},
 a derivative of the {\tt MSSelectionErrorHandler}, using the {\tt
-  MSSelection::setErrorHandler()} method, as shown in code snippet below.  
-\begin{verbatim}
+  MSSelection::setErrorHandler()} method, as shown in the
+Listing~\ref{FIG:EHCODE}.
+\begin{lstlisting}[frame=single, backgroundcolor=\color{light-gray},
+  basicstyle=\footnotesize\ttfamily, language=C, numbers=left,
+  numberstyle=\tiny\color{black},caption= {Code snippet showing use of
+    external error handlers.},label=FIG:EHCODE]
       MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
       //
       // Setup the MSSelection thingi
@@ -1149,7 +1168,7 @@ a derivative of the {\tt MSSelectionErrorHandler}, using the {\tt
                         timeStr,baselineStr,fieldStr,spwStr,
                         uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
                         stateObsModeStr,observationStr);
-\end{verbatim}
+\end{lstlisting}
 At the appropriate place in the client code, a call to {\tt
   MSSelectionErrorHandler::reportError()} can be made to display the
 collected error messages as warning messages. This behavior can be
@@ -1160,10 +1179,119 @@ This mechanism of error handling is currently available for ANTENNA
 and STATE (a.k.a. ``intent selection'') selection expressions only.
 
 \newpage
-\section{Appendix: API Note -- Using the {\tt MSSelection} module for other MS-like Tables}
+\section{API Note: Using the {\tt MSSelection} module for other
+  MS-like Tables}
 
+The \MSS\ module was originally written to provide a higher-level,
+simpler language called STaQL (Simpler TaQL) specifically for applying
+selection on Measurement Sets.  Parsers in the MSSelection module
+compile the various STaQL expressions and emit the equivalent tree of
+Table Expression Nodes (TEN), which is then used by the {\tt
+  MeasurementSet} class to generate a selected Table containing rows
+from the original Table for which the supplied TEN evaluates to True.
+
+The information required to compile the STaQL expressions is derived
+from various sub-tables of the Measurement Set format (e.g. the {\tt
+  ANTENNA} sub-table, {\tt SPECTRAL\_WINDOW} sub-table, etc.).  Since
+the {\tt MeasurementSet} class is a specialization of the {\tt Table}
+class and uses the services of the {\tt Table} class to do the
+selection, in principle, STaQL can be used for any database that
+follows the general Table structure of the Measurement Set format.  We
+refer to classes/objects which provide such a view of the
+underlying data as MS-like objects/classes.  To use the \MSS\ module
+for selection, the basic requirement is that the MS-like formats be
+organized as pseudo-relational database (like the Measurement Set)
+where {\it most} of the main-table entries are references to the rows
+of sub-tables.  The information that these main-table entries
+represent resides in these much smaller sub-tables.
+
+Since there may be minor differences in the details of the target
+databases (e.g. names of the sub-tables, or even absence of some
+required sub-tables which can be generated on-the-fly), the
+\MSS\ module provides an interface to the database via a translation
+class inherited from the pure-virtual base-class of type
+\MSSelectableTable.  The {\tt MSSelectableTable} class provides a
+uniform interface for the \MSS\ class(es) and does any required
+translation to interface with the database classes.  This also allows
+the client database related classes to exist outside the CASACore
+package.  The inheritance tree of the {\tt MSSelectableTable} line of
+classes is shown in Fig.~\ref{FIG:MSSTABS}.
+\begin{figure}[hb!]
+\centerline{
+  \includegraphics[width=8cm]{MSSelectableTable.png}\qquad
+}
+
+\caption{Class diagram of the implementations of the {\tt
+    MSSelectableTable} pure-virtual base-class.}
+\label{FIG:MSSTABS}
+\end{figure}
+
+For using the \MSS\ module on the Measurement Sets, the {\tt
+  MSInterface} object can be constructed from the {\tt MeasurementSet}
+object and passed to the \MSS\ object as shown in
+Listing~\ref{LIST:MSCODE}.
+\begin{lstlisting}[frame=single, backgroundcolor=\color{light-gray},
+  basicstyle=\footnotesize\ttfamily, language=C, numbers=left,
+  numberstyle=\tiny\color{black},caption= {Code snippet showing usage
+    of \MSS\ for Measurement Sets.},label=LIST:MSCODE]
+      MS ms(MSName,TableLock(TableLock::AutoNoReadLocking));
+      //
+      // Setup the MSSelection thingi
+      //
+      MSInterface msLike(ms);
+      MSSelection msSelection;
+      MSSelectionLogError mssLE;
+      msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
+      msSelection.reset(msLike,MSSelection::PARSE_NOW,
+                        timeStr,baselineStr,fieldStr,spwStr,
+                        uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+                        stateObsModeStr,observationStr);
+\end{lstlisting}
+Another method of using the \MSS\ class is to set the individual
+expressions, get the TEN via the {\tt MSSelection::toTableExprNode()}
+method and finally use the global method {\tt getSelectedTable()} to
+apply the selection.  This style of usage is shown in
+Listing~\ref{LIST:CTCODE}.  While for Measurement Sets the {\tt
+  MSSelection::reset()} method also works with {\tt MeasurementSet}
+object, for future compatibility reasons it is recommended that the
+{\tt MSInterface} be used instead.
+
+\subsection{Using \MSS\ for {\tt CalTables}}
+
+The \MSS\ module can be used for selection on \CalTables\ via the
+interface object of type {\tt CTInterface}, which are implemented in
+the synthesis module of CASA package.
+
+To use the \MSS\ module for selection on {\tt (New)CalTable} object,
+the only difference from the code snippet above, is that a {\tt
+  CTInterface} object needs to be constructed (instead of the {\tt
+  MSInterface} object) from the {\tt (New)CalTable} class of the
+synthesis module.  The {\tt CTInterface} object can be supplied to the
+\MSS\ object via the {\tt reset()} method.  Alternatively, various
+expressions can be set in the \MSS\ object and the {\tt CTInterface}
+object supplied via the {\tt MSSelection::toTableExprNode()} method
+which returns the tree of TEN.  The TEN can then be used to get a
+selected CalTable as shown in Listing~\ref{LIST:CTCODE}.
+\begin{lstlisting}[frame=single, backgroundcolor=\color{light-gray}, basicstyle=\footnotesize\ttfamily, language=C, numbers=left, numberstyle=\tiny\color{black},caption= {Code snippet showing usage of \MSS\ for (New)CalTables.},label=LIST:CTCODE]
+  NewCalTable calTab(CalName), selectedCalTable(calTab); 
+  CTInterface msLike(calTab); 
+  MSSelection mss; 
+  MSSelectionLogError mssLE;
+  mss.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
+
+  mss.setFieldExpr(fieldStr);
+  mss.setAntennaExpr(antennaStr);
+  mss.setSpwExpr(spwStr);
+
+  TableExprNode ten=mss.toTableExprNode(&msLike);
+  //
+  // Now use the global method getSelectedTable() to apply the ten on the calTab 
+  // parameter and return the selected table in selectedCalTable parameter.
+  //
+  getSelectedTable(selectedCalTable, calTab, ten, "");
+\end{lstlisting}
 \newpage
-\section{Appendix: User Examples}
+\section{Appendix: Usage Examples}
 
 \begin{table}[h!]
 \caption{Summary of the MS used}
