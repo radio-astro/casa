@@ -478,27 +478,22 @@ stage. To do that, the user has to give a list of spectral windows for
 Tsys measurement as well as mapping between spectral windows for Tsys
 measurement and scicence target. These can be specified by parameters
 'tsysspw' and 'spwmap', which are defined as subparameters of 'calmode'.
-For example, Tsys measurement is done in spw 0 and corresponding
-science spws are 1 and 2, these parameters should be specified as follows:
+For example, suppose that Tsys measurements for science windows 17, 19,
+21, and 23 are done in spw 9, 11, 13, and 15, respectively. 
+In this case, tsysspw and spwmap should be specified as follows:
 
-    tsysspw = '0'
-    spwmap = {0: [1,2]}
+    tsysspw = '9,11,13,15'
+    spwmap = {9:[17],11:[19],13:[21],15:[23]}
 
-Another example for multiple Tsys spws is,
-
-    tsysspw = '0,1'
-    spwmap = {0: [3], 1: [4]}
-
-where it assumes that Tsys is transferred from 0 to 3 and 1 to 4,
-respectively. Below is an example of full specification of task
-parameters for calmode of 'ps,tsys,apply':
+Below is an example of full specification of task parameters for calmode
+of 'ps,tsys,apply':
 
     default(sdcal2)
     infile = 'foo.asap'
     calmode = 'ps,tsys,apply'
     spw = ''
-    tsysspw = '0,1'
-    spwmap = {0:[3], 1:[4]}
+    tsysspw = '9,11,13,15'
+    spwmap = {9:[17],11:[19],13:[21],15:[23]}
     outfile = 'bar.asap'
     sdcal2()
 
