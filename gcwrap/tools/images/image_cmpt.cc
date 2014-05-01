@@ -2154,6 +2154,8 @@ variant* image::getchunk(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	// eliminate compiler warning, execution should never get here
+	return 0;
 }
 
 template<class T> Record image::_getchunk(
@@ -3062,8 +3064,8 @@ bool image::putchunk(
 		}
 		if (_image->isFloat()) {
 			Float f;
-			return _putchunk(
-				f, pixels, blc, inc, list, locking, replicate
+			_putchunk(
+				f, _image->getImage(), pixels, blc, inc, list, locking, replicate
 			);
 		}
 		else {
@@ -3076,90 +3078,47 @@ bool image::putchunk(
 				pixelsArray.resize(IPosition(shape));
 				Vector<std::complex<double> > localpix(pixelVector);
 				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-				if (
-					_image->putchunk(
-						pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
-						list, locking, replicate
-					)
-				) {
-					_stats.reset(0);
-					return True;
-				}
-				ThrowCc("Error putting chunk");
+				PixelValueManipulator<Complex>::put(
+					_image->getComplexImage(), pixelsArray, Vector<Int>(blc),
+					Vector<Int>(inc), list, locking,
+					replicate
+				);
 			}
 			else {
 				Complex c;
-				return _putchunk(
-					c, pixels, blc, inc, list, locking, replicate
+				_putchunk(
+					c, _image->getComplexImage(), pixels,
+					blc, inc, list, locking, replicate
 				);
 			}
 		}
-		/*
-		if (_image->isFloat()) {
-			Array<Float> pixelsArray;
-			if (pixels.type() == ::casac::variant::DOUBLEVEC) {
-				std::vector<double> pixelVector = pixels.getDoubleVec();
-				Vector<Int> shape = pixels.arrayshape();
-				pixelsArray.resize(IPosition(shape));
-				Vector<Double> localpix(pixelVector);
-				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-			}
-			else if (pixels.type() == ::casac::variant::INTVEC) {
-				std::vector<int> pixelVector = pixels.getIntVec();
-				Vector<Int> shape = pixels.arrayshape();
-				pixelsArray.resize(IPosition(shape));
-				Vector<Int> localpix(pixelVector);
-				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-			}
-			else {
-				ThrowCc(
-					"Unsupported type for pixels parameter. It "
-					"must be either a vector of doubles or ints"
-				);
-			}
-			if (
-				_image->putchunk(
-					pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
-					list, locking, replicate
-				)
-			) {
-				_stats.reset(0);
-				return True;
-			}
-		}
-		else {
-
-		}
-		throw AipsError("Error putting chunk.");
-		*/
-	} catch (const AipsError& x) {
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-template<class T> bool image::_putchunk(
-	T imageType, const variant& pixels,
+template<class T> void image::_putchunk(
+	T imageType, SPIIT myimage, const variant& pixels,
 	const vector<int>& blc, const vector<int>& inc,
 	const bool list, const bool locking, const bool replicate
 ) {
 	Array<T> pixelsArray;
 	Vector<Int> shape = pixels.arrayshape();
-
+	pixelsArray.resize(IPosition(shape));
 	if (pixels.type() == variant::DOUBLEVEC) {
 		std::vector<double> pixelVector = pixels.getDoubleVec();
-		pixelsArray.resize(IPosition(shape));
 		Vector<Double> localpix(pixelVector);
 		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
 	}
 	else if (pixels.type() == variant::INTVEC) {
 		std::vector<int> pixelVector = pixels.getIntVec();
-		pixelsArray.resize(IPosition(shape));
 		Vector<Int> localpix(pixelVector);
 		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
 	}
-
 	else {
 		String types = casa::whatType(&imageType) == TpFloat
 			? "doubles or ints"
@@ -3169,16 +3128,11 @@ template<class T> bool image::_putchunk(
 			"must be either a vector of " + types
 		);
 	}
-	if (
-		_image->putchunk(
-			pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
-			list, locking, replicate
-		)
-	) {
-		_stats.reset(0);
-		return True;
-	}
-	ThrowCc("Error putting chunk");
+	PixelValueManipulator<T>::put(
+		myimage, pixelsArray, Vector<Int>(blc),
+		Vector<Int>(inc), list, locking,
+		replicate
+	);
 }
 
 bool image::putregion(const ::casac::variant& v_pixels,

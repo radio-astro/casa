@@ -70,8 +70,8 @@ template<class T> casa::Record _getchunk(
 	bool list, bool dropdeg
 );
 
-template<class T> bool _putchunk(
-	T imageType,
+template<class T> void _putchunk(
+	T imageType, SPIIT image,
 	const casac::variant& pixels,
 	const vector<int>& blc, const vector<int>& inc,
 	const bool list, const bool locking, const bool replicate
