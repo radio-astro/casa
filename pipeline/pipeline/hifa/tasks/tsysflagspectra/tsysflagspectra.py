@@ -12,10 +12,11 @@ import pipeline.infrastructure.utils as utils
 
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks.common import commonresultobjects
-from pipeline.hifa.tasks.tsysflag.resultobjects import TsysflagResults
 from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.common import viewflaggers
+
+from .resultobjects import TsysflagspectraResults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -339,7 +340,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
 
     def __init__(self, inputs):
         super(TsysflagspectraWorker, self).__init__(inputs)
-        self.result = TsysflagResults()
+        self.result = TsysflagspectraResults()
 
     def prepare(self):
         inputs = self.inputs
@@ -480,7 +481,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         # dict of results for each pol, defaultdict ia preferred to simple {}
         # because it initialises a new (key,value) automatically if it is not
         # already present when demanded.
-        tsysspectra = collections.defaultdict(TsysflagResults)
+        tsysspectra = collections.defaultdict(TsysflagspectraResults)
 
         pols = range(len(corr_type))
 
@@ -504,7 +505,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
                     times.update([row.get('TIME')])
 
         for pol in pols:
-            tsysrefs = TsysflagResults()
+            tsysrefs = TsysflagspectraResults()
 
             for antenna_id in antenna_ids:
                 # get reference Tsys for each pol/antenna in this spw
@@ -657,7 +658,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         # dict of results for each pol, defaultdict ia preferred to simple {}
         # because it initialises a new (key,value) automatically if it is not
         # already present when demanded.
-        tsysspectra = collections.defaultdict(TsysflagResults)
+        tsysspectra = collections.defaultdict(TsysflagspectraResults)
 
         pols = range(len(corr_type))
 
@@ -786,7 +787,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         # dict of results for each pol, defaultdict ia preferred to simple {}
         # because it initialises a new (key,value) automatically if it is not
         # already present when demanded.
-        tsysspectra = collections.defaultdict(TsysflagResults)
+        tsysspectra = collections.defaultdict(TsysflagspectraResults)
 
         pols = range(len(corr_type))
 
@@ -812,7 +813,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
 
         for pol in pols:
             # get median Tsys for each pol in this spw
-            tsysmedians = TsysflagResults()
+            tsysmedians = TsysflagspectraResults()
             spectrumstack = None
             for description in tsysspectra[pol].descriptions():
                 tsysspectrum = tsysspectra[pol].last(description)
@@ -907,7 +908,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         # dict of results for each pol, defaultdict ia preferred to simple {}
         # because it initialises a new (key,value) automatically if it is not
         # already present when demanded.
-        tsysspectra = collections.defaultdict(TsysflagResults)
+        tsysspectra = collections.defaultdict(TsysflagspectraResults)
 
         pols = range(len(corr_type))
 
@@ -933,7 +934,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
 
         for pol in pols:
            # get median Tsys for each pol in this spw
-            tsysmedians = TsysflagResults()
+            tsysmedians = TsysflagspectraResults()
             spectrumstack = None
             for description in tsysspectra[pol].descriptions():
                 tsysspectrum = tsysspectra[pol].last(description)
