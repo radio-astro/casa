@@ -55,9 +55,8 @@ def printTsysFlags(tsystable, htmlreport):
             # format break between antennas
             stream.write('<br>\n')
 
-def renderflagcmds(flagcmdsfile, htmlflagcmds, reason):
-    """Method to render a flagdata file into html format. flagcmds 
-    that match the given reason are rendered black, others grey.
+def renderflagcmds(flagcmdsfile, htmlflagcmds):
+    """Method to render a flagdata file into html format.
     """
     if type(flagcmdsfile) is types.StringType:
         # input flagcmds from file named
@@ -77,8 +76,7 @@ def renderflagcmds(flagcmdsfile, htmlflagcmds, reason):
           <br>''')
 
         for line in lines:
-            if reason != '' and reason in line:
-                stream.write('%s<br>' % line)
+            stream.write('%s<br>' % line)
         stream.write('</body>')
         stream.write('</html>')
 
