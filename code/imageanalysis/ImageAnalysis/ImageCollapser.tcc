@@ -28,6 +28,8 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/IO/STLIO.h>
+#include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -89,9 +91,39 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 		! anyTrue(subImage->getMask()),
 		"All selected pixels are masked"
 	);
-	IPosition inShape = subImage->shape();
-	// Set the compressed axis reference pixel and reference value
 	CoordinateSystem outCoords(subImage->coordinates());
+	Bool hasDir = outCoords.hasDirectionCoordinate();
+	Bool n2 = _axes.size() == 2;
+	Bool dirAxesOnlyCollapse =  hasDir && n2;
+	if (dirAxesOnlyCollapse) {
+		Vector<Int>dirAxes = outCoords.directionAxesNumbers();
+		dirAxesOnlyCollapse = (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
+			|| (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]);
+	}
+	IPosition inShape = subImage->shape();
+	if (_aggType == ImageCollapserData::FLUX) {
+		ThrowIf(
+			! subImage->imageInfo().hasBeam(),
+			"Image has no beam(s), flux cannot be calculated"
+		);
+		if (! dirAxesOnlyCollapse) {
+			ThrowIf(
+				! hasDir,
+				"Image has no direction coordinate, flux cannot be calculated"
+			);
+			ThrowIf(
+				! n2,
+				"Exactly two axes were not specified for collapse, flux cannot be calculated"
+			);
+			Vector<Int> dirAxes = outCoords.directionAxesNumbers();
+			ThrowIf(
+				! (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
+				&& ! (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]),
+				"At least one specified axis is not a direction axis, flux cannot be calculated"
+			);
+		}
+	}
+	// Set the compressed axis reference pixel and reference value
 	Vector<Double> blc, trc;
 	IPosition pixblc(inShape.nelements(), 0);
 	IPosition pixtrc = inShape - 1;
@@ -131,10 +163,21 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 		_doMedian(subImage, tmpIm);
 	}
 	else {
-		if (subImage->getMask().size() > 0 && ! allTrue(subImage->getMask())) {
-			// mask with one or more False values, must use lower performance methods
+		Bool lowPerf = _aggType == ImageCollapserData::FLUX;
+		if (! lowPerf) {
+			Array<Bool> mask = subImage->getMask();
+			if (subImage->hasPixelMask()) {
+				mask = mask && subImage->pixelMask().get();
+			}
+			lowPerf = ! allTrue(mask);
+		}
+		if (lowPerf) {
+			// flux or mask with one or more False values, must use lower performance methods
 			LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
 			switch(_aggType) {
+			case ImageCollapserData::FLUX:
+				lattStatType = LatticeStatsBase::FLUX;
+				break;
 			case ImageCollapserData::MAX:
 				lattStatType = LatticeStatsBase::MAX;
 				break;
@@ -167,10 +210,28 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			}
 			Array<T> data;
 			Array<Bool> mask;
-			LatticeUtilities::collapse(
-				data, mask, _axes, *subImage, False,
-				True, True, lattStatType
-			);
+			if (_aggType == ImageCollapserData::FLUX) {
+				ImageStatistics<T> stats(*subImage, False);
+				stats.setAxes(_axes.asVector());
+				if (
+					! stats.getConvertedStatistic(
+						data, lattStatType, False
+					)
+				) {
+					ostringstream oss;
+					oss << "Unable to calculate flux density: "
+					<< stats.getMessages();
+					ThrowCc(oss.str());
+				}
+				mask.resize(data.shape());
+				mask.set(True);
+			}
+			else {
+				LatticeUtilities::collapse(
+					data, mask, _axes, *subImage, False,
+					True, True, lattStatType
+				);
+			}
 			Array<T> dataCopy = (_axes.size() <= 1)
 				? data
 				: data.addDegenerate(_axes.size() - 1);
@@ -215,8 +276,9 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			}
 		}
 	}
-	if (subImage->imageInfo().hasMultipleBeams()) {
-		*this->_getLog() << LogIO::WARN << "Input image has per plane beams. "
+	if (subImage->imageInfo().hasMultipleBeams() && ! dirAxesOnlyCollapse) {
+		*this->_getLog() << LogIO::WARN << "Input image has per plane beams "
+			<< "but the collapse is not. done exclusively along the direction axes. "
 			<< "The output image will arbitrarily have a single beam which "
 			<< "is the first beam available in the subimage."
 			<< "Thus, the image planes will not be convolved to a common "
@@ -241,13 +303,14 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 template<class T> void ImageCollapser<T>::_finishConstruction() {
 	for (
 		IPosition::const_iterator iter=_axes.begin();
-			iter != _axes.end(); iter++
-		) {
-		if (*iter >= this->_getImage()->ndim()) {
-			*this->_getLog() << "Specified zero-based axis (" << *iter
-				<< ") must be less than the number of axes in " << this->_getImage()->name()
-				<< "(" << this->_getImage()->ndim() << LogIO::EXCEPTION;
-		}
+		iter != _axes.end(); iter++
+	) {
+		ThrowIf(
+			*iter >= this->_getImage()->ndim(),
+			"Specified zero-based axis (" + String::toString(*iter)
+			+ ") must be less than the number of axes in " + this->_getImage()->name()
+			+ "(" + String::toString(this->_getImage()->ndim()) + ")"
+		);
 	}
 	_invert();
 }

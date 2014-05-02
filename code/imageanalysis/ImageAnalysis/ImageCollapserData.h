@@ -44,6 +44,7 @@ public:
 		VARIANCE,
 		// set all pixels in output image to 0
 		ZERO,
+		FLUX,
 		UNKNOWN
 	};
 

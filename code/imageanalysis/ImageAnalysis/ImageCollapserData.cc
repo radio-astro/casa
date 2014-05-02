@@ -12,6 +12,7 @@ const std::map<uInt, String>* ImageCollapserData::funcNameMap() {
 	if (! _funcNameMap) {
 		std::map<uInt, String> ref;
 		//ref[(uInt)AVDEV] = "avdev";
+		ref[(uInt)FLUX] = "flux";
 		ref[(uInt)MAX] = "max";
 		ref[(uInt)MEAN] = "mean";
 		ref[(uInt)MEDIAN] = "median";
@@ -30,6 +31,7 @@ const std::map<uInt, String>* ImageCollapserData::minMatchMap() {
 	if (! _minMatchMap) {
 		std::map<uInt, String> ref;
 		//ref[(uInt)AVDEV] = "a";
+		ref[(uInt)FLUX] = "f";
 		ref[(uInt)MAX] = "ma";
 		ref[(uInt)MEAN] = "mea";
 		ref[(uInt)MEDIAN] = "med";
