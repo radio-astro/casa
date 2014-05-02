@@ -1,7 +1,9 @@
 from __future__ import absolute_import
-import re
+import collections
 import os
+import re
 import string
+import types
 
 import matplotlib.ticker as ticker
 from matplotlib.colors import ColorConverter, Colormap, Normalize
@@ -386,8 +388,36 @@ class ImageDisplay(object):
         """
         sentinelset = False
 
-        i2flag = i[np.abs(flagx - x) < 0.1, np.abs(flagy - y) < 0.1]
-        j2flag = j[np.abs(flagx - x) < 0.1, np.abs(flagy - y) < 0.1]
+        # watch out for axes that are not numeric
+        if isinstance(flagx, types.StringTypes):
+            x_index = np.arange(len(x))
+            flagx_index = x_index[x==flagx]
+        else:
+            x_index = x
+            flagx_index = flagx
+
+        if isinstance(flagy, types.StringTypes):
+            y_index = np.arange(len(y)) 
+            flagy_index = y_index[y==flagy]
+        else:
+            y_index = y
+            flagy_index = flagy
+
+        # ensure flagx, flagy are iterable objects
+        if not isinstance(flagx_index, collections.Iterable):
+            flagx_index = np.array([flagx_index])
+        if not isinstance(flagy_index, collections.Iterable):
+            flagy_index = np.array([flagy_index])
+
+        i2flag = []
+        j2flag = []
+        for k in range(len(flagx_index)):
+            for kk in range(len(flagy_index)):
+                i2flag.append(i[np.abs(flagx_index[k] - x_index) < 0.1,
+                  np.abs(flagy_index[kk] - y_index) < 0.1])
+                j2flag.append(j[np.abs(flagx_index[k] - x_index) < 0.1,
+                  np.abs(flagy_index[kk] - y_index) < 0.1])
+
         if len(i2flag) > 0:
             data[i2flag, j2flag] = sentinel_value
             sentinelset = True
