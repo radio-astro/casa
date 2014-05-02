@@ -1075,12 +1075,12 @@ myim.done()
     <shortdescription>Collapse an image along a specified axis, computing a specified aggregate function of pixels along that axis.</shortdescription>
     <input>
         <param type="string"  name="function">
-            <description>Aggregate function to apply. This can be set to any of the following: max, mean, median, min, rms, stdev, sum, variance. User specification is required. Default value is unset.</description>
+            <description>Aggregate function to apply. This can be set one of flux, max, mean, median, min, rms, stdev, sum, variance. Must be specified.</description>
             <value></value>
         </param>
         <param type="any"  name="axes">
             <any type="variant"/>
-            <description>Zero-based (0, 1, 2) axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
+            <description>Zero-based axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
             <value>0</value>
         </param>
         <param type="string"  name="outfile">
@@ -1125,11 +1125,20 @@ specified axis. Both float valued and complex valued images are supported. It co
 function for pixel values along the specified axes,
 and places those values in the single remaining plane of those axes in the output image. The method returns
 an image analysis tool containing the newly-created collapsed image. Valid choices of aggregate functions are:
-'max', 'mean', 'median', 'min', 'rms', 'stdev', 'sum' and 'variance'. Minimal unique matching is supported
+'flux' (see below for constraitns), 'max', 'mean', 'median', 'min', 'rms', 'stdev', 'sum' and 'variance'. Minimal unique matching is supported
 for the function parameter (e.g. function = 'r' will compute the rms of the pixel values, 'med' will compute
 the median, etc.).
 
-Axes may be specified as a single integer or an array of integers indicating the zero-based (i.e. 0, 1, 2)
+If one specifies function='flux', the following constraints must be true:
+
+1. The image must have a direction coordinate,
+2. The image must have at least one beam,
+3. The specified axes must be exactly the direction coordinate axes,
+4. Only one of the non-directional axes may be non-degenerate,
+5. The iamge brightness unit must be conformant with x*yJy/beam, where x is an optional unit (such as km/s for moments images)
+   and y is an optional SI prefix.
+
+Axes may be specified as a single integer or an array of integers indicating the zero-based
 axes along which to collapse the image. Axes may also be specified as a single or array of strings which
 minimally and uniquely match (ignoring case) world axis names in the image (e.g. 'dec' for
 collapsing along the declination axis or ['ri', 'd'] for collapsing along both the right ascension and
@@ -5318,7 +5327,93 @@ pixelmask = ia.getregion(getmask=T)
 In this example we recover first the pixels and then the pixel mask.
 </example>
 </method>
+<!-- 
+<method type="function" name="getprofile">
+    <shortdescription>Get values and mask for a one dimensional profile along a specified image axis by applying an aggregate function.</shortdescription>
 
+    <input>
+        <param type="int"  name="axis">
+            <description>Axis along which to determine profile. Must be specified</description>
+            <value>-1</value>
+        </param>
+        <param type="string" name="function">
+            <description>Aggregate function to apply for collapse along axes orthogonal to specified axis.</description>
+            <value>mean</value>
+        </param>
+        <param type="string" name="unit"/>
+            <description>Unit of the returned abscissa values. Must be conformant with image axis unit. Default is the location in pixels relative to the zeroth axis plane of the image.</description>
+            <value></value>
+        </param>
+        <param type="any"  name="region">
+            <any type="variant" limittypes="record string"/>
+            <description>The region of interest. See help par.region for details. Default is whole image.</description>
+            <value></value>
+        </param>
+        <param type="variant"  name="mask">
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
+        </param>
+        <param type="bool"  name="list">
+            <description>List the bounding box to the logger?</description>
+            <value>false</value>
+        </param>
+
+        <param type="bool"  name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>false</value>
+        </param>
+     
+</input>
+<returns type="record"></returns>
+<description>
+This application returns information on a one-dimensional profile taken along a specified image axis.
+The region of interest is collapsed (a'la ia.collapse() along all axes perpendicular to the one specified, and)
+the specified aggregate function is applied to these pixels to generate the returned values. The returned dictionary
+contains the keys:
+
+values:  one-dimensional array along the specified axis containing values resulting from applying the specified
+         aggregate function to corresponding pixels at the same location along that axis.
+mask:    one-dimensional array of booleans of the resulting mask after applying the aggregate function, formed in the
+         same way as that formed by ia.collapse.
+abscissa One-dimensional array of corresponding abscissa values in the specified unit.
+
+
+<example>
+</example>
+
+</description>
+
+<example>
+Suppose that we have a 3-dimensional image called {\sff cube} and wish
+to recover the pixel from a simple regular region.
+
+"""
+#
+ia.fromshape('cube', [64,64,64], overwrite=true)
+#r1=rg.box(blc=[10,10,10],trc=[30,40]) # Create region
+r1=rg.box([10,10,10],[30,40,40]) # Create region
+pixels=ia.getregion(r1)
+ia.close()
+#
+"""
+
+</example>
+
+<example>
+
+"""
+#
+ia.fromshape('cube', [64,64,64], overwrite=true)
+pixels = ia.getregion()
+pixelmask = ia.getregion(getmask=T)  
+#
+"""
+
+In this example we recover first the pixels and then the pixel mask.
+</example>
+</method>
+
+-->
  
    <method type="function" name="getslice">
    <shortdescription>Get 1-D slice from the image</shortdescription>

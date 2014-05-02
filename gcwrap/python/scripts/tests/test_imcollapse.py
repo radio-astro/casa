@@ -523,6 +523,29 @@ class imcollapse_test(unittest.TestCase):
         myia.done()
         col.done()
         
+    def test_flux(self):
+        """Test flux function"""
+        myia = iatool()
+        imagename = "flux_test.im"
+        myia.fromshape(imagename, [10, 10, 10])
+        bb = myia.getchunk()
+        bb[:] = 1
+        bb[0,0,0] = 0
+        myia.putchunk(bb)
+        self.assertRaises(Exception, myia.collapse, axes=[0,1], function="flux")
+        myia.setrestoringbeam(major="3arcmin", minor="3arcmin", pa="0deg")
+        myia.setbrightnessunit("Jy/beam")
+        col = myia.collapse(axes=[0,1], function="flux", mask=imagename + "> 0")
+        self.assertTrue((col.shape() == [1, 1, 10]).all())
+        bb = col.getchunk()
+        for i in range(10):
+            if i == 0:
+                self.assertTrue(abs(bb[0,0,i] - 9.707966) < 1e-5)
+            else:
+                self.assertTrue(abs(bb[0,0,i] - 9.806027) < 1e-5)
+        col.done()
+        myia.done()
+        
         
 def suite():
     return [imcollapse_test]
