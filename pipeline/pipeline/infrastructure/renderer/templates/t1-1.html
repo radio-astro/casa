@@ -217,18 +217,3 @@ import pipeline.infrastructure.utils as utils
 			    % endfor
 		    </tbody>
 	    </table>
-
-
-% if 'casalogs' in pcontext.logs:
-<h4>CASA logs</h4>
-<ul>
-%for log_url in pcontext.logs['casalogs']:
-<% 
-   fp = os.path.join(pcontext.report_dir, log_url)
-   total_bytes = os.path.getsize(fp)
-   filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
-%>
-	<li>download <a href="${log_url}" download="${log_url}">${log_url}</a> (${str(filesize)})</li>
-%endfor
-</ul>
-%endif 
