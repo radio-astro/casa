@@ -83,8 +83,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         flags = list(set(flags))
         result.addflags(flags)
         result.table = flagsettertask.inputs.table
-        result.flagcmdfile = flagsettertask.inputs.inpfile
-        result.reason = flagsettertask.inputs.reason
+#        result.flagcmds = flagsettertask.inputs.inpfile
 
         return result
 
@@ -220,7 +219,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flagcoords = zip(xdata[i2flag], ydata[j2flag])
                         for flagcoord in flagcoords:
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='outlier',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol))
@@ -251,7 +250,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flagcoords = zip(xdata[i2flag], ydata[j2flag])
                         for flagcoord in flagcoords:
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='low_outlier',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol))
@@ -282,7 +281,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flagcoords = zip(xdata[i2flag], ydata[j2flag])
                         for flagcoord in flagcoords:
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='high_outlier',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol))
@@ -308,7 +307,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flagcoords = zip(xdata[i2flag], ydata[j2flag])
                         for flagcoord in flagcoords:
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='min_abs',
                               filename=table, rulename=rulename, spw=spw,
                               axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol))
@@ -334,7 +333,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flagcoords=zip(xdata[i2flag], ydata[j2flag])
                         for flagcoord in flagcoords:
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='max_abs',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol))
@@ -373,7 +372,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                 flagcoords = zip(xdata[i2flag], ydata[j2flag])
                                 for flagcoord in flagcoords:
                                     newflags.append(arrayflaggerbase.FlagCmd(
-                                      reason='stage%s' % self.inputs.context.stage,
+                                      reason='too_many_flags',
                                       filename=table, rulename=rulename,
                                       spw=spw, antenna=antenna, 
                                       axisnames=[xtitle,ytitle],
@@ -407,7 +406,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                 flagcoords = zip(xdata[i2flag], ydata[j2flag])
                                 for flagcoord in flagcoords:
                                     newflags.append(arrayflaggerbase.FlagCmd(
-                                      reason='stage%s' % self.inputs.context.stage,
+                                      reason='too_many_flags',
                                       filename=table, rulename=rulename, spw=spw,
                                       axisnames=[xtitle, ytitle],
                                       flagcoords=flagcoord, pol=pol))
@@ -443,7 +442,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flagcoords=zip(xdata[i2flag], ydata[j2flag])
                         for flagcoord in flagcoords:
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='nmedian',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol,
@@ -531,8 +530,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # add a record of flags set to the results object
         result.addflags(flags)
         result.table = flagsettertask.inputs.table
-        result.flagcmdfile = flagsettertask.inputs.inpfile
-        result.reason = flagsettertask.inputs.reason
+#        result.flagcmds = flagsettertask.inputs.inpfile
 
         return result
 
@@ -661,7 +659,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='edges',
                               filename=table,
                               rulename=rulename, spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords))
@@ -688,7 +686,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='min_abs',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
@@ -720,7 +718,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='nmedian',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
@@ -754,7 +752,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         # Add new flag command to flag data underlying the
                         # view.
                         newflags.append(arrayflaggerbase.FlagCmd(
-                          reason='stage%s' % self.inputs.context.stage,
+                          reason='outlier',
                           filename=table, rulename=rulename,
                           spw=spw, pol=pol, antenna=antenna,
                           axisnames=axisnames, flagcoords=flagcoords))
@@ -787,7 +785,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='sharps',
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords))
@@ -850,7 +848,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='sharps2',
                               filename=table,
                               rulename=rulename,
                               spw=spw, antenna=antenna, axisnames=axisnames,
@@ -897,7 +895,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='stage%s' % self.inputs.context.stage,
+                              reason='diffmad',
                               filename=table, rulename=rulename,
                               spw=spw, pol=pol, antenna=antenna,
                               axisnames=axisnames, flagcoords=flagcoords))
@@ -928,7 +926,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                                 # Add new flag command to flag data underlying the
                                 # view.
                                 newflags.append(arrayflaggerbase.FlagCmd(
-                                  reason='stage%s' % self.inputs.context.stage,
+                                  reason='tmf',
                                   filename=table, rulename=rulename,
                                   spw=spw, pol=pol, antenna=antenna,
                                   axisnames=axisnames, flagcoords=flagcoords))
