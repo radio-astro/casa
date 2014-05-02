@@ -131,8 +131,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             baseline = self.format_ac_baseline(sel_ids['antenna1'])
             scanid = list(sel_ids['scan']) if len(sel_ids['scan']) > 0 else ""
             # SPW (need to get a list of valid spws instead of -1)
-            if len(sel_ids['spw']) > 0:
-                spwid = list(sel_ids['spw'])
+            if len(sel_ids['channel']) > 0:
+                spwid = [ chanarr[0] for chanarr in sel_ids['channel'] ]
             elif spw=="": # No spw selection
                 my_ms.open(vis)
                 try: spwinfo =  my_ms.getspectralwindowinfo()
