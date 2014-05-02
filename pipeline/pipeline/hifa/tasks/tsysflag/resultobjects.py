@@ -6,52 +6,40 @@ import copy
 from pipeline.hifa.tasks.tsyscal import resultobjects 
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 
 LOG = infrastructure.get_logger(__name__)
 
-
+#class TsysflagResults(basetask.Results):
 class TsysflagResults(resultobjects.TsyscalResults):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self):
         """
         Construct and return a new TsysflagResults.
         """
         # the results to be merged back into the context
-        super(TsysflagResults, self).__init__(final, pool, preceding)
+#        super(TsysflagResults, self).__init__(final, pool, preceding)
+        super(TsysflagResults, self).__init__()
 
-        # views and associated results
-        self.flagging = []
-        # following are used instead of standard dictionaries so that
-        # missing keys are created automatically as needed
-        self.view = collections.defaultdict(list)
-        self.children = collections.defaultdict(dict)
+        # component results
+        self.components = collections.OrderedDict()
 
     def merge_with_context(self, context):
         # do nothing, the tsys cal files should already be in the context
         # and we don't want to insert them twice.
         pass
 
-    def addview(self, description, viewresult):
-        self.view[description].append(viewresult)
-
-    def addflags(self, flags):
-        self.flagging += flags
-
-    def descriptions(self):
-        return self.view.keys()
-
-    def first(self, description):
-        return copy.deepcopy(self.view[description][0])
-
-    def flagcmds(self):
-        return copy.deepcopy(self.flagging)
-
-    def flagged(self):
-        return len(self.flagging) > 0
-
-    def last(self, description):
-        return copy.deepcopy(self.view[description][-1])
+    def add(self, name, result):
+        self.components[name] = result
 
     def __repr__(self):
         s = super(TsysflagResults, self).__repr__()
         s = 'TsysflagResults incorporating %s' % s
+#        s = 'TsysflagResults'
+        components = self.components.keys()
+        if not components:
+            s += '\n Containing no component results'
+        else:
+            s += '\n Containing component results:'
+            for component in components:
+                s += '\n   %s' % component
         return s
