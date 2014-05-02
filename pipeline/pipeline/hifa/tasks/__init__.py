@@ -8,7 +8,8 @@ from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
 from .linpolcal import Linpolcal
 from .tsyscal import Tsyscal
-from .tsysflag import Tsysflag, Tsysflagchans
+from .tsysflag import Tsysflag
+from .tsysflagchans import Tsysflagchans
 from .tsysflagspectra import Tsysflagspectra
 from .wvrgcal import Wvrgcal
 from .wvrgcalflag import Wvrgcalflag
