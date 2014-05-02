@@ -35,7 +35,7 @@
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
-
+<!--
     <ProcessingCommand>
         <Command xmlns="">hifa_tsysflag</Command>
         <ParameterSet>
@@ -127,7 +127,7 @@
               </Parameter>
            </ParameterSet>
     </ProcessingCommand>
-
+-->
     <ProcessingCommand>
         <Command xmlns="">hifa_wvrgcalflag</Command>
         <ParameterSet>
