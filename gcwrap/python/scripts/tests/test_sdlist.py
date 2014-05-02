@@ -26,7 +26,7 @@ class sdlist_test(unittest.TestCase):
     infile2 = 'OrionS_rawACSmod'
     infiles = [infile1, infile2]
     outroot = 'sdlist_test'
-    refroot = "refsdlist"
+    reffile = "refsdlist01.txt"
 
     def setUp(self):
         for infile in self.infiles:
@@ -64,7 +64,7 @@ class sdlist_test(unittest.TestCase):
         result = sdlist(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
+        self._compareOutFile(outfile,self.datapath+self.reffile)
         
     def test02(self):
         """Test 2: Test overwrite=True"""
@@ -82,7 +82,7 @@ class sdlist_test(unittest.TestCase):
         result = sdlist(infile=infile,outfile=outfile,overwrite=True)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
+        self._compareOutFile(outfile,self.datapath+self.reffile)
         
     def test03(self):
         """Test 3: Test overwrite=False"""
