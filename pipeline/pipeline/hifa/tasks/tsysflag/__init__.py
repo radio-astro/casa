@@ -3,10 +3,10 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 
 from .tsysflag import Tsysflag
-from .tsysflagchans import Tsysflagchans
+from ..tsysflagchans import Tsysflagchans
 from . import qa
-from . import resultobjects
+from ..tsysflagspectra import resultobjects
 
 pipelineqa.registry.add_handler(qa.TsysflagQAHandler())
 pipelineqa.registry.add_handler(qa.TsysflagListQAHandler())
-qaadapter.registry.register_to_flagging_topic(resultobjects.TsysflagResults)
+qaadapter.registry.register_to_flagging_topic(resultobjects.TsysflagspectraResults)
