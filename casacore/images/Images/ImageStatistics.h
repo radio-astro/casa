@@ -159,7 +159,7 @@ private:
    IPosition blc_;
    Int precision_;
    Bool _showRobust, _recordMessages;
-   vector<String> _messages;
+   mutable vector<String> _messages;
 
 // Virtual functions.  See LatticeStatistics for more information
 // about these, or see the implementation.
