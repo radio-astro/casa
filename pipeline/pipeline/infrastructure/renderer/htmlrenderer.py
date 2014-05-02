@@ -2526,8 +2526,8 @@ class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
 
         htmlreports = {}
         for result in results:
-            if not hasattr(result, 'flagcmdfile'):
-                continue
+#            if not hasattr(result, 'flagcmdfile'):
+#                continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
@@ -2542,14 +2542,13 @@ class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
         if os.path.exists(filename):
             return filename
 
-        reason = result.reason
-        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
 
 class T2_4MDetailsFlagchansRenderer(T2_4MDetailsDefaultRenderer):
     '''
-    Renders detailed HTML output for the Tsysflag task.
+    Renders detailed HTML output for the Flagchans task.
     '''
     def __init__(self, template='t2-4m_details-hif_flagchans.html',
             always_rerender=False):
@@ -2572,8 +2571,8 @@ class T2_4MDetailsFlagchansRenderer(T2_4MDetailsDefaultRenderer):
 
         htmlreports = {}
         for result in results:
-            if not hasattr(result, 'flagcmdfile'):
-                continue
+#            if not hasattr(result, 'flagcmdfile'):
+#                continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
@@ -2588,8 +2587,7 @@ class T2_4MDetailsFlagchansRenderer(T2_4MDetailsDefaultRenderer):
         if os.path.exists(filename):
             return filename
 
-        reason = result.reason
-        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
 
@@ -3209,8 +3207,8 @@ class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
 
         htmlreports = {}
         for result in results:
-            if not hasattr(result, 'flagcmdfile'):
-                continue
+#            if not hasattr(result, 'flagcmdfile'):
+#                continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
@@ -3225,22 +3223,21 @@ class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
         if os.path.exists(filename):
             return filename
 
-        reason = result.reason
-        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
 
-class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
+class T2_4MDetailsTsysflagchansRenderer(T2_4MDetailsDefaultRenderer):
     '''
-    Renders detailed HTML output for the Tsysflag task.
+    Renders detailed HTML output for the Tsysflagchans task.
     '''
     def __init__(self, template='t2-4m_details-hif_tsysflagchans.html',
                  always_rerender=False):
-        super(T2_4MDetailsTsyscalFlagchansRenderer, self).__init__(template,
+        super(T2_4MDetailsTsysflagchansRenderer, self).__init__(template,
                                                                    always_rerender)
 
     def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsyscalFlagchansRenderer, self)
+        super_cls = super(T2_4MDetailsTsysflagchansRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
         weblog_dir = os.path.join(context.report_dir,
@@ -3324,8 +3321,8 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
 
         htmlreports = {}
         for result in results:
-            if not hasattr(result, 'flagcmdfile'):
-                continue
+#            if not hasattr(result, 'flagcmdfile'):
+#                continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
             report_abspath = self.write_report_to_disk(weblog_dir, result)
@@ -3344,8 +3341,7 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
         if os.path.exists(filename):
             return filename
 
-        reason = result.reason
-        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
     def write_report_to_disk(self, weblog_dir, result):
@@ -3359,17 +3355,17 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
         return filename
 
 
-class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
+class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
     '''
     Renders detailed HTML output for the Tsysflag task.
     '''
     def __init__(self, template='t2-4m_details-hif_tsysflag.html',
                  always_rerender=False):
-        super(T2_4MDetailsTsyscalFlagRenderer, self).__init__(template,
+        super(T2_4MDetailsTsysflagRenderer, self).__init__(template,
                                                               always_rerender)
 
     def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsyscalFlagRenderer, self)
+        super_cls = super(T2_4MDetailsTsysflagRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
         weblog_dir = os.path.join(context.report_dir,
@@ -3379,22 +3375,27 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
         
         summary_plots = {}
         subpages = {}
-        for result in results:
-            if result.flagged() is False:
-                continue
-            
-            plotter = tsys.TsysSummaryChart(context, result)
+        for msresult in results:
+            # summary plots at end of flagging sequence, beware empty
+            # sequence
+            lastflag = msresult.components.keys()
+            if lastflag:
+                lastflag = lastflag[-1]
+            lastresult = msresult.components[lastflag]
+
+            plotter = tsys.TsysSummaryChart(context, lastresult)
             plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
+            ms = os.path.basename(lastresult.inputs['vis'])
             summary_plots[ms] = plots
 
             # generate the per-antenna charts and JSON file
-            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
+            plotter = tsys.ScoringTsysPerAntennaChart(context, lastresult)
             plots = plotter.plot() 
             json_path = plotter.json_filename
 
             # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
+            renderer = TsyscalPlotRenderer(context, lastresult, plots, 
+              json_path)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
@@ -3413,36 +3414,51 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
         weblog_dir = os.path.join(report_dir,
                                   'stage%s' % results.stage_number)
 
+        r = results[0]
+        components = r.components.keys()
+
         htmlreports = {}
-        for result in results:
-            if not hasattr(result, 'flagcmdfile'):
-                continue
 
-            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-            report_abspath = self.write_report_to_disk(weblog_dir, result)
+        for component in components:
+            htmlreports[component] = {}
 
-            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-            report_relpath = os.path.relpath(report_abspath, report_dir)
+            for msresult in results:
+                flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, 
+                  msresult.components[component], component)
+                report_abspath = self.write_report_to_disk(weblog_dir, 
+                  msresult.components[component], component)
 
-            table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath, report_relpath)
+                flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+                report_relpath = os.path.relpath(report_abspath, report_dir)
+
+                table_basename = os.path.basename(
+                  msresult.components[component].table)
+                htmlreports[component][table_basename] = \
+                  (flagcmd_relpath, report_relpath)
 
         return htmlreports
 
-    def write_flagcmd_to_disk(self, weblog_dir, result):
+    def write_flagcmd_to_disk(self, weblog_dir, result, component=None):
         tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if component:
+            filename = os.path.join(weblog_dir, '%s%s.html' % (tablename, component))
+        else:
+            filename = os.path.join(weblog_dir, '%s.html' % (tablename))
+
         if os.path.exists(filename):
             return filename
 
-        reason = result.reason
-        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
-    def write_report_to_disk(self, weblog_dir, result):
+    def write_report_to_disk(self, weblog_dir, result, component=None):
         # now write printTsysFlags output to a report file
         tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.report.html' % tablename)
+        if component:
+            filename = os.path.join(weblog_dir, '%s%s.report.html' % (tablename, 
+              component))
+        else:
+            filename = os.path.join(weblog_dir, '%s.report.html' % (tablename))
         if os.path.exists(filename):
             return filename
         
@@ -3450,17 +3466,17 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
         return filename
 
 
-class T2_4MDetailsTsysFlagSpectraRenderer(T2_4MDetailsDefaultRenderer):
+class T2_4MDetailsTsysflagspectraRenderer(T2_4MDetailsDefaultRenderer):
     '''
     Renders detailed HTML output for the Tsysflagspectra task.
     '''
     def __init__(self, template='t2-4m_details-hif_tsysflagspectra.html',
                  always_rerender=False):
-        super(T2_4MDetailsTsysFlagSpectraRenderer, self).__init__(template,
+        super(T2_4MDetailsTsysflagspectraRenderer, self).__init__(template,
                                                               always_rerender)
 
     def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsysFlagSpectraRenderer, self)
+        super_cls = super(T2_4MDetailsTsysflagspectraRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
         weblog_dir = os.path.join(context.report_dir,
@@ -3506,8 +3522,8 @@ class T2_4MDetailsTsysFlagSpectraRenderer(T2_4MDetailsDefaultRenderer):
 
         htmlreports = {}
         for result in results:
-            if not hasattr(result, 'flagcmdfile'):
-                continue
+#            if not hasattr(result, 'flagcmdfile'):
+#                continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
             report_abspath = self.write_report_to_disk(weblog_dir, result)
@@ -3526,8 +3542,7 @@ class T2_4MDetailsTsysFlagSpectraRenderer(T2_4MDetailsDefaultRenderer):
         if os.path.exists(filename):
             return filename
 
-        reason = result.reason
-        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
     def write_report_to_disk(self, weblog_dir, result):
@@ -4425,7 +4440,7 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
             flagcmds_filename = '%s-agent_flagcmds.txt' % ms.basename
             flagcmds_path = os.path.join(weblog_dir, flagcmds_filename)
             with open(flagcmds_path, 'w') as flagcmds_file:
-                terminated = '\n'.join(r.flagcmds)
+                terminated = '\n'.join(r.flagcmds())
                 flagcmds_file.write(terminated)
 
             flagcmd_files[ms.basename] = flagcmds_path
@@ -4577,7 +4592,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
             flagcmds_filename = '%s-agent_flagcmds.txt' % ms.basename
             flagcmds_path = os.path.join(weblog_dir, flagcmds_filename)
             with open(flagcmds_path, 'w') as flagcmds_file:
-                terminated = '\n'.join(r.flagcmds)
+                terminated = '\n'.join(r.flagcmds())
                 flagcmds_file.write(terminated)
 
             flagcmd_files[ms.basename] = flagcmds_path
@@ -5858,11 +5873,11 @@ renderer_map = {
         hif.tasks.Setjy          : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html', always_rerender=True),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
-        hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
-        hifa.tasks.Tsysflagchans : T2_4MDetailsTsyscalFlagchansRenderer(),
-        hifa.tasks.Tsysflagspectra: T2_4MDetailsTsysFlagSpectraRenderer(),
-        hifa.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
-        hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
+        hifa.tasks.Tsysflag      : T2_4MDetailsTsysflagRenderer(),
+        hifa.tasks.Tsysflagchans : T2_4MDetailsTsysflagchansRenderer(),
+        hifa.tasks.Tsysflagspectra: T2_4MDetailsTsysflagspectraRenderer(),
+        hifa.tasks.Wvrgcal       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
+        hifa.tasks.Wvrgcalflag   : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDImportData   : T2_4MDetailsSingleDishImportDataRenderer(always_rerender=True),
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
