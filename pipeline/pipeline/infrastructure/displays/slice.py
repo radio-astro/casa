@@ -43,7 +43,8 @@ flag_color = {'edges':'lightblue',
 class SliceDisplay(object):
 
     def plot(self, context, results, reportdir, description_to_plot=None,
-      overplot_spectrum=None, plotbad=True, plot_only_flagged=False):
+      overplot_spectrum=None, plotbad=True, plot_only_flagged=False,
+      prefix=''):
 
         if not results:
             return []
@@ -83,7 +84,7 @@ class SliceDisplay(object):
             # down length)
             xtitle = results.first(description).axis.name
             ytitle = results.first(description).datatype
-            plotfile = '%s_%s_v_%s_%s.png' % (
+            plotfile = '%s_%s_%s_v_%s_%s.png' % (prefix,
               results.first(description).datatype, ytitle, xtitle,
               description)
             plotfile = sanitize(plotfile)
