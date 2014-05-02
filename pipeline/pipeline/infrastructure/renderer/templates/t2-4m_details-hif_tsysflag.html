@@ -1,6 +1,7 @@
 <%!
 rsc_path = ""
 
+import collections
 import os.path
 import pydoc
 import numpy as np
@@ -67,65 +68,97 @@ try:
     if not os.path.exists(plots_dir):
         os.mkdir(plots_dir)
 
-    plots = []
-    for r in result:
-        if r.view:
-            # display the view first
-            # plot() returns the list of Plots it has generated
-            LOG.info('Plotting')
-            plots.append(displays.ImageDisplay().plot(pcontext, r,
-              reportdir=plots_dir))
+    plot_groups = collections.OrderedDict()
+    components = r.components.keys()
 
-            # plot Tsys spectra that were flagged
-            for flagcmd in r.flagcmds():
-                for description in r.descriptions():
-                    tsysspectra = r.first(description).children.get(
-                      'tsysspectra')
-                    if tsysspectra is None:
-                        continue
+    for component in components:
 
-                    for tsys_desc in tsysspectra.descriptions():
-                        tsysspectrum = tsysspectra.first(tsys_desc)
+        # generate the plots
+        plots = []
+        for msresult in result:
+            r = msresult.components[component]
 
-                        if not flagcmd.match(tsysspectrum):
+            if component in ['nmedian','derivative','fieldshape'] and r.view:
+                # image to display
+                # plot() returns the list of Plots it has generated
+                LOG.info('Plotting')
+                plots.append(displays.ImageDisplay().plot(pcontext, r,
+                  reportdir=plots_dir, prefix=component))
+
+                # plot Tsys spectra that were flagged
+                for flagcmd in r.flagcmds():
+                    for description in r.descriptions():
+                        tsysspectra = r.first(description).children.get(
+                          'tsysspectra')
+                        if tsysspectra is None:
                             continue
 
-                        # have found flagged spectrum, now get
-                        # associated median spectrum
-                        medians = r.last(description).children.get(
-                          'tsysmedians')
+                        for tsys_desc in tsysspectra.descriptions():
+                            tsysspectrum = tsysspectra.first(tsys_desc)
 
-                        for median_desc in medians.descriptions():
-                            median_spectrum = medians.first(median_desc)
-                            if median_spectrum.ant is None or \
-                              median_spectrum.ant[0]==tsysspectrum.ant[0]:
-                                # do the plot
-                                plots.append(displays.SliceDisplay().plot(
-                                  context=pcontext, results=tsysspectra,
-                                  description_to_plot=tsys_desc,
-                                  overplot_spectrum=median_spectrum,
-                                  reportdir=plots_dir, plotbad=False))
-                                break
+                            if not flagcmd.match(tsysspectrum):
+                                continue
 
-    # Group the Plots by axes and plot types; each logical grouping will
-    # be contained in a PlotGroup
-    plot_groups = logger.PlotGroup.create_plot_groups(plots)
-    # Write the thumbnail pages for each plot grouping to disk
-    for plot_group in plot_groups:
-        renderer = hr.PlotGroupRenderer(pcontext, r, plot_group)
-        plot_group.filename = renderer.filename
-        with renderer.get_file() as fileobj:
-            fileobj.write(renderer.render())
+                            # have found flagged spectrum, now get
+                            # associated median spectrum
+                            medians = r.last(description).children.get(
+                              'tsysmedians')
+
+                            for median_desc in medians.descriptions():
+                                median_spectrum = medians.first(median_desc)
+                                if median_spectrum.ant is None or \
+                                  median_spectrum.ant[0]==tsysspectrum.ant[0]:
+                                    # do the plot
+                                    plots.append(displays.SliceDisplay().plot(
+                                      context=pcontext, results=tsysspectra,
+                                      description_to_plot=tsys_desc,
+                                      overplot_spectrum=median_spectrum,
+                                      reportdir=plots_dir, plotbad=False))
+                                    break
+
+            elif component in ['edgechans','birdies'] and r.view:
+                plots.append(displays.SliceDisplay().plot(pcontext, r,
+                  reportdir=plots_dir, plotbad=False, plot_only_flagged=True,
+                  prefix=component))
+
+        # Group the Plots by axes and plot types; each logical grouping will
+        # be contained in a PlotGroup
+        plot_groups[component] = logger.PlotGroup.create_plot_groups(plots)
+        # Write the thumbnail pages for each plot grouping to disk
+        for plot_group in plot_groups[component]:
+            renderer = hr.PlotGroupRenderer(pcontext, r, plot_group,
+              prefix=component)
+            plot_group.filename = renderer.filename
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
 
 except Exception, e:
     print 'hif_tsysflag html template exception:', e
     raise e
 %>
 
-% if htmlreports:
-<h2>Flags</h2>
-<table class="table table-bordered table-striped">
-	<caption>Report Files</caption>
+<ul>
+% for component in components: 
+ <li>
+  <h2>Flag component - ${component}</h2>
+
+    % if component=='birdies':
+        Flag spikes or birdies in Tsys spectra
+    % elif component=='derivative':
+        Flag Tsys spectra with high median derivative (ringing)
+    % elif component=='edgechans':
+        Flag edge channels of Tsys spectra
+    % elif component=='fieldshape':
+        Flag Tsys spectra whose shape differs from those associated with BANDPASS data
+    % elif component=='nmedian':
+        Flag Tsys spectra with high median values
+    % else:
+        Purpose unknown
+    % endif
+
+    % if htmlreports[component]:
+  <h3>Flags</h3>
+  <table class="table table-bordered table-striped">
 	<thead>
 	    <tr>
 	        <th>Flagging Commands</th>
@@ -133,7 +166,7 @@ except Exception, e:
 	    </tr>
 	</thead>
 	<tbody>
-	    % for file,reports in htmlreports.items():
+	    % for file,reports in htmlreports[component].items():
 	    <tr>
 	        <td><a class="replace-pre" href="${reports[0]}">${file}</a></td>
 	        <td><a class="replace-pre"
@@ -141,31 +174,35 @@ except Exception, e:
 	    </tr>
 	    % endfor
 	</tbody>
-</table>
-% endif
+  </table>
+    % endif
  
-% if plot_groups:
-<h2>Plots</h2>
-<ul>
-% for plot_group in plot_groups:
-	% if plot_group.title == 'Time vs Antenna1':
-		<li>
+    % if plot_groups[component]:
+  <h3>Plots</h3>
+  <ul>
+        % for plot_group in plot_groups[component]:
+            % if plot_group.title == 'Time vs Antenna1':
+	<li>
 			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
                shows the images used for flagging.
         </li>
 	% elif 'Tsys vs Channel' in plot_group.title:
-		<li>
+	<li>
 			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
                shows the T<sub>sys</sub> spectra flagged in each image.
         </li>
-   	% endif
+   	    % endif
+        % endfor
+  </ul>
+    % endif
+ </li>
 % endfor
 </ul>
 
 % if len(summary_plots) > 0:
 <h3>T<sub>sys</sub> after flagging</h3>
 
-% for ms in summary_plots:
+    % for ms in summary_plots:
     <h4><a class="replace"
            href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}">${ms}</a>
     </h4>
@@ -203,7 +240,6 @@ except Exception, e:
             % endif
         % endfor
     </ul>
-%endfor
-%endif
+    % endfor
 
 % endif
