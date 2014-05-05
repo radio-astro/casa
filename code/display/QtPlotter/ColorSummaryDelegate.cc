@@ -58,8 +58,12 @@ namespace casa {
 			QColor oldColor = pen.color();
 			pen.setColor( Qt::black );
 			painter->setPen( pen );
-			int startY = option.decorationSize.height() * index.row();
-			painter->drawRect(0,startY,viewport.width(), option.decorationSize.height()-PEN_WIDTH/2);
+
+			QRect drawRect = option.rect;
+			int startY = drawRect.y();
+			int drawHeight = drawRect.height();
+
+			painter->drawRect( PEN_WIDTH/2, startY, viewport.width(), drawHeight-PEN_WIDTH/2);
 			pen.setWidth( oldWidth );
 			pen.setColor( oldColor );
 			painter->setPen( pen );
