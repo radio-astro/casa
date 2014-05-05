@@ -520,7 +520,7 @@ def score_tsysspwmap (ms, unmappedspws):
 	if nscispws <= 0:
 	    score = 0.0
 	else:
-	    score = float(len (unmappedspws)) / float(nscispws)
+	    score = float(nscispws - len (unmappedspws)) / float(nscispws)
         longmsg = 'Tsys spw map is incomplete for %s science windows %s ' % (ms.basename, unmappedspws)
         shortmsg = 'Tsys spw map is incomplete'
 
