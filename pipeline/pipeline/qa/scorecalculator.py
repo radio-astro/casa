@@ -15,6 +15,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
            'score_bwswitching',                               # ALMA specific
+	   'score_tsysspwmap',                                # ALMA specific
            'score_missing_intents',
            'score_online_shadow_agents',
            'score_total_data_flagged',
@@ -501,4 +502,26 @@ def score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s (Ant=%s, SPW=%d, Pol=%d) was flagged' % (percent, name, ant, spw, pol)
     shortmsg = '%0.2f%% data flagged (This is tentative score.)' % percent
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_tsysspwmap (ms, unmappedspws):
+
+    '''
+    Score is equal to the fraction of unmapped windows
+    '''
+
+    if len(unmappedspws) <= 0:
+        score = 1.0
+        longmsg = 'Tsys spw map is complete for %s ' % ms.basename
+        shortmsg = 'Tsys spw map is complete'
+    else:
+        nscispws = len([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+	if nscispws <= 0:
+	    score = 0.0
+	else:
+	    score = float(len (unmappedspws)) / float(nscispws)
+        longmsg = 'Tsys spw map is incomplete for %s science windows %s ' % (ms.basename, unmappedspws)
+        shortmsg = 'Tsys spw map is incomplete'
+
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
