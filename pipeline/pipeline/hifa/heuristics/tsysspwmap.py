@@ -160,17 +160,19 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
                 spwWithoutMatch.append(i)
             applyCalSpwMap.append(int(useSpw))        
 
-    science_window_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
-    unmatched_science_spws = set(spwWithoutMatch).intersection(science_window_ids)
+    science_window_ids = list(set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]))
+    unmatched_science_spws = list(set(spwWithoutMatch).intersection(science_window_ids))
 
     if len(unmatched_science_spws) != 0:
         no_match = utils.commafy(unmatched_science_spws, False)
-        LOG.warning('No Tsys match found for spws %s.' % no_match) 
+        LOG.info('No Tsys match found for spws %s.' % no_match) 
 
     if trim :
         LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
-        return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
+        #return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
+        return unmatched_science_spws, trimSpwmap(applyCalSpwMap)
     else :
         LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
-        return spwWithoutMatch, applyCalSpwMap
+        #return spwWithoutMatch, applyCalSpwMap
+        return unmatched_science_spws, applyCalSpwMap
 
