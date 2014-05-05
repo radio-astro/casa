@@ -102,7 +102,7 @@ class Tsyscal(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom, origin)
         callist.append(calapp)
 
-        return resultobjects.TsyscalResults(pool=callist)
+        return resultobjects.TsyscalResults(pool=callist, unmappedspws=nospwmap)
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one

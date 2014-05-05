@@ -8,13 +8,14 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TsyscalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], unmappedspws=[]):
         super(TsyscalResults, self).__init__()
 
         self.vis = None
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
+	self.unmappedspws=unmappedspws
         self.error = set()
 
     def merge_with_context(self, context):
