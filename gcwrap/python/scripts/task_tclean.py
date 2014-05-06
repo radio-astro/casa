@@ -13,7 +13,9 @@ import numpy
 from taskinit import *
 import copy
 
-from refimagerhelper import PySynthesisImager, PyParallelContSynthesisImager,PyParallelCubeSynthesisImager, ImagerParameters
+from refimagerhelper import PySynthesisImager
+from refimagerhelper import PyParallelContSynthesisImager,PyParallelCubeSynthesisImager
+from refimagerhelper import ImagerParameters
 
 def tclean(
     ####### Data Selection
@@ -26,6 +28,7 @@ def tclean(
     scan='',
     observation='',
     intent='',
+    datacolumn='corrected',
 
     ####### Image definition
     imagename='',
@@ -35,6 +38,7 @@ def tclean(
     stokes='I',
 
     outlierfile='',
+    reuse=True,
 
     ## Spectral parameters
     specmode='mfs',
@@ -157,9 +161,13 @@ def tclean(
         readonly=False
 
     #####################################################
+    # Increment output image name if required.
+    #####################################################
+    ##imagename = incrementname( imagename )
 
+    #####################################################
     #### Construct ImagerParameterss object
-    from refimagerhelper import ImagerParameters
+    #####################################################
 
     # Put all parameters into dictionaries and check them. 
     paramList = ImagerParameters(
@@ -172,6 +180,7 @@ def tclean(
         scan=scan,
         obs=observation,
         state=intent,
+        datacolumn=datacolumn,
 
         ### Image....
         imagename=imagename,
@@ -213,6 +222,7 @@ def tclean(
         normtype=normtype,
 
         outlierfile=outlierfile,
+        reuse=reuse,
         # startmodel=startmodel
 
         weighting=weighting,
@@ -242,8 +252,9 @@ def tclean(
         workdir=workdir
         )
     
-    if paramList.checkParameters() == False:
-        return False
+    ## Do some type-checking, parse outlier files, and modify image name if needed.
+    #if paramList.checkParameters() == False:
+    #   return False
 
     #paramList.printParameters()
 

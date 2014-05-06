@@ -190,6 +190,7 @@ protected:
 		       const Float computePAStep   = 360.0,
 		       const Float rotatePAStep    = 5.0,
 		       const String interpolation = String("linear"),
+		       const Bool freqFrameValid = True,
 		       const Int cache=1000000000,
 		       const Int tile=16);
 
@@ -301,7 +302,9 @@ protected:
   Bool imageDefined_p;
   Bool useScratch_p;
   //
-  Bool freqFrameValid_p;
+  //  Bool freqFrameValid_p;
+
+  FTMachine::Type datacol_p;
 
 };
 

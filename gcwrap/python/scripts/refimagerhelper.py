@@ -47,16 +47,16 @@ class PySynthesisImager:
         ## It can also be used serially to process the major cycle in pieces.
         self.NN = 1 
 
-        isvalid = self.checkParameters()
-        if isvalid==False:
-            print 'Invalid parameters'
+#        isvalid = self.checkParameters()
+#        if isvalid==False:
+#            print 'Invalid parameters'
 
 #############################################
-    def checkParameters(self):
-        # Copy the imagename from impars to decpars, for each field.
-        for immod in range(0,self.NF):
-            self.alldecpars[str(immod)]['imagename'] = self.allimpars[str(immod)]['imagename']
-        return True
+#    def checkParameters(self):
+#        # Copy the imagename from impars to decpars, for each field.
+#        for immod in range(0,self.NF):
+#            self.alldecpars[str(immod)]['imagename'] = self.allimpars[str(immod)]['imagename']
+#        return True
 
 #############################################
 #############################################
@@ -715,6 +715,7 @@ class ImagerParameters():
                  scan='',
                  obs='',
                  state='',
+                 datacolumn='corrected',
 
                  ## Image Definition
                  imagename='', 
@@ -756,6 +757,7 @@ class ImagerParameters():
                  normtype='flatnoise',
 
                  outlierfile='',
+                 reuse=True,
                  startmodel='', 
 
                  weighting='natural', 
@@ -789,6 +791,7 @@ class ImagerParameters():
         ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
         self.allselpars = {'msname':msname, 'field':field, 'spw':spw, 'scan':scan,
                            'timestr':timestr, 'uvdist':uvdist, 'antenna':antenna, 'obs':obs,'state':state,
+                           'datacolumn':datacolumn,
                            'usescratch':usescratch, 'readonly':readonly}
 
         ## Imaging/deconvolution parameters
@@ -819,7 +822,8 @@ class ImagerParameters():
 #                           'outertaper':outertaper,'innertaper':innertaper } 
         
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
-        self.allnormpars = { '0' : {'imagename':imagename, 'mtype': mtype,
+#        self.allnormpars = { '0' : {'imagename':imagename, 'mtype': mtype,
+        self.allnormpars = { '0' : {'mtype': mtype,
                                  'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
                                  'normtype':normtype, 'workdir':workdir }     }
 
@@ -832,6 +836,8 @@ class ImagerParameters():
                           'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
 
 
+        self.reusename=reuse
+
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel',
@@ -840,8 +846,14 @@ class ImagerParameters():
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
         self.outdecparlist=['algo','startmodel','ntaylorterms']
-        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
+        self.outnormparlist=['mtype','weightlimit','ntaylorterms']
+#        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
 
+        ret = self.checkParameters()
+        if ret==False:
+            casalog.post('Found errors in input parameters. Please check.', 'WARN')
+
+        self.printParameters()
 
     def getSelPars(self):
         return self.allselpars
@@ -876,7 +888,7 @@ class ImagerParameters():
 
 
     def checkParameters(self):
-        casalog.origin('tclean.checkParameters')
+        casalog.origin('refimagerhelper.checkParameters')
         casalog.post('Verifying Input Parameters')
         # Init the error-string
         errs = "" 
@@ -885,13 +897,26 @@ class ImagerParameters():
         errs += self.checkAndFixIterationPars()
         errs += self.checkAndFixNormPars()
 
+        ### Copy them from 'impars' to 'normpars' and 'decpars'
+        for immod in self.allimpars.keys() :
+            self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
+            self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
+            if len(self.allnormpars[immod]['workdir'])==0:
+                self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
+
+#        for modelid in self.allnormpars.keys():
+
+
+        
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
-            casalog.post('Parameter Errors : \n' + errs,'WARN')
-            return False
+#            casalog.post('Parameter Errors : \n' + errs,'WARN')
+            raise Exception("Parameter Errors : \n" + errs)
+ #           return False
         return True
 
     ###### Start : Parameter-checking functions ##################
+
 
     def checkAndFixSelectionPars(self):
         errs=""
@@ -977,9 +1002,42 @@ class ImagerParameters():
             self.allimpars[immod] = synu.checkimageparams( self.allimpars[immod] )
             synu.done()
 
+        ## Check for name increments, and copy from impars to decpars and normpars.
+        self.handleImageNames()
 
         return errs
 
+    def handleImageNames(self):
+
+            for immod in self.allimpars.keys() :
+                inpname = self.allimpars[immod]['imagename']
+
+                ### If a directory name is embedded in the image name, check that the dir exists.
+                if inpname.count('/'):
+                    splitname = inpname.split('/')
+                    prefix = splitname[ len(splitname)-1 ]
+                    dirname = './' + inpname[0: len(inpname)-len(prefix)]   # has '/' at end
+                    if not os.path.exists( dirname ):
+                        casalog.post('Making directory : ' + dirname, 'INFO')
+                        os.mkdir( dirname )
+                    
+            ### Check for name increments 
+            if self.reusename == False:
+                ## Get a list of image names for all fields (to sync name increment ids across fields)
+                inpnamelist={}
+                for immod in self.allimpars.keys() :
+                    inpnamelist[immod] = self.allimpars[immod]['imagename'] 
+
+                newnamelist = self.incrementImageNameList( inpnamelist )
+
+                if len(newnamelist) != len(self.allimpars.keys()) :
+                    casalog.post('Internal Error : Non matching list lengths in refimagerhelper::handleImageNames. Not updating image names','WARN')
+                else : 
+                    for immod in self.allimpars.keys() :
+                        self.allimpars[immod]['imagename'] = newnamelist[immod]
+                
+#                newname = self.incrementImageName( inpname )
+#                self.allimpars[immod]['imagename'] = newname
 
     def checkAndFixIterationPars(self ):
         errs=""
@@ -995,9 +1053,9 @@ class ImagerParameters():
     def checkAndFixNormPars(self):  
         errs=""
 
-        for modelid in self.allnormpars.keys():
-            if len(self.allnormpars[modelid]['workdir'])==0:
-                self.allnormpars[modelid]['workdir'] = self.allnormpars['0']['imagename'] + '.workdir'
+#        for modelid in self.allnormpars.keys():
+#            if len(self.allnormpars[modelid]['workdir'])==0:
+#                self.allnormpars[modelid]['workdir'] = self.allnormpars['0']['imagename'] + '.workdir'
 
         return errs
 
@@ -1151,4 +1209,96 @@ class ImagerParameters():
         casalog.post('Weightpars : ' + str(self.weightpars), 'INFO')
         casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
         casalog.post('IterPars : ' + str(self.iterpars), 'INFO')
+
+
+    def incrementImageName(self,imagename):
+        dirname = '.'
+        prefix = imagename
+
+        if imagename.count('/'):
+            splitname = imagename.split('/')
+            prefix = splitname[ len(splitname)-1 ]
+            dirname = './' + imagename[0: len(imagename)-len(prefix)]   # has '/' at end
+
+        inamelist = [fn for fn in os.listdir(dirname) if any([fn.startswith(prefix)])];
+
+        if len(inamelist)==0:
+            newimagename = dirname[2:] + prefix
+        else:
+            nlen = len(prefix)
+            maxid=1
+            for iname in inamelist:
+                startind = iname.find( prefix+'_' )
+                if startind==0:
+                    idstr = ( iname[nlen+1:len(iname)] ).split('.')[0]
+                    if idstr.isdigit() :
+                        val = eval(idstr)
+                        if val > maxid : 
+                            maxid = val
+            newimagename = dirname[2:] + prefix + '_' + str(maxid+1)
+
+        print 'Using : ',  newimagename
+        return newimagename
+
+    def incrementImageNameList(self, inpnamelist ):
+
+        dirnames={}
+        prefixes={}
+
+        for immod in inpnamelist.keys() : 
+            imagename = inpnamelist[immod]
+            dirname = '.'
+            prefix = imagename
+
+            if imagename.count('/'):
+                splitname = imagename.split('/')
+                prefix = splitname[ len(splitname)-1 ]
+                dirname = './' + imagename[0: len(imagename)-len(prefix)]   # has '/' at end
+
+            dirnames[immod] = dirname
+            prefixes[immod] = prefix
+
+
+        maxid=0
+        for immod in inpnamelist.keys() : 
+            prefix = prefixes[immod]
+            inamelist = [fn for fn in os.listdir(dirnames[immod]) if any([fn.startswith(prefix)])];
+            nlen = len(prefix)
+
+            if len(inamelist)==0 : 
+                locmax=0
+            else: 
+                locmax=1
+
+            for iname in inamelist:
+                startind = iname.find( prefix+'_' )
+                if startind==0:
+                    idstr = ( iname[nlen+1:len(iname)] ).split('.')[0]
+                    if idstr.isdigit() :
+                        val = eval(idstr)
+                        if val > locmax : 
+                            locmax = val
+                            
+            if locmax > maxid:
+                maxid = locmax
+
+        
+        newimagenamelist={}
+        for immod in inpnamelist.keys() : 
+            if maxid==0 : 
+                newimagenamelist[immod] = inpnamelist[immod]
+            else:
+                newimagenamelist[immod] = dirnames[immod][2:] + prefixes[immod] + '_' + str(maxid+1) 
+
+        print 'Input : ',  inpnamelist
+        print 'Dirs : ', dirnames
+        print 'Pre : ', prefixes
+        print 'Max id : ', maxid
+        print 'Using : ',  newimagenamelist
+        return newimagenamelist
+
+
+
+
+
 

@@ -1402,7 +1402,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     vb.lsrFrequency(spw, lsrFreq, condoo, !freqFrameValid_p);
     doConversion_p[spw]=condoo;
-    
+
     if(lsrFreq.nelements() ==0){
       return False;
     }
@@ -1943,13 +1943,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Vectorized finalizeToVis is not implemented because it does nothing and is never called.
   
   // Vectorized InitializeToSky
-  void FTMachine::initializeToSkyNew(const Bool /*dopsf*/, 
+  void FTMachine::initializeToSkyNew(const Bool dopsf, 
 				     const VisBuffer& vb, 
 				     CountedPtr<SIImageStore> imstore)
     
   {
     AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
+    
+    // Make the relevant float grid. 
+    // This is needed mainly for facetting (to set facet shapes), but is harmless for non-facetting.
+    if( dopsf ) { imstore->psf(); } else { imstore->residual(); } 
 
+    // Initialize the complex grid (i.e. tell FTMachine what array to use internally)
     Matrix<Float> sumWeight;
     initializeToSky(*(imstore->backwardGrid()) , sumWeight , vb);
 
@@ -1980,7 +1985,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
 		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
-	
+
 	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
 	
       }

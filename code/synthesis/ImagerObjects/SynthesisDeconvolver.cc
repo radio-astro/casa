@@ -141,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
 	  }
-	  else if(algorithm==String("msmfs"))
+	  else if(algorithm==String("mtmfs"))
 	  {
 	    itsDeconvolver = new SDAlgorithmMSMFS( nTaylorTerms ); 
 	    } 
@@ -267,10 +267,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   CountedPtr<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
   {
-    if( itsDeconvolver->getAlgorithmName() == "msmfs" )
-      {  return new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms() ); }
+    CountedPtr<SIImageStore> imstore;
+    if( itsDeconvolver->getAlgorithmName() == "mtmfs" )
+      {  imstore =  new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms(), True ); }
     else
-      {  return new SIImageStore( imagename ); }
+      {  imstore = new SIImageStore( imagename, True ); }
+
+    return imstore;
+
   }
 
 

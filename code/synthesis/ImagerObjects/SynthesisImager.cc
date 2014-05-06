@@ -339,6 +339,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     mssFreqSel_p.resize();
     mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
 
+
+    //// Set the data column on which to operate
+    //    cout << "Using col : " << selpars.datacolumn << endl;
+    if( selpars.datacolumn.contains("data") || selpars.datacolumn.contains("obs") ) 
+      {datacol_p = FTMachine::OBSERVED; }
+    else if( selpars.datacolumn.contains("corr") )
+      {datacol_p = FTMachine::CORRECTED; }
+    else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = FTMachine::CORRECTED; }
+
       }
     catch(AipsError &x)
       {
@@ -462,7 +471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//csys = impars.buildCoordinateSystem( tms );
 	csys = impars.buildCoordinateSystem( rvi_p );
 	IPosition imshape = impars.shp();
-        freqFrameValid_p = impars.freqFrameValid;
+	//        freqFrameValid_p = impars.freqFrameValid;
 
 	if( (itsMappers.nMappers()==0) || 
 	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
@@ -497,7 +506,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
 			gridpars.doPBCorr,gridpars.conjBeams,
 			gridpars.computePAStep,gridpars.rotatePAStep,
-			gridpars.interpolation);
+			gridpars.interpolation, impars.freqFrameValid);
 
       }
     catch(AipsError &x)
@@ -848,22 +857,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if( mappertype=="default" || mappertype=="imagemosaic" )
 	  {
-	    //imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, useweightimage);
 	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
 	  }
 	else if (mappertype == "multiterm" )  // Currently does not support imagemosaic.
 	  {
-	    cout << "Making multiterm IS with nterms : " << ntaylorterms << endl;
+	    //cout << "Making multiterm IS with nterms : " << ntaylorterms << endl;
 	    imstor=new SIImageStoreMultiTerm(imageName, cSys, imShape, facets, overwrite, ntaylorterms, useweightimage);
 	  }
 	else
 	  {
 	    throw(AipsError("Internal Error : Invalid mapper type in SynthesisImager::createIMStore"));
 	  }
-	
-	//	if( ! imstor->checkValidity(True/*psf*/, False/*res*/,False/*wgt*/,False/*model*/,False/*image*/ ) ) 
-	//	  { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
-	
 	
 	// Fill in miscellaneous information needed by FITS
 	ROMSColumns msc(*mss_p[0]);
@@ -952,10 +956,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									      CountedPtr<SIImageStore> imagestore,
 									      Int facets)
   {
-    Int nIm=facets*facets;
-    Block<CountedPtr<SIImageStore> > facetList( nIm );
+    Block<CountedPtr<SIImageStore> > facetList( facets*facets );
 
-    if( nIm==1 ) { facetList[0] = imagestore;  return facetList; }
+    if( facets==1 ) { facetList[0] = imagestore;  return facetList; }
 
     // Remember, only the FIRST field in each run can have facets. So, check for this.
     if( ! unFacettedImStore_p.null() ) {
@@ -965,8 +968,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     unFacettedImStore_p = imagestore;
     facetsStore_p = facets;
     
-    for (Int facet=0; facet< nIm; ++facet){
-	facetList[facet] = unFacettedImStore_p->getFacetImageStore(facet, nIm);
+    // Note : facets : Number of facets on a side.
+    // Note : facet : index from range(0, facets*facets)
+    for (Int facet=0; facet< facets*facets; ++facet){
+	facetList[facet] = unFacettedImStore_p->getSubImageStore(facet, facets);
       }
     
     return facetList;
@@ -1005,7 +1010,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-      cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
+      //cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
 
   }
   
@@ -1044,8 +1049,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else // This field is facetted. Make a list of reference imstores, and add all to the mapper list.
 	{
 	  // First, make sure that full images have been allocated before trying to make references.....
-	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
-	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
+	  //	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	  //	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
 
 	  // Make and connect the list.
 	  Block<CountedPtr<SIImageStore> > imstorList = createFacetImageStoreList( imstor, facets );
@@ -1096,6 +1101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const Float computePAStep,         //=360.0
 					const Float rotatePAStep,          //=5.0
 					const String interpolation,  //="linear"
+					const Bool freqFrameValid, //=True
 					const Int cache,             //=1000000000,
 					const Int tile               //=16
 					)
@@ -1173,8 +1179,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> tspws(0);
     //theFT->setSpw( tspws, False );
     //theIFT->setSpw( tspws, False );
-    theFT->setSpw( tspws, freqFrameValid_p );
-    theIFT->setSpw( tspws, freqFrameValid_p );
+    theFT->setSpw( tspws, freqFrameValid );
+    theIFT->setSpw( tspws, freqFrameValid );
 
     //// Set interpolation mode
     theFT->setFreqInterpolation( interpolation );
@@ -1395,7 +1401,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				if(vi_p->isWritable() && useScratch_p)
     					vi_p->writeVisModel(vb->visCubeModel());
     			}
-    			itsMappers.grid(*vb, dopsf);
+    			itsMappers.grid(*vb, dopsf, datacol_p);
     		}
     	}
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
@@ -1426,7 +1432,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				if(writeAccess_p && useScratch_p)
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
     			}
-    			itsMappers.grid(*vb, dopsf);
+    			itsMappers.grid(*vb, dopsf, datacol_p);
 			cohDone += vb->nRow();
 			pm.update(Double(cohDone));
     		}

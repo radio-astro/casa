@@ -176,6 +176,11 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     itsImages->model()->get( itsMatModel, True );
     itsImages->psf()->get( itsMatPsf, True );
 
+    //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
+    //	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 
+    //	 << itsImages->psf()->shape() << " : " << itsMatPsf.shape() 
+    //	 << endl;
+
     findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
     itsModelFlux = sum( itsMatModel );
 
@@ -336,16 +341,6 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
   }
 */
-
-  // Use this decide how to partition
-  // the image for separate calls to 'deconvolve'.
-  void SDAlgorithmHogbomClean::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
-  {  
-    onechan = True;
-    onepol = True;
-  }
-
-
 
 
 } //# NAMESPACE CASA - END

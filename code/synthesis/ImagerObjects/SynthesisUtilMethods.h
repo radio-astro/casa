@@ -140,6 +140,8 @@ public:
   String field, antenna, timestr, scan, obs, state, uvdist,taql,intent;
   Bool usescratch,readonly,incrmodel;
 
+  String datacolumn;
+
 };
 
 

@@ -79,6 +79,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
+    <param type="string" name="datacolumn" subparam="true">
+      <description>data or observed, corrected</description>
+      <value type="string">corrected</value>
+    </param>
+
 
 <!--============================================== -->
 <!--                            Image Definition Parameters                                         -->
@@ -118,6 +123,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="outlierfile">
       <description>Name of outlier-field image definitions</description>
       <value type="string"></value>
+    </param>
+
+    <param type="bool" name="reuse">
+      <description>True : Re-use existing images. False : Increment imagename</description>
+      <value type="bool">True</value>
     </param>
 
 
@@ -309,7 +319,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               <value>clark</value>
 	      <value>clarkstokes</value>
 	      <value>multiscale</value>
-	      <value>msmfs</value>
+	      <value>mtmfs</value>
 	    </allowed>
     </param>
 
@@ -423,6 +433,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="scan"><value>""</value></default>
 	 <default param="observation"><value>""</value></default>
 	 <default param="intent"><value>""</value></default>
+	 <default param="datacolumn"><value>"corrected"</value></default>
        </notequals>
       </when> 
 
@@ -540,7 +551,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <equals type="string" value="multiscale">
 	 <default param="scales"><value>[]</value></default>
        </equals>
-       <equals type="string" value="msmfs">
+       <equals type="string" value="mtmfs">
 	 <default param="scales"><value>[]</value></default>
 	 <default param="ntaylorterms"><value>2</value></default>  
        </equals>

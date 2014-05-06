@@ -81,15 +81,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsBackwardGrids.resize(0);
 
     itsNTerms=0;
+
     itsNFacets=1;
+    itsFacetId=0;
+    itsNChanChunks = 1;
+    itsChanId = 0;
+    itsNPolChunks = 1;
+    itsPolId = 0;
+
     itsUseWeight=False;
 
-    itsImageShape=IPosition();
+    itsImageShape=IPosition(4,0,0,0,0);
     itsImageName=String("");
     itsCoordSys=CoordinateSystem();
     itsMiscInfo=Record();
 
     //    itsValidity = False;
+
+    init();
+
+    validate();
 
   }
   
@@ -117,17 +128,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsForwardGrids.resize(itsNTerms);
     itsBackwardGrids.resize(2 * itsNTerms - 1);
 
+    //cout << "Input imshape : " << imshape << endl;
+
     itsImageName = imagename;
     itsImageShape = imshape;
     itsCoordSys = imcoordsys;
-    itsNFacets = nfacets;
+
+    //    itsNFacets = nfacets;  // So that sumwt shape happens properly, via checkValidity
+    //    itsFacetId = -1;
+
+    itsNFacets=1;
+    itsFacetId=0;
+    itsNChanChunks = 1;
+    itsChanId = 0;
+    itsNPolChunks = 1;
+    itsPolId = 0;
+
+
     itsUseWeight = useweightimage;
 
     itsMiscInfo=Record();
 
+    init();
+
+    validate();
+
   }
 
-  SIImageStoreMultiTerm::SIImageStoreMultiTerm(String imagename, uInt ntaylorterms) 
+  SIImageStoreMultiTerm::SIImageStoreMultiTerm(String imagename, uInt ntaylorterms,const Bool ignorefacets) 
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","Open existing Images",WHERE) );
 
@@ -148,6 +176,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsImageName = imagename;
 
+    itsNFacets=1;
+    itsFacetId=0;
+    itsNChanChunks = 1;
+    itsChanId = 0;
+    itsNPolChunks = 1;
+    itsPolId = 0;
 
     Bool exists=True;
     Bool sumwtexists=True;
@@ -184,6 +218,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	CountedPtr<ImageInterface<Float> > imptr;
 	imptr = new PagedImage<Float> (itsImageName+String(".sumwt.tt0"));
 	itsNFacets = imptr->shape()[0];
+	itsFacetId = 0;
 	itsUseWeight = getUseWeightImage( *imptr );
 	if( itsUseWeight && ! doesImageExist(itsImageName+String(".weight.tt0")) )
 	  {
@@ -194,6 +229,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "Multi-term SumWt does not exist. Please create PSFs or Residuals." ) );
       }
+
+    if( ignorefacets==True ) itsNFacets=1;
+
+    init();
+    validate();
 
   }
 
@@ -238,13 +278,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsUseWeight=getUseWeightImage( *(sumwtims[0]) );
 
     itsImageName = String("reference");  // This is what the access functions use to guard against allocs...
+
+    init();
+    validate();
 	
-    //    itsValidity = checkValidity(True/*psf*/, True/*res*/,False/*wgt*/,False/*model*/,False/*image*/);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////Constructor with pointers already created else where but taken over here
+  SIImageStoreMultiTerm::SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > > modelims, 
+					       Block<CountedPtr<ImageInterface<Float> > >residims,
+					       Block<CountedPtr<ImageInterface<Float> > >psfims, 
+					       Block<CountedPtr<ImageInterface<Float> > >weightims, 
+					       Block<CountedPtr<ImageInterface<Float> > >restoredims,
+					       Block<CountedPtr<ImageInterface<Float> > >sumwtims, 
+					       CountedPtr<ImageInterface<Float> > newmask,
+					       CountedPtr<ImageInterface<Float> > newalpha,
+					       CountedPtr<ImageInterface<Float> > newbeta,
+					       CoordinateSystem& csys,
+					       IPosition imshape,
+					       String imagename,
+					       const Int facet, const Int nfacets,
+					       const Int chan, const Int nchanchunks,
+					       const Int pol, const Int npolchunks)
+  {
+    
+    itsPsfs=psfims;
+    itsModels=modelims;
+    itsResiduals=residims;
+    itsWeights=weightims;
+    itsImages=restoredims;
+    itsSumWts=sumwtims;
+    itsMask = newmask;
+    itsAlpha = newalpha;
+    itsBeta = newbeta;
+
+    itsNTerms = itsResiduals.nelements();
+    itsMiscInfo=Record();
+
+    AlwaysAssert( itsPsfs.nelements() == 2*itsNTerms-1 , AipsError ); 
+    //    AlwaysAssert( itsPsfs.nelements()>0 && !itsPsfs[0].null() , AipsError );
+    //    AlwaysAssert( itsSumWts.nelements()>0 && !itsSumWts[0].null() , AipsError );
+
+    itsForwardGrids.resize( itsNTerms );
+    itsBackwardGrids.resize( 2 * itsNTerms - 1 );
+
+    itsNFacets = nfacets;
+    itsFacetId = facet;
+    itsNChanChunks = nchanchunks;
+    itsChanId = chan;
+    itsNPolChunks = npolchunks;
+    itsPolId = pol;
+
+    itsParentImageShape = imshape; 
+    itsImageShape = imshape;
+    /////    itsImageShape = IPosition(4,0,0,0,0);
+
+    itsCoordSys = csys; // Hopefully this doesn't change for a reference image
+    itsImageName = imagename;
+
+	
+    //-----------------------
+    init(); // Connect parent pointers to the images.
+    //-----------------------
+
+    // Set these to null, to be set later upon first access.
+    // Setting to null will hopefully set all elements of each array, to NULL.
+    itsPsfs=NULL;  
+    itsModels=NULL;
+    itsResiduals=NULL;
+    itsWeights=NULL;
+    itsImages=NULL;
+    itsSumWts=NULL;
+
+    itsMask=NULL;
+
+     validate();
+
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -394,45 +509,66 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::psf(uInt term)
   {
     AlwaysAssert( itsPsfs.nelements() > term, AipsError );
+    /*
     if( !itsPsfs[term].null() && itsPsfs[term]->shape() == itsImageShape ) { return itsPsfs[term]; }
     checkRef( itsPsfs[term] , "psf.tt"+String::toString(term) );
     itsPsfs[term] = openImage( itsImageName+String(".psf.tt")+String::toString(term) , False );
+    */
+
+    accessImage( itsPsfs[term], itsParentPsfs[term], imageExts(PSF)+".tt"+String::toString(term) );
     return itsPsfs[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::residual(uInt term)
   {
+    /*
     if( !itsResiduals[term].null() && itsResiduals[term]->shape() == itsImageShape ) { return itsResiduals[term]; }
     checkRef( itsPsfs[term] , "psf.tt"+String::toString(term) );
     itsResiduals[term] = openImage( itsImageName+String(".residual.tt")+String::toString(term) , False );
+    */
+
+    accessImage( itsResiduals[term], itsParentResiduals[term], imageExts(RESIDUAL)+".tt"+String::toString(term) );
     return itsResiduals[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::weight(uInt term)
   {
+    /*
     if( !itsWeights[term].null() && itsWeights[term]->shape() == itsImageShape ) { return itsWeights[term]; }
     checkRef( itsWeights[term] , "weight.tt"+String::toString(term) );
     itsWeights[term] = openImage( itsImageName+String(".weight.tt")+String::toString(term) , False );
+    */
 
+    accessImage( itsWeights[term], itsParentWeights[term], imageExts(WEIGHT)+".tt"+String::toString(term) );
     return itsWeights[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::sumwt(uInt term)
   {
+    /*
     IPosition useShape( itsImageShape );
     useShape[0] = itsNFacets;
     useShape[1] = itsNFacets;
+    */
+    //    if( !itsSumWts[term].null() && itsSumWts[term]->shape() == useShape ) { return itsSumWts[term]; }
+    //    checkRef( itsSumWts[term], "sumwt.tt"+String::toString(term) );
+    //    itsSumWts[term] = openImage( itsImageName+String(".sumwt.tt")+String::toString(term) , False, True/*dosumwt*/ ); 
 
-    if( !itsSumWts[term].null() && itsSumWts[term]->shape() == useShape ) { return itsSumWts[term]; }
-    checkRef( itsSumWts[term], "sumwt.tt"+String::toString(term) );
-    itsSumWts[term] = openImage( itsImageName+String(".sumwt.tt")+String::toString(term) , False, True/*dosumwt*/ ); 
 
+    accessImage( itsSumWts[term], itsParentSumWts[term], imageExts(SUMWT)+".tt"+String::toString(term) );
+
+    if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) 
+      {itsUseWeight = getUseWeightImage( *itsParentSumWts[0] );}
     setUseWeightImage( *(itsSumWts[term]) , itsUseWeight); // Sets a flag in the SumWt image. 
 
     return itsSumWts[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::model(uInt term)
   {
+    /*
     if( !itsModels[term].null() && itsModels[term]->shape() == itsImageShape ) { return itsModels[term]; }
     checkRef( itsModels[term] , "model.tt"+String::toString(term) );
     itsModels[term] = openImage( itsImageName+String(".model.tt")+String::toString(term) , False );
+    */
+
+    accessImage( itsModels[term], itsParentModels[term], imageExts(MODEL)+".tt"+String::toString(term) );
 
     // Set up header info the first time.
     ImageInfo info = itsModels[term]->imageInfo();
@@ -448,9 +584,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::image(uInt term)
   {
+    /*
     if( !itsImages[term].null() && itsImages[term]->shape() == itsImageShape ) { return itsImages[term]; }
     checkRef( itsImages[term] , "image.tt"+String::toString(term) );
     itsImages[term] = openImage( itsImageName+String(".image.tt")+String::toString(term) , False );
+    */
+
+    accessImage( itsImages[term], itsParentImages[term], imageExts(IMAGE)+".tt"+String::toString(term) );
     itsImages[term]->setUnits("Jy/beam");
     return itsImages[term];
   }
@@ -463,6 +603,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::backwardGrid(uInt term){
   	  if(!itsBackwardGrids[term].null() && (itsBackwardGrids[term]->shape() == itsImageShape))
   		  return itsBackwardGrids[term];
+	  //	  cout << "MT : Making backward grid of shape : " << itsImageShape << endl;
   	  itsBackwardGrids[term]=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
   	  return itsBackwardGrids[term];
     }
@@ -965,6 +1106,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getFacetImageStore(const Int facet, const Int nfacets)
   {
+    /*
+
     Block<CountedPtr<ImageInterface<Float> > > psflist(2*itsNTerms-1);
     Block<CountedPtr<ImageInterface<Float> > > modellist(itsNTerms);
     Block<CountedPtr<ImageInterface<Float> > > residuallist(itsNTerms);
@@ -991,12 +1134,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     newmask = itsMask.null()?NULL:makeFacet(facet, nfacets, *itsMask);
     newalpha = itsAlpha.null()?NULL:makeFacet(facet, nfacets, *itsAlpha);
     newbeta = itsBeta.null()?NULL:makeFacet(facet, nfacets, *itsBeta);
-
     return new SIImageStoreMultiTerm(modellist, residuallist, psflist, weightlist, imagelist,sumwtlist, newmask,newalpha,newbeta);
+    */
+
+    return new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask , itsAlpha, itsBeta, itsCoordSys, itsParentImageShape, itsImageName,  facet, nfacets);
 
   }
 
-  CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStore(const Int chan, const Bool onechan,
+  CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStore(const Int facet, const Int nfacets, 
+							  const Int chan, const Int nchanchunks, 
+							  const Int pol, const Int npolchunks)
+  {
+    return new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask, itsAlpha, itsBeta, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks);
+  }
+
+
+
+  CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStoreOld(const Int chan, const Bool onechan,
 							  const Int pol, const Bool onepol)
   {
 
@@ -1035,6 +1189,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//
+  //-------------------------------------------------------------
+  // Initialize the internals of the object.  Perhaps other such
+  // initializations in the constructors can be moved here too.
+  //
+  void SIImageStoreMultiTerm::init()
+  {
+    imageExts.resize(MAX_IMAGE_IDS);
+    
+    imageExts(MASK)=".mask";
+    imageExts(PSF)=".psf";
+    imageExts(MODEL)=".model";
+    imageExts(RESIDUAL)=".residual";
+    imageExts(WEIGHT)=".weight";
+    imageExts(IMAGE)=".image";
+    imageExts(SUMWT)=".sumwt";
+    imageExts(FORWARDGRID)=".forward";
+    imageExts(BACKWARDGRID)=".backward";
+
+    itsParentPsfs.resize(itsPsfs.nelements());
+    itsParentModels.resize(itsModels.nelements());
+    itsParentResiduals.resize(itsResiduals.nelements());
+    itsParentWeights.resize(itsWeights.nelements());
+    itsParentImages.resize(itsImages.nelements());
+    itsParentSumWts.resize(itsSumWts.nelements());
+   
+    itsParentPsfs = itsPsfs;
+    itsParentModels=itsModels;
+    itsParentResiduals=itsResiduals;
+    itsParentWeights=itsWeights;
+    itsParentImages=itsImages;
+    itsParentSumWts=itsSumWts;
+
+    itsParentMask=itsMask;
+
+    itsParentImageShape = itsImageShape;
+    if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
+
+  }
+
+  /*
+  Bool SIImageStoreMultiTerm::getUseWeightImage()
+  {  if( itsParentSumWts.nelements()==0 || itsParentSumWts[0].null() ) 
+      {return False;} 
+    else
+      {
+	Bool ret = SIImageStore::getUseWeightImage( *(itsParentSumWts[0]) );
+	return ret;
+      }
+  }
+  */
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 

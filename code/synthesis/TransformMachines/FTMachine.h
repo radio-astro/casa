@@ -54,6 +54,7 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <synthesis/ImagerObjects/SIImageStore.h>
+#include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

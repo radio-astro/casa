@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMTCleaner(),
     itsMTCsetup(False)
  {
-   itsAlgorithmName=String("msmfs");
+   itsAlgorithmName=String("mtmfs");
  }
 
   SDAlgorithmMSMFS::~SDAlgorithmMSMFS()
@@ -220,7 +220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	tempMat.reference( tempArr );
 	itsMTCleaner.setresidual( tix, tempMat );
       }
-    
+
     itsMTCleaner.computeprincipalsolution();
 
     for(uInt tix=0; tix<itsNTerms; tix++)

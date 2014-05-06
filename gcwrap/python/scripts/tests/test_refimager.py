@@ -17,7 +17,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      interactive=False
 
 
-     if(testnum==18): ## mode=cubesrc (For interface test purpose only, the mode is not fully implemeted yet)
+     if(testnum==19): ## mode=cubesrc (For interface test purpose only, the mode is not fully implemeted yet)
           casalog.post("==================================");
           casalog.post("Test 18 image-field, cubesrc --- Real Imaging with various cube parameter specifications");
           #casalog.post("==================================");
@@ -41,22 +41,43 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
 
-     if(testnum==17): ## mode=cubedata (For interface test purpose only, the mode is not full implemented yet)
+     if(testnum==18): ## mode=cube (with doppler correction)
           casalog.post("==================================");
-          casalog.post("Test 17 image-field, cubedata --- Real Imaging with various cube parameter specifications");
+          casalog.post("Test 17 image-field, cube --- With dopper corrections");
           #casalog.post("==================================");
-          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
-                                       spw='0',\
+          paramList = ImagerParameters(msname='DataTest/Cband.G37line.DopplerTest.ms', field='1',\
+                                       spw='0:105~135',\
                                        usescratch=True,readonly=True,\
-                                       imagename="CubedataTest", mode='cubedata',\
-                                       nchan=10,\
-                                       start=5,\
+                                       imagename="CubeTest", mode='cube',\
+                                       nchan=30,\
+                                       start=105,\
                                        step=1,\
                                        veltype='radio',\
-                                       imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       imsize=[256,256],\
+                                       cellsize='0.01arcmin',\
+                                       phasecenter=1,
+                                       ftmachine='gridft', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+     if(testnum==17): ## mode=cubedata 
+          casalog.post("==================================");
+          casalog.post("Test 17 image-field, cubedata --- No runtime dopper corrections");
+          #casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/Cband.G37line.DopplerTest.ms', field='1',\
+                                       spw='0:105~135',\
+                                       usescratch=True,readonly=True,\
+                                       imagename="CubedataTest", mode='cubedata',\
+                                       nchan=30,\
+                                       start=105,\
+                                       step=1,\
+                                       veltype='radio',\
+                                       imsize=[256,256],\
+                                       cellsize='0.01arcmin',\
+                                       phasecenter=1,
+                                       ftmachine='gridft', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -67,7 +88,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 16 image-fields, mfs (one with nterms=1. one with nterms=2).");
           casalog.post("==================================");
           
-          write_file('out16.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nntaylorterms=2\nmtype=multiterm\nrestfreq=[1.5GHz]\nalgo=msmfs')
+          write_file('out16.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nntaylorterms=2\nmtype=multiterm\nreffreq=1.5GHz\nalgo=mtmfs')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -95,7 +116,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        outlierfile='out15.txt',\
                                        mode='mfs',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
-                                       algo='msmfs',\
+                                       algo='mtmfs',\
                                        imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
@@ -214,7 +235,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
 
 
-     if(testnum==12):  ## 1 image-field, mfs --- WB AWP ( multi term )
+     if(testnum==12):  ## 1 image-field, mfs --- WB AWP ( multi term mosaic )
           casalog.post("==================================");
           casalog.post("Test 12 image-field, mfs --- WB AWP( multi term )");
           casalog.post("==================================");
@@ -234,7 +255,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cfcache = "perm.wb.nt2.mytest0.cfcache",\
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
-                                       algo='msmfs',\
+                                       algo='mtmfs',\
                                        pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -331,7 +352,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
                                        ftmachine='gridft', startmodel='', weighting='natural',\
-                                       algo='msmfs',\
+                                       algo='mtmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -353,7 +374,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
                                        ftmachine='gridft', startmodel='', weighting='natural',\
-                                       algo='msmfs',\
+                                       algo='mtmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -509,10 +530,10 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
         clusterdef=""
 
      ### Check input parameters, and parse outlier files.
-     if paramList.checkParameters() == False:
-        return [None, "", False, False,False]
+     #if paramList.checkParameters() == False:
+     #   return [None, "", False, False,False]
 
-     paramList.printParameters()
+     #paramList.printParameters()
 
      return [ paramList , clusterdef, parallelmajor, parallelminor, parallelcube ]
 
