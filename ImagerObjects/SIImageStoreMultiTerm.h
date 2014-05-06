@@ -57,6 +57,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIImageStoreMultiTerm(String imagename, CoordinateSystem &imcoordsys, 
 			IPosition imshape, const int nfacets, 
 			const Bool overwrite=False, uInt ntaylorterms=1,Bool useweightimage=False);
+
+  /*
   SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
 			Block<CountedPtr<ImageInterface<Float> > >residims,
 			Block<CountedPtr<ImageInterface<Float> > >psfims, 
@@ -66,7 +68,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			CountedPtr<ImageInterface<Float> > newmask,
 			CountedPtr<ImageInterface<Float> > newalpha,
 			CountedPtr<ImageInterface<Float> > newbeta);
-  
+  */
+
  SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
 			Block<CountedPtr<ImageInterface<Float> > >residims,
 			Block<CountedPtr<ImageInterface<Float> > >psfims, 
@@ -117,9 +120,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
 
+  /*
   Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 		     const Bool imodel, const Bool irestored, const Bool imask=False, 
 		     const Bool isumwt=True, const Bool ialpha=False, const Bool ibeta=False);
+  */
 
   Bool releaseLocks();
 
@@ -130,9 +135,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   GaussianBeam restorePlane();
   void pbcorPlane();
 
+  /*
   CountedPtr<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
   CountedPtr<SIImageStore> getSubImageStoreOld(const Int chan, const Bool onechan, 
 					    const Int pol, const Bool onepol);
+  */
 
   CountedPtr<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
 					    const Int chan=0, const Int nchanchunks=1, 
