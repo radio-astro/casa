@@ -60,6 +60,11 @@ private slots:
 
 private:
 	void calculateRange( );
+
+	//Added because custom widgets as menu items were appearing transparent
+	//on the MAC.
+	void setDefaultBackground();
+
     Ui::ZoomWidgetClass ui;
     QStringList zoomList;
     std::tr1::shared_ptr<const ImageInterface<float> > image;

@@ -32,10 +32,19 @@ int BinCountWidget::DEFAULT_COUNT = 25;
 BinCountWidget::BinCountWidget(QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
+	setDefaultBackground();
 	QIntValidator* intValidator = new QIntValidator(1, 1000, this );
 	ui.binCountLineEdit->setValidator( intValidator );
 	connect( ui.binCountLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(binCountTextChanged(const QString&)));
 	connect( ui.binCountSlider, SIGNAL(valueChanged(int)), this, SLOT(binValueChanged(int)));
+}
+
+void BinCountWidget::setDefaultBackground(){
+	setAutoFillBackground( true );
+	QPalette pal = palette();
+	QColor bColor = pal.color(QPalette::Button );
+	pal.setColor( QPalette::Background, bColor );
+	setPalette( pal );
 }
 
 int BinCountWidget::getBinCount() const {
