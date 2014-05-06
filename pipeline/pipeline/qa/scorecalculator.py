@@ -525,3 +525,43 @@ def score_tsysspwmap (ms, unmappedspws):
         shortmsg = 'Tsys spw map is incomplete'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_setjy_measurements (ms, measurements):
+
+    '''
+    Score is equal to the ratio of actual flux
+    measurement to expected flux measurements
+    '''
+
+    # Initialize counters
+    nexpected = 0
+    nmeasured = 0
+    scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+
+    # Loop over the field measurements
+    for key, value in measurements.iteritems():
+	# There should be only one field here.
+        field = ms.get_fields (key)[0]
+	validspws = set([spw.id for spw in field.valid_spws])
+	nexpected = nexpected + len(validspws.intersection(scispws))
+	# Loop over the flux measurements
+	for flux in value:
+	    nmeasured = nmeasured + 1
+
+    # Compute score
+    if nexpected == 0:
+        score = 0.0
+        longmsg = 'No flux calibrators for %s ' % ms.basename
+        shortmsg = 'No flux calibrators'
+    elif nexpected == nmeasured:
+        score = 1.0
+        longmsg = 'Flux calibrator measurements are complete for %s ' % ms.basename
+        shortmsg = 'Flux calibrator measurements are complete'
+    else:
+        score = float(nmeasured) / float(nexpected)
+        longmsg = 'Flux calibrator measurements are incomplete for %s ' % ms.basename
+        shortmsg = 'Flux calibrator measurements are incomplete'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
