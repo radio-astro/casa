@@ -339,6 +339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////Constructor with pointers already created else where but taken over here
+  /*
   SIImageStore::SIImageStore(ImageInterface<Float>* modelim, 
 			     ImageInterface<Float>* residim,
 			     ImageInterface<Float>* psfim, 
@@ -376,7 +377,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     validate();
   }
 
-  
+  */  
 
   SIImageStore::SIImageStore(CountedPtr<ImageInterface<Float> > modelim, 
 			     CountedPtr<ImageInterface<Float> > residim,
@@ -439,23 +440,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////make a facet image store which refers to a sub section of images 
   ///////////////////////in this storage
+  /*
   CountedPtr<SIImageStore> SIImageStore::getFacetImageStore(const Int facet, const Int nfacets)
   {
-    /*
-    SubImage<Float>* facetPSF= itsPsf.null()?NULL:makeFacet(facet, nfacets, *itsPsf);
-    SubImage<Float>* facetModel=itsModel.null()?NULL:makeFacet(facet, nfacets, *itsModel);
-    SubImage<Float>* facetResidual=itsResidual.null()?NULL:makeFacet(facet, nfacets, *itsResidual);
-    SubImage<Float>* facetWeight=itsWeight.null()?NULL:makeFacet(facet, nfacets, *itsWeight);
-    SubImage<Float>* facetImage=itsImage.null()?NULL:makeFacet(facet, nfacets, *itsImage);
-    SubImage<Float>* facetMask=itsMask.null()?NULL:makeFacet(facet, nfacets, *itsMask);
-    SubImage<Float>* facetSumWt=itsSumWt.null()?NULL:makeFacet(facet, nfacets, *itsSumWt);
-    return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage, facetMask,facetSumWt);
-    */
-
     return new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets);
 
   }
-
+*/
   CountedPtr<SIImageStore> SIImageStore::getSubImageStore(const Int facet, const Int nfacets, 
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
@@ -463,15 +454,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks);
   }
 
-
+  /*
   void SIImageStore::getNSubImageStores(const Bool onechan, const Bool onepol, uInt& nSubChans, uInt& nSubPols)
   {
     nSubChans = ( (onechan)?itsImageShape[3]:1 );
     nSubPols = ( (onepol)?itsImageShape[2]:1 );
   }
+  */
 
-
-
+  /*
   CountedPtr<SIImageStore> SIImageStore::getSubImageStoreOld(const Int chan, const Bool onechan,
 							  const Int pol, const Bool onepol)
   {
@@ -487,7 +478,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float>* subSumWt=itsSumWt.null()?NULL:makePlane(  chan,onechan,pol,onepol, *itsSumWt);
     return new SIImageStore(subModel, subResidual, subPSF, subWeight, subImage, subMask, subSumWt);
   }
-
+  */
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //// Either read an image from disk, or construct one. 
 
@@ -543,11 +534,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+  /*
   // Check if images that are asked-for are ready and all have the same shape.
   Bool SIImageStore::checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 				   const Bool imodel, const Bool irestored,const Bool imask, 
-				   const Bool isumwt, const Bool /*ialpha*/, const Bool /*ibeta*/)
+				   const Bool isumwt, const Bool ialpha, const Bool ibeta)
   {
 
     Bool valid = True;
@@ -587,9 +578,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //	     (!itsWeight.null()) == weight  && (!itsModel.null()) == model && 
     //	     (!itsImage.null()) == restored );
   }
+*/
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /*
   CountedPtr<ImageInterface<Float> >
   SIImageStore::makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image){
     //assuming n x n facets
@@ -651,6 +644,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return sliceImage;
   }
 
+*/
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   CountedPtr<ImageInterface<Float> > SIImageStore::makeSubImage(const Int facet, const Int nfacets,
@@ -784,11 +778,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return 1;
   }
 
+  /*
   void SIImageStore::checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label )
   {
     if( ptr.null() && itsImageName==String("reference") ) 
       {throw(AipsError("Internal Error : Attempt to access null subImageStore "+label + " by reference."));}
   }
+  */
 
   void SIImageStore::accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
 		    CountedPtr<ImageInterface<Float> > &parentptr, 
@@ -1058,6 +1054,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
 
+  /*
   void SIImageStore::addSumWts(ImageInterface<Float>& target, ImageInterface<Float>& toadd)
   {
     Matrix<Float> addsumwt = getSumWt( target ) + getSumWt( toadd ) ;
@@ -1067,7 +1064,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     cout << "in addSumWts, useweightimage : " << getUseWeightImage( target ) << endl;
   }
-
+  */
 
   Double SIImageStore::getPbMax()
   {
@@ -1099,8 +1096,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Get the scale factor that will make the peak PB gain 1.
 	// This will be used to divide the residual image, and multiply the model image.
 	// It will let the minor cycle see as close to the 'principal solution' as possible.
-	itsPBScaleFactor = getPbMax();
-	cout << " PB Scale factor : " << itsPBScaleFactor << endl;
+	//	itsPBScaleFactor = getPbMax();
+	//	cout << " PB Scale factor : " << itsPBScaleFactor << endl;
       }
 
     /// Calculate and print point source sensitivity (per plane).
@@ -1363,6 +1360,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     miscinfo.define("sumwt", sumwt);
     target.setMiscInfo( miscinfo );
   }
+  
 
   Bool SIImageStore::getUseWeightImage(ImageInterface<Float>& target)
   {
@@ -1416,7 +1414,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IPosition pos(4,0,0,pol,chan);
 	    if( lsumwt(pos) != 1.0 )
 	      { 
-		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
+		//		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
+		CountedPtr<ImageInterface<Float> > subim=makeSubImage(0,1, 
+								      chan, lsumwt.shape()[3],
+								      pol, lsumwt.shape()[2], 
+								      target );
 		LatticeExpr<Float> le( (*subim)/lsumwt(pos) );
 		subim->copyData( le );
 		div=True;

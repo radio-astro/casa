@@ -237,7 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-
+  /*
   /////////////Constructor with pointers already created else where but taken over here
   SIImageStoreMultiTerm::SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > > modelims, 
 					       Block<CountedPtr<ImageInterface<Float> > >residims,
@@ -283,6 +283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     validate();
 	
   }
+  */
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////Constructor with pointers already created else where but taken over here
@@ -369,6 +370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    }
 
   // Check if images that are asked-for are ready and all have the same shape.
+  /*
   Bool SIImageStoreMultiTerm::checkValidity(const Bool ipsf, const Bool iresidual, 
 					    const Bool iweight, const Bool imodel, const Bool irestored, 
 					    const Bool imask,const Bool isumwt,
@@ -422,6 +424,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return valid;
     
   }
+  */
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -612,7 +615,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::alpha()
   {
     if( !itsAlpha.null() && itsAlpha->shape() == itsImageShape ) { return itsAlpha; }
-    checkRef( itsAlpha , "alpha" );
+    //    checkRef( itsAlpha , "alpha" );
     itsAlpha = openImage( itsImageName+String(".alpha"), False );
     //    itsAlpha->setUnits("Alpha");
     return itsAlpha;
@@ -621,7 +624,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::beta()
   {
     if( !itsBeta.null() && itsBeta->shape() == itsImageShape ) { return itsBeta; }
-    checkRef( itsBeta , "beta" );
+    //    checkRef( itsBeta , "beta" );
     itsBeta = openImage( itsImageName+String(".alpha"), False );
     //    itsBeta->setUnits("Beta");
     return itsBeta;
@@ -703,30 +706,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=1;tix<2*itsNTerms-1;tix++)
       { setSumWt( *psf(tix) , sumwt ); }
     
-    //    Bool useweightimage = getUseWeightImage( *psf() ) ;
-    
     for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
 	divideImageByWeightVal( *psf(tix) );
 	if( itsUseWeight ) { divideImageByWeightVal( *weight(tix) ); }
-	//	if( useweightimage ) { divideImageByWeightVal( *weight(tix) ); }
-	
-	/*
-	if( getUseWeightImage( *psf(tix) ) == True )
-	  {
-	    os << "Dividing " << itsImageName+String(".psf.tt")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
-	    //	    cerr << "weight limit " <<  weightlimit << endl;
-	    LatticeExpr<Float> mask( iif( (*(weight(0))) > weightlimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (*(weight(0))) > weightlimit , 0.0, 1.0 ) );
-	    
-	    LatticeExpr<Float> ratio( ( (*(psf(tix))) * mask ) / sqrt( (*(weight(0))) + maskinv) );
-	    itsPsfs[tix]->copyData(ratio);
-	  }
-	*/
       }
 
     calcSensitivity();
-
     // createMask
   }
 
@@ -1103,44 +1089,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
   
-  
+  /*  
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getFacetImageStore(const Int facet, const Int nfacets)
   {
-    /*
-
-    Block<CountedPtr<ImageInterface<Float> > > psflist(2*itsNTerms-1);
-    Block<CountedPtr<ImageInterface<Float> > > modellist(itsNTerms);
-    Block<CountedPtr<ImageInterface<Float> > > residuallist(itsNTerms);
-    Block<CountedPtr<ImageInterface<Float> > > weightlist(2*itsNTerms-1);
-    Block<CountedPtr<ImageInterface<Float> > > imagelist(itsNTerms);
-    Block<CountedPtr<ImageInterface<Float> > > sumwtlist(2*itsNTerms-1);
-    CountedPtr<ImageInterface<Float> > newmask;
-    CountedPtr<ImageInterface<Float> > newalpha;
-    CountedPtr<ImageInterface<Float> > newbeta;
-
-    for(uInt tix=0; tix<2*itsNTerms-1;tix++)
-      {
-	psflist[tix] = itsPsfs[tix].null()?NULL:makeFacet(facet, nfacets, *itsPsfs[tix]);	
-	weightlist[tix] = itsWeights[tix].null()?NULL:makeFacet(facet, nfacets, *itsWeights[tix]);
-	sumwtlist[tix] = itsSumWts[tix].null()?NULL:makeFacet(facet, nfacets, *itsSumWts[tix]);
-
-	if( tix<itsNTerms )
-	  {
-	    modellist[tix] = itsModels[tix].null()?NULL:makeFacet(facet, nfacets, *itsModels[tix]);
-	    residuallist[tix] = itsResiduals[tix].null()?NULL:makeFacet(facet, nfacets, *itsResiduals[tix]);
-	    imagelist[tix] = itsImages[tix].null()?NULL:makeFacet(facet, nfacets, *itsImages[tix]);
-	  }
-      }
-    newmask = itsMask.null()?NULL:makeFacet(facet, nfacets, *itsMask);
-    newalpha = itsAlpha.null()?NULL:makeFacet(facet, nfacets, *itsAlpha);
-    newbeta = itsBeta.null()?NULL:makeFacet(facet, nfacets, *itsBeta);
-    return new SIImageStoreMultiTerm(modellist, residuallist, psflist, weightlist, imagelist,sumwtlist, newmask,newalpha,newbeta);
-    */
 
     return new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask , itsAlpha, itsBeta, itsCoordSys, itsParentImageShape, itsImageName,  facet, nfacets);
 
   }
-
+  */
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStore(const Int facet, const Int nfacets, 
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
@@ -1149,7 +1105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-
+  /*
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStoreOld(const Int chan, const Bool onechan,
 							  const Int pol, const Bool onepol)
   {
@@ -1188,7 +1144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return new SIImageStoreMultiTerm(modellist, residuallist, psflist, weightlist, imagelist, sumwtlist, newmask, newalpha,newbeta);
 
   }
-
+  */
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //
