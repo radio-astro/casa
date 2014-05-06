@@ -266,9 +266,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 void MultiTermFTNew::initializeToVisNew(const VisBuffer& vb,
 				     CountedPtr<SIImageStore> imstore)
 {
-  //  reffreq_p = static_cast<SIImageStoreMultiTerm*> (&*imstore)->getReferenceFrequency();
-  reffreq_p = imstore->getReferenceFrequency();
-  
   
   // Convert Stokes planes to correlation planes..
   for(uInt taylor=0;taylor<nterms_p;taylor++)
@@ -280,7 +277,12 @@ void MultiTermFTNew::initializeToVisNew(const VisBuffer& vb,
       } else {
 	StokesImageUtil::changeCStokesRep( *(imstore->forwardGrid(taylor) ) , StokesImageUtil::CIRCULAR);
       }
+    }
       
+  reffreq_p = imstore->getReferenceFrequency();
+  
+  for(uInt taylor=0;taylor<nterms_p;taylor++)
+    {
       subftms_p[taylor]->initializeToVis(*(imstore->forwardGrid(taylor)),vb);
     }
   
@@ -340,9 +342,6 @@ void MultiTermFTNew::initializeToSkyNew(const Bool dopsf,
 					CountedPtr<SIImageStore> imstore)
 {
   
-  //  reffreq_p = static_cast<SIImageStoreMultiTerm*> (&*imstore)->getReferenceFrequency();
-  reffreq_p = imstore->getReferenceFrequency();
-  
   // If PSF is already done, don't ask again !
   AlwaysAssert( !(donePSF_p && dopsf) , AipsError ); 
   
@@ -358,6 +357,12 @@ void MultiTermFTNew::initializeToSkyNew(const Bool dopsf,
 	}
     }
 
+  // Make the relevant float grid. 
+  // This is needed mainly for facetting (to set facet shapes), but is harmless for non-facetting.
+  if( dopsf ) { imstore->psf(0); } else { imstore->residual(0); } 
+  
+  reffreq_p = imstore->getReferenceFrequency();
+ 
   Matrix<Float> sumWeight;
   for(uInt taylor=0;taylor< (dopsf ? psfnterms_p : nterms_p);taylor++) 
     {

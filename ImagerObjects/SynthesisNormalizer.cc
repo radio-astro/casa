@@ -275,6 +275,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool needToGatherImages=False;
 
+    String err("");
+
     // Check if full images exist, and open them if possible.
     Bool foundFullImage=False;
     try
@@ -286,6 +288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
 	//cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
+	err = err += String(x.getMesg()) + "\n";
 	foundFullImage = False;
       }
 
@@ -304,6 +307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	catch(AipsError &x)
 	  {
 	    //throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
+	    err = err += String(x.getMesg()) + "\n";
 	    foundPartImages = False;
 	  }
       }
@@ -319,7 +323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if( tempshape != itsPartImages[part]->getShape() )
 	      {
-		throw( AipsError("Shapes of partial images to be combined, do not match") );
+		throw( AipsError("Shapes of partial images to be combined, do not match" + err) );
 	      }
 	  }
       }
@@ -339,7 +343,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if( partshape != fullshape )
 		  {
 		    os << LogIO::DEBUG2<< "NO" << LogIO::POST;
-		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather") );
+		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather" + err) );
 		  }
 	      }
 	    os << LogIO::DEBUG2 << "Yes" << LogIO::POST;
@@ -359,7 +363,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		imopen = itsPartImageNames[0]+".psf"+((itsMapperType=="multiterm")?".tt0":"");
 		Directory imdir2( imopen );
 		if( ! imdir2.exists() )
-		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]));
+		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]+err));
 	      }
 
 	    PagedImage<Float> temppart( imopen );
@@ -384,7 +388,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	else // No full image on disk either. Error.
 	  {
-	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either.") );
+	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either."+err) );
 	  }
       }
     
@@ -393,21 +397,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         
         // First, make sure that full images have been allocated before trying to make references.....
-        if( ! itsImages->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
-	    { throw(AipsError("Internal Error : Invalid ImageStore for " + itsImages->getName())); }
+	//        if( ! itsImages->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	//	    { throw(AipsError("Internal Error : Invalid ImageStore for " + itsImages->getName())); }
 
         //        Array<Float> ttt;
         //        (itsImages->sumwt())->get(ttt);
         //        cout << "SUMWT full : " << ttt <<  endl;
         
-        uInt nIm = itsNFacets * itsNFacets;
-        itsFacetImageStores.resize( nIm );
-        for( uInt facet=0; facet<nIm; ++facet )
+        itsFacetImageStores.resize( itsNFacets*itsNFacets );
+        for( uInt facet=0; facet<itsNFacets*itsNFacets; ++facet )
           {
-            itsFacetImageStores[facet] = itsImages->getFacetImageStore(facet, nIm);
+            itsFacetImageStores[facet] = itsImages->getSubImageStore(facet, itsNFacets);
 
-            Array<Float> qqq;
-            itsFacetImageStores[facet]->sumwt()->get(qqq);
+            //Array<Float> qqq;
+            //itsFacetImageStores[facet]->sumwt()->get(qqq);
             //            cout << "SUMWTs for " << facet << " : " << qqq << endl;
 
           }

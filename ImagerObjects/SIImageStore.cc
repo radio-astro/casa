@@ -87,9 +87,111 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void openImage(const String& imagenamefull, CountedPtr<ImageInterface<Complex> >& img );
   //
   //===========================================================================
-  //
+
+   void SIImageStore::validate()
+  {
+    /// There are three valid states. Check for at least one of them. 
+    Bool state = False;
+
+    
+    stringstream oss;
+    oss << "shape:" << itsImageShape << " parentimageshape:" << itsParentImageShape 
+	<< " nfacets:" << itsNFacets << "x" << itsNFacets << " facetid:" << itsFacetId 
+	<< " nchanchunks:" << itsNChanChunks << " chanid:" << itsChanId 
+	<< " npolchunks:" << itsNPolChunks << " polid:" << itsPolId 
+	<< " coord-dim:" << itsCoordSys.nPixelAxes() 
+	<< " psf/res:" << (hasPsf() || hasResidual()) ;
+    if( hasSumWt() ) oss << " sumwtshape : " << sumwt()->shape() ; 
+	oss << endl;
+
+
+    try {
+
+    if( itsCoordSys.nPixelAxes() != 4 ) state=False;
+    
+    /// (1) Regular imagestore 
+    if( itsNFacets==1 && itsFacetId==0 
+	&& itsNChanChunks==1 && itsChanId==0
+	&& itsNPolChunks==1 && itsPolId==0 )  {
+      Bool check1 = hasSumWt() && sumwt()->shape()[0]==1;
+      if(  (itsImageShape.isEqual(itsParentImageShape) ) && ( check1 || !hasSumWt() )
+	   && itsParentImageShape.product() > 0 ) state=True;
+      }
+    /*
+    /// (2) Facet parent 
+    else if ( ( itsNFacets>1 && itsFacetId == -1 ) 
+	      || ( itsNChanChunks>1 && itsChanId == -1 )
+	      || ( itsNPolChunks>1 && itsPolId == -1 )    ) {
+      Bool check1 = hasSumWt() && sumwt()->shape()[0]==itsNFacets;
+      if(  ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) ) && ( itsParentImageShape.product() > 0 ) &&
+	   ( check1 || !hasSumWt() ) ) state=True;
+    }
+    */
+    /// (3) Reference Sub Imagestore 
+    else if ( ( itsNFacets>1 && itsFacetId >=0 )
+	      || ( itsNChanChunks>1 && itsChanId >=0 ) 
+	      || ( itsNPolChunks>1 && itsPolId >=0 )   ) {
+      // If shape is still unset, even when the first image has been made....
+      Bool check1 = ( itsImageShape.product() > 0 && ( hasPsf() || hasResidual() ) );
+      Bool check2 = ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) && ( !hasPsf() && !hasResidual() ) );
+      Bool check3 = hasSumWt() && sumwt()->shape()[0]==1; // One facet only.
+
+      if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) 
+	  && ( itsFacetId < itsNFacets*itsNFacets ) 
+	  && ( itsChanId < itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
+	  && ( check3 || !hasSumWt() ) )  state = True;
+    }
+
+    } catch( AipsError &x )  {
+      state = False;
+      oss << "  |||||  " << x.getMesg() << endl;
+    }
+
+    //cout << " SIIM:validate : " << oss.str() << endl;
+
+    if( state == False )  throw(AipsError("Internal Error : Invalid ImageStore state : "+ oss.str()) );
+    
+    return;
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  /*
+   try {
+
+    if( itsCoordSys.nPixelAxes() != 4 ) state=False;
+    
+    /// (1) Regular imagestore 
+    ///       [ imshape == parentimshape, nfacets=1, facetid=-1 ]
+    if( itsNFacets==1 && itsFacetId==-1 )  {
+      Bool check1 = hasSumWt() && sumwt()->shape()[0]==1;
+      if(  (itsImageShape.isEqual(itsParentImageShape) ) && ( check1 || !hasSumWt() ) ) state=True;
+      }
+    /// (2) Facet parent 
+    ///        [ imshape = IPosition(), parentimshape != IPosition(), nfacets>1, facetid=-1 ]
+    else if ( itsNFacets>1 && itsFacetId == -1 ) {
+      Bool check1 = hasSumWt() && sumwt()->shape()[0]==itsNFacets;
+      if(  ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) ) && ( itsParentImageShape.product() > 0 ) &&
+	   ( check1 || !hasSumWt() ) ) state=True;
+    }
+    /// (3) Facet imagestore 
+    ///       [ imshape != IPosition() and != parentimshape, nfacets>1, facetid >=0 ]
+    else if ( itsNFacets>1 && itsFacetId >=0 ) {
+      // If shape is still unset, even when the first image has been made....
+      Bool check1 = ( itsImageShape.product() > 0 && ( hasPsf() || hasResidual() ) );
+      Bool check2 = ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) && ( !hasPsf() && !hasResidual() ) );
+      Bool check3 = hasSumWt() && sumwt()->shape()[0]==1; // One facet only.
+
+      if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) && 
+	  ( itsFacetId < itsNFacets*itsNFacets ) && ( check3 || !hasSumWt() ) )  state = True;
+    }
+
+    } 
+*/
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////       START of SIIMAGESTORE implementation
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   SIImageStore::SIImageStore() 
@@ -102,16 +204,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask=NULL;
 
     itsSumWt=NULL;
-    itsNFacets=1;
     itsUseWeight=False;
     itsPBScaleFactor=1.0;
 
-    itsImageShape=IPosition();
+    itsNFacets=1;
+    itsFacetId=0;
+    itsNChanChunks = 1;
+    itsChanId = 0;
+    itsNPolChunks = 1;
+    itsPolId = 0;
+
+    itsImageShape=IPosition(4,0,0,0,0);
     itsImageName=String("");
     itsCoordSys=CoordinateSystem();
     itsMiscInfo=Record();
     init();
     //    itsValidity = False;
+    
+    //    validate();
 
   }
 
@@ -133,9 +243,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask=NULL;
 
     itsSumWt=NULL;
-    itsNFacets=nfacets;
     itsUseWeight=useweightimage;
     itsPBScaleFactor=1.0;
+
+    //    itsNFacets=nfacets;
+    itsNFacets=1;
+    itsFacetId=0;
+    itsNChanChunks = 1;
+    itsChanId = 0;
+    itsNPolChunks = 1;
+    itsPolId = 0;
 
     itsImageName = imagename;
     itsImageShape = imshape;
@@ -144,9 +261,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMiscInfo=Record();
 
     init();
+
+    validate();
   }
 
-  SIImageStore::SIImageStore(String imagename) 
+  SIImageStore::SIImageStore(String imagename,const Bool ignorefacets) 
   {
     LogIO os( LogOrigin("SIImageStore","Open existing Images",WHERE) );
 
@@ -167,6 +286,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsSumWt=NULL;
     itsNFacets=1;
+    itsFacetId=0;
+    itsNChanChunks = 1;
+    itsChanId = 0;
+    itsNPolChunks = 1;
+    itsPolId = 0;
 
     itsImageName = imagename;
 
@@ -193,6 +317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	CountedPtr<ImageInterface<Float> > imptr;
 	imptr = new PagedImage<Float> (itsImageName+String(".sumwt"));
 	itsNFacets = imptr->shape()[0];
+	itsFacetId = 0;
 	itsUseWeight = getUseWeightImage( *imptr );
 	itsPBScaleFactor=1.0; ///// No need to set properly here as it will be calc'd in dividePSF...()
 	if( itsUseWeight && ! doesImageExist(itsImageName+String(".weight")) )
@@ -204,8 +329,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
+
+    if( ignorefacets==True ) itsNFacets= 1;
+
     init();
     
+    validate();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,6 +359,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsSumWt=sumwtim;
     itsNFacets=sumwtim->shape()[0];
+    itsFacetId=0;
     itsUseWeight=getUseWeightImage( *sumwtim );
     itsPBScaleFactor=1.0;// No need to set properly here as it will be computed in makePSF.
 
@@ -243,13 +373,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     //    itsValidity=((!itsPsf.null()) &&   (!itsResidual.null()) && (!itsWeight.null()));
     init();
+    validate();
   }
+
+  
+
+  SIImageStore::SIImageStore(CountedPtr<ImageInterface<Float> > modelim, 
+			     CountedPtr<ImageInterface<Float> > residim,
+			     CountedPtr<ImageInterface<Float> > psfim, 
+			     CountedPtr<ImageInterface<Float> > weightim, 
+			     CountedPtr<ImageInterface<Float> > restoredim, 
+			     CountedPtr<ImageInterface<Float> > maskim,
+			     CountedPtr<ImageInterface<Float> > sumwtim,
+			     CoordinateSystem& csys,
+			     IPosition imshape,
+			     String imagename,
+			     const Int facet, const Int nfacets,
+			     const Int chan, const Int nchanchunks,
+			     const Int pol, const Int npolchunks)
+  {
+
+    itsPsf=psfim;
+    itsModel=modelim;
+    itsResidual=residim;
+    itsWeight=weightim;
+    itsImage=restoredim;
+    itsMask=maskim;
+
+    itsSumWt=sumwtim;
+
+    itsPBScaleFactor=1.0;// No need to set properly here as it will be computed in makePSF.
+
+    itsNFacets = nfacets;
+    itsFacetId = facet;
+    itsNChanChunks = nchanchunks;
+    itsChanId = chan;
+    itsNPolChunks = npolchunks;
+    itsPolId = pol;
+
+    itsParentImageShape = imshape; 
+    itsImageShape = imshape;
+    /////    itsImageShape = IPosition(4,0,0,0,0);
+
+    itsCoordSys = csys; // Hopefully this doesn't change for a reference image
+    itsImageName = imagename;
+
+    //-----------------------
+    init(); // Connect parent pointers to the images.
+    //-----------------------
+
+    // Set these to null, to be set later upon first access.
+    itsPsf=NULL;
+    itsModel=NULL;
+    itsResidual=NULL;
+    itsWeight=NULL;
+    itsImage=NULL;
+    itsMask=NULL;
+    itsSumWt=NULL;
+
+
+    validate();
+  }
+  
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////make a facet image store which refers to a sub section of images 
   ///////////////////////in this storage
   CountedPtr<SIImageStore> SIImageStore::getFacetImageStore(const Int facet, const Int nfacets)
   {
+    /*
     SubImage<Float>* facetPSF= itsPsf.null()?NULL:makeFacet(facet, nfacets, *itsPsf);
     SubImage<Float>* facetModel=itsModel.null()?NULL:makeFacet(facet, nfacets, *itsModel);
     SubImage<Float>* facetResidual=itsResidual.null()?NULL:makeFacet(facet, nfacets, *itsResidual);
@@ -258,8 +450,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float>* facetMask=itsMask.null()?NULL:makeFacet(facet, nfacets, *itsMask);
     SubImage<Float>* facetSumWt=itsSumWt.null()?NULL:makeFacet(facet, nfacets, *itsSumWt);
     return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage, facetMask,facetSumWt);
+    */
+
+    return new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets);
 
   }
+
+  CountedPtr<SIImageStore> SIImageStore::getSubImageStore(const Int facet, const Int nfacets, 
+							  const Int chan, const Int nchanchunks, 
+							  const Int pol, const Int npolchunks)
+  {
+    return new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks);
+  }
+
 
   void SIImageStore::getNSubImageStores(const Bool onechan, const Bool onepol, uInt& nSubChans, uInt& nSubPols)
   {
@@ -269,7 +472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-  CountedPtr<SIImageStore> SIImageStore::getSubImageStore(const Int chan, const Bool onechan,
+  CountedPtr<SIImageStore> SIImageStore::getSubImageStoreOld(const Int chan, const Bool onechan,
 							  const Int pol, const Bool onepol)
   {
 
@@ -289,29 +492,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //// Either read an image from disk, or construct one. 
 
   CountedPtr<ImageInterface<Float> > SIImageStore::openImage(const String imagenamefull, 
-							     const Bool overwrite, const Bool dosumwt)
+							     const Bool overwrite, 
+							     const Bool dosumwt, const Int nfacetsperside)
   {
 
     CountedPtr<ImageInterface<Float> > imPtr;
 
-    IPosition useShape( itsImageShape );
+    IPosition useShape( itsParentImageShape );
 
     if( dosumwt ) // change shape to sumwt image shape.
       {
-	useShape[0] = itsNFacets;
-	useShape[1] = itsNFacets;
+	useShape[0] = nfacetsperside;
+	useShape[1] = nfacetsperside;
+	//	cout << "openImage : Making sumwt grid : using shape : " << useShape << endl;
       }
-    
+
     if( overwrite || !Table::isWritable( imagenamefull ) )
       {
 	imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
 	// initialize to zeros...
 	imPtr->set(0.0);
-
-	// TODO : Add special case for itsWeightShape ?  A flag inputted to openImage to trigger this...
-
-	//	cout << "made  " << imagenamefull << " of shape : " << useShape << endl;
-
       }
     else
       {
@@ -390,7 +590,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  SubImage<Float>* 
+  CountedPtr<ImageInterface<Float> >
   SIImageStore::makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image){
     //assuming n x n facets
     Int nx_facets=Int(sqrt(Double(nfacets)));
@@ -416,7 +616,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LCBox::verify(blc, trc, inc, imshp);
     Slicer imslice(blc, trc, inc, Slicer::endIsLast);
     // Now create the facet image
-    SubImage<Float>*  facetImage = new SubImage<Float>(image, imslice, True);
+    CountedPtr<ImageInterface<Float> >  facetImage = new SubImage<Float>(image, imslice, True);
     facetImage->setMiscInfo(image.miscInfo());
     facetImage->setUnits(image.units());
     return facetImage;
@@ -452,8 +652,64 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+  CountedPtr<ImageInterface<Float> > SIImageStore::makeSubImage(const Int facet, const Int nfacets,
+								const Int chan, const Int nchanchunks,
+								const Int pol, const Int npolchunks,
+								ImageInterface<Float>& image)
+  {
+    //assuming n x n facets
+    Int nx_facets=Int(sqrt(Double(nfacets)));
+    LogIO os( LogOrigin("SynthesisImager","makeFacet") );
+     // Make the output image
+    Slicer imageSlicer;
+
+    // Add checks for all dimensions..
+    if((facet>(nfacets-1))||(facet<0)) {
+      os << LogIO::SEVERE << "Illegal facet " << facet << LogIO::POST;
+      return NULL;
+    }
+    IPosition imshp=image.shape();
+    IPosition blc(imshp.nelements(), 0);
+    IPosition trc=imshp-1;
+    IPosition inc(imshp.nelements(), 1);
+
+    /// Facets
+    Int facetx = facet % nx_facets; 
+    Int facety = (facet - facetx) / nx_facets;
+    Int sizex = imshp(0) / nx_facets;
+    Int sizey = imshp(1) / nx_facets;
+    blc(1) = facety * sizey; 
+    trc(1) = blc(1) + sizey - 1;
+    blc(0) = facetx * sizex; 
+    trc(0) = blc(0) + sizex - 1;
+
+    /// Pol Chunks
+    Int sizepol = imshp(2) / npolchunks;
+    blc(2) = pol * sizepol;
+    trc(2) = blc(2) + sizepol - 1;
+
+    /// Chan Chunks
+    Int sizechan = imshp(3) / nchanchunks;
+    blc(3) = chan * sizechan;
+    trc(3) = blc(3) + sizechan - 1;
+
+    LCBox::verify(blc, trc, inc, imshp);
+    Slicer imslice(blc, trc, inc, Slicer::endIsLast);
+
+    // Now create the sub image
+    CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(image, imslice, True);
+    referenceImage->setMiscInfo(image.miscInfo());
+    referenceImage->setUnits(image.units());
+
+    // cout << "Made Ref subimage of shape : " << referenceImage->shape() << endl;
+
+    return referenceImage;
+    
+  }
+
+
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   SIImageStore::~SIImageStore() 
@@ -534,40 +790,105 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {throw(AipsError("Internal Error : Attempt to access null subImageStore "+label + " by reference."));}
   }
 
+  void SIImageStore::accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
+		    CountedPtr<ImageInterface<Float> > &parentptr, 
+		    const String label )
+  {
+    // if ptr is not null, assume it's OK. Perhaps add more checks.
+
+    Bool sw=False;
+    if( label.contains(imageExts(SUMWT)) ) sw=True;
+    
+    if( ptr.null() )
+      {
+	//cout << itsNFacets << " " << itsNChanChunks << " " << itsNPolChunks << endl;
+	if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 )
+	  {
+	    if( parentptr.null() ) 
+	      {
+		//cout << "Making parent : " << label << "    sw : " << sw << endl; 
+		parentptr = openImage(itsImageName+label , False, sw, itsNFacets );  
+	      }
+	    //cout << "Making facet " << itsFacetId << " out of " << itsNFacets << endl;
+	    //ptr = makeFacet( itsFacetId, itsNFacets*itsNFacets, *parentptr );
+	    ptr = makeSubImage( itsFacetId, itsNFacets*itsNFacets, 
+				itsChanId, itsNChanChunks, 
+				itsPolId, itsNPolChunks, 
+				*parentptr );
+	    if( ! sw )
+	      {
+		itsImageShape = ptr->shape(); // over and over again.... FIX.
+		itsCoordSys = ptr->coordinates();
+		itsMiscInfo = ptr->miscInfo();
+	      }
+	    //	    else
+	    //	      { itsUseWeight=getUseWeightImage( );}
+	    //	      { itsUseWeight=getUseWeightImage( *parentptr );}
+
+	    //cout << "accessImage : " << label << " : sumwt : " << sw << " : shape : " << itsImageShape << endl;
+    
+	  }
+	else
+	  {
+	    ptr = openImage(itsImageName+label , False, sw, 1 ); 
+	    //cout << "Opening image : " << itsImageName+label << " of shape " << ptr->shape() << endl;
+	  }
+      }
+    
+  }
+
+
   CountedPtr<ImageInterface<Float> > SIImageStore::psf(uInt /*nterm*/)
   {
-    if( !itsPsf.null() && itsPsf->shape() == itsImageShape ) { return itsPsf; }
+    /*
+    if( !itsPsf.null() ) { return itsPsf; }
     checkRef( itsPsf, "psf" );
     itsPsf = openImage( itsImageName+String(".psf") , False );
+    return itsPsf;
+    */
+    accessImage( itsPsf, itsParentPsf, imageExts(PSF) );
     return itsPsf;
   }
   CountedPtr<ImageInterface<Float> > SIImageStore::residual(uInt /*nterm*/)
   {
+    /*
     if( !itsResidual.null() && itsResidual->shape() == itsImageShape ) { return itsResidual; }
     checkRef( itsResidual, "residual" );
     itsResidual = openImage( itsImageName+String(".residual") , False );
     return itsResidual;
+    */
+    accessImage( itsResidual, itsParentResidual, imageExts(RESIDUAL) );
+    return itsResidual;
   }
   CountedPtr<ImageInterface<Float> > SIImageStore::weight(uInt /*nterm*/)
   {
+    /*
     if( !itsWeight.null() && itsWeight->shape() == itsImageShape ) { return itsWeight; }
     checkRef( itsWeight, "weight" );
     itsWeight = openImage( itsImageName+String(".weight") , False );
+    return itsWeight;
+    */
+    accessImage( itsWeight, itsParentWeight, imageExts(WEIGHT) );
     return itsWeight;
   }
 
   CountedPtr<ImageInterface<Float> > SIImageStore::sumwt(uInt /*nterm*/)
   {
 
-    IPosition useShape( itsImageShape );
-    useShape[0] = itsNFacets;
-    useShape[1] = itsNFacets;
+//    IPosition useShape( itsParentImageShape );
+//    useShape[0] = itsNFacets;
+//    useShape[1] = itsNFacets;
 
-    if( !itsSumWt.null() && itsSumWt->shape() == useShape ) { return itsSumWt; }
-    checkRef( itsSumWt, "sumwt" );
-    itsSumWt = openImage( itsImageName+String(".sumwt") , False, True/*dosumwt*/ ); 
+    //    if( !itsSumWt.null() && itsSumWt->shape() == useShape ) { return itsSumWt; }
+    //    checkRef( itsSumWt, "sumwt" );
+    //    itsSumWt = openImage( itsImageName+String(".sumwt") , False, True/*dosumwt*/ ); 
 
+    accessImage( itsSumWt, itsParentSumWt, imageExts(SUMWT) );
+
+    if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) 
+      { itsUseWeight = getUseWeightImage( *itsParentSumWt );}
     setUseWeightImage( *itsSumWt , itsUseWeight); // Sets a flag in the SumWt image. 
+
     // if( itsUseWeight ){ 
       //      weight(); // Since it needs the weight image, make it. 
     //} 
@@ -577,10 +898,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   CountedPtr<ImageInterface<Float> > SIImageStore::model(uInt /*nterm*/)
   {
+    /*
     if( !itsModel.null() && itsModel->shape() == itsImageShape ) { return itsModel; }
 
     checkRef( itsModel, "model" );
     itsModel = openImage( itsImageName+String(".model") , False );
+    */
+
+    accessImage( itsModel, itsParentModel, imageExts(MODEL) );
 
     // Set up header info the first time.
     ImageInfo info = itsModel->imageInfo();
@@ -595,21 +920,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   CountedPtr<ImageInterface<Float> > SIImageStore::image(uInt /*nterm*/)
   {
+    /*
     if( !itsImage.null() && itsImage->shape() == itsImageShape ) { return itsImage; }
     checkRef( itsImage, "image" );
     
     itsImage = openImage( itsImageName+String(".image") , False );
+    */
+
+    accessImage( itsImage, itsParentImage, imageExts(IMAGE) );
+
     itsImage->setUnits("Jy/beam");
     return itsImage;
   }
+
   CountedPtr<ImageInterface<Float> > SIImageStore::mask(uInt /*nterm*/)
   {
+    /*
     if( !itsMask.null() && itsMask->shape() == itsImageShape ) { return itsMask; }
     checkRef( itsMask, "mask" );
     itsMask = openImage( itsImageName+String(".mask") , False );
     //    cout << itsImageName << " has mask of shape : " << itsMask->shape() << endl;
+    */
+
+    accessImage( itsMask, itsParentMask, imageExts(MASK) );
     return itsMask;
   }
+
   CountedPtr<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
 	  if(!itsForwardGrid.null() && (itsForwardGrid->shape() == itsImageShape))
 		  return itsForwardGrid;
@@ -619,6 +955,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Complex> > SIImageStore::backwardGrid(uInt /*nterm*/){
   	  if(!itsBackwardGrid.null() && (itsBackwardGrid->shape() == itsImageShape))
   		  return itsBackwardGrid;
+	  //cout << "Making backward grid of shape : " << itsImageShape << endl;
   	  itsBackwardGrid=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
   	  return itsBackwardGrid;
     }
@@ -970,7 +1307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( validbeam==True )
 	  {
-	    //	    os << "[" << itsImageName << "] " ;  // Add when parent image name is available.
+	    os << "[" << itsImageName << "] " ;  // Add when parent image name is available.
 	    os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
 	    
 	    // Initialize restored image
@@ -1037,7 +1374,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return useweightimage;
   }
-
+  /*
+  Bool SIImageStore::getUseWeightImage()
+  {
+    if( itsParentSumWt.null() )
+      return False;
+    else 
+     return  getUseWeightImage( *itsParentSumWt );
+  }
+  */
   void SIImageStore::setUseWeightImage(ImageInterface<Float>& target, Bool useweightimage)
   {
     Record miscinfo = target.miscInfo();
@@ -1145,6 +1490,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imageExts(SUMWT)=".sumwt";
     imageExts(FORWARDGRID)=".forward";
     imageExts(BACKWARDGRID)=".backward";
+
+    itsParentPsf = itsPsf;
+    itsParentModel=itsModel;
+    itsParentResidual=itsResidual;
+    itsParentWeight=itsWeight;
+    itsParentImage=itsImage;
+    itsParentSumWt=itsSumWt;
+    itsParentMask=itsMask;
+
+    //    cout << "parent shape : " << itsParentImageShape << "   shape : " << itsImageShape << endl;
+    itsParentImageShape = itsImageShape;
+
+    if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
+
   }
   //
   //---------------------------------------------------------------

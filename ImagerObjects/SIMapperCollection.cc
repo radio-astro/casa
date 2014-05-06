@@ -423,11 +423,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMapperCollection::checkOverlappingModels(String action)
   {
+    // If nothing that overlaps, don't check.
     if(nMappers()==1) return;
 
-    AlwaysAssert( action=="blank" || action=="restore" , AipsError );
-
     Int nmodels = nMappers();
+
+    // If there is no model image (i.e. first major cycle with no starting model), don't check.
+    Bool hasmodel=True;
+    for (Int model=0;model<(nmodels-1); ++model) 
+      { hasmodel = hasmodel && ((itsMappers[model])->imageStore())->hasModel();  }
+    if( hasmodel==False ) { 
+      //cout << "No model images to check overlap for." << endl; 
+      return; 
+    }
+
+    // Internal check
+    AlwaysAssert( action=="blank" || action=="restore" , AipsError );
 
     for (Int model=0;model<(nmodels-1); ++model) 
       {

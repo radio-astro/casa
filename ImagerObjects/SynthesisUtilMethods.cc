@@ -607,6 +607,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("uvdist"),uvdist);
 	err += readVal( inrec, String("taql"),taql);
 
+	err += readVal( inrec, String("datacolumn"),datacolumn);
+
 	err += verify();
 
       }
@@ -657,6 +659,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     usescratch=True;
     readonly=False;
     incrmodel=False;
+    datacolumn="corrected";
   }
 
   Record SynthesisParamsSelect::toRecord()
@@ -678,6 +681,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     selpar.define("usescratch",usescratch);
     selpar.define("readonly",readonly);
     selpar.define("incrmodel",incrmodel);
+    selpar.define("datacolumn",datacolumn);
 
     return selpar;
   }
@@ -1908,7 +1912,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // FTMachine parameters
     ftmachine="GridFT";
-    padding=1.0;
+    padding=1.2;
     useAutoCorr=False;
     useDoublePrec=True; 
     wprojplanes=1; 
