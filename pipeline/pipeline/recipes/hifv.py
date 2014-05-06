@@ -123,7 +123,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_statwt(pipelinemode=pipelinemode)
         
         # Make a list of expected point source calibrators to be cleaned
-        hif_makecleanlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode, imsize=[512])
+        hif_makecleanlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode, imsize=[300])
     
         # Make clean images for the selected calibrators
         hif_cleanlist (pipelinemode=pipelinemode)
