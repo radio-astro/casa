@@ -30,6 +30,7 @@ FootPrintWidget::FootPrintWidget(QWidget *parent)
     : QWidget(parent){
 
 	ui.setupUi(this);
+	setDefaultBackground();
 
 	QButtonGroup* group = new QButtonGroup( this );
 	group->addButton( ui.imageRadioButton );
@@ -43,6 +44,14 @@ FootPrintWidget::FootPrintWidget(QWidget *parent)
 			this, SLOT(regionModeSelected(bool)));
 	connect( ui.allRegionsRadioButton, SIGNAL(toggled(bool)),
 			this, SLOT(regionAllModeSelected(bool)));
+}
+
+void FootPrintWidget::setDefaultBackground(){
+	setAutoFillBackground( true );
+	QPalette pal = palette();
+	QColor bColor = pal.color(QPalette::Button );
+	pal.setColor( QPalette::Background, bColor );
+	setPalette( pal );
 }
 
 void FootPrintWidget::setPlotMode( int mode ){
