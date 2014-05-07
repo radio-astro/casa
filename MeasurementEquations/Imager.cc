@@ -2364,7 +2364,7 @@ Bool Imager::linearmosaic(const String& mosaic,
     CoordinateSystem cs=mosaicImage.coordinates();
     String err;
     //for some reason subimages below  fail if they are in some frames like BARY
-    if(CoordinateUtil::setSpectralConversion(err, cs, "LSRK")){
+    if(cs.setSpectralConversion(err, "LSRK")){
       mosaicImage.setCoordinateInfo(cs);
     }
     mosaicImage.set(0.0);
@@ -2385,7 +2385,7 @@ Bool Imager::linearmosaic(const String& mosaic,
       PagedImage<Float> smallImagedisk( images(i) );
       cs=smallImagedisk.coordinates();
       //for some reason subimages below  fail if they are in some frames like BARY
-      if(!CoordinateUtil::setSpectralConversion(err, cs, "LSRK")){
+      if(!cs.setSpectralConversion(err, "LSRK")){
 	cs=smallImagedisk.coordinates();
       }
       
