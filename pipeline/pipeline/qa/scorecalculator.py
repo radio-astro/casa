@@ -536,28 +536,22 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
 
     # Expected fields
     scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
-    LOG.info ('Number of expected fields %s' % len(scifields))
 
     # Expected science windows
     scispws = set([spw.id for spw in ms.get_spectral_windows(reqspws, science_windows_only=True)])
-    LOG.info ('Number of expected science windows %s' % len(scispws))
 
     # Loop over the field measurements
     nexpected = 0
     for scifield in scifields:
 	validspws = set([spw.id for spw in scifield.valid_spws])
-        LOG.info ('Expected field %s' % (scifield.name))
 	nexpected = nexpected + len(validspws.intersection(scispws))
-    LOG.info ('Number of expected measurements %d' % nexpected)
 
     # Loop over measurements
     nmeasured = 0
     for key, value in measurements.iteritems():
-        LOG.info ('Measured field %s' % key)
         # Loop over the flux measurements
         for flux in value:
             nmeasured = nmeasured + 1
-    LOG.info ('Number of measurements %d' % nmeasured)
 
     # Compute score
     if nexpected == 0:
