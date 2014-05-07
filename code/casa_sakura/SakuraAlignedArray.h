@@ -23,7 +23,6 @@ public:
 private:
   void initialize();
   size_t num_data_; // number of data to be stored.
-  //std::tr1::shared_ptr<void> storage_; // starting address of allocated memory. (unaligned)
   void *storage_; // starting address of allocated memory. (unaligned)
   T *data_;       // aligned pointer to store data.
 };

@@ -13,6 +13,7 @@
 #include <casa/Logging/LogOrigin.h>
 
 #include <casa_sakura/SakuraUtils.h>
+#include <casa_sakura/SakuraAlignedArray.h>
 
 namespace log4cxx {  
 class CasaLoggerAppender : public AppenderSkeleton

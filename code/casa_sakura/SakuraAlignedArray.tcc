@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 
 #include <log4cxx/logger.h>
@@ -16,16 +17,21 @@ namespace casa {
 template<typename T>
 SakuraAlignedArray<T>::SakuraAlignedArray(size_t num_data) : 
   num_data_(num_data) {
-  initialize();
-
   LogIO logger(LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
   logger << LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << LogIO::POST;
-  logger << LogIO::DEBUGGING << "Address [" << data_ << "]" << LogIO::POST;
+
+  initialize();
+
+  logger << LogIO::DEBUGGING << "Start Address [" << storage_ << "]" << LogIO::POST;
+  logger << LogIO::DEBUGGING << "Aligned Address [" << data_ << "]" << LogIO::POST;
 }
 
 template<typename T>
 SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) : 
   num_data_(in_vector.nelements()) {
+  LogIO logger(LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
+  logger << LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << LogIO::POST;
+
   initialize();
 
   T *ptr = data_;
@@ -33,6 +39,9 @@ SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) :
     *ptr = in_vector(i);
     ptr++;
   }
+
+  logger << LogIO::DEBUGGING << "Start Address [" << storage_ << "]" << LogIO::POST;
+  logger << LogIO::DEBUGGING << "Aligned Address [" << data_ << "]" << LogIO::POST;
 }
 
 template<typename T>
@@ -40,10 +49,8 @@ void SakuraAlignedArray<T>::initialize() {
   size_t size_required = sizeof(T) * num_data_;
   size_t size_of_arena = size_required + LIBSAKURA_SYMBOL(GetAlignment)() - 1;
   storage_ = malloc(size_of_arena);
-  //std::tr1::shared_ptr<void> storage_(malloc(size_of_arena), free);
 
   data_ = (T *)LIBSAKURA_SYMBOL(AlignAny)(size_of_arena, storage_, size_required);
-  //data_ = (T *)LIBSAKURA_SYMBOL(AlignAny)(size_of_arena, storage_.get(), size_required);
   assert(LIBSAKURA_SYMBOL(IsAligned)(data_));
 }
 
