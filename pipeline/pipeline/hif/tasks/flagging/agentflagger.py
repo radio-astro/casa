@@ -16,7 +16,10 @@ class AgentFlaggerResults(basetask.Results):
     def __init__(self, summaries, flagcmds):
         super(AgentFlaggerResults, self).__init__()
         self.summaries = summaries
-        self.flagcmds = flagcmds
+        self._flagcmds = flagcmds
+
+    def flagcmds(self):
+        return self._flagcmds
 
     def merge_with_context(self, context):
         # nothing to do
