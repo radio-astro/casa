@@ -566,7 +566,7 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
         score = 1.0
         longmsg = 'Flux calibrator measurements are complete for %s ' % ms.basename
         shortmsg = 'Flux calibrator measurements are complete'
-    elif nmeasurements < nexpected:
+    elif nmeasured < nexpected:
         score = float(nmeasured) / float(nexpected)
         longmsg = 'Flux calibrator measurements are incomplete for %s ' % ms.basename
         shortmsg = 'Flux calibrator measurements are incomplete'
