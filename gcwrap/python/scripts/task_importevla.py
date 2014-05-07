@@ -5,6 +5,15 @@ import flaghelper as fh
 debug = False
 
 
+# Hack to address CAS-6411, CAS-6412, and CAS-6413.
+import platform
+def set_library_paths_before_system_call(command_line):
+    if platform.system() == "Darwin":
+        if os.getenv("DYLD_FRAMEWORK_PATH"):
+            command_line = "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:" + os.getenv("DYLD_FRAMEWORK_PATH") + " " + command_line
+    return os.system(command_line)
+ 
+
 def importevla(
     asdm=None,
     vis=None,
@@ -89,8 +98,10 @@ def importevla(
         if showversion:
             casalog.post('asdm2MS --revision --logfile "'
                          + casalog.logfile() + '"')
-            os.system('asdm2MS --revision --logfile "'
-                      + casalog.logfile() + '"')
+            # os.system('asdm2MS --revision --logfile "'
+            #           + casalog.logfile() + '"')
+            # Hack to address CAS-6411, CAS-6412, and CAS-6413.
+            set_library_paths_before_system_call('asdm2MS --revision --logfile "' + casalog.logfile() + '"')
         if compression:
             execute_string = execute_string + ' --compression'
         if verbose:
@@ -120,7 +131,9 @@ def importevla(
         casalog.post(execute_string)
         
         # Catch the return status and exit on failure
-        ret_status = os.system(execute_string)
+        # ret_status = os.system(execute_string)
+        # Hack to address CAS-6411, CAS-6412, and CAS-6413.
+        ret_status = set_library_paths_before_system_call(execute_string)
         if ret_status != 0:
             casalog.post('asdm2MS failed to execute with exit error '+str(ret_status), 'SEVERE')
             raise Exception, 'ASDM conversion error, please check if it is a valid ASDM.'
