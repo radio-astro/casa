@@ -141,7 +141,7 @@ except:
 </table>
 
 
-<h4>Plot comparison</h4>
+<h4>Flux Calibrator Model Comparison</h4>
 
 
 % for ms in summary_plots:
@@ -153,7 +153,8 @@ except:
                 <div class="thumbnail">
                     <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                        class="fancybox"
-                       title="${'All antennae.' if plot.parameters['ant'] == '' else 'Antennae: '+str(plot.parameters['ant'])+'.'}"
+                       title="${'All antennae.' if plot.parameters['ant'] == '' else 'Antennae: '+str(plot.parameters['ant'])+'.' }
+                              Flux calibrator fields: ${plot.parameters['field']}."
                        rel="gfluxscale-summary-${ms}">
                         <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
                              title="gfluxscale summary for Antenna ${plot.parameters['ant']}"
@@ -162,8 +163,6 @@ except:
                     </a>
 
                     <div class="caption">
-                    	<h4>GFluxscale summary
-                        </h4>
 
                         <p>Amp vs. uvdist for 
                         <%
@@ -171,7 +170,7 @@ except:
                             antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
                         %>
                         ${'all antennae.' if plot.parameters['ant'] == '' else 'antennae: '+antdisp}
-                        Colored coded by spw.
+                        Colored coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
                         </p>
                     </div>
                 </div>

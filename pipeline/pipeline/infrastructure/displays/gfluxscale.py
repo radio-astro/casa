@@ -101,7 +101,8 @@ class GFluxscaleSummaryChart(object):
 			    x_axis='uvdist',
 			    y_axis='amp',
 			    parameters={'vis'      : self.ms.basename,
-					'ant'      : ant})
+					'ant'      : ant,
+					'field'     : self.result.inputs['reference']})
 					
 	if not os.path.exists(figfile):
             LOG.trace('Gfluxscale plot not found. Creating new plot')
