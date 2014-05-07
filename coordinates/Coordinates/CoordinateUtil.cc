@@ -1505,7 +1505,7 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
    
 
 
-
+/*
 Bool CoordinateUtil::setSpectralConversion (String& errorMsg, 
                                             CoordinateSystem& csys,
                                             const String frequencySystem)
@@ -1573,7 +1573,7 @@ Bool CoordinateUtil::setSpectralConversion (String& errorMsg,
    }
    return True;
 } 
-
+*/
 
 Bool CoordinateUtil::setDirectionUnit (CoordinateSystem& csys, const String& unit, Int which)
 {

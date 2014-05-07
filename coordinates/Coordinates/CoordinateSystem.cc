@@ -47,6 +47,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
+#include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MDoppler.h>
 #include <measures/Measures/MEpoch.h>
 #include <casa/Utilities/Assert.h>
@@ -4725,6 +4726,55 @@ void CoordinateSystem::_downcase(Vector<String>& vec) const {
 	for (Vector<String>::iterator iter = vec.begin(); iter != vec.end(); iter++) {
 		iter->downcase();
 	}
+}
+
+Bool CoordinateSystem::setSpectralConversion (
+	String& errorMsg, const String frequencySystem
+) {
+	if (! hasSpectralAxis()) {
+		return True;
+	}
+	if (! hasDirectionCoordinate()) {
+		errorMsg = String("No DirectionCoordinate; cannot set Spectral conversion layer");
+		return False;
+	}
+	MFrequency::Types ctype;
+	if (!MFrequency::getType(ctype, frequencySystem)) {
+		errorMsg = String("invalid frequency system");
+		return False;
+	}
+
+	SpectralCoordinate coord = spectralCoordinate();
+	MFrequency::Types oldctype;
+	MEpoch epoch;
+	MPosition position;
+	MDirection direction;
+	coord.getReferenceConversion(oldctype, epoch, position, direction);
+	if (ctype == oldctype) {
+		return True;
+	}
+	const DirectionCoordinate& dCoord = directionCoordinate();
+	const Vector<Double>& rp = dCoord.referencePixel();
+	if (!dCoord.toWorld(direction, rp)) {
+		errorMsg = dCoord.errorMessage();
+		return False;
+	}
+
+	const ObsInfo& oi = obsInfo();
+	String telescope = oi.telescope();
+	if (! MeasTable::Observatory(position, telescope)) {
+		errorMsg = String("Cannot find observatory; cannot set Spectral conversion layer");
+		return False;
+	}
+	epoch = oi.obsDate();
+	Double t = epoch.getValue().get();
+	if (t <= 0.0) {
+		errorMsg = String("Epoch not valid; cannot set Spectral conversion layer");
+		return False;
+	}
+	coord.setReferenceConversion(ctype, epoch, position, direction);
+	replaceCoordinate(coord, this->spectralCoordinateNumber());
+	return True;
 }
 
 } //# NAMESPACE CASA - END
