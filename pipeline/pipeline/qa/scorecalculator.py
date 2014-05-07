@@ -527,41 +527,59 @@ def score_tsysspwmap (ms, unmappedspws):
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
-def score_setjy_measurements (ms, measurements):
+def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
 
     '''
     Score is equal to the ratio of actual flux
     measurement to expected flux measurements
     '''
 
-    # Initialize counters
-    nexpected = 0
-    nmeasured = 0
-    scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+    # Expected fields
+    scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
+    LOG.info ('Number of expected fields %s' % len(scifields))
+
+    # Expected science windows
+    scispws = set([spw.id for spw in ms.get_spectral_windows(reqspws, science_windows_only=True)])
+    LOG.info ('Number of expected science windows %s' % len(scispws))
 
     # Loop over the field measurements
-    for key, value in measurements.iteritems():
-	# There should be only one field here.
-        field = ms.get_fields (key)[0]
-	validspws = set([spw.id for spw in field.valid_spws])
+    nexpected = 0
+    for scifield in scifields:
+	validspws = set([spw.id for spw in scifield.valid_spws])
+        LOG.info ('Expected field %s' % (scifield.name))
 	nexpected = nexpected + len(validspws.intersection(scispws))
-	# Loop over the flux measurements
-	for flux in value:
-	    nmeasured = nmeasured + 1
+    LOG.info ('Number of expected measurements %d' % nexpected)
+
+    # Loop over measurements
+    nmeasured = 0
+    for key, value in measurements.iteritems():
+        LOG.info ('Measured field %s' % key)
+        # Loop over the flux measurements
+        for flux in value:
+            nmeasured = nmeasured + 1
+    LOG.info ('Number of measurements %d' % nmeasured)
 
     # Compute score
     if nexpected == 0:
         score = 0.0
         longmsg = 'No flux calibrators for %s ' % ms.basename
         shortmsg = 'No flux calibrators'
+    elif nmeasured == 0:
+        score = 0.0
+        longmsg = 'No flux measurements for %s ' % ms.basename
+        shortmsg = 'No flux measurements'
     elif nexpected == nmeasured:
         score = 1.0
         longmsg = 'Flux calibrator measurements are complete for %s ' % ms.basename
         shortmsg = 'Flux calibrator measurements are complete'
-    else:
+    elif nmeasurements < nexpected:
         score = float(nmeasured) / float(nexpected)
         longmsg = 'Flux calibrator measurements are incomplete for %s ' % ms.basename
         shortmsg = 'Flux calibrator measurements are incomplete'
+    else:
+	score = 0.0
+        longmsg = 'Too many flux calibrator measurements for %s ' % ms.basename
+        shortmsg = 'Too many flux measurements'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
