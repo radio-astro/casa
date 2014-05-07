@@ -31,6 +31,8 @@ import setjy_cli
 import split_cli
 import statwt_cli
 import wvrgcal_cli
+import visstat_cli
+
 try:
     import sdcal2_cli
 except:
@@ -356,6 +358,9 @@ class CASATaskJobGenerator(object):
 
     def wvrgcal(self, *v, **k):
         return self._get_job(wvrgcal_cli.wvrgcal_cli, *v, **k)
+        
+    def visstat(self, *v, **k):
+        return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
     def sdcal2(self, *v, **k):
         return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)

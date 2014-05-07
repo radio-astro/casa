@@ -28,6 +28,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.applycal as applycal
 import pipeline.infrastructure.displays.setjy as setjy
+import pipeline.infrastructure.displays.gfluxscale as gfluxscale
 import pipeline.infrastructure.displays.bandpass as bandpass
 import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
@@ -2714,6 +2715,39 @@ class T2_4MDetailsSetjyRenderer(T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())        
 
         return d
+
+
+
+class T2_4MDetailsGFluxscaleRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hifv_gfluxscale.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsGFluxscaleRenderer, self).__init__(template,
+                                                          always_rerender)
+                                                          
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsGFluxscaleRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+        
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+                                  
+        summary_plots = {}
+        
+        for result in results:
+        
+            ms = context.observing_run.get_ms(result.inputs['vis'])
+            
+            plotter = gfluxscale.GFluxscaleSummaryChart(context, result, ms)
+            plots = plotter.plot()
+            summary_plots[os.path.basename(result.inputs['vis'])] = plots
+            
+        ctx.update({'summary_plots'  : summary_plots,
+                    'dirname'        : weblog_dir})
+                    
+        return ctx
+
+
+
 
     
 class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
@@ -5863,7 +5897,7 @@ renderer_map = {
         hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
-        hifa.tasks.GcorFluxscale : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
+        hifa.tasks.GcorFluxscale : T2_4MDetailsGFluxscaleRenderer('t2-4m_details-hif_gfluxscale.html', always_rerender=True),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
         hifa.tasks.ALMAImportData   : T2_4MDetailsImportDataRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
