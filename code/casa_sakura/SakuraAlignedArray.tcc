@@ -15,19 +15,19 @@
 
 namespace casa {
 template<typename T>
-SakuraAlignedArray<T>::SakuraAlignedArray(size_t num_data) : 
+inline SakuraAlignedArray<T>::SakuraAlignedArray(size_t num_data) : 
   num_data_(num_data) {
   LogIO logger(LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
   logger << LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << LogIO::POST;
 
   initialize();
 
-  logger << LogIO::DEBUGGING << "Start Address [" << storage_ << "]" << LogIO::POST;
-  logger << LogIO::DEBUGGING << "Aligned Address [" << data_ << "]" << LogIO::POST;
+  logger << LogIO::DEBUGGING << "  Initial Address = " << storage_ << LogIO::POST;
+  logger << LogIO::DEBUGGING << "  Aligned Address = " << data_ << LogIO::POST;
 }
 
 template<typename T>
-SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) : 
+inline SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) : 
   num_data_(in_vector.nelements()) {
   LogIO logger(LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
   logger << LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << LogIO::POST;
@@ -36,25 +36,33 @@ SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) :
 
   T *ptr = data_;
   for (size_t i = 0; i < num_data_; ++i) {
-    *ptr = in_vector(i);
-    ptr++;
+    ptr[i] = in_vector(i);
   }
 
-  logger << LogIO::DEBUGGING << "Start Address [" << storage_ << "]" << LogIO::POST;
-  logger << LogIO::DEBUGGING << "Aligned Address [" << data_ << "]" << LogIO::POST;
+  logger << LogIO::DEBUGGING << "  Initial Address = " << storage_ << LogIO::POST;
+  logger << LogIO::DEBUGGING << "  Aligned Address = " << data_ << LogIO::POST;
 }
 
 template<typename T>
-void SakuraAlignedArray<T>::initialize() {
+inline void SakuraAlignedArray<T>::initialize() {
+  storage_ = NULL;
+  data_ = NULL;
+
   size_t size_required = sizeof(T) * num_data_;
   size_t size_of_arena = size_required + LIBSAKURA_SYMBOL(GetAlignment)() - 1;
   storage_ = malloc(size_of_arena);
-
-  data_ = (T *)LIBSAKURA_SYMBOL(AlignAny)(size_of_arena, storage_, size_required);
+  if (storage_ == NULL) {
+    data_ = NULL;
+    throw std::bad_alloc();
+  }
+  data_ = reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(
+				size_of_arena, storage_, size_required));
+  assert(data_ != NULL);
   assert(LIBSAKURA_SYMBOL(IsAligned)(data_));
 }
 
-template<typename T> SakuraAlignedArray<T>::~SakuraAlignedArray() {
+template<typename T>
+inline SakuraAlignedArray<T>::~SakuraAlignedArray() {
   LogIO logger(LogOrigin("SakuraAlignedArray", "~SakuraAlignedArray", WHERE));
   logger << LogIO::DEBUGGING << "Destructing SakuraAlignedArray..." << LogIO::POST;
 
@@ -62,8 +70,10 @@ template<typename T> SakuraAlignedArray<T>::~SakuraAlignedArray() {
 }
 
 template<typename T>
-Vector<T> SakuraAlignedArray<T>::getAlignedVector() {
-  return Vector<T>(IPosition(1, num_data_), data_, SHARE);
+inline Vector<T> SakuraAlignedArray<T>::getAlignedVector() {
+  Vector<T> res = Vector<T>(IPosition(1, num_data_), data_, SHARE);
+  assert(data_ == res.cbegin());
+  return res;
 }
 
 }  // End of casa namespace.
