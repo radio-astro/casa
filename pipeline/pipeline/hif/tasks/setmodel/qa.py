@@ -48,7 +48,7 @@ class SetjyListQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = collated
 
         mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No unmapped science windows in %s' % utils.commafy(mses,
+        longmsg = 'No missing flux measurements in %s' % utils.commafy(mses,
                                                                     quotes=False,
                                                                     conjunction='or')
         result.qa.all_unity_longmsg = longmsg
