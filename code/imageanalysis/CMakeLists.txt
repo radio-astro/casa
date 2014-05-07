@@ -57,6 +57,7 @@ ImageAnalysis/ImageRegridder.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
+ImageAnalysis/PixelValueManipulatorData.cc
 ImageAnalysis/ProfileFitResults.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
@@ -183,6 +184,7 @@ install (FILES
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h
 	ImageAnalysis/PixelValueManipulator.h
 	ImageAnalysis/PixelValueManipulator.tcc
+	ImageAnalysis/PixelValueManipulatorData.h
 	ImageAnalysis/ProfileFitResults.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h

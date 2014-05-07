@@ -195,7 +195,7 @@ namespace casa {
             bool setSpectralState( String& errorMsg,const String& unit, const String& spcquant)
                 { return CoordinateUtil::setSpectralState( errorMsg, cs_, unit, spcquant ); }
             bool setSpectralConversion( String& errorMsg, const String frequencySystem )
-                { return CoordinateUtil::setSpectralConversion( errorMsg, cs_, frequencySystem); }
+                { return cs_.setSpectralConversion( errorMsg, frequencySystem); }
             bool setSpectralFormatting( String& errorMsg, const String& unit, const String& spcquant )
                 { return CoordinateUtil::setSpectralFormatting( errorMsg, cs_, unit, spcquant ); }
             bool setDirectionUnit( const string& unit, Int which=-1)

@@ -3830,7 +3830,7 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	CoordinateSystem cSys=cs;
 	if(specFrame != ""){
 		String errMsg;
-		if(!CoordinateUtil::setSpectralConversion(errMsg, cSys, specFrame)){
+		if(! cSys.setSpectralConversion(errMsg, specFrame)){
 			//cerr << "Failed to convert with error: " << errMsg << endl;
 			*_log << LogIO::WARN << "Failed to convert with error: " << errMsg << LogIO::POST;
 		}

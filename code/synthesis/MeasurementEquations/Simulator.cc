@@ -2260,7 +2260,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    // FTMachine only works in Hz and LSRK
 	    CoordinateSystem cs = images_p[model]->coordinates();
 	    String errorMsg;
-	    CoordinateUtil::setSpectralConversion(errorMsg,cs,MFrequency::showType(MFrequency::LSRK));
+	    cs.setSpectralConversion(errorMsg,MFrequency::showType(MFrequency::LSRK));
 	    Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
 	    AlwaysAssert(spectralIndex>=0, AipsError);
 	    SpectralCoordinate spectralCoord=cs.spectralCoordinate(spectralIndex);

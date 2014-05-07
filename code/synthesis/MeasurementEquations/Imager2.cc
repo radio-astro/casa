@@ -2152,7 +2152,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 	    if(freqFrameValid_p){
 	      CoordinateSystem cs=residIm.coordinates();
 	      String errorMsg;
-	      if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	      if (cs.setSpectralConversion (errorMsg, MFrequency::showType(freqFrame_p))) {
 		residIm.setCoordinateInfo(cs);
 		if(dorestore)
 		  restored.setCoordinateInfo(cs);
@@ -2295,7 +2295,7 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	if(freqFrameValid_p){
 	  CoordinateSystem cs=fluxScale.coordinates();
 	  String errorMsg;
-	  if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	  if (cs.setSpectralConversion (errorMsg,MFrequency::showType(freqFrame_p))) {
 	    fluxScale.setCoordinateInfo(cs);
             coverimage.setCoordinateInfo(cs);
 	  }
@@ -4252,7 +4252,7 @@ void Imager::savePSF(const Vector<String>& psf){
 	if(freqFrameValid_p){
 	  CoordinateSystem cs=psfimage.coordinates();
 	  String errorMsg;
-	  if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	  if (cs.setSpectralConversion (errorMsg, MFrequency::showType(freqFrame_p))) {
 	    psfimage.setCoordinateInfo(cs);
 	  }
         }
