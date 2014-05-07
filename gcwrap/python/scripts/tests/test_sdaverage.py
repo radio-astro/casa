@@ -19,6 +19,8 @@ import asap as sd
 from sdaverage import sdaverage
 from sdstatold import sdstatold
 
+from sdutil import tbmanager
+
 #
 # Unit test of sdaverage task.
 #
@@ -2414,8 +2416,67 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
             ref_data[schan:echan+1] = valuelist[irange % nval]
         return ref_data
 
+###
+# Test weighting by integration time
+###
+class sdaverage_test_weighting_tint(unittest.TestCase):
+    """
+    Test TINT weighting.
+
+    Data is testaverage.asap
+    """
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdaverage/'
+    rawfile = 'testaverage.asap'
+    prefix = 'sdaverage_test_weighting_tint'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+
+        default(sdaverage)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def verify(self, outfile, weight_tsys):
+        with tbmanager(outfile) as tb:
+            sp = tb.getcol('SPECTRA')
+
+        with tbmanager(self.rawfile) as tb:
+            raw_sp = tb.getcol('SPECTRA')
+            exposure = tb.getcol('INTERVAL')
+            tsys = tb.getcol('TSYS')
+
+        weight = numpy.ones(raw_sp.shape, dtype=float) * exposure.reshape((1,len(exposure)))
+        if weight_tsys:
+            weight /= (tsys * tsys)
+
+        expected = numpy.sum(raw_sp * weight, axis=1) / numpy.sum(weight, axis=1)
+        diff = abs((sp.flatten() - expected.flatten()) / expected.flatten())
+        self.assertTrue(all(diff < 1.0e-6),
+                        msg='Averaging failed to verify: actual %s expected %s'%(sp.flatten()[0], expected.flatten()[0]))
+
+    def test_weighting_tint(self):
+        """test_weighing_tint: test averaging by tint"""
+        outfile = self.prefix + '_tint.asap'
+        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        self.verify(outfile, weight_tsys=False)
+
+    def test_weighting_tintsys(self):
+        """test_weighting_tintsys: test averaging by tintsys"""
+        outfile = self.prefix + '_tintsys.asap'
+        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        self.verify(outfile, weight_tsys=True)
+        
+    
 
 def suite():
     return [sdaverage_badinputs, sdaverage_smoothTest, sdaverage_storageTest,
             sdaverage_test6, sdaverage_test7, sdaverage_test8, sdaverage_test9,
-            sdaverage_test_flag, sdaverage_avetest_selection, sdaverage_smoothtest_selection]
+            sdaverage_test_flag, sdaverage_avetest_selection, sdaverage_smoothtest_selection,
+            sdaverage_test_weighting_tint]
