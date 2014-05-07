@@ -1297,8 +1297,8 @@ coordsys::setconversiontype(const std::string& direction,
   }
   //
   if (!spectral.empty()) {
-    if (!CoordinateUtil::setSpectralConversion (errorMsg,
-						*_csys, spectral)) {
+    if (!_csys->setSpectralConversion (errorMsg,
+						spectral)) {
       *_log
 	<< "Failed to set the new SpectralCoordinate reference frame because "
 	<< errorMsg << LogIO::EXCEPTION;
