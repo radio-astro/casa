@@ -37,7 +37,8 @@ def hanningsmooth2(vis=None,
     
     # Initiate the helper class    
     msth = MSTHelper(locals()) 
-    
+    msth.setTaskName('hanningsmooth2')
+
     # Validate input and output parameters
     try:
         msth.setupIO()
