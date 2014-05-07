@@ -6,12 +6,26 @@ import functools
 import re
 import abc
 import datetime
+import contextlib
 
 from casac import casac
 from taskinit import casalog, gentools, qatool
 import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable, is_ms, scantable
+
+@contextlib.contextmanager
+def toolmanager(vis, tooltype, *args, **kwargs):
+    tool = gentools([tooltype])[0]
+    tool.open(vis, *args, **kwargs)
+    yield tool
+    tool.close()
+
+def tbmanager(vis, *args, **kwargs):
+    return toolmanager(vis, 'tb', *args, **kwargs)
+
+def cbmanager(vis, *args, **kwargs):
+    return toolmanager(vis, 'cb', *args, **kwargs)
 
 def sdtask_decorator(func):
     """

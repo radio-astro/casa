@@ -1,6 +1,5 @@
 import os
 import numpy
-import contextlib
 
 from taskinit import casalog, gentools
 
@@ -175,13 +174,6 @@ class sdsave_worker(sdutil.sdtask_template):
             sel.set_ifs(ifs_new)
             scantab.set_selection(sel)
 
-@contextlib.contextmanager
-def toolmanager(vis, tooltype, *args, **kwargs):
-    tool = gentools([tooltype])[0]
-    tool.open(vis, *args, **kwargs)
-    yield tool
-    tool.close()
-
 def _fillweight(vis):
     if not os.path.exists(vis):
         return
@@ -189,7 +181,7 @@ def _fillweight(vis):
     casalog.post('fill WEIGHT and SIGMA columns for %s ...'%(vis))
 
     # work with private cb tool
-    with toolmanager(vis, 'cb', compress=False, addcorr=False, addmodel=False) as cb:
+    with sdutil.cbmanager(vis, compress=False, addcorr=False, addmodel=False) as cb:
         status = cb.initweights()
 
     if status:
@@ -217,7 +209,7 @@ def _fillweight(vis):
                 os.system('rm -rf %s'%(caltable))
             # remove CORRECTED_DATA column
             casalog.post('remove CORRECTED_DATA from %s...'%(vis))
-            with toolmanager(vis, 'tb', nomodify=False) as tb:
+            with sdutil.tbmanager(vis, nomodify=False) as tb:
                 if 'CORRECTED_DATA' in tb.colnames():
                     tb.removecols('CORRECTED_DATA')
         
@@ -228,7 +220,7 @@ def _fillweight(vis):
 def _resetweight(vis):
     # work with private tb tool
     casalog.post('fill WEIGHT and SIGMA failed. reset all WEIGHT and SIGMA to 1.0...', priority='WARN')
-    with toolmanager(vis, 'tb', nomodify=False) as tb:
+    with sdutil.tbmanager(vis, nomodify=False) as tb:
         for column in ['WEIGHT', 'SIGMA']:
             values = tb.getvarcol(column)
             for v in values.values():

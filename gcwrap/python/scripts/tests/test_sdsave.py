@@ -17,7 +17,7 @@ except:
     import tests.selection_syntax as selection_syntax
 
 from sdsave import sdsave
-from task_sdsave import toolmanager
+from sdutil import tbmanager
 import asap as sd
 
 # Unit test of sdsave task.
@@ -2345,7 +2345,7 @@ class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
         Test fillweight=False
         """
         sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
-        with toolmanager(self.outfile, 'tb') as tb:
+        with tbmanager(self.outfile) as tb:
             weight = tb.getvarcol('WEIGHT')
             sigma  = tb.getvarcol('SIGMA')
             for key in weight.keys():
@@ -2359,27 +2359,27 @@ class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
         syscal = 'SYSCAL'
         spwin = 'SPECTRAL_WINDOW'
         # DATA_DESC_ID mapping from DATA_DESCRIPTION table
-        with toolmanager(os.path.join(self.outfile, datadesc), 'tb') as tb:
+        with tbmanager(os.path.join(self.outfile, datadesc)) as tb:
             spwmap = {}
             for irow in xrange(tb.nrows()):
                 spwmap[irow] = tb.getcell('SPECTRAL_WINDOW_ID', irow)
         
         # Tsys from SYSCAL table
-        with toolmanager(os.path.join(self.outfile, syscal), 'tb') as tb:
+        with tbmanager(os.path.join(self.outfile, syscal)) as tb:
             tsys = {}
             for irow in xrange(tb.nrows()):
                 tsys[tb.getcell('SPECTRAL_WINDOW_ID', irow)] = tb.getcell('TSYS_SPECTRUM', irow)
             #print tsys
                 
         # bandwidth from SPECTRAL_WINDOW table
-        with toolmanager(os.path.join(self.outfile, spwin), 'tb') as tb:
+        with tbmanager(os.path.join(self.outfile, spwin)) as tb:
             channelwidth = {}
             for irow in xrange(tb.nrows()):
                 channelwidth[irow] = tb.getcell('EFFECTIVE_BW', irow)
             #print channelwidth
                 
         # test MAIN
-        with toolmanager(self.outfile, 'tb') as tb:
+        with tbmanager(self.outfile) as tb:
             for irow in xrange(tb.nrows()):
                 ddid = tb.getcell('DATA_DESC_ID', irow)
                 spwid = spwmap[ddid]
