@@ -3849,8 +3849,7 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	      //os << errorMsg << LogIO::EXCEPTION;
 	   	*_log << LogIO::WARN << errMsg << LogIO::POST;
 	   }
-	   if (!CoordinateUtil::setRestFrequency (errMsg, cSys,
-	   	                                    restQuant.getUnit(), restQuant.getValue())) {
+	   if (!cSys.setRestFrequency (errMsg, restQuant)) {
 	   	//os << errorMsg << LogIO::EXCEPTION;
 	   	*_log << LogIO::WARN << errMsg << LogIO::POST;
 	   }

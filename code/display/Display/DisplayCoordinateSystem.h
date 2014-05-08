@@ -191,7 +191,7 @@ namespace casa {
 
             // CoordinateUtil wrappers...
             bool setRestFrequency( String& errorMsg, const String& unit, const Double& value )
-                { return CoordinateUtil::setRestFrequency( errorMsg, cs_, unit, value ); }
+                { return cs_.setRestFrequency( errorMsg, Quantity(value, unit) ); }
             bool setSpectralState( String& errorMsg,const String& unit, const String& spcquant)
                 { return CoordinateUtil::setSpectralState( errorMsg, cs_, unit, spcquant ); }
             bool setSpectralConversion( String& errorMsg, const String frequencySystem )
