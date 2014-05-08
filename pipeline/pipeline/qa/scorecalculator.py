@@ -16,6 +16,8 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
            'score_bwswitching',                               # ALMA specific
 	   'score_tsysspwmap',                                # ALMA specific
+	   'score_missing_derived_fluxes',                    # ALMA specific
+	   'score_setjy_measurements',         
            'score_missing_intents',
            'score_online_shadow_agents',
            'score_total_data_flagged',
@@ -530,8 +532,8 @@ def score_tsysspwmap (ms, unmappedspws):
 def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
 
     '''
-    Score is equal to the ratio of actual flux
-    measurement to expected flux measurements
+    Score is equal to the ratio of the number of actual flux
+    measurements to expected number of flux measurements
     '''
 
     # Expected fields
@@ -540,13 +542,13 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
     # Expected science windows
     scispws = set([spw.id for spw in ms.get_spectral_windows(reqspws, science_windows_only=True)])
 
-    # Loop over the field measurements
+    # Loop over the expected fields
     nexpected = 0
     for scifield in scifields:
 	validspws = set([spw.id for spw in scifield.valid_spws])
 	nexpected = nexpected + len(validspws.intersection(scispws))
 
-    # Loop over measurements
+    # Loop over the measurements
     nmeasured = 0
     for key, value in measurements.iteritems():
         # Loop over the flux measurements
@@ -577,3 +579,57 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
+@log_qa
+def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
+
+    '''
+    Score is equal to the ratio of actual flux
+    measurement to expected flux measurements
+    '''
+
+    # Expected fields
+    scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
+
+    # Expected science windows
+    scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+
+    # Loop over the expected fields
+    nexpected = 0
+    for scifield in scifields:
+	validspws = set([spw.id for spw in scifield.valid_spws])
+	nexpected = nexpected + len(validspws.intersection(scispws))
+
+    # Loop over measurements
+    nmeasured = 0
+    for key, value in measurements.iteritems():
+        # Loop over the flux measurements
+        for flux in value:
+	    fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+	    uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+	    if fluxjy <= 0.0 or uncjy <= 0.0: 
+	         continue
+            nmeasured = nmeasured + 1
+
+    # Compute score
+    if nexpected == 0:
+        score = 0.0
+        longmsg = 'No secondary calibrators for %s ' % ms.basename
+        shortmsg = 'No secondary calibrators'
+    elif nmeasured == 0:
+        score = 0.0
+        longmsg = 'No derived calibrator fluxes for %s ' % ms.basename
+        shortmsg = 'No derived calibrator fluxes'
+    elif nexpected == nmeasured:
+        score = 1.0
+        longmsg = 'Derived calibrator fluxes are complete for %s ' % ms.basename
+        shortmsg = 'Derived calibrator fluxes are complete'
+    elif nmeasured < nexpected:
+        score = float(nmeasured) / float(nexpected)
+        longmsg = 'Missing derived calibrator fluxes for %s ' % ms.basename
+        shortmsg = 'Missing derived calibrator fluxes'
+    else:
+	score = 0.0
+        longmsg = 'Too many derived calibrator fluxes for %s ' % ms.basename
+        shortmsg = 'Too many derived calibrator fluxes'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
