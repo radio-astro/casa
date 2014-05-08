@@ -34,6 +34,5 @@ install (FILES
 casa_add_assay( casa_sakura
     test/tSakuraAlignedArray.cc
     test/tSakuraUtils.cc
-    test/tSakuraArrayConverter.cc
     )
 
