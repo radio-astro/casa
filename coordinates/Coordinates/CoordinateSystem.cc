@@ -4777,5 +4777,54 @@ Bool CoordinateSystem::setSpectralConversion (
 	return True;
 }
 
+Bool CoordinateSystem::setRestFrequency (
+	String& errorMsg, const Quantity& freq
+) {
+	Double value = freq.getValue();
+	if (value < 0.0) {
+		errorMsg = "The rest frequency/wavelength is below zero!";
+		return False;
+	}
+	else if (isNaN(value)) {
+		errorMsg = "The rest frequency/wavelength is NaN!";
+		return False;
+	}
+	else if (isInf(value)) {
+		errorMsg = "The rest frequency/wavelength is InF!";
+		return False;
+	}
+	static Unit HZ(String("GHz"));
+	static Unit M(String("m"));
+	Unit t(freq.getUnit());
+	if (t != HZ && t!= M) {
+		errorMsg = "Illegal spectral unit " + freq.getUnit();
+		return False;
+	}
+	if (! hasSpectralAxis()) {
+		return True;
+	}
+	SpectralCoordinate sCoord = spectralCoordinate();
+	Unit oldUnit(sCoord.worldAxisUnits()[0]);
+
+	MVFrequency newFreq = MVFrequency(freq);
+	Double newValue = newFreq.get(oldUnit).getValue();
+
+	if (isNaN(newValue)) {
+		errorMsg = "The new rest frequency/wavelength is NaN!";
+		return False;
+	}
+	else if (isInf(newValue)) {
+		errorMsg = "The new rest frequency/wavelength is InF!";
+		return False;
+	}
+
+	if (!sCoord.setRestFrequency(newValue)) {
+		errorMsg = sCoord.errorMessage();
+		return False;
+	}
+	this->replaceCoordinate(sCoord, spectralCoordinateNumber());
+	return True;
+}
+
 } //# NAMESPACE CASA - END
 
