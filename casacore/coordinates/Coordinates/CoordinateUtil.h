@@ -446,13 +446,6 @@ static Bool dropRemovedAxes (
    static Bool setSpectralState (String& errorMsg, CoordinateSystem& cSys, 
                                  const String& unit, const String& spcquant);
 
-// Set rest frequency of SpectralCoordinate in CoordinateSystem.
-// Unit must be consistent with Hz or m.
-// Returns False if invalid inputs (and CS not changed) and an error message.
-   static Bool setRestFrequency (String& errorMsg, CoordinateSystem& cSys,
-   		                        const String& unit,
-   		                        const Double& value);
-
 // Set velocity state of SpectralCoordinate in CoordinateSystem.
 // Unit must be consistent m/s and the doppler a valid MDoppler string.
 // For no change, leave either String empty.
@@ -460,14 +453,6 @@ static Bool dropRemovedAxes (
    static Bool setVelocityState (String& errorMsg, CoordinateSystem& cSys, 
                                  const String& unit, const String& spcquant);
 
-   /*
-// Set Spectral conversion layer of SpectralCoordinate in CoordinateSystem
-// so that pixel<->world go to the specified frequency system (a valid
-// MFrequency::Types string).  Returns False if frequency system invalid
-// or if no DirectionCoordinate or if cant get Date/Epoch
-   static Bool setSpectralConversion (String& errorMsg, CoordinateSystem& cSys,
-                                      const String frequencySystem);
-*/
 // Set default format unit and doppler velocity state of SpectralCoordinate in CoordinateSystem.
 // Unit can be consistent with Hz or m/s
 // Returns False if invalid inputs (and CS not changed) and an error message. 

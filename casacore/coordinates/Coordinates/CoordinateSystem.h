@@ -847,6 +847,12 @@ public:
    // or if no DirectionCoordinate or if cant get Date/Epoch
    Bool setSpectralConversion (String& errorMsg, const String frequencySystem);
 
+   // Set rest frequency of SpectralCoordinate in CoordinateSystem.
+   // Unit must be consistent with Hz or m.
+   // Returns False if invalid inputs (and CS not changed) and an error message.
+   Bool setRestFrequency (
+		   String& errorMsg, const Quantity& freq
+   );
 
 private:
     // Where we store copies of the coordinates we are created with.
