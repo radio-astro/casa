@@ -221,7 +221,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
               output_dir=inputs.output_dir,
               vis=inputs.vis,
               caltable=inputs.caltable,
-              intentgroups="['ATMOSPHERE,BANDPASS,AMPLITUDE']",
+              intentgroups="['ATMOSPHERE','BANDPASS','AMPLITUDE']",
               flag_edges=True,
               edge_limit=inputs.fe_edge_limit,
               flag_sharps=False,
