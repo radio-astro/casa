@@ -441,7 +441,7 @@ SPIIF PVGenerator::generate() const {
 	IPosition axes(1, yAxis);
 	ImageCollapser<Float> collapser(
 		"mean", rotated, &lcbox,
-		"", axes, "", False
+		"", axes, False, "", False
 	);
 
 	SPIIF collapsed = collapser.collapse();

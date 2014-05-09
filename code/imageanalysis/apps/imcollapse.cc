@@ -44,7 +44,7 @@ Int main(Int argc, char *argv[]) {
 	);
     ImageCollapser<Float> imCollapser(
 		function, image, &myreg,
-		mask, axes, outname, overwrite
+		mask, axes, False, outname, overwrite
     );
 
 	imCollapser.collapse();

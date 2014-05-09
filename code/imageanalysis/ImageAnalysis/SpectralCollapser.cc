@@ -549,6 +549,7 @@ Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
 			&myreg,                          // const Record *const regionRec
 			"",                         // const String& maskInp
 			_specAxis,                  // const IPosition& axes
+			False,                      // do not invert axes selection
 			outname,                    // String& outname
 			True                        // const Bool overwrite
 		);

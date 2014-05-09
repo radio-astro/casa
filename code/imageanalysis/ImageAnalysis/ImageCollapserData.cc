@@ -48,13 +48,14 @@ const std::map<uInt, String>* ImageCollapserData::minMatchMap() {
 }
 
 ImageCollapserData::AggregateType ImageCollapserData::aggregateType(
-	String& aggString
+	const String& aggString
 ) {
 	ThrowIf (
 		aggString.empty(),
 		"Aggregate function name is not specified and it must be."
 	);
-	aggString.downcase();
+	String agg = aggString;
+	agg.downcase();
 	const std::map<uInt, String> *funcNamePtr = funcNameMap();
 	std::map<uInt, String>::const_iterator iter;
 	const std::map<uInt, String> *minMatch = minMatchMap();
@@ -64,8 +65,8 @@ ImageCollapserData::AggregateType ImageCollapserData::aggregateType(
 		String minMatch = iter->second;
 		String funcName = (*funcNamePtr).at(key);
 		if (
-			aggString.startsWith(minMatch)
-			&& funcName.startsWith(aggString)
+			agg.startsWith(minMatch)
+			&& funcName.startsWith(agg)
 		) {
 			return (AggregateType)key;
 		}

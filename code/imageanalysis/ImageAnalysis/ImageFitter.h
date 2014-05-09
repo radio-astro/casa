@@ -174,7 +174,7 @@ public:
 	Record getOutputRecord() const {return _output; }
 
 protected:
-    virtual inline Bool _supportsMultipleRegions() {return True;}
+    virtual inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
 	String _regionString, _residual, _model,

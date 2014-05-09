@@ -43,15 +43,16 @@ namespace casa {
 template<class T> map<uInt, T (*)(const Array<T>&)> ImageCollapser<T>::_funcMap;
 
 template<class T> ImageCollapser<T>::ImageCollapser(
-	String aggString, const SPCIIT image,
+	const String& aggString, const SPCIIT image,
 	const Record *const regionRec,
 	const String& maskInp, const IPosition& axes,
-	const String& outname, const Bool overwrite
+	Bool invertAxesSelection,
+	const String& outname, Bool overwrite
 ) : ImageTask<T>(
 		image, "", regionRec, "", "", "",
 		maskInp, outname, overwrite
 	),
-	_invertAxesSelection(False),
+	_invertAxesSelection(invertAxesSelection),
 	_axes(axes), _aggType(ImageCollapserData::UNKNOWN) {
 	_aggType = ImageCollapserData::aggregateType(aggString);
 	this->_construct();

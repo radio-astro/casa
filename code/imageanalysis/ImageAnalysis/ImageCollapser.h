@@ -50,17 +50,18 @@ public:
 	// <group>
 
 	ImageCollapser(
-		String aggString, const SPCIIT image,
+		const String& aggString, SPCIIT image,
 		const Record *const regionRec,
 		const String& maskInp, const IPosition& axes,
-		const String& outname, const Bool overwrite
+		Bool invertAxesSelection,
+		const String& outname, Bool overwrite
 	);
 
 	ImageCollapser(
 		const SPCIIT image,
-		const IPosition& axes, const Bool invertAxesSelection,
+		const IPosition& axes, Bool invertAxesSelection,
 		const ImageCollapserData::AggregateType aggregateType,
-		const String& outname, const Bool overwrite
+		const String& outname, Bool overwrite
 	);
 	// </group>
 
@@ -81,6 +82,8 @@ protected:
 	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
 		return std::vector<Coordinate::Type>();
 	}
+
+	Bool _supportsMultipleRegions() const {return True;}
 
 private:
 	Bool _invertAxesSelection;

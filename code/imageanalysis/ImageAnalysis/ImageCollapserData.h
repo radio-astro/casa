@@ -51,7 +51,7 @@ public:
 	// destructor
 	~ImageCollapserData() {}
 
-	static AggregateType aggregateType(String& aggString);
+	static AggregateType aggregateType(const String& aggString);
 
 	static const std::map<uInt, String>* funcNameMap();
 	static const std::map<uInt, String>* minMatchMap();

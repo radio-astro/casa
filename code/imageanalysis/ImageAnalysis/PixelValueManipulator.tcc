@@ -26,6 +26,8 @@
 
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
+// #include <casa/Arrays/ArrayMath.h>
+
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 namespace casa {
@@ -67,9 +69,8 @@ template<class T> void PixelValueManipulator<T>::setAxes(
 }
 
 template<class T> Record PixelValueManipulator<T>::get () const {
-	SPCIIT myimage = this->_getImage();
 	SPCIIT subImage = SubImageFactory<T>::createImage(
-		*myimage, "", *this->_getRegion(), this->_getMask(),
+		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
 		False, False,
 		(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
 		this->_getStretch()
@@ -92,6 +93,209 @@ template<class T> Record PixelValueManipulator<T>::get () const {
     ret.define("values", values);
     ret.define("mask", pixelMask);
     return ret;
+}
+
+template<class T> Record PixelValueManipulator<T>::getProfile(
+	uInt axis, const String& function, Bool doWorld,
+	const String& unit, PixelValueManipulatorData::SpectralType specType,
+	const Quantity *const restFreq, const String& frame
+) const {
+	 ImageCollapser<T> collapser(
+		function, this->_getImage(), this->_getRegion(),
+		this->_getMask(), IPosition(1, axis), True, "", ""
+	 );
+	 collapser.setStretch(this->_getStretch());
+	 SPIIT collapsed = collapser.collapse();
+	 Record ret;
+	 Array<T> values = collapsed->get(True);
+	 ret.define("values", values);
+	 Array<Bool> mask(values.shape(), True);
+	 if (collapsed->isMasked()) {
+		 mask = mask && collapsed->getMask(True);
+	 }
+	 if (collapsed->hasPixelMask()) {
+		 mask = mask && collapsed->pixelMask().get(True);
+	 }
+	 ret.define("mask", mask);
+	 if (doWorld) {
+		 ret.merge(
+			_doWorld(
+				collapsed, unit, specType,
+				restFreq, frame, axis
+			)
+		 );
+	 }
+	 else {
+		 if (! unit.empty()) {
+			 *this->_getLog() << LogIO::WARN
+				<< "doWorld is False so the specified unit will be ignored"
+				<< LogIO::POST;
+		 }
+		 Vector<Double> pix(collapsed->ndim(), 0);
+		 Vector<Double> outputRef = collapsed->coordinates().toWorld(pix);
+		 Vector<Double> inputRef = this->_getImage()->coordinates().referenceValue();
+		 inputRef[axis] = outputRef[axis];
+		 Vector<Double> inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
+		 Int count = floor(inputPixel[axis] + 0.5);
+		 uInt length = values.shape()[0];
+		 Vector<Int> coords(length);
+		 for (uInt i=0; i<length; i++, count++) {
+			 coords[i] = count;
+		 }
+		 ret.define("coords", coords);
+		 ret.define("xUnit", "pixels");
+	 }
+	 return ret;
+}
+
+template<class T> Record PixelValueManipulator<T>::_doWorld(
+	SPIIT collapsed, const String& unit,
+	PixelValueManipulatorData::SpectralType specType,
+	const Quantity *const restFreq, const String& frame,
+	uInt axis
+) const {
+	SPIIT tmp = SubImageFactory<T>::createImage(
+		*collapsed, "", Record(), "", True, False, False, False
+	);
+	const CoordinateSystem csys = tmp->coordinates();
+	Quantity t(0, unit);
+	String axisUnit = csys.worldAxisUnits()[0];
+	if (! unit.empty()) {
+		_checkUnit(unit, csys, specType);
+	}
+	uInt length = tmp->shape()[0];
+	Vector<Double> coords(length);
+	Matrix<Double> pixel;
+	Matrix<Double> world;
+	Vector<Bool> failures;
+	if (
+		! frame.empty() && (unit.empty() || t.isConform(axisUnit))
+		&& csys.hasSpectralAxis()
+	) {
+		SPCIIT subimage = SubImageFactory<T>::createImage(
+			*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+			False, False, False, this->_getStretch()
+		);
+		CoordinateSystem mycsys = subimage->coordinates();
+		pixel.resize(IPosition(2, mycsys.nPixelAxes(), length));
+		pixel.set(0);
+		pixel.row(axis) = indgen(length, 0.0, 1.0);
+		mycsys.setSpectralConversion(frame);
+		mycsys.toWorldMany(world, pixel, failures);
+		coords = world.row(axis);
+	}
+	else {
+		pixel.resize(IPosition(2, 1, length));
+		pixel.set(0);
+		pixel.row(0) = indgen(length, 0.0, 1.0);
+		csys.toWorldMany(world, pixel, failures);
+		coords = world.row(0);
+		if (! unit.empty()) {
+			if (t.isConform(axisUnit)) {
+				Quantum<Vector<Double> > q(coords, axisUnit);
+				coords = q.getValue(unit);
+			}
+			else {
+				_doNoncomformantUnit(
+					coords, csys, unit, specType, restFreq, axisUnit
+				);
+			}
+		}
+	}
+	Record ret;
+	ret.define("coords", coords);
+	ret.define("xUnit", unit.empty() ? axisUnit : unit);
+	return ret;
+}
+
+template<class T> void PixelValueManipulator<T>::_doNoncomformantUnit(
+	Vector<Double> coords, const CoordinateSystem& csys,
+	const String& unit, PixelValueManipulatorData::SpectralType specType,
+	const Quantity *const restFreq, const String& axisUnit
+) const {
+	ThrowIf(
+		! csys.hasSpectralAxis(),
+		"Units must be conformant with" + axisUnit
+	);
+	SpectralCoordinate sp = csys.spectralCoordinate();
+	if (restFreq) {
+		Double value = restFreq->getValue(axisUnit);
+		sp.setRestFrequency(value, False);
+		sp.selectRestFrequency(value);
+	}
+	Quantity t(0, unit);
+	if (t.isConform("m/s")) {
+		MDoppler::Types doppler;
+		if (
+			specType == PixelValueManipulatorData::DEFAULT
+			|| specType == PixelValueManipulatorData::RELATIVISTIC
+		) {
+			doppler = MDoppler::RELATIVISTIC;
+		}
+		else if (specType == PixelValueManipulatorData::RADIO_VELOCITY) {
+			doppler = MDoppler::RADIO;
+		}
+		else if (specType == PixelValueManipulatorData::OPTICAL_VELOCITY) {
+			doppler = MDoppler::OPTICAL;
+		}
+		else {
+			ThrowCc("Spectral type not compatible with velocity units");
+		}
+		sp.setVelocity(unit ,doppler);
+		sp.frequencyToVelocity(coords, coords);
+	}
+	else {
+		// unit must be conformant with meters
+		sp.setWavelengthUnit(unit);
+		if (
+			specType == PixelValueManipulatorData::DEFAULT
+			|| specType == PixelValueManipulatorData::WAVELENGTH
+		) {
+			sp.frequencyToWavelength(coords, coords);
+		}
+		else if (specType == PixelValueManipulatorData::AIR_WAVELENGTH) {
+			sp.frequencyToAirWavelength(coords, coords);
+		}
+	}
+}
+
+template<class T> void PixelValueManipulator<T>::_checkUnit(
+	const String& unit, const CoordinateSystem& csys,
+	PixelValueManipulatorData::SpectralType specType
+) const {
+	Quantity t(0, unit);
+	String axisUnit = csys.worldAxisUnits()[0];
+	if (! t.isConform(axisUnit)) {
+		if (csys.hasSpectralAxis()) {
+			ThrowIf(
+				! (t.isConform("m/s") || t.isConform("m")),
+				"Invalid spectral conversion unit " + unit
+			);
+			ThrowIf(
+				t.isConform("m/s")
+				&& (
+					specType == PixelValueManipulatorData::WAVELENGTH
+					|| specType == PixelValueManipulatorData::AIR_WAVELENGTH
+				),
+				"Inconsistent spectral type used for velocity units"
+			);
+			ThrowIf(
+				t.isConform("m")
+				&& (
+					specType == PixelValueManipulatorData::OPTICAL_VELOCITY
+					|| specType == PixelValueManipulatorData::RADIO_VELOCITY
+				),
+				"Inconsistent spectral type used for wavelength units"
+			);
+		}
+		else {
+			ThrowCc(
+				"Unit " + unit
+				+ " does not conform to corresponding axis unit "
+				+ axisUnit
+			);
+		}
+	}
 }
 
 template<class T> void PixelValueManipulator<T>::put(

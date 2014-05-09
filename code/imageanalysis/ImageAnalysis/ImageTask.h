@@ -162,7 +162,7 @@ protected:
 
     void _closeLogfile() const;
 
-    virtual inline Bool _supportsMultipleRegions() {return False;}
+    virtual inline Bool _supportsMultipleRegions() const {return False;}
 
     virtual inline Bool _supportsMultipleBeams() {return True;}
 
