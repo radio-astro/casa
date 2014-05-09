@@ -223,7 +223,7 @@ except:
 						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
 					    %>
 					    ${'all antennae.' if plot.parameters['ant'] == '' else 'antennae: '+antdisp}
-					    Colored coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
+					    Color coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
 					    </p>
 					</div>
 		                </div>
@@ -257,7 +257,7 @@ except:
 						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
 					    %>
 					    ${'all antennae.' if antplot.parameters['ant'] == '' else 'antennae: '+antdisp}
-					    Colored coded by spw.<br> Flux calibrator fields: ${antplot.parameters['field']}.
+					    Color coded by spw.<br> Flux calibrator fields: ${antplot.parameters['field']}.
 					    </p>
 					</div>
 		                </div>
