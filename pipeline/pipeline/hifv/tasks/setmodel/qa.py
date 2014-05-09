@@ -20,11 +20,16 @@ class VLASetjyQAHandler(pqa.QAResultHandler):
 
 	vis= result.inputs['vis']
 	ms = context.observing_run.get_ms(vis)
+	if 'spw' in result.inputs:
+	    spw = result.inputs['spw']
+	else:
+	    spw = ''
 
 	# Check for the existence of the expected flux measurements
 	# and assign a score based on the fraction of actual to 
 	# expected ones.
-	scores = [qacalc.score_setjy_measurements(ms, result.measurements)]
+	scores = [qacalc.score_setjy_measurements(ms, result.inputs['field'],
+	    result.inputs['intent'], spw, result.measurements)]
 	result.qa.pool[:] = scores
 	result.qa.all_unity_longmsg = 'No missing flux measurements in %s' % ms.basename 
 
@@ -43,7 +48,7 @@ class VLASetjyListQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = collated
 
         mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No unmapped science windows in %s' % utils.commafy(mses,
+        longmsg = 'No missing flux measurements in %s' % utils.commafy(mses,
                                                                     quotes=False,
                                                                     conjunction='or')
         result.qa.all_unity_longmsg = longmsg

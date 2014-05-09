@@ -217,7 +217,7 @@ class BasebandSummaryChart(PlotmsBasebandComposite):
 
 class AmpVsUVSummaryChart(BasebandSummaryChart):
     """
-    Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
+    Create an amplitude vs UV distance plot for each baseband.
     """
     def __init__(self, context, result, intent='', ydatacolumn='model'):
         plot_args = {'ydatacolumn' : ydatacolumn,

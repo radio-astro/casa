@@ -2724,27 +2724,95 @@ class T2_4MDetailsGFluxscaleRenderer(T2_4MDetailsDefaultRenderer):
         super(T2_4MDetailsGFluxscaleRenderer, self).__init__(template,
                                                           always_rerender)
                                                           
-    def get_display_context(self, context, results):
+    def get_display_context(self, context, result):
         super_cls = super(T2_4MDetailsGFluxscaleRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
+        ctx = super_cls.get_display_context(context, result)
         
         weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
+                                  'stage%s' % result.stage_number)
                                   
-        summary_plots = {}
+        ctx.update({'dirname'  : weblog_dir})
         
-        for result in results:
+        '''
+        amp_vs_uv_summary_plots = self.create_plots(context, 
+                                                    result, 
+                                                    setjy.AmpVsUVSummaryChart, 
+                                                    'AMPLITUDE')
+        '''
+        #All antenna, sort by baseband
+        ampuv_allant_plots = collections.defaultdict(dict)
+        for intents in ['AMPLITUDE']:
+            plots = self.create_plots(context, 
+                                      result, 
+                                      gfluxscale.GFluxscaleSummaryChart, 
+                                      intents)
+            self.sort_plots_by_baseband(plots)
+
+            key = intents
+            for vis, vis_plots in plots.items():
+                ampuv_allant_plots[vis][key] = vis_plots
+                
+        #List of antenna for the fluxscale result, sorted by baseband
+        ampuv_ant_plots = collections.defaultdict(dict)
+
+        for intents in ['AMPLITUDE']:
+            plots = self.create_plots_ants(context, 
+                                      result, 
+                                      gfluxscale.GFluxscaleSummaryChart, 
+                                      intents)
+            self.sort_plots_by_baseband(plots)
+
+            key = intents
+            for vis, vis_plots in plots.items():
+                ampuv_ant_plots[vis][key] = vis_plots
+
+        ctx.update({'ampuv_allant_plots'     : ampuv_allant_plots,
+                    'ampuv_ant_plots'     : ampuv_ant_plots})
         
-            ms = context.observing_run.get_ms(result.inputs['vis'])
-            
-            plotter = gfluxscale.GFluxscaleSummaryChart(context, result, ms)
-            plots = plotter.plot()
-            summary_plots[os.path.basename(result.inputs['vis'])] = plots
-            
-        ctx.update({'summary_plots'  : summary_plots,
-                    'dirname'        : weblog_dir})
-                    
         return ctx
+
+    def sort_plots_by_baseband(self, d):
+        for vis, plots in d.items():
+            plots = sorted(plots, 
+                           key=lambda plot: plot.parameters['baseband'])
+            d[vis] = plots
+
+    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None):
+        """
+        Create plots and return a dictionary of vis:[Plots].
+        """
+        d = {}
+        for result in results:
+            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls)
+            d = utils.dict_merge(d, plots)
+        return d
+        
+    def create_plots_ants(self, context, results, plotter_cls, intents, renderer_cls=None):
+        """
+        Create plots and return a dictionary of vis:[Plots].
+        """
+        d = {}
+        for result in results:
+            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls, ant=result.resantenna)
+            d = utils.dict_merge(d, plots)
+        return d
+
+    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, ant=''):
+        vis = os.path.basename(result.inputs['vis'])
+        
+        
+        plotter = plotter_cls(context, result, intents, ant=ant)
+        plots = plotter.plot()
+
+        d = collections.defaultdict(dict)
+        d[vis] = plots
+
+        if renderer_cls is not None:
+            renderer = renderer_cls(context, result, plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())        
+
+        return d
 
 
 

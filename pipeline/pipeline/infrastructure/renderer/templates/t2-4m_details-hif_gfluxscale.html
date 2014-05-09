@@ -1,9 +1,50 @@
 <%!
 rsc_path = ""
+import cgi
 import decimal
 import os
+import string
+import types
+
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.utils as utils
+
+agent_description = {
+	'before'   : 'Before',
+	'applycal' : 'After',
+}
+
+total_keys = {
+	'TOTAL'        : 'All Data',
+	'SCIENCE SPWS' : 'Science Spectral Windows',
+	'BANDPASS'     : 'Bandpass',
+	'AMPLITUDE'    : 'Flux',
+	'PHASE'        : 'Phase',
+	'TARGET'       : 'Target'
+}
+
+def template_agent_header1(agent):
+	span = 'col' if agent in ('online','template') else 'row'
+	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
+
+def template_agent_header2(agent):
+	if agent in ('online', 'template'):
+		return '<th>File</th><th>Number of Statements</th>'
+	else:
+		return ''		
+
+def get_template_agents(agents):
+	return [a for a in agents if a in ('online', 'template')]
+
+def sanitise(url):
+	return filenamer.sanitize(url)
+
+
+
+
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -141,45 +182,99 @@ except:
 </table>
 
 
-<h4>Flux Calibrator Model Comparison</h4>
 
 
-% for ms in summary_plots:
-    
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       title="${'All antennae.' if plot.parameters['ant'] == '' else 'Antennae: '+str(plot.parameters['ant'])+'.' }
+%if ampuv_allant_plots:
+    <h3>Flux Calibrator Model Comparison</h3>
+
+	% for ms in ampuv_allant_plots:
+	    <h4>
+			<a class="replace"
+	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}">
+	            ${ms}
+	        </a>
+		</h4>
+		% for intent in ampuv_allant_plots[ms]:
+		    <ul class="thumbnails">
+		        % for i, plot in enumerate(ampuv_allant_plots[ms][intent]):
+		        	<!--  Select on antenna -->
+		            <%
+		              antplot = ampuv_ant_plots[ms][intent][i]
+		            %>
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       title="Baseband ${plot.parameters['baseband']}.  ${'All antennae.' if plot.parameters['ant'] == '' else 'Antennae: '+str(plot.parameters['ant'])+'.' }
                               Flux calibrator fields: ${plot.parameters['field']}."
-                       rel="gfluxscale-summary-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="gfluxscale summary for Antenna ${plot.parameters['ant']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
+		                       rel="amp_vs_uv-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+                                            <h4>Baseband ${plot.parameters['baseband']}</h4>
+					    <p>Amp vs. uvdist for 
+					    <%
+						antlist = plot.parameters['ant'].split(',')
+						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
+					    %>
+					    ${'all antennae.' if plot.parameters['ant'] == '' else 'antennae: '+antdisp}
+					    Colored coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
+					    </p>
+					</div>
+		                </div>
 
-                    <div class="caption">
+		            % endif
 
-                        <p>Amp vs. uvdist for 
-                        <%
-                            antlist =plot.parameters['ant'].split(',')
-                            antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
-                        %>
-                        ${'all antennae.' if plot.parameters['ant'] == '' else 'antennae: '+antdisp}
-                        Colored coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
+		            
 
-%endfor
+		            % if os.path.exists(antplot.thumbnail):
+
+		            
+		            
+
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       title="Baseband ${antplot.parameters['baseband']}.  ${'All antennae.' if antplot.parameters['ant'] == '' else 'Antennae: '+str(antplot.parameters['ant'])+'.' }
+                              Flux calibrator fields: ${antplot.parameters['field']}."
+		                       rel="amp_vs_uv-${ms}">
+		                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}"
+		                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+                                            <h4>Baseband ${antplot.parameters['baseband']}</h4>
+					    <p>Amp vs. uvdist for 
+					    <%
+						antlist = antplot.parameters['ant'].split(',')
+						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
+					    %>
+					    ${'all antennae.' if antplot.parameters['ant'] == '' else 'antennae: '+antdisp}
+					    Colored coded by spw.<br> Flux calibrator fields: ${antplot.parameters['field']}.
+					    </p>
+					</div>
+		                </div>
+		            </li>
+		            % endif
+		            
+
+		            
+		        % endfor
+		    </ul>
+		% endfor
+	%endfor
+%endif
+
+
+
+
 
 
 
