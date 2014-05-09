@@ -3479,9 +3479,6 @@ class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
         else:
             filename = os.path.join(weblog_dir, '%s.html' % (tablename))
 
-        if os.path.exists(filename):
-            return filename
-
         rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
 
