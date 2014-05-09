@@ -5327,7 +5327,7 @@ pixelmask = ia.getregion(getmask=T)
 In this example we recover first the pixels and then the pixel mask.
 </example>
 </method>
-<!-- 
+
 <method type="function" name="getprofile">
     <shortdescription>Get values and mask for a one dimensional profile along a specified image axis by applying an aggregate function.</shortdescription>
 
@@ -5340,42 +5340,86 @@ In this example we recover first the pixels and then the pixel mask.
             <description>Aggregate function to apply for collapse along axes orthogonal to specified axis.</description>
             <value>mean</value>
         </param>
-        <param type="string" name="unit"/>
-            <description>Unit of the returned abscissa values. Must be conformant with image axis unit. Default is the location in pixels relative to the zeroth axis plane of the image.</description>
-            <value></value>
-        </param>
+        
         <param type="any"  name="region">
             <any type="variant" limittypes="record string"/>
             <description>The region of interest. See help par.region for details. Default is whole image.</description>
             <value></value>
         </param>
-        <param type="variant"  name="mask">
+        <param type="string"  name="mask">
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
-        <param type="bool"  name="list">
-            <description>List the bounding box to the logger?</description>
-            <value>false</value>
+        <param type="bool" name="doworld">
+            <description>Return world or pixel coordinate values?</description>
+            <value>true</value>
         </param>
-
+        <param type="string" name="unit">
+            <description>Unit of the returned abscissa values if doworld=True. Must be conformant with image axis unit unless axis is the spectral axis. Default is the unit associated with axis in the image coordinate system.</description>
+            <value></value>
+        </param>
         <param type="bool"  name="stretch">
             <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
             <value>false</value>
         </param>
-     
+        <param type="string"  name="spectype">
+            <description>Velocity or wavelength type if profile taken along spectral axis. Supported (minimum match, case insensitive) values are "relativistic velocity", "beta", "radio velocity", "optical velocity", "wavelength", "air wavelength", "default".</description>
+            <value>default</value>
+        </param>
+        <param type="any"  name="restfreq">
+            <any type="variant"/>
+            <description>Rest frequency to use when calculating coordinate values. Used only if doworld=True, axis is spectral axis, and unit is not the unit associated with the axis in the coordinate system. Empty string means use the rest frequency associated with the image coordinate system</description>
+            <value type="string"/>
+        </param>
+        <param type="string"  name="frame">
+            <description>Reference frame to use when calculating coordinate values. Used only if doworld=True, axis is spectral axis, and unit is not the unit associated with the axis in the coordinate system. Empty string means use the reference frame associated with the image coordinate system</description>
+            <value/>
+        </param>
 </input>
-<returns type="record"></returns>
+<returns type="record"/>
 <description>
 This application returns information on a one-dimensional profile taken along a specified image axis.
-The region of interest is collapsed (a'la ia.collapse() along all axes perpendicular to the one specified, and)
-the specified aggregate function is applied to these pixels to generate the returned values. The returned dictionary
+The region of interest is collapsed (a'la ia.collapse() along all axes orthogonal to the one specified, and)
+the specified aggregate function is applied to these pixels to generate the returned values. 
+
+The aggregate function must be one of the functions supported by ia.collapse; ie, 'flux', 'max',  'mean',
+'median', 'min', 'rms', 'stdev', 'sum', and 'variance'. See the help for ia.collapse() for details regarding
+these functions. Minimum match and case insenstivity is supported.
+
+If doworld=True, the returned coodinate values will be world coordinates. If False, the returned coordinate
+values will be pixel coordinates, relative to the zeroth pixel of the input image.
+
+One may specify the unit of the returned coordinate values. This parameter is only used if doworld=True. Unless
+axis is the spectral axis, unit must be conformant with the corresponding axis unit in the image coordinate
+system. If axis is the spectral axis, unit may be a velocity unit (assuming the coordinate system has a rest
+frequency or restfreq is specified) or a length unit. In these cases, the returned coordinate values will be
+converted to velocity or wavelength, respectively.
+
+The parameter spectype may be used to specify the velocity or wavelength type for the returned coordinate values
+if profile is taken along spectral axis and doworld=True. Supported (minimum match, case insensitive) values
+are "relativistic velocity", "beta", "radio velocity", "optical velocity", "wavelength", "air wavelength",
+"default". The "default" value is equivalent to "relativistic" if unit is a velocity unit or "wavelength" if unit
+is a length unit.
+
+The restfreq parameter allows one to set the rest frequency for the coordinates to be returned if doworld=True,
+axis is the spectral axis, and unit is a velocity unit. If blank, the rest frequency associated with the image
+coordinate system is used.
+
+The frame allows one to specify which kinematic reference frame that the returned coordinate values should be
+calculated in. It is only used if doworld=True, axis is the spectral axis, and unit is unspecified or is specified
+and a frequency unit.
+
+The returned dictionary
 contains the keys:
 
 values:  one-dimensional array along the specified axis containing values resulting from applying the specified
          aggregate function to corresponding pixels at the same location along that axis.
 mask:    one-dimensional array of booleans of the resulting mask after applying the aggregate function, formed in the
          same way as that formed by ia.collapse.
-abscissa One-dimensional array of corresponding abscissa values in the specified unit.
+coords   One-dimensional array of corresponding coordinate values along the specified axis in the specified unit
+         (or the unit associated with the axis in the image coordinate system if unspecified and doworld=True or pixel
+         coordinates if doworld=False).
+xUnit    The unit used for calculating the values the coords array.
 
 
 <example>
@@ -5384,36 +5428,22 @@ abscissa One-dimensional array of corresponding abscissa values in the specified
 </description>
 
 <example>
-Suppose that we have a 3-dimensional image called {\sff cube} and wish
-to recover the pixel from a simple regular region.
+ia.open('myimage')
+# get the max pixel values along axis 2
+res = ia.getprofile(axis=2, function='max')
 
-"""
-#
-ia.fromshape('cube', [64,64,64], overwrite=true)
-#r1=rg.box(blc=[10,10,10],trc=[30,40]) # Create region
-r1=rg.box([10,10,10],[30,40,40]) # Create region
-pixels=ia.getregion(r1)
-ia.close()
-#
-"""
+# axis 2 is the spectral axis. Get the minimum pixel values along this axis
+# and specify that the returned coordinate values should be optical velocities
+
+res2 = ia.getprofile(axis=2, function='min', unit='km/s', spectype='optical')
+
+ia.done()
 
 </example>
 
-<example>
-
-"""
-#
-ia.fromshape('cube', [64,64,64], overwrite=true)
-pixels = ia.getregion()
-pixelmask = ia.getregion(getmask=T)  
-#
-"""
-
-In this example we recover first the pixels and then the pixel mask.
-</example>
 </method>
 
--->
+
  
    <method type="function" name="getslice">
    <shortdescription>Get 1-D slice from the image</shortdescription>

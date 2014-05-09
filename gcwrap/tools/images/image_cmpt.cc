@@ -315,7 +315,7 @@ image * image::collapse(
 			);
 			ImageCollapser<Float> collapser(
 				aggString, myimage, &myreg,
-				mask, myAxes, outfile, overwrite
+				mask, myAxes, False, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
 			return new image(collapser.collapse());
@@ -332,7 +332,7 @@ image * image::collapse(
 			);
 			ImageCollapser<Complex> collapser(
 				aggString, myimage, &myreg,
-				mask, myAxes, outfile, overwrite
+				mask, myAxes, False, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
 			return new image(collapser.collapse());
@@ -2319,14 +2319,80 @@ image* image::pbcor(
 		pbcor->setStretch(stretch);
         std::tr1::shared_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
 		return new image(corrected);
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-::casac::variant* image::getregion(
+record* image::getprofile(
+	int axis, const string& function, const variant& region,
+	const string& mask, bool doworld, const string& unit,
+	bool stretch, const string& spectype,
+	const variant& restfreq, const string& frame
+) {
+	try {
+		ThrowIf(
+			detached(), "Unable to create image"
+		);
+		std::tr1::shared_ptr<Record> myregion(_getRegion(region, False));
+
+		std::tr1::shared_ptr<casa::Quantity> rfreq;
+		if (restfreq.type() != variant::BOOLVEC) {
+			String rf = restfreq.toString();
+			rf.trim();
+			if (! rf.empty()) {
+				rfreq.reset(
+					new casa::Quantity(_casaQuantityFromVar(variant(restfreq)))
+				);
+			}
+		}
+		String myframe = frame;
+		myframe.trim();
+		if (_image->isFloat()) {
+			SPCIIF myimage = _image->getImage();
+			return fromRecord(
+				_getprofile(
+					myimage, axis, function, unit,
+					*myregion, mask, doworld, stretch,
+					spectype, rfreq.get(), myframe
+				)
+			);
+		}
+		else {
+			SPCIIC myimage = _image->getComplexImage();
+			return fromRecord(
+				_getprofile(
+					myimage, axis, function, unit,
+					*myregion, mask, doworld, stretch,
+					spectype, rfreq.get(), myframe
+				)
+			);
+		}
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+	return 0;
+}
+template <class T> Record image::_getprofile(
+	SPCIIT myimage, int axis, const String& function,
+	const String& unit, const Record& region, const String& mask,
+	bool doworld, bool stretch, const String& spectype,
+	const casa::Quantity* const &restfreq, const String& frame
+) {
+	PixelValueManipulatorData::SpectralType type = PixelValueManipulatorData::spectralType(spectype);
+	PixelValueManipulator<T> pvm(myimage, &region, mask);
+	pvm.setStretch(stretch);
+	Record x = pvm.getProfile(axis, function, doworld, unit, type, restfreq, frame);
+	return x;
+}
+
+variant* image::getregion(
 	const variant& region, const std::vector<int>& axes,
 	const ::casac::variant& mask, bool list, bool dropdeg,
 	bool getmask, bool stretch

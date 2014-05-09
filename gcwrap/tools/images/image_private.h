@@ -70,6 +70,14 @@ template<class T> casa::Record _getchunk(
 	bool list, bool dropdeg
 );
 
+template <class T> casa::Record _getprofile(
+	SPCIIT myimage, int axis, const casa::String& function,
+	const casa::String& unit, const casa::Record& region,
+	const casa::String& mask, bool doworld, bool stretch,
+	const casa::String& spectype, const casa::Quantity* const &restfreq,
+	const casa::String& frame
+);
+
 template<class T> void _putchunk(
 	T imageType, SPIIT image,
 	const casac::variant& pixels,
