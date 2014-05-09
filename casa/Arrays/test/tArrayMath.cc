@@ -343,6 +343,14 @@ void testMinMax1()
   indgen (a);
   a.data()[11] = -3;
   a.data()[66] = 1000;
+
+  Vector<Double> x = indgen(10, 4.0, 3.0);
+  for (uInt i=0; i<10; i++) {;
+  	  AlwaysAssertExit(x[i] == 4 + 3*i);
+  }
+
+
+
   Int minval, maxval;
   IPosition minpos, maxpos;
   // Unmasked minmax.

@@ -841,11 +841,15 @@ public:
    // been removed. For a normal direction coordinate, this will return True.
    Bool isDirectionAbscissaLongitude() const;
 
+   // <group>
    // Set Spectral conversion layer of SpectralCoordinate in CoordinateSystem
    // so that pixel<->world go to the specified frequency system (a valid
    // MFrequency::Types string).  Returns False if frequency system invalid
    // or if no DirectionCoordinate or if cant get Date/Epoch
    Bool setSpectralConversion (String& errorMsg, const String frequencySystem);
+   // this version throws an exception rather than returning False
+   void setSpectralConversion (const String frequencySystem);
+   //</group>
 
    // Set rest frequency of SpectralCoordinate in CoordinateSystem.
    // Unit must be consistent with Hz or m.
