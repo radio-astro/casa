@@ -4728,6 +4728,16 @@ void CoordinateSystem::_downcase(Vector<String>& vec) const {
 	}
 }
 
+void CoordinateSystem::setSpectralConversion (
+	const String frequencySystem
+) {
+	String err;
+	ThrowIf(
+		! setSpectralConversion(err, frequencySystem),
+		err
+	);
+}
+
 Bool CoordinateSystem::setSpectralConversion (
 	String& errorMsg, const String frequencySystem
 ) {
@@ -4740,7 +4750,7 @@ Bool CoordinateSystem::setSpectralConversion (
 	}
 	MFrequency::Types ctype;
 	if (!MFrequency::getType(ctype, frequencySystem)) {
-		errorMsg = String("invalid frequency system");
+		errorMsg = String("invalid frequency system " + frequencySystem);
 		return False;
 	}
 
