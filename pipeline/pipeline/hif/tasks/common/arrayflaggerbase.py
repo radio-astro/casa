@@ -183,16 +183,21 @@ class FlagCmd(object):
                     antenna = flagcoords[k]
             if antenna is not None:
                 flagcmd += " antenna='%s'" % (antenna)
+                self.antenna = antenna
 
             flag_time = None
             for k,name in enumerate(axisnames):
                 if name.upper()=='TIME':
                     flag_time = flagcoords[k]
 
+            self.start_time = None
+            self.end_time = None
             if flag_time is not None:
-                start = casatools.quanta.quantity(flag_time - 0.5, 's')
+                self.start_time = flag_time - 0.5
+                start = casatools.quanta.quantity(self.start_time, 's')
                 start = casatools.quanta.time(start, form=['ymd'])
-                end = casatools.quanta.quantity(flag_time + 0.5, 's')
+                self.end_time = flag_time + 0.5
+                end = casatools.quanta.quantity(self.end_time + 0.5, 's')
                 end = casatools.quanta.time(end, form=['ymd'])
                 flagcmd += " timerange='%s~%s'" % (start[0], end[0])
 
@@ -233,15 +238,33 @@ class FlagCmd(object):
         """
         match = True
         match = match and (self.filename == spectrum.filename)
-        if self.spw is not None:
-            match = match and (self.spw == spectrum.spw)
-        if self.antenna is not None:
-            match = match and (self.antenna == spectrum.ant[0])
-#        if self.flag_time is not None:
-#            match = match and (self.flag_time > spectrum.time-0.5 and
-#              self.flag_time < spectrum.time + 0.5)
-        if self.pol is not None:
-            match = match and (self.pol == spectrum.pol)
+
+        # does spw match?
+        match = match and (
+          ("spw=" not in self.__repr__()) or
+          (("spw='%s" % spectrum.spw) in self.__repr__()))
+
+        # does antenna match?
+        try:
+            match = match and (
+              ("antenna=" not in self.__repr__()) or
+              (("antenna='%s'" % spectrum.ant[0]) in self.__repr__()))
+        except:
+            match = False
+
+        # does time match?
+        if spectrum.time is not None:
+            try:
+                match = match and (spectrum.time > self.start_time and
+                  spectrum.time < self.end_time)
+            except:
+                match = False        
+
+        # does correlation/pol match?
+        match = match and (
+          ("correlation=" not in self.__repr__()) or
+          (("correlation='%s'" % spectrum.pol) in self.__repr__()))
+
         return match
 
     def match_image(self, image):
