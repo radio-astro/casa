@@ -566,15 +566,15 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
         shortmsg = 'No flux measurements'
     elif nexpected == nmeasured:
         score = 1.0
-        longmsg = 'Flux calibrator measurements are complete for %s ' % ms.basename
-        shortmsg = 'Flux calibrator measurements are complete'
+        longmsg = 'All expected flux calibrator measurements present for %s ' % ms.basename
+        shortmsg = 'All expected flux calibrator measurements present'
     elif nmeasured < nexpected:
         score = float(nmeasured) / float(nexpected)
-        longmsg = 'Flux calibrator measurements are incomplete for %s ' % ms.basename
-        shortmsg = 'Flux calibrator measurements are incomplete'
+        longmsg = 'Missing flux calibrator measurements for %s %d/%d ' % (ms.basename, nmeasured, nexpected)
+        shortmsg = 'Missing flux calibrator measurements'
     else:
 	score = 0.0
-        longmsg = 'Too many flux calibrator measurements for %s ' % ms.basename
+        longmsg = 'Too many flux calibrator measurements for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Too many flux measurements'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
@@ -617,19 +617,19 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
         shortmsg = 'No secondary calibrators'
     elif nmeasured == 0:
         score = 0.0
-        longmsg = 'No derived calibrator fluxes for %s ' % ms.basename
-        shortmsg = 'No derived calibrator fluxes'
+        longmsg = 'No derived fluxes for %s ' % ms.basename
+        shortmsg = 'No derived fluxes'
     elif nexpected == nmeasured:
         score = 1.0
-        longmsg = 'Derived calibrator fluxes are complete for %s ' % ms.basename
-        shortmsg = 'Derived calibrator fluxes are complete'
+        longmsg = 'All expected derived fluxes present for %s ' % ms.basename
+        shortmsg = 'All expected derived fluxes present'
     elif nmeasured < nexpected:
         score = float(nmeasured) / float(nexpected)
-        longmsg = 'Missing derived calibrator fluxes for %s ' % ms.basename
-        shortmsg = 'Missing derived calibrator fluxes'
+        longmsg = 'Missing derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
+        shortmsg = 'Missing derived fluxes'
     else:
 	score = 0.0
-        longmsg = 'Too many derived calibrator fluxes for %s ' % ms.basename
-        shortmsg = 'Too many derived calibrator fluxes'
+        longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
+        shortmsg = 'Extra derived fluxes'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
