@@ -83,7 +83,6 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         flags = list(set(flags))
         result.addflags(flags)
         result.table = flagsettertask.inputs.table
-#        result.flagcmds = flagsettertask.inputs.inpfile
 
         return result
 
@@ -530,7 +529,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # add a record of flags set to the results object
         result.addflags(flags)
         result.table = flagsettertask.inputs.table
-#        result.flagcmds = flagsettertask.inputs.inpfile
 
         return result
 
