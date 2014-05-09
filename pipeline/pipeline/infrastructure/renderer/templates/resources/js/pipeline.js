@@ -71,7 +71,7 @@ UTILS = (function () {
         });
     };
 
-    module.loadFakeframe = function (fakeframe, href, insertPre, callback) {
+    module.loadFakeframe = function (fakeframe, href, title, insertPre, callback) {
         insertPre = insertPre || false;
         $(fakeframe).load(href, function (response, status, xhr) {
             if (status == "error") {
@@ -85,19 +85,21 @@ UTILS = (function () {
                 $("a.replace").click(function (evt) {
                     evt.preventDefault();
                     var callbackFn = $(this).data("callback");
-                    UTILS.loadFakeframe(fakeframe, this.href, false, callbackFn);
+                    var title = $(this).data("title") || $.url(this.href).attr('file');
+                    UTILS.loadFakeframe(fakeframe, this.href, title, false, callbackFn);
                 });
 
                 $("a.replace-pre").click(function (evt) {
                     evt.preventDefault();
                     var callbackFn = $(this).data("callback");
-                    UTILS.loadFakeframe(fakeframe, this.href, true, callbackFn);
+                    var title = $(this).data("title") || $.url(this.href).attr('file');
+                    UTILS.loadFakeframe(fakeframe, this.href, title, true, callbackFn);
                 });
 
                 if (insertPre) {
                     $(fakeframe).wrapInner("<pre />");
                     $(fakeframe).prepend('<div class="page-header">' +
-                        '<h3>' + $.url(href).attr('file') +
+                        '<h3>' + title +
                         '<button class="btn btn-large pull-right" ' +
                         'onclick="javascript:location.reload()">Back</button>' +
                         '</h3>' +
