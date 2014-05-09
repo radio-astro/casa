@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 import sys
+import time
 import types
 
 import pipeline.extern.logutils as logutils
@@ -165,7 +166,7 @@ def get_logger(name,
     logger.todo = types.MethodType(todo, logger)
     
     logger.setLevel(logging_level)
-    fmt = logging.Formatter(format, datefmt)  
+    fmt = UTCFormatter(format, datefmt)  
     logger.propagate = propagate  
   
     # Remove existing handlers, otherwise multiple handlers can accrue  
@@ -277,6 +278,10 @@ class CapturingHandler(logging.Handler):
         self.flush()
         logging.Handler.close(self)
 
+
+class UTCFormatter(logging.Formatter):
+    converter = time.gmtime
+    
 
 # Code, Frame and Traceback are serializable substitutes for the Traceback
 # logged with exceptions
