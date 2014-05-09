@@ -71,6 +71,7 @@ try:
     plot_groups = collections.OrderedDict()
     components = r.components.keys()
 
+    LOG.info('Plotting')
     for component in components:
 
         # generate the plots
@@ -81,7 +82,6 @@ try:
             if component in ['nmedian','derivative','fieldshape'] and r.view:
                 # image to display
                 # plot() returns the list of Plots it has generated
-                LOG.info('Plotting')
                 plots.append(displays.ImageDisplay().plot(pcontext, r,
                   reportdir=plots_dir, prefix=component))
 
@@ -168,9 +168,11 @@ except Exception, e:
 	<tbody>
 	    % for file,reports in htmlreports[component].items():
 	    <tr>
-	        <td><a class="replace-pre" href="${reports[0]}">${file}</a></td>
+	        <td><a class="replace-pre" href="${reports[0]}" 
+                   data-title="Flagging Commands">${file}</a></td>
 	        <td><a class="replace-pre"
-                   href="${reports[1]}">printTsysFlags</a></td>
+                   href="${reports[1]}" data-title="Flagging Report">
+                   printTsysFlags</a></td>
 	    </tr>
 	    % endfor
 	</tbody>
