@@ -58,7 +58,9 @@ public:
 	);
 
 	// get the aggregated values along the specified pixel axis using the region and mask at construction
-	// and any other mask the image may have. Aggregation of values occurs along all axes orthogonal to
+	// and any other mask the image may have. Supported values of <src>function</src> are (case-insensitive,
+	// minimum match) those supported by ImageCollapser, ie "flux", "max", "mean", "median", "min", "rms",
+	// "stddev", "sum", "variance",  and "zero". Aggregation of values occurs along all axes orthogonal to
 	// the one specified. One may specify the unit in which coordinate values are calculated using the
 	// <src>unit</src> parameter. If unit starts with "pix", then pixel coordinates are calculated,
 	// world units otherwise. If pixel coordinates, the values are relative to the zeroth pixel
@@ -84,6 +86,12 @@ public:
 	// and "xUnit" is a String containing the coordinate unit.
 	Record getProfile(
 		uInt axis, const String& function, const String& unit,
+		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
+		const Quantity *const restFreq=0, const String& frame=""
+	) const;
+
+	Record getProfile(
+		uInt axis, ImageCollapserData::AggregateType function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
 		const Quantity *const restFreq=0, const String& frame=""
 	) const;

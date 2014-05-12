@@ -94,6 +94,16 @@ template<class T> Record PixelValueManipulator<T>::get () const {
     ret.define("mask", pixelMask);
     return ret;
 }
+template<class T> Record PixelValueManipulator<T>::getProfile(
+	uInt axis, ImageCollapserData::AggregateType function,
+	const String& unit, PixelValueManipulatorData::SpectralType specType,
+	const Quantity *const restFreq, const String& frame
+) const {
+	return getProfile(
+		axis, ImageCollapserData::minMatchMap()->find((uInt)function)->second,
+		unit,  specType, restFreq,  frame
+	);
+}
 
 template<class T> Record PixelValueManipulator<T>::getProfile(
 	uInt axis, const String& function,
