@@ -494,49 +494,9 @@ SPIIF ImageAnalysis::imageconcat(
 	return _imageFloat;
 }
 
-Bool ImageAnalysis::imagefromarray(const String& outfile,
-		Array<Float> & pixelsArray, const Record& csys, const Bool linear,
-		const Bool overwrite, const Bool log) {
-	Bool rstat = False;
-	try {
-		*_log << LogOrigin("ImageAnalysis", "imagefromarray");
-
-		String error;
-		if (csys.nfields() != 0) {
-			PtrHolder<CoordinateSystem> cSys(makeCoordinateSystem(csys,
-					pixelsArray.shape()));
-			CoordinateSystem* pCS = cSys.ptr();
-			_make_image(
-				outfile, *pCS, pixelsArray.shape(),
-				log, overwrite
-			);
-		} else {
-			// Make default CoordinateSystem
-			CoordinateSystem cSys = CoordinateUtil::makeCoordinateSystem(
-					pixelsArray.shape(), linear);
-			centreRefPix(cSys, pixelsArray.shape());
-			_make_image(
-				outfile, cSys, pixelsArray.shape(),
-				log, overwrite
-			);
-		}
-
-		// Fill image
-		_imageFloat->putSlice(pixelsArray, IPosition(pixelsArray.ndim(), 0),
-				IPosition(pixelsArray.ndim(), 1));
-		rstat = True;
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-	}
-	return rstat;
-}
-
 Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		const Vector<Int>& shape, const String& sep, const Record& csys,
 		const Bool linear, const Bool overwrite) {
-	Bool rstat = False;
-
 	try {
 		*_log << LogOrigin("ImageAnalysis", "imagefromascii");
 
@@ -580,13 +540,13 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		for (uInt i = 0; i < n; i++)
 			vec[i] = a[i];
 		Array<Float> pixels(vec.reform(IPosition(shape)));
-		rstat = imagefromarray(outfile, pixels, csys, linear, overwrite);
-
+		ImageFactory::imageFromArray(outfile, pixels, csys, linear, overwrite);
 	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
+		return False;
 	}
-	return rstat;
+	return True;
 }
 
 Bool ImageAnalysis::imagefromfits(

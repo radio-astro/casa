@@ -90,10 +90,6 @@ class ImageAnalysis
                                         const Bool tempclose = True, 
                                         const Bool overwrite = False);
 
-    Bool imagefromarray(const String& outfile, Array<Float>& pixels, 
-                        const Record& csys, const Bool linear = False, 
-                        const Bool overwrite = False, const Bool log = True);
-
     Bool imagefromascii(const String& outfile, const String& infile, 
                         const Vector<Int>& shape, const String& sep, 
                         const Record& csys, const Bool linear = False, 

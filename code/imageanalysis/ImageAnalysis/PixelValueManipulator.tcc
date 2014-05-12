@@ -135,9 +135,9 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		 Vector<Double> inputRef = this->_getImage()->coordinates().referenceValue();
 		 inputRef[axis] = outputRef[axis];
 		 Vector<Double> inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
-		 Int count = floor(inputPixel[axis] + 0.5);
+		 Double count = floor(inputPixel[axis] + 0.5);
 		 uInt length = values.shape()[0];
-		 Vector<Int> coords = indgen(length, count, 1);
+		 Vector<Double> coords = indgen(length, count, 1.0);
 		 ret.define("coords", coords);
 		 ret.define("xUnit", "pixel");
 	 }

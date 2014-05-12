@@ -92,7 +92,7 @@ template <class T> SPIIT ImageFactory::createImage(
 
 template <class T> SPIIT ImageFactory::_fromShape(
 	const String& outfile, const Vector<Int>& shapeV,
-	const Record& coordinates, bool linear,
+	const Record& coordinates, Bool linear,
 	Bool overwrite, Bool verbose,
     const vector<std::pair<LogOrigin, String> > *const &msgs
 ) {
@@ -122,12 +122,24 @@ template <class T> SPIIT ImageFactory::_fromShape(
 		);
         mycsys = *csysPtr;
 	}
-
 	return createImage<T>(
 		outfile, mycsys, shapeV, verbose,
 		overwrite, msgs
 	);
+}
 
+template <class T> SPIIT ImageFactory::imageFromArray(
+    const String& outfile, const Array<T>& pixels,
+    const Record& csys, Bool linear,
+    Bool overwrite, Bool verbose,
+    const vector<std::pair<LogOrigin, String> > *const &msgs
+) {
+	SPIIT myim = _fromShape<T>(
+		outfile, pixels.shape().asVector(),
+		csys, linear, overwrite, verbose, msgs
+	);
+	myim->put(pixels);
+	return myim;
 }
 
 

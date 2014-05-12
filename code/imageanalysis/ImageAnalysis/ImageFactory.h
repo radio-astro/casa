@@ -30,6 +30,7 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
+#include <casa/Arrays/Array.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/namespace.h>
@@ -91,6 +92,13 @@ public:
     	const Record& csys, Bool linear=True,
     	Bool overwrite=False, Bool verbose=True,
         const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
+    );
+
+    template <class T> static SPIIT imageFromArray(
+    	const String& outfile, const Array<T>& pixels,
+    	const Record& csys, Bool linear=False,
+    	Bool overwrite=False, Bool verbose=True,
+    	const vector<std::pair<LogOrigin, String> > *const &msgs=0
     );
 
 private:
