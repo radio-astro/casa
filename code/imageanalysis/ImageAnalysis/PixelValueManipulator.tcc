@@ -96,7 +96,7 @@ template<class T> Record PixelValueManipulator<T>::get () const {
 }
 
 template<class T> Record PixelValueManipulator<T>::getProfile(
-	uInt axis, const String& function, Bool doWorld,
+	uInt axis, const String& function,
 	const String& unit, PixelValueManipulatorData::SpectralType specType,
 	const Quantity *const restFreq, const String& frame
 ) const {
@@ -117,20 +117,9 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		 mask = mask && collapsed->pixelMask().get(True);
 	 }
 	 ret.define("mask", mask);
-	 if (doWorld) {
-		 ret.merge(
-			_doWorld(
-				collapsed, unit, specType,
-				restFreq, frame, axis
-			)
-		 );
-	 }
-	 else {
-		 if (! unit.empty()) {
-			 *this->_getLog() << LogIO::WARN
-				<< "doWorld is False so the specified unit will be ignored"
-				<< LogIO::POST;
-		 }
+	 String tunit = unit;
+	 tunit.downcase();
+	 if (tunit.startsWith("pix")) {
 		 Vector<Double> pix(collapsed->ndim(), 0);
 		 Vector<Double> outputRef = collapsed->coordinates().toWorld(pix);
 		 Vector<Double> inputRef = this->_getImage()->coordinates().referenceValue();
@@ -138,12 +127,17 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		 Vector<Double> inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
 		 Int count = floor(inputPixel[axis] + 0.5);
 		 uInt length = values.shape()[0];
-		 Vector<Int> coords(length);
-		 for (uInt i=0; i<length; i++, count++) {
-			 coords[i] = count;
-		 }
+		 Vector<Int> coords = indgen(length, count, 1);
 		 ret.define("coords", coords);
-		 ret.define("xUnit", "pixels");
+		 ret.define("xUnit", "pixel");
+	 }
+	 else {
+		 ret.merge(
+			_doWorld(
+				collapsed, unit, specType,
+				restFreq, frame, axis
+			)
+		 );
 	 }
 	 return ret;
 }

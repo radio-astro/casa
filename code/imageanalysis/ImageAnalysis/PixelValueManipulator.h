@@ -59,28 +59,31 @@ public:
 
 	// get the aggregated values along the specified pixel axis using the region and mask at construction
 	// and any other mask the image may have. Aggregation of values occurs along all axes orthogonal to
-	// the one specified. If <src>doWorld</src>, the coordinate values returned are world coordinates, if
-	// False they are pixel coordinates. If pixel coordinates, the values are relative to the zeroth pixel
-	// on the corresponding axis of the input image. <src>unit</src> specifies to unit to which to return the
-	// coordinate values in. This is only used if doWorld=True. If specified, the unit must be conformant with
+	// the one specified. One may specify the unit in which coordinate values are calculated using the
+	// <src>unit</src> parameter. If unit starts with "pix", then pixel coordinates are calculated,
+	// world units otherwise. If pixel coordinates, the values are relative to the zeroth pixel
+	// on the corresponding axis of the input image.  If specified and it doesn't start with "pix",
+	// the unit must be conformant with
 	// the unit of <src>axis</src> in the coordinate system of the image, or it must be a unit that this axis
 	// can be readily converted to (eg km/s if the axis is a frequency axis with base unit of Hz).
-	// If doWorld=True, the selected axis is the spectral axis and if the unit is chosen to be something other
+	// If the selected axis is the spectral axis and if the unit is chosen to be something other
 	// than the native spectral coordinate unit (such as velocity or wavelength for a native frequency unit),
 	// <src>specType</src> indicates the system to use when converting the frequency. Values of RELATVISTIC,
 	// RADIO_VELOCITY, and OPTICAL_VELOCITY are only permitted if <src>unit</src> represents a velocity unit.
 	// Values of WAVELENGTH and AIR_WAVELENGTH are only permitted if <src>unit</src> represents a length unit.
 	// For a velocity unit, DEFAULT is equivalent to RELATIVISTIC. For a length unit, DEFAULT is equivalent to
 	// WAVELENGTH.
-	// If doWorld=True, the selected axis is the spectral axis, and <src>unit</src> is a velocity unit,
+	// If the selected axis is the spectral axis and <src>unit</src> is a velocity unit,
 	// <src>restFreq</src> represents the rest frequency with respect to which the velocity scale should be
 	// calculated. If null, the rest frequency associated with the spectral coordinate is used.
-	// If doWorld=True, the selected axis is the spectral axis, and <src>unit</src> is a frequency unit,
+	// If the selected axis is the spectral axis, and <src>unit</src> is a frequency unit,
 	// <src>frame</src> represents the frame of reference with respect to which the frequency scale should be
 	// calculated. If empty, the reference frame associated with the spectral coordinate is used.
+	// The return Record has the following keys: "values" is a Vector<T> containing the aggregate pixel values,
+	// "mask" is the associated mask values (Vector<Bool>), "coords" is a Vector<Double> of coordinate values,
+	// and "xUnit" is a String containing the coordinate unit.
 	Record getProfile(
-		uInt axis, const String& function, Bool doWorld,
-		const String& unit,
+		uInt axis, const String& function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
 		const Quantity *const restFreq=0, const String& frame=""
 	) const;
