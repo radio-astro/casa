@@ -46,6 +46,7 @@ test_ia_decompose               dmehring@nrao.edu
 test_ia_deconvolvecomponentlist dmehring@nrao.edu
 test_ia_deconvolvefrombeam      dmehring@nrao.edu
 test_ia_fft                     dmehring@nrao.edu
+test_ia_fromarray               dmehring@nrao.edu
 test_ia_fromshape               dmehring@nrao.edu
 test_ia_getregion               dmehring@nrao.edu
 test_ia_hanning                 dmehring@nrao.edu

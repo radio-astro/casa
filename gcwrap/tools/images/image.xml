@@ -1484,7 +1484,7 @@ bigim.done()
 <description>
 
 This function converts a numerical (integer or float) numpy array of any size and
-dimensionality into a \casa\ image. 
+dimensionality into a \casa\ image. It will create both float and complex valued images.
 
 The image analysis tool on which this method is called will reference the created image;
 if this tool referenced another image before this call, that image will no longer be referenced

@@ -400,52 +400,70 @@ bool image::fromarray(const std::string& outfile,
 		const ::casac::variant& pixels, const ::casac::record& csys,
 		const bool linear, const bool overwrite, const bool log) {
 	try {
-		_reset();
-
-		_log << _ORIGIN;
-
 		Vector<Int> shape = pixels.arrayshape();
-		uInt ndim = shape.size();
-		if (ndim == 0) {
-			_log << "The pixels array is empty" << LogIO::EXCEPTION;
-		}
-		for (uInt i = 0; i < ndim; i++) {
-			if (shape(i) <= 0) {
-				_log << "The shape of the pixels array is invalid"
-						<< LogIO::EXCEPTION;
-			}
-		}
-
-		Array<Float> pixelsArray;
+		ThrowIf(
+			shape.ndim() == 0,
+			"The pixels array cannot be empty"
+		);
+		Array<Float> floatArray;
+		Array<Complex> complexArray;
 		if (pixels.type() == variant::DOUBLEVEC) {
 			std::vector<double> pixelVector = pixels.getDoubleVec();
-			Vector<Int> shape = pixels.arrayshape();
-			pixelsArray.resize(IPosition(shape));
+			floatArray.resize(IPosition(shape));
 			Vector<Double> localpix(pixelVector);
-			convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-		} else if (pixels.type() == ::casac::variant::INTVEC) {
+			convertArray(floatArray, localpix.reform(IPosition(shape)));
+		}
+		else if (pixels.type() == ::casac::variant::INTVEC) {
 			vector<int> pixelVector = pixels.getIntVec();
-			Vector<Int> shape = pixels.arrayshape();
-			pixelsArray.resize(IPosition(shape));
+			floatArray.resize(IPosition(shape));
 			Vector<Int> localpix(pixelVector);
-			convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-		} else {
-			_log << "pixels is not understood, try using an array "
-					<< LogIO::EXCEPTION;
-			return False;
+			convertArray(floatArray, localpix.reform(IPosition(shape)));
 		}
-
+		else if (pixels.type() == ::casac::variant::COMPLEXVEC) {
+			vector<std::complex<double> > pixelVector = pixels.getComplexVec();
+			complexArray.resize(IPosition(shape));
+			Vector<Complex> localpix(pixelVector);
+			convertArray(complexArray, localpix.reform(IPosition(shape)));
+		}
+		else {
+			ThrowCc(
+				"pixels is not understood, try using an array "
+			);
+		}
+		LogOrigin lor("image", __func__);
+		_log << lor;
+		_reset();
 		auto_ptr<Record> coordinates(toRecord(csys));
-		if (
-			_image->imagefromarray(
-				outfile, pixelsArray, *coordinates,
-				linear, overwrite, log
-			)
-		) {
-			_stats.reset(0);
-			return True;
+		vector<std::pair<LogOrigin, String> > msgs;
+		{
+			ostringstream os;
+			os << "Ran ia." << __func__;
+			msgs.push_back(make_pair(lor, os.str()));
+			vector<std::pair<String, variant> > inputs;
+			inputs.push_back(make_pair("outfile", outfile));
+			inputs.push_back(make_pair("csys", csys));
+			inputs.push_back(make_pair("linear", linear));
+			inputs.push_back(make_pair("overwrite", overwrite));
+			inputs.push_back(make_pair("log", log));
+			os.str("");
+			os << "ia." << __func__ << _inputsString(inputs);
+			msgs.push_back(make_pair(lor, os.str()));
 		}
-		throw AipsError("Error creating image from array");
+		if (floatArray.ndim() > 0) {
+			SPIIF myfloat = ImageFactory::imageFromArray(
+				outfile, floatArray, *coordinates,
+				linear, overwrite, log, &msgs
+			);
+			_image.reset(new ImageAnalysis(myfloat));
+		}
+		else {
+			SPIIC mycomplex = ImageFactory::imageFromArray(
+				outfile, complexArray, *coordinates,
+				linear, overwrite, log, &msgs
+			);
+			_image.reset(new ImageAnalysis(mycomplex));
+		}
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
