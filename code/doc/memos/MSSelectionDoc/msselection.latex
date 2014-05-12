@@ -1258,9 +1258,9 @@ object, for future compatibility reasons it is recommended that the
 
 \subsection{Using \MSS\ for {\tt CalTables}}
 
-The \MSS\ module can be used for selection on \CalTables\ via the
-interface object of type {\tt CTInterface}, which are implemented in
-the synthesis module of CASA package.
+The \MSS\ module can be used for selection on \CalTables\ , which are
+implemented in the synthesis module of the CASA package, via the
+interface object of type {\tt CTInterface}.
 
 To use the \MSS\ module for selection on {\tt (New)CalTable} object,
 the only difference from the code snippet above, is that a {\tt
@@ -1270,7 +1270,7 @@ synthesis module.  The {\tt CTInterface} object can be supplied to the
 \MSS\ object via the {\tt reset()} method.  Alternatively, various
 expressions can be set in the \MSS\ object and the {\tt CTInterface}
 object supplied via the {\tt MSSelection::toTableExprNode()} method
-which returns the tree of TEN.  The TEN can then be used to get a
+which returns the tree of TENs.  The tree can then be used to get a
 selected CalTable as shown in Listing~\ref{LIST:CTCODE}.
 \begin{lstlisting}[frame=single, backgroundcolor=\color{light-gray}, basicstyle=\footnotesize\ttfamily, language=C, numbers=left, numberstyle=\tiny\color{black},caption= {Code snippet showing usage of \MSS\ for (New)CalTables.},label=LIST:CTCODE]
   NewCalTable calTab(CalName), selectedCalTable(calTab); 
