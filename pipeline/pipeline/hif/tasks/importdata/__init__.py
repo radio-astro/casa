@@ -8,4 +8,4 @@ from . import importdata
 
 pipelineqa.registry.add_handler(qa.ImportDataQAHandler())
 pipelineqa.registry.add_handler(qa.ImportDataListQAHandler())
-qaadapter.registry.register_to_miscellaneous_topic(importdata.ImportDataResults)
+qaadapter.registry.register_to_dataset_topic(importdata.ImportDataResults)
