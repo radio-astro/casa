@@ -144,90 +144,81 @@ class getchunk_test(unittest.TestCase):
         spectypes = [""]
         spectypes.extend(veltypes)
         spectypes.extend(wavetypes)
-        for doworld in [True, False]:
-            for function in ['mean', 'sum']:
-                for region in [r1, r2, r3]:
-                    for unit in ["", "MHz", "km/s", "cm/s", "m", "cm"]:
-                        for spectype in spectypes:
-                            if (
-                                doworld
-                                and (
-                                    (
-                                        veltypes.count(spectype) > 0
-                                        and ["km/s", "cm/s"].count(unit) == 0
-                                    )
-                                    or (
-                                        wavetypes.count(spectype) > 0
-                                        and ["cm", "m"].count(unit) == 0
-                                    )
+        for function in ['mean', 'sum']:
+            for region in [r1, r2, r3]:
+                for unit in ["pixel", "", "MHz", "km/s", "cm/s", "m", "cm"]:
+                    for spectype in spectypes:
+                        if (
+                            (
+                                (
+                                    veltypes.count(spectype) > 0
+                                    and ["km/s", "cm/s"].count(unit) == 0
                                 )
-                            ):
-                                continue
-                            elif not doworld and len(unit) > 0:
-                                continue
-                            res = myia.getprofile(
-                                function=function, axis=axis, doworld=doworld,
-                                region=region, unit=unit, spectype=spectype
+                                or (
+                                    wavetypes.count(spectype) > 0
+                                    and ["cm", "m"].count(unit) == 0
+                                )
                             )
-                            if region == r1:
-                                n = 30
-                                off = 0
-                                self.assertTrue(res['mask'].all())
-                            elif region == r2:
-                                n = 9
-                                off = 2
-                                self.assertTrue(res['mask'].all())
-                            elif region == r3:
-                                n = 13
-                                off = 3
-                                self.assertTrue(res['mask'][0:2].all())
-                                self.assertFalse(res['mask'][3:6].all())
-                                self.assertTrue(res['mask'][7:12].all())
-                            self.assertTrue(len(res['values'] == n))
-                            coords = res['coords']
-                            if doworld:
-                                if ["km/s", "cm/s", "m", "cm"].count(unit) == 1:
-                                    if (spectype == "" and ["km/s", "cm/s"].count(unit) == 1) or spectype == "re" or spectype == "b":
-                                        expec = numpy.copy(expecbeta)
-                                    elif spectype == "ra":
-                                        expec = numpy.copy(expecradio)
-                                    elif spectype == "o":
-                                        expec = numpy.copy(expecoptical)
-                                    elif (spectype == "" and ["m", "cm"].count(unit) == 1) or spectype == "w":
-                                        expec = numpy.copy(expecm)
-                                    elif spectype == "a":
-                                        expec = numpy.copy(expecairwavem)
-                                    vfac = 1
-                                    if unit == "cm/s":
-                                        vfac = 1e5
-                                    if unit == "cm":
-                                        vfac = 100
-                                    expec *= vfac
-                            for k in range(n):
-                                if region == r3 and k > 2 and k < 7:
-                                    self.assertTrue(res['values'][k] == 0)
-                                else:
-                                    if function == 'mean':
-                                        self.assertTrue(res['values'][k] == numpy.mean(bb[:,:,k + off]))
-                                    elif function == 'sum':
-                                        self.assertTrue(res['values'][k] == numpy.sum(bb[:,:,k + off]))
-                                if doworld:
-                                    if ["km/s", "cm/s", "m", "cm"].count(unit) == 1:
-                                        self.assertTrue(abs(coords[k]/expec[k + off] - 1) < 1e-12)   
-                                    else:
-                                        f = 1
-                                        if unit == 'MHz':
-                                            f = 1e6
-                                        self.assertTrue(coords[k] == expecworld[k + off]/f)
-                                else:
-                                    self.assertTrue(coords[k] == k + off)
-                            if doworld:
-                                if unit == "":
-                                    self.assertTrue(res['xUnit'] == 'Hz')
-                                else:
-                                    self.assertTrue(res['xUnit'] == unit)
+                        ):
+                            continue
+                        res = myia.getprofile(
+                            function=function, axis=axis,
+                            region=region, unit=unit, spectype=spectype
+                        )
+                        if region == r1:
+                            n = 30
+                            off = 0
+                            self.assertTrue(res['mask'].all())
+                        elif region == r2:
+                            n = 9
+                            off = 2
+                            self.assertTrue(res['mask'].all())
+                        elif region == r3:
+                            n = 13
+                            off = 3
+                            self.assertTrue(res['mask'][0:2].all())
+                            self.assertFalse(res['mask'][3:6].all())
+                            self.assertTrue(res['mask'][7:12].all())
+                        self.assertTrue(len(res['values'] == n))
+                        coords = res['coords']
+                        if ["km/s", "cm/s", "m", "cm"].count(unit) == 1:
+                            if (spectype == "" and ["km/s", "cm/s"].count(unit) == 1) or spectype == "re" or spectype == "b":
+                                expec = numpy.copy(expecbeta)
+                            elif spectype == "ra":
+                                expec = numpy.copy(expecradio)
+                            elif spectype == "o":
+                                expec = numpy.copy(expecoptical)
+                            elif (spectype == "" and ["m", "cm"].count(unit) == 1) or spectype == "w":
+                                expec = numpy.copy(expecm)
+                            elif spectype == "a":
+                                expec = numpy.copy(expecairwavem)
+                            vfac = 1
+                            if unit == "cm/s":
+                                vfac = 1e5
+                            if unit == "cm":
+                                vfac = 100
+                            expec *= vfac
+                        for k in range(n):
+                            if region == r3 and k > 2 and k < 7:
+                                self.assertTrue(res['values'][k] == 0)
                             else:
-                                self.assertTrue(res['xUnit'] == 'pixels')
+                                if function == 'mean':
+                                    self.assertTrue(res['values'][k] == numpy.mean(bb[:,:,k + off]))
+                                elif function == 'sum':
+                                    self.assertTrue(res['values'][k] == numpy.sum(bb[:,:,k + off]))
+                            if ["km/s", "cm/s", "m", "cm"].count(unit) == 1:
+                                self.assertTrue(abs(coords[k]/expec[k + off] - 1) < 1e-12)   
+                            elif unit == "pixel":
+                                self.assertTrue(coords[k] == k + off)
+                            else:
+                                f = 1
+                                if unit == 'MHz':
+                                    f = 1e6
+                                self.assertTrue(coords[k] == expecworld[k + off]/f)                                
+                        if unit == "":
+                            self.assertTrue(res['xUnit'] == 'Hz')
+                        else:
+                            self.assertTrue(res['xUnit'] == unit)
         myia.done()
         
         myimd = imdtool()
@@ -238,13 +229,13 @@ class getchunk_test(unittest.TestCase):
         myimd.done()
         myia.open(imagename)
         res = myia.getprofile(
-            function="mean", axis=2, doworld=True,
-            unit="km/s", spectype="radio", restfreq=rfreq
+            function="mean", axis=2, unit="km/s",
+            spectype="radio", restfreq=rfreq
         )
         self.assertTrue((res['coords'] == expecradio).all())
        
         res = myia.getprofile(
-            function="mean", axis=2, doworld=True,
+            function="mean", axis=2,
             restfreq=rfreq, frame="cmb"
         )
         nchan = myia.shape()[2]

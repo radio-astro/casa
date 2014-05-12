@@ -2329,7 +2329,7 @@ image* image::pbcor(
 
 record* image::getprofile(
 	int axis, const string& function, const variant& region,
-	const string& mask, bool doworld, const string& unit,
+	const string& mask, const string& unit,
 	bool stretch, const string& spectype,
 	const variant& restfreq, const string& frame
 ) {
@@ -2356,7 +2356,7 @@ record* image::getprofile(
 			return fromRecord(
 				_getprofile(
 					myimage, axis, function, unit,
-					*myregion, mask, doworld, stretch,
+					*myregion, mask, stretch,
 					spectype, rfreq.get(), myframe
 				)
 			);
@@ -2366,7 +2366,7 @@ record* image::getprofile(
 			return fromRecord(
 				_getprofile(
 					myimage, axis, function, unit,
-					*myregion, mask, doworld, stretch,
+					*myregion, mask, stretch,
 					spectype, rfreq.get(), myframe
 				)
 			);
@@ -2382,13 +2382,13 @@ record* image::getprofile(
 template <class T> Record image::_getprofile(
 	SPCIIT myimage, int axis, const String& function,
 	const String& unit, const Record& region, const String& mask,
-	bool doworld, bool stretch, const String& spectype,
+	bool stretch, const String& spectype,
 	const casa::Quantity* const &restfreq, const String& frame
 ) {
 	PixelValueManipulatorData::SpectralType type = PixelValueManipulatorData::spectralType(spectype);
 	PixelValueManipulator<T> pvm(myimage, &region, mask);
 	pvm.setStretch(stretch);
-	Record x = pvm.getProfile(axis, function, doworld, unit, type, restfreq, frame);
+	Record x = pvm.getProfile(axis, function, unit, type, restfreq, frame);
 	return x;
 }
 

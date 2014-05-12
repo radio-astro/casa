@@ -5330,7 +5330,6 @@ In this example we recover first the pixels and then the pixel mask.
 
 <method type="function" name="getprofile">
     <shortdescription>Get values and mask for a one dimensional profile along a specified image axis by applying an aggregate function.</shortdescription>
-
     <input>
         <param type="int"  name="axis">
             <description>Axis along which to determine profile. Must be specified</description>
@@ -5350,12 +5349,8 @@ In this example we recover first the pixels and then the pixel mask.
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
-        <param type="bool" name="doworld">
-            <description>Return world or pixel coordinate values?</description>
-            <value>true</value>
-        </param>
         <param type="string" name="unit">
-            <description>Unit of the returned abscissa values if doworld=True. Must be conformant with image axis unit unless axis is the spectral axis. Default is the unit associated with axis in the image coordinate system.</description>
+            <description>Unit of the returned abscissa values. Must either be 'pixel' or be conformant with image axis unit unless axis is the spectral axis. Default is the unit associated with axis in the image coordinate system.</description>
             <value></value>
         </param>
         <param type="bool"  name="stretch">
@@ -5368,11 +5363,11 @@ In this example we recover first the pixels and then the pixel mask.
         </param>
         <param type="any"  name="restfreq">
             <any type="variant"/>
-            <description>Rest frequency to use when calculating coordinate values. Used only if doworld=True, axis is spectral axis, and unit is not the unit associated with the axis in the coordinate system. Empty string means use the rest frequency associated with the image coordinate system</description>
+            <description>Rest frequency to use when calculating coordinate values. Used only if axis is spectral axis and unit is not the unit associated with the axis in the coordinate system. Empty string means use the rest frequency associated with the image coordinate system</description>
             <value type="string"/>
         </param>
         <param type="string"  name="frame">
-            <description>Reference frame to use when calculating coordinate values. Used only if doworld=True, axis is spectral axis, and unit is not the unit associated with the axis in the coordinate system. Empty string means use the reference frame associated with the image coordinate system</description>
+            <description>Reference frame to use when calculating coordinate values. Used only if axis is spectral axis and unit is not the unit associated with the axis in the coordinate system. Empty string means use the reference frame associated with the image coordinate system</description>
             <value/>
         </param>
 </input>
@@ -5386,28 +5381,24 @@ The aggregate function must be one of the functions supported by ia.collapse; ie
 'median', 'min', 'rms', 'stdev', 'sum', and 'variance'. See the help for ia.collapse() for details regarding
 these functions. Minimum match and case insenstivity is supported.
 
-If doworld=True, the returned coodinate values will be world coordinates. If False, the returned coordinate
-values will be pixel coordinates, relative to the zeroth pixel of the input image.
-
-One may specify the unit of the returned coordinate values. This parameter is only used if doworld=True. Unless
-axis is the spectral axis, unit must be conformant with the corresponding axis unit in the image coordinate
-system. If axis is the spectral axis, unit may be a velocity unit (assuming the coordinate system has a rest
-frequency or restfreq is specified) or a length unit. In these cases, the returned coordinate values will be
-converted to velocity or wavelength, respectively.
+One may specify the unit of the returned coordinate values.  Unless axis is the spectral axis, unit must be
+conformant with the corresponding axis unit in the image coordinate system or it must be 'pixel' which signifies,
+pixel, rather than world, coordinate values should be calculated. If axis is the spectral axis, unit may be a
+velocity unit (assuming the coordinate system has a rest frequency or restfreq is specified) or a length unit.
+In these cases, the returned coordinate values will be converted to velocity or wavelength, respectively.
 
 The parameter spectype may be used to specify the velocity or wavelength type for the returned coordinate values
-if profile is taken along spectral axis and doworld=True. Supported (minimum match, case insensitive) values
-are "relativistic velocity", "beta", "radio velocity", "optical velocity", "wavelength", "air wavelength",
-"default". The "default" value is equivalent to "relativistic" if unit is a velocity unit or "wavelength" if unit
-is a length unit.
+if profile is taken along spectral axis. Supported (minimum match, case insensitive) values) are "relativistic
+velocity", "beta", "radio velocity", "optical velocity", "wavelength", "air wavelength", "default". The "default"
+value is equivalent to "relativistic" if unit is a velocity unit or "wavelength" if unit is a length unit.
 
-The restfreq parameter allows one to set the rest frequency for the coordinates to be returned if doworld=True,
-axis is the spectral axis, and unit is a velocity unit. If blank, the rest frequency associated with the image
-coordinate system is used.
+The restfreq parameter allows one to set the rest frequency for the coordinates to be returned if axis is the
+spectral axis and unit is a velocity unit. If blank, the rest frequency associated with the image coordinate
+system is used.
 
 The frame allows one to specify which kinematic reference frame that the returned coordinate values should be
-calculated in. It is only used if doworld=True, axis is the spectral axis, and unit is unspecified or is specified
-and a frequency unit.
+calculated in. It is only used if axis is the spectral axis and unit is unspecified or is specified and a
+frequency unit. If blank, the reference frame associated with the image coordinate system is used.
 
 The returned dictionary
 contains the keys:
@@ -5417,8 +5408,7 @@ values:  one-dimensional array along the specified axis containing values result
 mask:    one-dimensional array of booleans of the resulting mask after applying the aggregate function, formed in the
          same way as that formed by ia.collapse.
 coords   One-dimensional array of corresponding coordinate values along the specified axis in the specified unit
-         (or the unit associated with the axis in the image coordinate system if unspecified and doworld=True or pixel
-         coordinates if doworld=False).
+         (or the unit associated with the axis in the image coordinate system if unspecified).
 xUnit    The unit used for calculating the values the coords array.
 
 
@@ -5434,6 +5424,7 @@ res = ia.getprofile(axis=2, function='max')
 
 # axis 2 is the spectral axis. Get the minimum pixel values along this axis
 # and specify that the returned coordinate values should be optical velocities
+# in km/s
 
 res2 = ia.getprofile(axis=2, function='min', unit='km/s', spectype='optical')
 
