@@ -55,18 +55,12 @@ def printTsysFlags(tsystable, htmlreport):
             # format break between antennas
             stream.write('<br>\n')
 
-def renderflagcmds(flagcmdsfile, htmlflagcmds):
-    """Method to render a flagdata file into html format.
+def renderflagcmds(flagcmds, htmlflagcmds):
+    """Method to render a list of flagcmds into html format.
     """
-    if type(flagcmdsfile) is types.StringType:
-        # input flagcmds from file named
-        with open(flagcmdsfile, 'r') as stream:
-            lines = stream.readlines()
-    elif type(flagcmdsfile) is types.ListType:
-        # flagcmds are listed in flagcmdsfile variable
-        lines = flagcmdsfile
-    else:
-        raise Exception, 'bad type for flagcmdsfile: %s' % type(flagcmdsfile)
+    lines = []
+    for flagcmd in flagcmds:
+        lines.append(flagcmd.flagcmd)
 
     with open(htmlflagcmds, 'w') as stream:
         stream.write('<html>')
