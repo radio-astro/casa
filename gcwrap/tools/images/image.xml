@@ -1495,8 +1495,8 @@ which this method was called will reference a temporary image (either in memory 
 depending on its size) that will be deleted when the tool
 is closed.
 
-At present, no matter what type the {\stfaf pixels} array is, a
-float-valued image will be written.
+Float valued images are produced from real-valued arrays. Complex-valued images are produced from
+complex-valued arrays.
 
 The coordinate system, provided as a <link
 anchor="images:coordsys">coordsys</link> \tool converted to a record
