@@ -9,7 +9,7 @@ def ssdreduce(vis,
              blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn,
              rejwn, clipthresh, clipniter,
              bloutput, blformat,
-             clipminmax, clipoutside,
+             clipminmax, 
              kernel, kwidth, usefft, interpflag,
              statmask, stoutput, stformat):
              

@@ -183,12 +183,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="doubleArray"></value>
     </param>
 
-    <param type="any" name="clipoutside">
-            <description>clip outside the range, or within it</description>
-            <any type="variant" limittypes="bool boolArray"/>
-            <value type="bool">True</value>
-    </param>
-
     <param type="string" name="kernel">
             <description>type of spectral smoothing</description>
             <value>none</value>
@@ -205,7 +199,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>5</value>
     </param>
 
-    <param type="bool" name="usefft" subparam="true">
+    <param type="bool" name="usefft">
       <description>use FFT or not</description>
       <value>True</value>
     </param>
@@ -256,7 +250,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <equals value="hanning"/>
                 <equals value="gaussian">
                         <default param="kwidth"><value>5</value></default>
-			<default param="usefft"><value type="bool">True</value></default>
                 </equals>
                 <equals value="boxcar">
                         <default param="kwidth"><value>5</value></default>
