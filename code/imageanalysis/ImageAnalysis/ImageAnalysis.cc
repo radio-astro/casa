@@ -540,7 +540,8 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		for (uInt i = 0; i < n; i++)
 			vec[i] = a[i];
 		Array<Float> pixels(vec.reform(IPosition(shape)));
-		ImageFactory::imageFromArray(outfile, pixels, csys, linear, overwrite);
+		_imageComplex.reset();
+		_imageFloat = ImageFactory::imageFromArray(outfile, pixels, csys, linear, overwrite);
 	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
