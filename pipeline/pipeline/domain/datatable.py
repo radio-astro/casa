@@ -432,17 +432,9 @@ class DataTableImpl( object ):
         pollist = numpy.unique(polnos)
         file_list = self.getkeyword('FILENAMES').tolist()
         ant = file_list.index(os.path.basename(infile.rstrip('/')))
-        
-        spw_atmcal={}
-        spw_target={}
-        step_atm={}
-        for i in xrange(len(context.observing_run[0].spectral_window)):
-            if context.observing_run[0].spectral_window[i].is_atmcal:
-                spw_atmcal[i]=(context.observing_run[0].spectral_window[i])
-                step_atm[i]=spw_atmcal[i].increment
-            elif context.observing_run[0].spectral_window[i].is_target:
-                spw_target[i] = context.observing_run[0].spectral_window[i]
-        
+
+        spectral_windows = context.observing_run[ant].spectral_window
+                
         for ifno_from in if_from:
             for polno in pollist:
                 indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
@@ -450,11 +442,12 @@ class DataTableImpl( object ):
                     continue
                 
                 for ifno_to in ifmap[ifno_from]:
-                    atsys = [calculate_average_tsys(spw_atmcal[ifno_from].freq_min,
-                                                    spw_atmcal[ifno_from].freq_max,
-                                                    spw_target[ifno_to].freq_min,
-                                                    spw_target[ifno_to].freq_max,
-                                                    step_atm[ifno_from],tsys[i]) for i in indices]
+                    atsys = [calculate_average_tsys(spectral_windows[ifno_from].freq_min,
+                                                    spectral_windows[ifno_from].freq_max,
+                                                    spectral_windows[ifno_to].freq_min,
+                                                    spectral_windows[ifno_to].freq_max,
+                                                    spectral_windows[ifno_from].increment,
+                                                    tsys[i]) for i in indices]
                     LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:

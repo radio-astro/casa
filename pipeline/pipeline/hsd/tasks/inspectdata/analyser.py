@@ -26,7 +26,7 @@ class DataTableAnalyser(object):
         self.analyse_beam_size()
         self.select_data()
         self.group_data()
-        self.analyse_grid()
+        #self.analyse_grid()
         
     def analyse_reduction_group(self):
         # reset reduction_group
@@ -203,6 +203,8 @@ class DataTableAnalyser(object):
             self.posgrp_list[ant] = {}
             self.timegrp_list[ant] = {}
             for (spw,vspw) in self.by_spw.items():
+                if not st.spectral_window.has_key(spw):
+                    continue
                 spectral_window = st.spectral_window[spw]
                 pattern_dict[spw] = {}
                 # beam radius
@@ -215,6 +217,8 @@ class DataTableAnalyser(object):
                 self.timegrp_list[ant][spw] = {}
                 for (pol,vpol) in self.by_pol.items():
                     id_list = list(vant & vspw & vpol)
+                    if len(id_list) == 0:
+                        continue
                     id_list.sort()
                     row_sel = numpy.take(row, id_list)
                     ra_sel = numpy.take(ra, id_list)

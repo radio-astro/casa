@@ -127,6 +127,12 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
         return self.result.outcome['image'].antenna
 
     @property
+    def reduction_group(self):
+        reduction_group = self.context.observing_run.reduction_group
+        group_id = self.result.outcome['reduction_group_id']
+        return reduction_group[group_id]
+
+    @property
     def stage_number(self):
         return self.result.stage_number
 
@@ -292,10 +298,13 @@ class SDImageDisplay(object):
 
         # beam size in deg
         ant_index = -1
-        for i in xrange(len(self.context.observing_run)):
-            if self.context.observing_run[i].antenna.name == self.antenna:
-                ant_index = i
-                break
+        if self.antenna == 'COMBINED':
+            ant_index = self.inputs.reduction_group[0].antenna
+        else:
+            for i in map(lambda x: x.antenna, self.inputs.reduction_group):
+                if self.context.observing_run[i].antenna.name == self.antenna:
+                    ant_index = i
+                    break
         self.beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.spw], 'deg')['value']
 
         self.beam_radius = self.beam_size / 2.0

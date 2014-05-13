@@ -145,7 +145,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
         result.outcome['reduction_group'] = worker.reduction_group
         result.outcome['calibration_strategy'] = worker.calibration_strategy
         result.outcome['beam_size'] = worker.beam_size
-        result.outcome['grid_position'] = worker.grid_position
+        #result.outcome['grid_position'] = worker.grid_position
         result.outcome['observing_pattern'] = worker.observing_pattern
         
         return result

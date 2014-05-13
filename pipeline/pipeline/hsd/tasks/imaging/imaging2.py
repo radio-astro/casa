@@ -253,6 +253,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     outcome['validsp'] = numpy.array(validsps)
                     outcome['rms'] = numpy.array(rmss)
                     outcome['edge'] = edge
+                    outcome['reduction_group_id'] = group_id
                     result = SDImaging2Results(task=self.__class__,
                                               success=True,
                                               outcome=outcome)
@@ -327,6 +328,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 
                 # to register exported_ms to each scantable instance
                 outcome['export_results'] = export_results
+                outcome['reduction_group_id'] = group_id
                 result = SDImaging2Results(task=self.__class__,
                                           success=True,
                                           outcome=outcome)

@@ -30,9 +30,8 @@ class SDCalTsysInputs(common.SingleDishInputs):
         # iflist is taken from observing_run
         if len(args['iflist']) == 0:
             ifset = set()
-            for st in self.context.observing_run:
-                if st.tsys_transfer == False:
-                    continue
+            st = self.context.observing_run.get_scantable(os.path.basename(self.infiles))
+            if st.tsys_transfer is not False:
                 for from_to in st.tsys_transfer_list:
                     ifset.add(from_to[0])
             args['tsysiflist'] = list(ifset)
