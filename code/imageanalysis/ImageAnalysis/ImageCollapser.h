@@ -110,6 +110,8 @@ private:
 		const Array<Bool>& outMask
 	) const;
 
+	static void _zeroNegatives(Array<T>& arr);
+
 	static const map<uInt, T (*)(const Array<T>&)>& _getFuncMap();
 };
 }

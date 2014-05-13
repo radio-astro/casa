@@ -27,7 +27,8 @@
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
-#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
+//#include <casa/Arrays/ArrayMath.h>
 #include <casa/IO/STLIO.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageUtilities.h>
@@ -172,6 +173,26 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			}
 			lowPerf = ! allTrue(mask);
 		}
+		T npixPerBeam = 1;
+		if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
+			ImageInfo info = subImage->imageInfo();
+			if (! info.hasBeam()) {
+				*this->_getLog() << LogIO::WARN
+					<< "Image has no beam, will use sqrtsum method"
+					<< LogIO::POST;
+			}
+			else if (info.hasMultipleBeams()) {
+				*this->_getLog() << LogIO::WARN
+					<< "Function sqrtsum_npix_beam does not support multiple beams, will"
+					<< "use sqrtsum method instead"
+					<< LogIO::POST;
+			}
+			else {
+				npixPerBeam = info.getBeamAreaInPixels(
+					-1, -1, subImage->coordinates().directionCoordinate()
+				);
+			}
+		}
 		if (lowPerf) {
 			// flux or mask with one or more False values, must use lower performance methods
 			LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
@@ -188,12 +209,18 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			case ImageCollapserData::MIN:
 				lattStatType = LatticeStatsBase::MIN;
 				break;
+			case ImageCollapserData::NPTS:
+				lattStatType = LatticeStatsBase::NPTS;
+				break;
 			case ImageCollapserData::RMS:
 				lattStatType = LatticeStatsBase::RMS;
 				break;
 			case ImageCollapserData::STDDEV:
 				lattStatType = LatticeStatsBase::SIGMA;
 				break;
+			case ImageCollapserData::SQRTSUM:
+			case ImageCollapserData::SQRTSUM_NPIX:
+			case ImageCollapserData::SQRTSUM_NPIX_BEAM:
 			case ImageCollapserData::SUM:
 				lattStatType = LatticeStatsBase::SUM;
 				break;
@@ -232,6 +259,25 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 					data, mask, _axes, *subImage, False,
 					True, True, lattStatType
 				);
+				if (
+					_aggType == ImageCollapserData::SQRTSUM
+					|| _aggType == ImageCollapserData::SQRTSUM_NPIX
+					|| _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
+				) {
+					_zeroNegatives(data);
+					data = sqrt(data);
+					if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
+						Array<T> npts = data.copy();
+						LatticeUtilities::collapse(
+							npts, mask, _axes, *subImage, False,
+							True, True, LatticeStatsBase::NPTS
+						);
+						data /= npts;
+					}
+					else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
+						data /= npixPerBeam;
+					}
+				}
 			}
 			Array<T> dataCopy = (_axes.size() <= 1)
 				? data
@@ -269,17 +315,36 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			// no mask, can use higher performance method
 			T (*function)(const Array<T>&) = _getFuncMap().find(_aggType)->second;
 			Array<T> data = subImage->get(False);
-			for (uInt i=0; i<outShape.product(); i++) {
+			Int64 nelements = outShape.product();
+			for (uInt i=0; i<nelements; i++) {
 				IPosition start = toIPositionInArray(i, outShape);
 				IPosition end = start + shape - 1;
 				Slicer s(start, end, Slicer::endIsLast);
 				tmpIm.putAt(function(data(s)), start);
 			}
+			if (
+				_aggType == ImageCollapserData::SQRTSUM
+				|| _aggType == ImageCollapserData::SQRTSUM_NPIX
+				|| _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
+			) {
+				Array<T> arr = tmpIm.get();
+				_zeroNegatives(arr);
+				arr = sqrt(arr);
+				if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
+					T npts = subImage->shape().product()/nelements;
+					arr /= npts;
+
+				}
+				else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
+					arr /= npixPerBeam;
+				}
+				tmpIm.put(arr);
+			}
 		}
 	}
 	if (subImage->imageInfo().hasMultipleBeams() && ! dirAxesOnlyCollapse) {
 		*this->_getLog() << LogIO::WARN << "Input image has per plane beams "
-			<< "but the collapse is not. done exclusively along the direction axes. "
+			<< "but the collapse is not done exclusively along the direction axes. "
 			<< "The output image will arbitrarily have a single beam which "
 			<< "is the first beam available in the subimage."
 			<< "Thus, the image planes will not be convolved to a common "
@@ -299,6 +364,20 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 		ImageUtilities::copyMiscellaneous(tmpIm, *subImage, True);
 	}
     return this->_prepareOutputImage(tmpIm);
+}
+
+template<class T> void ImageCollapser<T>::_zeroNegatives(Array<T>& arr) {
+	typename Array<T>::iterator iter = arr.begin();
+	if (isComplex(whatType(&(*iter))) || allGE(arr, (T)0)) {
+		return;
+	}
+	typename Array<T>::iterator end = arr.end();
+	while (iter != end) {
+		if (*iter < 0) {
+			*iter = 0;
+		}
+		iter++;
+	}
 }
 
 template<class T> void ImageCollapser<T>::_finishConstruction() {
@@ -417,6 +496,9 @@ template<class T> const map<uInt, T (*)(const Array<T>&)>& ImageCollapser<T>::_g
 		_funcMap[(uInt)ImageCollapserData::MEDIAN] = casa::median;
 		_funcMap[(uInt)ImageCollapserData::MIN] = casa::min;
 		_funcMap[(uInt)ImageCollapserData::RMS] = casa::rms;
+		_funcMap[(uInt)ImageCollapserData::SQRTSUM] = casa::sum;
+		_funcMap[(uInt)ImageCollapserData::SQRTSUM_NPIX] = casa::sum;
+		_funcMap[(uInt)ImageCollapserData::SQRTSUM_NPIX_BEAM] = casa::sum;
 		_funcMap[(uInt)ImageCollapserData::STDDEV] = casa::stddev;
 		_funcMap[(uInt)ImageCollapserData::SUM] = casa::sum;
 		_funcMap[(uInt)ImageCollapserData::VARIANCE] = casa::variance;

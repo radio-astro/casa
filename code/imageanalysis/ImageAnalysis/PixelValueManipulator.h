@@ -60,12 +60,12 @@ public:
 	// get the aggregated values along the specified pixel axis using the region and mask at construction
 	// and any other mask the image may have. Supported values of <src>function</src> are (case-insensitive,
 	// minimum match) those supported by ImageCollapser, ie "flux", "max", "mean", "median", "min", "rms",
-	// "stddev", "sum", "variance",  and "zero". Aggregation of values occurs along all axes orthogonal to
-	// the one specified. One may specify the unit in which coordinate values are calculated using the
-	// <src>unit</src> parameter. If unit starts with "pix", then pixel coordinates are calculated,
-	// world units otherwise. If pixel coordinates, the values are relative to the zeroth pixel
-	// on the corresponding axis of the input image.  If specified and it doesn't start with "pix",
-	// the unit must be conformant with
+	// "sqrtsum", "sqrtsum_npix", sqrtsum_npix_beam", "stddev", "sum", "variance",  and "zero". Aggregation
+	// of values occurs along all axes orthogonal to the one specified. One may specify the unit in which
+	// coordinate values are calculated using the <src>unit</src> parameter. If unit starts with "pix", then
+	// pixel coordinates are calculated, world units otherwise. If pixel coordinates, the values are
+	// relative to the zeroth pixel on the corresponding axis of the input image.  If specified and it
+	// doesn't start with "pix", the unit must be conformant with
 	// the unit of <src>axis</src> in the coordinate system of the image, or it must be a unit that this axis
 	// can be readily converted to (eg km/s if the axis is a frequency axis with base unit of Hz).
 	// If the selected axis is the spectral axis and if the unit is chosen to be something other

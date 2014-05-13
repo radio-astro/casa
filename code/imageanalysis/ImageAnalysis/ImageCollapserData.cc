@@ -17,7 +17,11 @@ const std::map<uInt, String>* ImageCollapserData::funcNameMap() {
 		ref[(uInt)MEAN] = "mean";
 		ref[(uInt)MEDIAN] = "median";
 		ref[(uInt)MIN] = "min";
+		ref[(uInt)NPTS] = "nputs";
 		ref[(uInt)RMS] = "rms";
+		ref[(uInt)SQRTSUM] = "sqrtsum";
+		ref[(uInt)SQRTSUM_NPIX_BEAM] = "sqrtsum_npix_beam";
+		ref[(uInt)SQRTSUM_NPIX] = "sqrtsum_npix";
 		ref[(uInt)STDDEV] = "stddev";
 		ref[(uInt)SUM] = "sum";
 		ref[(uInt)VARIANCE] = "variance";
@@ -36,7 +40,11 @@ const std::map<uInt, String>* ImageCollapserData::minMatchMap() {
 		ref[(uInt)MEAN] = "mea";
 		ref[(uInt)MEDIAN] = "med";
 		ref[(uInt)MIN] = "mi";
+		ref[(uInt)NPTS] = "n";
 		ref[(uInt)RMS] = "r";
+		ref[(uInt)SQRTSUM] = "sqrtsum";
+		ref[(uInt)SQRTSUM_NPIX_BEAM] = "sqrtsum_npix_beam";
+		ref[(uInt)SQRTSUM_NPIX] = "sqrtsum_npix";
 		ref[(uInt)STDDEV] = "st";
 		ref[(uInt)SUM] = "su";
 		ref[(uInt)VARIANCE] = "v";
