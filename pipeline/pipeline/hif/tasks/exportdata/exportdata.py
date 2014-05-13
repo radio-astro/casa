@@ -40,6 +40,7 @@ import StringIO
 import copy
 import string
 import re
+import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -211,17 +212,22 @@ class ExportDataInputs(basetask.StandardInputs):
         self._targetimages = value
 
 class ExportDataResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
+        visdict=collections.OrderedDict(), weblog='', pipescript='',
+	commandslog=''):
 	"""
 	Initialise the results object with the given list of JobRequests.
 	"""
         super(ExportDataResults, self).__init__()
-        self.jobs = jobs
+        self.pprequest = pprequest
+	self.sessiondict = sessiondict
+	self.visdict = visdict
+	self.weblog = weblog
+	self.pipescript = pipescript
+	self.commandslog = commandslog
 
     def __repr__(self):
 	s = 'ExportData results:\n'
-	for job in self.jobs:
-	    s += '%s performed.' % str(job)
 	return s 
 
 
@@ -264,11 +270,11 @@ class ExportData(basetask.StandardTaskTemplate):
 	    vislist = [vislist,]
 
 	# Locate and copy the pipeline processing request.
-        pprfiles = self._export_pprfile (inputs.context, inputs.output_dir,
+        ppr_files = self._export_pprfile (inputs.context, inputs.output_dir,
 	    inputs.products_dir, inputs.pprfile)
 
-	# Save list of pprfiles in a file.
-	# TBD
+	# Save list of ppr files in a file.
+	#     TBD if necessary
 
 	# Loop over the measurements sets in the working directory and 
 	# save the final flags using the flag manager. 
@@ -286,7 +292,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	    flag_version_list.append(flag_version_file)
 
 	 # Save the list of flag versions in a file.
-	 # TBD
+	 #     TBD if necessary
 
         # Loop over the measurements sets in the working directory, and
 	# create the calibration apply file(s) in the products directory. 
@@ -297,7 +303,16 @@ class ExportData(basetask.StandardTaskTemplate):
 	    apply_file_list.append (apply_file)
 
 	# Save the list of calibration apply files in a file.
-	# TBD
+	#     TBD if necessary
+
+	# Create the ordered vis dictionary
+	#    The keys are the base vis names
+	#    The values are a tuple containing the flags and applycal files
+	visdict = collections.OrderedDict()
+	for i in range(len(vislist)):
+	    visdict[os.path.basename(vislist[i])] = \
+	        (os.path.basename(flag_version_list[i]), \
+		os.path.basename(apply_file_list[i])) 
 
 	# Get the session list and the visibility files associated with
 	# each session.
@@ -312,7 +327,16 @@ class ExportData(basetask.StandardTaskTemplate):
 	    caltable_file_list.append (caltable_file)
 
 	# Save the list of session calibration tar files
-	# TBD
+	#     TBD if necessary
+
+	# Create the ordered session dictionary
+	#    The keys are the session names
+	#    The values are a tuple containing the 
+	sessiondict = collections.OrderedDict()
+	for i in range(len(session_names)):
+	    sessiondict[session_names[i]] = \
+	        ([os.path.basename(visfile) for visfile in session_vislists[i]], \
+		os.path.basename(caltable_file_list[i])) 
 
 	# Export a tar file of the web log
 	weblog_file = self._export_weblog (inputs.context, inputs.products_dir)
@@ -340,7 +364,13 @@ class ExportData(basetask.StandardTaskTemplate):
 	    ['TARGET'], inputs.targetimages, inputs.products_dir)
 
 	# Return the results object, which will be used for the weblog
-	return ExportDataResults(jobs=[])
+	#    There should normally be only one pipeline processing request
+	return ExportDataResults(pprequest=os.path.basename(ppr_files[0]), \
+	    sessiondict=sessiondict, \
+	    visdict=visdict,
+	    weblog=os.path.basename(weblog_file), \
+	    pipescript=os.path.basename(casa_pipescript), \
+	    commandslog=os.path.basename(casa_commands_file))
 
     def analyse(self, results):
 	"""
