@@ -5,13 +5,13 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifa_tsysflag(vis=None, caltable=None, metric=None,
-  intentgroups=None, refintent=None,
-  flag_hi=None, fhi_limit=None, fhi_minsample=None,
-  flag_maxabs=None, fmax_limit=None, flag_minabs=None, fmin_limit=None,
-  flag_nmedian=None, fnm_limit=None, 
-  flag_tmf1=None, tmf1_axis=None, tmf1_limit=None,
-  niter=None,
+def hifa_tsysflag(vis=None, caltable=None,
+  flag_nmedian=None, fnm_limit=None,
+  flag_derivative=None, fd_max_limit=None,
+  flag_edgechans=None, fe_edge_limit=None,
+  flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
+  ff_tmf1_limit=None,
+  flag_birdies=None, fb_sharps2_limit=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
