@@ -17,6 +17,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_bwswitching',                               # ALMA specific
 	   'score_tsysspwmap',                                # ALMA specific
 	   'score_missing_derived_fluxes',                    # ALMA specific
+	   'score_derived_fluxes_snr',                        # ALMA specific
 	   'score_setjy_measurements',         
            'score_missing_intents',
            'score_online_shadow_agents',
@@ -631,5 +632,53 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
 	score = 0.0
         longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Extra derived fluxes'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_derived_fluxes_snr (ms, measurements):
+
+    '''
+    Score the SNR of the derived flux measurements.
+        1.0 if SNR > 20.0
+	0.0 if SNR < 5.0
+	linear scale between 0.0 and 1.0 in between
+    '''
+
+    # Loop over measurements
+    nmeasured = 0
+    score = 0.0
+    minscore = 1.0
+    for key, value in measurements.iteritems():
+        # Loop over the flux measurements
+        for flux in value:
+	    fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+	    uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+	    if fluxjy <= 0.0 or uncjy <= 0.0: 
+	         continue
+	    snr = fluxjy / uncjy
+            nmeasured = nmeasured + 1
+	    if float(snr) <= 5.0:
+	        score1 = 0.0
+	    elif float(snr)  >= 20.0:
+	        score1 = 1.0
+	    else:
+	        score1 = linear_score (float(snr), 5.0, 20.0, 0.0, 1.0)
+	    minscore = min (minscore, score1)
+	    score = score + score1
+    if nmeasured > 0:
+        score = score / nmeasured
+
+    if nmeasured == 0:
+        score = 0.0
+        longmsg = 'No derived fluxes for %s ' % ms.basename
+        shortmsg = 'No derived fluxes'
+    elif minscore >= 1.0:
+        score = 1.0
+        longmsg = 'No low SNR derived fluxes for %s ' % ms.basename
+        shortmsg = 'No low SNR derived fluxes'
+    else:
+        longmsg = 'Low SNR derived fluxes for %s ' % ms.basename
+        shortmsg = 'Low SNR derived fluxes'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
