@@ -272,18 +272,24 @@ class FlagCmd(object):
         """
         match = True
         match = match and (self.filename == image.filename)
-        if self.spw is not None:
-            # spw may contain a channel spec, if so remove it
-            spw = str(self.spw)
-            spw = spw.split(':')[0]
-            match = match and (spw == str(image.spw))
+
+        # does spw match?
+        match = match and (
+          ("spw=" not in self.__repr__()) or
+          (("spw='%s" % image.spw) in self.__repr__()))
+
+        # does antenna match?
         if self.antenna is not None:
-            match = match and (('ANTENNA' in str(self.axisnames)) or 
-              ('BASELINE' in str(self.axisnames)))
+            match = match and (('ANTENNA' in str(self.axisnames).upper()) or 
+              ('BASELINE' in str(self.axisnames).upper()))
+
 #        if self.flag_time is not None:
 #            match = match and ('TIME' in self.axisnames)
-        if self.pol is not None:
-            match = match and (self.pol == image.pol)
+
+        # does correlation/pol match?
+        match = match and (
+          ("correlation=" not in self.__repr__()) or
+          (("correlation='%s'" % image.pol) in self.__repr__()))
 
         return match
 
