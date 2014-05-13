@@ -546,6 +546,66 @@ class imcollapse_test(unittest.TestCase):
         col.done()
         myia.done()
         
+    def test_sqrtsum(self):
+        """Test sqrtsum function"""
+        myia = iatool()
+        myia.fromshape("",[2,2,2])
+        bb = myia.getchunk()
+        bb[:, :, 0] = 1
+        bb[:, :, 1] = 2
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 2)
+        self.assertTrue(abs(bb[0, 0, 1] - 2*sqrt(2)) < 1e-6)
+        bb = myia.getchunk()
+        bb[:, :, 0] = -1
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0)
+        self.assertTrue(abs(bb[0, 0, 1] - 2*sqrt(2)) < 1e-6)
+        
+    def test_sqrtsum_npix(self):
+        """Test sqrtsum function"""
+        myia = iatool()
+        myia.fromshape("",[2,2,2])
+        bb = myia.getchunk()
+        bb[:, :, 0] = 1
+        bb[:, :, 1] = 2
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0.5)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.5*sqrt(2)) < 1e-6)
+        bb = myia.getchunk()
+        bb[:, :, 0] = -1
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.5*sqrt(2)) < 1e-6)
+        
+    def test_sqrtsum_npix_beam(self):
+        """Test sqrtsum function"""
+        myia = iatool()
+        myia.fromshape("",[2,2,2])
+        myia.setrestoringbeam(major="3arcmin", minor="3arcmin", pa="0deg")
+        bb = myia.getchunk()
+        bb[:, :, 0] = 1
+        bb[:, :, 1] = 2
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix_beam")
+        bb = zz.getchunk()
+        self.assertTrue(abs(bb[0, 0, 0] - 0.19612053) < 1e-6)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.27735632) < 1e-6)
+        bb = myia.getchunk()
+        bb[:, :, 0] = -1
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix_beam")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.27735632) < 1e-6)
         
 def suite():
     return [imcollapse_test]
