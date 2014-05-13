@@ -220,6 +220,7 @@ scripts/update_spw.py
 scripts/viewertool.py
 scripts/vishead_util.py
 scripts/simple_cluster.py
+scripts/task_ssdreduce.py
 )
 
 add_subdirectory( scripts/tests )

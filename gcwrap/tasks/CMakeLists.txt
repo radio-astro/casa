@@ -142,4 +142,5 @@ virtualconcat.xml
 vishead.xml
 visstat.xml
 widebandpbcor.xml
-widefield.xml )
+widefield.xml
+ssdreduce.xml )

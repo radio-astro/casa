@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for (new) sdreduce -->
+
+<task type="function" name="ssdreduce" startup="true" category="single dish">
+
+  <shortdescription>End-to-end single dish data reduction task.</shortdescription>
+
+  <description></description>
+
+  <input>
+
+    <param type="string" name="vis"  mustexist="true">
+    <description>name of ms</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="field">
+      <description>Select field using field id(s) or field name(s)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="spw">
+      <description>Select spectral window/channels</description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="selectdata">
+      <description>Other data selection parameters</description>
+      <value>False</value>
+    </param>
+    
+    <param type="string" name="timerange" subparam="true">
+      <description>Time range to operate on</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="antenna" subparam="true">
+      <description>Select data based on antenna/baseline</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="scan" subparam="true">
+      <description>Scan number range</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="pol" subparam="true">
+      <description>Polarization range</description>
+      <value></value>
+    </param>
+    
+    <param type="string" name="observation" subparam="true">
+      <description>Select by observation ID(s)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="msselect" subparam="true">
+      <description>Optional complex data selection (ignore for now)</description>
+      <value></value>
+    </param>
+
+    <param type="stringArray" name="gaintable" mustexist="false">
+      <description>Gain calibration table(s) to apply on the fly</description>
+      <value></value>
+    </param>
+
+    <param type="stringArray" name="interp">
+      <description>Interp type in time[,freq], per gaintable.  default=linear,linear</description>
+      <value></value>
+    </param>
+
+    <param type="intArray" name="spwmap">
+      <description>Spectral windows combinations to form for gaintables(s)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="maskmode">
+            <description>mode of setting additional channel masks for baselining</description>
+            <value>manual</value>
+            <allowed kind="enum">
+            <value>manual</value>
+	    <value>auto</value>
+            </allowed>
+    </param>
+
+    <param type="double" name="thresh" subparam="true">
+            <description>S/N threshold for linefinder</description>
+            <value>5.0</value>
+    </param>
+
+    <param type="int" name="avg_limit" subparam="true">
+            <description>channel averaging for broad lines</description>
+            <value>4</value>
+    </param>
+
+    <param type="intArray" name="edge" subparam="true">
+            <description>channels to drop at beginning and end of spectrum</description>
+            <value type="vector"><value>0</value></value>
+    </param>
+
+    <param type="string" name="blmask" subparam="true">
+      <description>manual channel mask for baseline subtraction</description>
+      <value></value>
+    </param>
+    
+    <param type="string" name="blfunc">
+	    <description>baseline model function</description>
+            <value>none</value>
+	    <allowed kind="enum">
+                <value>none</value>
+	        <value>poly</value>
+                <value>chebyshev</value>
+	        <value>cspline</value>
+	        <value>sinusoid</value>
+	    </allowed>
+    </param>
+
+    <param type="int" name="order" subparam="true">
+            <description>order of baseline polynomial</description>
+            <value>5</value>
+    </param>
+
+    <param type="int" name="npiece" subparam="true">
+            <description>number of element polynomials of spline</description>
+            <value>2</value>
+    </param>
+
+    <param type="bool" name="applyfft" subparam="true">
+            <description>automatically set wave numbers of sinusoids</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="fftmethod" subparam="true">
+            <description>method for automatically set wave numbers of sinusoids</description>
+            <value>fft</value>
+    </param>
+
+    <param type="any" name="fftthresh" subparam="true">
+            <description>threshold to select wave numbers of sinusoids</description>
+	    <value type='double'>3.0</value>
+    </param>
+
+    <param type="any" name="addwn" subparam="true">
+            <description>additional wave numbers to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="any" name="rejwn" subparam="true">
+            <description>wave numbers NOT to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="double" name="clipthresh" subparam="true">
+            <description>clipping threshold for iterative fitting</description>
+            <value>3.0</value>
+    </param>
+
+    <param type="int" name="clipniter" subparam="true">
+            <description>maximum iteration number</description>
+            <value>0</value>
+    </param>
+
+    <param type="bool" name="bloutput">
+            <description>output fitting results to a text file</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="blformat">
+            <description>format of the text file specified with bloutput</description>
+            <value></value>
+    </param>
+
+    <param type="any" name="clipminmax">
+            <description>range of data that will NOT be flagged</description>
+            <any type="variant" limittypes="doubleArray doubleArrayArray"/>
+            <value type="doubleArray"></value>
+    </param>
+
+    <param type="any" name="clipoutside">
+            <description>clip outside the range, or within it</description>
+            <any type="variant" limittypes="bool boolArray"/>
+            <value type="bool">True</value>
+    </param>
+
+    <param type="string" name="kernel">
+            <description>type of spectral smoothing</description>
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>hanning</value>
+            <value>gaussian</value>
+            <value>boxcar</value>
+            </allowed>
+    </param>
+
+    <param type="int" name="kwidth" subparam="true">
+            <description>width of spectral kernel in channels</description>
+            <value>5</value>
+    </param>
+
+    <param type="bool" name="usefft" subparam="true">
+      <description>use FFT or not</description>
+      <value>True</value>
+    </param>
+
+    <param type="string" name="interpflag">
+      <description>interpolation method for masked channels</description>
+      <value>linear</value>
+      <allowed kind="enum">
+	<value>linear</value>
+	<value>zero</value>
+	<value>mean</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="statmask">
+      <description>channel mask for statistics</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="stoutput">
+      <description>output filename for statistics</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="stformat">
+      <description>output file format for statistics</description>
+      <value>ASCII</value>
+      <allowed kind="enum">
+	<value>ASCII</value>
+	<value>csv</value>
+      </allowed>
+    </param>
+
+    <constraints>
+	    <when param="selectdata">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="timerange"><value type="string"></value></default>
+			<default param="antenna"><value type="string"></value></default>
+			<default param="scan"><value type="string"></value></default>
+			<default param="pol"><value type="string"></value></default>
+			<default param="observation"><value type="string"></value></default>
+			<default param="msselect"><value type="string"></value></default>
+		</equals>
+	    </when>
+            <when param="kernel">
+                <equals value="none"/>
+                <equals value="hanning"/>
+                <equals value="gaussian">
+                        <default param="kwidth"><value>5</value></default>
+			<default param="usefft"><value type="bool">True</value></default>
+                </equals>
+                <equals value="boxcar">
+                        <default param="kwidth"><value>5</value></default>
+                </equals>
+            </when>
+            <when param="maskmode">
+                <equals value="auto">
+                  <default param="thresh"><value>5.0</value></default>
+                  <default param="avg_limit"><value>4</value></default>
+                  <default param="edge"><value type='vector'><value>0</value></value></default>
+		  <default param="blmask"><value type="string"></value></default>
+                </equals>
+                <equals value="manual">
+		  <default param="blmask"><value type="string"></value></default>
+		</equals>
+            </when>
+	    <when param="blfunc">
+                <equals value="none"/>
+		<equals value="poly">
+			<default param="order"><value>5</value></default>
+	        </equals>
+		<equals value="chebyshev">
+			<default param="order"><value>5</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
+                <equals value="cspline">
+			<default param="npiece"><value>2</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
+                <equals value="sinusoid">
+			<default param="applyfft"><value>True</value></default>
+			<default param="fftmethod"><value type="string">fft</value></default>
+			<default param="fftthresh"><value type="double">3.0</value></default>
+			<default param="addwn"><value type="vector"><value>0</value></value></default>
+			<default param="rejwn"><value type="vector"><value></value></value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
+	    </when>
+    </constraints>
+
+    </input>
+
+  <!--
+  <output>
+    <param type="any" name="xstat">
+      <description></description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+  </output>
+-->
+
+  <returns type="void"/>
+
+  <example>
+
+  </example>
+
+</task>
+
+</casaxml>
