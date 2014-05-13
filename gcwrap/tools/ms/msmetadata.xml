@@ -797,6 +797,29 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+         
+        <method type="function" name="namesforspws" direction="in">
+            <shortdescription>Get the name of the specified spws.</shortdescription>
+             <input>
+                <param type="any" direction="in" name="spwids">
+                    <description>Zero-based spw ID(s) for which to get the names (integer or interger array). Unspecified will return all spw names.</description>
+                     <value type="string"/>
+                    <any type="variant" limittypes="string int intArray"/>
+                </param>
+            </input>
+            <returns type="stringArray"/>
+            <description>
+                Get the name of the specified spw(s).
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the name for spws 8 and 2.
+    spw_names = msmd.namesforspws([8, 2])
+    # get all spw names
+    all_spw_names = namesforspws()
+    msmd.done()
+            </example>
+        </method>
         
         <method type="function" name="nbaselines">
             <shortdescription>Get the number of baselines represented in the main MS table.</shortdescription>

@@ -775,6 +775,48 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	return vector<string>();
 }
 
+
+vector<string> msmetadata::namesforspws(const variant& spwids) {
+	_FUNC(
+		variant::TYPE myType = spwids.type();
+		vector<uInt> spwIDs;
+		if (myType == variant::INT) {
+			Int id = spwids.toInt();
+			ThrowIf(id < 0, "Field ID must be nonnegative.");
+			spwIDs.push_back(id);
+		}
+		else if (myType == variant::INTVEC) {
+			vector<Int> kk = spwids.toIntVec();
+			ThrowIf(
+				min(Vector<Int>(kk)) < 0,
+				"All field IDs must be nonnegative."
+			);
+			spwIDs = _vectorIntToVectorUInt(kk);
+		}
+		else if (
+			(myType == variant::STRING && spwids.toString().empty())
+			|| myType == variant::BOOLVEC
+		) {
+			return _vectorStringToStdVectorString(
+				_msmd->getSpwNames()
+			);
+		}
+		else if (spwids.size() != 0) {
+			ThrowCc(
+				"Unsupported type for spwids. It must be a "
+				"nonnegative integer or nonnegative integer array"
+			);
+		}
+		vector<String> allNames = _msmd->getSpwNames();
+		vector<String> names;
+		foreach_(uInt i, spwIDs) {
+			names.push_back(allNames[i]);
+		}
+		return _vectorStringToStdVectorString(names);
+	)
+	return vector<string>();
+}
+
 int msmetadata::nantennas() {
 	_FUNC(
 		return _msmd->nAntennas();

@@ -1005,6 +1005,23 @@ class msmd_test(unittest.TestCase):
         expec = numpy.array(["A072", "A075"])
         got = md.antennastations(['DV13', 'DA43'])
         self.assertTrue((got == expec).all())
+        
+    def test_namesforspw(self):
+        """Test anemsforspws()"""
+        md = self.md
+        got = md.namesforspws()
+        i = 0
+        for name in got:
+            if i == 3:
+                expec = "BB_1#SQLD"
+            else:
+                expec = ""
+            self.assertTrue(name == expec)
+            i += 1
+        got = md.namesforspws([4, 3])
+        self.assertTrue((got == numpy.array(["", "BB_1#SQLD"])).all())
+        got = md.namesforspws(3)
+        self.assertTrue((got == numpy.array(["BB_1#SQLD"])).all())
 
 def suite():
     return [msmd_test]
