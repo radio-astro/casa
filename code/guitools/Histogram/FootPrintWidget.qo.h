@@ -48,6 +48,9 @@ private slots:
 	void regionAllModeSelected( bool selected );
 
 private:
+	//Added to fix the problem that custom menu items are transparent
+	//on the MAC.
+	void setDefaultBackground();
     Ui::FootPrintWidgetClass ui;
 };
 }

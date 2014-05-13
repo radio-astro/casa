@@ -31,7 +31,16 @@ int BinCountWidget::DEFAULT_COUNT = 25;
 BinCountWidget::BinCountWidget(QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
+	setDefaultBackground();
 	connect( ui.binCountSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(binCountChanged(int)));
+}
+
+void BinCountWidget::setDefaultBackground(){
+	setAutoFillBackground( true );
+	QPalette pal = palette();
+	QColor bColor = pal.color(QPalette::Button );
+	pal.setColor( QPalette::Background, bColor );
+	setPalette( pal );
 }
 
 int BinCountWidget::getBinCount() const {

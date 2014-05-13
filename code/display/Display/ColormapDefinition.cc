@@ -263,7 +263,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool ColormapDefinition::save(const String &fullPathName,
 	                              const Vector<String> &synonyms,
-	                              const Bool &overwrite) const {
+	                              const Bool &/*overwrite*/) const {
 		Table *tbl = 0;
 		try {
 			tbl = new Table(fullPathName, Table::Update);
@@ -334,7 +334,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	std::map<String,bool> ColormapDefinition::builtinColormapNames(Bool uniqueonly) {
+	std::map<String,bool> ColormapDefinition::builtinColormapNames(Bool /*uniqueonly*/) {
 		// uniqueonly is not used at the moment
 		// static data members
 		if (ourDefaultColormap.empty()) {

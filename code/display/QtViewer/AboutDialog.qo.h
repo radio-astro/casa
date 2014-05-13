@@ -1,5 +1,4 @@
-//# PCRefreshEH.cc: PixelCanvas refresh event handler
-//# Copyright (C) 1993,1994,1995,1996,1999,2000
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,30 +22,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
 
-#include <casa/aips.h>
-#include <display/DisplayEvents/PCRefreshEvent.h>
-#include <display/DisplayEvents/PCRefreshEH.h>
+#ifndef ABOUTDIALOG_QO_H_VIEWER
+#define ABOUTDIALOG_QO_H_VIEWER
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <QtGui/QDialog>
+#include <display/QtViewer/AboutDialog.ui.h>
 
-// Default Constructor Required
-	PCRefreshEH::PCRefreshEH() {
-	}
+namespace casa {
 
-	PCRefreshEH::PCRefreshEH( const PCRefreshEH& /*other*/ ){
+/**
+ * Displays information to the user about the viewer.
+ */
+class AboutDialog : public QDialog
+{
+    Q_OBJECT
 
-	}
+public:
+    AboutDialog(QWidget *parent = 0);
+    ~AboutDialog();
 
-	void PCRefreshEH::operator ()(const PCRefreshEvent &) {
-	}
-
-// Destructor
-	PCRefreshEH::~PCRefreshEH() {
-	}
-
-
-
-} //# NAMESPACE CASA - END
-
+private:
+    QString getDescription() const;
+    Ui::AboutDialogClass ui;
+};
+}
+#endif // ABOUTDIALOG_H

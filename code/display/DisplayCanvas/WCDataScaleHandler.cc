@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Retrieve the current and default options for this object.
-	Record WCDataScaleHandler::getOptions() {
+	Record WCDataScaleHandler::getOptions( bool /*scrub*/ ) const {
 		// nothing yet
 		Record rec;
 		return rec;

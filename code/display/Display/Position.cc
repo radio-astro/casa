@@ -29,7 +29,7 @@
 namespace casa {
 	namespace viewer {
 
-		static std::ostream &operator<<( std::ostream &out, const casa::CoordinateSystem &csys ) {
+		/*static std::ostream &operator<<( std::ostream &out, const casa::CoordinateSystem &csys ) {
 			size_t size = csys.nCoordinates( );
 			out << "[";
 			for ( size_t i=0; i < size; ++i ) {
@@ -38,7 +38,7 @@ namespace casa {
 			}
 			out << "]";
 			return out;
-		}
+		}*/
 
 		void Position::show( std::ostream &out ) const {
 

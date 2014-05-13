@@ -38,13 +38,14 @@ Histogram::Histogram( HeightSource* heightSource ):
 	histogramMaker(NULL), region(NULL),
 	ALL_CHANNELS(-1),
 	ALL_INTENSITIES( -1),
-	image(ImageTask::shCImFloat()),
+	image(),
 	channelMin( ALL_CHANNELS ),
 	channelMax( ALL_CHANNELS ),
 	intensityMin( ALL_INTENSITIES ),
 	intensityMax( ALL_INTENSITIES),
 	binCount( 25 ){
 	this->heightSource = heightSource;
+	specIndex = -1;
 }
 
 void Histogram::setChannelRangeDefault(){
@@ -52,9 +53,10 @@ void Histogram::setChannelRangeDefault(){
 	channelMax = ALL_CHANNELS;
 }
 
-void Histogram::setChannelRange( int minChannel, int maxChannel ){
+void Histogram::setChannelRange( int minChannel, int maxChannel, int spectralIndex ){
 	channelMin = minChannel;
 	channelMax = maxChannel;
+	specIndex = spectralIndex;
 }
 
 void Histogram::setBinCount( int count ){
@@ -111,27 +113,34 @@ bool Histogram::compute( ){
 	return success;
 }
 
-ImageHistograms<Float>* Histogram::filterByChannels( const ImageTask::shCImFloat image ){
+ImageHistograms<Float>* Histogram::filterByChannels( const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
 	ImageHistograms<Float>* imageHistogram = NULL;
 	if ( channelMin != ALL_CHANNELS && channelMax != ALL_CHANNELS ){
-
 		//Create a slicer from the image
 		CoordinateSystem cSys = image->coordinates();
 		if ( cSys.hasSpectralAxis() ){
-			int spectralIndex = cSys.spectralCoordinateNumber();
+			//We use the preset spectral coordinate, if it
+			//exists because images can be rotated when they
+			//come into the viewer.  CoordinateSystem does not
+			//take rotation into account.
+			int spectralIndex = specIndex;
+			if ( spectralIndex == -1 ){
+				spectralIndex = cSys.spectralCoordinateNumber();
+			}
 			IPosition imShape = image->shape();
 			int shapeCount = imShape.nelements();
-
 			IPosition startPos( shapeCount, 0);
 			IPosition endPos(imShape - 1);
 			IPosition stride( shapeCount, 1);
 
-			startPos(spectralIndex) = channelMin;
-			endPos(spectralIndex) = channelMax;
+			startPos[spectralIndex] = channelMin;
+			endPos[spectralIndex] = channelMax;
+
 			Slicer channelSlicer( startPos, endPos, stride, Slicer::endIsLast );
 			SubImage<Float> subImage(*image, channelSlicer );
 			imageHistogram = new ImageHistograms<Float>( subImage );
 		}
+
 	}
 	else {
 		imageHistogram = new ImageHistograms<Float>(*image );
@@ -139,7 +148,7 @@ ImageHistograms<Float>* Histogram::filterByChannels( const ImageTask::shCImFloat
 	return imageHistogram;
 }
 
-void Histogram::setImage(const ImageTask::shCImFloat img ){
+void Histogram::setImage(const std::tr1::shared_ptr<const ImageInterface<Float> > img ){
 	image = img;
 }
 
@@ -149,7 +158,7 @@ void Histogram::setRegion( ImageRegion* region ){
 
 bool Histogram::reset(){
 	bool success = true;
-	if ( image != NULL ){
+	if ( image.get() != NULL ){
 		if ( histogramMaker != NULL ){
 			delete histogramMaker;
 			histogramMaker = NULL;
@@ -178,7 +187,6 @@ bool Histogram::reset(){
 			if ( heightSource != NULL ){
 				QString msg( "Could not make a histogram of the region: ");
 				msg.append( error.getMesg().c_str() );
-				qDebug() << "Could not make histogram message="<<msg;
 				heightSource->postMessage( msg );
 			}
 		}

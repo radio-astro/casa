@@ -167,16 +167,19 @@ namespace casa {
 				}
 			} else {
 				std::vector<float> pixelValues = pixelRangeDialog.getXValues();
-				std::vector<float>::iterator maxValuePos = std::max_element( pixelValues.begin(), pixelValues.end());
-				std::vector<float>::iterator minValuePos = std::min_element( pixelValues.begin(), pixelValues.end());
-				if ( value < *minValuePos ) {
-					value = *minValuePos;
-				} else if ( value > *maxValuePos ) {
-					value = *maxValuePos;
-				}
-				double span = *maxValuePos - *minValuePos;
-				double dataSpan = value - *minValuePos;
-				value = dataSpan / span;
+				if ( pixelValues.size( ) > 0 ) {
+					// when array is empty dereferenceing iterator == dereference of null pointer
+					std::vector<float>::iterator maxValuePos = std::max_element( pixelValues.begin(), pixelValues.end());
+					std::vector<float>::iterator minValuePos = std::min_element( pixelValues.begin(), pixelValues.end());
+					if ( value < *minValuePos ) {
+						value = *minValuePos;
+					} else if ( value > *maxValuePos ) {
+						value = *maxValuePos;
+					}
+					double span = *maxValuePos - *minValuePos;
+					double dataSpan = value - *minValuePos;
+					value = dataSpan / span;
+				} else { return std::numeric_limits<double>::quiet_NaN( ); }
 			}
 		}
 		return value;
@@ -668,7 +671,7 @@ namespace casa {
 		pixelBox = pixelBoxStr.toStdString();
 	}
 
-	void FindSourcesDialog::setImage( ImageTask::shCImFloat img ) {
+	void FindSourcesDialog::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
 		image = img;
 		if ( image != NULL ) {
 			const DisplayCoordinateSystem cSys = image->coordinates();
@@ -717,9 +720,9 @@ namespace casa {
 					resetCurrentId( id );
 					populatePixelBox();
 					regionChanged = true;
-				} else {
-					qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
-				}
+				} /*else {
+					qDebug() << "FitSources::updateRegion unrecognized id="<<id;
+				}*/
 			} else {
 				RegionBox* regionToRemove = regions.take(id);
 				delete regionToRemove;
@@ -755,5 +758,6 @@ namespace casa {
 
 	FindSourcesDialog::~FindSourcesDialog() {
 		clearRegions();
+		delete fileModel;
 	}
 }

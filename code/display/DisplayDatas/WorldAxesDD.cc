@@ -98,8 +98,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange);
 	}
 
-	Record WorldAxesDD::getOptions() {
-		Record rec = AxesDisplayData::getOptions();
+	Record WorldAxesDD::getOptions( bool scrub ) const {
+		Record rec = AxesDisplayData::getOptions(scrub);
 
 		// context: Axis_units
 		itsParamSpectralUnit->toRecord(rec);

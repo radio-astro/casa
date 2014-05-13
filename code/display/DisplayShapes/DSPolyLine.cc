@@ -167,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void DSPolyLine::scale(const Float& scaleFactor) {
+	void DSPolyLine::scale(const Float& /*scaleFactor*/) {
 
 	}
 

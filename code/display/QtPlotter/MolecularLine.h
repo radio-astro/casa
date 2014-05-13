@@ -46,6 +46,8 @@ namespace casa {
 		virtual int rtti() const;
 		void setCenter( float center );
 		float getCenter( ) const;
+		float getOriginalFrequency() const;
+		QString getOriginalUnits() const;
 		void setPeak( float peak );
 		float getPeak() const;
 		void setLabel( const QString& label );

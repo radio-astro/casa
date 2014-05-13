@@ -248,8 +248,10 @@ namespace casa {
 		if ( segments.size() > 0 ) {
 			//Now reset the curve with the new data.
 			QwtPlot* curvePlot = segments[0]->getPlot();
-			addPlotCurve( curvePlot );
-			resetSegmentColors();
+			if ( curvePlot != NULL ){
+				addPlotCurve( curvePlot );
+				resetSegmentColors();
+			}
 		}
 	}
 
@@ -332,6 +334,7 @@ namespace casa {
 			(*iter)->clearCurve();
 			iter++;
 		}
+		selected = false;
 		clearCorners();
 	}
 

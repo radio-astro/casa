@@ -80,6 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Default Constructor Required
 		PCRefreshEH();
 
+		PCRefreshEH( const PCRefreshEH& other );
+
 		// Default just prints the event to cout
 		virtual void operator ()(const PCRefreshEvent & eh);
 

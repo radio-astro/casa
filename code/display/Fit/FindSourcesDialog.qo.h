@@ -34,8 +34,6 @@
 #include <display/Fit/PixelRangeDialog.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
-
 #include <tr1/memory>
 class QFileSystemModel;
 
@@ -55,12 +53,13 @@ namespace casa {
 
 	public:
 		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
-		void setImage( ImageTask::shCImFloat image );
+		void setImage( std::tr1::shared_ptr<const ImageInterface<Float> > image );
 		void setChannel( int channel );
 		void clearImage();
 
 		QString getRegionString() const;
 		String getPixelBox() const;
+		QString getImagePixelBox() const;
 		String getScreenedEstimatesFile( const String& estimatesFileName,
 		                                 bool* errorWritingFile );
 		const static QStringList colorNames;
@@ -102,7 +101,7 @@ namespace casa {
 		//Written because when a fit of a residual image was being done, the region
 		//bounds were larger than the bounds in the residual image.
 		void populateImageBounds();
-		QString getImagePixelBox() const;
+
 		void resetCurrentId( int suggestedId );
 		void resetSourceView();
 		void setSourceResultsVisible( bool visible );
@@ -122,7 +121,7 @@ namespace casa {
 		enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
 		                     MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/
 		                   };
-		ImageTask::shCImFloat image;
+        std::tr1::shared_ptr<const ImageInterface<Float> > image;
 		String pixelBox;
 		QString skyPath;
 		QString overlayColorName;

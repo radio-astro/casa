@@ -105,8 +105,9 @@ namespace casa {
 		CanvasCurve getCurve( const QString& curveName );
 		int getLineCount();
 		void curveLabelsChanged();
-		void clearCurve();
+		void clearCurve( bool inDtor=false );
 		void clearFitCurves();
+		void clearEverything();
 		void clearMolecularLines( bool refresh = true );
 		void setDataRange();
 		void setImageMode(bool);
@@ -116,6 +117,7 @@ namespace casa {
 		void drawFrameMarker( QPainter* );
 		QString getUnits( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
 		QList<MolecularLine*> getMolecularLines() const;
+		void setGaussianEstimateCount( int count );
 
 		//Plotting curves
 		void plotPolyLines(QString);
@@ -415,7 +417,6 @@ namespace casa {
 		void storeActiveAnnotation( QMouseEvent* event );
 		void selectChannel( QMouseEvent* event );
 		void updateChannel( QMouseEvent* event );
-		void moveChannel( QMouseEvent* event );
 		void startRangeX( QMouseEvent* event );
 		void updateRangeX( QMouseEvent* event );
 		void endRangeX( QMouseEvent* event );
@@ -539,6 +540,10 @@ namespace casa {
 		TaskMode taskMode;
 
 		float channelSelectValue;
+
+		//Needed to determine if we show the gauss estimate context
+		//items.
+		int gaussEstimateCount;
 
 		Annotation* selectedAnnotation;
 		vector<Annotation*> annotations;

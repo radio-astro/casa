@@ -142,7 +142,8 @@ namespace casa {
 					}
 				}
 			}
-
+			int currentChannel = zIndex();
+			slicePlot->updateChannel( currentChannel );
 			slicePlots.insert( imageName, slicePlot );
 			setPlotLineColor( slicePlot );
 			connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
@@ -308,10 +309,10 @@ namespace casa {
 			region::PointInfo pointInfo(x, y, region::PointOutside);
 			if ( complete != false ) {
 				unsigned int result = 0;
-				double blc_x, blc_y, trc_x, trc_y;
+				/*double blc_x, blc_y, trc_x, trc_y;
 				boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 				if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y )
-					result |= region::PointInside;
+					result |= region::PointInside;*/
 				unsigned int handle = check_handle( x, y );
 				if ( handle )
 					result |= region::PointHandle;
@@ -1252,7 +1253,7 @@ namespace casa {
 			}
 		}
 
-		ImageRegion *Polyline::get_image_region( DisplayData * dd ) const {
+		ImageRegion *Polyline::get_image_region( DisplayData * /*dd*/ ) const {
 
 			return NULL;
 		}

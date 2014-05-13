@@ -39,7 +39,6 @@
 #include <QDebug>
 #include <QMenu>
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <tr1/memory>
 
 using namespace std;
@@ -92,7 +91,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const ImageTask::shCImFloat img );
+    bool setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img, bool waitOnHistogram = false );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -142,6 +141,13 @@ public slots:
 	void toAscii( const QString& filePath );
 	void toPing( const QString& filtPath, int width, int height );
 
+	//The channel has changed value.
+	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic, int specIndex=-1 );
+
+	//Histogramming an image versus a region.
+	void imageModeSelected( bool enabled );
+	void regionModeSelected( bool enabled );
+
 protected:
     virtual void resizeEvent( QResizeEvent* event );
     virtual void keyPressEvent( QKeyEvent* event );
@@ -176,9 +182,7 @@ private slots:
 	//Zoom based on an intensity range specified by the user using the zoom context menu.
 	void zoomPercentage( float minValue, float maxValue);
 	void binCountChanged( int count );
-	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic );
-	void imageModeSelected( bool enabled );
-	void regionModeSelected( bool enabled );
+
 	void regionAllModeSelected( bool enabled );
 
 private:
@@ -201,7 +205,7 @@ private:
 	void resetAxisTitles();
 	void resetPlotTitle();
 	void reset();
-	bool resetImage();
+	bool resetImage( bool waitOnHistogram = false );
 	void resetRegion();
 	void resetRectangleMarker();
 	void defineCurveLine( int id, const QColor& lineColor );
@@ -225,6 +229,10 @@ private:
     bool displayPlotTitle;
     bool displayAxisTitles;
     bool multiColored;
+    bool allChannels;
+    int spectralIndex;
+    int minChannel;
+    int maxChannel;
 
     QColor curveColor;
     QColor selectionColor;
@@ -238,7 +246,7 @@ private:
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    ImageTask::shCImFloat image;
+    std::tr1::shared_ptr<const ImageInterface<Float> > image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;
