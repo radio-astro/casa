@@ -25,12 +25,9 @@ class GcorFluxscaleQAHandler(pqa.QAResultHandler):
 	# the derived fluxes are missing.
         score1 = self._missing_derived_fluxes(ms, result.inputs['transfer'],
 	    result.inputs['transintent'], result.measurements)
-
-#        self._check_flagged_calibrator_data(result.mses)
-#        score3 = self._check_model_data_column(result.mses)
-#        score4 = self._check_history_column(result.mses)
-
-        scores = [score1]
+	score2 = self._low_snr_fluxes(ms, result.measurements)
+        scores = [score1, score2]
+	    
         result.qa.pool.extend(scores)
     
     def _missing_derived_fluxes(self, ms, field, intent, measurements):
@@ -38,6 +35,12 @@ class GcorFluxscaleQAHandler(pqa.QAResultHandler):
         Check whether there are missing derived fluxes. 
         '''
         return qacalc.score_missing_derived_fluxes(ms, field, intent, measurements)
+
+    def _low_snr_fluxes(self, ms, measurements):
+        '''
+        Check whether there are low SNR derived fluxes. 
+        '''
+        return qacalc.score_derived_fluxes_snr(ms,  measurements)
     
 class GcorFluxscaleListQAHandler(pqa.QAResultHandler):
     """
