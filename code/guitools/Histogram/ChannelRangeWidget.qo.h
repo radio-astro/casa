@@ -54,11 +54,6 @@ private slots:
 private:
 	bool isAllChannels() const;
 	bool isAutomatic() const;
-
-	//Added to fix the problem that custom menu items are transparent
-	//on the MAC.
-	void setDefaultBackground();
-
 	int channel;
     Ui::ChannelRangeWidgetClass ui;
 };

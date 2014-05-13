@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>733</width>
+    <width>730</width>
     <height>538</height>
    </rect>
   </property>
@@ -397,13 +397,6 @@
            <widget class="QLineEdit" name="endLineEdit">
             <property name="toolTip">
              <string>Upper bound of pixel values to include/exclude.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="unitsLabel">
-            <property name="text">
-             <string> </string>
             </property>
            </widget>
           </item>

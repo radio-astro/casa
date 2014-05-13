@@ -31,7 +31,6 @@
 #include <iostream>
 #include <dirent.h>
 #include <string.h>		/***for strlen( )***/
-#include <unistd.h>
 
 namespace casa {
 	namespace viewer {

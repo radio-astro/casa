@@ -686,7 +686,7 @@ namespace casa {
 			output_region(out,wc_,pts);
 		}
 
-		bool Rectangle::output_region( ds9writer &out, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &pts ) const {
+		bool Rectangle::output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const {
 			return out.rectangle(wc_,pts);
 		}
 

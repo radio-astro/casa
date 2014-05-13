@@ -222,13 +222,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		addHandle(newPoint, False, position);
 	}
 
-	void DSPoly::deletePoint(const Vector<Float> & /*removePoint*/) {
+	void DSPoly::deletePoint(const Vector<Float> &removePoint) {
 		//NYI
 		//itsValidCenter = False;
 		//cerr << "Sorry. I haven't been implemented yet." << endl;
 	}
 
-	void DSPoly::deletePoint(const Int /*nPoint*/) {
+	void DSPoly::deletePoint(const Int nPoint) {
 		//NYI
 		//itsValidCenter = False;
 		//cerr << "Sorry. I haven't been implemented yet." << endl;

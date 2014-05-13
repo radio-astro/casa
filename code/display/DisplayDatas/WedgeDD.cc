@@ -290,8 +290,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record WedgeDD::getOptions( bool scrub ) const {
-		Record rec = ActiveCaching2dDD::getOptions(scrub);
+	Record WedgeDD::getOptions() {
+		Record rec = ActiveCaching2dDD::getOptions();
 		Record datamin;
 		datamin.define("value", itsMin);
 		rec.defineRecord(DisplayData::DATA_MIN, datamin);

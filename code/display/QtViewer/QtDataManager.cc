@@ -661,8 +661,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDataManager::updateDisplayDatas(QtDisplayData*, Bool ) {
-		tab_info_map_t::iterator it=tab_info.find(tabs->currentIndex( ));
-		if ( it != tab_info.end( ) ) it->second.notify(this,"update data");
+		for ( tab_info_map_t::iterator it=tab_info.begin( ); it != tab_info.end( ); ++it ) {
+			it->second.notify(this,"update data");
+		}
 	}
 
 	void QtDataManager::buildDirTree( std::string /*newpath*/ ) {
@@ -1313,7 +1314,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		buildDirTree();
-		updateDisplayDatas(0,false);
 	}
 
 	void QtDataManager::init_tab_info( ) {

@@ -333,7 +333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	String LatticePADisplayData<T>::getBrightnessUnits() const {
+	String LatticePADisplayData<T>::getBrightnessUnits() {
 		try {
 			return itsDataUnit.getName();
 		} catch(...) {
@@ -743,7 +743,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	Record LatticePADisplayData<T>::getHist() const {
+	Record LatticePADisplayData<T>::getHist() {
 		if(imageHistogram.isDefined("values")) {
 			return imageHistogram;
 		} else {
@@ -754,9 +754,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	Record LatticePADisplayData<T>::getOptions( bool scrub ) const {
+	Record LatticePADisplayData<T>::getOptions() {
 
-		Record rec = PrincipalAxesDD::getOptions(scrub);
+		Record rec = PrincipalAxesDD::getOptions();
 
 // Some of these widgets are not appropriate to the
 // LatticeAsVector DD (which has a Complex data source)
@@ -796,7 +796,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 //
-		if (itsBaseImagePtr && ! scrub) {
+		if (itsBaseImagePtr) {
 			Record region;
 			region.define("dlformat", "region");
 			region.define("listname", "Image region");

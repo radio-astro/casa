@@ -46,7 +46,7 @@ namespace casa {
 		  slicePlot( this, true ) {
 		ui.setupUi(this);
 
-		setWindowTitle( "Spatial Profile Tool");
+		setWindowTitle( "1D Slice Tool");
 
 		connect( &slicePlot, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(markPositionChanged(int,int,float)));
 		connect( &slicePlot, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT( markVisibilityChanged(int,bool)));
@@ -293,8 +293,8 @@ namespace casa {
 //               Region and image changes
 //--------------------------------------------------------------------------------
 
-	bool SlicerMainWindow::setRegionSelected( int regionId, bool selected ) {
-		return slicePlot.setRegionSelected( regionId, selected );
+	void SlicerMainWindow::setRegionSelected( int regionId, bool selected ) {
+		slicePlot.setRegionSelected( regionId, selected );
 	}
 
 	void SlicerMainWindow::updateStatisticsLayout() {

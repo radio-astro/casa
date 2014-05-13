@@ -125,8 +125,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		virtual void setDataMin(Double datmin);
 		virtual void setDataMax(Double datmax);
-		virtual Double getDataMin() const;
-		virtual Double getDataMax() const;
+		virtual Double getDataMin();
+		virtual Double getDataMax();
 		// </group>
 
 		// sizeControlFunction, called by the WorldCanvasHolder to setup the
@@ -160,13 +160,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub ) const;
+		virtual Record getOptions();
 
 		// distribute options to all the axis labellers
 		virtual Bool setLabellerOptions(Record &rec, Record &recout);
 
 		// retrieve options from the axis labellers
-		virtual Record getLabellerOptions( bool scrub=false ) const;
+		virtual Record getLabellerOptions();
 
 		// Sets which axes are on display and animator, and positions for
 		// animator and sliders.  Pass 'reset' as False if you don't need

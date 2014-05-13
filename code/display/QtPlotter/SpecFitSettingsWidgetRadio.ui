@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>747</width>
-    <height>170</height>
+    <width>829</width>
+    <height>197</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,139 +22,135 @@
     <height>0</height>
    </size>
   </property>
-  <property name="maximumSize">
-   <size>
-    <width>16777215</width>
-    <height>180</height>
-   </size>
-  </property>
   <property name="windowTitle">
    <string>SpecFitSettingsWidgetRadio</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_5">
+  <layout class="QVBoxLayout" name="verticalLayout_6">
    <property name="spacing">
     <number>1</number>
    </property>
-   <property name="margin">
-    <number>1</number>
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
    </property>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="spacing">
-      <number>1</number>
-     </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_9">
-       <property name="spacing">
-        <number>1</number>
+      <spacer name="horizontalSpacer_7">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="margin">
-        <number>1</number>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
        </property>
-       <item>
-        <spacer name="horizontalSpacer_6">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>2</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="curveLabel">
-         <property name="text">
-          <string>&lt;font color='black'&gt;Curve:&lt;/font&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="curveComboBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>2</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
+      </spacer>
      </item>
      <item>
-      <widget class="QGroupBox" name="rangeGroupBox">
+      <widget class="QLabel" name="curveLabel">
+       <property name="text">
+        <string>&lt;font color='black'&gt;Curve:&lt;/font&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="curveComboBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
-         <width>89</width>
+         <width>400</width>
          <height>0</height>
         </size>
        </property>
-       <property name="toolTip">
-        <string>Either type the channel range in directly
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_9">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="rangeGroupBox">
+         <property name="minimumSize">
+          <size>
+           <width>89</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Either type the channel range in directly
 or press the right mouse button down 
 on the graph while pressing the Shift key
 and drag the mouse on the graph to
 specify a region. </string>
-       </property>
-       <property name="title">
-        <string>[km/s]</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <property name="spacing">
-         <number>1</number>
-        </property>
-        <property name="leftMargin">
-         <number>5</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>5</number>
-        </property>
-        <property name="bottomMargin">
-         <number>1</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="channelDirections">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         </property>
+         <property name="title">
+          <string>[km/s]</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <property name="spacing">
+           <number>1</number>
           </property>
-          <property name="minimumSize">
-           <size>
-            <width>100</width>
-            <height>10</height>
-           </size>
+          <property name="leftMargin">
+           <number>5</number>
           </property>
-          <property name="text">
-           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>1</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="channelDirections">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>10</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
@@ -162,185 +158,21 @@ p, li { white-space: pre-wrap; }
 &lt;tr&gt;
 &lt;td style=&quot;border: none;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:9pt; color:#000000;&quot;&gt;Shift+click the left mouse button on the graph and drag.&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QLabel" name="minLabel">
-            <property name="minimumSize">
-             <size>
-              <width>28</width>
-              <height>21</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&lt;font color='black'&gt;Min:&lt;/font&gt;</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="minLineEdit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>110</width>
-              <height>21</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>110</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Enter the lower bound for the fit.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="maxLabel">
-            <property name="text">
-             <string>&lt;font color='black'&gt;Max:&lt;/font&gt;</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="maxLineEdit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>110</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>110</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Enter the upper bound for the fit.</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <property name="spacing">
-        <number>1</number>
-       </property>
-       <item>
-        <widget class="QGroupBox" name="multiFitGroupBox">
-         <property name="title">
-          <string>MultiFit</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="multiFitCheckBox">
-            <property name="toolTip">
-             <string>If this box is checked, individual fits will be done at each
-point in the selected region.  Otherwise, a single fit will be
-over the selected region.</string>
-            </property>
-            <property name="text">
-             <string>MultiFit</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="polyGroupBox">
-         <property name="title">
-          <string>Polynomial</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>1</number>
-          </property>
-          <property name="verticalSpacing">
-           <number>1</number>
-          </property>
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
+             <widget class="QLabel" name="minLabel">
+              <property name="minimumSize">
                <size>
-                <width>2</width>
-                <height>16</height>
+                <width>28</width>
+                <height>21</height>
                </size>
               </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="polyFitCheckBox">
-              <property name="toolTip">
-               <string>Check this box to do a polynomial fit.</string>
-              </property>
               <property name="text">
-               <string>Fit</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>2</width>
-                <height>16</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item row="1" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <widget class="QLabel" name="polyOrderLabel">
-              <property name="text">
-               <string>&lt;font color='black'&gt;Order:&lt;/font&gt;</string>
+               <string>&lt;font color='black'&gt;Min:&lt;/font&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -348,188 +180,341 @@ over the selected region.</string>
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="polyOrderSpinBox">
-              <property name="toolTip">
-               <string>Specify the order (degree) of the polynomial to fit.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="outputGroupBox">
-         <property name="title">
-          <string>Output</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <property name="spacing">
-           <number>1</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>1</number>
-          </property>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>2</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="saveOutputCheckBox">
+             <widget class="QLineEdit" name="minLineEdit">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="toolTip">
-               <string>Check this box if you would like to save the results
-of the fit to a file.</string>
+              <property name="minimumSize">
+               <size>
+                <width>110</width>
+                <height>21</height>
+               </size>
               </property>
-              <property name="text">
-               <string>Save</string>
+              <property name="maximumSize">
+               <size>
+                <width>110</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Enter the lower bound for the fit.</string>
               </property>
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+             <widget class="QLabel" name="maxLabel">
+              <property name="text">
+               <string>&lt;font color='black'&gt;Max:&lt;/font&gt;</string>
               </property>
-              <property name="sizeHint" stdset="0">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="maxLineEdit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
                <size>
-                <width>2</width>
-                <height>20</height>
+                <width>110</width>
+                <height>0</height>
                </size>
               </property>
-             </spacer>
+              <property name="maximumSize">
+               <size>
+                <width>110</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Enter the upper bound for the fit.</string>
+              </property>
+             </widget>
             </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QPushButton" name="saveButton">
-            <property name="toolTip">
-             <string>Indicate the location of the file where the results
-of the fit will be saved.</string>
-            </property>
-            <property name="text">
-             <string>File Name...</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </widget>
        </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QGroupBox" name="multiFitGroupBox">
+           <property name="title">
+            <string>MultiFit</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="multiFitCheckBox">
+              <property name="toolTip">
+               <string>If this box is checked, individual fits will be done at each
+point in the selected region.  Otherwise, a single fit will be
+over the selected region.</string>
+              </property>
+              <property name="text">
+               <string>MultiFit</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="polyGroupBox">
+           <property name="title">
+            <string>Polynomial</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>1</number>
+            </property>
+            <property name="verticalSpacing">
+             <number>1</number>
+            </property>
+            <item row="0" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>2</width>
+                  <height>16</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="polyFitCheckBox">
+                <property name="toolTip">
+                 <string>Check this box to do a polynomial fit.</string>
+                </property>
+                <property name="text">
+                 <string>Fit</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>2</width>
+                  <height>16</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item row="1" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QLabel" name="polyOrderLabel">
+                <property name="text">
+                 <string>&lt;font color='black'&gt;Order:&lt;/font&gt;</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="polyOrderSpinBox">
+                <property name="toolTip">
+                 <string>Specify the order (degree) of the polynomial to fit.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="outputGroupBox">
+           <property name="title">
+            <string>Output</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <property name="spacing">
+             <number>1</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>1</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>2</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="saveOutputCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Check this box if you would like to save the results
+of the fit to a file.</string>
+                </property>
+                <property name="text">
+                 <string>Save</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_8">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>2</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPushButton" name="saveButton">
+              <property name="toolTip">
+               <string>Indicate the location of the file where the results
+of the fit will be saved.</string>
+              </property>
+              <property name="text">
+               <string>File Name...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
       </layout>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_5">
-     <property name="spacing">
-      <number>1</number>
-     </property>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <property name="spacing">
+        <number>0</number>
+       </property>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
          <item>
-          <widget class="QLabel" name="gaussCountLabel">
-           <property name="text">
-            <string>&lt;font color='black'&gt;Gaussian Count:&lt;/font&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="gaussCountSpinBox">
-           <property name="toolTip">
-            <string>Indicate the number of Gaussian curves you would
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QLabel" name="gaussCountLabel">
+             <property name="text">
+              <string>&lt;font color='black'&gt;Gaussian Count:&lt;/font&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="gaussCountSpinBox">
+             <property name="toolTip">
+              <string>Indicate the number of Gaussian curves you would
 like to fit.</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>&lt;font color='black'&gt;Fit Samples/Channel:&lt;/font&gt;</string>
-           </property>
-          </widget>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
-          <widget class="QSpinBox" name="fitRatioSpinBox">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>&lt;font color='black'&gt;Fit Samples/Channel:&lt;/font&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="fitRatioSpinBox">
+             <property name="toolTip">
+              <string>Specify the resolution of the fit.  The default is to plot the fit with the same sampling as the data, but a higher resolution (&gt;1) can be specified.</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QPushButton" name="advancedGaussianEstimatesButton">
            <property name="toolTip">
-            <string>Specify the resolution of the fit.  The default is to plot the fit with the same sampling as the data, but a higher resolution (&gt;1) can be specified.</string>
-           </property>
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>10</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QPushButton" name="advancedGaussianEstimatesButton">
-         <property name="toolTip">
-          <string>Pressing this button will bring up a dialog that
+            <string>Pressing this button will bring up a dialog that
 allows you specify initial Gaussian estimates
 using sliders.  You can also use the results of
 a molecular line search for specifying initial
 Gaussian estimates.</string>
-         </property>
-         <property name="text">
-          <string>Estimates...</string>
-         </property>
-        </widget>
+           </property>
+           <property name="text">
+            <string>Estimates...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_11">
-       <property name="spacing">
-        <number>1</number>
-       </property>
-       <property name="margin">
-        <number>1</number>
-       </property>
        <item>
         <widget class="QTableWidget" name="estimateTable">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>440</width>
+           <width>460</width>
            <height>90</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>440</width>
+           <width>460</width>
            <height>120</height>
           </size>
          </property>
@@ -546,70 +531,60 @@ Gaussian estimates.</string>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_7">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="spacing">
+          <number>-1</number>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>1</width>
-           <height>20</height>
-          </size>
+         <property name="topMargin">
+          <number>2</number>
          </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_12">
-       <property name="spacing">
-        <number>1</number>
-       </property>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="fitButton">
-         <property name="toolTip">
-          <string>Fit one or more polynomial/Gaussian curves
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="fitButton">
+           <property name="toolTip">
+            <string>Fit one or more polynomial/Gaussian curves
 to the profile.</string>
-         </property>
-         <property name="text">
-          <string>Fit</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="viewButton">
-         <property name="toolTip">
-          <string>See the output results from the last fit that
+           </property>
+           <property name="text">
+            <string>Fit</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="viewButton">
+           <property name="toolTip">
+            <string>See the output results from the last fit that
 was performed.</string>
-         </property>
-         <property name="text">
-          <string>Results..</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="cleanButton">
-         <property name="toolTip">
-          <string>Clear the profile graph of any estimates and/or
+           </property>
+           <property name="text">
+            <string>Results..</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cleanButton">
+           <property name="toolTip">
+            <string>Clear the profile graph of any estimates and/or
 fits and reset it back to its original state.</string>
-         </property>
-         <property name="text">
-          <string>Clean</string>
-         </property>
-        </widget>
+           </property>
+           <property name="text">
+            <string>Clean</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>

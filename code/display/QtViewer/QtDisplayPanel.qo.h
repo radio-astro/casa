@@ -45,8 +45,6 @@
 #include <display/region/QtRegionSourceFactory.h>
 #include <display/Display/Position.h>
 
-#include <stack>
-
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
 #  include <QtGui>
@@ -1080,14 +1078,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (pc_) pc_->setUpdateAllowed(allowed);
 		}
 
-		void pushCurrentDrawingState( );
-		void popCurrentDrawingState( );
-
-		float getLabelLineWidth( );
-		void  setLabelLineWidth( float value );
-		float getTickLength( );
-		void  setTickLength( float value );
-
 		void setLineWidthPS(Float &w);
 		void setBackgroundPS(String &w, String &c);
 
@@ -1194,8 +1184,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# 0 <= Start_ <=Index_ < End_ <=Len_   and  1 <= Step_ <= Len_.
 		Int zStart_, zEnd_, zStep_;
 		Int bStart_, bEnd_, bStep_;
-
-		std::stack<Record*> drawing_state;
 
 	};
 

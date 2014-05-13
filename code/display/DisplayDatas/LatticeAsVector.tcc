@@ -207,8 +207,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	Record LatticeAsVector<T>::getOptions( bool scrub ) const {
-		Record rec = LatticePADisplayData<T>::getOptions(scrub);
+	Record LatticeAsVector<T>::getOptions() {
+		Record rec = LatticePADisplayData<T>::getOptions();
 		Record unset;
 		unset.define("i_am_unset", "i_am_unset");
 //

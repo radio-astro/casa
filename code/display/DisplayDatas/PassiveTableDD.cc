@@ -81,8 +81,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange);
 	}
 
-	Record PassiveTableDD::getOptions( bool scrub ) const {
-		Record rec = PassiveCachingDD::getOptions(scrub);
+	Record PassiveTableDD::getOptions() {
+		Record rec = PassiveCachingDD::getOptions();
 
 		Record querystring;
 		querystring.define("dlformat", "querystring");

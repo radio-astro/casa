@@ -30,7 +30,6 @@ namespace casa {
 ChannelRangeWidget::ChannelRangeWidget(QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
-	setDefaultBackground();
 
 	ui.minSpinBox->setMinimum( 0 );
 	ui.minSpinBox->setMaximum( 0 );
@@ -39,14 +38,6 @@ ChannelRangeWidget::ChannelRangeWidget(QWidget *parent)
 	connect(ui.minSpinBox,SIGNAL(valueChanged(int)), this, SLOT(valueChangedMin(int)));
 	connect(ui.maxSpinBox,SIGNAL(valueChanged(int)), this, SLOT(valueChangedMax(int)));
 	connect(ui.automaticChannelCheckBox, SIGNAL(toggled(bool)), this, SLOT(automaticChannelsChanged(bool)));
-}
-
-void ChannelRangeWidget::setDefaultBackground(){
-	setAutoFillBackground( true );
-	QPalette pal = palette();
-	QColor bColor = pal.color(QPalette::Button );
-	pal.setColor( QPalette::Background, bColor );
-	setPalette( pal );
 }
 
 void ChannelRangeWidget::automaticChannelsChanged( bool enabled ){

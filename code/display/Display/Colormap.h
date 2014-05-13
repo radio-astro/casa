@@ -184,9 +184,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void getInvertFlags(Bool &red, Bool &green, Bool &blue) const;
 		// </group>
 
-		// Set whether or not the colormap should use a log scale.
-		void setLogScale( const Int & logScale, const Bool & doReinstall = True);
-
 		// Do resizeCallbacks on the PixelCanvasColorTables that use this
 		// Colormap
 		void doResizeCallbacks();
@@ -246,7 +243,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Float itsContrast, itsContrastScale;
 		// invert flags
 		Bool itsInvertRed, itsInvertGreen, itsInvertBlue;
-		Int itsLogScale;
 
 		ColormapDefinition *itsColormapDefinition;
 

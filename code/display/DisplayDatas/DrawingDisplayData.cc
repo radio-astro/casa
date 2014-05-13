@@ -46,7 +46,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
 		} catch(AipsError x) {
-			itsKeyModifier = (Display::KeyModifier)0;
+			if (&x) {
+				itsKeyModifier = (Display::KeyModifier)0;
+			}
 		}
 		AipsrcValue<Double>::find(itsDoubleClickInterval,
 		                          "display.controls.doubleclickinterval",
@@ -75,8 +77,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record DrawingDisplayData::getOptions( bool scrub ) const {
-		Record rec = PassiveCachingDD::getOptions(scrub);
+	Record DrawingDisplayData::getOptions() {
+		Record rec = PassiveCachingDD::getOptions();
 
 		Record labelposition;
 		labelposition.define("dlformat", "labelposition");
@@ -261,7 +263,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
 		} catch (AipsError x) {
-			itsKeyModifier = (Display::KeyModifier)0;
+			if (&x) {
+				itsKeyModifier = (Display::KeyModifier)0;
+			}
 		}
 	}
 

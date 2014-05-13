@@ -50,7 +50,7 @@ namespace casa {
 	const QString QtCanvas::FONT_NAME = "Helvetica [Cronyx]";
 
 	QtCanvas::~QtCanvas() {
-		this->clearCurve(true);
+		this->clearCurve();
 		delete modeFactory;
 	}
 
@@ -79,7 +79,6 @@ namespace casa {
 		autoScaleY = true;
 		plotError  = 2;
 		showGrid   = 2;
-		gaussEstimateCount = 0;
 		taskMode = LINE_OVERLAY_MODE;
 		topAxisCompatible = false;
 
@@ -138,7 +137,7 @@ namespace casa {
 				defaultZoomOut();
 			}
 		}
-		//emit xRangeChanged(1.0,0.0);
+		emit xRangeChanged(1.0,0.0);
 	}
 
 	void QtCanvas::defaultZoomOut() {
@@ -165,7 +164,7 @@ namespace casa {
 			xRangeIsShown=false;
 			++curZoom;
 			refreshPixmap();
-			//emit xRangeChanged(1.0,0.0);
+			emit xRangeChanged(1.0,0.0);
 		} else {
 			if (curveMap.size() != 0) {
 				defaultZoomIn();
@@ -237,28 +236,14 @@ namespace casa {
 
 
 	void QtCanvas::zoomNeutral() {
-		//xRangeIsShown=false;
-		if ( zoomStack.size() != 1 ){
-			zoomStack.resize(1);
-			zoomStack[0] = QtPlotSettings();
-			curZoom = 0;
+		xRangeIsShown=false;
 
-			setDataRange();
+		zoomStack.resize(1);
+		zoomStack[0] = QtPlotSettings();
+		curZoom = 0;
 
-			if (xRangeIsShown ){
-				QtPlotSettings currSettings = zoomStack[curZoom];
-				double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
-				double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
-				double newXStart = currMinX + dx * (xRectStart - MARGIN_LEFT);
-				double newXEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
-
-				xRangeStart = qMax( newXStart,xRangeStart);
-				xRangeEnd = qMin( newXEnd, xRangeEnd );
-				update();
-				emit xRangeChanged(xRangeStart,xRangeEnd);
-			}
-		}
-		//emit xRangeChanged(1.0,0.0);
+		setDataRange();
+		emit xRangeChanged(1.0,0.0);
 	}
 
 	int QtCanvas::getLineCount() {
@@ -414,11 +399,11 @@ namespace casa {
 		curveCountSecondary = 0;
 	}
 
-	void QtCanvas::clearCurve( bool inDtor ) {
+	void QtCanvas::clearCurve() {
 		curveMap.clear();
 		profileFitMarkers.clear();
-
-		//this->xRangeIsShown = false;
+		clearMolecularLines( false );
+		this->xRangeIsShown = false;
 		curveCount = 0;
 		curveCountPrimary = 0;
 		curveCountSecondary = 0;
@@ -430,15 +415,8 @@ namespace casa {
 		}
 		delete selectedAnnotation;
 		selectedAnnotation = NULL;
-		if ( ! inDtor ) {
-			emit curvesChanged();
-			refreshPixmap();
-		}
-	}
-
-	void QtCanvas::clearEverything(){
-		clearMolecularLines( false );
-		clearCurve();
+		emit curvesChanged();
+		refreshPixmap();
 	}
 
 	void QtCanvas::clearMolecularLines( bool refresh ) {
@@ -740,7 +718,7 @@ namespace casa {
 			QtPlotSettings plotSettings = zoomStack[curZoom];
 			double maxYVal = plotSettings.getMaxY();
 			int peakPixel = this->getPixelY( maxYVal );
-			int zeroPixel = this->getRectBottom();
+			int zeroPixel = this->getPixelY( 0 );
 			molecularLineStack[i]->draw( &painter, centerPixel, peakPixel,
 			                             zeroPixel, width(), height() );
 		}
@@ -750,14 +728,11 @@ namespace casa {
 		refreshPixmap();
 	}
 
-	void QtCanvas::setGaussianEstimateCount( int count ){
-		gaussEstimateCount = count;
-	}
 
 
 	void QtCanvas::showContextMenu( QMouseEvent* event ) {
 		contextMenu.clear();
-		if ( taskMode == SPECTRAL_LINE_MODE && gaussEstimateCount > 0 ) {
+		if ( taskMode == SPECTRAL_LINE_MODE ) {
 			//The user is specifying the (Center,Peak) or the FWHM
 			//of a Gaussian estimate. The point must be in the selected
 			//range to be valid.
@@ -877,7 +852,7 @@ namespace casa {
 				if (xRangeIsShown) {
 					xRangeIsShown=false;
 					updatexRangeBandRegion();
-					//emit xRangeChanged(1.0,0.0);
+					emit xRangeChanged(1.0,0.0);
 				}
 				currentMode = NULL;
 				break;
@@ -1847,17 +1822,21 @@ namespace casa {
 		if ( xcursor.isValid( )   ) {
 			update( );
 		}
-		if ( currentMode != NULL &&
-				currentMode->isMode( CanvasMode::MODE_CHANNEL) ){
-			QtPlotSettings currSettings = zoomStack[curZoom];
-			double dx = currSettings.spanX(QtPlotSettings::xBottom) /
-					getRectWidth();
-			float endChannelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
-			emit channelRangeSelect(channelSelectValue, endChannelSelectValue );
-			channelSelectValue = endChannelSelectValue;
-		}
 	}
 
+
+	void QtCanvas::moveChannel( QMouseEvent* event ) {
+			if ( xcursor.isValid( ) ) {
+				xcursor = QColor( );
+				QtPlotSettings currSettings = zoomStack[curZoom];
+				double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+				float endChannelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
+
+				emit channelRangeSelect(channelSelectValue, endChannelSelectValue );
+				update();
+			}
+
+		}
 
 	void QtCanvas::startRangeX( QMouseEvent* event ) {
 		xRangeMode    = true;

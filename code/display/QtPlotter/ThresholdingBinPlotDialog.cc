@@ -60,7 +60,7 @@ namespace casa {
 
 
 
-	void ThresholdingBinPlotDialog::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img) {
+	void ThresholdingBinPlotDialog::setImage( const ImageTask::shCImFloat img) {
 		plotWidget->setImage( img );
 	}
 

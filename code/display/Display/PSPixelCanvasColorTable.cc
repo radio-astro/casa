@@ -309,14 +309,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				*outq++ = (t1 << RSHIFT) | (t2 << GSHIFT) | (t3 << BSHIFT);
 			}
 		else	// HSV
-			while (outq < endp){
-				Float hueValue = *ch1q++;
-				Float saturation = *ch2q++;
-				Float value = *ch3q++;
-				//Think there is a mistake here and ch2q should be ch3q.
-				//*outq++ = HSV2UL(*ch1q++, *ch2q++, *ch2q++);
-				*outq++ = HSV2UL( hueValue, saturation, value );
-			}
+			while (outq < endp)
+				*outq++ = HSV2UL(*ch1q++, *ch2q++, *ch2q++);
 
 		chan1in.freeStorage(ch1p, ch1Del);
 		chan2in.freeStorage(ch2p, ch2Del);
@@ -363,15 +357,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				*outq++ = (t1 << RSHIFT) | (t2 << GSHIFT) | (t3 << BSHIFT);
 			}
 		else	// HSV
-			while (outq < endp){
-				Float hueValue = *ch1q++;
-				Float saturation = *ch2q++;
-				Float value = *ch3q++;
-				//Think there is a mistake here-last argument should be ch3q rather
-				//than ch2q.
-				//*outq++ = HSV2UL(Float(*ch1q++), Float(*ch2q++), Float(*ch2q++));
-				*outq++ = HSV2UL( hueValue, saturation, value );
-			}
+			while (outq < endp)
+				*outq++ = HSV2UL(Float(*ch1q++), Float(*ch2q++), Float(*ch2q++));
 
 		chan1in.freeStorage(ch1p, ch1Del);
 		chan2in.freeStorage(ch2p, ch2Del);
@@ -421,10 +408,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		else	// HSV
 			while (outq < endp) {
-				Float hueValue = Float(*ch1q++ * MAXCF);
-				Float saturation = Float(*ch2q++ * MAXCF);
-				Float value = Float(*ch2q++ * MAXCF);
-				*outq++ = HSV2UL( hueValue, saturation, value);
+				*outq++ = HSV2UL(Float(*ch1q++ * MAXCF), Float(*ch2q++ * MAXCF),
+				                 Float(*ch2q++ * MAXCF));
 			}
 
 		chan1in.freeStorage(ch1p, ch1Del);
@@ -475,10 +460,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		else // color model = HSV.
 			while (outq < endp) {
-				Float hueValue = Float(*ch1q++ * MAXCF);
-				Float saturation = Float(*ch2q++ * MAXCF);
-				Float value =  Float(*ch3q++ * MAXCF);
-				*outq++ = HSV2UL( hueValue, saturation, value );
+				*outq++ = HSV2UL(Float(*ch1q++ * MAXCF), Float(*ch2q++ * MAXCF),
+				                 Float(*ch2q++ * MAXCF));
 			}
 
 		chan1in.freeStorage(ch1p, ch1Del);

@@ -26,7 +26,6 @@
 #include "CanvasModeChannel.h"
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
-#include <QDebug>
 namespace casa {
 
 	CanvasModeChannel::CanvasModeChannel():
@@ -50,8 +49,8 @@ namespace casa {
 		receiver->updateChannel( event );
 	}
 
-	void CanvasModeChannel::mouseReleaseEventSpecific( QMouseEvent* /*event*/ ) {
-		//receiver->moveChannel( event );
+	void CanvasModeChannel::mouseReleaseEventSpecific( QMouseEvent* event ) {
+		receiver->moveChannel( event );
 	}
 
 	QString CanvasModeChannel::toString() const {

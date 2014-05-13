@@ -79,14 +79,14 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	/*static std::string record_to_string( const Record &rec ) {
+	static std::string record_to_string( const Record &rec ) {
 		ostringstream os;
 		os << rec;
 		std::string result = os.str( );
 		// std::vector<char> r = std::for_each(result.begin( ),result.end( ),viewer::filter<char>('\n'));
 		// return std::string(r.begin(),r.end());
 		return std::for_each(result.begin( ),result.end( ),viewer::filter<char,std::string>('\n'));
-	}*/
+	}
 
 
 	template <typename T> class anylt {
@@ -251,7 +251,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayData *regrid_to = 0;
 		invertColorMap = false;
-		logScaleColorMap = 0;
 		std::string method = "";
 
 		if(dataType=="lel") {
@@ -363,7 +362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
 							regridder.setSpecAsVelocity(True);
-							im_ = regridder.regrid(true);
+							im_ = regridder.regrid(True);
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
 						std::string slice_description = ddo["slice"];
@@ -926,7 +925,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	void QtDisplayData::checkAxis( bool changeSpectralUnits ) {
+	void QtDisplayData::checkAxis( bool updateUnits) {
 		Record rec = getOptions();
 
 		try {
@@ -949,7 +948,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			emit axisChangedProfile(xaxis, yaxis, zaxis, hidden);
 			emit axisChanged(xaxis, yaxis, zaxis, hidden);
 
-			if ( changeSpectralUnits ){
+			if ( updateUnits ){
 				// get the spectral type, units, rest frequency/wavelength
 				// and the frequency system //axislabelspectypeunit
 				String spcRval, spcSys, spcTypeUnit;
@@ -1197,9 +1196,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void QtDisplayData::setHistogramColorProperties( bool invert, int logScale ) {
+	void QtDisplayData::setInvertColorMap( bool invert ) {
 		invertColorMap = invert;
-		logScaleColorMap = logScale;
 		setColormap_(clrMapName_, true);
 	}
 
@@ -1393,7 +1391,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		clrMap->setInvertFlags( invertColorMap, invertColorMap, invertColorMap );
-		clrMap->setLogScale( logScaleColorMap );
 
 		// clrmap is ok to use.
 

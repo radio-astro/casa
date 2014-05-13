@@ -30,10 +30,9 @@
 
 namespace casa {
 
-	ColorHistogramScale::ColorHistogramScale(bool invert, int logScale ):QwtLinearColorMap(),
+	ColorHistogramScale::ColorHistogramScale(bool invert):QwtLinearColorMap(),
 		colorDefinition(NULL) {
 		invertMap = invert;
-		this->logScale = logScale;
 	}
 
 	String ColorHistogramScale::getColorMapName() const {
@@ -44,23 +43,8 @@ namespace casa {
 	void ColorHistogramScale::setColorMapName( const String& colorMapName ) {
 		mapName = colorMapName;
 		colorDefinition = new ColormapDefinition( colorMapName );
-		const int COLOR_COUNT = 100;
-
-		float divisor = 1;
-		if ( logScale > 0 ){
-			divisor = (COLOR_COUNT*1.0f) / logScale;
-		}
-		double maxValue = (COLOR_COUNT - 1) / divisor;
-		double MAX_POWER = qPow(2, maxValue);
-		for ( int i = 0; i < COLOR_COUNT; i++ ) {
-			float percent = (i*1.0f) / COLOR_COUNT;
-			float colorIndex = percent;
-
-			if ( logScale > 0 ){
-				double power = (i*1.0)/divisor;
-				double value = qPow(2, power);
-				percent = value / MAX_POWER;
-			}
+		for ( int i = 0; i < 100; i++ ) {
+			float percent = i / 100.0f;
 
 			Float red = 0;
 			Float green = 0;
@@ -75,9 +59,8 @@ namespace casa {
 				redValue   = COLOR_MAX - redValue;
 				blueValue  = COLOR_MAX - blueValue;
 			}
-
 			QColor colorStop( redValue, greenValue, blueValue );
-			addColorStop( colorIndex, colorStop );
+			addColorStop( percent, colorStop );
 		}
 	}
 

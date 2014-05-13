@@ -61,7 +61,6 @@ namespace casa {
 		void powerCyclesChangedSlider(int value );
 		void powerCyclesChangedLineEdit( const QString& str );
 		void histogramColorModeChanged( bool useColors );
-		void logScaleChanged ( int logScaleAmount );
 
 	private:
 		void updateColorMap( bool invertChanged = false);
@@ -79,7 +78,6 @@ namespace casa {
 		ColorTransferWidget* colorTransferWidget;
 		double minIntensity;
 		double maxIntensity;
-		int logScale;
 		const int COLOR_MAX;
 		const int SLIDER_MIN;
 		const int SLIDER_MAX;

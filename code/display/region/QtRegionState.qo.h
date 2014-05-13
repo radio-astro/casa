@@ -278,7 +278,7 @@ namespace casa {
 			                 QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
 			                 Region *region=0, QWidget *parent=0 );
 			QString STATISTICS_MODE( ) const {
-				return "Spatial Profile";
+				return "Slice Cut";
 			}
 
 		};

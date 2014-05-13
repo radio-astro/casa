@@ -68,8 +68,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Retrieve the current and default options for this object.
-	Record WCPowerScaleHandler::getOptions( bool scrub ) const {
-		Record rec = WCDataScaleHandler::getOptions(scrub);
+	Record WCPowerScaleHandler::getOptions() {
+		Record rec = WCDataScaleHandler::getOptions();
 
 		Record histoequalisation;
 		histoequalisation.define("dlformat", "histoequalisation");

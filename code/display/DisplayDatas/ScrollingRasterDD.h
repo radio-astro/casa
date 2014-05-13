@@ -61,12 +61,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void updateLattice(const Record &) {};
 		virtual void updateLattice(Array<Float> &, DisplayCoordinateSystem &);
 
-		virtual String className() const {
+		virtual String className() {
 			return String("ScrollingRasterDD");
 		}
 
 		virtual Bool setOptions(Record &rec, Record &recOut);
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions();
 
 		virtual void setDefaultOptions();
 
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// retrieve options from the axis labellers - empty here, we use WorldAxesDD
-		virtual Record getLabellerOptions( bool /*scrub*/=false ) const {
+		virtual Record getLabellerOptions() {
 			Record rec;
 			return rec;
 		}

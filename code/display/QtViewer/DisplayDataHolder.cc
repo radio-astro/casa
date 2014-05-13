@@ -124,6 +124,25 @@ namespace casa {
 		return coordinateMaster;
 	}
 
+	QtDisplayData* DisplayDataHolder::getDD( int index ){
+			QtDisplayData* dd = NULL;
+			int dataCount = dataList.size();
+			if ( 0 <= index && index < dataCount){
+				int i = 0;
+				DisplayDataIterator iter = dataList.begin();
+				while ( iter != dataList.end() ){
+					if ( i == index ){
+						dd = (*iter);
+						break;
+					}
+					iter++;
+					i++;
+				}
+			}
+			return dd;
+		}
+
+
 	QtDisplayData* DisplayDataHolder::getDD(const std::string& name) const {
 		// retrieve DD with given name (0 if none).
 		QtDisplayData* qdd = NULL;
@@ -136,24 +155,6 @@ namespace casa {
 			iter++;
 		}
 		return qdd;
-	}
-
-	QtDisplayData* DisplayDataHolder::getDD( int index ){
-		QtDisplayData* dd = NULL;
-		int dataCount = dataList.size();
-		if ( 0 <= index && index < dataCount){
-			int i = 0;
-			DisplayDataIterator iter = dataList.begin();
-			while ( iter != dataList.end() ){
-				if ( i == index ){
-					dd = (*iter);
-					break;
-				}
-				iter++;
-				i++;
-			}
-		}
-		return dd;
 	}
 
 	QtDisplayData* DisplayDataHolder::getDD(const DisplayData *dd) const {

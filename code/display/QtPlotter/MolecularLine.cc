@@ -72,14 +72,6 @@ namespace casa {
 		return center;
 	}
 
-	float MolecularLine::getOriginalFrequency() const {
-		return originalFrequency;
-	}
-
-	QString MolecularLine::getOriginalUnits() const {
-		return frequencyUnits;
-	}
-
 
 	void MolecularLine::setPeak( float peak ) {
 		this->peak = peak;
@@ -122,29 +114,27 @@ namespace casa {
 
 	void MolecularLine::draw (QPainter * painter, int centerPixel,
 	                          int peakPixel, int zeroPixel, int canvasWidth, int canvasHeight ) const {
-		if ( 0 <= centerPixel && centerPixel <= canvasWidth ){
-			painter->save();
-			QPen pen( lineColor );
-			pen.setWidth(2);
-			painter->setPen( pen );
-			painter->drawLine(centerPixel, zeroPixel, centerPixel, peakPixel );
+		painter->save();
+		QPen pen( lineColor );
+		pen.setWidth(2);
+		painter->setPen( pen );
+		painter->drawLine(centerPixel, zeroPixel, centerPixel, peakPixel );
 
-			//Label the line
-			QFont font("Helvetica [Cronyx]", 9);
-			font.setBold( true );
-			int minY = qMin( peakPixel,zeroPixel);
-			painter->translate( centerPixel + 3, minY );
-			painter->setFont( font );
-			painter->rotate(90);
+		//Label the line
+		QFont font("Helvetica [Cronyx]", 9);
+		font.setBold( true );
+		int minY = qMin( peakPixel,zeroPixel);
+		painter->translate( centerPixel + 3, minY );
+		painter->setFont( font );
+		painter->rotate(90);
 
-			//Have to use HTML because of
-			//some of the molecular formula symbols
-			QTextDocument document;
-			QString coloredFormula = "<font color='"+ lineColor.name()+"'>"+label+"</font>";
-			document.setHtml( coloredFormula );
-			document.drawContents(painter, QRect(0, 0, canvasHeight, canvasWidth ));
-			painter->restore();
-		}
+		//Have to use HTML because of
+		//some of the molecular formula symbols
+		QTextDocument document;
+		QString coloredFormula = "<font color='"+ lineColor.name()+"'>"+label+"</font>";
+		document.setHtml( coloredFormula );
+		document.drawContents(painter, QRect(0, 0, canvasHeight, canvasWidth ));
+		painter->restore();
 	}
 
 	bool MolecularLine::equalTo( const MolecularLine* const other ) const {

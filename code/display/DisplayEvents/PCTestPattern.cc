@@ -277,8 +277,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor.
-	PCTestPattern::PCTestPattern(const PCTestPattern & other) :
-		PCRefreshEH(other),
+	PCTestPattern::PCTestPattern(const PCTestPattern &other) :
+		// below commented until PCRefreshEH has (required) copy ctor.
+		//PCRefreshEH(other),
 		itsFirstTime(True),
 		itsListLength(0) {
 	}

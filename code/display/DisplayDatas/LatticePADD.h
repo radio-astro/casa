@@ -120,12 +120,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions();
 
 		// Return the class name of this DisplayData; useful mostly for
 		// debugging purposes, and perhaps future use in the glish widget
 		// interface.
-		virtual String className() const {
+		virtual String className() {
 			return String("LatticePADisplayData");
 		}
 		String description( ) const {
@@ -156,10 +156,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool insertFloat(Record& toGoInto, Float toInsert, const String fieldname);
 
 		// Return the last calculated histogram
-		virtual Record getHist() const;
+		virtual Record getHist();
 
 		// Return the brightness unit as a string
-		virtual String getBrightnessUnits() const;
+		virtual String getBrightnessUnits();
 
 		// Aids updateHistogram() by computing a stride to use for efficiency
 		// when computing histograms (could be used elsewhere too).

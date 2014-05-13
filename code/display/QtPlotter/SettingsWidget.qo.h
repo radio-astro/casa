@@ -64,7 +64,6 @@ namespace casa {
 	private slots:
 		void clear();
 		void setFitRange(double start, double end );
-		void gaussCountChanged( int estimateCount );
 
 	private:
 		QtCanvas* pixelCanvas;

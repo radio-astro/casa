@@ -74,13 +74,6 @@ namespace casa {
 		//Invert the color map
 		connect( ui.invertMapCheckBox, SIGNAL(stateChanged(int)), this, SLOT(invertColorMap(int)));
 
-		//Log Scale
-		logScale = 0;
-		/*ui.logScaleSlider->setMinimum( 0 );
-		ui.logScaleSlider->setMaximum( COLOR_MAX );
-		ui.logScaleSlider->setValue( logScale );
-		connect( ui.logScaleSlider, SIGNAL(valueChanged(int)), this, SLOT(logScaleChanged(int)));
-		*/
 		//Histogram plot
 		histogram = new BinPlotWidget( false, true, false, this );
 		histogram->setPlotMode( FootPrintWidget::IMAGE_MODE );
@@ -96,7 +89,7 @@ namespace casa {
 
 		//Color transfer plot
 		colorTransferWidget = new ColorTransferWidget( this );
-		QHBoxLayout* hBox2 = new QHBoxLayout(ui.transferWidgetHolder);
+		QHBoxLayout* hBox2 = new QHBoxLayout();
 		hBox2->addWidget( colorTransferWidget );
 		ui.transferWidgetHolder->setLayout( hBox2 );
 
@@ -144,8 +137,7 @@ namespace casa {
 			QString powerCycleText = ui.powerCyclesLineEdit->text();
 			float powerCycles = powerCycleText.toFloat();
 			displayData->setHistogramColorMapping( minValue, maxValue, powerCycles );
-			displayData->setHistogramColorProperties( ui.invertMapCheckBox->isChecked(), /*ui.logScaleSlider->value()*/0 );
-
+			displayData->setInvertColorMap( ui.invertMapCheckBox->isChecked() );
 		}
 	}
 
@@ -174,11 +166,6 @@ namespace casa {
 	void ColorHistogram::invertColorMap( int /*invert*/ ) {
 		updateColorMap( true);
 		resetColorLookups();
-	}
-
-	void ColorHistogram::logScaleChanged ( int logScaleAmount ){
-		this->logScale = logScaleAmount;
-		invertColorMap( true );
 	}
 
 	void ColorHistogram::resetColorLookups() {
@@ -252,17 +239,16 @@ namespace casa {
 		String colorMapName = displayData->getColormap();
 		bool reset = false;
 		bool invertedMap = ui.invertMapCheckBox->isChecked();
-
 		if ( colorScale != NULL ) {
 			String existingMapName = colorScale->getColorMapName();
 			if (existingMapName != colorMapName || invertChanged ) {
 				delete colorScale;
 				reset = true;
-				colorScale = new ColorHistogramScale( invertedMap, logScale );
+				colorScale = new ColorHistogramScale( invertedMap );
 			}
 		} else {
 			reset = true;
-			colorScale = new ColorHistogramScale( invertedMap, logScale );
+			colorScale = new ColorHistogramScale( invertedMap );
 		}
 
 		if ( reset ) {

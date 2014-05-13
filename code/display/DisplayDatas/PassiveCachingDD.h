@@ -109,7 +109,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions();
 
 		// Negotiatiate WorldCanvas linear coordinate system when asked to
 		// do so by the WorldCanvasHolder.  In this implementation, simply

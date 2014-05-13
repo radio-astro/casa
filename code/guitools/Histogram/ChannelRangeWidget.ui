@@ -89,7 +89,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="layoutWidget2">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -116,7 +116,7 @@
    </widget>
   </widget>
  </widget>
- <layoutdefault spacing="6" margin="0"/>
+ <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections/>
 </ui>

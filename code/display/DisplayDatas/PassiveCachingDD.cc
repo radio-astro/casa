@@ -85,8 +85,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record PassiveCachingDD::getOptions( bool scrub ) const {
-		Record rec = CachingDisplayData::getOptions(scrub);
+	Record PassiveCachingDD::getOptions() {
+		Record rec = CachingDisplayData::getOptions();
 		return rec;
 	}
 

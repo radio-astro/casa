@@ -1,6 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-	<file>icons/about.png</file>
     <file>icons/Anim0_ToStart.png</file>
     <file>icons/Anim1_RevStep.png</file>
     <file>icons/Anim2_Rev.png</file>

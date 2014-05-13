@@ -46,7 +46,7 @@ namespace casa {
 	}
 	bool ResidualHistogramDialog::setImage( const String& imagePath ) {
 		bool success = true;
-		residualImage = std::tr1::shared_ptr<const ImageInterface<Float> >();
+		residualImage = ImageTask::shCImFloat();
 
 		try {
 			residualImage.reset(new PagedImage<Float> (imagePath));

@@ -205,8 +205,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange || coordchange);
 	}
 
-	Record TblAsContourDD::getOptions( bool scrub ) const {
-		Record rec = ActiveCaching2dDD::getOptions(scrub);
+	Record TblAsContourDD::getOptions() {
+		Record rec = ActiveCaching2dDD::getOptions();
 
 		Record querystring;
 		querystring.define("dlformat", "querystring");

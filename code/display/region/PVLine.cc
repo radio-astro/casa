@@ -847,20 +847,10 @@ namespace casa {
 		void PVLine::boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const {
 			// the bounding rectangle is extended here by half the size of the
 			// handles in both directions...
-			blcx = (pt1_x < pt2_x ? pt1_x : pt2_x);
-			blcy = (pt1_y < pt2_y ? pt1_y : pt2_y);
-			trcx = (pt1_x < pt2_x ? pt2_x : pt1_x);
-			trcy = (pt1_y < pt2_y ? pt2_y : pt1_y);
-			// don't add/subtract offsets when creating the region because
-			// this results in the region being registered as "weakly selected"
-			// and this results in the region being deleted (rather than just
-			// completed if the user presses <ESC> while drawing the region...
-			if ( memory::nullptr.check( creating_region ) ) {
-				blcx -= 3;
-				blcy -= 3;
-				trcx += 3;
-				trcy += 3;
-			}
+			blcx = (pt1_x < pt2_x ? pt1_x : pt2_x) - 3;
+			blcy = (pt1_y < pt2_y ? pt1_y : pt2_y) - 3;
+			trcx = (pt1_x < pt2_x ? pt2_x : pt1_x) + 3;
+			trcy = (pt1_y < pt2_y ? pt2_y : pt1_y) + 3;
 		}
 
 		std::string PVLine::display_element::outputPath( ) {

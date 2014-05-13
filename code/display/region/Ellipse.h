@@ -84,7 +84,6 @@ namespace casa {
 			/* void drawHandles( ); */
 
 		private:
-			std::pair<Vector<Quantity>,Vector<Quantity> > posAndRadii( ) const;
 			bool output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const;
 
 		};

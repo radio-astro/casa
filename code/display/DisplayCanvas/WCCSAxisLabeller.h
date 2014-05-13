@@ -138,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// If you are using 0-basing for 'Absolute Pixel Coordinate' labelling,
 		// you should call setUIBase(0), before using draw().
 		// <group>
-		virtual Int uiBase() const {
+		virtual Int uiBase() {
 			return uiBase_;
 		}
 

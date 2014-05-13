@@ -145,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions();
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {

@@ -1226,7 +1226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //---------------------------------------------------------------------
-	Record MSAsRaster::getOptions( bool scrub ) const {
+	Record MSAsRaster::getOptions() {
 		// getOptions() returns a record of the user-adjustable display
 		// parameters for this object.  It includes initial values, ranges,
 		// interface element types, help and label texts; in short, all the
@@ -1243,7 +1243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// setUIBase(0) _before_ using this routine -- see setUIBase().
 
 		// get base class options.
-		Record rec = ActiveCaching2dDD::getOptions(scrub);
+		Record rec = ActiveCaching2dDD::getOptions();
 
 		// Remove a few unneeded ActiveCaching2dDD options.
 		// This will prevent their showing up in Adjust gui's.
@@ -1394,9 +1394,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// 'Basic settings' rollup.
-		((MSAsRaster*)this)->postDataRng_ = False;    // this seems like a hack that should go away...
-		                                              // <drs:Thu Dec 19 13:27:39 EST 2013>
 
+		postDataRng_ = False;
 		// postDataRng_ is a signal from extract_ to send itsDataMin/Max
 		// out to the GUI.  This is being done now.
 		itsDataMin->toRecord(rec);
@@ -1404,7 +1403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// from attached data scaler
 
-		rec.merge(itsPowerScaleHandler.getOptions(scrub));
+		rec.merge(itsPowerScaleHandler.getOptions());
 		if(rec.isDefined("histoequalisation")) rec.removeField("histoequalisation");
 		// (not fond of this option either...)
 

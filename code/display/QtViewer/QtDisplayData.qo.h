@@ -299,7 +299,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void initImage();
 		void setImage(std::tr1::shared_ptr< ImageInterface<Float> > img);
 		static void setGlobalColorOptions( bool global );
-		void setHistogramColorProperties( bool invert, int logScale );
+		void setInvertColorMap( bool invert );
 
 	public slots:
 
@@ -325,7 +325,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-		virtual void checkAxis( bool changeSpectrum = true);
+		virtual void checkAxis( bool updateUnits = true);
 
 
 		const String &getColormap( ) {
@@ -474,8 +474,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		std::string name_;
 
 		bool invertColorMap;
-		int logScaleColorMap;
-
 		// Name of colormap used by dd_  ("" if none)
 		String clrMapName_;
 		// Color maps can be removed.  In such a case, the restoreColorMapName

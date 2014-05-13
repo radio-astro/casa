@@ -62,11 +62,6 @@ private slots:
 
 private:
 	void calculateRange( );
-
-	//Added to fix the problem that custom menu items are transparent
-	//on the MAC.
-	void setDefaultBackground();
-
     Ui::ZoomWidgetClass ui;
     QStringList zoomList;
     ImageTask::shCImFloat image;

@@ -30,6 +30,8 @@
 #include <casa/vector.h>
 #include <QTextStream>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
 #include <tr1/memory>
 
 namespace casa {
@@ -74,9 +76,9 @@ public:
 	void setBinCount( int count );
 	void setChannelRangeDefault();
 	void setIntensityRangeDefault();
-	void setChannelRange( int minChannel, int maxChannel, int spectralIndex=-1 );
+	void setChannelRange( int minChannel, int maxChannel );
 	void setIntensityRange( float minimumIntensity, float maximumIntensity );
-	void setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > image );
+	void setImage( const ImageTask::shCImFloat image );
 	static double computeYValue( double value, bool useLog );
 
 signals:
@@ -85,7 +87,7 @@ signals:
 private:
 	Histogram( const Histogram& other );
 	Histogram operator=( const Histogram& other );
-	ImageHistograms<Float>* filterByChannels( const std::tr1::shared_ptr<const ImageInterface<Float> >  image );
+	ImageHistograms<Float>* filterByChannels( const ImageTask::shCImFloat image );
 	HeightSource* heightSource;
 	vector<Float> xValues;
 	vector<Float> yValues;
@@ -94,10 +96,9 @@ private:
 
 	const int ALL_CHANNELS;
 	const int ALL_INTENSITIES;
-    std::tr1::shared_ptr<const ImageInterface<Float> >  image;
+	ImageTask::shCImFloat image;
 	int channelMin;
 	int channelMax;
-	int specIndex;
 	float intensityMin;
 	float intensityMax;
 	int binCount;

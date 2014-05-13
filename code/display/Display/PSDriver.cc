@@ -1638,7 +1638,7 @@ image\n"
 // If colorspace is INDEXED, color value ranges from 0 to NCOLORS-1.
 // For the others, color ranges from 0. to 1.0.
 // INDEXED and GRAY only use the first argument.
-	void PSDriver::emitSetColor(const ColorSpace /*cs*/, const int index) {
+	void PSDriver::emitSetColor(const ColorSpace cs, const int index) {
 		*out << index << " index2color setrgbcolor" << endl;
 	}
 

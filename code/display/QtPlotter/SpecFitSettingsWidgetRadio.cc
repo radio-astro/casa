@@ -128,7 +128,7 @@ namespace casa {
 		ui.maxLineEdit->setValidator(validator);
 
 		ui.estimateTable->setColumnCount( END_COLUMN );
-		QStringList tableHeaders =(QStringList()<< "  Peak  " << " Center " << "  FWHM  " << "       Fixed       ");
+		QStringList tableHeaders =(QStringList()<< "  Peak  " << " Center " << "  FWHM  " << "          Fixed          ");
 		ui.estimateTable->setHorizontalHeaderLabels( tableHeaders );
 		ui.estimateTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 		ui.estimateTable->setSelectionMode( QAbstractItemView::SingleSelection );
@@ -166,50 +166,15 @@ namespace casa {
 	}
 
 
-	void SpecFitSettingsWidgetRadio::setFitEstimate( int row, double xValue,
-			double yValue, bool centerPeak ){
-		if ( centerPeak ) {
-			//Check that the center value is between the specified limits
-			if ( isInRange( xValue )) {
-				setEstimateValue( row, PEAK, yValue );
-				setEstimateValue( row, CENTER, xValue );
-				pixelCanvas->setProfileFitMarkerCenterPeak( row, xValue, yValue );
-			}
-			else {
-				QString msg( "The initial estimate must be in the fit range.");
-				Util::showUserMessage( msg, this );
-			}
-		}
-		else {
-			//Take the distance between the center and xValue, then
-			//double it to get the fwhm.
-			QTableWidgetItem* centerItem = ui.estimateTable->item( row, CENTER );
-			QString centerStr = centerItem->text();
-			bool validNum;
-			double val = centerStr.toDouble( &validNum );
-			if ( validNum ) {
-				double fwhm = 2 * abs(val - xValue);
-				setEstimateValue( row, FWHM, fwhm);
-				pixelCanvas -> setProfileFitMarkerFWHM( row, fwhm, yValue );
-			}
-		}
-	}
-
 	void SpecFitSettingsWidgetRadio::specFitEstimateSpecified(double xValue,
 	        double yValue, bool centerPeak ) {
 
 		QList<QTableWidgetSelectionRange> selectionRanges = ui.estimateTable->selectedRanges();
 		int selectionCount = selectionRanges.length();
 		if ( selectionCount == 0 ) {
-			if ( ui.estimateTable->isVisible()){
-				int gaussEstimateCount = ui.gaussCountSpinBox->value();
-				if ( gaussEstimateCount > 1) {
-					QString msg( "Please select a row in the initial Gaussian estimates table before specifying the estimate.");
-					Util::showUserMessage( msg, this );
-				}
-				else if ( gaussEstimateCount == 1 ){
-					setFitEstimate( 0, xValue, yValue, centerPeak );
-				}
+			if ( ui.estimateTable->isVisible()) {
+				QString msg( "Please select a row in the initial Gaussian estimates table before specifying the estimate.");
+				Util::showUserMessage( msg, this );
 			}
 		} else if ( selectionCount == 1 ) {
 			QTableWidgetSelectionRange selectionRange = selectionRanges[0];
@@ -217,7 +182,29 @@ namespace casa {
 			int rowCount = selectionRange.rowCount();
 			if ( rowCount == 1 ) {
 				int row = selectionRange.bottomRow();
-				setFitEstimate( row, xValue, yValue, centerPeak );
+				if ( centerPeak ) {
+					//Check that the center value is between the specified limits
+					if ( isInRange( xValue )) {
+						setEstimateValue( row, PEAK, yValue );
+						setEstimateValue( row, CENTER, xValue );
+						pixelCanvas->setProfileFitMarkerCenterPeak( row, xValue, yValue );
+					} else {
+						QString msg( "The initial estimate must be in the fit range.");
+						Util::showUserMessage( msg, this );
+					}
+				} else {
+					//Take the distance between the center and xValue, then
+					//double it to get the fwhm.
+					QTableWidgetItem* centerItem = ui.estimateTable->item( row, CENTER );
+					QString centerStr = centerItem->text();
+					bool validNum;
+					double val = centerStr.toDouble( &validNum );
+					if ( validNum ) {
+						double fwhm = 2 * abs(val - xValue);
+						setEstimateValue( row, FWHM, fwhm);
+						pixelCanvas -> setProfileFitMarkerFWHM( row, fwhm, yValue );
+					}
+				}
 			}
 		}
 	}
@@ -302,8 +289,6 @@ namespace casa {
 		}
 	}
 
-
-
 	void SpecFitSettingsWidgetRadio::gaussCountChanged( int count ) {
 		int oldRowCount = ui.estimateTable->rowCount();
 		//We are adding rows.
@@ -331,7 +316,6 @@ namespace casa {
 			ui.advancedGaussianEstimatesButton->setEnabled( false );
 		}
 		gaussEstimateDialog.setGaussCount( ui.gaussCountSpinBox->value() );
-		emit gaussEstimateCountChanged( count );
 	}
 
 	void SpecFitSettingsWidgetRadio::setRange(double xmin, double xmax ) {

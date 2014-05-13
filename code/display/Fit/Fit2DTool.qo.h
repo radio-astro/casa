@@ -36,6 +36,8 @@
 #include <display/Fit/Fit2DLogDialog.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
 #include <tr1/memory>
 
 namespace casa {
@@ -50,10 +52,7 @@ namespace casa {
 
 	public:
 		Fit2DTool(QWidget *parent = 0);
-		void setImage( std::tr1::shared_ptr<const ImageInterface<Float> > image);
-		bool setImageRegion( ImageRegion* imageRegion, int id );
-		void deleteImageRegion( int id );
-		void imageRegionSelected( int id );
+		void setImage( ImageTask::shCImFloat image );
 		~Fit2DTool();
 
 	signals:
@@ -91,7 +90,6 @@ namespace casa {
 		void residualSupportChanged( bool enable );
 		void showResidualDialog();
 		void displayFitChanged( bool display );
-		void imageModeChanged( bool imageEnabled );
 
 	private:
 		Fit2DTool( const Fit2DTool& fitTool );
@@ -111,11 +109,8 @@ namespace casa {
 		void removeViewerFitMarkers();
 		void clearRegions();
 
-		//Update the widgets that depend on knowing the frame.
-		void updateFrame();
-
 		const QString REGION_LABEL;
-        std::tr1::shared_ptr<const ImageInterface<Float> > image;
+		ImageTask::shCImFloat image;
 		QList<RegionShape*> fitMarkers;
 		Gaussian2DFitter* fitter;
 		ColorComboDelegate* fitColorDelegate;

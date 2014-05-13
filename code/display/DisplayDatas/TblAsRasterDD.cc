@@ -157,8 +157,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange || coordchange);
 	}
 
-	Record TblAsRasterDD::getOptions( bool scrub ) const {
-		Record rec = ActiveCaching2dDD::getOptions(scrub);
+	Record TblAsRasterDD::getOptions() {
+		Record rec = ActiveCaching2dDD::getOptions();
 
 		Record querystring;
 		querystring.define("dlformat", "querystring");

@@ -45,9 +45,6 @@ signals:
 	void binCountChanged( int binCount );
 
 private:
-	//Added to fix the problem that custom menu items are transparent
-	//on the MAC.
-	void setDefaultBackground();
     Ui::BinCountWidgetClass ui;
 };
 }

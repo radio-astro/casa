@@ -181,7 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// information can be used to generate form-type graphical user
 		// interfaces or command-line interfaces to set the options with
 		// prompts.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions();
 
 		// Return the DisplayData type; used by the WorldCanvasHolder to
 		// determine the order of drawing.
@@ -190,7 +190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// class name
-		virtual String className() const {
+		virtual String className() {
 			return String("LatticeAsMarker");
 		}
 

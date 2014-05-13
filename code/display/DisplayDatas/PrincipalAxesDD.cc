@@ -157,8 +157,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (itsPixelInTmp2.nelements()!=nPixelAxes) itsPixelInTmp2.resize(nPixelAxes);
 
-		viewer::RangeLimiter<double> xLimiter = viewer::RangeLimiter<double>();
-		viewer::RangeLimiter<double> yLimiter = viewer::RangeLimiter<double>();
+		viewer::RangeLimiter<double> xLimiter;
+		viewer::RangeLimiter<double> yLimiter;
 		Vector<int> shape = dataShape( ).asVector( );
 		const Coordinate &xcoord = axisToCoordinate(&itsCoordSys,0);
 		if ( xcoord.type( ) == Coordinate::STOKES ) {
@@ -612,11 +612,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		datamax = datmax;
 	}
 
-	Double PrincipalAxesDD::getDataMin() const {
+	Double PrincipalAxesDD::getDataMin() {
 		return datamin;
 	}
 
-	Double PrincipalAxesDD::getDataMax() const {
+	Double PrincipalAxesDD::getDataMax() {
 		return datamax;
 	}
 
@@ -2074,8 +2074,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	};
 
 
-	Record PrincipalAxesDD::getOptions( bool scrub ) const {
-		Record rec = DisplayData::getOptions(scrub);
+	Record PrincipalAxesDD::getOptions() {
+		Record rec = DisplayData::getOptions();
 //
 
 		const uInt nPixelAxes = itsCoordSys.nPixelAxes();
@@ -2146,13 +2146,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 //
 		if (itsUsesAxisLabels) {
-			Record labelrec = getLabellerOptions(scrub);
+			Record labelrec = getLabellerOptions();
 			rec.merge(labelrec);
 		}
 		return rec;
 	}
 
-	Record PrincipalAxesDD::getLabellerOptions( bool /*scrub*/ ) const {
+	Record PrincipalAxesDD::getLabellerOptions() {
 
 		Record rec;
 //

@@ -670,9 +670,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					itsComponents[i+2] = (uShort)(b*maxcolor3);
 				}
 			}
-			drawPSImage(static_cast<int>(itsComponentX), static_cast<int>(itsComponentY),
-					itsComponentWidth, itsComponentHeight, 1.0, 1.0,
-			        itsComponents, itsComponentBPC, PSpcctbl()->colorModel());
+			drawPSImage(itsComponentX, itsComponentY, itsComponentWidth, itsComponentHeight,
+			            1.0, 1.0,
+			            itsComponents, itsComponentBPC, PSpcctbl()->colorModel());
 			itsComponentWidth = itsComponentHeight = 0;
 			delete [] itsComponents;
 			itsComponents = NULL;
