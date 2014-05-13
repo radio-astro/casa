@@ -16,13 +16,6 @@ except:
 
 __rethrow_casa_exceptions = True
 
-#myf=sys._getframe(len(inspect.stack())-1).f_globals
-#try:
-    #default__rethrow_casa_exceptions = myf['__rethrow_casa_exceptions']
-#except Exception, e:
-    #default__rethrow_casa_exceptions = False
-    #myf['__rethrow_casa_exceptions'] = True
-
 # Setup paths
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
@@ -63,28 +56,8 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hifa_tsyscal (pipelinemode=pipelinemode)
     
         # Flag system temperature calibration
-
-	# Tsys spectra with extreme values
         hifa_tsysflag (pipelinemode=pipelinemode)
 
-	# Tsys spectra with extreme derivative values
-        hifa_tsysflag (metric='derivative', flag_maxabs=True, fmax_limit=2,
-            flag_nmedian=False, pipelinemode=pipelinemode)
-
-	# Deviant Tsys edge channels
-        hifa_tsysflagchans (intentgroups=['ATMOSPHERE', 'BANDPASS', 'AMPLITUDE'],
-	    pipelinemode=pipelinemode)
-
-	# Tsys shapes significantly different from reference
-        hifa_tsysflag (metric='fieldshape', refintent='BANDPASS',
-	    flag_maxabs=True, fmax_limit=5, flag_tmf1=True,
-	    tmf1_axis='Antenna1', tmf1_limit=0.666,
-            flag_nmedian=False, pipelinemode=pipelinemode)
-
-	# Deviant non-ede Tsys channels, e.g. birdies
-        hifa_tsysflagchans (metric='antenna_diff', flag_edges=False,
-            flag_sharps2=True, sharps2_limit=0.1, pipelinemode=pipelinemode)
-    
         # Compute the WVR calibration, flag and interpolate over bad antennas
         hifa_wvrgcalflag (pipelinemode=pipelinemode)
     
