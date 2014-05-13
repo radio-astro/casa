@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
 import os
 from taskinit import *
-from casac import casac
-import traceback
-import sys
 
 def importmiriad (
     mirfile=None,
@@ -93,11 +89,8 @@ def importmiriad (
         # -----------------------------------
        
     except Exception, e:
-
-        print '*** Error ***', e
-	print '1', e.__doc__
-    	print '2', sys.exc_info()
-    	# print '5', sys.exc_info()[2], 'Sorry I mean line...',traceback.tb_lineno(sys.exc_info()[2])
-	ex_type, ex, tb = sys.exc_info()
-
+	casalog.post("Failed to import miriad file %s" % mirfile)
+	
+    return
+ 
 
