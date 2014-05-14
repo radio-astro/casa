@@ -183,17 +183,29 @@ except Exception, e:
   <h3>Plots</h3>
   <ul>
         % for plot_group in plot_groups[component]:
-            % if plot_group.title == 'Time vs Antenna1':
+            % if component in ['nmedian','derivative','fieldshape'] and r.view:
+                % if plot_group.title == 'Time vs Antenna1':
 	<li>
 			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
                shows the images used for flagging.
         </li>
-	% elif 'Tsys vs Channel' in plot_group.title:
+                % elif 'Tsys vs Channel' in plot_group.title:
 	<li>
 			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
                shows the T<sub>sys</sub> spectra flagged in each image.
         </li>
-   	    % endif
+   	        % endif
+            % elif component in ['edgechans','birdies'] and r.view:
+	<li>
+			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
+               shows the views used for flagging.
+        </li>
+            % else:
+	<li>
+			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
+               shows the plots generated.
+        </li>
+            % endif
         % endfor
   </ul>
     % endif
