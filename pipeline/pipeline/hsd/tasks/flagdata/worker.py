@@ -192,14 +192,18 @@ class SDFlagDataWorker(object):
                 # Countup progress timer
                 #Timer.count()
                 START += 1
+                # Mask out line and edge channels
                 mask = numpy.ones(NCHAN, numpy.int)
                 for [m0, m1] in DataTable.getcell('MASKLIST',idx): mask[m0:m1] = 0
                 mask[:edgeL] = 0
                 if edgeR > 0: mask[-edgeR:] = 0
-                Nmask = int(NCHAN - numpy.sum(mask * 1.0))
 
                 # Calculate Standard Deviation (NOT RMS)
                 ### 2011/05/26 shrink the size of data on memory
+                flag_mask = numpy.array( self._get_mask_from_flagtra(tbIn.getcell('FLAGTRA', row)) )
+                mask_in = flag_mask * mask
+                Nmask = int(NCHAN - numpy.sum(mask_in))
+                SpIn[index] *= flag_mask
                 MaskedData = SpIn[index] * mask
                 StddevMasked = MaskedData.std()
                 MeanMasked = MaskedData.mean()
@@ -207,14 +211,20 @@ class SDFlagDataWorker(object):
                                 NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
                 stats = DataTable.getcell('STATISTICS',idx)
                 stats[2] = OldRMS
+                del flag_mask, Nmask
 
+                flag_mask = numpy.array( self._get_mask_from_flagtra(tbOut.getcell('FLAGTRA', row)) )
+                mask_out = flag_mask * mask
+                Nmask = int(NCHAN - numpy.sum(mask_out))
+                SpOut[index] *= flag_mask
                 MaskedData = SpOut[index] * mask
                 StddevMasked = MaskedData.std()
                 MeanMasked = MaskedData.mean()
                 NewRMS = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
                                 NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
                 stats[1] = NewRMS
-
+                del flag_mask, Nmask, mask
+                
                 # Calculate Diff from the running mean
                 ### 2011/05/26 shrink the size of data on memory
                 ### modified to calculate Old and New statistics in a single cycle
@@ -224,8 +234,10 @@ class SDFlagDataWorker(object):
                     NewRMSdiff = 0.0
                     stats[3] = NewRMSdiff
                 else:
+                    # Mean spectra of row = row+1 ~ row+Nmean
                     if START == 1:
-                        Rmask = numpy.zeros(NCHAN, numpy.int)
+                        RmaskOld = numpy.zeros(NCHAN, numpy.int)
+                        RmaskNew = numpy.zeros(NCHAN, numpy.int)
                         RdataOld0 = numpy.zeros(NCHAN, numpy.float64)
                         RdataNew0 = numpy.zeros(NCHAN, numpy.float64)
                         NR = 0
@@ -233,22 +245,33 @@ class SDFlagDataWorker(object):
                             NR += 1
                             RdataOld0 += SpIn[x]
                             RdataNew0 += SpOut[x]
-                            mask0 = numpy.ones(NCHAN, numpy.int)
-                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][x]): mask0[m0:m1] = 0
-                            Rmask += mask0
+#                             mask0 = numpy.ones(NCHAN, numpy.int)
+#                             for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][x]): mask0[m0:m1] = 0
+                            masklist = DataTable.getcell('MASKLIST',chunks[1][x])
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][x]))
+                            RmaskOld += mask0
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][x]))
+                            RmaskNew += mask0
                     elif START > (nrow - Nmean):
                         NR -= 1
                         RdataOld0 -= SpIn[index]
                         RdataNew0 -= SpOut[index]
-                        Rmask -= mask
+                        RmaskOld -= mask_in
+                        RmaskNew -= mask_out
                     else:
                         RdataOld0 -= (SpIn[index] - SpIn[START + Nmean - 1])
                         RdataNew0 -= (SpOut[index] - SpOut[START + Nmean - 1])
-                        mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START + Nmean - 1]): mask0[m0:m1] = 0
-                        Rmask += (mask0 - mask)
+#                         mask0 = numpy.ones(NCHAN, numpy.int)
+#                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START + Nmean - 1]): mask0[m0:m1] = 0
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][START + Nmean - 1])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START + Nmean - 1]))
+                        RmaskOld += (mask0 - mask_in)
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START + Nmean - 1]))
+                        RmaskNew += (mask0 - mask_out)
+                    # Mean spectra of row = row-Nmean ~ row-1
                     if START == 1:
-                        Lmask = numpy.zeros(NCHAN, numpy.int)
+                        LmaskOld = numpy.zeros(NCHAN, numpy.int)
+                        LmaskNew = numpy.zeros(NCHAN, numpy.int)
                         LdataOld0 = numpy.zeros(NCHAN, numpy.float64)
                         LdataNew0 = numpy.zeros(NCHAN, numpy.float64)
                         NL = 0
@@ -256,33 +279,49 @@ class SDFlagDataWorker(object):
                         NL += 1
                         LdataOld0 += SpIn[START - 2]
                         LdataNew0 += SpOut[START - 2]
-                        mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START - 2]): mask0[m0:m1] = 0
-                        Lmask += mask0
+#                         mask0 = numpy.ones(NCHAN, numpy.int)
+#                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][START - 2])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START - 2]))
+                        LmaskOld += mask0
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START - 2]))
+                        LmaskNew += mask0
                     else:
                         LdataOld0 += (SpIn[START - 2] - SpIn[START - 2 - Nmean])
                         LdataNew0 += (SpOut[START - 2] - SpOut[START - 2 - Nmean])
-                        mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START - 2]): mask0[m0:m1] = 0
-                        Lmask += mask0
-                        mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START - 2 - Nmean]): mask0[m0:m1] = 0
-                        Lmask -= mask0
+#                         mask0 = numpy.ones(NCHAN, numpy.int)
+#                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][START - 2])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START - 2]))
+                        LmaskOld += mask0
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START - 2]))
+                        LmaskNew += mask0
+#                         mask0 = numpy.ones(NCHAN, numpy.int)
+#                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2 - Nmean]): mask0[m0:m1] = 0
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][START - 2 - Nmean])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START - 2 - Nmean]))
+                        LmaskOld -= mask0
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START - 2 - Nmean]))
+                        LmaskNew -= mask0
 
                     diffOld0 = (LdataOld0 + RdataOld0) / float(NL + NR) - SpIn[index]
                     diffNew0 = (LdataNew0 + RdataNew0) / float(NL + NR) - SpOut[index]
-                    mask0 = (Rmask + Lmask + mask) / (NL + NR + 1)
+#                     mask0 = (Rmask + Lmask + mask) / (NL + NR + 1)
 
                     # Calculate Standard Deviation (NOT RMS)
-                    MaskedDataOld = diffOld0 * mask0
-                    StddevMasked = MaskedDataOld.std()
-                    MeanMasked = MaskedDataOld.mean()
+                    mask0 = (RmaskOld + LmaskOld + mask_in) / (NL + NR + 1)
+                    Nmask = int(NCHAN - numpy.sum(mask0))
+                    MaskedData = diffOld0 * mask0
+                    StddevMasked = MaskedData.std()
+                    MeanMasked = MaskedData.mean()
 #                     OldRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
                     OldRMSdiff = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
                                 NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
                     stats[4] = OldRMSdiff
-                    MaskedDataNew = diffNew0 * mask0
-                    StddevMasked = MaskedDataNew.std()
+                    mask0 = (RmaskNew + LmaskNew + mask_out) / (NL + NR + 1)
+                    Nmask = int(NCHAN - numpy.sum(mask0))
+                    MaskedData = diffNew0 * mask0
+                    StddevMasked = MaskedData.std()
                     MeanMasked = MaskedData.mean()
 #                     NewRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
                     NewRMSdiff = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
@@ -296,6 +335,35 @@ class SDFlagDataWorker(object):
                 data.append([idx, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
             del SpIn, SpOut
         return data
+
+    def _get_mask_from_flagtra(self, flagtra):
+        """Convert FLAGTRA to a mask array (1=valid, 0=flagged)"""
+        return [ 0 if int(flg)!=0 else 1 for flg in flagtra]
+        
+    def _get_mask_array(self, masklist, edge, flagtra, flagrow=False):
+        """Get a list of channel mask (1=valid 0=flagged)"""
+        array_type = [list, tuple, numpy.ndarray]
+        if type(flagtra) not in array_type:
+            raise Exception, "flagtra should be an array"
+        if flagrow:
+            return [0]*len(flagtra)
+        # Not row flagged
+        if type(masklist) not in array_type:
+            raise Exception, "masklist should be an array"
+        if len(masklist) > 0 and type(masklist[0]) not in array_type:
+            raise Exception, "masklist should be an array of array"
+        if type(edge) not in array_type:
+            edge = (edge, edge)
+        elif len(edge) == 1:
+            edge = (edge[0], edge[0])
+        # convert FLAGTRA to mask (1=valid channel, 0=flagged channel)
+        mask = numpy.array(self._get_mask_from_flagtra(flagtra))
+        # masklist
+        for [m0, m1] in masklist: mask[m0:m1] = 0
+        # edge channels
+        mask[0:edge[0]] = 0
+        mask[len(flagtra)-edge[1]:] = 0
+        return mask
 
     def _get_flag_from_stats(self, stat, Threshold, iteration):
         Ndata = len(stat[0])
