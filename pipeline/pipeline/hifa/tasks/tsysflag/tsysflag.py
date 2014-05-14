@@ -21,7 +21,7 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
       ff_tmf1_limit=None, 
-      flag_birdies=None, fb_sharps2_limit=None):
+      flag_birdies=None, fb_sharps_limit=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -161,14 +161,14 @@ class TsysflagInputs(basetask.StandardInputs):
         self._flag_birdies = value
 
     @property
-    def fb_sharps2_limit(self):
-        return self._fb_sharps2_limit
+    def fb_sharps_limit(self):
+        return self._fb_sharps_limit
 
-    @fb_sharps2_limit.setter
-    def fb_sharps2_limit(self, value):
+    @fb_sharps_limit.setter
+    def fb_sharps_limit(self, value):
         if value is None:
             value = 0.05
-        self._fb_sharps2_limit = value
+        self._fb_sharps_limit = value
 
 
 class Tsysflag(basetask.StandardTaskTemplate):
@@ -224,8 +224,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
               intentgroups="['ATMOSPHERE','BANDPASS','AMPLITUDE']",
               flag_edges=True,
               edge_limit=inputs.fe_edge_limit,
-              flag_sharps=False,
-              flag_sharps2=False)
+              flag_sharps=False)
 
             flagtask = Tsysflagchans(flaginputs)
             result.add('edgechans', self._executor.execute(flagtask))
@@ -260,9 +259,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
               caltable=inputs.caltable,
               metric='antenna_diff',
               flag_edges=False,
-              flag_sharps=False,
-              flag_sharps2=True,
-              sharps2_limit=inputs.fb_sharps2_limit)
+              flag_sharps=True,
+              sharps_limit=inputs.fb_sharps_limit)
 
             flagtask = Tsysflagchans(flaginputs)
             result.add('birdies', self._executor.execute(flagtask))
