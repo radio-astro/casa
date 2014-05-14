@@ -78,8 +78,8 @@ possible error.
         <value>True</value>
     </param>
 
-    <param type="double" name="fb_sharps2_limit" subparam="true">
-        <description>Flag channels bracketing a channel to channel difference &gt; fb_sharps2_limit</description>
+    <param type="double" name="fb_sharps_limit" subparam="true">
+        <description>Flag channels bracketing a channel to channel difference &gt; fb_sharps_limit</description>
         <value>0.05</value>
     </param>
 
@@ -162,7 +162,7 @@ possible error.
 
         <when param="flag_birdies">
             <equals type="bool" value="True">
-                <default param="fb_sharps2_limit"><value>0.05</value></default>
+                <default param="fb_sharps_limit"><value>0.05</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -207,7 +207,7 @@ fmax_limit=ff_max_limit, flag_tmf1=True, tmf1_axis='Antenna1',
 tmf1_limit=ff_tmf1_limit.
 
 5. Flag 'birdies' by running hif_tsysflagchans with metric='antenna_diff',
-flag_sharps2=True, sharps2_limit=fb_sharps2_limit.
+flag_sharps=True, sharps_limit=fb_sharps_limit.
 
 
 Keyword arguments:
@@ -266,8 +266,8 @@ ff_tmf1_limit -- Flag all Tsys spectra for an antenna if proportion flagged
 flag_birdies -- True to flag channels covering sharp spectral features.
     default: True
 
-fb_sharps2_limit -- Flag channels bracketing a channel to channel difference
-     &gt; fb_sharps2_limit.
+fb_sharps_limit -- Flag channels bracketing a channel to channel
+     difference &gt; fb_sharps_limit.
      default: 0.05
 
 -- Pipeline task execution modes
