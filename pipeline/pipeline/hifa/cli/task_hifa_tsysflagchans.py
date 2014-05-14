@@ -9,7 +9,6 @@ def hifa_tsysflagchans(caltable=None, metric=None,
   intentgroups=None,
   flag_edges=None, edge_limit=None,
   flag_sharps=None, sharps_limit=None,
-  flag_sharps2=None, sharps2_limit=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
