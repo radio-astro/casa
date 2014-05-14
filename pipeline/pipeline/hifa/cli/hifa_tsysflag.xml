@@ -58,7 +58,7 @@ possible error.
         <value>True</value>
     </param>
 
-    <param type="string" name="ff_refintent">
+    <param type="string" name="ff_refintent" subparam="true">
         <description>Data intent providing the reference shape for \'flag_fieldshape\'</description>
         <value>BANDPASS</value>
     </param>
@@ -107,7 +107,6 @@ possible error.
         <when param="pipelinemode">
             <equals type="string" value="automatic" />
             <equals type="string" value="interactive">
-                <default param="vis"><value type="stringArray"></value></default>
                 <default param="caltable"><value type="stringArray"></value></default>
                 <default param="flag_nmedian"><value type="bool">True</value></default>
                 <default param="flag_derivative"><value type="bool">True</value></default>
@@ -118,7 +117,6 @@ possible error.
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
-                <default param="vis"><value type="stringArray"></value></default>
                 <default param="caltable"><value type="stringArray"></value></default>
                 <default param="flag_nmedian"><value type="bool">True</value></default>
                 <default param="flag_derivative"><value type="bool">True</value></default>
