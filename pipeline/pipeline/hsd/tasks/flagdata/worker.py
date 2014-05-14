@@ -9,7 +9,7 @@ import asap as sd
 from taskinit import gentools
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.sdfilenamer as filenamer
+# import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 
@@ -71,9 +71,9 @@ class SDFlagDataWorker(object):
         #ThreExpectedRMSPostFit = flagRule['RmsExpectedPostFitFlag']['Threshold']
         # WARN: ignoring the value set as flagRule['RunMeanPostFitFlag']['Nmean']
         nmean = flagRule['RunMeanPreFitFlag']['Nmean']
-        # out table name
-        namer = filenamer.BaselineSubtractedTable()
-        namer.spectral_window(spwid)
+#         # out table name
+#         namer = filenamer.BaselineSubtractedTable()
+#         namer.spectral_window(spwid)
 
         flagSummary = []
         # loop over file
@@ -81,10 +81,10 @@ class SDFlagDataWorker(object):
             st = self.context.observing_run[idx]
             filename_in = st.name
             filename_out = st.baselined_name
-            asdm = common.asdm_name(st)
-            namer.asdm(asdm)
-            namer.antenna_name(st.antenna.name)
-            out_table_name = namer.get_filename()
+#             asdm = common.asdm_name(st)
+#             namer.asdm(asdm)
+#             namer.antenna_name(st.antenna.name)
+#             out_table_name = namer.get_filename()
             # Baseline is not yet done
             if not os.path.exists(filename_out):
                 #with casatools.TableReader(filename_in) as tb:
@@ -104,19 +104,19 @@ class SDFlagDataWorker(object):
                     TimeTable = time_table[0]
                 LOG.info('Applied time bin for the running mean calculation: %s' % flagRule['Flagging']['ApplicableDuration'])
                 
-                # Calculate RMS and Diff from running mean
+                # Calculate Standard Deviation and Diff from running mean
                 t0 = time.time()
                 data = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge)
                 t1 = time.time()
-                LOG.info('RMS and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
+                LOG.info('Standard Deviation and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
                 t0 = time.time()
                 tmpdata = numpy.transpose(data)
                 dt_idx = numpy.array(tmpdata[0], numpy.int)
-                LOG.info('Calculating the thresholds by RMS and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (iteration))
+                LOG.info('Calculating the thresholds by Standard Deviation and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (iteration))
                 stat_flag, final_thres = self._get_flag_from_stats(tmpdata[1:6], Threshold, iteration)
                 LOG.debug('final threshold shape = %d' % len(final_thres))
-                LOG.info('Final thresholds: RMS (pre-/post-fit) = %.2f / %.2f , Diff RMS (pre-/post-fit) = %.2f / %.2f , Tsys=%.2f' % tuple([final_thres[i][1] for i in (1,0,3,2,4)]))
+                LOG.info('Final thresholds: StdDev (pre-/post-fit) = %.2f / %.2f , Diff StdDev (pre-/post-fit) = %.2f / %.2f , Tsys=%.2f' % tuple([final_thres[i][1] for i in (1,0,3,2,4)]))
                 
                 self._apply_stat_flag(datatable, dt_idx, stat_flag)
 
@@ -142,7 +142,7 @@ class SDFlagDataWorker(object):
 
     def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge):
 
-        # Calculate RMS and Diff from running mean
+        # Calculate Standard Deviation and Diff from running mean
         NROW = len([ series for series in utils.flatten(TimeTable) ])/2
         # parse edge
         if len(edge) == 2:
@@ -151,14 +151,14 @@ class SDFlagDataWorker(object):
             edgeL = edge[0]
             edgeR = edge[0]
 
-        LOG.info('Calculate RMS and Diff from running mean for Pre/Post fit...')
+        LOG.info('Calculate Standard Deviation and Diff from running mean for Pre/Post fit...')
         LOG.info('Processing %d spectra...' % NROW)
         LOG.info('Nchan for running mean=%s' % Nmean)
         data = []
 
         ProcStartTime = time.time()
 
-        LOG.info('RMS and diff calculation Start')
+        LOG.info('Standard deviation and diff calculation Start')
 
         tbIn, tbOut = gentools(['tb','tb'])
         tbIn.open(DataIn)
@@ -198,7 +198,7 @@ class SDFlagDataWorker(object):
                 if edgeR > 0: mask[-edgeR:] = 0
                 Nmask = int(NCHAN - numpy.sum(mask * 1.0))
 
-                # Calculate RMS
+                # Calculate Standard Deviation (NOT RMS)
                 ### 2011/05/26 shrink the size of data on memory
                 MaskedData = SpIn[index] * mask
                 StddevMasked = MaskedData.std()
@@ -234,7 +234,7 @@ class SDFlagDataWorker(object):
                             RdataOld0 += SpIn[x]
                             RdataNew0 += SpOut[x]
                             mask0 = numpy.ones(NCHAN, numpy.int)
-                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][x]): mask0[m0:m1] = 0
+                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][x]): mask0[m0:m1] = 0
                             Rmask += mask0
                     elif START > (nrow - Nmean):
                         NR -= 1
@@ -245,7 +245,7 @@ class SDFlagDataWorker(object):
                         RdataOld0 -= (SpIn[index] - SpIn[START + Nmean - 1])
                         RdataNew0 -= (SpOut[index] - SpOut[START + Nmean - 1])
                         mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START + Nmean - 1]): mask0[m0:m1] = 0
+                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START + Nmean - 1]): mask0[m0:m1] = 0
                         Rmask += (mask0 - mask)
                     if START == 1:
                         Lmask = numpy.zeros(NCHAN, numpy.int)
@@ -257,38 +257,42 @@ class SDFlagDataWorker(object):
                         LdataOld0 += SpIn[START - 2]
                         LdataNew0 += SpOut[START - 2]
                         mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
+                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START - 2]): mask0[m0:m1] = 0
                         Lmask += mask0
                     else:
                         LdataOld0 += (SpIn[START - 2] - SpIn[START - 2 - Nmean])
                         LdataNew0 += (SpOut[START - 2] - SpOut[START - 2 - Nmean])
                         mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
+                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START - 2]): mask0[m0:m1] = 0
                         Lmask += mask0
                         mask0 = numpy.ones(NCHAN, numpy.int)
-                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2 - Nmean]): mask0[m0:m1] = 0
+                        for [m0, m1] in DataTable.getcell('MASKLIST',chunks[1][START - 2 - Nmean]): mask0[m0:m1] = 0
                         Lmask -= mask0
 
                     diffOld0 = (LdataOld0 + RdataOld0) / float(NL + NR) - SpIn[index]
                     diffNew0 = (LdataNew0 + RdataNew0) / float(NL + NR) - SpOut[index]
                     mask0 = (Rmask + Lmask + mask) / (NL + NR + 1)
 
-                    # Calculate RMS
+                    # Calculate Standard Deviation (NOT RMS)
                     MaskedDataOld = diffOld0 * mask0
                     StddevMasked = MaskedDataOld.std()
                     MeanMasked = MaskedDataOld.mean()
-                    OldRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
+#                     OldRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
+                    OldRMSdiff = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
+                                NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
                     stats[4] = OldRMSdiff
                     MaskedDataNew = diffNew0 * mask0
                     StddevMasked = MaskedDataNew.std()
                     MeanMasked = MaskedData.mean()
-                    NewRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
+#                     NewRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
+                    NewRMSdiff = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
+                                NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
                     stats[3] = NewRMSdiff
 
                 DataTable.putcell('STATISTICS',idx,stats)
                 DataTable.putcell('NMASK',idx,Nmask)
-                LOG.debug('Row=%d, pre-fit RMS= %.2f pre-fit diff RMS= %.2f' % (row, OldRMS, OldRMSdiff))
-                LOG.debug('Row=%d, post-fit RMS= %.2f post-fit diff RMS= %.2f' % (row, NewRMS, NewRMSdiff))
+                LOG.debug('Row=%d, pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, OldRMS, OldRMSdiff))
+                LOG.debug('Row=%d, post-fit StdDev= %.2f post-fit diff StdDev= %.2f' % (row, NewRMS, NewRMSdiff))
                 data.append([idx, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
             del SpIn, SpOut
         return data
