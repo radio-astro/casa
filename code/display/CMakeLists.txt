@@ -158,6 +158,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/printControl.ui
   QtViewer/QtAnnotatorGui.ui
   QtViewer/QtDataManager.ui
+  QtViewer/VOParam.ui
   QtViewer/SlicerGen.ui
   QtViewer/QtExportManager.ui
   QtViewer/QtExportBrowser.ui
