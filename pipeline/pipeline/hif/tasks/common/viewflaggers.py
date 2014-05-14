@@ -541,7 +541,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
       flag_nmedian=False, fnm_limit=0.0,
       flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
       flag_sharps=False, sharps_limit=0.05,
-      flag_sharps2=False, sharps2_limit=0.05,
       flag_diffmad=False, diffmad_limit=10, diffmad_nchan_limit=4,
       flag_tmf=None, tmf_frac_limit=0.1, tmf_nchan_limit=4):
 
@@ -563,8 +562,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
               'minsample':fhl_minsample})
         if flag_sharps:
             rules.append({'name':'sharps', 'limit':sharps_limit})
-        if flag_sharps2:
-            rules.append({'name':'sharps2', 'limit':sharps2_limit})
         if flag_diffmad:
             rules.append({'name':'diffmad', 'limit':diffmad_limit,
               'nchan_limit':diffmad_nchan_limit})
@@ -758,39 +755,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 elif rulename == 'sharps':
                     limit = rule['limit']
                     if len(valid_data):
-
-                        diff = abs(rdata[1:] - rdata[:-1])
-                        diff_flag = np.logical_or(rflag[1:], rflag[:-1])
-
-                        newflag = (diff>limit) & np.logical_not(diff_flag)
-                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
-                        flag_chan[:-1] = newflag
-                        flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='sharps',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords))
-
-                elif rulename == 'sharps2':
-                    limit = rule['limit']
-                    if len(valid_data):
                         diff = abs(rdata[1:] - rdata[:-1])
                         diff_flag = (rflag[1:] | rflag[:-1])
 
@@ -846,7 +810,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             # Add new flag command to flag data underlying the
                             # view.
                             newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='sharps2',
+                              reason='sharps',
                               filename=table,
                               rulename=rulename,
                               spw=spw, antenna=antenna, axisnames=axisnames,
