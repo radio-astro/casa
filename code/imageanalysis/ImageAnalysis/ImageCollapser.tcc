@@ -93,38 +93,31 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 		! anyTrue(subImage->getMask()),
 		"All selected pixels are masked"
 	);
-	CoordinateSystem outCoords(subImage->coordinates());
+	CoordinateSystem outCoords = subImage->coordinates();
 	Bool hasDir = outCoords.hasDirectionCoordinate();
-	Bool n2 = _axes.size() == 2;
-	Bool dirAxesOnlyCollapse =  hasDir && n2;
-	if (dirAxesOnlyCollapse) {
-		Vector<Int>dirAxes = outCoords.directionAxesNumbers();
-		dirAxesOnlyCollapse = (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
-			|| (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]);
-	}
 	IPosition inShape = subImage->shape();
 	if (_aggType == ImageCollapserData::FLUX) {
+		String cant = " Cannot do flux density calculation";
+		ThrowIf(
+			! hasDir,
+			"Image has no direction coordinate." + cant
+		);
 		ThrowIf(
 			! subImage->imageInfo().hasBeam(),
-			"Image has no beam(s), flux cannot be calculated"
+			"Image has no beam." + cant
 		);
-		if (! dirAxesOnlyCollapse) {
+		Vector<Int> dirAxes = outCoords.directionAxesNumbers();
+		for (uInt i=0; i<_axes.nelements(); i++) {
+			Int axis = _axes[i];
 			ThrowIf(
-				! hasDir,
-				"Image has no direction coordinate, flux cannot be calculated"
-			);
-			ThrowIf(
-				! n2,
-				"Exactly two axes were not specified for collapse, flux cannot be calculated"
-			);
-			Vector<Int> dirAxes = outCoords.directionAxesNumbers();
-			ThrowIf(
-				! (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
-				&& ! (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]),
-				"At least one specified axis is not a direction axis, flux cannot be calculated"
+				! anyTrue(dirAxes == axis)
+				&& inShape[axis] > 1,
+				"Specified axis " + String::toString(axis)
+				+ " is not a direction axis but has length > 1." + cant
 			);
 		}
 	}
+
 	// Set the compressed axis reference pixel and reference value
 	Vector<Double> blc, trc;
 	IPosition pixblc(inShape.nelements(), 0);
@@ -341,6 +334,13 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 				tmpIm.put(arr);
 			}
 		}
+	}
+	Bool n2 = _axes.size() == 2;
+	Bool dirAxesOnlyCollapse =  hasDir && n2;
+	if (dirAxesOnlyCollapse) {
+		Vector<Int>dirAxes = outCoords.directionAxesNumbers();
+		dirAxesOnlyCollapse = (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
+			|| (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]);
 	}
 	if (subImage->imageInfo().hasMultipleBeams() && ! dirAxesOnlyCollapse) {
 		*this->_getLog() << LogIO::WARN << "Input image has per plane beams "

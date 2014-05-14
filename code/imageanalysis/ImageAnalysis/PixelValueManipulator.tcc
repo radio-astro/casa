@@ -110,46 +110,46 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	const String& unit, PixelValueManipulatorData::SpectralType specType,
 	const Quantity *const restFreq, const String& frame
 ) const {
-	 ImageCollapser<T> collapser(
+	ImageCollapser<T> collapser(
 		function, this->_getImage(), this->_getRegion(),
 		this->_getMask(), IPosition(1, axis), True, "", ""
-	 );
-	 collapser.setStretch(this->_getStretch());
-	 SPIIT collapsed = collapser.collapse();
-	 Record ret;
-	 Array<T> values = collapsed->get(True);
-	 ret.define("values", values);
-	 Array<Bool> mask(values.shape(), True);
-	 if (collapsed->isMasked()) {
-		 mask = mask && collapsed->getMask(True);
-	 }
-	 if (collapsed->hasPixelMask()) {
-		 mask = mask && collapsed->pixelMask().get(True);
-	 }
-	 ret.define("mask", mask);
-	 String tunit = unit;
-	 tunit.downcase();
-	 if (tunit.startsWith("pix")) {
-		 Vector<Double> pix(collapsed->ndim(), 0);
-		 Vector<Double> outputRef = collapsed->coordinates().toWorld(pix);
-		 Vector<Double> inputRef = this->_getImage()->coordinates().referenceValue();
-		 inputRef[axis] = outputRef[axis];
-		 Vector<Double> inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
-		 Double count = floor(inputPixel[axis] + 0.5);
-		 uInt length = values.shape()[0];
-		 Vector<Double> coords = indgen(length, count, 1.0);
-		 ret.define("coords", coords);
-		 ret.define("xUnit", "pixel");
-	 }
-	 else {
-		 ret.merge(
+	);
+	collapser.setStretch(this->_getStretch());
+	SPIIT collapsed = collapser.collapse();
+	Record ret;
+	Array<T> values = collapsed->get(True);
+	ret.define("values", values);
+	Array<Bool> mask(values.shape(), True);
+	if (collapsed->isMasked()) {
+		mask = mask && collapsed->getMask(True);
+	}
+	if (collapsed->hasPixelMask()) {
+		mask = mask && collapsed->pixelMask().get(True);
+	}
+	ret.define("mask", mask);
+	String tunit = unit;
+	tunit.downcase();
+	if (tunit.startsWith("pix")) {
+		Vector<Double> pix(collapsed->ndim(), 0);
+		Vector<Double> outputRef = collapsed->coordinates().toWorld(pix);
+		Vector<Double> inputRef = this->_getImage()->coordinates().referenceValue();
+		inputRef[axis] = outputRef[axis];
+		Vector<Double> inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
+		Double count = floor(inputPixel[axis] + 0.5);
+		uInt length = values.shape()[0];
+		Vector<Double> coords = indgen(length, count, 1.0);
+		ret.define("coords", coords);
+		ret.define("xUnit", "pixel");
+	}
+	else {
+		ret.merge(
 			_doWorld(
 				collapsed, unit, specType,
 				restFreq, frame, axis
 			)
-		 );
-	 }
-	 return ret;
+		);
+	}
+	return ret;
 }
 
 template<class T> Record PixelValueManipulator<T>::_doWorld(
