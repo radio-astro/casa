@@ -247,7 +247,23 @@ class getchunk_test(unittest.TestCase):
         self.assertTrue((res['coords'] == expeccmb).all())
         myia.done()
         
-        
+    def test_flux(self):
+        """Test the function='flux' option in ia.getprofile()"""
+        myia = iatool()
+        myia.fromshape("", [20, 20, 20, 1])
+        myia.setrestoringbeam(major="3arcmin", minor="3arcmin", pa="0deg")
+        myia.setbrightnessunit("Jy/beam")
+        bb = myia.getchunk()
+        for i in range(20):
+            bb[:, :, i, :] = i
+        myia.putchunk(bb)
+        res = myia.getprofile(axis=2, function='flux')
+        myia.done()
+        fac = pi/4/log(2)*9
+        for i in range(20):
+            got = res['values'][i]
+            expec = 400*i/fac
+            self.assertTrue(abs(got - expec) < 1e-4)
 
 def suite():
     return [getchunk_test]
