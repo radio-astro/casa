@@ -151,7 +151,7 @@ namespace casa {
 		vector<string> convertStringFormats( const QList<QString>& names );
 		void startSearchThread();
 		void setSearchRangeDefault();
-		void setRangeValue( double value, QString units, QLineEdit* lineEdit );
+		double setRangeValue( double value, QString units);
 
 		MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 

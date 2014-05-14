@@ -1,5 +1,4 @@
-//# PCRefreshEH.cc: PixelCanvas refresh event handler
-//# Copyright (C) 1993,1994,1995,1996,1999,2000
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,30 +22,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
 
-#include <casa/aips.h>
-#include <display/DisplayEvents/PCRefreshEvent.h>
-#include <display/DisplayEvents/PCRefreshEH.h>
+#include <display/QtViewer/AboutDialog.qo.h>
+#include <QDebug>
+#include <stdcasa/version.h>
+#include <sstream>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-// Default Constructor Required
-	PCRefreshEH::PCRefreshEH() {
-	}
+AboutDialog::AboutDialog(QWidget *parent)
+    : QDialog(parent)
+{
+	ui.setupUi(this);
 
-	PCRefreshEH::PCRefreshEH( const PCRefreshEH& /*other*/ ){
+	ui.aboutLabel->setText( getDescription());
+	connect(ui.okButton, SIGNAL(clicked()), this, SLOT(close()));
+}
 
-	}
+QString AboutDialog::getDescription() const {
+	std::stringstream ss;
+	ss<<"The Viewer is a tool for visualizing images and measurement sets in raster, contour, vector, or marker form.\n";
+	ss<<"Images can be blinked, and movies are available for spectral-line image cubes. A variety of image analysis tools\n";
+	ss<<"such as histograms, moment calculations, two-dimensional fitting, interactive position-velocity diagrams, \n";
+	ss<<"and spatial profiling are also available in the viewer.\n\n";
+	ss<<"The Viewer is part of the CASA (Common Astronomy Software Applications) package.\n\n";
 
-	void PCRefreshEH::operator ()(const PCRefreshEvent &) {
-	}
+	// CASA info
+	ss << "CASA Version:  ";
+	VersionInfo::report( ss );
+	ss << "\n\n";
 
-// Destructor
-	PCRefreshEH::~PCRefreshEH() {
-	}
+	QString aboutStr( ss.str().c_str() );
+	return aboutStr;
+}
 
+AboutDialog::~AboutDialog()
+{
 
-
-} //# NAMESPACE CASA - END
-
+}
+}

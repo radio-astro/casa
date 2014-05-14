@@ -23,6 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "SliceColorPreferences.qo.h"
+#include <display/QtPlotter/ColorSummaryDelegate.h>
 #include <QColorDialog>
 #include <QMessageBox>
 #include <QDebug>
@@ -40,13 +41,15 @@ namespace casa {
 		: QDialog(parent), POLYGONAL_CHAIN( "Polygonal Chain"),
 		  LINE_SEGMENT( "Line Segment") {
 		ui.setupUi(this);
-		setWindowTitle( "1D Slice Color Preferences");
+		setWindowTitle( "Spatial Profile Color Preferences");
 
 		viewerColors = true;
 		accumulateColorList << "#40E0D0" << "#FF69B4" << "#00FF00" << "#FF8C00" << "#BA55D3" <<
 		                    "#A52A2A" << "#808080" << "#FF6347" << "#FFFF00";
 		ui.accumulatedColorList->setSelectionBehavior(QAbstractItemView::SelectRows);
 		ui.accumulatedColorList->setSelectionMode( QAbstractItemView::SingleSelection );
+		ui.accumulatedColorList->setItemDelegate( new ColorSummaryDelegate( this ) );
+
 
 		polylineUnit = true;
 		colorUnits << POLYGONAL_CHAIN << LINE_SEGMENT;
@@ -73,6 +76,7 @@ namespace casa {
 		ui.colorUnitComboBox->setEnabled( !viewerColors );
 		ui.addButton->setEnabled( !viewerColors );
 		ui.deleteButton->setEnabled( !viewerColors );
+		ui.accumulatedColorList->setEnabled( !viewerColors );
 	}
 
 	bool SliceColorPreferences::isViewerColors() const {

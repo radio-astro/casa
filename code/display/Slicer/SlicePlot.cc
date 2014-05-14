@@ -391,16 +391,26 @@ namespace casa {
 		}
 	}
 
-	void SlicePlot::setRegionSelected( int regionId, bool selected ) {
+	bool SlicePlot::setRegionSelected( int regionId, bool selected ) {
+		bool selectionChange = false;
 		if ( sliceMap.contains( regionId )) {
 			bool oldSelected = sliceMap[regionId]->isSelected();
 			if (oldSelected != selected  ) {
+				if ( selected ){
+					//Go through and set them all to unselected
+					for ( QMap<int,ImageSlice*>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it ) {
+						(*it)->setSelected( false );
+					}
+				}
 				sliceMap[regionId]->setSelected( selected );
 				if ( accumulateSlices  ) {
 					resetCurves();
 				}
+				selectionChange = true;
+
 			}
 		}
+		return selectionChange;
 	}
 
 	void SlicePlot::updateSelectedRegionId( int selectedRegionId ) {

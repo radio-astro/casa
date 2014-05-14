@@ -567,8 +567,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record ScrollingRasterDD::getOptions() {
-		Record rec = PrincipalAxesDD::getOptions();
+	Record ScrollingRasterDD::getOptions( bool scrub ) const {
+		Record rec = PrincipalAxesDD::getOptions(scrub);
 
 		Record resample;
 		resample.define("dlformat", "resample");

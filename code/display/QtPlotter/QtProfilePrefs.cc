@@ -43,7 +43,6 @@ namespace casa {
 	const QString QtProfilePrefs::CHANNEL_LINE = "Channel Line";
 	const QString QtProfilePrefs::SINGLE_CHANNEL_IMAGE = "Single Channel Image";
 
-
 	QtProfilePrefs::~QtProfilePrefs() {
 	}
 
@@ -102,7 +101,6 @@ namespace casa {
 
 		singleChannelImageDefault = settings.value( SINGLE_CHANNEL_IMAGE, singleChannelImage ).toBool();
 		singlePlaneCheckBox->setChecked( singleChannelImageDefault );
-
 
 		initializeConnections();
 	}
@@ -180,6 +178,9 @@ namespace casa {
 
 		channelLineDefault = channelLineCheckBox->isChecked();
 		settings.setValue( CHANNEL_LINE, channelLineDefault );
+
+		singleChannelImageDefault = singlePlaneCheckBox->isChecked();
+		settings.setValue( SINGLE_CHANNEL_IMAGE, singleChannelImageDefault );
 	}
 
 
@@ -190,7 +191,7 @@ namespace casa {
 		                  topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
 		                  opticalSpecFitCheckBox->checkState(),
 		                  channelLineCheckBox->checkState(),
-		                  singlePlaneCheckBox->checkState()) ;
+		                  singlePlaneCheckBox->checkState() ) ;
 		close();
 	}
 

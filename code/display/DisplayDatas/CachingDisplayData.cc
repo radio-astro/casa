@@ -72,8 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Retrieve the current and default options and parameter types.
-	Record CachingDisplayData::getOptions() {
-		Record rec = DisplayData::getOptions();
+	Record CachingDisplayData::getOptions( bool scrub ) const {
+		Record rec = DisplayData::getOptions(scrub);
 
 		Record cachesize;
 		cachesize.define("dlformat", "cachesize");

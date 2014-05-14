@@ -602,7 +602,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return False;
 	}
 
-	Record DisplayData::getOptions() {
+	Record DisplayData::getOptions( bool ) const {
 		// nothing yet
 		Record rec;
 		return rec;

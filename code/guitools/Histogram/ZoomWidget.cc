@@ -34,6 +34,7 @@ namespace casa {
 ZoomWidget::ZoomWidget(bool rangeControls, QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
+	setDefaultBackground();
 
 	//Combo box for setting the percent zoom
 	zoomList =(QStringList()<< "95" << "98" << "99.5"<<"99.9");
@@ -60,6 +61,14 @@ ZoomWidget::ZoomWidget(bool rangeControls, QWidget *parent)
 
 	connect( ui.zoomButton, SIGNAL(clicked()), this, SLOT(zoom()));
 
+}
+
+void ZoomWidget::setDefaultBackground(){
+	setAutoFillBackground( true );
+	QPalette pal = palette();
+	QColor bColor = pal.color(QPalette::Button );
+	pal.setColor( QPalette::Background, bColor );
+	setPalette( pal );
 }
 
 void ZoomWidget::copyState( ZoomWidget* other ){

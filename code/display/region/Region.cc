@@ -2438,6 +2438,10 @@ namespace casa {
 				}
 				for ( std::set<Region*>::const_iterator it = selected_regions.begin( );
 				        it != selected_regions.end( ); ++it ) {
+					if ( ! *it ) continue; // OSX crash seemingly with a null pointer
+					                       // ( was not able to determine how selected region
+ 					                       //   set ended up with a null pointer in it... )
+					                       // <drs> Wed Apr 23 11:30:20 EDT 2014
 					ImageRegion* imageRegion = (*it)->get_image_region( dd );
 					if ( imageRegion != NULL ) {
 						imageRegionCount++;

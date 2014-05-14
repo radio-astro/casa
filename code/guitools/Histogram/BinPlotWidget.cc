@@ -100,6 +100,10 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	displayPlotTitle = false;
 	displayAxisTitles = false;
 	multiColored = true;
+	allChannels = true;
+	spectralIndex = -1;
+	minChannel = 0;
+	maxChannel = 0;
 	selectedId = IMAGE_ID;
 }
 
@@ -325,7 +329,12 @@ void BinPlotWidget::regionAllModeSelected( bool enabled ){
 
 
 
-void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic ){
+void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic, int specIndex ){
+
+	this->allChannels = allChannels;
+	this->spectralIndex = specIndex;
+	minChannel = minValue;
+	maxChannel = maxValue;
 
 	//Coordinate the channel range from the two different menus
 	if ( channelRangeWidgetContext != NULL ){
@@ -348,9 +357,10 @@ void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allCha
 		QList<int> histKeys = histogramMap.keys();
 		for ( QList<int>::iterator iter = histKeys.begin();
 						iter != histKeys.end(); iter++ ){
-			histogramMap[*iter]->setChannelRange( minValue, maxValue );
+			histogramMap[*iter]->setChannelRange( minValue, maxValue, specIndex );
 		}
 	}
+
 	int selectedId = getSelectedId();
 	if ( histogramMap.contains( selectedId )){
 		histogramMap[selectedId]->reset();
@@ -680,8 +690,12 @@ int BinPlotWidget::getSelectedId() const {
 	//can find.
 	if ( selectedId == IMAGE_ID && plotMode != FootPrintWidget::IMAGE_MODE ){
 		QList<int> keys = histogramMap.keys();
-		if ( keys.size() > 0 ){
-			id = keys[0];
+		int keyCount = keys.size();
+		for ( int i = 0; i < keyCount; i++ ){
+			if ( keys[i] != IMAGE_ID ){
+				id = keys[i];
+				break;
+			}
 		}
 	}
 	return id;
@@ -1138,7 +1152,9 @@ Histogram* BinPlotWidget::findHistogramFor( int id ){
 	}
 	else {
 		histogram = new Histogram( this );
-
+		if ( !allChannels ){
+			histogram->setChannelRange(minChannel,maxChannel,spectralIndex);
+		}
 		histogramMap.insert(id, histogram );
 	}
 	histogram->setImage( image );
@@ -1170,13 +1186,14 @@ std::vector<float> BinPlotWidget::getXValues() const {
 	return values;
 }
 
-bool BinPlotWidget::setImage( const ImageTask::shCImFloat img ){
+bool BinPlotWidget::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img,
+		bool waitOnHistogram ){
 	bool success = true;
-	if ( image != img && img.get() != NULL ){
+	if ( img.get() != NULL && image.get() != img.get()){
 		image = img;
 		clearHistograms();
 		clearAll();
-		success = resetImage();
+		success = resetImage( waitOnHistogram);
 		if ( success ){
 			resetAxisTitles();
 			if ( zoomWidgetContext != NULL ){
@@ -1225,20 +1242,24 @@ void BinPlotWidget::resetRegion( ){
 	}
 }
 
-bool BinPlotWidget::resetImage(){
+bool BinPlotWidget::resetImage(bool waitOnReset){
 	bool success = true;
-	if ( image != NULL ){
+	if ( image.get() != NULL ){
 		if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 			Histogram* histogram = findHistogramFor( IMAGE_ID );
+
 			histogram->setImage( image );
-			success = histogram->reset( );
-			if ( success ){
-				makeHistogram( IMAGE_ID, curveColor );
-				//resetColorCurve();
-			}
-			else {
-				QString msg( "Could not make a histogram from the image.");
-				QMessageBox::warning( this, "Error Making Histogram", msg);
+
+			if ( !waitOnReset){
+				success = histogram->reset( );
+				if ( success ){
+					makeHistogram( IMAGE_ID, curveColor );
+					//resetColorCurve();
+				}
+				else {
+					QString msg( "Could not make a histogram from the image.");
+					QMessageBox::warning( this, "Error Making Histogram", msg);
+				}
 			}
 		}
 		this->resetPlotTitle();
@@ -1350,9 +1371,15 @@ void BinPlotWidget::keyPressEvent( QKeyEvent* event ){
 	if (modifiers & Qt::ShiftModifier ){
 		contextMenuMode = DISPLAY_CONTEXT;
 	}
+#if defined(__APPLE__)
+	else if (event->key() & Qt::Key_Meta ){
+		contextMenuMode = FIT_CONTEXT;
+	}
+#else
 	else if ( modifiers & Qt::ControlModifier ){
 		contextMenuMode = FIT_CONTEXT;
 	}
+#endif
 	else {
 		contextMenuMode = ZOOM_CONTEXT;
 	}

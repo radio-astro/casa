@@ -389,6 +389,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pSz.setWidth(int(xs * ratio));
 		pSz.setHeight(int(ys * ratio));
 
+		pDP->pushCurrentDrawingState( );
+		pDP->setLabelLineWidth(pDP->getLabelLineWidth( ) * ratio);
+		pDP->setTickLength(pDP->getTickLength( ) * ratio);
 		QPixmap pmp(pSz);
 		QApplication::setOverrideCursor(Qt::WaitCursor);
 		pDP->setAllowBackToFront(false);
@@ -401,6 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		painter.drawPixmap(0,0,pmp);
 		pDP->endLabelAndAxisCaching( painter );
 		painter.end();
+		pDP->popCurrentDrawingState( );
 		pDP->setBackgroundPS(backColor, foreColor);
 		pDP->setAllowBackToFront(true);
 		pDP->resize(sz);
@@ -522,6 +526,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    dh = oldSize.height() - scaledSize.height();
 				scaledSize.scale(width, height, Qt::KeepAspectRatio);
 
+				float factor = ( (scaledSize.width() + dw)/oldSize.width() +
+				                 (scaledSize.height() + dh)/oldSize.height() ) / 2.0;
+
+				pDP->pushCurrentDrawingState( );
+				float new_width = pDP->getLabelLineWidth( ) * factor;
+				if ( new_width < 1 ) new_width = 1;
+				pDP->setLabelLineWidth(new_width);
+				float new_length = pDP->getTickLength( ) * factor;
+				if ( new_length < 1 ) new_length = 1;
+				pDP->setTickLength( new_length );
 				//pDP->setAllowBackToFront(false); <-- for back buffer
 				// have to add pixels for the border that the QtDisplayPanel adds
 				// around the QtPixelCanvas
@@ -529,6 +543,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// (Prevent display widget flashing during temporary resize.)
 				pDP->resize(scaledSize.width() + dw, scaledSize.height() + dh);
 				QPixmap* mp = pDP->contents();
+				pDP->popCurrentDrawingState( );
 				pDP->setUpdateAllowed(True);
 				pDP->resize(oldSize);
 				QCoreApplication::processEvents();

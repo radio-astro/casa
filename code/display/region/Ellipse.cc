@@ -63,38 +63,8 @@ namespace casa {
 
 			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 
-			double wx, wy;
-			try {
-				linear_to_world( wc_, (blc_x + trc_x) / 2.0, (blc_y + trc_y) / 2.0, wx, wy );
-			} catch(...) {
-				return 0;
-			}
-			const Vector<String> &units = wc_->worldAxisUnits( );
-
-			Quantity qx( wx, units[0] );
-			Quantity qy( wy, units[1] );
-
-			Quantity minor, major, rot;
-			double wblc_x, wblc_y, wtrc_x, wtrc_y;
-			try {
-				linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
-			} catch(...) {
-				return 0;
-			}
-			// The position angle (rot) is the angle between north and the major axis of the
-			// ellipse, measured to the east (clockwise in standard astronomical coordinates
-			//  where the longitude increases with decreasing x).
-			double y_distance = fabs(wtrc_y - wblc_y);
-			double x_distance = fabs(wtrc_x - wblc_x);
-			if (  y_distance > x_distance ) {
-				rot = Quantity(0,"deg");
-				minor = Quantity( x_distance, units[0] );
-				major = Quantity( y_distance, units[1] );
-			} else {
-				rot = Quantity(90,"deg");
-				major = Quantity( x_distance, units[0] );
-				minor = Quantity( y_distance, units[1] );
-			}
+			std::pair<Vector<Quantity>,Vector<Quantity> > p_r = posAndRadii( );
+			if ( p_r.second.size( ) != 2 ) return 0;
 
 			const DisplayData *dd = wc_->displaylist().front();
 
@@ -108,7 +78,14 @@ namespace casa {
 				IPosition shape(cs.nPixelAxes( ));
 				for ( unsigned int i=0; i < shape.size( ); ++i )
 					shape(i) = dd->dataShape( )[axes[i]];
-				ellipse = new AnnEllipse( qx, qy, major/2, minor/2, rot, cs, shape, stokes );
+				Quantity rot( p_r.second(1) > p_r.second(0) ? Quantity(0,"deg") : Quantity(90,"deg") );
+				//  Can't call them major and minor because of gcc macros which render them:
+				//  ------- ------- ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+				//  Quantity gnu_dev_minor (p_r.second(1) > p_r.second(0) ? p_r.second(0) : p_r.second(1));
+				//  Quantity gnu_dev_major (p_r.second(1) < p_r.second(0) ? p_r.second(0) : p_r.second(1));
+				Quantity minor_( p_r.second(1) > p_r.second(0) ? p_r.second(0) : p_r.second(1) );
+				Quantity major_( p_r.second(1) < p_r.second(0) ? p_r.second(0) : p_r.second(1) );
+				ellipse = new AnnEllipse( p_r.first(0), p_r.first(1), major_, minor_, rot, cs, shape, stokes );
 			} catch ( AipsError &e ) {
 				cerr << "Error encountered creating an AnnEllipse:" << endl;
 				cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
@@ -382,12 +359,7 @@ namespace casa {
 			return region_centers;
 		}
 
-		ImageRegion *Ellipse::get_image_region( DisplayData *dd ) const {
-
-			if( wc_==0 ) return 0;
-
-			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
-			if ( padd == 0 ) return 0;
+		std::pair<Vector<Quantity>,Vector<Quantity> > Ellipse::posAndRadii( ) const {
 
 			Vector<Double> lin(2), blc(2), center(2);
 			double blcx, blcy, trcx, trcy;
@@ -395,56 +367,79 @@ namespace casa {
 
 			lin(0) = blcx;
 			lin(1) = blcy;
-			if ( ! wc_->linToWorld(blc, lin)) return 0;
+			if ( ! wc_->linToWorld(blc, lin)) return std::pair<Vector<Quantity>,Vector<Quantity> >( );
 
 			double center_x, center_y;
 			linearCenter( center_x, center_y );
 			lin(0) = center_x;
 			lin(1) = center_y;
-			if ( ! wc_->linToWorld(center, lin)) return 0;
+			if ( ! wc_->linToWorld(center, lin)) return std::pair<Vector<Quantity>,Vector<Quantity> >( );
+
+			Vector<Quantum<Double> > qcenter, qblc;
+
+			qcenter.resize(2);
+			qblc.resize(2);
+
+			const Vector<String> &units = wc_->worldAxisUnits( );
+
+			qcenter[0] = Quantum<Double>(center[0], units[0]);
+			qcenter[1] = Quantum<Double>(center[1], units[1]);
+
+			qblc[0] = Quantum<Double>(blc[0], units[0]);
+			qblc[1] = Quantum<Double>(blc[1], units[1]);
+
+			Vector<Quantity> radii_(2);
+
+			MDirection::Types cccs = current_casa_coordsys( );
+			if ( cccs == MDirection::N_Types ) {
+				// no direction coordinate was found...
+				radii_[0] = qcenter[0] > qblc[0] ? qcenter[0] - qblc[0] : qblc[0] - qcenter[0];
+				radii_[1] = qcenter[1] > qblc[1] ? qcenter[1] - qblc[1] : qblc[1] - qcenter[1];
+
+			} else {
+				// a direction coordinate was found...
+
+				Vector<Double> center_rad(2);
+				center_rad[0] = qcenter[0].getValue("rad");
+				center_rad[1] = qcenter[1].getValue("rad");
+				MDirection mdcenter( Quantum<Vector<Double> >(center_rad,"rad"), cccs );
+
+				Vector<Double> blc_rad_x(2);
+				blc_rad_x[0] = qblc[0].getValue("rad");
+				blc_rad_x[1] = qcenter[1].getValue("rad");
+				MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,"rad"),cccs );
+
+				Vector<Double> blc_rad_y(2);
+				blc_rad_y[0] = qcenter[0].getValue("rad");
+				blc_rad_y[1] = qblc[1].getValue("rad");
+				MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,"rad"),cccs );
+
+				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
+				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
+				radii_[0] = Quantity(xdistance,"rad");
+				radii_[1] = Quantity(ydistance,"rad");
+            }
+
+			return std::make_pair(qcenter,radii_);
+		}
+
+		ImageRegion *Ellipse::get_image_region( DisplayData *dd ) const {
+
+			if( wc_==0 ) return 0;
+
+			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+			if ( padd == 0 ) return 0;
 
 			std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
 			Vector<Int> dispAxes = padd->displayAxes( );
 			dispAxes.resize(2,True);
 
-			MDirection::Types cccs = current_casa_coordsys( );
-
-			const Vector<String> &units = wc_->worldAxisUnits( );
-			const DisplayCoordinateSystem &cs = image->coordinates( );
-			Vector<Quantum<Double> > qblc, qcenter;
-			qblc.resize(2);
-			qcenter.resize(2);
-
-			qcenter[0] = Quantum<Double>(center[0], units[0]);
-			qcenter[1] = Quantum<Double>(center[1], units[1]);
-
-			Vector<Double> center_rad(2);
-			center_rad[0] = qcenter[0].getValue("rad");
-			center_rad[1] = qcenter[1].getValue("rad");
-			MDirection mdcenter( Quantum<Vector<Double> >(center_rad,"rad"), cccs );
-
-			qblc[0] = Quantum<Double>(blc[0], units[0]);
-			qblc[1] = Quantum<Double>(blc[1], units[1]);
-
-			Vector<Double> blc_rad_x(2);
-			blc_rad_x[0] = qblc[0].getValue("rad");
-			blc_rad_x[1] = qcenter[1].getValue("rad");
-			MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,"rad"),cccs );
-
-			Vector<Double> blc_rad_y(2);
-			blc_rad_y[0] = qcenter[0].getValue("rad");
-			blc_rad_y[1] = qblc[1].getValue("rad");
-			MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,"rad"),cccs );
-
-			Vector<Quantity> radii(2);
-			double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
-			double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
-			radii[0] = Quantity(xdistance,"rad");
-			radii[1] = Quantity(ydistance,"rad");
+			std::pair<Vector<Quantity>,Vector<Quantity> > p_r = posAndRadii( );
+			if ( p_r.second.size( ) != 2 ) return 0;
 
 			ImageRegion *result = 0;
 			try {
-				WCEllipsoid ellipse( qcenter, radii, IPosition(dispAxes), cs);
+				WCEllipsoid ellipse( p_r.first, p_r.second, IPosition(dispAxes), wc_->coordinateSystem( ));
 				result = new ImageRegion(ellipse);
 			} catch(...) { }
 			return result;

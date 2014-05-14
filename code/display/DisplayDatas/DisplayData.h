@@ -586,7 +586,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions();
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// an explicit refresh: should be called if the DisplayData is
 		// changed such that drawing is required.  If clean is True,
@@ -606,7 +606,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return the class name of this DisplayData; useful mostly for
 		// debugging purposes, and perhaps future use in the glish widget
 		// interface.
-		virtual String className() {
+		virtual String className() const {
 			return String("DisplayData");
 		}
 		virtual String description( ) const {
@@ -683,7 +683,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// setUIBase(0) right after constructing this DD, before other
 		// user interface operations such as getOptions().
 		// <group>
-		virtual Int uiBase() {
+		virtual Int uiBase() const {
 			return uiBase_;
 		}
 
@@ -823,6 +823,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	private:
+
 		WorldCanvasHolder* oldWCHolder;
 
 		// is this data currently being displayed?

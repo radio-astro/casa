@@ -82,13 +82,10 @@ namespace casa {
 			}
 
 			bool SliceStats::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
-				try {
-					std::tr1::shared_ptr<SliceRegionInfo> sliceInfo = std::tr1::dynamic_pointer_cast<SliceRegionInfo>(info);
+				std::tr1::shared_ptr<SliceRegionInfo> sliceInfo = std::tr1::dynamic_pointer_cast<SliceRegionInfo>(info);
+				if ( sliceInfo ) {
 					Polyline* polylineRegion = sliceInfo->getRegion();
 					polylineRegion->addPlot( this->getPlotHolder(), sliceInfo->label());
-				}
-				catch(...){
-					qDebug()<<"Got exception from slice stats updateStatisticsInfo";
 				}
 				return true;
 			}
@@ -102,16 +99,14 @@ namespace casa {
 			}
 
 			bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
-				try {
-					std::tr1::shared_ptr<PVLineRegionInfo> pvinfo = std::tr1::dynamic_pointer_cast<PVLineRegionInfo>(info);
+				std::tr1::shared_ptr<PVLineRegionInfo> pvinfo = std::tr1::dynamic_pointer_cast<PVLineRegionInfo>(info);
+				if ( pvinfo ) {
 					pixel_pt1->setText(QString::fromStdString(pvinfo->pixelStrings( )[0]));
 					pixel_pt2->setText(QString::fromStdString(pvinfo->pixelStrings( )[1]));
 					world_pt1->setText(QString::fromStdString(pvinfo->worldStrings( )[0]));
 					world_pt2->setText(QString::fromStdString(pvinfo->worldStrings( )[1]));
 					position_angle->setText(QString::fromStdString(pvinfo->positionAngle( )) + QString::fromUtf8("˚"));
 					separation->setText(QString::fromStdString(pvinfo->separation( )));
-				} catch (...) {
-					/* expect only std::bad_cast */
 				}
 				return true;
 			}
@@ -174,7 +169,7 @@ namespace casa {
 
 		}
 
-		void QtRegionStats::setCenterBackground(QString background) {
+		void QtRegionStats::setCenterBackground(QString /*background*/) {
             ///////// the display widget has switched from an
             ///////// un-editable entry widget to a label widget
             ///////// so it does not need to have its background
