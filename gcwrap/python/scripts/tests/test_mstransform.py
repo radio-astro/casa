@@ -1475,7 +1475,7 @@ class test_timeaverage(test_base_compare):
         self.generate_tolerance_map()
 
         self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 4.08E-3/100
+        self.tolerance['UVW'] = 15.0/100
         
         self.mode['EXPOSURE'] = "percentage"
         self.tolerance['EXPOSURE'] = 3.58E-5/100
@@ -1484,7 +1484,7 @@ class test_timeaverage(test_base_compare):
         self.tolerance['TIME_CENTROID'] = 2.77E-4
         
         self.mode['DATA'] = "percentage"  
-        self.tolerance['DATA'] = 1.20E-5/100
+        self.tolerance['DATA'] = 2.27E-5/100
         
         self.mode['WEIGHT'] = "percentage"
         self.tolerance['WEIGHT'] = 3.15E-3/100
@@ -1538,7 +1538,7 @@ class test_timeaverage(test_base_compare):
         self.tolerance['TIME_CENTROID'] = 2.77E-4
         
         self.mode['DATA'] = "percentage"  
-        self.tolerance['DATA'] = 1.20E-5/100
+        self.tolerance['DATA'] = 2.34E-5/100
         
         self.mode['WEIGHT'] = "percentage"
         self.tolerance['WEIGHT'] = 3.15E-3/100

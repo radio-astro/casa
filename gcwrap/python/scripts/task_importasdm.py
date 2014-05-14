@@ -5,6 +5,15 @@ import flaghelper as fh
 from casac import casac
 
 
+# Hack to address CAS-6411, CAS-6412, and CAS-6413.
+import platform
+def set_library_paths_before_system_call(command_line):
+    if platform.system() == "Darwin":
+        if os.getenv("DYLD_FRAMEWORK_PATH"):
+            command_line = "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:" + os.getenv("DYLD_FRAMEWORK_PATH") + " " + command_line
+    return os.system(command_line)
+
+
 def importasdm(
     asdm=None,
     vis=None,
@@ -199,7 +208,9 @@ def importasdm(
                     execute_string += ' -logfile ' + casalog.logfile()
                 casalog.post('execute_string is')
                 casalog.post('   ' + execute_string)
-                ret = os.system(execute_string)
+                # ret = os.system(execute_string)
+                # Hack to address CAS-6411, CAS-6412, and CAS-6413.
+                ret = set_library_paths_before_system_call(execute_string)
                 if ret != 0 and not showversion:
                     casalog.post(theexecutable
                                  + ' terminated with exit code '
@@ -330,7 +341,9 @@ def importasdm(
                      + ' standalone invoked as:')
         # print execute_string
         casalog.post(execute_string)
-        exitcode = os.system(execute_string)
+        # exitcode = os.system(execute_string)
+        # Hack to address CAS-6411, CAS-6412, and CAS-6413.
+        exitcode = set_library_paths_before_system_call(execute_string)
         if exitcode != 0:
             if not showversion:
                 casalog.post(theexecutable
