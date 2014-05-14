@@ -147,7 +147,7 @@ class TsysflagInputs(basetask.StandardInputs):
     @ff_tmf1_limit.setter
     def ff_tmf1_limit(self, value):
         if value is None:
-            value = 0.5
+            value = 0.666
         self._ff_tmf1_limit = value
 
     @property
@@ -191,7 +191,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
               caltable=inputs.caltable,
               metric='median',
               flag_nmedian=True,
-              fnm_limit = inputs.fnm_limit)
+              fnm_limit = inputs.fnm_limit,
+              flag_hi=False,
+              flag_maxabs=False,
+              flag_tmf1=False)
 
             flagtask = Tsysflagspectra(flaginputs)
             # Execute it to flag the data view
@@ -206,9 +209,11 @@ class Tsysflag(basetask.StandardTaskTemplate):
               vis=inputs.vis,
               caltable=inputs.caltable,
               metric='derivative',
-              flag_nmedian=False,
               flag_maxabs=True,
-              fmax_limit=inputs.fd_max_limit)
+              fmax_limit=inputs.fd_max_limit,
+              flag_nmedian=False,
+              flag_hi=False,
+              flag_tmf1=False)
 
             flagtask = Tsysflagspectra(flaginputs)
             result.add('derivative', self._executor.execute(flagtask))
@@ -244,7 +249,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
               flag_tmf1=True,
               tmf1_axis='Antenna1',
               tmf1_limit=inputs.ff_tmf1_limit,
-              flag_nmedian=False)
+              flag_nmedian=False,
+              flag_hi=False)
 
             flagtask = Tsysflagspectra(flaginputs)
             result.add('fieldshape', self._executor.execute(flagtask))
