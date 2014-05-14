@@ -25,8 +25,8 @@ class TsysflagchansInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       intentgroups=None, metric=None,
-      flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
-      flag_sharps2=None, sharps2_limit=None, niter=None):
+      flag_edges=None, edge_limit=None, 
+      flag_sharps=None, sharps_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -131,26 +131,6 @@ class TsysflagchansInputs(basetask.StandardInputs):
         self._sharps_limit = value
 
     @property
-    def flag_sharps2(self):
-        if self._flag_sharps2 is None:
-            return False
-        return self._flag_sharps2
-
-    @flag_sharps2.setter
-    def flag_sharps2(self, value):
-        self._flag_sharps2 = value
-
-    @property
-    def sharps2_limit(self):
-        if self._sharps2_limit is None:
-            return 0.05
-        return self._sharps2_limit
-
-    @sharps2_limit.setter
-    def sharps2_limit(self, value):
-        self._sharps2_limit = value
-
-    @property
     def niter(self):
         if self._niter is None:
             return 1
@@ -186,9 +166,7 @@ class Tsysflagchans(basetask.StandardTaskTemplate):
         if inputs.metric != 'channel_time':
              rules = viewflaggers.VectorFlagger.make_flag_rules (
                flag_edges=inputs.flag_edges, edge_limit=inputs.edge_limit,
-               flag_sharps=inputs.flag_sharps, sharps_limit=inputs.sharps_limit,
-               flag_sharps2=inputs.flag_sharps2,
-               sharps2_limit=inputs.sharps2_limit)
+               flag_sharps=inputs.flag_sharps, sharps_limit=inputs.sharps_limit)
              flagger = viewflaggers.VectorFlagger
         else:
              rules = viewflaggers.MatrixFlagger.make_flag_rules ()
