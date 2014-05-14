@@ -27,7 +27,7 @@ Flag deviant channels in bandpass calibration.
     </param>
 
     <param type="bool" name="flag_sharps">
-        <description>True to flag channels covering sharp spectral features</description>
+        <description>True to flag channels covering sharp spectral features plus additional channels on their flanks</description>
         <value>False</value>
     </param>
 
@@ -36,14 +36,19 @@ Flag deviant channels in bandpass calibration.
         <value>0.05</value>
     </param>
 
-    <param type="bool" name="flag_sharps2">
-        <description>True to flag channels covering sharp spectral features plus additional channels on their flanks</description>
+    <param type="bool" name="flag_hilo">
+        <description>True to flag outlier channels</description>
         <value>False</value>
     </param>
 
-    <param type="double" name="sharps2_limit" subparam="true">
-        <description>Flag channels bracketing a channel to channel difference > sharps2_limit</description>
-        <value>0.05</value>
+    <param type="double" name="fhl_limit" subparam="true">
+        <description>Flag channels further from median than limit * MAD</description>
+        <value>7</value>
+    </param>
+
+    <param type="double" name="fhl_minsample" subparam="true">
+        <description>Minimum number of points in sample</description>
+        <value>5</value>
     </param>
 
     <param type="bool" name="flag_diffmad">
@@ -102,6 +107,7 @@ Flag deviant channels in bandpass calibration.
             <equals type="string" value="interactive">
                 <default param="caltable"><value type="stringArray"></value></default>
                 <default param="flag_diffmad"><value type="bool">True</value></default>
+                <default param="flag_hilo"><value type="bool">False</value></default>
                 <default param="flag_tmf"><value type="bool">False</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
@@ -109,6 +115,7 @@ Flag deviant channels in bandpass calibration.
             <equals type="string" value="getinputs">
                 <default param="caltable"><value type="stringArray"></value></default>
                 <default param="flag_diffmad"><value type="bool">True</value></default>
+                <default param="flag_hilo"><value type="bool">False</value></default>
                 <default param="flag_tmf"><value type="bool">False</value></default>
             </equals>
         </when>
@@ -129,20 +136,21 @@ Flag deviant channels in bandpass calibration.
             </equals>
         </when>
 
-        <when param="flag_sharps2">
-            <equals type="bool" value="False">
-            </equals>
-            <equals type="bool" value="True">
-                <default param="sharps2_limit"><value>0.05</value></default>
-            </equals>
-        </when>
-
         <when param="flag_diffmad">
             <equals type="bool" value="True">
                 <default param="diffmad_limit"><value>14</value></default>
                 <default param="diffmad_nchan_limit"><value>10000</value></default>
             </equals>
             <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_hilo">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fhl_limit"><value>7</value></default>
+                <default param="fhl_minsample"><value>5</value></default>
             </equals>
         </when>
 
@@ -222,21 +230,15 @@ edge_limit -- The first channels inward from each end of the spectrum where the
               than 1/4 of the way across the spectrum then no flagging is done.
     default: 3
 
-flag_sharps -- True to flag channels that cover sharp spectral features.
+flag_sharps -- True to flag channels that cover sharp spectral features. Uses
+               the same algorithm as flag_sharps to flag the cores of the 
+               features but extends the flagging over the feature flanks until
+               the channel to channel difference falls below 2 * the median 
+               over the spectrum.
     default: False
 
-sharps_limit -- Flag channels bracketing a channel to channel difference > sharps_limit.
-    default: 0.05
-
-flag_sharps2 -- True to flag channels that cover sharp spectral features. Uses
-                the same algorithm as flag_sharps to flag the cores of the 
-                features but extends the flagging over the feature flanks until
-                the channel to channel difference falls below 2 * the median 
-                over the spectrum.
-    default: False
-
-sharps2_limit -- Flag as sharp feature cores those channels bracketing a channel
-                 to channel difference > sharps_limit.
+sharps_limit -- Flag as sharp feature cores those channels bracketing a channel
+                to channel difference > sharps_limit.
     default: 0.05
 
 ---- pipeline context defined parameter arguments which can be set only in
@@ -274,10 +276,7 @@ proportion of channels have already been flagged for other reasons.
  
 If flag_edges is True then channels at the band edges are detected and flagged.
 
-If flag_sharps is True then channels covering sharp spectral features are
-are flagged.
-
-If flag_sharps2 is True then channels covering sharp sepctral features are
+If flag_sharps is True then channels covering sharp sepctral features are
 flagged and the flagging is extended in an attempt to cover the lower
 flanks of the features as well.
 
