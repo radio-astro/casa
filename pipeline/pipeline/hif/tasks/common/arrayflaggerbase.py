@@ -173,17 +173,18 @@ class FlagCmd(object):
                     flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(rangestrs)
 
             # antenna/baseline flags
+            ax_antenna = None
             for k,name in enumerate(axisnames):
                 if 'ANTENNA' in name.upper():
                     if antenna is None or antenna==flagcoords[k]:
-                        antenna = flagcoords[k]
+                        ax_antenna = flagcoords[k]
                     else:
-                        antenna = '%s&%s' % (antenna, flagcoords[k])
+                        ax_antenna = '%s&%s' % (antenna, flagcoords[k])
                 elif name.upper()=='BASELINE':
-                    antenna = flagcoords[k]
-            if antenna is not None:
-                flagcmd += " antenna='%s'" % (antenna)
-                self.antenna = antenna
+                    ax_antenna = flagcoords[k]
+            if ax_antenna is not None:
+                flagcmd += " antenna='%s'" % (ax_antenna)
+                self.antenna = ax_antenna
 
             flag_time = None
             for k,name in enumerate(axisnames):
