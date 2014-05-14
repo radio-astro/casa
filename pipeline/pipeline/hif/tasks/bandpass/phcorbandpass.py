@@ -14,9 +14,9 @@ LOG = infrastructure.get_logger(__name__)
 
 class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     phaseup       = basetask.property_with_default('phaseup', True)
-    phaseupbw     = basetask.property_with_default('phaseupbw', '500MHz')
+    #phaseupbw     = basetask.property_with_default('phaseupbw', '500MHz')
+    phaseupbw     = basetask.property_with_default('phaseupbw', '')
     phaseupsolint = basetask.property_with_default('phaseupsolint', 'int')
-    #solint        = basetask.property_with_default('solint', 'inf,7.8125MHz')
     solint        = basetask.property_with_default('solint', 'inf')
     maxchannels   = basetask.property_with_default('maxchannels', 240)
     
