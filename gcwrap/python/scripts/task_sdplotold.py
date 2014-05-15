@@ -297,7 +297,8 @@ class sdplot_worker(sdutil.sdtask_template):
         if self.plottype == 'grid':
              datname += " (gridded)"
         sd.plotter.print_header(plot=(self.header and asaplot),fontsize=self.headsize,
-                                logger=True,selstr=self.ssel,extrastr=datname)        
+                                #logger=True,selstr=self.ssel,extrastr=datname)
+                                logger=True,extrastr=datname)
 
     def __dosmooth(self):
         if self.kernel == '': self.kernel = 'none'
