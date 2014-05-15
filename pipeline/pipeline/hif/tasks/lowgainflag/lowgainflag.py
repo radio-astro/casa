@@ -24,7 +24,7 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
       intent=None, spw=None, refant=None, flag_nmedian=None,
-      fnm_limit=None, niter=None):
+      fnm_lo_limit=None, fnm_hi_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -65,14 +65,24 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
         self._flag_nmedian = value
 
     @property
-    def fnm_limit(self):
-        return self._fnm_limit
+    def fnm_lo_limit(self):
+        return self._fnm_lo_limit
 
-    @fnm_limit.setter
-    def fnm_limit(self, value):
+    @fnm_lo_limit.setter
+    def fnm_lo_limit(self, value):
         if value is None:
-            value = 0.5
-        self._fnm_limit = value
+            value = 0.7
+        self._fnm_lo_limit = value
+
+    @property
+    def fnm_hi_limit(self):
+        return self._fnm_hi_limit
+
+    @fnm_hi_limit.setter
+    def fnm_hi_limit(self, value):
+        if value is None:
+            value = 1.3
+        self._fnm_hi_limit = value
 
     @property
     def niter(self):
@@ -108,7 +118,8 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # list of rules.
 	rules = viewflaggers.MatrixFlagger.make_flag_rules (
           flag_nmedian=inputs.flag_nmedian,
-          fnm_limit=inputs.fnm_limit)
+          fnm_lo_limit=inputs.fnm_lo_limit,
+          fnm_hi_limit=inputs.fnm_hi_limit)
 
         # Construct the flagger task around the data view task  and the
         # flagger task. When executed this will:
