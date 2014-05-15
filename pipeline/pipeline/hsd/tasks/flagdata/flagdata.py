@@ -172,7 +172,6 @@ class SDFlagData(common.SingleDishTaskTemplate):
             spwid_list = [group_desc[i].spw for i in member_list]
             
             # selection by infiles
-)
             if len(_file_index) < 1:
                 LOG.debug('Skip reduction group %d'%(group_id))
                 continue
