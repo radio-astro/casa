@@ -41,6 +41,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_fixvis.py
   test_flagcmd.py
   test_flagdata.py
+  test_flaghelper.py
   test_fluxscale.py
   test_gaincal.py
   test_getchunk.py

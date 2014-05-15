@@ -10,6 +10,7 @@ import copy
 from taskinit import *
 from tasks import *
 import flagdata as flagdata
+from collections import deque
 # needed in Python 2.6
 from OrderedDictionary import OrderedDict
 # for Python 2.7
@@ -17,33 +18,35 @@ from OrderedDictionary import OrderedDict
 
 '''
 A set of helper functions for the tasks flagdata and flagcmd.
+Class Parser: to parse flag commands
+
 I/O functions:
     readFile
-    readXML
-    makeDict
+    readFiles
+    readAndParse
+    parseDictionary
+    parseXML
     readAntennaList
     writeAntennaList
-    writeFlagCmd
+    writeFlagCommands
     writeRflagThresholdFile
     
 Parameter handling
     compressSelectionList
-    fixType
-    getLinePars
-    getNumPar
-    getReason
-    getSelectionPars
-    getUnion
+    evalParams
+    selectReason
+    parseSelectionPars
+    parseUnion
     purgeEmptyPars
     purgeParameter
-    setupAgent
+    parseAgents
     
 Others
     backupFlags
     convertDictToString
     convertStringToDict
     extractAntennaInfo
-    extractRflagOutputFromSummary
+    parseRflagOutputFromSummary
     
 '''
 ###some helper tools
@@ -158,10 +161,10 @@ def isCalTable(msname):
     
     return retval
 
-@dump_args
+#@dump_args
 def addAbsolutePath(input_file):
     '''Read in the lines from an input file
-    input_file -->  file in disk with a list of strings per line
+    input_file -->  file in disk with a list of strinZeeuwgs per line
      
     Return a new file saved to disk with relative file names 
     changed to absolute file names. The new file will have the name
@@ -215,7 +218,6 @@ def readFile(inputfile):
         casalog.post('ASCII file not found - please verify the name','ERROR')
         raise 
             
-    #
     # Parse file
     try:
         cmdlist = []
@@ -237,13 +239,349 @@ def readFile(inputfile):
     
     return cmdlist
 
+def readFiles(inputfiles):
+    '''Read in a list of files with flag commands
+        inputfiles  --> list of files in disk
+
+    Returns all files concatenated into one single list. Blank lines are skipped. 
+    Boolean values will be capitalized to avoid errors in the parser later.
+    '''
+    
+    if not isinstance(inputfiles, list):
+        casalog.post('Error opening list of flag commands ' + inputfiles,'ERROR')
+        raise
+    
+    cmdlist = []
+    
+    # Read files 
+    for flagfile in inputfiles:
+        cmd = readFile(flagfile)
+        nlines = len(cmd)
+        casalog.post('Read %s command(s) from file: %s'%(nlines, flagfile))  
+        cmdlist = cmdlist + cmd
+                     
+    return cmdlist
+    
+def readAndParse(inputlist, tbuff=None):
+    '''Read in a list of flag commands and parse them into a dictionary.
+       The flag commands can be from a list of files or from a list of flag commands.
+       If tbuff is given, it will be applied to the timerange parameters.
+       
+       Note: when tbuff is None, it is best to use the individual functions
+       readFile(s) and parseDictionary to avoid parsing the file twice!
+    
+    inputlist -->  list of files in disk containing the flag commands or
+                   a list of Python strings with flag commands.
+    tbuff      -->  list of time buffers to apply to each timerange. If tbuff
+                  is a list, it should be the same size of the list of inputfiles.
+                  If it is a Double value, it will be applied only to the first
+                  input file. 
+    
+    Returns a list of dictionaries. Blank lines are skipped. Boolean values will
+    be capitalized to avoid errors in the parser.
+    
+    Each parameter=value will become a key=value in the dictionary. Example:
+    inputlist = ["mode='manual' spw='0' autocorr=true",
+                 "mode='shadow'"]
+                 
+    Returns:
+    [{'mode':'manual','spw':'0','autocorr':True},
+     {'mode':'shadow'}]
+    
+    '''      
+    if not isinstance(inputlist, list):
+        casalog.post('Error opening list of flag commands ' + inputlist,'ERROR')
+        raise       
+    
+    # List of files
+    if os.path.isfile(inputlist[0]):
+        isFile = True
+        
+    # List of strings
+    else:
+        isFile = False
+        
+    if tbuff is None:
+        doPadding = False
+    else:
+        doPadding = True
+
+    # Make the list of tbuff a deque        
+    dtbuff = deque()
+    
+    if isinstance(tbuff, float):
+        dtbuff.append(tbuff)
+    elif isinstance(tbuff, list):
+        dtbuff = deque(i for i in tbuff)
+            
+    # List of dictionaries to return    
+    listofdict = []
+
+    # Initialize the parser
+    myParser = Parser(' ', '=')
+    
+    # Read files 
+    if isFile:
+        for flagfile in inputlist:        
+            cmdlist = readFile(flagfile)
+            nlines = len(cmdlist)
+            casalog.post('Read %s command(s) from file: %s'%(nlines, flagfile))  
+ 
+            parsedlist = []
+            for cmd in cmdlist:
+                #Get a dictionary without type evaluation
+                preparsing = myParser.parseNoEval(cmd)   
+                
+                # Evaluate the types          
+                parsed = evaluateParameters(preparsing)                                    
+                parsedlist.append(parsed)
+                
+            # Apply time buffer to file
+            if doPadding:
+                mytbuff = dtbuff.popleft()
+                applyTimeBufferList(parsedlist, mytbuff)
+                if dtbuff.__len__() == 0:
+                    doPadding = False
+                    
+            listofdict = listofdict + parsedlist
+            
+    # It is a list of strings
+    else:
+
+        cmdlist = inputlist
+        nlines = len(cmdlist)
+        casalog.post('Read %s command(s) from a Python list of strings'%nlines)  
+        
+        parsedlist = []
+        for cmd in cmdlist:
+            #Get a dictionary without type evaluation
+            preparsing = myParser.parseNoEval(cmd)   
+            
+            # Evaluate the types          
+            parsed = evaluateParameters(preparsing)
+            parsedlist.append(parsed)
+                   
+        # Apply time buffer to list
+        if doPadding:
+            mytbuff = dtbuff.popleft()
+            applyTimeBufferList(parsedlist, mytbuff)
+            
+        listofdict = listofdict + parsedlist
+                            
+    return listofdict
+
+# USe readAndParse to apply tbuff, which is slightly faster. For
+# small files, the difference is not noticeable.
+def readParseTbuff(inputlist, tbuff=None):
+    '''Read in a list of flag commands and parse them into a dictionary.
+       The flag commands can be from a list of files or from a list of flag commands.
+       If tbuff is given, it will be applied to the timerange parameters.
+       
+       Note: when tbuff is None, it is best to use the individual functions
+       readFile(s) and parseDictionary to avoid parsing the file twice!
+    
+    inputlist -->  list of files in disk containing the flag commands or
+                   a list of Python strings with flag commands.
+    tbuff      -->  list of time buffers to apply to each timerange. If tbuff
+                  is a list, it should be the same size of the list of inputfiles.
+                  If it is a Double value, it will be applied only to the first
+                  input file. 
+    
+    Returns a list of dictionaries. Blank lines are skipped. Boolean values will
+    be capitalized to avoid errors in the parser.
+    
+    Each parameter=value will become a key=value in the dictionary. Example:
+    inputlist = ["mode='manual' spw='0' autocorr=true",
+                 "mode='shadow'"]
+                 
+    Returns:
+    [{'mode':'manual','spw':'0','autocorr':True},
+     {'mode':'shadow'}]
+    
+    '''      
+    if not isinstance(inputlist, list):
+        casalog.post('Error opening list of flag commands ' + inputlist,'ERROR')
+        raise       
+    
+    # List of files
+    if os.path.isfile(inputlist[0]):
+        isFile = True
+        
+    # List of strings
+    else:
+        isFile = False
+        
+    if tbuff is None:
+        doPadding = False
+    else:
+        doPadding = True
+    
+    # Make the list of tbuff a deque        
+    dtbuff = deque()
+    
+    if isinstance(tbuff, float):
+        dtbuff.append(tbuff)
+    elif isinstance(tbuff, list):
+        dtbuff = deque(i for i in tbuff)
+        
+    # List of dictionaries to return    
+    listofdict = []
+
+    # Initialize the parser
+    myParser = Parser(' ', '=')
+    
+    # Read files 
+    if isFile:
+        for flagfile in inputlist:        
+            cmdlist = readFile(flagfile)
+            nlines = len(cmdlist)
+            casalog.post('Read %s command(s) from file: %s'%(nlines, flagfile))  
+
+            if doPadding: 
+                mytbuff = dtbuff.popleft()
+ 
+            parsedlist = []
+            for cmd in cmdlist:
+                #Get a dictionary without type evaluation
+                preparsing = myParser.parseNoEval(cmd)   
+                
+                # Evaluate the types          
+                parsed = evaluateParameters(preparsing)     
+                                               
+                # Apply time buffer to single command
+                if doPadding: 
+                    applyTimeBuffer(parsed, mytbuff)
+
+                parsedlist.append(parsed)
+                            
+            if dtbuff.__len__() == 0:
+                doPadding = False   
+                    
+            # Append dictionary to list
+            listofdict = listofdict + parsedlist
+            
+    # It is a list of strings
+    else:
+
+        cmdlist = inputlist
+        nlines = len(cmdlist)
+        casalog.post('Read %s command(s) from a Python list of strings'%nlines)  
+
+        if doPadding: 
+            mytbuff = dtbuff.popleft()
+        
+        parsedlist = []
+        for cmd in cmdlist:
+            #Get a dictionary without type evaluation
+            preparsing = myParser.parseNoEval(cmd)   
+            
+            # Evaluate the types          
+            parsed = evaluateParameters(preparsing)
+            
+            # Apply time buffer to single command
+            if doPadding: 
+                applyTimeBuffer(parsed, mytbuff)
+                
+            parsedlist.append(parsed)
+                               
+        listofdict = listofdict + parsedlist
+                            
+    return listofdict
+
+def applyTimeBuffer(cmddict, tbuff):
+    ''' Apply in-place a time buffer to timerange from a dictionary with one flag command
+
+        cmddict --> dictionary with a single flag command:
+                Ex: {'antenna':'DV01', 'timerange':'2013/11/15/10:25:30.516~2013/11/15/10:25:32.454'}
+        tbuff --> float value of time buffer to apply to all timerange parameters
+         
+        * it assumes that timerange has syntax t0~t1
+        * split timerange in '~' to get t0 and t1
+        * convert value to time in days using qa.totime
+        * convert days to seconds
+        * subtract tbuff from t0 and add tbuff to t1
+        * convert back to time string with the form 'ymd' using qa.time
+        * write new values back to input dictionary
+        
+    '''
+#     if not isinstance(tbuff, float):
+#         casalog.post('Time buffer (tbuff) is not of type float', 'WARN')
+#         return
+            
+    if cmddict.has_key('timerange'):
+        timerange = cmddict['timerange']
+        if timerange.find('~') != -1:
+            t0,t1 = timerange.split('~',1)
+            # start time
+            startTime = qa.totime(t0)['value']
+            startTimeSec = (startTime * 24 * 3600) - tbuff
+            startTimeSec = qa.quantity(startTimeSec, 's')
+            paddedT0 = qa.time(startTimeSec,form='ymd',prec=9)[0]
+            # end time
+            endTime = qa.totime(t1)['value']
+            endTimeSec = (endTime * 24 * 3600) + tbuff
+            endTimeSec = qa.quantity(endTimeSec, 's')
+            paddedT1 = qa.time(endTimeSec,form='ymd',prec=9)[0]
+            
+            # update the original dictionary
+            cmddict['timerange'] = paddedT0+'~'+paddedT1                
+
+    return
+
+
+def applyTimeBufferList(alist, tbuff):
+    ''' Apply in-place a time buffer to ALL timerange parameters of a
+        list of dictionaries with several flag commands. It will do the following:
+        
+        alist --> list of dictionaries with flag commands.
+              Ex: [{'antenna':'DV01', 'timerange':'2013/11/15/10:25:30.516~2013/11/15/10:25:32.454'},
+                   {'antenna':'DV02', 'timerange':'2013/10/15/10:25:30.110~2013/10/15/10:25:32.230'},
+                   ...]
+        tbuff --> float value of time buffer to apply to all timerange parameters
+        
+        * it assumes that timerange has syntax t0~t1
+        * split timerange in '~' to get t0 and t1
+        * convert value to time in days using qa.totime
+        * convert days to seconds
+        * subtract tbuff from t0 and add tbuff to t1
+        * convert back to time string with the form 'ymd' using qa.time
+        * write new values back to dictionary
+        
+    '''
+#     if not isinstance(tbuff, float):
+#         casalog.post('Time buffer (tbuff) is not of type float', 'WARN')
+#         return
+        
+    casalog.post('Apply time buffer padding to list of dictionaries', 'DEBUG1')
+    
+    for cmddict in alist:
+        if cmddict.has_key('timerange'):
+            timerange = cmddict['timerange']
+            if timerange.find('~') != -1:
+                t0,t1 = timerange.split('~',1)
+                # start time
+                startTime = qa.totime(t0)['value']
+                startTimeSec = (startTime * 24 * 3600) - tbuff
+                startTimeSec = qa.quantity(startTimeSec, 's')
+                paddedT0 = qa.time(startTimeSec,form='ymd',prec=9)[0]
+                # end time
+                endTime = qa.totime(t1)['value']
+                endTimeSec = (endTime * 24 * 3600) + tbuff
+                endTimeSec = qa.quantity(endTimeSec, 's')
+                paddedT1 = qa.time(endTimeSec,form='ymd',prec=9)[0]
+                
+                # update the original dictionary
+                cmddict['timerange'] = paddedT0+'~'+paddedT1
+                
+    return
+
 #@dump_args
 def parseDictionary(cmdlist, reason='any', shadow=True):
     '''Create a dictionary after parsing a list of flag commands.
        If reason is different than 'any', only the selected
        rows will be parsed to the final dictionary.
      
-       cmdlist --> list of flag commands
+       cmdlist --> list of flag commands OR list of dictionaries with flag commands as key:value
        reason --> reason or list of reasons to select from
        shadow --> True will make a dictionary of the addantenna parameter
                    and add it to the flag command
@@ -255,7 +593,6 @@ def parseDictionary(cmdlist, reason='any', shadow=True):
        of the filename and add it to the parsed dictionary.
      
     '''
-         
     if cmdlist.__len__() == 0:
         raise Exception, 'Empty list of commands'
 
@@ -271,7 +608,6 @@ def parseDictionary(cmdlist, reason='any', shadow=True):
                      'ERROR')
         return
  
-
     # Separate per ' ', then per '='
     myParser = Parser(' ', '=')
  
@@ -280,35 +616,31 @@ def parseDictionary(cmdlist, reason='any', shadow=True):
     for cmd in cmdlist:
         cmddict = {}
         
-        # Skip comment and empty lines
-        if cmd.startswith('#'):
-            continue
-        if cmd == '':
-            continue
-
-        uppercmd = cmd.replace('true','True')
-        cmd = uppercmd.replace('false','False')      
-
-        # CAS-5368, allow summary in list mode
-#        if cmd.__contains__('summary'):
-#            casalog.post('Mode summary is not allowed in list operation', 'WARN')
-#            continue
-
+        # Simple list of strings ([key1='value1' key2='value2']
+        if isinstance(cmd, str):
+            # Skip comment and empty lines
+            if cmd.startswith('#'):
+                continue
+            if cmd == '':
+                continue
+    
+            uppercmd = cmd.replace('true','True')
+            cmd = uppercmd.replace('false','False')      
+        
+            # Get a dictionary without type evaluation
+            preparsing = myParser.parseNoEval(cmd)
+            
+            # Evaluate the types            
+            parsed = evaluateParameters(preparsing)
+            
+        # List of dictionaries: [{'key1':'value1', 'key2':'value2'}]
+        elif isinstance(cmd, dict):
+            parsed = cmd
+                
+        # Parse the flag commands into a dictionary
         mode = ''
         antenna = ''
         timerange = ''
-        
-        ##############################
-        # Get a dictionary without type evaluation
-        preparsing = myParser.parseNoEval(cmd)
-        
-        # Evaluate the types            
-        parsed = evaluateParameters(preparsing)
-        
-        ##############################
-        
-        # Parse the flag commands into a dictionary
-#        parsed = myParser.parse2Dictionary(cmd)
         cmddict['row'] = str(row)
         cmddict['id'] = str(row)
         cmddict['command'] = parsed
@@ -599,7 +931,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         mode = cmd['mode']
         agent_name = mode.capitalize()+'_'+str(row)
             
-        cmd['name'] = agent_name
+        cmd['agentname'] = agent_name
         
         # Remove the data selection parameters if there is only one agent for performance reasons.
         # Explanation: if only one agent exists and the data selection parameters are parsed to it, 
@@ -615,7 +947,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
                     cmd.pop(k)
 
         casalog.post('Parsing parameters of mode %s in row %s'%(mode,row), 'DEBUG')
-        casalog.post('%s'%cmd, 'DEBUG')
+        casalog.post('%s'%cmd, 'DEBUG')            
 
         # Parse the dictionary of parameters to the tool
         if (not aflocal.parseagentparameters(cmd)):
@@ -858,10 +1190,16 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
             cmdline = ""
             reason = ""
             cmddict = flagdict[key]['command']
+            
             # Do not save reason in the COMMAND column
             if cmddict.has_key('reason'):
                 cmddict.pop('reason')
                 
+            # Summary cmds should not go to FLAG_CMD
+            if cmddict.has_key('mode') and cmddict['mode'] == 'summary':
+                casalog.post("Commands with mode='summary' are not allowed in the FLAG_CMD table", 'WARN')
+                continue
+            
             # Add to REASON column the user input reason if requested
             reason = flagdict[key]['reason']
             if reason2add:
@@ -877,6 +1215,7 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                         v = v.strip("'")
                     cmdstr = "'"+v+"'"
                     cmdline = cmdline + k + '=' + str(cmdstr) + ' '
+<<<<<<< .working
 
 #                 elif k == 'timedev' and isinstance(v,list):
 #                     #outer list, 
@@ -917,6 +1256,9 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
 #                     lstring = lstring.rstrip(',')
 #                     cmdline = cmdline + k + '=['+ lstring + '] '
                     
+=======
+
+>>>>>>> .merge-right.r27602
                 else:
                     cmdline = cmdline + k + '=' + str(v) + ' '
                 
@@ -957,14 +1299,16 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
         
         newrows = int(tblocal.nrows())
         newrows = newrows - nrows
-        casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
+        if newrows == 0:
+            casalog.post('Did not save any rows to FLAG_CMD')
+        else:
+            casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
         
         tblocal.close()
         
     return True
 
 
-# TODO: verify
 def parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
     """
     Function to pull out 'rflag' output from the long dictionary, and 
@@ -1526,6 +1870,38 @@ def evaluateParameters(pardict):
     
     return cmddict
 
+<<<<<<< .working
+=======
+def evaluateNumpyType(elem):
+    '''Evaluate if an element is of numpy type.
+       Cast it to the corresponding Python type
+       and return the casted value'''
+    
+    import numpy as np
+    
+    val = None
+    
+    if(isinstance(elem,np.int) or isinstance(elem,np.int8) or
+       isinstance(elem,np.int16) or isinstance(elem,np.int32) or
+       isinstance(elem,np.int64)):
+        val = int(elem)
+        
+    elif(isinstance(elem,np.float) or isinstance(elem,np.float16) or
+         isinstance(elem,np.float32) or isinstance(elem,np.float64) or
+         isinstance(elem,np.float128)):
+        val = float(elem)
+        
+    elif(isinstance(elem,np.double)):
+        val = float(elem)  
+        
+    else:
+        # it is none of the above numpy types
+        val = elem
+        
+    # return the casted element  
+    return val
+
+>>>>>>> .merge-right.r27602
 def parseXML(sdmfile, mytbuff):
     '''
 #   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
@@ -1601,7 +1977,7 @@ def parseXML(sdmfile, mytbuff):
     rowlist = xmlants.getElementsByTagName('row')
     for rownode in rowlist:
         rowname = rownode.getElementsByTagName('name')
-        ant = str(rowname[0].childNodes[0].nodeValue)
+        ant = str(rowname[0].childNodes[0].nodeValue).strip()
         rowid = rownode.getElementsByTagName('antennaId')
         # CAS-4532: remove spaces between content and tags
         antid = str(rowid[0].childNodes[0].nodeValue).strip()
@@ -1624,7 +2000,7 @@ def parseXML(sdmfile, mytbuff):
             # SMC: 6/3/2012 ALMA SDM does not have name
             if rownode.getElementsByTagName('name'):
                 rowname = rownode.getElementsByTagName('name')
-                spw = str(rowname[0].childNodes[0].nodeValue)
+                spw = str(rowname[0].childNodes[0].nodeValue).strip()
                 spwdict[spwid]['name'] = spw
             else:
                 spwmode = -1
@@ -1663,7 +2039,7 @@ def parseXML(sdmfile, mytbuff):
     for fid in range(nrows):
         rownode = rowlist[fid]
         rowfid = rownode.getElementsByTagName('flagId')
-        fidstr = str(rowfid[0].childNodes[0].nodeValue)
+        fidstr = str(rowfid[0].childNodes[0].nodeValue).strip()
         flagdict[fid] = {}
         flagdict[fid]['id'] = fidstr
         rowid = rownode.getElementsByTagName('antennaId')
@@ -1787,6 +2163,7 @@ def parseXML(sdmfile, mytbuff):
         # Construct command strings (per input flag)
         cmddict = OrderedDict()
 #        cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
+#        cmddict['mode'] = 'manual'
         cmddict['antenna'] = antname
         cmddict['timerange'] = timestr
         if spwstring != '':
@@ -3952,8 +4329,4 @@ def evalString(cmdline):
     
     return cmddict
 
-
-
-
-    
 

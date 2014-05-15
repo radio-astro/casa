@@ -107,6 +107,12 @@
                         <any type="variant" limittypes="string stringArray"/>
                         <value type="string">any</value>
             </param>
+            <param type="any" name="tbuff" subparam="true">
+                    <description>List of time buffers (sec) to pad timerange in flag commands</description>
+                    <any type="variant" limittypes="double doubleArray" />
+                    <value type="double">0.0</value>
+            </param>
+                        
             
             <!-- SELECTION parameters -->
             <param type="any" name="spw" subparam="true">
@@ -171,7 +177,7 @@
                 <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
-                <description>Data column on which to operate (data,corrected,model,residual,etc.)</description>
+                <description>Data column on which to operate (data,corrected,model,weight,etc.)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
             </param>
@@ -365,6 +371,10 @@
                 <value type="bool">False</value>
             </param>
 
+            <param type="string" name="name" subparam="true">
+                <description>Name of this summary report (key in summary dictionary)</description>
+                <value>Summary</value>
+            </param>
 
             <!-- ACTION parameters -->
             <param type="string" name="action">
@@ -434,6 +444,7 @@
                     <equals value="list">
                         <default param="inpfile"><value type="string"></value></default>
                         <default param="reason"><value type="string">any</value></default>
+                        <default param="tbuff"><value type="double">0.0</value></default>
                     </equals>
                     <equals value="clip">
                         <default param="field"><value type="string"></value></default>
@@ -601,6 +612,7 @@
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
+                        <default param="name"><value type="string">Summary</value></default>
                     </equals>
                 </when>
 
@@ -638,86 +650,88 @@
 
         Any flagging will only be applied to the specified selections.
 
-              antenna -- Select data based on baseline
-                    default: '' (all); example: antenna='DV04&amp;DV06' baseline DV04-DV06
-                    antenna='DV04&amp;DV06;DV07&amp;DV10' #baselines DV04-DV06 and DV07-DV10
-                    antenna='DV06' # all cross-correlation baselines between antenna DV06 and 
-                            all other available antennas
-                    antenna='DV04,DV06' # all baselines with antennas DV04 and DV06
-                    antenna='DV06&amp;&amp;DV06' # only the auto-correlation baselines for antenna DV06
-                    antenna='DV04&amp;&amp;*' # cross and auto-correlation baselines between antenna DV04
-                                             and all other available antennas
-                    antenna='0~2&amp;&amp;&amp;' # only the auto-correlation baselines for antennas 
-                                                   in range 0~2
-
-                    Note that for some antenna-based calibration tables, selecting baselines with
-                    the &amp; syntax do not apply.
-
-              spw -- Select data based on spectral window and channels
-                    default: '' (all); example: spw='1'
-                    spw='&lt;2' #spectral windows less than 2
-                    spw='&gt;1' #spectral windows greater than 1
-                    spw='1:0~10' # first 10 channels from spw 1
-                    spw='1:0~5;120~128' # multiple separated channel chunks.
-
-                    Note : For modes clip, tfcrop and rflag, channel-ranges can be excluded 
-                    from flagging by selecting ranges such as spw='0:0~5;10~63'. This is a way to
-                    protect known spectral-lines from being flagged by the autoflag algorithms.
-
-              correlation -- Correlation types or expression.
-                    default: '' (all correlations)
-                            For modes clip, tfcrop or rflag, the default means ABS_ALL. If
-                            the input is cal table that does not contain a complex data column,
-                            the default will fall back to REAL_ALL.
-                    example: correlation='XX,YY' or
-                    options: Any of 'ABS', 'ARG', 'REAL', 'IMAG', 'NORM' followed by
-                             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'Sol1', 'Sol2', 'WVR'
-                             'WVR' refers to the water vapour radiometer of ALMA data.
-                    example: correlation='REAL_XX,XY'
-                  -->correlation selection is not supported for modes other than clip, tfcrop or
-                      rflag in cal tables.      
-                    
-                    Note that the operators ABS,ARG,REAL, etc. are written only once as the first value.
-                    if more than one correlation is given, the operator will be applied to all of them.
-                    
-                    The expression is used only in modes clip, tfcrop and rflag.
-
-              field -- Select data based on field id(s) or name(s)
-                    default: '' (all); example: field='1'
-                    field='0~2' # field ids inclusive from 0 to 2
-                    field='3C*' # all field names starting with 3C
-
-              uvrange -- Select data within uvrange (default units meters)
-                    default: '' (all); example:
-                    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
-                    uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
-                    uvrange='0~1000km'; uvrange in kilometers
-                  -->uvrange selection is not supported for cal tables.                          
-
-              timerange  -- Select data based on time range:
-                    default = '' (all); example,
-                    timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
-                    Note: YYYY/MM/DD can be dropped as needed:
-                    timerange='09:14:0~09:54:0' # this time range
-                    timerange='09:44:00' # data within one integration of time
-                    timerange='&gt;10:24:00' # data after this time
-                    timerange='09:44:00+00:13:00' #data 13 minutes after time
-
-              scan -- Select data based on scan number
-                    default: '' (all); example: scan='&gt;3'
-
-              intent -- Select data based on observation intent
-                    default: '' (all); example: intent='*CAL*,*BAND*'
-                  -->intent selection is not supported for cal tables.                          
-
-              array -- Selection based on the antenna array
-                    default: '' (all); 
-                  -->array selection is not supported for cal tables.                          
-
-              observation -- Selection based on the observation ID
-                    default: '' (all); example: observation='1' or observation=1
-
-              feed -- Selection based on the feed - NOT IMPLEMENTED YET
+	antenna -- Select data based on baseline
+	    default: '' (all); example: antenna='DV04&amp;DV06' baseline DV04-DV06
+	    antenna='DV04&amp;DV06;DV07&amp;DV10' #baselines DV04-DV06 and DV07-DV10
+	    antenna='DV06' # all cross-correlation baselines between antenna DV06 and 
+	            all other available antennas
+	    antenna='DV04,DV06' # all baselines with antennas DV04 and DV06
+	    antenna='DV06&amp;&amp;DV06' # only the auto-correlation baselines for antenna DV06
+	    antenna='DV04&amp;&amp;*' # cross and auto-correlation baselines between antenna DV04
+	                             and all other available antennas
+	    antenna='0~2&amp;&amp;&amp;' # only the auto-correlation baselines for antennas 
+	                                   in range 0~2
+	
+	    Note that for some antenna-based calibration tables, selecting baselines with
+	    the &amp; syntax do not apply.
+	
+	spw -- Select data based on spectral window and channels
+	    default: '' (all); example: spw='1'
+	    spw='&lt;2' #spectral windows less than 2
+	    spw='&gt;1' #spectral windows greater than 1
+	    spw='1:0~10' # first 10 channels from spw 1
+	    spw='1:0~5;120~128' # multiple separated channel chunks.
+	
+	    Note : For modes clip, tfcrop and rflag, channel-ranges can be excluded 
+	    from flagging by leaving them out of the selection range. This is a way to
+	    protect known spectral-lines from being flagged by the autoflag algorithms.
+	    Example: if spectral-lines fall in channels 6~9, set the selection range to
+	             spw='0:0~5;10~63'.
+	
+	correlation -- Correlation types or expression.
+	    default: '' (all correlations)
+	            For modes clip, tfcrop or rflag, the default means ABS_ALL. If
+	            the input is cal table that does not contain a complex data column,
+	            the default will fall back to REAL_ALL.
+	    example: correlation='XX,YY' or
+	    options: Any of 'ABS', 'ARG', 'REAL', 'IMAG', 'NORM' followed by
+	             any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'Sol1', 'Sol2', 'WVR'
+	             'WVR' refers to the water vapour radiometer of ALMA data.
+	    example: correlation='REAL_XX,XY'
+	  -->correlation selection is not supported for modes other than clip, tfcrop or
+	      rflag in cal tables.      
+	    
+	    Note that the operators ABS,ARG,REAL, etc. are written only once as the first value.
+	    if more than one correlation is given, the operator will be applied to all of them.
+	    
+	    The expression is used only in modes clip, tfcrop and rflag.
+	
+	field -- Select data based on field id(s) or name(s)
+	    default: '' (all); example: field='1'
+	    field='0~2' # field ids inclusive from 0 to 2
+	    field='3C*' # all field names starting with 3C
+	
+	uvrange -- Select data within uvrange (default units meters)
+	    default: '' (all); example:
+	    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+	    uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
+	    uvrange='0~1000km'; uvrange in kilometers
+	  -->uvrange selection is not supported for cal tables.                          
+	
+	timerange  -- Select data based on time range:
+	    default = '' (all); example,
+	    timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+	    Note: YYYY/MM/DD can be dropped as needed:
+	    timerange='09:14:0~09:54:0' # this time range
+	    timerange='09:44:00' # data within one integration of time
+	    timerange='&gt;10:24:00' # data after this time
+	    timerange='09:44:00+00:13:00' #data 13 minutes after time
+	
+	scan -- Select data based on scan number
+	    default: '' (all); example: scan='&gt;3'
+	
+	intent -- Select data based on observation intent
+	    default: '' (all); example: intent='*CAL*,*BAND*'
+	  -->intent selection is not supported for cal tables.                          
+	
+	array -- Selection based on the antenna array
+	    default: '' (all); 
+	  -->array selection is not supported for cal tables.                          
+	
+	observation -- Selection based on the observation ID
+	    default: '' (all); example: observation='1' or observation=1
+	
+	feed -- Selection based on the feed - NOT IMPLEMENTED YET
 
 
     mode -- Mode of operation.
@@ -732,18 +746,16 @@
                 the parameters that are not present in the line. Each line will be taken 
                 as a command to the task. If data is pre-selected using any of the selection 
                 parameters, then flagging will apply only to that subset of the MS.
-                  
-                The summary mode is not allowed in the input list.
-                  
+                                    
                 For optimization, the task will create a union of the data selection parameters
                 present in the list and select only that portion of the MS.
 
-                NOTE: the flag commands will be applied only when action='apply'. If
-                      action='calculate' the flags will be calculated, but not applied.
-                      This is useful if display is set to something other than 'none'. If
-                      action='' or 'none', the flag commands will not be applied either.
-                      An empty action is useful only to save the parameters of the list
-                      to a file or to the FLAG_CMD sub-table.
+                    NOTE: the flag commands will be applied only when action='apply'. If
+                          action='calculate' the flags will be calculated, but not applied.
+                          This is useful if display is set to something other than 'none'. If
+                          action='' or 'none', the flag commands will not be applied either.
+                          An empty action is useful only to save the parameters of the list
+                          to a file or to the FLAG_CMD sub-table.
                   
                inpfile -- Input ASCII file, list of files or a Python list of command strings.
                   default: ''
@@ -751,22 +763,27 @@
                            [] with filenames or 
                            '' with a filename.
 
-                  IMPORTANT: string values must contain quotes around them or the parser
-                             will not work. The parser evaluates the commands in the list
-                             and considers only existing Python types.
+                    IMPORTANT: string values must contain quotes around them or the parser
+                               will not work. The parser evaluates the commands in the list
+                               and considers only existing Python types.
+	
+                    NOTE: There should be no whitespace between KEY=VALUE since the parser 
+                          first breaks command lines on whitespace, then on "=". Use only whitespaces 
+                          to separate the parameters (no commas). Scroll down to the bottom to see
+                          a detailed description of the input list syntax.
 
-                  Example1: the following commands can be saved to a file or group of files
-                            and given to the task (e.g. save it to flags.txt).
+                    Example1: the following commands can be saved to a file or group of files
+                              and given to the task (e.g. save it to flags.txt).
                   
                      scan='1~3' mode='manual'
                      mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
                      spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
                      mode='extend' extendpols=True
 
-                    flagdata(vis, mode='list', inpfile='flags.txt') or
-                    flagdata(vis, mode='list', inpfile=['onlineflags.txt','otherflags.txt'])
+                     flagdata(vis, mode='list', inpfile='flags.txt') or
+                     flagdata(vis, mode='list', inpfile=['onlineflags.txt','otherflags.txt'])
 
-                  Example2: the same commands can be given in a Python list on the command line
+                    Example2: the same commands can be given in a Python list on the command line
                              to the task.
                      cmd=["scan='1~3' mode='manual'", 
                           "mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False",
@@ -776,26 +793,50 @@
                      flagdata(vis,mode='list',inpfile=cmd)                    
         
                reason -- select flag commands based on REASON(s) .
-                   default: 'any' (all flags regardless of reason)
+                  default: 'any' (all flags regardless of reason)
                             can be a string, or list of strings
-                   example: reason='FOCUS_ERROR'
+                  example: reason='FOCUS_ERROR'
                             reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
 
-                   If inpfile is a list of files, the reasons given in this
-                   parameter will apply to all the files.
+                     If inpfile is a list of files, the reasons given in this
+                     parameter will apply to all the files.
     
-                   NOTE: what is within the string is literally
-                   matched, e.g. reason='' matches only blank reasons, 
-                   and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
-                   matches this compound reason string only.
+                     NOTE: what is within the string is literally
+                           matched, e.g. reason='' matches only blank reasons, 
+                           and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
+                           matches this compound reason string only.
                      
-                  See the syntax for writing flag commands at the end of this help.                  
+                    See the syntax for writing flag commands at the end of this help.                  
 
+               tbuff -- A time buffer or list of time buffers to pad the timerange parameters
+                        in flag commands. The list of tbuff must be the same size of the
+                        number of input files given in 'inpfile'. If the list of tbuff is smaller than
+                        the list of input files, it will apply the available tbuff to the corresponding
+                        input files. Each tbuff value should be a Float number given in seconds.
+                  default: 0.0 (it will not apply any time padding)
+                            
+                  example: tbuff=[1.01, 0.5]
+                           inpfile=['online.txt','userflags.txt']
+
+                        The timeranges in the online.txt file are first converted to seconds.
+                        Then, tbuff is subtracted from t0 and tbuff is added to t1,
+                        where t0 and t1 are the two intervals given in timerange. Similarly,
+                        tbuff=0.5 will be applied to any timerange in userflags.txt. 
+	
+                       IMPORTANT: This task assumes that timerange = t0 ~ t1, therefore it will
+                                 not work if only t0 or t1 is given. The full syntax of timerange
+                                 will be accepted when MS selection is modified to take the integration
+                                 time into account when selecting a timerange data point.
+
+                       NOTE: The most common use-case for tbuff is to apply the online flags
+                            that are created by importasdm when savecmds=True. The value of
+                            time buffer should be tbuff=0.5*max(integration time).
+                      
 
         manual -- Flag according to the data selection specified.
                   This is the default mode (used when the mode is not specified).
                   
-                autocorr -- Flag only the auto-correlations. Note that this parameter is only
+               autocorr -- Flag only the auto-correlations. Note that this parameter is only
                             active when set to True. If set to False it does NOT mean "do not
                             flag auto-correlations". When set to True, it will only flag
                             data from a processor of type CORRELATOR. 
@@ -1249,7 +1290,8 @@
 
         unflag -- Unflag according to the data selection specified.
 
-        summary -- List the number of rows and data points flagged.
+        summary -- List the number of rows and flagged data points for the MS's meta-data.
+	               The resulting summary will be returned as a Python dictionary.
                   
                minrel -- Minimum number of flags (relative) to include in histogram
                     default: 0.0
@@ -1273,16 +1315,35 @@
                basecnt -- list the number of flags per baseline
                     default: False
 
+               name -- Name for this summary, to be used as a key in the returned
+                       Python dictionary. It is possible to call the summary mode
+                       multiple times in list mode. When calling the summary mode as a 
+                       command in a list, one can give different names to each one of 
+                       them so that they can be easily pulled out of the summary's dictionary.
+                    default: 'Summary'
+
                     In summary mode, the task returns a dictionary of flagging statistics.
-                    Example:
+	
+                    Example1:
 
                         s = flagdata(..., mode='summary')
 
                      Then s will be a dictionary which contains
                     s['total']   : total number of data
                     s['flagged'] : amount of flagged data
-                    
-        
+
+                    Exmaple2: two summary commands in list mode, intercalating a manual flagging command.
+	
+                        s = flagdata(..., mode='list', inpfile=["mode='summary' name='InitFlags'",
+                                                                "mode='manual' autocorr=True",
+                                                                "mode='summary' name='Autocorr'"])
+
+                    The dictionary returned in 's' will contain two dictionaries, one for each of the
+                    two summary modes. 
+
+                    s['report0']['name'] : 'InitFlags'
+                    s['report1']['name'] : 'Autocorr'
+			                            
 
     action -- Action to perform in MS/cal table or in the input list of parameters. 
         options: 'none', 'apply','calculate'
@@ -1346,8 +1407,6 @@
                              contains any reason, they will be replaced with this one. At the 
                              moment it is not possible to add more than one reason. 
 
-                             Whitespaces are not allowed in the reasons when saving to a file. 
-                             They will be replaced by underscores and a warning will be issued.
                     default: ' '; no reason will be added to output.
                     example: cmdreason='CLIP_ZEROS'
                 

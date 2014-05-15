@@ -6,21 +6,49 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="flagcmd" category="data editing">
-        <shortdescription>Flagging task based on batches of flag-commands</shortdescription>
-        <description>
-        The flagcmd task allows several batch-operations using flag commands.
+    <shortdescription>Flagging task based on batches of flag-commands</shortdescription>
+    <description>
+    The flagcmd task allows several batch-operations using flag commands.
 
-        Flag commands follow the mode and parameter names from the flagdata task
-        (also explained below).  The available modes are: manual, clip, shadow, quack, 
-        elevation,  tfcrop, rflag, extend and unflag.
+    Flag commands follow the mode and parameter names from the flagdata task
+    (also explained below).  The available modes are: manual, clip, shadow, quack, 
+    elevation,  tfcrop, rflag and extend. The summary mode is not supported
+    in this task. Use the flagdata task for that.
 
-        The flagcmd task will flag data based on the commands input on inpmode :
-            table = input from FLAG_CMD table in MS
-            list  = input from text file or list of strings given in inpfile
-            xml   = input from Flag.xml in the MS given by vis
+    The flagcmd task will flag data based on the commands input on inpmode :
+        table = input from FLAG_CMD table in MS
+        list  = input from text file or list of strings given in inpfile
+        xml   = input from Flag.xml in the MS given by vis
 
-        Batch operations include : apply/unapply/list/plot/clear/extract
+    Batch operations include : apply/unapply/list/plot/clear/extract
 
+    IMPORTANT: The FLAG_CMD sub-table is meant only for meta-data selections such as online flags.
+       Using it to save other parameters (from modes such as clip, quack, shadow, etc) is
+       possible but carries a risk that in future releases these parameters maybe renamed
+       or changed their default values. Use it at your own risk! There will be no automatic
+       way to rename any parameter that changes in the future.
+    
+       There is no way to guarantee that a command from the COMMAND column has been
+       applied or not to the MS, even if the APPLIED column is set to True. If you
+       use other ways to flag such as interactive flagging in plotms, the FLAG_CMD
+       will not be updated! Use at your own risk.
+               
+    NOTE on flagging calibration tables.
+    -----------------------------------
+    
+    It is possible to flag cal tables using this task, although we recommend using the flagdata
+    task for this.
+    
+    When using this task to flag cal tables, only the 'apply' and 'list' actions are supported. 
+    Because cal tables do not have a FLAG_CMD sub-table, the default inpmode='table' can only 
+    be used if an MS is given in the 'inpfile' parameter so that flags from the MS are applied to 
+    the cal table. Otherwise, the flag commands must be given using inpmode='list', either from a 
+    file(s) or from a list of strings. See below for more information about these parameters. 
+    Data selection for calibration tables is limited to field, scan, antenna, time, spw and
+    observation. If the calibration table was created before CASA 4.1, this task will create 
+    a dummy OBSERVATION column and OBSERVATION sub-table in the input calibration table to
+    adapt it to the new cal table format.
+        
         </description>
         <input>
                 <param type="string" name="vis" mustexist="true">
@@ -158,40 +186,6 @@
 <returns type="void"/>
 
 <example>
-
-    Flag commands follow the mode and parameter names from the flagdata task
-    (also explained below).  The available modes are: manual, clip, shadow, quack, 
-    elevation,  tfcrop, rflag, extend and unflag.
-
-    The flagcmd task will flag data based on the commands input on inpmode:
-        table = input from FLAG_CMD table in MS
-        list  = input from a file, list of files or a (Python) list of command strings
-        xml   = input from Flag.xml in the MS given by vis (only for EVLA MSs)
-
-    Batch operations include : apply/unapply/list/plot/clear/extract
-
-    IMPORTANT: The FLAG_CMD sub-table is meant only for meta-data selections such as online flags.
-               Using it to save other parameters (from modes such as clip, quack, shadow, etc) is
-               possible but carries a risk that in future releases these parameters maybe renamed
-               or changed their default values. Use it at your own risk! There will be no automatic
-               way to rename any parameter that changes in the future.
-               
-    NOTE on flagging calibration tables.
-    -----------------------------------
-    
-    It is possible to flag cal tables using this task, although we recommend using the flagdata
-    task for this.
-    
-    When using this task to flag cal tables, only the 'apply' and 'list' actions are supported. 
-    Because cal tables do not have a FLAG_CMD sub-table, the default inpmode='table' can only 
-    be used if an MS is given in the 'inpfile' parameter so that flags from the MS are applied to 
-    the cal table. Otherwise, the flag commands must be given using inpmode='list', either from a 
-    file(s) or from a list of strings. See below for more information about these parameters. 
-    Data selection for calibration tables is limited to field, scan, antenna, time, spw and
-    observation. If the calibration table was created before CASA 4.1, this task will create 
-    a dummy OBSERVATION column and OBSERVATION sub-table in the input calibration table to
-    adapt it to the new cal table format.
-
 
     Keyword arguments:
 
