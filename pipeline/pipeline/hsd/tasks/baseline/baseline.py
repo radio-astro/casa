@@ -55,22 +55,18 @@ class SDBaselineResults(common.SingleDishResults):
         # register detected lines to reduction group member
         reduction_group = context.observing_run.reduction_group
         for b in self.outcome['baselined']:
+            group_id = b['group_id']
             spw = b['spw']
             antenna = b['index']
             pols = b['pols']
             lines = b['lines']
             channelmap_range = b['channelmap_range']
-            for _ant in antenna:
-                group_id = -1
-                for (idx,desc) in reduction_group.items():
-                    if desc[0].spw == spw:
-                        group_id = idx
-                        break
-                if group_id >= 0:
-                    reduction_group[group_id].iter_countup(_ant, spw, pols)
-                    reduction_group[group_id].add_linelist(lines, _ant, spw, pols, 
-                                                           channelmap_range=channelmap_range)
-                st = context.observing_run[_ant]
+            group_desc = reduction_group[group_id]
+            for (ant,spw) in zip(antenna,spw):
+                group_desc.iter_countup(ant, spw, pols)
+                group_desc.add_linelist(lines, ant, spw, pols,
+                                        channelmap_range=channelmap_range)
+                st = context.observing_run[ant]
                 st.work_data = st.baselined_name
 
     def _outcome_name(self):
@@ -88,7 +84,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
         reduction_group = context.observing_run.reduction_group
         infiles = inputs.infiles
         iflist = inputs.iflist
-        #antennalist = inputs.antennalist
         pollist = inputs.pollist
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
@@ -114,22 +109,19 @@ class SDBaseline(common.SingleDishTaskTemplate):
         self._generate_storage_for_baselined(context, reduction_group)
 
         # loop over reduction group
-        files = set()
+        #files = set()
         files_temp = {}
-        for (group_id,group_desc) in reduction_group.items():            
+        for (group_id,group_desc) in reduction_group.items():
+            LOG.debug('Processing Reduction Group %s'%(group_id))
+            LOG.debug('Group Summary:')
+            for m in group_desc:
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
             # assume all members have same spw and pollist
             first_member = group_desc[0]
-            spwid = first_member.spw
-            LOG.debug('spwid=%s'%(spwid))
             pols = first_member.pols
             iteration = first_member.iteration[0]
             if pollist is not None:
                 pols = list(set(pollist) & set(pols))
-
-            # skip spw not included in iflist
-            if iflist is not None and spwid not in iflist:
-                LOG.debug('Skip spw %s'%(spwid))
-                continue
 
             # reference data is first scantable 
             st = context.observing_run[first_member.antenna]
@@ -137,15 +129,36 @@ class SDBaseline(common.SingleDishTaskTemplate):
             # skip channel averaged spw
             nchan = group_desc.nchan
             if nchan == 1:
-                LOG.info('Skip channel averaged spw %s.'%(spwid))
+                LOG.info('Skip channel averaged spw %s.'%(spwid_list))
                 continue
 
                 
             srctype = st.calibration_strategy['srctype']
-            _file_index = set(file_index) & set([m.antenna for m in group_desc])
-            files = files | _file_index
-            index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
-            maskline_inputs = maskline.MaskLine.Inputs(context, list(_file_index), spwid, iteration, 
+
+            member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+            # skip this group if valid member list is empty
+            if len(member_list) == 0:
+                LOG.info('Skip reduction group %d'%(group_id))
+                continue
+
+            member_list.sort()
+            antenna_list = [group_desc[i].antenna for i in member_list]
+            spwid_list = [group_desc[i].spw for i in member_list]
+            
+            LOG.debug('Members to be processed:')
+            for i in xrange(len(member_list)):
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols))
+                
+            # skip polarizations not included in pollist
+            if pollist is not None and len(pols)==0:
+                LOG.info('Skip pols %s (not in pollist)'%(str(first_member.pols)))
+                continue
+
+            index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, srctype))
+            index_list.sort()
+            
+            #maskline_inputs = maskline.MaskLine.Inputs(context, list(_file_index), spwid, iteration,
+            maskline_inputs = maskline.MaskLine.Inputs(context, antenna_list, spwid_list, iteration, 
                                                        index_list, window, edge, broadline)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
@@ -157,22 +170,23 @@ class SDBaseline(common.SingleDishTaskTemplate):
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
-            for idx in _file_index:
-                _iteration = group_desc.get_iteration(idx, spwid)
-                outfile = self._get_dummy_name(context, idx)
-                fitter_inputs = fitter_cls.Inputs(context, idx, spwid, pols, _iteration, 
+            for (ant,spwid) in zip(antenna_list, spwid_list):
+                LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s'%(ant, spwid))
+                _iteration = group_desc.get_iteration(ant, spwid)
+                outfile = self._get_dummy_name(context, ant)
+                fitter_inputs = fitter_cls.Inputs(context, ant, spwid, pols, _iteration, 
                                                   fitorder, edge, outfile)
                 fitter = fitter_cls(fitter_inputs)
                 fitter_result = self._executor.execute(fitter, merge=True)
                 # store temporal scantable name
-                if not files_temp.has_key(idx):
-                    files_temp[idx] = fitter_result.outcome.pop('outtable')
+                if not files_temp.has_key(ant):
+                    files_temp[ant] = fitter_result.outcome.pop('outtable')
                 
             name_list = [context.observing_run[f].baselined_name
-                         for f in _file_index]
+                         for f in antenna_list]
             baselined.append({'group_id': group_id, 'iteration': iteration,
-                              'name': name_list, 'index': list(_file_index),
-                              'spw': spwid, 'pols': pols,
+                              'name': name_list, 'index': antenna_list,
+                              'spw': spwid_list, 'pols': pols,
                               'lines': detected_lines,
                               'channelmap_range': channelmap_range,
                               'clusters': cluster_info})

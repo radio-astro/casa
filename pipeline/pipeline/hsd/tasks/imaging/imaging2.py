@@ -37,6 +37,11 @@ class SDImaging2Inputs(common.SingleDishInputs):
         else:
             return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
 
+    @property
+    def antennaid_list(self):
+        st_names = self.context.observing_run.st_names
+        return map(st_names.index, self.infiles)
+
 class SDImaging2Results(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(SDImaging2Results, self).__init__(task, success, outcome)
@@ -59,6 +64,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
         context = self.inputs.context
         reduction_group = context.observing_run.reduction_group
         infiles = self.inputs.infiles
+        file_index = self.inputs.antennaid_list
         iflist = self.inputs.iflist
         antennalist = self.inputs.antennalist
         pollist = self.inputs.pollist
@@ -114,27 +120,41 @@ class SDImaging2(common.SingleDishTaskTemplate):
         
         # loop over reduction group
         for (group_id, group_desc) in reduction_group.items():
+            LOG.debug('Processing Reduction Group %s'%(group_id))
+            LOG.debug('Group Summary:')
+            for m in group_desc:
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
+
+            member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+            LOG.debug('group %s: member_list=%s'%(group_id, member_list))
+            
+            # skip this group if valid member list is empty
+            if len(member_list) == 0:
+                LOG.info('Skip reduction group %d'%(group_id))
+                continue
+
+            member_list.sort()
+            antenna_list = [group_desc[i].antenna for i in member_list]
+            spwid_list = [group_desc[i].spw for i in member_list]
+                
             # assume all members have same spw and pollist
             first_member = group_desc[0]
-            spwid = first_member.spw
-            LOG.debug('spwid=%s' % (spwid))
             pols = first_member.pols
             if pollist is not None:
                 pols = list(set(pollist).intersection(pols))
 
-            # skip spw not included in iflist
-            if iflist is not None and spwid not in iflist:
-                LOG.debug('Skip spw %s' % (spwid))
-                continue
+            LOG.debug('Members to be processed:')
+            for i in xrange(len(member_list)):
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols))
 
             # image is created per antenna
             antenna_group = {}
-            for m in group_desc:
-                antenna = context.observing_run[m.antenna].antenna.name
+            for (ant, spwid) in zip(antenna_list, spwid_list):
+                antenna = context.observing_run[ant].antenna.name
                 if antenna in antenna_group.keys():
-                    antenna_group[antenna].append(m.antenna)
+                    antenna_group[antenna].append([ant, spwid])
                 else:
-                    antenna_group[antenna] = [m.antenna]
+                    antenna_group[antenna] = [[ant, spwid]]
             LOG.info('antenna_group=%s' % (antenna_group))
 
             # polarization string
@@ -151,17 +171,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
             combined_indices = []
             source_name = None
             combined_infiles = []
+            combined_spws = []
             srctype = None
-            for (name, indices) in antenna_group.items():
-
-                # skip antenna not included in antennalist
-                if antennalist is not None and name not in antennalist:
-                    LOG.debug('Skip antenna %s' % (name))
-                    continue
-
-                # register indices to combined_indices
-                combined_indices.extend(indices)
-
+            for (name, ant_spw_pairs) in antenna_group.items():
+                indices = map(lambda x: x[0], ant_spw_pairs)
+                spwids = map(lambda x: x[1], ant_spw_pairs)
+                
                 # reference data is first scantable 
                 st = context.observing_run[indices[0]]
 
@@ -178,7 +193,11 @@ class SDImaging2(common.SingleDishTaskTemplate):
                             if os.path.exists(x.baselined_name) else x.name
                 filenames = [data_name(context.observing_run[i]) for i in indices]
                 infiles = [context.observing_run[i].basename for i in indices]
+
+                # register data for combining
+                combined_indices.extend(indices)
                 combined_infiles.extend(infiles)
+                combined_spws.extend(spwids)
 
                 LOG.debug('filenames=%s' % (filenames))
                 
@@ -187,7 +206,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 namer.casa_image()
                 namer.source(source_name)
                 namer.antenna_name(name)
-                namer.spectral_window(spwid)
+                namer.spectral_window(spwids[0])
                 namer.polarization(polstr)
                 imagename = namer.get_filename()
                 
@@ -196,6 +215,8 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 LOG.info('Step 4. Set weights')
                 for i in xrange(len(indices)):
                     index = indices[i]
+                    spwid = spwids[i]
+                    LOG.debug('Setting weight for Antenna %s Spw %s'%(index,spwid))
                     original_st = filenames[i]
                     exported_ms = exported_mses[index]
                     spwtype = context.observing_run[index].spectral_window[spwid].type
@@ -210,7 +231,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 # Imaging
                 LOG.info('Step 5. Imaging')
                 imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=infiles, 
-                                                               outfile=imagename, spwid=spwid, 
+                                                               outfile=imagename, spwids=spwids, 
                                                                onsourceid=srctype, edge=edge,
                                                                vislist=exported_mses)
                 imager_task = worker.SDImaging2Worker(imager_inputs)
@@ -228,12 +249,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     ny = ia.shape()[dircoords[1]]
                 validsps = []
                 rmss = []
-                observing_pattern = st.pattern[spwid].values()[0]
+                observing_pattern = st.pattern[spwids[0]].values()[0]
                 grid_task_class = gridding.gridding_factory(observing_pattern)
                 grid_tables = []
                 for pol in pols:
                     gridding_inputs = grid_task_class.Inputs(context, antennaid=indices, 
-                                                             spwid=spwid, polid=pol,
+                                                             spwid=spwids, polid=pol,
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task, merge=True)
@@ -245,7 +266,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 if imagename is not None:
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
-                                                        spwlist=spwid,
+                                                        spwlist=spwids,
                                                         sourcetype='TARGET')
                     image_item.antenna = name
                     outcome = {}
@@ -254,6 +275,8 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     outcome['rms'] = numpy.array(rmss)
                     outcome['edge'] = edge
                     outcome['reduction_group_id'] = group_id
+                    outcome['file_index'] = indices
+                    outcome['assoc_spws'] = spwids
                     result = SDImaging2Results(task=self.__class__,
                                               success=True,
                                               outcome=outcome)
@@ -274,7 +297,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
             namer = filenamer.Image()
             namer.casa_image()
             namer.source(source_name)
-            namer.spectral_window(spwid)
+            namer.spectral_window(combined_spws[0])
             namer.polarization(polstr)
             imagename = namer.get_filename()
 
@@ -282,7 +305,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
             # Imaging
             LOG.info('Step 4. Imaging')
             imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=combined_infiles, 
-                                                           outfile=imagename, spwid=spwid, 
+                                                           outfile=imagename, spwids=combined_spws, 
                                                            onsourceid=srctype, edge=edge,
                                                            vislist=exported_mses)
             imager_task = worker.SDImaging2Worker(imager_inputs)
@@ -300,12 +323,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 ny = ia.shape()[dircoords[1]]
             validsps = []
             rmss = []
-            observing_pattern = st.pattern[spwid].values()[0]
+            observing_pattern = st.pattern[combined_spws[0]].values()[0]
             grid_task_class = gridding.gridding_factory(observing_pattern)
             grid_tables = []
             for pol in pols:
                 gridding_inputs = grid_task_class.Inputs(context, antennaid=combined_indices, 
-                                                         spwid=spwid, polid=pol,
+                                                         spwid=combined_spws, polid=pol,
                                                          nx=nx, ny=ny)
                 gridding_task = grid_task_class(gridding_inputs)
                 gridding_result = self._executor.execute(gridding_task, merge=True)
@@ -317,7 +340,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
             if imagename is not None:
                 image_item = imagelibrary.ImageItem(imagename=imagename,
                                                     sourcename=source_name,
-                                                    spwlist=spwid,
+                                                    spwlist=combined_spws,
                                                     sourcetype='TARGET')
                 image_item.antenna = 'COMBINED'
                 outcome = {}
@@ -325,6 +348,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 outcome['validsp'] = numpy.array(validsps)
                 outcome['rms'] = numpy.array(rmss)
                 outcome['edge'] = edge
+                outcome['reduction_group_id'] = group_id
+                outcome['file_index'] = combined_indices
+                outcome['assoc_spws'] = combined_spws
                 
                 # to register exported_ms to each scantable instance
                 outcome['export_results'] = export_results

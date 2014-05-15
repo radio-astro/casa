@@ -12,9 +12,10 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 NoData = common.NoData
+DO_TEST = True
 
 class SimpleGriddingInputs(common.SingleDishInputs):
-    def __init__(self, context, antennalist, spwid, nplane=None):
+    def __init__(self, context, antenna_list, spwid_list, index_list, nplane=None):
         self._init_properties(vars())
         
     @property
@@ -67,35 +68,31 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         """
         Calculate Parameters for grid by RA/DEC positions
         """
-        spwid = self.inputs.spwid
-        index_list = self.inputs.antennalist
-        reference_data = self.context.observing_run[index_list[0]]
+        spwid_list = self.inputs.spwid_list
+        antenna_list = self.inputs.antenna_list
+        assert len(antenna_list) == len(spwid_list)
+        index_list = self.inputs.index_list
+        reference_data = self.context.observing_run[antenna_list[0]]
         srctype = reference_data.calibration_strategy['srctype']
-        beam_size = reference_data.beam_size[spwid]
+        beam_size = reference_data.beam_size[spwid_list[0]]
         grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
         
-        # need opened table to call taql, so we use table object that 
-        # datatable holds.
-        table = self.datatable.tb1
+        rows = self.datatable.tb1.getcol('ROW').take(index_list)
+        ants = self.datatable.tb1.getcol('ANTENNA').take(index_list)
+        ras = self.datatable.tb1.getcol('RA').take(index_list)
+        decs = self.datatable.tb1.getcol('DEC').take(index_list)
+        stats = self.datatable.tb2.getcol('STATISTICS')[0,:].take(index_list)
 
-        # TaQL command to make a view from DataTable that is physically 
-        # separated to two tables named RO and RW, respectively. 
-        # Note that TaQL accesses DataTable on disk, not on memory. 
-        datatable_name = self.datatable.plaintable
-        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RW.STATISTICS[0] AS STAT FROM "%s" RO, "%s" RW WHERE IF==%s'\
-            % (os.path.join(datatable_name, 'RO'), os.path.join(datatable_name, 'RW'), spwid)
-        if srctype is not None:
-            taqlstring += ' && SRCTYPE==%s' % (srctype)
-        tx = table.taql(taqlstring)
-        index_list = tx.getcol('ID')
-        rows = tx.getcol('ROW')
-        ants = tx.getcol('ANTENNA')
-        ras = tx.getcol('RA')
-        decs = tx.getcol('DEC')
-        stats = tx.getcol('STAT')
-        tx.close()
-        del tx
-
+        ### test
+        if DO_TEST:
+            ifnos = self.datatable.tb1.getcol('IF').take(index_list)
+            for _i in xrange(len(ants)):
+                _ant = ants[_i]
+                _spw = ifnos[_i]
+                _index = numpy.where(antenna_list == _ant)[0]
+                assert _spw in spwid_list, 'row %s is bad selection: IFNO not in selected list (actual %s expected %s)'%(index_list[_i], _spw, spwid_list)
+        ###
+        
         # Curvature has not been taken account
         dec_corr = 1.0 / cos(decs[0] / 180.0 * 3.141592653)
         grid_ra_corr = grid_size * dec_corr
@@ -147,7 +144,7 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         # Create grid_table for output
         grid_table = []
         # vIF, vPOL: dummy (not necessary)
-        vIF = spwid
+        vIF = spwid_list[0]
         vPOL = 0
 
         for y in range(ngrid_dec):
@@ -199,11 +196,11 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         nrow = len(grid_table)
         LOG.info('SimpleGrid: Processing %d spectra...' % (nrow))
 
-        spwid = self.inputs.spwid
-        index_list = self.inputs.antennalist
-        infiles = [self.context.observing_run[i].work_data for i in index_list]
-        reference_data = self.context.observing_run[index_list[0]]
-        nchan = reference_data.spectral_window[spwid].nchan
+        spwid_list = self.inputs.spwid_list
+        antenna_list = self.inputs.antenna_list
+        infiles = [self.context.observing_run[i].work_data for i in antenna_list]
+        reference_data = self.context.observing_run[antenna_list[0]]
+        nchan = reference_data.spectral_window[spwid_list[0]].nchan
         
         # create storage for output
         StorageOut = numpy.zeros((nrow, nchan), dtype=numpy.float32)
@@ -221,7 +218,7 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         # loop for all ROWs in grid_table to make dictionary that 
         # associates spectra in data_in and weights with grids.
         # bind_to_grid = dict([(k,[]) for k in self.data_in.keys()])
-        bind_to_grid = dict([(k, []) for k in index_list])
+        bind_to_grid = dict([(k, []) for k in antenna_list])
         for ROW in xrange(nrow):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
             for [row, delta, rms, index, ant] in RowDelta:
@@ -242,8 +239,8 @@ class SimpleGridding(common.SingleDishTaskTemplate):
 
         # loop for antennas
         # for AntID in index_list:
-        for i in xrange(len(index_list)):
-            AntID = index_list[i]
+        for i in xrange(len(antenna_list)):
+            AntID = antenna_list[i]
             with casatools.TableReader(infiles[i]) as tb:
                 for entry in bind_to_grid[AntID]:
                     [tROW, ROW, Weight, tSFLAG] = entry

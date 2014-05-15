@@ -12,6 +12,7 @@ from .. import common
 from .accumulator import Accumulator
 
 LOG = infrastructure.get_logger(__name__)
+DO_TEST = True
 
 def gridding_factory(observing_pattern):
     LOG.info('ObsPattern = %s' % observing_pattern)
@@ -56,14 +57,23 @@ class GriddingBase(common.SingleDishTaskTemplate):
         else:
             self.antenna = inputs.antennaid
         self.files = [context.observing_run[i].name for i in self.antenna]
-        self.spw = inputs.spwid
+        if type(inputs.spwid) == int:
+            self.spw = [inputs.spwid]
+        else:
+            self.spw = inputs.spwid
+        self.spwmap = dict([(a,s) for (a,s) in zip(self.antenna,self.spw)])
         self.pol = inputs.polid
+            
+        LOG.debug('Members to be processed:')
+        for (a,s) in zip(self.antenna, self.spw):
+            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,self.pol))
+            
         reference_data = context.observing_run[self.antenna[0]]
-        reference_spw = reference_data.spectral_window[self.spw]
+        reference_spw = reference_data.spectral_window[self.spw[0]]
         self.nchan = reference_spw.nchan
         self.srctype = reference_data.calibration_strategy['srctype']
         # beam size
-        grid_size = casatools.quanta.convert(reference_data.beam_size[self.spw], 'deg')['value']
+        grid_size = casatools.quanta.convert(reference_data.beam_size[self.spw[0]], 'deg')['value']
         self.grid_ra = grid_size
         self.grid_dec = grid_size       
         
@@ -115,24 +125,13 @@ class GriddingBase(common.SingleDishTaskTemplate):
         """
         start = time.time()
 
-        # need opened table to call taql, so we use table object that 
-        # datatable holds.
         table = self.datatable.tb1
-        datatable_name = self.datatable.plaintable
-
-        # TaQL command to make a view from DataTable that is physically 
-        # separated to two tables named RO and RW, respectively. 
-        # Note that TaQL accesses DataTable on disk, not on memory. 
-        #taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RO.TSYS, RO.EXPOSURE, RW.STATISTICS[0] AS STAT, RW.FLAG_SUMMARY FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),os.path.join(self.datatable_name,'RW'),self.spw,self.pol,list(self.antenna))
-        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(datatable_name,'RO'),self.spw,self.pol,list(self.antenna))
-        if self.srctype is not None:
-            taqlstring += ' && SRCTYPE==%s'%(self.srctype)
-
-        LOG.debug('taqlstring="%s"'%(taqlstring))
-        tx = table.taql(taqlstring)
-        index_list = tx.getcol('ID')
-        tx.close()
-        del tx
+        index_list = list(common.get_index_list(self.datatable, self.antenna, self.spw, self.srctype))
+        index_list.sort()
+        pols = table.getcol('POL').take(index_list)
+        index_list = numpy.take(index_list, numpy.where(pols == self.pol)[0])
+        del pols
+        
         rows = table.getcol('ROW').take(index_list)
         ants = table.getcol('ANTENNA').take(index_list)
         ras = table.getcol('RA').take(index_list)
@@ -141,6 +140,19 @@ class GriddingBase(common.SingleDishTaskTemplate):
         tsys = table.getcol('TSYS').take(index_list)
         exposure = table.getcol('EXPOSURE').take(index_list)
         net_flag = self.datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
+
+        ### test code
+        if DO_TEST:
+            ifnos = self.datatable.tb1.getcol('IF').take(index_list)
+            polnos = self.datatable.tb1.getcol('POL').take(index_list)
+            for _i in xrange(len(ants)):
+                _ant = ants[_i]
+                _spw = ifnos[_i]
+                _pol = polnos[_i]
+                _index = numpy.where(self.antenna == _ant)[0]
+                assert _pol == self.pol, 'row %s is bad selection: POLNO doesn\'t match (actual %s expected %s)'%(index_list[_i], _pol, self.pol)
+                assert _spw in self.spw, 'row %s is bad selection: IFNO not in process list (actual %s expected %s)'%(index_list[_i], _spw, self.spw)
+        ###
 
         # Re-Gridding
         # 2008/09/20 Spacing should be identical between RA and DEC direction
@@ -198,7 +210,8 @@ class GriddingBase(common.SingleDishTaskTemplate):
         # Create progress timer
         Timer = common.ProgressTimer(80, num_grid, loglevel)
         ID = 0
-        for [IF, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
+        for [IFS, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
+            IF = IFS[0]
             # RowDelta is numpy array
             if len(RowDelta) == 0:
                 indexlist = []
@@ -306,7 +319,7 @@ class RasterGridding(GriddingBase):
                     ssIDX = numpy.take(sIDX, SelectR)
                     ssANT = numpy.take(sANT, SelectR)
                     ssDelta = numpy.sqrt(numpy.take(Delta, SelectR))
-                    line = [self.spw, self.pol, x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssANT])]
+                    line = [map(lambda x: self.spwmap[x], ssANT), self.pol, x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssANT])]
                 else:
                     line = [self.spw, self.pol, x, y, RA, DEC, []]
                 GridTable.append(line)
@@ -331,10 +344,11 @@ class SinglePointGridding(GriddingBase):
         NGridDEC = 1
         CenterRA = ras.mean()
         CenterDEC = decs.mean()
-        line = [self.spw, self.pol, 0, 0, CenterRA, CenterDEC, []]
+        line = [[], self.pol, 0, 0, CenterRA, CenterDEC, []]
         for x in range(len(index_list)):
             Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
             if Delta <= Allowance:
+                line[0].append(self.spwmap[ants[x]])
                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
         line[6] = numpy.array(line[6], dtype=float)
         GridTable.append(line)
@@ -374,12 +388,13 @@ class MultiPointGridding(GriddingBase):
                                 DECtmp.append(decs[y])
                     CenterRA = (numpy.array(RAtmp)).mean()
                     CenterDEC = (numpy.array(DECtmp)).mean()
-                    line = [self.spw, self.pol, 0, NGridRA, CenterRA, CenterDEC, []]
+                    line = [[], self.pol, 0, NGridRA, CenterRA, CenterDEC, []]
                     NGridRA += 1
                     for x in range(len(index_list)):
                         if Flag[x] == 1:
                             Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
                             if Delta <= Allowance:
+                                line[0].append(self.spwmap[ants[x]])
                                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
                                 Flag[x] = 0
                     line[6] = numpy.array(line[6])

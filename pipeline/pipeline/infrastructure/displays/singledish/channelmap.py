@@ -145,24 +145,22 @@ class SDChannelMapDisplay(SDImageDisplay):
 
     def __valid_lines(self):
         reduction_group = self.context.observing_run.reduction_group
-        if self.antenna == 'COMBINED':
-            ant_index = range(len(self.context.observing_run))
-        else:
-            ant_index = [i for i in xrange(len(self.context.observing_run))
-                         if self.context.observing_run[i].antenna.name == self.antenna]
-        mygroup = None
-        for (k,v) in reduction_group.items():
-            if v[0].spw == self.spw:
-                mygroup = v
-                break
+        ant_index = self.inputs.antennaid_list
+        spwid_list = self.inputs.spwid_list
 
         line_list = []
-        for g in mygroup:
-            if g.antenna in ant_index:
-                for ll_p in g.channelmap_range:
-                    for ll in ll_p:
-                        if not ll in line_list and ll[2] is True:
-                            line_list.append(ll)
+        for (gid, group_desc) in reduction_group.items():
+            for g in group_desc:
+                found = False
+                for (ant,spw) in zip(ant_index, spwid_list):
+                    if g.antenna == ant and g.spw == spw:
+                        found = True
+                        break
+                if found:
+                    for ll_p in g.channelmap_range:
+                        for ll in ll_p:
+                            if not ll in line_list and ll[2] is True:
+                                line_list.append(ll)
         return line_list
 
     def __plot_channel_map(self):

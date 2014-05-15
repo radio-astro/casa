@@ -12,7 +12,7 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 class MaskLineInputs(common.SingleDishInputs):
-    def __init__(self, context, antennalist, spwid, iteration, index_list, 
+    def __init__(self, context, antenna_list, spwid_list, iteration, index_list, 
                  window=None, edge=None, broadline=None):
         self._init_properties(vars())
         
@@ -60,16 +60,20 @@ class MaskLine(common.SingleDishTaskTemplate):
         start_time = time.time()
 
         iteration = self.inputs.iteration
-        spwid = self.inputs.spwid
-        file_index = self.inputs.antennalist
+        spwid_list = self.inputs.spwid_list
+        file_index = self.inputs.antenna_list
         index_list = self.inputs.index_list
         window = self.inputs.window
         edge = self.inputs.edge
         broadline = self.inputs.broadline
         reference_data = context.observing_run[file_index[0]]
-        beam_size = casatools.quanta.convert(reference_data.beam_size[spwid], 'deg')['value']
-        observing_pattern = reference_data.pattern[spwid][0]
+        beam_size = casatools.quanta.convert(reference_data.beam_size[spwid_list[0]], 'deg')['value']
+        observing_pattern = reference_data.pattern[spwid_list[0]][0]
         
+        LOG.debug('Members to be processed:')
+        for (a,s) in zip(file_index,spwid_list):
+            LOG.debug('Antenna %s Spw %s'%(a,s))
+            
         # filename for input/output
         filenames_work = [self.context.observing_run[idx].work_data
                           for idx in file_index]
@@ -82,7 +86,7 @@ class MaskLine(common.SingleDishTaskTemplate):
 
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SimpleGridding.Inputs(context, file_index, spwid)
+        gridding_inputs = simplegrid.SimpleGridding.Inputs(context, file_index, spwid_list, index_list)
         gridding_task = simplegrid.SimpleGridding(gridding_inputs)
         gridding_result = self._executor.execute(gridding_task, merge=True)
         spectra = gridding_result.outcome['spectral_data']
@@ -123,7 +127,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         # line validation
         t0 = time.time()
         validator_cls = validation.ValidationFactory(observing_pattern)
-        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid, index_list, iteration, grid_size, grid_size, window, edge)
+        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid_list, index_list, iteration, grid_size, grid_size, window, edge)
         line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)=%s'%(len(index_list)))
         validation_result = self._executor.execute(line_validator, merge=True)

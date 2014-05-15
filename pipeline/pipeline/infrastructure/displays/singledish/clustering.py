@@ -116,7 +116,8 @@ class ClusterDisplay(object):
             if not cluster.has_key('cluster_score'):
                 # it should be empty cluster (no detection) so skip this cycle
                 continue
-            spw = group['spw']
+            antenna = group['index'][0]
+            spw = group['spw'][0]
             group_id = group['group_id']
             iteration = group['iteration']
             t0 = time.time()
@@ -125,7 +126,6 @@ class ClusterDisplay(object):
             t1 = time.time()
             plot_property = ClusterPropertyDisplay(group_id, iteration, cluster, spw, stage_dir)
             plot_list.extend(plot_property.plot())
-            antenna = group['index'][0]
             lines = group['lines']
             t2 = time.time()
             plot_validation = ClusterValidationDisplay(self.context, group_id, iteration, cluster, spw, antenna, lines, stage_dir)

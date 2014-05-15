@@ -5018,8 +5018,9 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
         #for image_item in result.outcome:
         for r in results:
             image_item = r.outcome['image']
+            antenna_list = r.outcome['file_index']
             spwid = image_item.spwlist
-            spw_type = context.observing_run[0].spectral_window[spwid].type
+            spw_type = context.observing_run[antenna_list[0]].spectral_window[spwid[0]].type
             task_cls = sddisplay.SDImageDisplayFactory(spw_type)
             inputs = task_cls.Inputs(context,result=r)
             task = task_cls(inputs)

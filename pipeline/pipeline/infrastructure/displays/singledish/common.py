@@ -120,7 +120,11 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
 
     @property
     def spw(self):
-        return self.result.outcome['image'].spwlist
+        spwlist = self.result.outcome['image'].spwlist
+        if isinstance(spwlist, list):
+            return spwlist[0]
+        else:
+            return spwlist
 
     @property
     def antenna(self):
@@ -131,6 +135,14 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
         reduction_group = self.context.observing_run.reduction_group
         group_id = self.result.outcome['reduction_group_id']
         return reduction_group[group_id]
+    
+    @property
+    def antennaid_list(self):
+        return self.result.outcome['file_index']
+
+    @property
+    def spwid_list(self):
+        return self.result.outcome['assoc_spws']
 
     @property
     def stage_number(self):
@@ -297,15 +309,8 @@ class SDImageDisplay(object):
         LOG.debug('(dec_min,dec_max)=(%s,%s)'%(self.dec_min,self.dec_max))
 
         # beam size in deg
-        ant_index = -1
-        if self.antenna == 'COMBINED':
-            ant_index = self.inputs.reduction_group[0].antenna
-        else:
-            for i in map(lambda x: x.antenna, self.inputs.reduction_group):
-                if self.context.observing_run[i].antenna.name == self.antenna:
-                    ant_index = i
-                    break
-        self.beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.spw], 'deg')['value']
+        ant_index = self.inputs.antennaid_list[0]
+        self.beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.inputs.spwid_list[0]], 'deg')['value']
 
         self.beam_radius = self.beam_size / 2.0
         self.grid_size = self.beam_size / 3.0

@@ -16,7 +16,7 @@ class SDImaging2WorkerInputs(common.SingleDishInputs):
     """
     Inputs for imaging worker
     """
-    def __init__(self, context, infiles, outfile, spwid, onsourceid, 
+    def __init__(self, context, infiles, outfile, spwids, onsourceid, 
                  edge=None, vislist=None):
         self._init_properties(vars())
 
@@ -39,9 +39,9 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         infiles = self.inputs.infiles
         outfile = self.inputs.outfile
         edge = self.inputs.edge
-        spwlist = [self.inputs.spwid for i in xrange(len(infiles))]
+        spwid_list = self.inputs.spwids
  
-        self._do_imaging(infiles, spwlist, outfile, edge)
+        self._do_imaging(infiles, spwid_list, outfile, edge)
  
         result = SDImaging2WorkerResults(task=self.__class__,
                                  success=True,
@@ -58,7 +58,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_imaging(self, infiles, spwlist, imagename, edge):
+    def _do_imaging(self, infiles, spwid_list, imagename, edge):
         context = self.context
         datatable = self.datatable
         antenna_list = [context.observing_run.st_names.index(f) 
@@ -66,8 +66,12 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         vislist = [self.inputs.vislist[i] for i in antenna_list]
         srctype = self.inputs.onsourceid
         reference_data = context.observing_run[antenna_list[0]]
-        spwid = spwlist[0]
+        spwid = spwid_list[0]
         
+        LOG.debug('Members to be processed:')
+        for (a,s) in zip(antenna_list, spwid_list):
+            LOG.debug('\tAntenna %s Spw %s'%(a,s))
+
         # imager tool
         im = casatools.imager
     
@@ -91,17 +95,8 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         print 'cell=%s' % (cellx)
     
         # nx and ny
-        tb = datatable.tb1
-        datatable_name = datatable.plaintable
-        index_list = []
-        for (_spw, _antenna) in zip(spwlist, antenna_list):
-            taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && SRCTYPE == %s && ANTENNA == %s' % (os.path.join(datatable_name, 'RO'), _spw, srctype, _antenna)
-            LOG.debug('taqlstring=\'%s\'' % (taqlstring))
-            tx = tb.taql(taqlstring)
-            index_list.append(tx.getcol('ID'))
-            tx.close()
-            del tx
-        index_list = numpy.sort(numpy.concatenate(index_list))
+        index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, srctype))
+        index_list.sort()
     
         ra = datatable.tb1.getcol('RA').take(index_list)
         dec = datatable.tb1.getcol('DEC').take(index_list)
@@ -192,12 +187,13 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         temporary_name = imagename.rstrip('/')+'.tmp'
         with temporary_filename(temporary_name) as name:
             # imaging
-            for (vis, spw) in zip(vislist, spwlist):
+            for (vis, spw) in zip(vislist, spwid_list):
+                LOG.debug('Registering data to imager: im.selectvis(vis=\'%s\', spw=%s, field=%s'%(vis, spw, field))
                 im.selectvis(vis=vis, spw=spw, field=field)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, stokes=stokes,
                            phasecenter=phasecenter, mode=mode, start=start,
                            nchan=nchan, step=step, restfreq=restfreq,
-                           outframe=outframe, spw=spwlist[0])
+                           outframe=outframe, spw=-1)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             im.setsdoptions(convsupport=convsupport, truncate=truncate,
                             gwidth=gwidth, jwidth=jwidth)
