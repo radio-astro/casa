@@ -316,6 +316,7 @@ protected:
 	FlagDataHandler *flagDataHandler_p;
 	casa::LogIO *logger_p;
 	String agentName_p;
+	String summaryName_p;
 	String mode_p;
 
 	// Flag counters

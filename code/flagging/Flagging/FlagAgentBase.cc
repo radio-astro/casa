@@ -135,7 +135,7 @@ FlagAgentBase::initialize()
    fieldSelection_p = String("");
    // NOTE (first implementation): According to MS selection syntax, spw must be at least *
    // but since we are parsing it only if it was provided it should not be a problem
-   // NOTE (after Dic 2011 testing): As far as I know spw selection does not have to be *
+   // NOTE (after Dec 2011 testing): As far as I know spw selection does not have to be *
    // (can be empty) and in fact applying a spw selection slows down the MSSelection class
    spwSelection_p = String("");
    uvwSelection_p = String("");
@@ -182,6 +182,7 @@ FlagAgentBase::initialize()
    threadId_p = 0;
 
    agentName_p = String("");
+   summaryName_p = String("");
    /// Flag/Unflag config
    writePrivateFlagCube_p = false;
    flag_p = true;
@@ -1111,16 +1112,28 @@ FlagAgentBase::setAgentParameters(Record config)
 
 	int exists;
 
-	exists = config.fieldNumber ("name");
-	if (exists >= 0)
-	{
-		agentName_p = config.asString("name");
-	}
-	else if (agentName_p.empty())
-	{
-		agentName_p = "FlagAgentUnknown";
-	}
-	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+    // Retrieve agent name
+    exists = config.fieldNumber ("agentname");
+    if (exists >= 0)
+    {
+        agentName_p = config.asString("agentname");
+    }
+    else if (agentName_p.empty())
+    {
+        agentName_p = "FlagAgentUnknown";
+    }
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+    // Retrieve name for summary report
+    exists = config.fieldNumber ("name");
+    if (exists >= 0)
+    {
+        summaryName_p = config.asString("name");
+    }
+    else if (summaryName_p.empty())
+    {
+        summaryName_p = agentName_p;
+    }
 
 	// Retrieve mode
 	exists = config.fieldNumber ("mode");
