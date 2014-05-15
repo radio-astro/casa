@@ -108,21 +108,11 @@ possible error.
             <equals type="string" value="automatic" />
             <equals type="string" value="interactive">
                 <default param="caltable"><value type="stringArray"></value></default>
-                <default param="flag_nmedian"><value type="bool">True</value></default>
-                <default param="flag_derivative"><value type="bool">True</value></default>
-                <default param="flag_edgechans"><value type="bool">True</value></default>
-                <default param="flag_fieldshape"><value type="bool">True</value></default>
-                <default param="flag_birdies"><value type="bool">True</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
                 <default param="caltable"><value type="stringArray"></value></default>
-                <default param="flag_nmedian"><value type="bool">True</value></default>
-                <default param="flag_derivative"><value type="bool">True</value></default>
-                <default param="flag_edgechans"><value type="bool">True</value></default>
-                <default param="flag_fieldshape"><value type="bool">True</value></default>
-                <default param="flag_birdies"><value type="bool">True</value></default>
             </equals>
         </when>
 
