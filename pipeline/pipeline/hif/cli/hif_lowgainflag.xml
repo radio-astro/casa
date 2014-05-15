@@ -31,7 +31,7 @@ Flag antennas with low or high gain.
         <value></value>
     </param>
 
-    <param type="bool" name="flag_nmedian" subparam="true">
+    <param type="bool" name="flag_nmedian">
         <description>True to flag values outside range [fnm_lo_limit * median, fnm_hi_limit*nmedian]</description>
         <value>True</value>
     </param>
@@ -74,9 +74,6 @@ Flag antennas with low or high gain.
                 <default param="intent"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
-                <default param="flag_nmedian"><value type="bool">True</value></default>
-                <default param="fnm_lo_limit"><value type="float">0.7</value></default>
-                <default param="fnm_hi_limit"><value type="float">1.3</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
@@ -85,9 +82,6 @@ Flag antennas with low or high gain.
                 <default param="intent"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
-                <default param="flag_nmedian"><value type="bool">True</value></default>
-                <default param="fnm_lo_limit"><value type="float">0.7</value></default>
-                <default param="fnm_hi_limit"><value type="float">1.3</value></default>
             </equals>
         </when>
 

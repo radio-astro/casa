@@ -41,16 +41,6 @@ Fills the model column with the model visibilities.
         <value></value>
     </param>
 
-    <param type="string" name="pipelinemode">
-	<description>The pipeline operating mode</description>
-	<value>automatic</value>
-	<allowed kind="enum">
-	    <value>automatic</value>
-	    <value>interactive</value>
-	    <value>getinputs</value>
-	</allowed>
-   </param>
-
     <param type="any" name="fluxdensity">
 	<any type="variant" limittypes="int intArray doubleArray"/>
 	<description>Specified flux density [I,Q,U,V]; -1 will lookup values</description>
@@ -72,10 +62,20 @@ Fills the model column with the model visibilities.
 	<value>True</value>
     </param>
 
-    <param type="variant" name="standard" subparam="true">
+    <param type="variant" name="standard">
 	<description>Flux density standard</description>
 	<value type="string"></value>
     </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+   </param>
 
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display the commands(True)</description>
@@ -89,13 +89,6 @@ Fills the model column with the model visibilities.
 
     <constraints>
 
-        <when param="fluxdensity">
-           <notequals type="int" value="-1">
-              <default param="spix"><value type="int">0</value></default>
-              <default param="reffreq"><value type="string">1GHz</value></default>
-           </notequals>
-        </when>
-
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic" />
 	    <equals type="string" value="interactive">
@@ -103,9 +96,8 @@ Fills the model column with the model visibilities.
 		<default param="field"><value type="string"></value></default>
 		<default param="intent"><value type="string"></value></default>
 		<default param="spw"><value type="string"></value></default>
-	    <default param="reffile"><value type="string"></value></default>
+	        <default param="reffile"><value type="string"></value></default>
 		<default param="model"><value type="string"></value></default>
-		<default param="standard"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -114,11 +106,18 @@ Fills the model column with the model visibilities.
 		<default param="field"><value type="string"></value></default>
 		<default param="intent"><value type="string"></value></default>
 		<default param="spw"><value type="string"></value></default>
-	    <default param="reffile"><value type="string"></value></default>
-		<default param="standard"><value type="string"></value></default>
+	        <default param="reffile"><value type="string"></value></default>
 		<default param="model"><value type="string"></value></default>
 	    </equals>
 	</when>
+
+        <when param="fluxdensity">
+           <notequals type="int" value="-1">
+              <default param="spix"><value type="int">0</value></default>
+              <default param="reffreq"><value type="string">1GHz</value></default>
+           </notequals>
+        </when>
+
 
    </constraints>
 

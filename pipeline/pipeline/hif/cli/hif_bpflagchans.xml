@@ -106,17 +106,11 @@ Flag deviant channels in bandpass calibration.
             <equals type="string" value="automatic" />
             <equals type="string" value="interactive">
                 <default param="caltable"><value type="stringArray"></value></default>
-                <default param="flag_diffmad"><value type="bool">True</value></default>
-                <default param="flag_hilo"><value type="bool">False</value></default>
-                <default param="flag_tmf"><value type="bool">False</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
                 <default param="caltable"><value type="stringArray"></value></default>
-                <default param="flag_diffmad"><value type="bool">True</value></default>
-                <default param="flag_hilo"><value type="bool">False</value></default>
-                <default param="flag_tmf"><value type="bool">False</value></default>
             </equals>
         </when>
 
