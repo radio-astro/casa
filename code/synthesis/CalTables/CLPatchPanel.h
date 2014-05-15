@@ -259,6 +259,11 @@ public:
   // Const access to various state
   // TBD
 
+  Bool getTresult(Cube<Float>& resultR, Cube<Bool>& resFlag,
+		  Int obs, Int fld, Int ent, Int spw);
+
+
+
   // Report state
   void listmappings();
   void state();

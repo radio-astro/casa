@@ -168,6 +168,9 @@ class Calibrater
   //  deposit in the MODEL_DATA column
   Bool corrupt();
 
+  // Initialize sigma/weight according to bandwidth/exposure
+  Bool initWeights();
+
   // Solve for a given calibration component
   Bool solve();
 
@@ -314,7 +317,8 @@ class Calibrater
 
   // Given a (supplied) list of uncalibrated spws, determines and returns if there were
   // any, and if so sends them as a warning message to the logger.
-  Bool summarize_uncalspws(const Vector<Bool>& uncalspw, const String& origin);
+  Bool summarize_uncalspws(const Vector<Bool>& uncalspw, const String& origin,
+			   Bool strictflag=False);
 
   // Create a VisSet for raw phase transfer if needed
   void getRawPhaseVisSet(Vector<Int>& spwid); 

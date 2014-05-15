@@ -1352,10 +1352,11 @@ void VisBuffer::resetWeightMat()
         *w = 0.0f;
       }
 
+  // As of 2014, we define wt = 1/sigma**2 (indep of nchan)
   // Scale by (unselected!) # of channels
   //  (to stay aligned with original nominal weights)
-  Int nchan = msColumns().spectralWindow().numChan()(spectralWindow());
-  weightMat_p *= Float(nchan);
+  //  Int nchan = msColumns().spectralWindow().numChan()(spectralWindow());
+  //  weightMat_p *= Float(nchan);
 
   // weightMat_p now OK
   weightMatOK_p = True;

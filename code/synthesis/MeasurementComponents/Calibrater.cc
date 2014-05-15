@@ -49,6 +49,8 @@
 #include <synthesis/MeasurementComponents/UVMod.h>
 #include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -1064,38 +1066,42 @@ Calibrater::correct(String mode)
             for (vi.origin(); vi.more(); vi++) {
 
                 uInt spw = vb->spectralWindow();
+
+		// Re-initialize weights from sigma column
+		vb->resetWeightMat();
+
+		// If we can calibrate this vb, do it...
                 if (ve_p->spwOK(spw)){
-
-		    // Re-initialize weights from sigma column
-		    vb->resetWeightMat();
-
-		    // throws exception if nothing to apply
-                    ve_p->correct(*vb,trialmode);
+		  
+		  // throws exception if nothing to apply
+		  ve_p->correct(*vb,trialmode);
 		    
-		    // Only if not a trial run, trigger write to disk
-		    if (upmode!="TRIAL") {
-		      
-		      if (upmode.contains("CAL")) {
-			vi.setVis (vb->visCube(), whichOutCol);
-			vi.setWeightMat(vb->weightMat()); 
-		      }
-		      
-		      if (upmode.contains("FLAG"))
-			vi.setFlag (vb->flag());
-		      
-		    }
                 }
+		// ...else don't, prepare warning, and possibly set flags
                 else{
-                    uncalspw[spw] = true;
-                    if (! vi.isAsynchronous()){
 
-                        // Asynchronous I/O doesn't have a way to skip
-                        // VisBuffers, so only break out when not using
-                        // async i/o.
-
-                        break; // Only proceed if spw can be calibrated
-                    }
+		  // set uncalspw for warning message
+		  uncalspw[spw] = true;
+		  // set the flags, if we are being strict
+		  if (upmode.contains("STRICT"))
+		    // set the flags
+		    // (don't touch the data/weights, which are initialized)
+		    vb->flag().set(True);
                 }
+
+		// Only if not a trial run, trigger write to disk
+		if (!upmode.contains("TRIAL")) {
+		      
+		  if (upmode.contains("CAL")) {
+		    vi.setVis (vb->visCube(), whichOutCol);
+		    vi.setWeightMat(vb->weightMat()); 
+		  }
+		  
+		  if (upmode.contains("FLAG"))
+		    vi.setFlag (vb->flag());
+		  
+		}
+		
             }
         }
 
@@ -1103,7 +1109,8 @@ Calibrater::correct(String mode)
 
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct");
+        retval = summarize_uncalspws(uncalspw, "correct", 
+				     upmode.contains("STRICT"));
 
 	actRec_=Record();
 	actRec_.define("origin","Calibrater::correct");
@@ -1305,8 +1312,114 @@ Bool Calibrater::corrupt() {
   return retval;
 }
 
+
+Bool Calibrater::initWeights() {
+
+  logSink() << LogOrigin("Calibrater","initWeights2") << LogIO::NORMAL;
+  Bool retval = true;
+
+  try {
+
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for initWeights!"));
+
+    // Log that we are beginning...
+
+    // Arrange for iteration over data
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    vi::SortColumns sc(columns);
+    vi::VisibilityIterator2 vi2(*ms_p,sc,True);
+    vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+    ROMSColumns mscol(*ms_p);
+    const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
+    uInt nSpw=msspw.nrow();
+    Vector<Double> effChBw(nSpw,0.0);
+    for (uInt ispw=0;ispw<nSpw;++ispw) {
+      effChBw[ispw]=mean(msspw.effectiveBW()(ispw));
+    }
+
+    Int ivb(0);
+    for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
+
+      for (vi2.origin(); vi2.more(); vi2.next()) {
+
+       Int spw = vb->spectralWindows()(0);
+
+       Int nrow=vb->nRows();
+       Int ncor=vb->nCorrelations();
+
+       // Detect ACs
+       const Vector<Int> a1(vb->antenna1());
+       const Vector<Int> a2(vb->antenna2());
+       Vector<Bool> ac(a1==a2);
+
+       // XCs need an extra factor of 2
+       Vector<Float> xcfactor(nrow,2.0);
+       xcfactor(ac)=1.0;   // (but not ACs)
+
+       // The row-wise integration time
+       Vector<Float> expo(nrow);
+       convertArray(expo,vb->exposure());
+
+       Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
+       newsig.set(1.0);
+
+       // Set weights to channel bandwidth first.
+       newwt.set(Float(effChBw(spw)));
+
+       // For each correlation, apply exposure and xcfactor
+       for (Int icor=0;icor<ncor;++icor) {
+         Vector<Float> wt(newwt.row(icor));
+         wt*=expo;
+	 wt*=xcfactor;
+       }
+
+       // sig from wt is inverse sqrt
+       newsig=newsig/sqrt(newwt);
+
+       /*
+       cout << ivb << " "
+            << ncor << " " << nchan << " " << nrow << " "
+            << expo(0) << " "
+            << newwt(0,0) << " "
+            << newsig(0,0) << " "
+            << endl;
+       */
+       ++ivb;
+
+       vb->setWeight(newwt);
+       vb->setSigma(newsig);
+       vb->writeChangesBack();
+
+      }
+    }
+  }
+  catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+             << LogIO::POST;
+
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
+    unsetapply();
+
+    throw(AipsError("Error in Calibrater::initWeights."));
+    retval = False;  // Not that it ever gets here...
+  }
+  return retval;
+}
+
+
 Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
-				     const String& origin)
+				     const String& origin,
+				     Bool strictflag)
 {
   Bool hadprob = false;
   uInt totNspw = uncalspw.nelements();
@@ -1326,9 +1439,13 @@ Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
       }
     }
     logSink() << "\n  could not be " << origin << "ed due to missing (pre-)calibration\n"
-	      << "    in one or more of the specified tables.\n"
-	      << "    Please check your results carefully!"
-	      << LogIO::POST;
+	      << "    in one or more of the specified tables.\n";
+    if (strictflag)
+      logSink() << "    These spws have been flagged!";
+    else
+      logSink() << "    Please check your results carefully!";
+
+    logSink() << LogIO::POST;
   }
   return !hadprob;
 }
