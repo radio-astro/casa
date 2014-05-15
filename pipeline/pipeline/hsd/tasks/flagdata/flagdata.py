@@ -157,13 +157,28 @@ class SDFlagData(common.SingleDishTaskTemplate):
         files = set()
         flagResult = []
         for (group_id,group_desc) in reduction_group.items():
+            LOG.debug('Processing Reduction Group %s'%(group_id))
+            LOG.debug('Group Summary:')
+            for m in group_desc:
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
+            member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+            # skip this group if valid member list is empty
+            if len(member_list) == 0:
+                LOG.info('Skip reduction group %d'%(group_id))
+                continue
+
+            member_list.sort()
+            _file_index = [group_desc[i].antenna for i in member_list]
+            spwid_list = [group_desc[i].spw for i in member_list]
+            
             # selection by infiles
-            _file_index = set(file_index) & set([m.antenna for m in group_desc])
+)
             if len(_file_index) < 1:
                 LOG.debug('Skip reduction group %d'%(group_id))
                 continue
+
             # accumulate files IDs processed
-            files = files | _file_index
+            files = files | set(_file_index)
             
 
             # assume all members have same spw and pollist
@@ -175,9 +190,13 @@ class SDFlagData(common.SingleDishTaskTemplate):
             if pollist is not None:
                 pols = list(set(pollist) & set(pols))
 
+            LOG.debug('Members to be processed:')
+            for i in xrange(len(member_list)):
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(_file_index[i], spwid_list[i], pols))
+
             # skip spw not included in iflist
-            if iflist is not None and spwid not in iflist:
-                LOG.info('Skip spw %d (not in iflist)'%(spwid))
+            if len(spwid_list) == 0:
+                LOG.info('Skip spw %d (not in iflist)'%(spwid_list))
                 continue
 
             # skip polarizations not included in pollist
@@ -194,17 +213,17 @@ class SDFlagData(common.SingleDishTaskTemplate):
             LOG.info("Start processing reduction group %d" % (group_id))
             LOG.debug("- file indices = %s" % str(_file_index))
             LOG.info("- scantable names: %s" % (", ".join([st_names[id] for id in _file_index])))
-            LOG.info("- spw: %d" % spwid)
+            LOG.info("- spw: %s" % spwid_list)
             LOG.info("- pols: %s" % str(pols))
             #LOG.debug("- additional selections:")
             #LOG.debug("       scanlist: %s" % str(scanlist))
             #LOG.debug("       field: %s" % field)
             LOG.info("*"*60)
 
-            worker = SDFlagDataWorker(context, datatable, iteration, spwid, nchan, pols, list(_file_index), flag_rule)
+            worker = SDFlagDataWorker(context, datatable, iteration, spwid_list, nchan, pols, _file_index, flag_rule)
             thresholds = self._executor.execute(worker, merge=False)
             # Summary
-            renderer = SDFlagSummary(context, datatable, spwid, pols, list(_file_index), thresholds, flag_rule)
+            renderer = SDFlagSummary(context, datatable, spwid_list, pols, _file_index, thresholds, flag_rule)
             result = self._executor.execute(renderer, merge=False)
             flagResult += result
             

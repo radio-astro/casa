@@ -26,13 +26,13 @@ class SDFlagSummary(object):
     This class defines per spwid flagging operation.
     '''
 
-    def __init__(self, context, datatable, spwid, pollist, file_index, thresholds, flagRule, userFlag=[]):
+    def __init__(self, context, datatable, spwid_list, pollist, file_index, thresholds, flagRule, userFlag=[]):
         '''
         Constructor of worker class
         '''
         self.context = context
         self.datatable = datatable
-        self.spwid = spwid
+        self.spwid_list = spwid_list
         self.pollist = pollist
         self.file_index = file_index
         self.thres_value = thresholds
@@ -47,12 +47,18 @@ class SDFlagSummary(object):
         start_time = time.time()
 
         datatable = self.datatable
-        spwid = self.spwid
+        spwid_list = self.spwid_list
         pollist = self.pollist
         file_index = self.file_index
         thresholds = self.thres_value
         flagRule = self.flagRule
         #userFlag = self.userFlag
+
+        assert len(file_index) == len(spwid_list)
+        LOG.debug('Members to be processed:')
+        for (a,s) in zip(file_index, spwid_list):
+            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,pollist))
+        
         # output directory
 #         if self.context.subtask_counter is 0: 
 #             stage_number = self.context.task_counter - 1
@@ -66,7 +72,8 @@ class SDFlagSummary(object):
         FigFileDir += "/"
 
         flagSummary = []
-        for idx in file_index:
+        for (idx,spwid) in zip(file_index, spwid_list):
+            LOG.debug('Performing flagdata for Antenna %s Spw %s'%(idx,spwid))
             st = self.context.observing_run[idx]
             filename_in = st.name
             ant_name = st.antenna.name
