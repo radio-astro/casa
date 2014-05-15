@@ -378,8 +378,8 @@ class SDFlagDataWorker(object):
                 if StddevFlagged == 0: StddevFlagged = stat[x][0] / 100.0
                 MeanFlagged = FlaggedData.mean()
                 AVE = MeanFlagged / float(Unflag) * float(Ndata)
-                RMS = math.sqrt(Ndata * StddevFlagged ** 2 / Unflag - \
-                                Ndata * (Ndata - Unflag) * MeanFlagged ** 2 / (Unflag ** 2))
+                RMS = math.sqrt(abs( Ndata * StddevFlagged ** 2 / Unflag - \
+                                Ndata * (Ndata - Unflag) * MeanFlagged ** 2 / (Unflag ** 2) ))
                 ThreP = AVE + RMS * Threshold[x]
                 if x == 4:
                     # Tsys case
