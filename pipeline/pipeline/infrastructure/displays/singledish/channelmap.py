@@ -269,8 +269,8 @@ class SDChannelMapDisplay(SDImageDisplay):
             vertical_lines = []
             # vertical lines for integrated spectrum #1
             pl.gcf().sca(axes_integsp1)
-            vertical_lines.append(pl.axvline(x = self.frequency[ChanB], linewidth=0.3, color='r'))
-            vertical_lines.append(pl.axvline(x = self.frequency[ChanB + self.NumChannelMap * ChanW], linewidth=0.3, color='r'))
+            vertical_lines.append(pl.axvline(x = self.frequency[max(ChanB,0)], linewidth=0.3, color='r'))
+            vertical_lines.append(pl.axvline(x = self.frequency[chan1], linewidth=0.3, color='r'))
 
             # vertical lines for integrated spectrum #2
             pl.gcf().sca(axes_integsp2)
