@@ -300,7 +300,8 @@ class Tsysflagspectra(basetask.StandardTaskTemplate):
           tmf1_limit=inputs.tmf1_limit,
 	  flag_tmf2=False,
           flag_nmedian = inputs.flag_nmedian,
-          fnm_limit = inputs.fnm_limit)
+          fnm_hi_limit = inputs.fnm_limit,
+          fnm_lo_limit = 0.0)
 
         # Construct the flagger task around the data view task  and the
         # flagger task. When executed this will:
