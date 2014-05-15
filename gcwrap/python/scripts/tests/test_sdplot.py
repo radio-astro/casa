@@ -1683,88 +1683,110 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     prefix=sdplot_unittest_base.taskname+'TestSel'
     postfix='.plot.png'
     outfile=prefix+postfix
-    field_prefix = 'M100__'
-    refinfo = {'npanel':6,
-               'nstack0':1,
-               'nstack1':1,
-               'nstack2':2,
-               'nstack3':2,
-               'nstack4':1,
-               'nstack5':1,
-               #'rows':None,
-               #'cols':None,
-               #'xlabel':'Channel', 
-               'xlim0':(0.0, 50.0),
-               'xlim1':(0.0, 100.0),
-               'xlim2':(0.0, 100.0),
-               'xlim3':(0.0, 100.0),
-               'xlim4':(0.0, 50.0),
-               'xlim5':(0.0, 100.0),
-               #'ylabel':'Brightness Temperature (K)',
-               'ylim0':(0.0, 6.0),
-               'ylim1':(4.7, 5.3),
-               'ylim2':(-20.0, 5.0),
-               'ylim3':(4.7, 5.3),
-               'ylim4':(-1.5, 3.0),
-               'ylim5':(4.7, 5.3),
-               'title0':'IF20',
-               'title1':'IF21',
-               'title2':'IF22',
-               'title3':'IF23',
-               'title4':'IF24',
-               'title5':'IF25',
-               #'label0_0':'XX'
-               }
 
-    # set plot information
-    def _set_plot_info( self, nstacks, xlims, ylims, titles ):
+    def _get_field_selection_plot_info( self ):
         retdic = {}
-        if not isinstance(nstacks, list):
-            raise Exception("_set_plot_info: nstacks must be a list.")
-        if not isinstance(xlims, list):
-            raise Exception("_set_plot_info: xlims must be a list.")
-        if not isinstance(ylims, list):
-            raise Exception("_set_plot_info: ylims must be a list.")
-        if not isinstance(titles, list):
-            raise Exception("_set_plot_info: titles must be a list.")
-        retdic['npanel'] = len(nstacks)
-        for i in xrange(len(nstacks)):
-            retdic['nstack'+str(i)] = nstacks[i]
-        for i in xrange(len(xlims)):
-            retdic['xlim'+str(i)] = xlims[i]
-        for i in xrange(len(ylims)):
-            retdic['ylim'+str(i)] = ylims[i]
-        for i in xrange(len(titles)):
-            retdic['title'+str(i)] = titles[i]
-
-        return retdic
-        
-    # get plot information
-    def _get_plot_info( self ):
-        retdic = {}
-        
-        retdic['rows'] = sd.plotter._rows
-        retdic['cols'] = sd.plotter._cols
-        
+        titles = []
         npanel = len(sd.plotter._plotter.subplots)
-        retdic['npanel'] = npanel
         for i in xrange(npanel):
-            retdic['nstack'+str(i)] = len(sd.plotter._plotter.subplots[i]['lines'])
+            ttmp = sd.plotter._plotter.subplots[i]['axes'].get_title().upper().strip()
+            title = ttmp.split('(')[1].split(')')[0].strip()
+            if title not in titles:
+                titles.append(title)
+        titles.sort()
+        retdic['title'] = titles
 
-            ax = sd.plotter._plotter.subplots[i]['axes']
-            retdic['xlabel'+str(i)] = ax.get_xlabel()
-            retdic['xlim'+str(i)] = ax.get_xlim()
-            retdic['ylabel'+str(i)] = ax.get_ylabel()
-            retdic['ylim'+str(i)] = ax.get_ylim()
-            retdic['title'+str(i)] = ax.get_title()
+        return retdic
+    
+    def _set_field_selection_plot_info( self, fields ):
+        retdic = {}
+        flist = []
+        for field in fields:
+            try:
+                fid = int(field)
+                if fid == 5:
+                    sfield = 'M100'
+                elif fid == 6:
+                    sfield = 'M100'
+                elif fid == 7:
+                    sfield = 'M30'
+                elif fid == 8:
+                    sfield = '3C273'
+                else:
+                    raise Exception("bad field ID (" + str(fid) + ")")
+            except:
+                sfield = field.upper().strip()
+            finally:
+                if sfield not in flist:
+                    flist.append(sfield)
+        flist.sort()
+        retdic['title'] = flist
+        return retdic
+    
+    def _get_selection_plot_info( self ):
+        sel_keys = ['SCANNO', 'POLNO', 'QUERY', 'IFNO', 'BEAMNO']
+        retdic = {}
 
-            nlabel = len(ax.get_lines())
-            retdic['nlabel'+str(i)] = nlabel
-            for j in xrange(nlabel):
-                retdic['label'+str(i)+'_'+str(j)] = ax.get_lines()[j].get_label()
-        
+        sel_texts = sd.plotter._data.get_selection().__str__().split('\n')
+        for sel_text in sel_texts:
+            sel_kv = sel_text.split(': ')
+            if len(sel_kv) != 2: continue
+            skey = sel_kv[0].upper()
+            if skey in sel_keys:
+                if skey == 'QUERY':
+                    srealkey = sel_kv[1].split('==')[0][1:].strip().upper()
+                    sval = sel_kv[1].split('__')[1].split('$')[0]
+                    retdic[srealkey] = sval
+                else:
+                    svals = sel_kv[1][1:len(sel_kv[1])-1].split(',')
+                    for i in range(len(svals)):
+                        svals[i] = svals[i].strip()
+                    svals.sort()
+                    retdic[skey] = svals
+
         return retdic
 
+    def _set_selection_plot_info( self, scanno=None, polno=None, field=None, ifno=None, beamno=None ):
+        retdic = {}
+
+        if scanno is not None:
+            if isinstance(scanno, list):
+                for i in range(len(scanno)):
+                    scanno[i] = str(scanno[i])
+            else:
+                scanno = str(scanno)
+            retdic['SCANNO'] = scanno
+        if polno is not None:
+            if isinstance(polno, list):
+                for i in range(len(polno)):
+                    polno[i] = str(polno[i])
+            else:
+                polno = str(polno)
+            retdic['POLNO'] = polno
+        if field is not None:
+            if isinstance(field, list):
+                for i in range(len(field)):
+                    field[i] = str(field[i])
+            else:
+                field = str(field)
+            retdic['FIELDNAME'] = field
+        if ifno is not None:
+            if isinstance(ifno, list):
+                for i in range(len(ifno)):
+                    ifno[i] = str(ifno[i])
+            else:
+                ifno = str(ifno)
+            retdic['IFNO'] = ifno
+        if beamno is not None:
+            if isinstance(beamno, list):
+                for i in range(len(beamno)):
+                    beamno[i] = str(beamno[i])
+            else:
+                beamno = str(beamno)
+            retdic['BEAMNO'] = beamno
+
+        return retdic
+    
     @property
     def task(self):
         return sdplot
@@ -1797,12 +1819,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan=''
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info()
         self._compareDictVal(outinfo, refinfo)
     
     def test_scan_id_exact(self):
@@ -1810,12 +1828,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan='15'
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1],
-            [(0.0,49.0),(0.0,99.0)],
-            [(0.47,0.53),(4.7,5.3)],
-            ['IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(scanno=15)
         self._compareDictVal(outinfo, refinfo)
         
     def test_scan_id_lt(self):
@@ -1823,12 +1837,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan = '<17'
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(scanno=[15,16])
         self._compareDictVal(outinfo, refinfo)
     
     def test_scan_id_gt(self):
@@ -1836,12 +1846,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan = '>15'
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(scanno=[16,17])
         self._compareDictVal(outinfo, refinfo)
     
     def test_scan_id_range(self):
@@ -1849,13 +1855,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan = '15~16'
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
-        print refinfo
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(scanno=[15,16])
         self._compareDictVal(outinfo, refinfo)
     
     def test_scan_id_list(self):
@@ -1863,12 +1864,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan = '15,17'
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2],
-            [(0.0,49.0),(0.0,99.0)],
-            [(-20.0,5.0),(4.7,5.3)],
-            ['IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(scanno=[15,17])
         self._compareDictVal(outinfo, refinfo)
     
     def test_scan_id_exprlist(self):
@@ -1876,12 +1873,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         scan = '<16, 17'
         self.res=sdplot(scan=scan,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2],
-            [(0.0,49.0),(0.0,99.0)],
-            [(-20.0,5.0),(4.7,5.3)],
-            ['IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(scanno=[15,17])
         self._compareDictVal(outinfo, refinfo)
     
     ####################
@@ -1892,12 +1885,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol=''
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info()
         self._compareDictVal(outinfo, refinfo)
     
     def test_pol_id_exact(self):
@@ -1905,12 +1894,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol = '1'
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,49.0),(0.0,99.0)],
-            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(polno=1)
         self._compareDictVal(outinfo, refinfo)
     
     def test_pol_id_lt(self):
@@ -1919,12 +1904,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol = '<1'
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,49.0),(0.0,99.0)],
-            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(polno=0)
         self._compareDictVal(outinfo, refinfo)
     
     def test_pol_id_gt(self):
@@ -1932,12 +1913,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol = '>0'
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,49.0),(0.0,99.0)],
-            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(polno=1)
         self._compareDictVal(outinfo, refinfo)
     
     def test_pol_id_range(self):
@@ -1945,12 +1922,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol = '0~1'
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(polno=[0,1])
         self._compareDictVal(outinfo, refinfo)
     
     def test_pol_id_list(self):
@@ -1958,12 +1931,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol = '0,1'
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(polno=[0,1])
         self._compareDictVal(outinfo, refinfo)
     
     def test_pol_id_exprlist(self):
@@ -1971,12 +1940,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         pol='<1,1'
         self.res=sdplot(pol=pol,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(polno=[0,1])
         self._compareDictVal(outinfo, refinfo)
 
     ####################
@@ -1985,144 +1950,100 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_value_default(self):
         """test field selection (field='')"""
         field=''
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([5,6,7,8])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_id_exact(self):
         """ test field selection (field='6')"""
         field = '6'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1],
-            [(0.0,49.0),(0.0,99.0)],
-            [(-1.5,3.0),(4.7,5.3)],
-            ['IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([6])
         self._compareDictVal(outinfo, refinfo)
 
     def test_field_id_lt(self):
         """ test field selection (field='<6')"""
         field = '<6'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1],
-            [(0.0,49.0),(0.0,99.0)],
-            [(0.47,0.53),(4.7,5.3)],
-            ['IF22','IF23'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([5])
         self._compareDictVal(outinfo, refinfo)
 
     def test_field_id_gt(self):
         """ test field selection (field='>7')"""
         field = '>7'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1],
-            [(0.0,49.0),(0.0,99.0)],
-            [(-20.0,5.0),(4.7,5.3)],
-            ['IF22','IF23'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([8])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_id_range(self):
         """ test field selection (field='5~7')"""
         field = '5~7'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([5,6,7])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_id_list(self):
         """ test field selection (field='5,7')"""
         field = '5,7'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,49.0),(0.0,99.0)],
-            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([5,7])
         self._compareDictVal(outinfo, refinfo)
 
     def test_field_id_exprlist(self):
         """ test field selection (field='<7,8')"""
         field = '<7,8'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([6,8])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_value_exact(self):
         """ test field selection (field='M100')"""
         field = 'M100'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info(['M100'])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_value_pattern(self):
         """ test field selection (field='M*')"""
         field = 'M*'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info(['M100','M30'])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_value_list(self):
         """ test field selection (field='M30,3C273')"""
         field = 'M30,3C273'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info(['M30','3C273'])
         self._compareDictVal(outinfo, refinfo)
     
     def test_field_mix_exprlist(self):
         """ test field selection (field='<7,3C273')"""
         field = '<7,3C273'
-        self.res=sdplot(field=field,infile=self.infile,outfile=self.outfile)
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_field_selection_plot_info()
+        refinfo = self._set_field_selection_plot_info([6,'3C273'])
         self._compareDictVal(outinfo, refinfo)
     
     ####################
@@ -2133,12 +2054,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw=''
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info()
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_exact(self):
@@ -2146,12 +2063,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '21'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1],
-            [(0.0,99.0)],
-            [(4.7,5.3)],
-            ['IF21'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=21)
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_lt(self):
@@ -2159,12 +2072,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '<25'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0)],
-            ['IF20','IF21','IF22','IF23','IF24'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[20,21,22,23,24])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_gt(self):
@@ -2172,12 +2081,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '>21'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[22,23,24,25])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_range(self):
@@ -2185,12 +2090,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '21~24'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 2, 2, 1],
-            [(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0)],
-            [(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0)],
-            ['IF21','IF22','IF23','IF24'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[21,22,23,24])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_list(self):
@@ -2198,12 +2099,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '21,22,23,25'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 2, 2, 1],
-            [(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,100.0)],
-            [(4.7,5.3),(-20.0,5.0),(4.7,5.3),(4.7,5.3)],
-            ['IF21','IF22','IF23','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[21,22,23,25])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_exprlist(self):
@@ -2211,12 +2108,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '<22,>24'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(4.7,5.3)],
-            ['IF20','IF21','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[20,21,25])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_id_pattern(self):
@@ -2224,12 +2117,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw='*'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[20,21,22,23,24,25])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_value_frequency(self):
@@ -2237,12 +2126,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '299.5~310GHz'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2, 1, 1],
-            [(0.0,49.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[22,23,24,25])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_value_velocity(self):
@@ -2250,12 +2135,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '-50~50km/s'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [2, 2],
-            [(0.0,49.0),(0.0,99.0)],
-            [(-20.0,5.0),(4.7,5.3)],
-            ['IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[22,23])
         self._compareDictVal(outinfo, refinfo)
     
     def test_spw_mix_exprlist(self):
@@ -2263,12 +2144,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         spw = '150~550km/s,>23'
         self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(ifno=[20,21,24,25])
         self._compareDictVal(outinfo, refinfo)
     
     ####################
@@ -2279,12 +2156,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam=''
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info()
         self._compareDictVal(outinfo, refinfo)
     
     def test_beam_id_exact(self):
@@ -2292,12 +2165,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam='12'
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1],
-            [(0.0,49.0),(0.0,99.0)],
-            [(-1.5,3.0),(4.7,5.3)],
-            ['IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(beamno=12)
         self._compareDictVal(outinfo, refinfo)
     
     def test_beam_id_lt(self):
@@ -2305,12 +2174,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam='<13'
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.47,0.53),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(beamno=[11,12])
         self._compareDictVal(outinfo, refinfo)
     
     def test_beam_id_gt(self):
@@ -2318,12 +2183,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam='>11'
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(beamno=[12,13])
         self._compareDictVal(outinfo, refinfo)
     
     def test_beam_id_range(self):
@@ -2331,12 +2192,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam='12~13'
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 1, 1, 1, 1],
-            [(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0),(0.0,50.0),(0.0,100.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3),(-1.5,3.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23','IF24','IF25'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(beamno=[12,13])
         self._compareDictVal(outinfo, refinfo)
     
     def test_beam_id_list(self):
@@ -2344,12 +2201,8 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam='11,13'
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(beamno=[11,13])
         self._compareDictVal(outinfo, refinfo)
     
     def test_beam_id_exprlist(self):
@@ -2357,15 +2210,11 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         beam='<12,>12'
         self.res=sdplot(beam=beam,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        outinfo = self._get_plot_info()
-        refinfo = self._set_plot_info(
-            [1, 1, 2, 2],
-            [(0.0,50.0),(0.0,100.0),(0.0,99.0),(0.0,99.0)],
-            [(0.0,6.0),(4.7,5.3),(-20.0,5.0),(4.7,5.3)],
-            ['IF20','IF21','IF22','IF23'])
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info(beamno=[11,13])
         self._compareDictVal(outinfo, refinfo)
 
 def suite():
-    return [sdplot_basicTest, sdplot_storageTest,sdplot_gridTest,
-            sdplot_selectTest, sdplot_errorTest,
+    return [#sdplot_basicTest, sdplot_storageTest,sdplot_gridTest,
+            #sdplot_selectTest, sdplot_errorTest,
             sdplot_selectionTest]
