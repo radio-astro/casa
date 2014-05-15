@@ -84,9 +84,6 @@ ImageFitter::ImageFitter(
 ImageFitter::~ImageFitter() {}
 
 std::pair<ComponentList, ComponentList> ImageFitter::fit() {
-	LogOrigin origin(_class, __func__);;
-	*_getLog() << origin;
-	Bool converged;
 	SPIIF modelImage, residualImage, templateImage;
 	Bool doResid = ! _residual.empty();
 	Bool doModel = ! _model.empty();
@@ -99,7 +96,6 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			modelImage = _createImageTemplate();
 			templateImage = modelImage;
 		}
-		//completePixelMask.reset(new LCMask(templateImage->shape()));
 	}
 	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
 	Vector<String> models(ngauss, "gaussian");
@@ -130,7 +126,8 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		_getMask(), _includePixelRange, _excludePixelRange,
 		_estimatesString
 	);
-
+	LogOrigin origin(_class, __func__);;
+	*_getLog() << origin;
 	*_getLog() << LogIO::NORMAL << resultsString << LogIO::POST;
 	ComponentList convolvedList, deconvolvedList;
 	Bool anyConverged = False;
@@ -138,7 +135,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	_fitLoop(
 		anyConverged, convolvedList, deconvolvedList,
 		templateImage, residualImage, modelImage,
-		/* *completePixelMask, */ resultsString
+		resultsString
 	);
 	if (anyConverged) {
 		_results.writeCompList(
@@ -179,8 +176,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			}
 		}
 	}
-
-	if (converged && ! _newEstimatesFileName.empty()) {
+	if (anyConverged && ! _newEstimatesFileName.empty()) {
 		_results.setConvolvedList(_curConvolvedList);
 		_results.setPeakIntensities(_peakIntensities);
 		_results.setMajorAxes(_majorAxes);
