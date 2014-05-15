@@ -2215,6 +2215,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         self._compareDictVal(outinfo, refinfo)
 
 def suite():
-    return [#sdplot_basicTest, sdplot_storageTest,sdplot_gridTest,
-            #sdplot_selectTest, sdplot_errorTest,
+    return [sdplot_basicTest, sdplot_storageTest, sdplot_gridTest,
+            #sdplot_selectTest,
+            sdplot_errorTest,
             sdplot_selectionTest]
