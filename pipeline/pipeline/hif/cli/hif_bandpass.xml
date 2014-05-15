@@ -55,7 +55,7 @@ window in each measurement set.
 
   <param type="string" name="phaseupbw" subparam="true">
     <description>Bandwidth to use for phaseup</description>
-    <value>500MHz</value>
+    <value></value>
   </param>
 
   <param type="string" name="hm_bandtype">
@@ -139,7 +139,7 @@ window in each measurement set.
     <when param="phaseup">
       <equals type="bool" value="True">
         <default param="phaseupsolint"><value type="string">int</value></default>
-        <default param="phaseupbw"><value type="string">500MHz</value></default>
+        <default param="phaseupbw"><value type="string"></value></default>
       </equals>
       <equals type="bool" value="False">
       </equals>
@@ -223,8 +223,8 @@ phaseupsolint -- The phase correction solution interval in CASA syntax.
 
 phaseupbw -- Bandwidth to be used for phaseup. Defaults to 500MHz.
     Used when phaseup is True.
-    default: '500MHz'
-    example: '' default to entire bandpass
+    default: ''
+    example: '' default to entire bandpass, '500MHz' use centreal 500MHz
 
 hm_bandtype -- The type of bandpass. The options are 'channel' and
     'polynomial' for CASA bandpass types = 'B' and 'BPOLY' respectively.
