@@ -1029,22 +1029,22 @@ print "Canonical regression from "+canonical['version']+" on "+canonical['date']
 
 canonical_results = {}
 canonical_results['dirty_image_rms'] = {}
-canonical_results['dirty_image_rms']['value'] = 0.000570
+canonical_results['dirty_image_rms']['value'] = 0.000595
 
 canonical_results['clean_image_max'] = {}
-canonical_results['clean_image_max']['value'] = 0.0231359191239
+canonical_results['clean_image_max']['value'] = 0.025132
 
 canonical_results['clean_image_offsrc_rms'] = {}
-canonical_results['clean_image_offsrc_rms']['value'] = 0.000533470036927
+canonical_results['clean_image_offsrc_rms']['value'] = 0.000555
 
 canonical_results['clean_image_offline_rms'] = {}
-canonical_results['clean_image_offline_rms']['value'] = 0.000515150649237
+canonical_results['clean_image_offline_rms']['value'] = 0.000539
 
 canonical_results['clean_momentzero_max'] = {}
-canonical_results['clean_momentzero_max']['value'] = 0.551860868931
+canonical_results['clean_momentzero_max']['value'] = 0.603875
 
 canonical_results['clean_momentzero_rms'] = {}
-canonical_results['clean_momentzero_rms']['value'] = 0.0878139138222
+canonical_results['clean_momentzero_rms']['value'] = 0.097894
 
 # The following value is a velocity in BARY
 #  (in LSRK, the answer is ~132.47
