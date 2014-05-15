@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_lowgainflag(vis=None, intent=None, spw=None, refant=None,
-  flag_nmedian=None, fnm_limit=None,
+  flag_nmedian=None, fnm_lo_limit=None, fnm_hi_limit=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
