@@ -162,8 +162,33 @@ def to_numeric(s):
     
 @contextlib.contextmanager
 def temporary_filename(name='_heuristics.temporary.table'):
-    try:
-        yield name
-    finally:
-        os.system('rm -rf %s'%(name))
+    yield name
+    os.system('rm -rf %s'%(name))
 
+def get_index_list(datatable, antenna, spw, srctype):
+    assert len(antenna) == len(spw)
+    table = datatable.tb1
+    antenna_column = table.getcol('ANTENNA')
+    spw_column = table.getcol('IF')
+    if srctype is None:
+        srctype_column = None
+        f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] 
+    else:
+        srctype_column = table.getcol('SRCTYPE')
+        f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and srctype_column[i] == srctype
+
+    nrow = table.nrows()
+    nval = len(antenna)
+    for irow in xrange(nrow):
+        for ival in xrange(nval):
+            if f(irow, ival):
+                yield irow
+
+def get_valid_members(group_desc, antenna_filter, spwid_filter):
+    for i in xrange(len(group_desc)):
+        member = group_desc[i]
+        antenna = member.antenna
+        spwid = member.spw
+        if antenna in antenna_filter:
+            if spwid_filter is None or spwid in spwid_filter:
+                yield i

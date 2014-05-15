@@ -10,6 +10,8 @@ from .utils import parseEdge
 from .utils import mjd_to_datestring
 from .utils import asdm_name
 from .utils import temporary_filename
+from .utils import get_index_list
+from .utils import get_valid_members
 
 # constants 
 NoData = -32767.0
