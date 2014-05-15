@@ -65,8 +65,9 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
         vis = parent_ms.basename
-        spws = parent_ms.get_spectral_windows(science_windows_only=True)
-        spwid = spws[0].id
+        target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
+                       if spwobj.is_target and spwobj.nchan != 4]
+        spwid = target_spws[0]
         rows = self.datatable.get_row_index(idx, spwid, 0)
         timegap = self.datatable.get_timegap(idx, spwid, 0, asrow=False)
         plotfile = os.path.join(stage_dir, 'azel_%s.png'%(st.basename))
