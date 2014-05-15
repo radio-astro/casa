@@ -96,7 +96,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
       flag_lo=False, flo_limit=5.0, flo_minsample=5,
       flag_tmf1=False, tmf1_axis='Time', tmf1_limit=0.5,
       flag_tmf2=False, tmf2_axis='Time', tmf2_limit=0.5,
-      flag_nmedian=False, fnm_limit=4.0,
+      flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
       flag_maxabs=False, fmax_limit=0.1,
       flag_minabs=False, fmin_limit=0.0):
 
@@ -115,7 +115,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         if flag_minabs:
             rules.append({'name':'min abs', 'limit':fmin_limit})
         if flag_nmedian:
-            rules.append({'name':'nmedian', 'limit':fnm_limit})
+            rules.append({'name':'nmedian', 'lo_limit':fnm_lo_limit,
+              'hi_limit':fnm_hi_limit})
         if flag_hilo:
             rules.append({'name':'outlier', 'limit':fhl_limit,
               'minsample':fhl_minsample})
@@ -420,17 +421,16 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             continue
 
                         # Check limits.
-                        limit = rule['limit']
-                        if limit < 1:
-                            i2flag = i[np.logical_and(data < limit * data_median,
-                              np.logical_not(flag))]
-                            j2flag = j[np.logical_and(data < limit * data_median,
-                              np.logical_not(flag))]
-                        else:
-                            i2flag = i[np.logical_and(data > limit * data_median,
-                              np.logical_not(flag))]
-                            j2flag = j[np.logical_and(data > limit * data_median,
-                              np.logical_not(flag))]
+                        lo_limit = rule['lo_limit']
+                        hi_limit = rule['hi_limit']
+                        i2flag = i[np.logical_and(
+                          np.logical_or(data < lo_limit * data_median,
+                          data > hi_limit * data_median),
+                          np.logical_not(flag))]
+                        j2flag = j[np.logical_and(
+                          np.logical_or(data < lo_limit * data_median,
+                          data > hi_limit * data_median),
+                          np.logical_not(flag))]
 
                         # No flags
                         if len(i2flag) <= 0:
@@ -538,7 +538,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
     @staticmethod
     def make_flag_rules (flag_edges=False, edge_limit=2.0,
       flag_minabs=False, fmin_limit=0.0,
-      flag_nmedian=False, fnm_limit=0.0,
+      flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
       flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
       flag_sharps=False, sharps_limit=0.05,
       flag_diffmad=False, diffmad_limit=10, diffmad_nchan_limit=4,
@@ -556,7 +556,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         if flag_minabs:
             rules.append({'name':'min abs', 'limit':fmin_limit})
         if flag_nmedian:
-            rules.append({'name':'nmedian', 'limit':fnm_limit})
+            rules.append({'name':'nmedian', 'lo_limit':fnm_lo_limit,
+              'hi_limit':fnm_hi_limit})
         if flag_hilo:
             rules.append({'name':'outlier', 'limit':fhl_limit,
               'minsample':fhl_minsample})
