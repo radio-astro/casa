@@ -12,6 +12,7 @@ import pipeline.infrastructure as infrastructure
 # import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
+from pipeline.hsd.tasks.common import utils as sdutils
 
 from . import SDFlagPlotter as SDP
 from .. import common
@@ -206,7 +207,7 @@ class SDFlagDataWorker(object):
 
                 # Calculate Standard Deviation (NOT RMS)
                 ### 2011/05/26 shrink the size of data on memory
-                flag_mask = numpy.array( self._get_mask_from_flagtra(tbIn.getcell('FLAGTRA', row)) )
+                flag_mask = numpy.array( sdutils.get_mask_from_flagtra(tbIn.getcell('FLAGTRA', row)) )
                 mask_in = flag_mask * mask
                 Nmask = int(NCHAN - numpy.sum(mask_in))
                 SpIn[index] *= flag_mask
@@ -219,7 +220,7 @@ class SDFlagDataWorker(object):
                 stats[2] = OldRMS
                 del flag_mask, Nmask
 
-                flag_mask = numpy.array( self._get_mask_from_flagtra(tbOut.getcell('FLAGTRA', row)) )
+                flag_mask = numpy.array( sdutils.get_mask_from_flagtra(tbOut.getcell('FLAGTRA', row)) )
                 mask_out = flag_mask * mask
                 Nmask = int(NCHAN - numpy.sum(mask_out))
                 SpOut[index] *= flag_mask
@@ -341,10 +342,6 @@ class SDFlagDataWorker(object):
                 data.append([idx, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
             del SpIn, SpOut
         return data
-
-    def _get_mask_from_flagtra(self, flagtra):
-        """Convert FLAGTRA to a mask array (1=valid, 0=flagged)"""
-        return [ 0 if int(flg)!=0 else 1 for flg in flagtra]
         
     def _get_mask_array(self, masklist, edge, flagtra, flagrow=False):
         """Get a list of channel mask (1=valid 0=flagged)"""
@@ -363,7 +360,7 @@ class SDFlagDataWorker(object):
         elif len(edge) == 1:
             edge = (edge[0], edge[0])
         # convert FLAGTRA to mask (1=valid channel, 0=flagged channel)
-        mask = numpy.array(self._get_mask_from_flagtra(flagtra))
+        mask = numpy.array(sdutils.get_mask_from_flagtra(flagtra))
         # masklist
         for [m0, m1] in masklist: mask[m0:m1] = 0
         # edge channels
