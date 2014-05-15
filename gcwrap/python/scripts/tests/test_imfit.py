@@ -148,7 +148,7 @@ class imfit_test(unittest.TestCase):
         for f in [
             noisy_image, noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
-            expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
+            stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates,
             twogim, twogest
         ] :
@@ -164,7 +164,7 @@ class imfit_test(unittest.TestCase):
             # noisy_image,
             noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_estimates,
-            expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
+            stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
         ] :
             if (os.path.isdir(f)):
@@ -717,9 +717,6 @@ class imfit_test(unittest.TestCase):
     # Test writing of a new estimates file
     def test_newestimates(self):
         '''Imfit: Test new estimates'''
-        success = True
-        test = 'test_newestimates: '
-        global msgs
         box = "20, 157, 93, 233, 119, 87, 178, 133"
         for i in [0, 1]:
             newestimates = "newestimates" + str(i) + ".txt"
@@ -730,7 +727,6 @@ class imfit_test(unittest.TestCase):
                     res = myia.fitcomponents(box=box, estimates=two_gaussians_estimates, newestimates=newestimates)
                     return res
                 code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
             else:
                 def run_imfit():
                     default('imfit')
@@ -739,22 +735,17 @@ class imfit_test(unittest.TestCase):
                         newestimates=newestimates
                     )
                 code = run_imfit
-                method = test + "imfit: "
             res = code()
     
-            if (not os.path.exists(newestimates)):
-                success = False
-                msgs += method + "new estimates file was not written\n"
-                return {'success' : success, 'error_msgs' : msgs}        
-     
-            expected_sha = hashlib.sha512(open(expected_new_estimates, 'r').read()).hexdigest()
+            self.assertTrue(os.path.exists(newestimates)) 
+            expec = datapath + expected_new_estimates
+            expected_sha = hashlib.sha512(open(expec, 'r').read()).hexdigest()
     
             got_sha = hashlib.sha512(open(newestimates, 'r').read()).hexdigest()
-            if (got_sha != expected_sha):
-                success = False
-                msgs += method + "new estimates file differs from expected\n"
-        
-        self.assertTrue(success,msgs)
+            self.assertTrue(
+                got_sha == expected_sha,
+                newestimates + " differs from " + expec
+            )
         
     ## Test imfit on various polarization planes
     def test_polarization_image(self):
