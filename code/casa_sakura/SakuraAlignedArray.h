@@ -19,12 +19,13 @@ public:
   SakuraAlignedArray(size_t num_data);
   SakuraAlignedArray(Vector<T> const &in_vector);
   ~SakuraAlignedArray();
-  Vector<T> getAlignedVector();
+
+  T *data;               // pointer to aligned data
+  Vector<T> *casaVector; // pointer to aligned CASA Vector
 private:
   void initialize();
-  size_t num_data_; // number of data to be stored.
-  void *storage_; // starting address of allocated memory. (unaligned)
-  T *data_;       // aligned pointer to store data.
+  size_t num_data_;      // number of data to be stored
+  void *storage_;        // starting address of allocated memory (unaligned)
 };
 
 } //# NAMESPACE CASA - END

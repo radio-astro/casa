@@ -23,7 +23,7 @@ inline SakuraAlignedArray<T>::SakuraAlignedArray(size_t num_data) :
   initialize();
 
   logger << LogIO::DEBUGGING << "  Initial Address = " << storage_ << LogIO::POST;
-  logger << LogIO::DEBUGGING << "  Aligned Address = " << data_ << LogIO::POST;
+  logger << LogIO::DEBUGGING << "  Aligned Address = " << data << LogIO::POST;
 }
 
 template<typename T>
@@ -34,31 +34,36 @@ inline SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) :
 
   initialize();
 
-  T *ptr = data_;
+  T *ptr = data;
   for (size_t i = 0; i < num_data_; ++i) {
     ptr[i] = in_vector(i);
   }
 
   logger << LogIO::DEBUGGING << "  Initial Address = " << storage_ << LogIO::POST;
-  logger << LogIO::DEBUGGING << "  Aligned Address = " << data_ << LogIO::POST;
+  logger << LogIO::DEBUGGING << "  Aligned Address = " << data << LogIO::POST;
 }
 
 template<typename T>
 inline void SakuraAlignedArray<T>::initialize() {
   storage_ = NULL;
-  data_ = NULL;
+  data = NULL;
+  casaVector = NULL;
 
   size_t size_required = sizeof(T) * num_data_;
   size_t size_of_arena = size_required + LIBSAKURA_SYMBOL(GetAlignment)() - 1;
   storage_ = malloc(size_of_arena);
   if (storage_ == NULL) {
-    data_ = NULL;
+    data = NULL;
     throw std::bad_alloc();
   }
-  data_ = reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(
+  data = reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(
 				size_of_arena, storage_, size_required));
-  assert(data_ != NULL);
-  assert(LIBSAKURA_SYMBOL(IsAligned)(data_));
+  assert(data != NULL);
+  assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+
+  Vector<T> alignedCasaVector = Vector<T>(IPosition(1, num_data_), data, SHARE);
+  assert(data == alignedCasaVector.cbegin());
+  casaVector = &alignedCasaVector;
 }
 
 template<typename T>
@@ -67,13 +72,6 @@ inline SakuraAlignedArray<T>::~SakuraAlignedArray() {
   logger << LogIO::DEBUGGING << "Destructing SakuraAlignedArray..." << LogIO::POST;
 
   free(storage_);
-}
-
-template<typename T>
-inline Vector<T> SakuraAlignedArray<T>::getAlignedVector() {
-  Vector<T> res = Vector<T>(IPosition(1, num_data_), data_, SHARE);
-  assert(data_ == res.cbegin());
-  return res;
 }
 
 }  // End of casa namespace.
