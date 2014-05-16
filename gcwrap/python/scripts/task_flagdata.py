@@ -44,8 +44,7 @@ class FlagHelper(ParallelTaskHelper):
             for i in range(len(parname)):
                 newpar.append(fh.addAbsolutePath(parname[i]))
         
-        return newpar
-    
+        return newpar    
         
 #    @dump_args
     def setupCluster(self, thistask=''):
@@ -54,8 +53,24 @@ class FlagHelper(ParallelTaskHelper):
             thistask = 'flagdata'
             
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
-
-
+        
+#    @dump_args 
+    def setupRflag(self, devpar):
+        '''cast rflag's list parameters from numpy types to Python types
+        devpar --> list of numeric parameters or list of list
+                   such as timedev or freqdev'''
+        
+        nt = copy.deepcopy(devpar)
+        for i in range(len(nt)):
+            if (isinstance(nt[i],list)):
+                nnt = nt[i]
+                for j in range(len(nnt)):
+                    elem = fh.evaluateNumpyType(nnt[j])
+                    # write the casted element back  
+                    devpar[i][j] = elem
+        
+        
+# The flagdata task
 def flagdata(vis,
              mode,
              autocorr,      # mode manual parameter
@@ -321,18 +336,6 @@ def flagdata(vis,
                 if tbuff == 0.0 or tbuff == [] or tbuff == None:
                     doPadding = False
                     
-<<<<<<< .working
-                    # It is a list of input files
-                    if os.path.isfile(inpfile[0]):
-                        flaglist = []
-                        for ifile in inpfile:
-                            casalog.post('Will read commands from the file '+ifile)                    
-                            flaglist = flaglist + fh.readFile(ifile)
-                        
-                        flagcmd = fh.parseDictionary(flaglist, reason)
-                    
-                    # It is a list of strings with flag commands
-=======
                 if doPadding:
                     casalog.post('Will apply time buffer padding')
 
@@ -355,39 +358,13 @@ def flagdata(vis,
                         flaglist = fh.readFiles(inpfile)
                         
                     # must be a Python list of strings
->>>>>>> .merge-right.r28816
                     else:
-<<<<<<< .working
-                        casalog.post('Will read commands from a Python list')
-                        flagcmd = fh.parseDictionary(inpfile, reason)
-=======
                         flaglist = inpfile
                             
                         
                 # Parse and create a dictionary
                 flagcmd = fh.parseDictionary(flaglist, reason)
->>>>>>> .merge-right.r28816
                     
-<<<<<<< .working
-                # Input commands are given in a file
-                elif isinstance(inpfile, str):
-                    
-                    if inpfile == '':
-                         casalog.post('Input file is empty', 'ERROR')
-                         
-                    casalog.post('Will read commands from the file '+inpfile)
-                    flaglist = fh.readFile(inpfile)
-                    casalog.post('%s'%flaglist,'DEBUG')
-                    
-                    flagcmd = fh.parseDictionary(flaglist, reason)
-                
-                else:
-                    casalog.post('Input type is not supported', 'ERROR')
-                    
-                casalog.post('%s'%flagcmd,'DEBUG1')
-                                                                    
-=======
->>>>>>> .merge-right.r28816
                 # List of flag commands in dictionary
                 vrows = flagcmd.keys()
 
@@ -396,10 +373,11 @@ def flagdata(vis,
                 
             except Exception, instance:
                 casalog.post('%s'%instance,'ERROR')
-                raise Exception, 'Error reading the input list '
+                raise Exception, 'Error reading the input list. Make sure the syntax used in the list '\
+                                 'follows the rules given in the inline help of the task.'
 
-            casalog.post('Read ' + str(vrows.__len__())
-                         + ' lines from input list ')
+            casalog.post('Selected ' + str(vrows.__len__())
+                         + ' commands from combined input list(s) ')
 
 #####################################################################################            
             # Parse the input file
@@ -532,6 +510,7 @@ def flagdata(vis,
             if newtime != 0.0:
                 # this means ntime='scan', the default
                 agent_pars['ntime'] = newtime
+                
             agent_pars['combinescans'] = combinescans   
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['winsize'] = winsize
