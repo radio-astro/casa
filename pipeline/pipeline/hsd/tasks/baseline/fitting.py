@@ -13,6 +13,7 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
 from . import utils
+from pipeline.hsd.tasks.common import utils as sdutils
 from .baselinetable import SplineBaselineTableGenerator
 from .baselinetable import PolynomialBaselineTableGenerator
 
@@ -183,16 +184,26 @@ class FittingBase(common.SingleDishTaskTemplate):
                 rows = member_list[y][0]
                 idxs = member_list[y][1]
 
+#                 with casatools.TableReader(filename_in) as tb:
+#                     spectra = numpy.array([tb.getcell('SPECTRA',row)
+#                                            for row in rows])
                 with casatools.TableReader(filename_in) as tb:
                     spectra = numpy.array([tb.getcell('SPECTRA',row)
                                            for row in rows])
+                    flaglist = [self._mask_to_masklist([ -fchan+1 for fchan in sdutils.get_mask_from_flagtra(tb.getcell('FLAGTRA', row)) ])
+                                for row in rows]
+  
+                LOG.debug("Flag Mask = %s" % str(flaglist))
+
                 spectra[:,:edge[0]] = 0.0
                 spectra[:,nchan-edge[1]:] = 0.0 
                 masklist = [datatable.tb2.getcell('MASKLIST',idx)
                             for idx in idxs]
+#                 masklist = [datatable.tb2.getcell('MASKLIST',idxs[i]) + flaglist[i]
+#                             for i in range(len(idxs))]
     
                 # fit order determination
-                polyorder = self.fitorder_heuristic(spectra, masklist, edge)
+                polyorder = self.fitorder_heuristic(spectra, [ list(masklist[i]) + flaglist[i] for i in range(len(idxs))], edge)
                 if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                     polyorder = min(polyorder, self.MaxPolynomialOrder)
                 LOG.info('time group %d: fitting order=%s'%(y,polyorder))
@@ -216,7 +227,8 @@ class FittingBase(common.SingleDishTaskTemplate):
         
                     # mask lines
                     maxwidth = 1
-                    _masklist = masklist[i] 
+#                     _masklist = masklist[i] 
+                    _masklist = list(masklist[i]) + flaglist[i]
                     for [chan0, chan1] in _masklist:
                         if chan1 - chan0 >= maxwidth:
                             maxwidth = int((chan1 - chan0 + 1) / 1.4)
@@ -233,6 +245,8 @@ class FittingBase(common.SingleDishTaskTemplate):
                     mask_array[edge[0]:nchan-edge[1]] = 1
                     irow = len(row_list_total)+len(row_list)
                     param = self._calc_baseline_param(irow, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
+                    # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
+                    param['masklist'] = [ [start, end-1] for [start, end] in param['masklist'] ]
                     blinfo.append(param)
                     index_list.append(idx)
                     row_list.append(row)
@@ -321,9 +335,9 @@ class FittingBase(common.SingleDishTaskTemplate):
                 istart.append(ichan)
             elif switch == -1:
                 # end of mask channels (1 -> 0)
-                iend.append(ichan-1)
+                iend.append(ichan)
         if mask[nchan-1] == 1:
-            iend.append(nchan-1)
+            iend.append(nchan)
         if len(istart) != len(iend):
             raise RuntimeError, "Failed to get mask ranges. The lenght of start channels and end channels do not match."
         masklist = []
