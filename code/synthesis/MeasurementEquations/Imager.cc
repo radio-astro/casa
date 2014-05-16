@@ -4708,6 +4708,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
       for (std::vector<int>::const_iterator it=tmpv.begin();it != tmpv.end(); it++)
       {
          fldids(count) = *it;
+         count++;
       }
     }
     //else {
@@ -4902,7 +4903,6 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
           Flux<Double> fluxval;
           Flux<Double> fluxerr;
           fluxval.setValue(fluxUsed);
-	            
           // Create a point component at the field center
           // with the specified flux density 
           // - obviously this does not correct for solar objects... 
@@ -4953,6 +4953,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
           String fldidstr = String::toString(fldid); 
           // use field id due to possible MSSelection bug for handing field name with blanks
           //VisModelData::clearModel(*mssel_p, fieldName, spwstring)
+          //cerr<<"fldidstr="<<fldidstr<<" spwstring="<<spwstring<<endl;
           VisModelData::clearModel(*mssel_p, fldidstr, spwstring);
         }
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],
@@ -4976,7 +4977,10 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
                << LogIO::POST;
         }
         Record subrec;
-        subrec.define("fluxd",fluxUsed);
+        //store fluxd actually used to scale (not input fluxdensity)
+        Vector<Double> finalFluxUsed;
+        returnFluxes[selspw][0].value(finalFluxUsed);
+        subrec.define("fluxd",finalFluxUsed);
         // TODO: add fluxd error when the flux density uncertainties 
         //       are corrrectly filled.
         retvalperField.defineRecord(String::toString(rawspwid),subrec);
