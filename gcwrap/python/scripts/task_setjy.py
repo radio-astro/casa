@@ -234,14 +234,21 @@ def setjy_core(vis=None, field=None, spw=None,
                     else:
                         raise Exception, "No field is selected. Check fluxdict and field selection."
                 else: 
+                    influxdensity=fluxdensity
                     if standard=="manual":
                         instandard="Perley-Butler 2010" # default standard when fluxdensity=-1 or 1
                     else:
                         instandard=standard
+                        # From the task, fluxdensity=-1 always for standard!="manual" (but possible to 
+                        # for im.setjy to run with both the stanadard and fluxdensity specified.
+                        if userFluxDensity:
+                            influxdensity=-1
+                            raise Exception, "Use standard=\"manual\" to set the specified fluxdensity."
+
                     if spix==[]: # handle the default 
                         spix=0.0
                     # need to modify imager to accept double array for spix
-                    retval=myim.setjy(field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity, 
+                    retval=myim.setjy(field=field, spw=spw, modimage=modimage, fluxdensity=influxdensity, 
                                       spix=spix, reffreq=reffreq, standard=instandard, scalebychan=scalebychan, 
                                       time=timerange, observation=str(observation), scan=scan, intent=intent, 
                                       interpolation=interpolation)

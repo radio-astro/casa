@@ -129,17 +129,16 @@ class ss_setjy_helper:
           # old setjy (Butler-JPL-Horizons 2010) seems to be using
           # time in FIELD... but here is first selected time in main table
           tc = trange['time'][0] #in sec.
+          self._casalog.post("field=%s trange0=%s" % (fid,tc), 'DEBUG1')
 	  if inparams[srcnames[fid]].has_key('mjd'):
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
             inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
-
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
           # make sure it is int rather than numpy.int32, etc.
           selspws = [int(ispw) for ispw in selspws]
 	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
-
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
 	  freqlist=[]
