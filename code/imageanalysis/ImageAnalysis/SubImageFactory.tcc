@@ -70,28 +70,31 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     	}
     }
     if (outMaskMgr.get() != 0) {
-    	IPosition maskShape = dynamic_cast<const WCLELMask *>(
+    	const WCLELMask *myWMask = dynamic_cast<const WCLELMask *>(
     		outMaskMgr->asWCRegionPtr()
-    	)->getImageExpr()->shape();
-    	if (
-    		outMaskMgr->asWCRegionPtr()->type() == "WCLELMask"
-    		&& ! maskShape.isEqual(inImage.shape())
-    	) {
-    		ThrowIf(
-    			! extendMask,
-    			"The input image shape and mask shape are different and it was specified "
-    			"that the mask should not be extended, so the mask cannot be applied to the "
-    			"(sub)image. Specifying that the mask should be extended may resolve the issue"
-    		);
-    		try {
-    			const WCRegion *wcptr = outMaskMgr->asWCRegionPtr();
-    			const WCLELMask *mymask = dynamic_cast<const WCLELMask *>(wcptr);
-    			const ImageExpr<Bool> *const imEx = mymask->getImageExpr();
-    			ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
-    			outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
-    		}
-    		catch (const AipsError& x) {
-    			ThrowCc("Unable to extend mask: " + x.getMesg());
+    	);
+    	if (myWMask) {
+    		const ImageExpr<Bool> *myExpression = myWMask->getImageExpr();
+    		if (
+    			myExpression
+    			&& ! myExpression->shape().isEqual(inImage.shape())
+    		) {
+    			ThrowIf(
+    				! extendMask,
+    				"The input image shape and mask shape are different and it was specified "
+    				"that the mask should not be extended, so the mask cannot be applied to the "
+    				"(sub)image. Specifying that the mask should be extended may resolve the issue"
+    			);
+    			try {
+    				const WCRegion *wcptr = outMaskMgr->asWCRegionPtr();
+    				const WCLELMask *mymask = dynamic_cast<const WCLELMask *>(wcptr);
+    				const ImageExpr<Bool> *const imEx = mymask->getImageExpr();
+    				ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
+    				outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
+    			}
+    			catch (const AipsError& x) {
+    				ThrowCc("Unable to extend mask: " + x.getMesg());
+    			}
     		}
     	}
     }
