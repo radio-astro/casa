@@ -254,9 +254,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						    const MEpoch& upboundTime,
 						    bool edgeInclusive)
   {
-    if (edgeInclusive)
-      cerr << "Edge inclusive time expression detected" << endl;
-
     Double upperBound = toTAIInSec(upboundTime);
     Double lowerBound = toTAIInSec(lowboundTime);
 
