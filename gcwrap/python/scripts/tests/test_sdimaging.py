@@ -1641,7 +1641,6 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         self._checkstats_new(self.outfile,refstats,atol=1.e-5)
         self._checkstats_box(self.outfile,refstats,box=region,atol=1.e-5)
         
-    @unittest.expectedFailure
     def test_spw_value_frequency_channel(self):
         """test spw selection w/ channel selection (spw='300.4~300.5GHz:2~7')"""
         spw = '300.4~300.5GHz:2~7'
@@ -1658,7 +1657,6 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         self._checkstats_new(self.outfile,refstats,atol=1.e-3,rtol=1.e-3)
         self._checkstats_box(self.outfile,refstats,box=region,atol=1.e-3,rtol=1.e-3)
         
-    @unittest.expectedFailure
     def test_spw_value_frequency_frequency(self):
         """test spw selection w/ channel selection (spw='300.4~300.5GHz:300.4749~300.5251GHz')"""
         spw = '300.4~300.5GHz:300.4749~300.5251GHz'   #chan=2-7 of spw=1 should be selected'
