@@ -50,7 +50,7 @@ template <class T> size_t QVector<T>::nelements() const {
 }
 
 template <class T> void QVector<T>::scale(T d) {
-	setValue(d*this->getValue());
+	this->setValue(d*this->getValue());
 }
 
 template <class T> QVector<T> QVector<T>::operator+(const QVector<T>& that) const {
