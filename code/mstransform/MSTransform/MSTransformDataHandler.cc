@@ -2594,31 +2594,57 @@ Bool MSTransformDataHandler::copyState()
 
 		if (oldState.nrow() > 0)
 		{
-			MSState& newState = msOut_p.state();
-			const ROMSStateColumns oldStateCols(oldState);
-			MSStateColumns newStateCols(newState);
-
-			// Initialize stateRemapper_p if necessary.
-			if (stateRemapper_p.size() < 1) make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
-
-
-			uInt nStates = stateRemapper_p.size();
-
-			// stateRemapper_p goes from input to output, as is wanted in most
-			// places.  Here we need a map going the other way, so make one.
-			Vector<Int> outStateToInState(nStates);
-			std::map<Int, Int>::iterator mit;
-
-			for (mit = stateRemapper_p.begin(); mit != stateRemapper_p.end(); ++mit)
+			if (!intentString_p.empty())
 			{
-				outStateToInState[(*mit).second] = (*mit).first;
+				MSState& newState = msOut_p.state();
+				const ROMSStateColumns oldStateCols(oldState);
+				MSStateColumns newStateCols(newState);
+
+				// Initialize stateRemapper_p if necessary.
+				// if (stateRemapper_p.size() < 1) make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
+
+				// jagonzal (CAS-6351): Do not apply implicit re-indexing //////////////////////////////////////////////////
+				//
+				// Get list of selected scan intent indexes
+				MSSelection mssel;
+				mssel.setStateExpr(intentString_p);
+				Vector<Int> scanIntentList = mssel.getStateObsModeList(getInputMS());
+				//
+				// Populate state re-mapper using all selected indexes (not only the implicit ones)
+				stateRemapper_p.clear();
+				for (uInt index=0; index < scanIntentList.size(); index++)
+				{
+					stateRemapper_p[scanIntentList(index)] = index;
+				}
+				///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				uInt nStates = stateRemapper_p.size();
+
+				// stateRemapper_p goes from input to output, as is wanted in most
+				// places.  Here we need a map going the other way, so make one.
+				Vector<Int> outStateToInState(nStates);
+				std::map<Int, Int>::iterator mit;
+
+				for (mit = stateRemapper_p.begin(); mit != stateRemapper_p.end(); ++mit)
+				{
+					outStateToInState[(*mit).second] = (*mit).first;
+				}
+
+
+				for (uInt outrn = 0; outrn < nStates; ++outrn)
+				{
+					TableCopy::copyRows(newState, oldState, outrn,outStateToInState[outrn], 1);
+				}
+			}
+			// jagonzal (CAS-6351): Do not apply implicit re-indexing
+			// Therefore just copy the input state sub-table to the output state sub-table
+			else
+			{
+				const MSState& oldState = mssel_p.state();
+				MSState& newState = msOut_p.state();
+				TableCopy::copyRows(newState, oldState);
 			}
 
-
-			for (uInt outrn = 0; outrn < nStates; ++outrn)
-			{
-				TableCopy::copyRows(newState, oldState, outrn,outStateToInState[outrn], 1);
-			}
 		}
 	}
 	return True;

@@ -918,6 +918,8 @@ void MSTransformManager::open()
 	}
 
 	// jagonzal (CAS-5076): Reindex state column when there is scan selection
+	// jagonzal (CAS-6351): Removing this fix as only implicit selection-based re-indexing has to be applied
+	/*
 	map<Int, Int> stateRemapper = dataHandler_p->getStateRemapper();
     std::map<Int, Int>::iterator stateRemapperIter;
     for (	stateRemapperIter = stateRemapper.begin();
@@ -926,9 +928,10 @@ void MSTransformManager::open()
     {
     	inputOutputScanIntentIndexMap_p[stateRemapperIter->first] = stateRemapperIter->second;
 
-    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "State " << stateRemapperIter->first << " mapped to " << stateRemapperIter->second << LogIO::POST;
     }
+    */
 
     // jagonzal (CAS-5349): Reindex antenna columns when there is antenna selection
     Vector<Int> antennaRemapper = dataHandler_p->getAntennaRemapper();
