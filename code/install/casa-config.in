@@ -10,6 +10,11 @@ revision="@CASAREVISION@"
 srcurl="@CASASRCURL@"
 arch="@arch@"
 
+#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#
+#######  code after this point is shared by both developer builds and binary
+#######  releases and should be written to support either using the variables
+#######  above...
+
 os=`uname -s | awk -F. '{ print $1 }'`
 
 usage( ) {
@@ -27,25 +32,25 @@ EOF
 }
 
 execute( ) {
-	if [ "${lddpreload}" ]; then
+    if [ "${lddpreload}" ]; then
         LD_PRELOAD="${lddpreload}"
         export LD_PRELOAD
     fi
     if [ "${lddpath}" ]; then
-		case "${os}" in
-		Darwin)
-				DYLD_LIBRARY_PATH="${lddpath}"
-				export DYLD_LIBRARY_PATH
-				;;
-		Linux)
-				LD_LIBRARY_PATH="${lddpath}"
-				export LD_LIBRARY_PATH
-				;;
-		esac
+        case "${os}" in
+        Darwin)
+                DYLD_LIBRARY_PATH="${lddpath}"
+                export DYLD_LIBRARY_PATH
+                ;;
+        Linux)
+                LD_LIBRARY_PATH="${lddpath}"
+                export LD_LIBRARY_PATH
+                ;;
+        esac
     fi
     CASAPATH="${prefix} ${arch}"
     export CASAPATH
-	exec $1
+    exec $1
 }
 
 if [ $# -eq 0 ]; then
@@ -55,27 +60,27 @@ fi
 while [ $# -gt 0 ]; do
     case "$1" in
     --version)
-			echo ${version}
-			;;
+            echo ${version}
+            ;;
     --prefix)
-			echo ${prefix}
-			;;
+            echo ${prefix}
+            ;;
     --revision)
-			echo ${revision}
-			;;
+            echo ${revision}
+            ;;
     --libversion)
-			echo "${libversion}"
-			;;
+            echo "${libversion}"
+            ;;
     --src)
-			echo "${srcurl}"
-			;;
+            echo "${srcurl}"
+            ;;
     --exec)
-			if [ $1 <= 1 ]; then
-				usage 1
-			fi
-			execute "$2"
-			shift
-			;;
+            if [ $1 <= 1 ]; then
+                usage 1
+            fi
+            execute "$2"
+            shift
+            ;;
     esac
     shift
 done
