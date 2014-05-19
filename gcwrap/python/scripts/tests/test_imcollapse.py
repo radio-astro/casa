@@ -375,6 +375,26 @@ class imcollapse_test(unittest.TestCase):
                             self.assertTrue(npts == 26)
                         else:
                             self.assertTrue(npts == 24)
+                            
+    def test_median(self):
+        """Test median when collapsing along multiple axes"""
+        myia = iatool()
+        myia.fromshape("", [3, 3, 3])
+        bb = myia.getchunk()
+        count = 0
+        for i in range(3):
+            for j in range(3):
+                for k in range(3):
+                    bb[i, j, k] = count
+                    count += 1
+        myia.putchunk(bb)
+        collapsed = myia.collapse(axes=[0, 1], function="median")
+        myia.done()
+        bb = collapsed.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 12)
+        self.assertTrue(bb[0, 0, 1] == 13)
+        self.assertTrue(bb[0, 0, 2] == 14)
+        collapsed.done()
 
     def test_CAS_3418(self):
         """imcollapse: Test separate code for median due to performance issues"""
