@@ -505,6 +505,8 @@ Quanta/QMath.h
 Quanta/QMath.tcc
 Quanta/Quantum.h
 Quanta/Quantum.tcc
+Quanta/QVector.h
+Quanta/QVector.tcc
 Quanta/QuantumHolder.h
 Quanta/QuantumType.h
 Quanta/RotMatrix.h

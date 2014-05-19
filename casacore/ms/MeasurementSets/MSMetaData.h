@@ -27,6 +27,7 @@
 #ifndef MS_MSMETADATA_H
 #define MS_MSMETADATA_H
 
+#include <casa/Quanta/QVector.h>
 #include <measures/Measures/MPosition.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
@@ -297,13 +298,15 @@ public:
 
 	vector<Double> getBandWidths();
 
-	vector<Quantum<Vector<Double> > > getChanFreqs();
+	vector<QVD> getChanFreqs();
 
-	vector<Quantum<Vector<Double> > > getChanWidths();
+	vector<QVD> getChanWidths();
 
 	vector<Int> getNetSidebands();
 
 	vector<Quantity> getMeanFreqs();
+
+	vector<Quantity> getCenterFreqs();
 
 	vector<uInt> nChans();
 
@@ -340,11 +343,17 @@ private:
 
 	struct SpwProperties {
 		Double bandwidth;
-		Quantum<Vector<Double> > chanfreqs;
-		Quantum<Vector<Double> > chanwidths;
+		QVD chanfreqs;
+		QVD chanwidths;
 		Int netsideband;
+		// The sum of all channel frequencies divided by the number of channels
 		Quantity meanfreq;
+		// The mean of the low frequency extent of the lowest frequency channel and
+		// the high frequency extend of the highest frequency channel. Often, but not
+		// necessarily, the same as meanfreq
+		Quantity centerfreq;
 		uInt nchans;
+		// The center frequencies of the two channels at the edges of the window
 		vector<Double> edgechans;
 		uInt bbcno;
 		String name;

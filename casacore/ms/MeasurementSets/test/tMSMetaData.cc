@@ -33,6 +33,7 @@
 #include <casa/BasicMath/StdLogical.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/EnvVar.h>
+#include <casa/Quanta/QLogical.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <casa/IO/STLIO.h>
@@ -1296,6 +1297,37 @@ void testIt(MSMetaData& md) {
 				expec.insert(i);
 			}
 			AlwaysAssert(md.getUniqueFiedIDs() == expec, AipsError);
+		}
+		{
+			cout << "*** test getCenterFreqs()" << endl;
+			vector<Quantity> centers = md.getCenterFreqs();
+			cout << "centers " << centers << endl;
+			Double mine[] = {
+				187550000000.0,	214250000000.0,
+				214234375000.0,	216250000000.0,
+				216234375000.0,	230250000000.0,
+				230234375000.0,	232250000000.0,
+				232234375000.0,	231471730000.0,
+				231456105000.0,	233352270000.0,
+				233336645000.0,	219465062500.0,
+				219449437500.0,	218610562500.0,
+				218594937500.0,	230534230000.0,
+				230534214741.0,	232414770000.0,
+				232414754741.0,	220402562500.0,
+				220402547241.0,	219548062500.0,
+				219548047241.0,	187550000000.0,
+				187550000000.0,	187550000000.0,
+				187550000000.0,	187550000000.0,
+				187550000000.0,	187550000000.0,
+				187550000000.0,	187550000000.0,
+				187550000000.0,	187550000000.0,
+				187550000000.0,	187550000000.0,
+				187550000000.0,	187550000000.0
+			};
+			vector<Double> expec(mine, mine + 39);
+			for (uInt i=0; i<40; i++) {
+				AlwaysAssert(abs(centers[i].getValue("Hz")/mine[i] - 1) < 1e-8, AipsError);
+			}
 		}
 		{
 			cout << "*** cache size " << md.getCache() << endl;

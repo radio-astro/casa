@@ -1411,13 +1411,13 @@ vector<Double> MSMetaData::getBandWidths() {
 	return out;
 }
 
-vector<Quantum<Vector<Double> > > MSMetaData::getChanFreqs() {
+vector<QVD> MSMetaData::getChanFreqs() {
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
 		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
-	vector<Quantum<Vector<Double> > > out;
+	vector<QVD> out;
 	for (
 		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
 		iter!=end; iter++
@@ -1427,13 +1427,13 @@ vector<Quantum<Vector<Double> > > MSMetaData::getChanFreqs() {
 	return out;
 }
 
-vector<Quantum<Vector<Double> > > MSMetaData::getChanWidths() {
+vector<QVD> MSMetaData::getChanWidths() {
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
 		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
-	vector<Quantum<Vector<Double> > > out;
+	vector<QVD> out;
 	for (
 		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
 		iter!=end; iter++
@@ -1471,6 +1471,23 @@ vector<Quantity> MSMetaData::getMeanFreqs() {
 		iter!=end; iter++
 	) {
 		out.push_back(iter->meanfreq);
+	}
+	return out;
+}
+
+
+vector<Quantity> MSMetaData::getCenterFreqs() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<Quantity> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->centerfreq);
 	}
 	return out;
 }
@@ -3022,17 +3039,22 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 		spwInfo[i].bandwidth = bws[i];
 		tmp.resize(0);
 		cfCol.get(i, tmp);
-		spwInfo[i].chanfreqs = Quantum<Vector<Double> >(tmp, *cfUnits.begin());
+		spwInfo[i].chanfreqs = QVD(tmp, *cfUnits.begin());
 		spwInfo[i].meanfreq = Quantity(mean(tmp), *cfUnits.begin());
 		freqLimits[0] = min(tmp);
 		freqLimits[1] = max(tmp);
 		spwInfo[i].edgechans = freqLimits;
 		tmp.resize(0);
 		cwCol.get(i, tmp);
-		spwInfo[i].chanwidths = Quantum<Vector<Double> >(tmp, *cwUnits.begin());
+		spwInfo[i].chanwidths = QVD(tmp, *cwUnits.begin());
 		// coded this way in ValueMapping
 		spwInfo[i].netsideband = nss[i] == 2 ? 1 : -1;
 		spwInfo[i].nchans = tmp.size();
+		uInt nchan = spwInfo[i].nchans;
+		QVD halfWidths = (spwInfo[i].chanwidths)/2.0;
+		Quantity lowFreq = (spwInfo[i].chanfreqs - halfWidths).min();
+		Quantity highFreq = (spwInfo[i].chanfreqs + halfWidths).max();
+		spwInfo[i].centerfreq = (lowFreq + highFreq)/2;
 		spwInfo[i].name = name[i];
 		if (myHasBBCNo) {
 			spwInfo[i].bbcno = bbcno[i];
@@ -3041,7 +3063,6 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 		    }
 		}
 		// algorithm from thunter, CAS-5794
-		uInt nchan = spwInfo[i].nchans;
 		if (
 			nchan >= 15
 			&& ! (

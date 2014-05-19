@@ -1838,6 +1838,8 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().width(widthFreq);	os << "   Ch0(MHz)";
 		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
+		os.output().width(widthFreq);	os << "CtrFreq(MHz) ";
+
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
 		Bool hasBBCNo = _msmd->hasBBCNo();
 		if (hasBBCNo) {
@@ -1848,8 +1850,9 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os << endl;
 
 		vector<uInt> nChans = _msmd->nChans();
-		vector<Quantum<Vector<Double> > > chanFreqs = _msmd->getChanFreqs();
-		vector<Quantum<Vector<Double> > > chanWidths = _msmd->getChanWidths();
+		vector<QVD> chanFreqs = _msmd->getChanFreqs();
+		vector<QVD> chanWidths = _msmd->getChanWidths();
+		vector<Quantity> centerFreqs = _msmd->getCenterFreqs();
 		vector<Double> bandwidths = _msmd->getBandWidths();
 		vector<uInt> bbcNo = hasBBCNo ? _msmd->getBBCNos() : vector<uInt>();
 
@@ -1887,6 +1890,10 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthFrqNum);
 			os.output().precision(1);
 			os<< bandwidths[spw]/1000;
+			os.output().width(widthFrqNum);
+			os.output().precision(4);
+
+			os << centerFreqs[spw].getValue("MHz") << " ";
 			if (hasBBCNo) {
 				os.output().width(widthBBCNo);
 				os<< bbcNo[spw];
