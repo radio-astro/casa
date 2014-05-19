@@ -397,6 +397,7 @@ else()
     )
 endif()
 
+
 #
 # Create casainit.(c)sh
 # The environment defined here is not needed at build time, but at runtime.
@@ -471,6 +472,40 @@ file( WRITE ${casaroot}/casainit.csh
 set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
+set( PREFIX ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
+set( INCLUDE ${CMAKE_INSTALL_PREFIX}/include CACHE PATH "casa include file install directory" FORCE )
+set( LDDPATH "" CACHE STRING "path for (DY)LD_LIBRARY_PATH" FORCE )
+set( LDDPRELOAD "" CACHE STRING "libraries to be pre-loaded at runtime" FORCE )
+set( LIBVERSION ${casa_soversion} CACHE STRING "shared library version number" FORCE )
+
+
+###
+### these are duplicated from casadef.cmake...
+###
+execute_process( COMMAND
+  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE CASAREVISION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+execute_process( COMMAND
+  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE CASASRCURL
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+###
+###
+
+configure_file( ${CMAKE_SOURCE_DIR}/install/casa-config.in ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config @ONLY )
+file( COPY ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config
+	  DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+	  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+	                   GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE )
+
 
 # Preprocessor definitions
 add_definitions( 

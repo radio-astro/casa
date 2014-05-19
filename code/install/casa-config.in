@@ -1,0 +1,83 @@
+#!/bin/sh
+
+prefix="@PREFIX@"
+include="@INCLUDE@"
+lddpath="@LDDPATH@"
+lddpreload="@LDDPRELOAD@"
+libversion="@LIBVERSION@"
+version="@CASAVERSION@"
+revision="@CASAREVISION@"
+srcurl="@CASASRCURL@"
+arch="@arch@"
+
+os=`uname -s | awk -F. '{ print $1 }'`
+
+usage( ) {
+    cat <<EOF
+Usage: casa-config [OPTION]
+
+   --version            print CASA version information
+   --prefix             print CASA's install root
+   --revision           print CASA source revision information
+   --libversion         print CASA library version number
+   --exec <sh command>  setup CASA environment and exec a shell cmd
+
+EOF
+    exit $1
+}
+
+execute( ) {
+	if [ "${lddpreload}" ]; then
+        LD_PRELOAD="${lddpreload}"
+        export LD_PRELOAD
+    fi
+    if [ "${lddpath}" ]; then
+		case "${os}" in
+		Darwin)
+				DYLD_LIBRARY_PATH="${lddpath}"
+				export DYLD_LIBRARY_PATH
+				;;
+		Linux)
+				LD_LIBRARY_PATH="${lddpath}"
+				export LD_LIBRARY_PATH
+				;;
+		esac
+    fi
+    CASAPATH="${prefix} ${arch}"
+    export CASAPATH
+	exec $1
+}
+
+if [ $# -eq 0 ]; then
+    usage 1
+fi
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    --version)
+			echo ${version}
+			;;
+    --prefix)
+			echo ${prefix}
+			;;
+    --revision)
+			echo ${revision}
+			;;
+    --libversion)
+			echo "${libversion}"
+			;;
+    --src)
+			echo "${srcurl}"
+			;;
+    --exec)
+			if [ $1 <= 1 ]; then
+				usage 1
+			fi
+			execute "$2"
+			shift
+			;;
+    esac
+    shift
+done
+
+exit 0
