@@ -1585,13 +1585,12 @@
     Basic Syntax Rules
         
           Commands are strings (which may contain internal "strings") consisting of
-          KEY=VALUE pairs separated by whitespace. 
+          KEY=VALUE pairs separated by one whitespace only. 
 
-          NOTE: There should be no whitespace between KEY=VALUE or within each KEY or 
-          VALUE, since the simple parser first breaks command lines on whitespace, 
-          then on "=". 
+          NOTE: There should be no whitespace between KEY=VALUE.The parser first breaks 
+                command lines on whitespace, then on "=". 
 
-          Use only white spaces to separate the parameters (no commas).
+          Use only ONE white space to separate the parameters (no commas).
         
           Each key should only appear once on a given command line/string.
         
@@ -1603,7 +1602,7 @@
           Example:
         
           scan='1~3' mode='manual'
-          # this line will ignored
+          # this line will be ignored
           spw='9' mode='tfcrop' correlation='ABS_XX,YY' ntime=51.0
           mode='extend' extendpols=True
           scan='1~3,10~12' mode='quack' quackinterval=1.0
