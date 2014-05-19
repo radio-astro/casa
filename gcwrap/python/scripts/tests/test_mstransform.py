@@ -1254,15 +1254,40 @@ class test_state(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
+        #os.system('rm -rf '+ self.outputms)
         
-    def test_CAS_5076(self):
-        '''mstransform: select 2 scans and automatically re-index state sub-table'''
-        self.outputms = "test_state.ms"
+    def test_select_by_scan_intent_and_reindex_state_accordingly(self):
+        '''mstransform: select a scan intent and re-index state sub-table'''
+        self.outputms = "test_select_by_scan_intent_and_reindex_state_accordingly.ms"
+        mstransform(vis=self.vis, outputvis=self.outputms, intent='OBSERVE_TARGET*', datacolumn='DATA')
+        self.assertTrue(os.path.exists(self.outputms))
+        
+        # Check that state sub-table has been re-indexed
+        mytb = tbtool()
+        mytb.open(self.outputms + '/STATE')
+        scan_intent = mytb.getcol('OBS_MODE')
+        mytb.close()
+        n_subscans = scan_intent.size
+        check_eq(n_subscans, 12)
+        
+        # listobs checks that re-indexing is consisten
+        listobs(self.outputms)
+        
+    def test_select_by_scan_but_not_implicit_state_reindex(self):
+        '''mstransform: select 2 scans and do not automatically re-index state sub-table'''
+        self.outputms = "test_select_by_scan_but_not_implicit_state_reindex.ms"
         mstransform(vis=self.vis, outputvis=self.outputms, scan='2,3', datacolumn='DATA')
-        self.assertTrue(os.path.exists(self.outputms))        
+        self.assertTrue(os.path.exists(self.outputms))
         
-        ''' listobs should not crash '''
+        # Check that state sub-table has not been re-indexed
+        mytb = tbtool()
+        mytb.open(self.outputms + '/STATE')
+        scan_intent = mytb.getcol('OBS_MODE')
+        mytb.close()
+        n_subscans = scan_intent.size
+        check_eq(n_subscans, 30)        
+
+        # listobs checks that re-indexing is consisten
         listobs(self.outputms)
 
         
