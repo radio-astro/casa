@@ -126,7 +126,7 @@ class partition_test1(test_base):
 
 
     def test_default_scan(self):
-        '''Partition: create an MMS with default values ans axis=scan'''
+        '''Partition: create an MMS with default values and axis=scan'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan')
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -273,7 +273,7 @@ class partition_test1(test_base):
         shutil.copytree(self.msfile, inpms)
         
         # First, run setjy to create the SOURCE_MODEL column
-        setjy(vis=inpms,field='0',fluxdensity=[23.0,0.,0.,0.],scalebychan=False)
+        setjy(vis=inpms,field='0',fluxdensity=[23.0,0.,0.,0.],standard='manual', scalebychan=False)
         
         # Now create an MMS from it. The SOURCE_MODEL column should be there too
         partition(vis=inpms,outputvis=self.mmsfile, observation='1',spw='1',
