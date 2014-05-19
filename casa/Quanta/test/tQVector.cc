@@ -59,6 +59,32 @@ int main () {
 		AlwaysAssert(mymin.getValue() == 0, AipsError);
 		AlwaysAssert(mymin.getUnit() == unit, AipsError);
 
+		Vector<Double> aa(2), bb(2);
+		aa[0] = 1;
+		aa[1] = 2;
+		bb[0] = 3;
+		bb[1] = 4;
+		QVector<Double> a(aa, "g");
+		QVector<Double> b(bb, "mg");
+		QVector<Double> add = a + b;
+		AlwaysAssert(add.getValue()[0] == 1.003, AipsError);
+		AlwaysAssert(add.getValue()[1] == 2.004, AipsError);
+		AlwaysAssert(add.getUnit() == "g", AipsError);
+		add = b + a;
+		AlwaysAssert(add.getValue()[0] == 1003, AipsError);
+		AlwaysAssert(add.getValue()[1] == 2004, AipsError);
+		AlwaysAssert(add.getUnit() == "mg", AipsError);
+
+		QVector<Double> sub = a - b;
+		AlwaysAssert(sub.getValue()[0] == 0.997, AipsError);
+		AlwaysAssert(sub.getValue()[1] == 1.996, AipsError);
+		AlwaysAssert(sub.getUnit() == "g", AipsError);
+		sub = b - a;
+		AlwaysAssert(sub.getValue()[0] == -997, AipsError);
+		AlwaysAssert(sub.getValue()[1] == -1996, AipsError);
+		AlwaysAssert(sub.getUnit() == "mg", AipsError);
+
+
 	}
 	catch (const AipsError& x) {
 		cerr << x.getMesg() << endl;

@@ -54,11 +54,11 @@ template <class T> void QVector<T>::scale(T d) {
 }
 
 template <class T> QVector<T> QVector<T>::operator+(const QVector<T>& that) const {
-	return QVector<T>(this->getValue() + that.getValue(), this->getFullUnit());
+	return QVector<T>(this->getValue() + that.getValue(this->getFullUnit()), this->getFullUnit());
 }
 
 template <class T> QVector<T> QVector<T>::operator-(const QVector<T>& that) const {
-	return QVector<T>(this->getValue() - that.getValue(), this->getFullUnit());
+	return QVector<T>(this->getValue() - that.getValue(this->getFullUnit()), this->getFullUnit());
 }
 
 template <class T> QVector<T> QVector<T>::operator/(const T d) const {
