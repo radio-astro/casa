@@ -425,7 +425,7 @@ template<class T> void ImageCollapser<T>::_doMedian(
 	Bool hasMaskedPixels = ! allTrue(mask);
 	for (stepper.reset(); !stepper.atEnd(); stepper++) {
 		Slicer slicer(stepper.position(), stepper.endPosition(), Slicer::endIsLast);
-		Vector<T> kk(ary(slicer));
+		Vector<T> kk(ary(slicer).tovector());
 		if (hasMaskedPixels) {
 			Vector<Bool> maskSlice(mask(slicer));
 			if (! anyTrue(maskSlice)) {
@@ -458,7 +458,6 @@ template<class T> void ImageCollapser<T>::_doMedian(
 		}
 		GenSort<T>::sort(kk);
 		uInt s = kk.size();
-
 		outImage.putAt(
 			s == 0
 				? 0
