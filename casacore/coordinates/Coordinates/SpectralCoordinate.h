@@ -32,6 +32,7 @@
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Utilities/PtrHolder.h>
 #include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <measures/Measures/MFrequency.h>
@@ -42,8 +43,6 @@
 #include <casa/Quanta/Quantum.h>
 
 #include <wcslib/wcs.h>
-
-#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -588,7 +587,7 @@ public:
 
 private:
 
-    std::auto_ptr<TabularCoordinate> _tabular;                     // Tabular coordinate OR
+    PtrHolder<TabularCoordinate> _tabular;                     // Tabular coordinate OR
     mutable ::wcsprm wcs_p;                              // wcs structure is used 
     Double to_hz_p;                                    // Convert from current world units to Hz
     Double to_m_p;                                     // Convert from current wavelength units to m

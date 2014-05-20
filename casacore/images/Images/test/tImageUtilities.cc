@@ -58,8 +58,6 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/iostream.h>
 
-#include <memory>
-
 #include <casa/namespace.h>
 void doOpens()
 {
@@ -80,7 +78,7 @@ void doOpens()
 				      True);
 
       {
-         std::auto_ptr<ImageInterface<Float> > im;
+         PtrHolder<ImageInterface<Float> > im;
          ImageUtilities::openImage(im, name1);
       }
       {
