@@ -2439,7 +2439,9 @@ void MSTransformManager::calculateWeightAndSigmaFactors()
 void MSTransformManager::checkFillFlagCategory()
 {
 	fillFlagCategory_p = False;
-	if (!selectedInputMsCols_p->flagCategory().isNull() && selectedInputMsCols_p->flagCategory().isDefined(0))
+	if (	!selectedInputMsCols_p->flagCategory().isNull()
+			&& selectedInputMsCols_p->flagCategory().isDefined(0)
+			&& selectedInputMsCols_p->flagCategory()(0).shape() == 3)
 	{
 		fillFlagCategory_p = True;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
