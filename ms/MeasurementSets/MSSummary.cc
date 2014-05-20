@@ -101,7 +101,7 @@ MSSummary::~MSSummary ()
 //
 Int MSSummary::nrow () const
 {
-	return _msmd->nRows();
+	return _msmd.ptr()->nRows();
 }
 
 
@@ -128,7 +128,7 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 		return False;
 	} else {
 		pMS = pTemp;
-		_msmd.reset(new MSMetaData(&ms, _cacheSizeMB));
+		_msmd.set(new MSMetaData(&ms, _cacheSizeMB));
 		return True;
 	}
 }
@@ -465,7 +465,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					// this MJD
 					day=floor(MVTime(btime/C::day).day());
 
-					spw = _msmd->getSpwsForScan(lastscan);
+					spw = _msmd.ptr()->getSpwsForScan(lastscan);
 					String name=fieldnames(lastfldids(0));
 
 					if (verbose) {

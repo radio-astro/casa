@@ -61,8 +61,6 @@
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/iostream.h>
 
-#include <memory>
-
 // debug
 #include <components/ComponentModels/Flux.h>
 namespace casa { //# NAMESPACE CASA - BEGIN

@@ -39,8 +39,6 @@
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/Containers/SimOrdMap.h>
 
-#include <memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -48,6 +46,7 @@ template <class T> class ImageInterface;
 template <class T> class Vector;
 template <class T> class Quantum;
 template <class T> class MaskedArray;
+template <class T> class PtrHolder;
 class LatticeBase;
 class CoordinateSystem;
 class Coordinate;
@@ -101,7 +100,7 @@ public:
 	// applied.
 	//  <group>
 	template <typename T> static void openImage(
-		std::auto_ptr<ImageInterface<T> >& image,
+		PtrHolder<ImageInterface<T> >& image,
 		const String& fileName
 	);
 

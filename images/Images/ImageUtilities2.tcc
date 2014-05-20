@@ -270,12 +270,12 @@ template <typename T> void ImageUtilities::openImage(
 }
 
 template <typename T> void ImageUtilities::openImage(
-	std::auto_ptr<ImageInterface<T> >& image,
+	PtrHolder<ImageInterface<T> >& image,
 	const String& fileName
 ) {
    ImageInterface<T>* p = 0;
    ImageUtilities::openImage(p, fileName);
-   image.reset(p);
+   image.set(p);
 }
 
 
