@@ -924,43 +924,41 @@ class test_Columns(test_base):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
         
-    # Disabled until CAS-5348 is fixed    
-#     def test_col1(self):
-#          """mstransform: try to make real a non-existing virtual MODEL column"""
-#          self.setUp_ngc5921()
-#          self.outputms = "col1.ms"
-#          mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='all', realmodelcol=True)
-#                               
-#          self.assertTrue(os.path.exists(self.outputms))
-#          mcol = th.getColDesc(self.outputms, 'MODEL_DATA')
-#          mkeys = mcol.keys()
-#          self.assertTrue(mkeys.__len__()==0, 'Should not add MODEL_DATA column')
-#     
-#     # Disabled until CAS-5348 is fixed    
-#     def test_col2(self):
-#          """mstransform: make real a virtual MODEL column """
-#          self.setUp_ngc5921()
-#          self.outputms = "col2.ms"
-#          inpms = 'ngc5921Jy.ms'
-#          shutil.copytree(self.vis, inpms)
-#          
-#          # First, run setjy to create a virtual MODEl column (SOURCE_MODEL)
-#          setjy(vis=inpms,field='1331+305*',modimage='',standard='Perley-Taylor 99',
-#                scalebychan=False, usescratch=False)
-#          
-#          # Verify that the virtual column exists
-#          mcol = th.getColDesc(inpms+'/SOURCE', 'SOURCE_MODEL')
-#          mkeys = mcol.keys()
-#          self.assertTrue(mkeys.__len__() > 0, 'Should have a SOURCE_MODEL column')
-#          
-#          # Make the virtual column a real MODEL_DATA column
-#          mstransform(vis=inpms, outputvis=self.outputms, datacolumn='all', realmodelcol=True)
-#                              
-#          self.assertTrue(os.path.exists(self.outputms))
-#          mcol = th.getColDesc(self.outputms, 'MODEL_DATA')
-#          mkeys = mcol.keys()
-#          self.assertTrue(mkeys.__len__() > 0, 'Should have a MODEL_DATA column')
+    def test_col1(self):
+          """mstransform: try to make real a non-existing virtual MODEL column"""
+          self.setUp_ngc5921()
+          self.outputms = "col1.ms"
+          mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='all', realmodelcol=True)
+
+          self.assertTrue(os.path.exists(self.outputms))
+          mcol = th.getColDesc(self.outputms, 'MODEL_DATA')
+          mkeys = mcol.keys()
+          self.assertTrue(mkeys.__len__()==0, 'Should not add MODEL_DATA column')
+          
+    def test_col2(self):
+          """mstransform: make real a virtual MODEL column """
+          self.setUp_ngc5921()
+          self.outputms = "col2.ms"
+          inpms = 'ngc5921Jy.ms'
+          shutil.copytree(self.vis, inpms)
     
+          # First, run setjy to create a virtual MODEl column (SOURCE_MODEL)
+          setjy(vis=inpms,field='1331+305*',modimage='',standard='Perley-Taylor 99',
+                scalebychan=False, usescratch=False)
+
+          # Verify that the virtual column exists
+          mcol = th.getColDesc(inpms+'/SOURCE', 'SOURCE_MODEL')
+          mkeys = mcol.keys()
+          self.assertTrue(mkeys.__len__() > 0, 'Should have a SOURCE_MODEL column')
+
+          # Make the virtual column a real MODEL_DATA column
+          mstransform(vis=inpms, outputvis=self.outputms, datacolumn='all', realmodelcol=True)
+
+          self.assertTrue(os.path.exists(self.outputms))
+          mcol = th.getColDesc(self.outputms, 'MODEL_DATA')
+          mkeys = mcol.keys()
+          self.assertTrue(mkeys.__len__() > 0, 'Should have a MODEL_DATA column')
+
     def test_col3(self):
         '''mstransform: split out the MODEL column'''
         self.setUp_4ants()
