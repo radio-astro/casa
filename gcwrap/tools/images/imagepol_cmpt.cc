@@ -64,20 +64,9 @@ imagepol::open(const variant& image){
 			itsImPol= new ImagePol(tmpim);
 		}
 		else if(image.type()== variant::STRING) {
-			std::auto_ptr<ImageInterface<Float> > im;
+			PtrHolder<ImageInterface<Float> > im;
 			ImageUtilities::openImage(im, toCasaString(image));
 			itsImPol= new ImagePol(*im);
-			/*
-			if(casa::Table::isReadable(toCasaString(image))){
-				PagedImage<Float> tmpim(toCasaString(image));
-				itsImPol= new ImagePol(tmpim);
-				rstat=True;
-			}
-			else{
-				*itsLog << LogIO::SEVERE << "image not found on disk"
-						<< LogIO::EXCEPTION;
-			}
-			*/
 		}
 		else {
 			*itsLog << "Unsupported type for image input" << LogIO::EXCEPTION;

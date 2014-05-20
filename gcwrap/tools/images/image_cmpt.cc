@@ -4041,13 +4041,13 @@ bool image::setrestoringbeam(
 				channel >= 0 || polarization >= 0,
 				"Neither channel nor polarization can be non-negative if imagename is specified"
 			);
-			std::auto_ptr<ImageInterface<Float> > k;
+			PtrHolder<ImageInterface<Float> > k;
 			ImageUtilities::openImage(k, imagename);
-			if (k.get() == 0) {
-				std::auto_ptr<ImageInterface<Float> > c;
+			if (k.ptr() == 0) {
+				PtrHolder<ImageInterface<Float> > c;
 				ImageUtilities::openImage(c, imagename);
 				ThrowIf(
-					c.get() == 0,
+					c.ptr() == 0,
 					"Unable to open " + imagename
 				);
 				bs = c->imageInfo().getBeamSet();
@@ -4969,17 +4969,17 @@ std::tr1::shared_ptr<Record> image::_getRegion(
 			}
 		}
 		else {
-			std::auto_ptr<ImageInterface<Float> > image;
+			PtrHolder<ImageInterface<Float> > image;
 			ImageUtilities::openImage(image, otherImageName);
-			if (image.get()) {
+			if (image.ptr()) {
 				shape = image->shape();
 				csys = image->coordinates();
 			}
 			else {
-				std::auto_ptr<ImageInterface<Complex> > imagec;
+				PtrHolder<ImageInterface<Complex> > imagec;
 				ImageUtilities::openImage(imagec, otherImageName);
 				ThrowIf(
-					! imagec.get(),
+					! imagec.ptr(),
 					"Unable to open image " + otherImageName
 				);
 				shape = imagec->shape();
