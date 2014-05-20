@@ -31,7 +31,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption option) :
+MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption option, Bool realmodelcol) :
 		  ms_p(MeasurementSet(theMS, option)),
 		  mssel_p(ms_p),
 		  msc_p(NULL),
@@ -49,15 +49,26 @@ MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption
 		  combine_p(""),
 		  fitorder_p(-1),
 		  fitspw_p("*"),
-		  fitoutspw_p("*")
+		  fitoutspw_p("*"),
+		  realmodelcol_p(realmodelcol)
 {
+	// CAS-5348 (jagonzal): Check if model parameters are defined.
+	if ((realmodelcol_p) and (not ms_p.source().isColumn(MSSource::SOURCE_MODEL)))
+	{
+		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+		os << LogIO::WARN 	<< "Requested to make virtual MODEL_DATA column real but "
+							<< "SOURCE_MODEL column is not present in SOURCE sub-table"
+							<< LogIO::POST;
+		realmodelcol_p = False;
+	}
+
 	return;
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms) :
+MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool realmodelcol) :
 		   ms_p(ms),
 		   mssel_p(ms_p),
 		   msc_p(NULL),
@@ -75,8 +86,19 @@ MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms) :
 		   combine_p(""),
 		   fitorder_p(-1),
 		   fitspw_p("*"),
-		   fitoutspw_p("*")
+		   fitoutspw_p("*"),
+		   realmodelcol_p(realmodelcol)
 {
+	// CAS-5348 (jagonzal): Check if model parameters are defined.
+	if ((realmodelcol_p) and (not ms_p.source().isColumn(MSSource::SOURCE_MODEL)))
+	{
+		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+		os << LogIO::WARN 	<< "Requested to make virtual MODEL_DATA column real but "
+							<< "SOURCE_MODEL column is not present in SOURCE sub-table"
+							<< LogIO::POST;
+		realmodelcol_p = False;
+	}
+
 	return;
 }
 
@@ -163,7 +185,7 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(String col,const MeasurementSet& msref)
+const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(String col,const MeasurementSet& msref, Bool realmodelcol)
 {
 	// Memorize both for efficiency and so that the info
 	// message at the bottom isn't unnecessarily repeated.
@@ -217,6 +239,14 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 			++nFound;
 			my_colNameVect.resize(nFound, true);
 			my_colNameVect[nFound - 1] = wanted[i];
+		}
+		// CAS-5348 (jagonzal): Model parameters check is done at construction time
+		else if (wanted[i] == MS::MODEL_DATA and realmodelcol)
+		{
+			++nFound;
+			my_colNameVect.resize(nFound, true);
+			my_colNameVect[nFound - 1] = wanted[i];
+			os << LogIO::NORMAL 	<< "Virtual MODEL_DATA column found will be written to output MS " << LogIO::POST;
 		}
 		else if (!doAny)
 		{
@@ -757,7 +787,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	}
 
 	// Watch out!  This throws an AipsError if ms_p doesn't have the requested columns.
-	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p);
+	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p,realmodelcol_p);
 
 	if (!makeSelection())
 	{

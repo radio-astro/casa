@@ -59,8 +59,8 @@ public:
 		USE_FOR_DATA_WEIGHT_SIGMA_FLAG
 	};
 
-	MSTransformDataHandler(String& theMS, Table::TableOption option);
-	MSTransformDataHandler(MeasurementSet& ms);
+	MSTransformDataHandler(String& theMS, Table::TableOption option, Bool realmodelcol=False);
+	MSTransformDataHandler(MeasurementSet& ms, Bool realmodelcol=False);
 	~MSTransformDataHandler();
 
 	// Declared static because it's used in setupMS().
@@ -72,7 +72,7 @@ public:
 	// verifyColumns() after calling this.  Unlike the other version, it knows
 	// about FLOAT_DATA and LAG_DATA.  It throws an exception if a
 	// _specifically_ requested column is absent.
-	static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList, const MeasurementSet& ms);
+	static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList, const MeasurementSet& ms, Bool realmodelcol=False);
 
 	// Helper function for parseColumnNames().  Converts col to a list of
 	// MS::PredefinedColumnss, and returns the # of recognized data columns.
@@ -245,6 +245,9 @@ public:
 	map<Int, Int> & getStateRemapper() {return stateRemapper_p;};
 	Vector<Int> & getAntennaRemapper() {return antNewIndex_p;};
 
+	// Accesors for additional parameters
+	Bool getRealModelColParam() {return realmodelcol_p;};
+
 protected:
 
 	// Initialized* by ctors.  (Maintain order both here and in ctors.)
@@ -308,6 +311,9 @@ protected:
 	Vector<Slice> corrSlice_p;
 	Vector<Vector<Slice> > corrSlices_p; // Used by VisIterator::selectCorrelation()
 	Matrix<Double> selTimeRanges_p;
+
+	// CAS-5348 (jagonzal): Make virtual MODEL data column real
+	Bool realmodelcol_p;
 
 };
 
