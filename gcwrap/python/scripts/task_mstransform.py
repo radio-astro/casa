@@ -348,6 +348,9 @@ class MSTHelper(ParallelTaskHelper):
             
 #    @dump_args
     def _createDefaultSeparationCommands(self):
+        
+        casalog.post('Partition per scan/spw will ignore NULL combinations of these two parameters.')
+
         # Separates in scan and spw axes
         self._selectMS()
             
@@ -463,7 +466,7 @@ class MSTHelper(ParallelTaskHelper):
         except:
             isSelected = False
             casalog.post('Ignoring NULL combination of scan=%s and spw=%s'% \
-                             (scan,spw),'WARN')
+                             (scan,spw),'DEBUG1')
         
         return isSelected
             
