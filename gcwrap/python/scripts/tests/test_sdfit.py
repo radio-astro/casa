@@ -26,6 +26,27 @@ class sdfit_unittest_base:
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
+
+    def setUp(self):
+        if hasattr(self, 'inputs'):
+            for infile in self.inputs:
+                #print 'copying %s...'%(infile)
+                if os.path.exists(infile):
+                    shutil.rmtree(infile)
+                shutil.copytree(os.path.join(self.datapath, infile), infile)
+        default(sdfit)
+
+    def tearDown(self):
+        if hasattr(self, 'inputs'):
+            for infile in self.inputs:
+                #print 'removing %s...'%(infile)
+                if os.path.exists(infile):
+                    shutil.rmtree(infile)
+
+        if hasattr(self, 'outputs'):
+            for outfile in self.outputs:
+                #print 'removing %s...'%(outfile)
+                os.system('rm -rf %s'%(outfile))
     
     def read_result(self, outfile):
         # basic check
@@ -54,7 +75,7 @@ class sdfit_unittest_base:
                     result[key] = [peak, center, fwhm]
         return result
     
-class sdfit_test(unittest.TestCase):
+class sdfit_test(sdfit_unittest_base, unittest.TestCase):
     """
     Unit tests for task sdfit. No interactive testing.
 
@@ -78,27 +99,10 @@ class sdfit_test(unittest.TestCase):
 
     created 21/04/2011 by Wataru Kawasaki
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
     # Input and output names
     infile_gaussian   = 'Artificial_Gaussian.asap'
     infile_lorentzian = 'Artificial_Lorentzian.asap'
-
-    def setUp(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
-        shutil.copytree(self.datapath+self.infile_gaussian, self.infile_gaussian)
-        if os.path.exists(self.infile_lorentzian):
-            shutil.rmtree(self.infile_lorentzian)
-        shutil.copytree(self.datapath+self.infile_lorentzian, self.infile_lorentzian)
-
-        default(sdfit)
-
-    def tearDown(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
-        if os.path.exists(self.infile_lorentzian):
-            shutil.rmtree(self.infile_lorentzian)
+    inputs = [infile_gaussian, infile_lorentzian]
 
     def testGaussian00(self):
         """Test Gaussian00: single broad profile """
@@ -377,24 +381,13 @@ class sdfit_test(unittest.TestCase):
                 within_errorrange = (abs(ans - val) <= abs(err * threshold))
                 self.assertTrue(within_errorrange)
 
-class sdfit_test_exceptions(unittest.TestCase):
+class sdfit_test_exceptions(sdfit_unittest_base, unittest.TestCase):
     """
     test the case when sdfit throws exception.
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
     # Input and output names
     infile_gaussian   = 'Artificial_Gaussian.asap'
-
-    def setUp(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
-        shutil.copytree(self.datapath+self.infile_gaussian, self.infile_gaussian)
-        default(sdfit)
-
-    def tearDown(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
+    inputs = [infile_gaussian]
 
     def testNoData(self):
         try:
@@ -411,11 +404,14 @@ class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSynt
     
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
+    
     # Input and output names
     infile_convolve = 'sd_analytic_type3-1.asap'
     infile_shift = 'sd_analytic_type4-1.asap'
     infile_duplicate = 'sd_analytic_type5-1.asap'
     prefix = 'sdfit_selection_syntax'
+    inputs = [infile_convolve, infile_shift, infile_duplicate]
+    outputs = [prefix+'*']
 
     # line information
     # | row | line channel | intensity |
@@ -460,18 +456,6 @@ class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSynt
     @property
     def spw_channel_selection(self):
         return True
-
-    def setUp(self):
-        for infile in [self.infile_convolve, self.infile_shift, self.infile_duplicate]:
-            if os.path.exists(infile):
-                shutil.rmtree(infile)
-            shutil.copytree(self.datapath+infile, infile)
-        default(sdfit)
-
-    def tearDown(self):
-        for infile in [self.infile_convolve, self.infile_shift, self.infile_duplicate]:
-            if os.path.exists(infile):
-                shutil.rmtree(infile)
 
     def __test_result(self, infile, result_ret, result_out, rows):
         casalog.post('result=%s'%(result_ret))
@@ -1042,24 +1026,14 @@ class sdfit_average(sdfit_unittest_base, unittest.TestCase):
     """
     """
     infile = 'sdfit_average.asap'
+    inputs = [infile]
     outfile = 'sdfit_average.txt'
+    outputs = [outfile]
     fitmode = 'list'
     spw = ':0~40'
     nfit = [1]
     tweight = 'tint'
     pweight = 'tsys'
-    
-    def setUp(self):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(os.path.join(self.datapath, self.infile), self.infile)
-        
-
-    def tearDown(self):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        if os.path.exists(self.outfile):
-            os.system('rm -f %s'%(self.outfile))
 
     def _execute_task(self, timeaverage, scanaverage, polaverage):
         kwargs={'infile': self.infile,
@@ -1078,21 +1052,35 @@ class sdfit_average(sdfit_unittest_base, unittest.TestCase):
         return sdfit(**kwargs)
 
     def _verify(self, expected):
-        print expected
+        # dictionary for verification
+        # key: tuple consisting of SCANNO, IFNO, and POLNO
+        #     (SCANNO,IFNO,POLNO), e.g.,
+        #
+        #         (0,0,0)
+        #
+        # value: flattened list of 'peak', 'cent', and 'fwhm'.
+        #     If there are multiple rows for one key, the list
+        #     is extended, e.g.,
+        #
+        #         [peak0, cent0, fwhm0, peak1, cent1, fwhm1, ...]
+        #
         result = self.read_result(self.outfile)
         tol = 1.0e-4
         properties = ['peak', 'cent', 'fwhm']
+        nprop = len(properties)
         for key in expected.keys():
             self.assertTrue(result.has_key(key),
                             msg='result does\'t have key %s'%(list(key)))
             e = expected[key]
             r = result[key]
-            self.assertEqual(len(r), len(e),
-                             msg='%s: number of row mismatch (expected %s, actual %s)'%(list(key), len(e)/3, len(r)/3))
+            ne = len(e)
+            nr = len(r)
+            self.assertEqual(nr, ne,
+                             msg='%s: number of row mismatch (expected %s, actual %s)'%(list(key), ne/nprop, nr/nprop))
             for irow in xrange(len(e)):
                 diff = abs((r[irow] - e[irow])/e[irow])
                 self.assertLessEqual(diff, tol,
-                                     msg='%s (%s): result differ (expected %s, actual %s)'%(properties[irow % 3], irow, e[irow], r[irow]))
+                                     msg='%s (%s): result differ (expected %s, actual %s)'%(properties[irow % nprop], irow, e[irow], r[irow]))
 
     def testaverageFFF(self):
         """testaverageFFF: test average (timeaverage=False, scanaverage=False, polaverage=False)"""
