@@ -392,7 +392,7 @@ SPIIF ImageAnalysis::imageconcat(
 	}
 
 	// Find spectral axis of first image
-	std::auto_ptr<ImageInterface<Float> > im;
+	PtrHolder<ImageInterface<Float> > im;
 	ImageUtilities::openImage(im, expInNames(0));
 
 	CoordinateSystem cSys = im->coordinates();
@@ -422,7 +422,7 @@ SPIIF ImageAnalysis::imageconcat(
 	for (uInt i = 1; i < expInNames.nelements(); i++) {
 		Bool doneOpen = False;
 		try {
-			std::auto_ptr<ImageInterface<Float> > im2;
+			PtrHolder<ImageInterface<Float> > im2;
 			ImageUtilities::openImage(im2, expInNames(i));
 			doneOpen = True;
 			pConcat->setImage(*im2, relax);
@@ -600,7 +600,7 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		*_log << LogOrigin(className(), __func__);
 
 		// Open
-		std::auto_ptr<ImageInterface<Float> > inImage;
+		PtrHolder<ImageInterface<Float> > inImage;
 		ImageUtilities::openImage(inImage, infile);
 		//
 		// Convert region from Glish record to ImageRegion.
@@ -3585,7 +3585,7 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		*_log << LogOrigin(className(), __func__);
 
 		// Open
-		std::auto_ptr<ImageInterface<Float> > inImage;
+		PtrHolder<ImageInterface<Float> > inImage;
 		ImageUtilities::openImage(inImage, infile);
 
 		AxesSpecifier axesSpecifier;
@@ -3653,7 +3653,7 @@ ImageAnalysis::newimagefromfile(const String& fileName) {
 		}
 
 		// Open
-		std::auto_ptr<ImageInterface<Float> > inImage;
+		PtrHolder<ImageInterface<Float> > inImage;
 		ImageUtilities::openImage(inImage, fileName);
 		outImage = inImage->cloneII();
 		if (outImage == 0) {
