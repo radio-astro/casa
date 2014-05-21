@@ -29,6 +29,7 @@
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
+#include <plotms/PlotMS/PlotMSExportParam.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 
@@ -51,6 +52,7 @@ public:
 	virtual PlotMSPlotManager& getPlotManager() = 0;
 	virtual PlotFactoryPtr getPlotFactory() = 0;
 	virtual PlotMSParameters& getParameters() = 0;
+	virtual PlotMSExportParam& getExportParameters() = 0;
 
 	//Symbols
 	virtual PlotSymbolPtr createSymbol (const String& descriptor,
@@ -64,9 +66,11 @@ public:
 	virtual void showGUI(bool show = true) = 0;
 	virtual bool guiShown() const = 0;
 	virtual bool isClosed() const = 0;
+	virtual void clearPlots() = 0;
 
 	virtual bool isOperationCompleted() const = 0;
-	virtual bool save(const PlotExportFormat& format, const bool interactive) = 0;
+	virtual void setOperationCompleted( bool complete) = 0;
+	virtual bool save(const PlotExportFormat& format) = 0;
 	virtual PlotMSFlagging getFlagging() const = 0;
 	virtual void setFlagging(PlotMSFlagging flag) = 0;
 	virtual void quitApplication() = 0;

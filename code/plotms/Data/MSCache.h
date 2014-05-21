@@ -64,7 +64,7 @@ public:
   virtual ~MSCache();
 
   // Identify myself
-  PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::MS; };
+  PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::MS; };
 
   // Access to channel averaging bounds
   Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
@@ -138,7 +138,7 @@ private:
 			  Vector<Int>& chunks, 
 			  Vector<Int>& relids,
 			  Bool flag,
-			  PlotMSIndexer* indexer);
+			  PlotMSIndexer* indexer, int dataIndex);
   
 
 
@@ -159,7 +159,7 @@ private:
   // Volume meter for volume calculation
   MSCacheVolMeter vm_;
 
-    
+  bool ephemerisAvailable;
 };
 typedef CountedPtr<MSCache> MSCachePtr;
 

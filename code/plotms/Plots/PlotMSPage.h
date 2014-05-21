@@ -30,6 +30,7 @@
 #include <graphics/GenericPlotter/PlotCanvas.h>
 
 #include <casa/namespace.h>
+#include <QList>
 
 namespace casa {
 
@@ -44,10 +45,7 @@ class PlotMSPage {
     
     //# Friend class declarations.
     friend class PlotMSOverPlot;
-    friend class PlotMSMultiPlot;
     friend class PlotMSPages;
-    friend class PlotMSSinglePlot;
-    friend class PlotMSIterPlot;
     
 public:    
     // Copy constructor.
@@ -55,48 +53,63 @@ public:
     
     // Destructor.
     ~PlotMSPage();
-    
-    
-    // Returns this page's page number.
-    unsigned int pageNumber() const;
-    
+
     // Returns the number of rows/columns of the canvas grid on this page.
     // <group>
     unsigned int canvasRows() const;
     unsigned int canvasCols() const;
     // </group>
-    
-    
+
+    //Erase all trace of this plot
+    void disown( PlotMSPlot* plot );
+
+    //Erase all traces of a plot at the specific location including removing axes and title.
+    void clearCanvas( int row, int col );
+
     // Copy operator.
     PlotMSPage& operator=(const PlotMSPage& copy);
-    
+
+    // Returns true if the canvas at (rowIndex, colIndex) does not yet have
+    // a plot or if it already has the plot passed in; return false otherwise.
+    bool isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const;
+
+    //  Returns the <rowIndex,colIndex> of the first available canvas that does
+    //  not yet have a plot.  Returns <-1,-1> if there are no canvases without
+    //  plots.
+    pair<int,int> findEmptySpot() const;
+
+    //Returns whether or not the plot is the owner of a canvas located at the given
+    //rowIndex and colIndex.
+    bool isOwner( int rowIndex, int colIndex, PlotMSPlot* plot ) const;
+
+
 private:
+    // Resizes the grid to the given number of rows and columns.
+    void resize(unsigned int nrows, unsigned int ncols);
+
     // Parent.
     PlotMSPages* itsParent_;
-    
-    // Page number.
-    unsigned int itsPageNum_;
-    
+
     // Canvases grid.
-    vector<vector<PlotCanvasPtr> > itsCanvases_;
+    vector<vector<PlotCanvasPtr > > itsCanvases_;
     
     // Owner grid.
-    vector<vector<PlotMSPlot*> > itsCanvasOwners_;
+    vector<vector<QList<PlotMSPlot*> > > itsCanvasOwners_;
     
     
     // Constructor.
-    PlotMSPage(PlotMSPages& parent, unsigned int pageNumber);
+    PlotMSPage(PlotMSPages& parent);
     
-    
-    // Resizes the grid to the given number of rows and columns.
-    void resize(unsigned int nrows, unsigned int ncols);
+    //Returns true if the canvas at the given row and col was disowned; false otherwise.
+    bool disown( int row, int col );
     
     // Returns the canvas at the given row and column, or NULL if invalid.
     PlotCanvasPtr canvas(unsigned int row, unsigned int col);
     
-    // Returns the owner plot at the given row and column, or NULL if invalid
-    // or there is no owner for that canvas.
-    PlotMSPlot* owner(unsigned int row, unsigned int col);
+    // Returns the owner plot(s) at the given row and column, or an empty list if invalid
+    // or there is no owner for that canvas.  For overplotting, there could be multiple owners
+    // of the canvas at the given location.
+    QList<PlotMSPlot*> owner(unsigned int row, unsigned int col) const;
     
     // Sets the owner for the canvas at the given row and column to the given
     // plot; returns true for success, false otherwise.  If the given canvas is
@@ -105,113 +118,20 @@ private:
     
     // Returns true if the canvas at the given row and column exists and is
     // owned, false otherwise.
-    bool isOwned(unsigned int row, unsigned int col) {
-        return owner(row, col) != NULL; }
+    bool isOwned(unsigned int row, unsigned int col);
+
     
     // Sets the canvas at the given row and column to be owned by no one.  All
     // items are removed from the canvas.  Returns true for success, false for
     // failure.
-    bool disown(unsigned int row, unsigned int col);
+    bool disown(unsigned int row, unsigned int col, PlotMSPlot* plot);
     
     // Sets up this page on the plotter.
     void setupPage();
 };
 
 
-// Represents (potentially) multiple pages for PlotMS, with one being current
-// (visible) at a time.
-class PlotMSPages {
-    
-    //# Friend class declarations.
-    friend class PlotMSMultiPlot;
-    friend class PlotMSPage;
-    friend class PlotMSPlot;
-    friend class PlotMSPlotManager;
-    friend class PlotMSSinglePlot;
-    friend class PlotMSIterPlot;
 
-public:
-    // Constructor, which the plot manager.
-    PlotMSPages(PlotMSPlotManager& manager);
-
-    // Copy constructor.
-    PlotMSPages(const PlotMSPages& copy);
-
-    // Destructor.
-    ~PlotMSPages();
-
-    // Returns the current page number.
-    unsigned int currentPageNumber() const;
-
-    // Returns a COPY of the current page.
-    PlotMSPage currentPage() const;
-
-    void setCurrentPageNum(uInt num) {
-        if(num < totalPages()) itsCurrentPageNum_ = num;
-    }
-
-    // Accessor
-    PlotMSPage& operator[](uInt index) { return itsPages_[index]; }
-
-    // Iterators
-    typedef vector<PlotMSPage>::iterator iterator;
-    iterator begin() { return itsPages_.begin(); }
-    iterator end() { return itsPages_.end(); }
-
-    typedef vector<PlotMSPage>::const_iterator const_iterator;
-    const_iterator begin() const { return itsPages_.begin(); }
-    const_iterator end() const { return itsPages_.end(); }
-
-    // Returns the total pages.
-    unsigned int totalPages() const;
-
-    // Clear all pages
-    void clear() { itsPages_.clear(); }
-
-    void resize(size_t pages) {
-        size_t currentSize = itsPages_.size();
-        // Shrink if needed
-        if(pages < currentSize) {
-            itsPages_.resize(pages, PlotMSPage(*this, 0));
-        }
-        // If we are adding new pages, initialize them
-        for(size_t i = currentSize; i < pages; ++i) {
-            insertPage(i);
-            itsPages_[i].resize(itsPages_[0].canvasRows(),
-                                itsPages_[0].canvasCols());
-            itsPages_[i].setupPage();
-        }
-    }
-
-    // Copy operator.
-    PlotMSPages& operator=(const PlotMSPages& copy);
-
-    // Iterators
-    void firstPage();
-    void nextPage();
-    void previousPage();
-    void lastPage();
-
-    // Inserts a new page at the given index, and returns it.  If the given
-    // index is invalid, the page is inserted at the end.
-    PlotMSPage insertPage(int index = -1);
-    
-    // Clears all pages.
-    void clearPages();
-    
-    // Sets up the current page (see PlotMSPage::setupPage()).
-    void setupCurrentPage();
-
-private:
-    // Plot manager.
-    PlotMSPlotManager* itsManager_;
-
-    // Pages.
-    vector<PlotMSPage> itsPages_;
-
-    // Current page number.
-    unsigned int itsCurrentPageNum_;
-};
 
 }
 

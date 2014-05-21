@@ -21,7 +21,10 @@
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
 
+#casa_qt4_add_dbus_proxy( outfiles_qdbus_qoh outfiles_qdbus_cc QtDBus/dVO.h dVO.interface.xml )
+
 qt4_wrap_cpp( outfiles_qoh
+  #${outfiles_qdbus_qoh}
   QtBrowser/QCloseableWidget.qo.h
   QtBrowser/QProgressPanel.qo.h
   QtBrowser/TBBrowser.qo.h
@@ -190,11 +193,19 @@ casa_add_library( casaqt
   QtUtilities/QtPlotWidget.cc
   QtUtilities/QtProgressWidget.cc
   QtUtilities/QtUtilities.cc
+  QtUtilities/Axis/ExternalAxisWidget.cc
+  QtUtilities/Axis/ExternalAxisWidgetLeft.cc
+  QtUtilities/Axis/ExternalAxisWidgetRight.cc
+  QtUtilities/Axis/ExternalAxisWidgetTop.cc
+  QtUtilities/Axis/ExternalAxisWidgetBottom.cc
+  QtUtilities/Axis/ExternalAxisWidgetHorizontal.cc
+  QtUtilities/Axis/ExternalAxisWidgetVertical.cc
   QwtPlotter/QPAnnotation.cc
   QwtPlotter/QPAxis.cc
   QwtPlotter/QPBarPlot.cc
   QwtPlotter/QPCanvas.cc
   QwtPlotter/QPCanvasHelpers.cc
+  QwtPlotter/QPExporter.cc
   QwtPlotter/QPData.cc
   QwtPlotter/QPFactory.cc
   QwtPlotter/QPImageCache.cc
@@ -296,6 +307,13 @@ install (FILES
 	QtUtilities/QtPlotWidget.qo.h
 	QtUtilities/QtProgressWidget.qo.h
 	QtUtilities/QtUtilities.h
+	QtUtilities/Axis/ExternalAxisWidget.h
+	QtUtilities/Axis/ExternalAxisWidgetLeft.h
+	QtUtilities/Axis/ExternalAxisWidgetRight.h
+	QtUtilities/Axis/ExternalAxisWidgetTop.h
+	QtUtilities/Axis/ExternalAxisWidgetBottom.h
+	QtUtilities/Axis/ExternalAxisWidgetVertical.h
+	QtUtilities/Axis/ExternalAxisWidgetHorizontal.h
 	DESTINATION include/casacode/casaqt/QtUtilities
 	)
 install (FILES
@@ -305,10 +323,12 @@ install (FILES
 	QwtPlotter/QPCanvas.qo.h
 	QwtPlotter/QPCanvasHelpers.qo.h
 	QwtPlotter/QPData.h
+	QwtPlotter/QPExportCanvas.h
 	QwtPlotter/QPFactory.h
 	QwtPlotter/QPImageCache.h
 	QwtPlotter/QPLayeredCanvas.qo.h
 	QwtPlotter/QPOptions.h
+	QwtPlotter/QPExporter.h
 	QwtPlotter/QPPanel.qo.h
 	QwtPlotter/QPPlotItem.qo.h
 	QwtPlotter/QPPlotter.qo.h

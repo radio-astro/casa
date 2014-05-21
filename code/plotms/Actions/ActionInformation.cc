@@ -29,7 +29,6 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Data/PlotMSIndexer.h>
 #include <plotms/Client/Client.h>
 namespace casa {
 
@@ -70,8 +69,7 @@ bool ActionInformation::doActionWithResponse(PlotMSApp* plotms, Record &retval) 
 		bool selectAll = true;
 		vector<PlotCanvasPtr> canv = plot->canvases();
 		for(uInt j = 0; j < canv.size(); ++j) {
-			if(canv[j]->standardMouseTools()->selectTool()->
-					getSelectedRects().size() > 0) {
+			if(canv[j]->hasSelectedRectangles() ) {
 				selectAll = false;
 				break;
 			}
@@ -79,28 +77,24 @@ bool ActionInformation::doActionWithResponse(PlotMSApp* plotms, Record &retval) 
 		for(unsigned int j = 0; j < canv.size(); j++) {
 			// Only apply to visible canvases.
 			bool visible = false;
-			for(unsigned int k= 0; !visible && k < visibleCanv.size(); k++)
-				if(canv[j] == visibleCanv[k]) visible = true;
+			for(unsigned int k= 0; !visible && k < visibleCanv.size(); k++){
+				if(canv[j] == visibleCanv[k]){
+					visible = true;
+				}
+			}
 			if(!visible) continue;
 
 			// Get selected regions on that canvas.
-			vector<PlotRegion> regions = canv[j]->standardMouseTools()
-	                    		->selectTool()->getSelectedRects();
+			Vector<PlotRegion> regions = canv[j]->getSelectedRects();
 
 			// Actually do locate/flag/unflag...
 			try {
-				int iterCount = plot->cache().nIter();
+				int iterCount = plot->nIter();
 				int plotIterCount = plot->iter()+j;
 				if(plotIterCount >= iterCount ) break;
 				Record d;
-				d = plot->cache().indexer(plot->iter()+j).locateInfo(
-						Vector<PlotRegion>(regions), showUnflagged,
-						showFlagged, selectAll);
+				d = plot->locateInfo(plotIterCount, regions, showUnflagged, showFlagged, selectAll );
 
-				//int n = retval.nfields();
-				//for(uInt r = 0; r < d.nfields(); ++r) {
-					//    retval.defineRecord(n+r, d.subRecord(r));
-				//}
 				retval.defineRecord(i*j + j, d);
 				// ...and catch any reported errors.
 			} catch(AipsError& err) {

@@ -25,13 +25,11 @@
 //#
 //# $Id: $
 #include <plotms/Plots/PlotMSPlot.h>
-
-//#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/MSCache.h>
-//#include <casaqt/QwtPlotter/QPCanvas.qo.h>
-//#include <casaqt/QwtPlotter/QPPlotter.qo.h>
+#include <QDebug>
+
 
 namespace casa {
 
@@ -52,6 +50,7 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* /*plotm
     if(params.typedGroup<PMS_PP_MSData>() == NULL)
         params.setGroup<PMS_PP_MSData>();
 }
+
 const uInt PlotMSPlot::PIXEL_THRESHOLD = 1000000;
 const uInt PlotMSPlot::MEDIUM_THRESHOLD = 10000;
 const uInt PlotMSPlot::LARGE_THRESHOLD = 1000;
@@ -65,7 +64,7 @@ PlotMSPlot::PlotMSPlot(PlotMSApp* parent) :
   itsCache_(NULL) { 
   
   itsCache_ = new MSCache(itsParent_);
-
+  cacheUpdating = false;
 }
 
 PlotMSPlot::~PlotMSPlot() {
@@ -104,13 +103,15 @@ void PlotMSPlot::customizeAutoSymbol( const PlotSymbolPtr& baseSymbol, uInt data
 
 vector<PMS::DataColumn> PlotMSPlot::getCachedData(){
 	PMS_PP_Cache* cache = itsParams_.typedGroup<PMS_PP_Cache>();
-	int count = cache->numXAxes() + cache->numYAxes();
+	int xAxisCount = cache->numXAxes();
+	int yAxisCount = cache->numYAxes();
+	int count = xAxisCount + yAxisCount;
 	vector<PMS::DataColumn> cdata( count );
-	for(uInt i = 0; i < cache->numXAxes(); ++i) {
+	for( int i = 0; i < xAxisCount; ++i) {
 		cdata[i] = cache->xDataColumn(i);
 	}
-	for( int i = cache->numYAxes(); i < count; ++i) {
-	    cdata[i] = cache->yDataColumn(i - cache->numXAxes());
+	for( int i = xAxisCount; i < count; ++i) {
+	    cdata[i] = cache->yDataColumn(i - xAxisCount);
 	}
 	return cdata;
 }
@@ -118,14 +119,17 @@ vector<PMS::DataColumn> PlotMSPlot::getCachedData(){
 
 vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
-	vector<PMS::Axis> axes(c->numXAxes() + c->numYAxes());
-	for(unsigned int i = 0; i < c->numXAxes(); i++)
+	int xAxisCount = c->numXAxes();
+	int yAxisCount = c->numYAxes();
+	int count = xAxisCount + yAxisCount;
+	vector<PMS::Axis> axes( count );
+	for(int i = 0; i < xAxisCount; i++){
 		axes[i] = c->xAxis(i);
-	for(unsigned int i = c->numXAxes(); i < axes.size(); i++)
-	    axes[i] = c->yAxis(i - c->numXAxes());
-	/*vector<PMS::Axis> axes(2);
-	axes[0] = c->xAxis();
-	axes[1] = c->yAxis();*/
+	}
+	for(int i = xAxisCount; i < count; i++){
+		uInt yIndex = i - xAxisCount;
+	    axes[i] = c->yAxis(yIndex);
+	}
 	return axes;
 }
 
@@ -150,25 +154,52 @@ vector<PlotCanvasPtr> PlotMSPlot::visibleCanvases() const {
     return v;
 }
 
+Record PlotMSPlot::locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+  		bool showUnflagged, bool showFlagged, bool selectAll ) const {
+	Record resultRecord = itsCache_->locateInfo( plotIterIndex, regions,
+			showUnflagged, showFlagged, selectAll );
+	return resultRecord;
+}
+
+PlotLogMessage* PlotMSPlot::locateRange( int canvasIndex, const Vector<PlotRegion> & regions,
+   		bool showUnflagged, bool showFlagged){
+	int iterIndex = iter() + canvasIndex;
+	PlotLogMessage* m = itsCache_->locateRange(iterIndex, regions,showUnflagged,showFlagged);
+	return m;
+}
+
+PlotLogMessage* PlotMSPlot::flagRange( int canvasIndex, casa::PlotMSFlagging& flagging,
+   		const Vector<PlotRegion>& regions, bool showFlagged){
+	int iterIndex = iter() + canvasIndex;
+	PlotLogMessage* m = itsCache_->flagRange(iterIndex, flagging, regions,showFlagged);
+	return m;
+}
+
+
+
 PlotMSRegions PlotMSPlot::selectedRegions() const {
     return selectedRegions(canvases()); }
 PlotMSRegions PlotMSPlot::visibleSelectedRegions() const {
     return selectedRegions(visibleCanvases()); }
 
-bool PlotMSPlot::initializePlot(PlotMSPages& pages) {    
+bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
 
     bool hold = allDrawingHeld();
-    if(!hold) holdDrawing();
-    
+    if(!hold){
+    	holdDrawing();
+    }
+
     // Initialize plot objects and assign canvases.
     if(!assignCanvases(pages) || !initializePlot()) {
-        if(!hold) releaseDrawing();
+        if(!hold){
+        	releaseDrawing();
+        }
         return false;
     }
-    
+
     // Set up page.
     pages.setupCurrentPage();
-    
+
     // Attach plot objects to their assigned canvases.
     attachToCanvases();
     
@@ -183,24 +214,35 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
     return true;
 }
 
-/*
-void PlotMSPlot::attachToCanvases() {
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        itsCanvasMap_[&*itsPlots_[i]]->plotItem(itsPlots_[i]);
+bool PlotMSPlot::updateData() {
+	itsCache_->clear();
+	return True;
+};
+
+bool PlotMSPlot::isCacheUpdating() const {
+	return cacheUpdating;
 }
 
-void PlotMSPlot::detachFromCanvases() {
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        itsCanvasMap_[&*itsPlots_[i]]->removePlotItem(itsPlots_[i]);
+void PlotMSPlot::setCacheUpdating( bool updating ){
+	cacheUpdating = updating;
 }
-*/
+
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag) {
+        int updateFlag ) {
+
+	cacheUpdating = false;
 
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
-    
+
+    //A plot not to be shown.
+    bool plottable = itsParent_->getPlotManager().isPlottable( this );
+    if ( ! plottable ){
+    	//Clear the plot
+    	detachFromCanvases();
+    	return;
+    }
     vector<String> updates =
         PlotMSWatchedParameters::UPDATE_FLAG_NAMES(updateFlag);
     if(updates.size() == 0) return;
@@ -216,10 +258,11 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
             PMS::LOG_ORIGIN_PARAMS_CHANGED, ss.str(),
             PMS::LOG_EVENT_PARAMS_CHANGED);
-    
-    bool releaseWhenDone = !allDrawingHeld() &&
-                           (updateFlag & PMS_PP::UPDATE_REDRAW);
-    if(releaseWhenDone) holdDrawing();
+    int updateRedraw= updateFlag & PMS_PP::UPDATE_REDRAW;
+    bool releaseWhenDone = !allDrawingHeld() && updateRedraw;
+    if(releaseWhenDone){
+    	holdDrawing();
+    }
     
     // Update MS as needed.
     const PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
@@ -255,8 +298,17 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     
     // Let the child handle the rest of the parameter changes, and release
     // drawing if needed.
-    if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone)
-        releaseDrawing();
+    bool result=parametersHaveChanged_(p,updateFlag,releaseWhenDone);
+    if( result && releaseWhenDone){
+    	//Note::this was put in because when reload was checked from the gui
+    	//we were getting a segfault because the plot was redrawing before the cache
+    	//was loaded from a thread.  There seems to be a mechanism in place to release
+    	//the drawing later after the cache is loaded.
+    	if ( ! itsParent_->guiShown() ){
+    		releaseDrawing();
+    	}
+    }
+
 }
 
 void PlotMSPlot::plotDataChanged() {
@@ -264,22 +316,82 @@ void PlotMSPlot::plotDataChanged() {
     if(!hold) holdDrawing();
     
     vector<MaskedScatterPlotPtr> p = plots();
-    for(unsigned int i = 0; i < p.size(); i++)
-        if(!p[i].null()) p[i]->dataChanged();
+    for(unsigned int i = 0; i < p.size(); i++){
+        if(!p[i].null()){
+        	p[i]->dataChanged();
+        }
+    }
     
-    if(!hold) releaseDrawing();
+    if(!hold){
+    	releaseDrawing();
+    }
+}
+
+bool PlotMSPlot::isIteration() const {
+	return false;
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
-    vector<PlotCanvasPtr> canv = canvases();
-    if(canv.size() == 0) return true;
-    else if(canv.size() == 1){
-        return canv[0]->exportToFile(format);
+	vector<PlotCanvasPtr> canv = canvases();
+    bool exportSuccess = true;
+
+    //Determine how many pages we need to print.
+    int pageCount = 1;
+    //Store the current page.
+    Int currentIter = iter();
+
+    PlotMSExportParam& exportParams = itsParent_->getExportParameters();
+    PMS::ExportRange range = exportParams.getExportRange();
+    if ( range == PMS::PAGE_ALL ){
+    	int iterationCount = itsCache_->nIter( 0 );
+    	float divResult = (iterationCount * 1.0f) / canv.size();
+    	pageCount = static_cast<int>(ceil( divResult ));
+    	//If we are an iteration plot and we don't own the first few plots on the
+    	//page we may need to bump the page count up by one.
+    	if ( isIteration() ){
+    		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+    		PlotMSPage firstPage = pages.getFirstPage();
+    		int firstPagePlotCount = getPageIterationCount( firstPage );
+    		if ( firstPagePlotCount < static_cast<int>(canv.size()) ){
+    			int notOwnedCount = canv.size() - firstPagePlotCount;
+    			int excessSpace = (pageCount * canv.size()) - (notOwnedCount + iterationCount );
+    			if ( excessSpace < 0 ){
+    				pageCount = pageCount + 1;
+    			}
+    		}
+    	}
+    	firstIter();
     }
-    else {
-        bool success = itsParent_->exportToFormat( format );
-        return success;
+
+
+    PlotExportFormat exportFormat( format );
+    String baseFileName = format.location;
+    String suffix = "";
+    int periodIndex = baseFileName.find_last_of( ".");
+    if ( periodIndex != static_cast<int>(String::npos) ){
+    	suffix = baseFileName.substr( periodIndex, baseFileName.size() - periodIndex);
+    	baseFileName = baseFileName.substr(0, periodIndex );
     }
+
+    //Loop over all the iterations, exporting them
+    for ( int i = 0; i < pageCount; i++ ){
+    	if ( i > 0 ){
+    		//Remove the last '.' from the storage location.
+    		String pageStr = String::toString( i+1 );
+    		exportFormat.location = baseFileName + pageStr + suffix;
+    	}
+
+    	exportSuccess = itsParent_->exportToFormat( exportFormat );
+
+    	if ( i < pageCount - 1 ){
+    		nextIter();
+    	}
+    }
+
+    //Restore the current page
+    setIter( currentIter );
+
+    return exportSuccess;
 }
 
 void PlotMSPlot::exportToFormatCancel(){
@@ -317,20 +429,72 @@ void PlotMSPlot::constructorSetup() {
 
 bool PlotMSPlot::allDrawingHeld() {
     vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        if(!canv[i].null() && !canv[i]->drawingIsHeld()) return false;
-    return true;
+    bool allDrawingHeld = true;
+    int canvasCount = canv.size();
+    for(int i = 0; i < canvasCount; i++){
+        if(!canv[i].null()){
+        	bool canvasDrawingHeld = canv[i]->drawingIsHeld();
+        	if ( !canvasDrawingHeld ){
+        		allDrawingHeld = false;
+        		break;
+        	}
+        }
+    }
+    return allDrawingHeld;
 }
 
 void PlotMSPlot::holdDrawing() {
-    vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++) canv[i]->holdDrawing();
+   vector<PlotCanvasPtr> canv = canvases();
+    for(unsigned int i = 0; i < canv.size(); i++){
+    	if ( !canv[i].null() ){
+    		bool canvasDrawing = canv[i]->isDrawing();
+    		if ( canvasDrawing ){
+    			waitOnCanvas( canv[i]);
+    		}
+    		canv[i]->holdDrawing();
+    	}
+    }
 }
 
 void PlotMSPlot::releaseDrawing() {
     vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        if(!canv[i].null()) canv[i]->releaseDrawing();
+    for(unsigned int i = 0; i < canv.size(); i++){
+        if(!canv[i].null()){
+        	if ( canv[i]->drawingIsHeld()){
+        		canv[i]->releaseDrawing();
+        	}
+        }
+    }
+}
+
+void PlotMSPlot::waitOnCanvas( const PlotCanvasPtr& canvas ){
+	if ( !canvas.null()){
+		int callIndex = 0;
+		int maxCalls =  5;
+
+		bool canvasDrawing = canvas->isDrawing();
+
+	    while(  canvasDrawing && callIndex < maxCalls ){
+
+	        usleep(1000000);
+	        callIndex++;
+	        canvasDrawing = canvas->isDrawing();
+	    }
+	}
+}
+
+void PlotMSPlot::waitForDrawing( bool holdDrawing ){
+
+	vector<PlotCanvasPtr> canv = canvases();
+	for (unsigned int i = 0; i < canv.size(); i++ ){
+		if ( !canv[i].null()){
+			waitOnCanvas( canv[i]);
+			if ( holdDrawing ){
+				canv[i]->holdDrawing();
+			}
+		}
+	}
+	detachFromCanvases();
 }
 
 }

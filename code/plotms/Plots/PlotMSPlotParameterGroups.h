@@ -30,6 +30,7 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
+#include <plotms/PlotMS/PlotMSExportParam.h>
 #include <plotms/PlotMS/PlotMSIterParam.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
@@ -79,7 +80,7 @@ public:
 	static const int UPDATE_DISPLAY;
 	// </group>
 
-	// Update flag for display group.
+	// Update flag for iteration group.
 	// <group>
 	static const String UPDATE_ITERATION_NAME;
 	static const int UPDATE_ITERATION;
@@ -145,8 +146,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator, operator=(). */
+	PMS_PP_MSData& operator=(const PMS_PP_MSData& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_MSData & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -200,6 +204,9 @@ public:
 	}
 
 private:
+	//Does the work of the operator=()s.
+	PMS_PP_MSData& assign(const PMS_PP_MSData* other);
+
 	/* Parameters' values */
 	PlotMSSelection itsSelection_;
 	String itsFilename_;
@@ -260,8 +267,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator=().*/
+	PMS_PP_Cache& operator=(const PMS_PP_Cache& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Cache & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -275,18 +285,16 @@ public:
 	// </group>
 
 
+	// Setting the data and data columns for the x- and y-axes
+	// <group>
 	void setXAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
-			unsigned int index = 0) {
-		setAxes (axis, yAxis (index), data, yDataColumn (index), index);
-	}
+			unsigned int index = 0);
 	void setYAxis (const PMS::Axis & axis, const PMS::DataColumn & data,
-			unsigned int index = 0) {
-		setAxes (xAxis (index), axis, xDataColumn (index), data, index);
-	}
+			unsigned int index = 0);
 	void setAxes (const PMS::Axis & xAxis, const PMS::Axis & yAxis,
 			const PMS::DataColumn & xData,
 			const PMS::DataColumn & yData, unsigned int index = 0);
-
+	//<group>
 
 	const vector<PMS::Axis> &xAxes() const {
 		return itsXAxes_;
@@ -334,6 +342,7 @@ public:
 			updated();
 		}
 	}
+
 
 
 	const vector<PMS::DataColumn> &xDataColumns() const {
@@ -387,8 +396,12 @@ public:
 		}
 	}
 
+	void resize( int count );
 
 private:
+	//Does the work for the operator=()s.
+	PMS_PP_Cache& assign(const PMS_PP_Cache* o);
+
 	/* Parameters' values */
 	vector<PMS::Axis> itsXAxes_;
 	vector<PMS::Axis> itsYAxes_;
@@ -450,8 +463,11 @@ public:
 		return true;
 	}
 
+	/* Overrides the real assignment operator, operator= */
+	PMS_PP_Axes& operator=(const PMS_PP_Axes& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Axes & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -499,9 +515,12 @@ public:
 		return itsXAxes_[index];
 	}
 	void setXAxis(const PlotAxis & value, unsigned int index = 0) {
-		if (index >= itsXAxes_.size())
+		if (index >= itsXAxes_.size()){
 			itsXAxes_.resize (index + 1);
+
+		}
 		if (itsXAxes_[index] != value) {
+
 			itsXAxes_[index] = value;
 			updated();
 		}
@@ -532,6 +551,15 @@ public:
 			updated();
 		}
 	}
+
+	void setYAxis( String& value, unsigned int index = 0 ){
+		PlotAxis axisLocation = Y_LEFT;
+		if ( value == "right"){
+			axisLocation = Y_RIGHT;
+		}
+		setYAxis( axisLocation, index );
+	}
+
 
 
 	const vector<bool> &xRangesSet() const {
@@ -630,7 +658,14 @@ public:
 		}
 	}
 
+	//Change the size of the vectors.
+	void resize( int count );
+
 private:
+
+	//Does the work for operator=()s.
+	PMS_PP_Axes& assign(const PMS_PP_Axes* o);
+
 	/* Parameters' values */
 	vector<PlotAxis> itsXAxes_;
 	vector<PlotAxis> itsYAxes_;
@@ -698,7 +733,10 @@ public:
 	}
 
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Canvas& operator= (const Group & other);
+
+	/* Overrides the actual operator=(). */
+	PMS_PP_Canvas& operator=(const PMS_PP_Canvas& other );
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -717,6 +755,8 @@ public:
 	void showLegend (const bool & show,
 			const PlotCanvas::LegendPosition & pos,
 			unsigned int index = 0);
+
+	void showLegend( const bool& show, const String& pos, unsigned int index=0);
 
 	void showGridMajor (const bool & show, const PlotLinePtr & line,
 			unsigned int index = 0) {
@@ -852,7 +892,7 @@ public:
 	const vector < PlotCanvas::LegendPosition > &legendPositions() const {
 		return itsLegendsPos_;
 	}
-	void showLegends (const vector < PlotCanvas::LegendPosition > &value) {
+	void setLegendPositions (const vector < PlotCanvas::LegendPosition > &value) {
 		if (itsLegendsPos_ != value) {
 			itsLegendsPos_ = value;
 			updated();
@@ -864,7 +904,7 @@ public:
 		&>(itsLegendsPos_).resize (index + 1);
 		return itsLegendsPos_[index];
 	}
-	void showLegend (const PlotCanvas::LegendPosition & value,
+	void setLegendPosition (const PlotCanvas::LegendPosition & value,
 			unsigned int index = 0) {
 		if (index >= itsLegendsPos_.size())
 			itsLegendsPos_.resize (index + 1);
@@ -995,6 +1035,10 @@ public:
 
 
 private:
+
+	//Does the work for the operator=()s.
+	PMS_PP_Canvas& assign(const PMS_PP_Canvas* o );
+
 	/* Parameters' values */
 	vector<PlotMSLabelFormat> itsXLabels_;
 	vector<PlotMSLabelFormat> itsYLabels_;
@@ -1071,7 +1115,10 @@ public:
 	}
 
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Display & operator= (const Group & other);
+
+	/*  Overrides the actual assignment operator=() */
+	PMS_PP_Display& operator=(const PMS_PP_Display& other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
@@ -1094,21 +1141,19 @@ public:
 		}
 	}
 	PlotSymbolPtr unflaggedSymbol (unsigned int index = 0) const {
-		if (index >= itsUnflaggedSymbols_.size())
-			const_cast < vector < PlotSymbolPtr >
-		&>(itsUnflaggedSymbols_).resize (index + 1);
+		if (index >= itsUnflaggedSymbols_.size()){
+			int newSize = index+1;
+			vector<PlotSymbolPtr> & unflaggedSymbols = const_cast < vector <PlotSymbolPtr > &>(itsUnflaggedSymbols_);
+			unflaggedSymbols.resize ( newSize);
+			for ( int j = 0; j < newSize; j++ ){
+				if ( unflaggedSymbols[j].null() ){
+					unflaggedSymbols[j]=PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
+				}
+			}
+		}
 		return itsUnflaggedSymbols_[index];
 	}
-	void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
-			0) {
-		if (index >= itsUnflaggedSymbols_.size())
-			itsUnflaggedSymbols_.resize (index + 1);
-		if (itsUnflaggedSymbols_[index] != value) {
-			itsUnflaggedSymbols_[index] = value;
-			updated();
-		}
-	}
-
+	void setUnflaggedSymbol (const PlotSymbolPtr & value, unsigned int index =0);
 
 	const vector < PlotSymbolPtr > &flaggedSymbols() const {
 		return itsFlaggedSymbols_;
@@ -1120,21 +1165,19 @@ public:
 		}
 	}
 	PlotSymbolPtr flaggedSymbol (unsigned int index = 0) const {
-		if (index >= itsFlaggedSymbols_.size())
-			const_cast < vector < PlotSymbolPtr >
-		&>(itsFlaggedSymbols_).resize (index + 1);
+		if (index >= itsFlaggedSymbols_.size()){
+			int newSize = index + 1;
+			vector<PlotSymbolPtr> & flaggedSymbols = const_cast < vector <PlotSymbolPtr > &>(itsFlaggedSymbols_);
+			flaggedSymbols.resize( newSize );
+			for ( int j = 0; j < newSize; j++ ){
+				if ( flaggedSymbols[j].null()){
+					flaggedSymbols[j] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
+				}
+			}
+		}
 		return itsFlaggedSymbols_[index];
 	}
-	void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =
-			0) {
-		if (index >= itsFlaggedSymbols_.size())
-			itsFlaggedSymbols_.resize (index + 1);
-		if (itsFlaggedSymbols_[index] != value) {
-			itsFlaggedSymbols_[index] = value;
-			updated();
-		}
-	}
-
+	void setFlaggedSymbol (const PlotSymbolPtr & value, unsigned int index =0);
 
 	const vector < PlotMSLabelFormat > &titleFormats() const {
 		return itsTitleFormats_;
@@ -1171,15 +1214,7 @@ public:
 			const_cast < vector < bool > &>(itsColorizeFlags_).resize (index + 1);
 		return itsColorizeFlags_[index];
 	}
-	void setColorize (const bool & value, unsigned int index = 0) {
-		if (index >= itsColorizeFlags_.size())
-			itsColorizeFlags_.resize (index + 1);
-		if (itsColorizeFlags_[index] != value) {
-			itsColorizeFlags_[index] = value;
-			updated();
-		}
-	}
-
+	void setColorize (const bool & value, unsigned int index = 0);
 
 	const vector < PMS::Axis > &colorizeAxes() const {
 		return itsColorizeAxes_;
@@ -1206,13 +1241,21 @@ public:
 	}
 
 
+
+
 private:
+
+	/* Does the work for both versions of operator=() */
+	PMS_PP_Display& assign( const PMS_PP_Display* o );
+
+
 	/* Parameters' values */
 	vector<PlotSymbolPtr> itsUnflaggedSymbols_;
 	vector<PlotSymbolPtr> itsFlaggedSymbols_;
 	vector<PlotMSLabelFormat> itsTitleFormats_;
 	vector<bool> itsColorizeFlags_;
 	vector<PMS::Axis> itsColorizeAxes_;
+
 
 	/* Key strings for Record */
 	static const String REC_UNFLAGGEDS;
@@ -1238,11 +1281,6 @@ class PMS_PP_Iteration : public PlotMSPlotParameters::Group {
 
 
 public:
-	enum AxisScaleMode   {
-		GLOBAL,
-		SELF
-	};
-
 
 	/* Constructor which takes a factory */
 	PMS_PP_Iteration (PlotFactoryPtr factory);
@@ -1275,24 +1313,17 @@ public:
 		return true;
 	}
 
+	/* Overrides the real operator=().  */
+	PMS_PP_Iteration& operator=(const PMS_PP_Iteration& other);
+
 	/* Overrides PlotMSPlotParameters::Group::operator=(). */
-	Group & operator= (const Group & other);
+	PMS_PP_Iteration & operator= (const Group & other);
 
 	/* Overrides PlotMSPlotParameters::Group::operator==(). */
 	bool operator== (const Group & other) const;
 
-
-	/* deprecated...
-     bool enableIteration() const {
-          return itsEnableIteration_;
-     }
-     void setEnableIteration (const bool & value) {
-          if (itsEnableIteration_ != value) {
-               itsEnableIteration_ = value;
-               updated();
-          }
-     }
-	 */
+	//Returns whether or not we are iterating on an axis.
+	bool isIteration() const;
 
 	const PlotMSIterParam& iterParam() const {
 		return itsIterParam_;
@@ -1305,13 +1336,10 @@ public:
 	}
 
 	PMS::Axis  iterationAxis() const {
-		//          return itsIterationAxis_;
 		return itsIterParam_.iterAxis();
 	}
 
 	void setIterationAxis (const PMS::Axis & value) {
-		//          if (itsIterationAxis_ != value) {
-		//               itsIterationAxis_ = value;
 		if (iterationAxis()!=value) {
 			itsIterParam_.setIterAxis(value);
 			updated();
@@ -1319,22 +1347,22 @@ public:
 	}
 
 
-	int numRows() const  {
-		return itsIterParam_.Ny();
+	int getGridRow() const  {
+		return itsIterParam_.getGridRow();
 	}
-	void setNumRows(const int &value)  {
-		if (numRows() != value) {
-			itsIterParam_.setNy(value);
+	void setGridRow(const int &value)  {
+		if (getGridRow() != value) {
+			itsIterParam_.setGridRow(value);
 			updated();
 		}
 	}
 
-	int numColumns() const  {
-		return itsIterParam_.Nx();
+	int getGridCol() const  {
+		return itsIterParam_.getGridCol();
 	}
-	void setNumColumns(const int &value)  {
-		if (numColumns() != value) {
-			itsIterParam_.setNx(value);
+	void setGridCol(const int &value)  {
+		if (getGridCol() != value) {
+			itsIterParam_.setGridCol(value);
 			updated();
 		}
 	}
@@ -1344,14 +1372,14 @@ public:
 	}
 	void setCommonAxisX( bool commonAxis ){
 		if ( isCommonAxisX() != commonAxis ){
-			int rowCount = numRows();
 			bool validValue = false;
-			if ( rowCount > 1 ){
+			if ( isGlobalScaleX()){
 				validValue = true;
 			}
 			else if ( !commonAxis ){
 				validValue = true;
 			}
+
 			if ( validValue ){
 				itsIterParam_.setCommonAxisX( commonAxis );
 				updated();
@@ -1363,9 +1391,8 @@ public:
 	}
 	void setCommonAxisY( bool commonAxis ){
 		if ( isCommonAxisY() != commonAxis ){
-			int colCount = numColumns();
 			bool validValue = false;
-			if ( colCount > 1 ){
+			if ( isGlobalScaleY() ){
 				validValue = true;
 			}
 			else if ( !commonAxis ){
@@ -1377,85 +1404,36 @@ public:
 			}
 		}
 	}
-
-	Bool globalXRange() const {
-		return !itsIterParam_.xSelfScale(); }
-
-	//       return itsXAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
-
-	Bool globalYRange() const {
-		return !itsIterParam_.ySelfScale(); }
-	//       return itsYAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
-
-	AxisScaleMode xAxisScaleMode() const {
-		//          return itsXAxisScaleMode_;
-		return (itsIterParam_.xSelfScale() ?
-				PMS_PP_Iteration::SELF :
-				PMS_PP_Iteration::GLOBAL);
-	}
-
-	void setXAxisScaleMode(AxisScaleMode value) {
-		//          if (itsXAxisScaleMode_ != value) {
-		//               itsXAxisScaleMode_ = value;
-		if (xAxisScaleMode()!=value) {
-			switch (value) {
-			case PMS_PP_Iteration::SELF:
-				itsIterParam_.setXSelfScale(True);
-				break;
-			case PMS_PP_Iteration::GLOBAL:
-				itsIterParam_.setXSelfScale(False);
-				break;
-			}
-			updated();
+	Bool isGlobalScaleX() const {
+			return itsIterParam_.isGlobalAxisX();
 		}
-	}
-
-
-	AxisScaleMode yAxisScaleMode() const {
-		//          return itsYAxisScaleMode_;
-		return (itsIterParam_.ySelfScale() ?
-				PMS_PP_Iteration::SELF :
-				PMS_PP_Iteration::GLOBAL);
-
-	}
-	void setYAxisScaleMode (AxisScaleMode value) {
-		//          if (itsYAxisScaleMode_ != value) {
-		//               itsYAxisScaleMode_ = value;
-		if (yAxisScaleMode()!=value) {
-			switch (value) {
-			case PMS_PP_Iteration::SELF:
-				itsIterParam_.setYSelfScale(True);
-				break;
-			case PMS_PP_Iteration::GLOBAL:
-				itsIterParam_.setYSelfScale(False);
-				break;
+		void setGlobalScaleX( bool globalAxis ){
+			if ( isGlobalScaleX() != globalAxis ){
+				itsIterParam_.setGlobalScaleX( globalAxis );
+				updated();
 			}
-			updated();
 		}
-	}
-
+		Bool isGlobalScaleY() const {
+			return itsIterParam_.isGlobalAxisY();
+		}
+		void setGlobalScaleY( bool globalAxis ){
+			if ( isGlobalScaleY() != globalAxis ){
+				itsIterParam_.setGlobalScaleY( globalAxis );
+				updated();
+			}
+		}
 private:
+
+	//Does the work for the operator=()s.
+	PMS_PP_Iteration& assign(const PMS_PP_Iteration* o);
+
 	/* Parameters' values */
 	PlotMSIterParam itsIterParam_;
-
-	/*
-     PMS::Axis itsIterationAxis_;
-     AxisScaleMode itsXAxisScaleMode_;
-     AxisScaleMode itsYAxisScaleMode_;
-	 */
-	int itsNumRows_;
-	int itsNumColumns_;
-
-	/* Key strings for Record */
-	static const String REC_ITERPARAM;
-	static const String REC_ITERATIONAXIS;
-	static const String REC_NUMROWS;
-	static const String REC_NUMCOLUMNS;
-	static const String REC_XAXISSCALEMODE;
-	static const String REC_YAXISSCALEMODE;
-
 	void setDefaults();
 };
+
+
+
 
 }
 

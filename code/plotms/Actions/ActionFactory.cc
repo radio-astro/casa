@@ -31,6 +31,7 @@
 #include <plotms/Actions/ActionClearPlotter.h>
 #include <plotms/Actions/ActionClearRegions.h>
 #include <plotms/Actions/ActionExport.h>
+#include <plotms/Actions/ActionExportDialog.h>
 #include <plotms/Actions/ActionHoldReleaseDrawing.h>
 #include <plotms/Actions/ActionInformation.h>
 #include <plotms/Actions/ActionIterFirst.h>
@@ -49,9 +50,11 @@
 #include <plotms/Actions/ActionStackForward.h>
 #include <plotms/Actions/ActionSubtractRegions.h>
 #include <plotms/Actions/ActionSummary.h>
+#include <plotms/Actions/ActionSummaryDialog.h>
 #include <plotms/Actions/ActionTrackerDisplay.h>
 #include <plotms/Actions/ActionTrackerHover.h>
 #include <plotms/Actions/ActionZoom.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -129,6 +132,9 @@ CountedPtr<PlotMSAction> ActionFactory::getAction( PlotMSAction::Type actionType
 	case PlotMSAction::CACHE_RELEASE:
 		action = new ActionCacheRelease( client );
 		break;
+	case PlotMSAction::SUMMARY_DIALOG:
+		action = new ActionSummaryDialog( client );
+		break;
 	case PlotMSAction::MS_SUMMARY:
 		action = new ActionSummary( client );
 		break;
@@ -137,6 +143,9 @@ CountedPtr<PlotMSAction> ActionFactory::getAction( PlotMSAction::Type actionType
 		break;
 	case PlotMSAction::PLOT_EXPORT:
 		action = new ActionExport( client );
+		break;
+	case PlotMSAction::EXPORT_DIALOG:
+		action = new ActionExportDialog( client );
 		break;
 	case PlotMSAction::HOLD_RELEASE_DRAWING:
 		action = new ActionHoldReleaseDrawing( client );

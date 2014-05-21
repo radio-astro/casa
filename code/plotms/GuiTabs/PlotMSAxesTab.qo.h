@@ -66,9 +66,37 @@ public:
     // with PlotMSSinglePlotParameters.
     void update(const PlotMSPlot& plot);
     
+signals:
+	//Identifier for a y-axis has changed.
+	void yAxisIdentifierChanged( int index, QString id );
+
+	//A y-axis has been removed.
+	void yAxisIdentifierRemoved( int index );
+
+private slots:
+	//Add a new y-axis.
+	void addYWidget();
+
+	//Remove a y-axis.
+	void removeYWidget();
+
+	//Selected data for a y-axis has changed.
+	void axisIdentifierChanged(PlotMSAxisWidget* axisWidget);
+
+	//Display the settings for a new y-axis.
+	void yAxisSelected( int index );
+
 private:
+
+	//Hide/show features associated with multipleYAxes.
+	void setMultipleAxesYEnabled();
+
+	//Relabel based on the new y-axis index.
+	void setYAxisLabel( PlotMSAxisWidget* yWidget, int index );
+
     // Widgets for the x axis and y axis, respectively.
-    PlotMSAxisWidget* itsXWidget_, *itsYWidget_;
+    PlotMSAxisWidget* itsXWidget_;
+    QList<PlotMSAxisWidget*> itsYWidgets_;
 };
 
 }

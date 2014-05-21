@@ -25,61 +25,79 @@
 //#
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
-
+#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
-
+#include <QDebug>
 namespace casa {
 
 /////////////////////////////////
 // PLOTMSEXPORTTAB DEFINITIONS //
 /////////////////////////////////
 
-PlotMSExportTab::PlotMSExportTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
-        PlotMSPlotSubtab(plotTab, parent) {
-    setupUi(this);
+PlotMSExportTab::PlotMSExportTab(QWidget* parent):
+        QDialog(parent) {
+    ui.setupUi(this);
+    setWindowTitle( "Export Plots");
     
     // Setup widgets.
     itsFileWidget_ = new QtFileWidget(false, true);
-    QtUtilities::putInFrame(fileFrame, itsFileWidget_);
-    
-    format->addItem("[by file extension]");
+    QtUtilities::putInFrame(ui.fileFrame, itsFileWidget_);
+
+    ui.format->addItem("[by file extension]");
     vector<String> formats = PlotExportFormat::supportedFormatStrings();
     for(unsigned int i = 0; i < formats.size(); i++)
-        format->addItem(formats[i].c_str());
+        ui.format->addItem(formats[i].c_str());
     
-    // Connect widgets.
-    const QMap<PlotMSAction::Type, QAction*>& actMap=  parent->plotActionMap();
-    connect(exportButton, SIGNAL(clicked()),
-            actMap[PlotMSAction::PLOT_EXPORT], SLOT(trigger()));
+    const vector<String>& exportRanges = PMS::exportRangeStrings();
+    for(unsigned int i = 0; i < exportRanges.size(); i++){
+    	ui.exportRangeCombo->addItem(exportRanges[i].c_str());
+    }
+    ui.exportRangeCombo->setCurrentIndex( PMS::DEFAULT_EXPORT_RANGE );
+
+    //connect(ui.exportRangeCombo, SIGNAL(currentIndexChanged(int)), SIGNAL(exportRangeChanged()));
+    connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(closeDialog()));
+    connect( ui.exportButton, SIGNAL(clicked()), this, SLOT(doExport()));
 }
 
 PlotMSExportTab::~PlotMSExportTab() { }
 
+PlotMSExportParam PlotMSExportTab::getExportParams() const {
+	PlotMSExportParam params;
+	QString rangeStr =  ui.exportRangeCombo->currentText();
+	params.setExportRange( rangeStr.toStdString());
+	return params;
+}
 
 PlotExportFormat PlotMSExportTab::currentlySetExportFormat() const {
     String file = itsFileWidget_->getFile();
-    PlotExportFormat::Type t = (format->currentIndex() == 0) ?
+    PlotExportFormat::Type t = (ui.format->currentIndex() == 0) ?
             PlotExportFormat::typeForExtension(file) :
-            PlotExportFormat::exportFormat(
-                format->currentText().toStdString());
-
+            PlotExportFormat::exportFormat(ui.format->currentText().toStdString());
     PlotExportFormat format(t, file);
-    format.resolution = highRes->isChecked() ? PlotExportFormat::HIGH :
+    format.resolution = ui.highRes->isChecked() ? PlotExportFormat::HIGH :
                                                PlotExportFormat::SCREEN;
-    format.dpi = (dpi->isVisible() && dpi->isChecked()) ?
-                 dpiSpinner->value() : -1;
-    if(ExportTab::size->isVisible() && ExportTab::size->isChecked()) {
-        format.width  = sizeSpinner1->value();
-        format.height = sizeSpinner2->value();
+    format.dpi = (ui.dpi->isVisible() && ui.dpi->isChecked()) ?
+                 ui.dpiSpinner->value() : -1;
+    if(ui.ExportTab::size->isVisible() && ui.ExportTab::size->isChecked()) {
+        format.width  = ui.sizeSpinner1->value();
+        format.height = ui.sizeSpinner2->value();
     } else {
         format.width  = -1;
         format.height = -1;
     }
-    
     return format;
+}
+
+void PlotMSExportTab::closeDialog(){
+	done( -1);
+}
+
+void PlotMSExportTab::doExport(){
+	done( 1);
 }
 
 }

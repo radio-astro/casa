@@ -29,9 +29,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
-#include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-//-#include <plotms/Plots/PlotMSSinglePlot.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
 #include <casadbus/utilities/Diagnostic.h>
 

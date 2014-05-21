@@ -37,9 +37,7 @@
 namespace casa {
 
 //# Forward declarations.
-class PlotSymbolWidget;
-class QtIndexChooser;
-class QtLabelWidget;
+class PlotMSDataSymbolWidget;
 
 
 // Subclass of PlotMSPlotSubtab to manage plot display parameters.
@@ -49,7 +47,6 @@ class PlotMSDisplayTab : public PlotMSPlotSubtab, Ui::DisplayTab {
     
 public:
 
-	
     // Constructor which takes the parent tab and plotter.
     PlotMSDisplayTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
@@ -71,31 +68,23 @@ public:
     // Implements PlotMSPlotSubtab::update().  WARNING: for now, only works
     // with PlotMSSinglePlotParameters.
     void update(const PlotMSPlot& plot);
-    
-    
-    // Hides the index chooser at the top.
-    void hideIndex();
-    
-    // Uses the index chooser at the top, with the given number of rows and
-    // columns, to manage multi-plot display parameters.
-    void setIndexRowsCols(unsigned int nRows, unsigned int nCols);
-    
-private:
-    // Index chooser.
-    QtIndexChooser* itsIndexChooser_;
-    
-    // Label widget for title.
-    QtLabelWidget* itsTitleWidget_;
-    
-    // Symbol widgets for unflagged and flagged points, respectively.
-    PlotSymbolWidget* itsSymbolWidget_, *itsMaskedSymbolWidget_;
-    
-    // Display parameters.
-    PMS_PP_Display itsPDisplay_;
-    
+
+    //Support for overplotting with multiple y-axes.
+    void setAxisIdentifier( int index, QString id );
+    void removeAxisIdentifier( int index );
+ 
 private slots:
-    // Slot for when the index changes.
-    void indexChanged(unsigned int index);
+	void updateText( QLabel* source, bool highlight );
+	void changeSymbolViewed();
+
+
+private:
+	void makeDataSymbol();
+	void updateMultipleAxisSupport();
+    
+    QList<PlotMSDataSymbolWidget*> dataSymbols;
+    
+
 };
 
 }

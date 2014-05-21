@@ -69,8 +69,12 @@ QPScaleDraw::QPScaleDraw(QwtPlot* parent, QwtPlot::Axis axis) :
 		m_dateFormat(Plotter::DEFAULT_DATE_FORMAT),
 		m_relativeDateFormat(Plotter::DEFAULT_RELATIVE_DATE_FORMAT),
 		m_referenceSet(false), m_referenceValue(0) {
-	parent->setAxisScaleDraw(axis, this);
+	if ( parent != NULL ){
+		parent->setAxisScaleDraw(axis, this);
+	}
 }
+
+
 
 QPScaleDraw::~QPScaleDraw() { }
 
@@ -78,14 +82,27 @@ PlotAxisScale QPScaleDraw::scale() const { return m_scale; }
 void QPScaleDraw::setScale(PlotAxisScale scale) {
 	if(scale != m_scale) {
 		m_scale = scale;
-		
-		if(m_scale == LOG10)
-			m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
-		else
-			m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
-
-        if(m_parent->autoReplot()) m_parent->replot();
+		if ( m_parent != NULL ){
+			if(m_scale == LOG10){
+				m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
+			}
+			else {
+				m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
+			}
+			if(m_parent->autoReplot()){
+				m_parent->replot();
+			}
+		}
 	}
+}
+
+void QPScaleDraw::draw(QPainter* painter, const QPalette& palette) const {
+	QwtScaleDraw::draw( painter, palette );
+}
+
+int QPScaleDraw::extent( const QPen& pen, const QFont& font ) const{
+	int extent = QwtScaleDraw::extent( pen, font );
+	return extent;
 }
 
 const String& QPScaleDraw::dateFormat() const { return m_dateFormat; }
@@ -146,10 +163,15 @@ QPLegend::~QPLegend() { }
 
 QSize QPLegend::sizeHint() const {
     QSize size = QwtLegend::sizeHint();
-    if(!size.isValid() || m_line.style() == PlotLine::NOLINE) return size;
+    if(!size.isValid() || m_line.style() == PlotLine::NOLINE){
+    	return size;
+    }
     
     int width = (int)(m_line.width() + 0.5);
-    if(width > 0) size += QSize(width * 2 + 1, width * 2 + 1);
+    if(width > 0){
+    	int verticalOffset = 20;
+    	size += QSize(width * 2 + 1, width * 2 + 1 + verticalOffset );
+    }
     return size;
 }
 
@@ -164,10 +186,13 @@ void QPLegend::setLine(const PlotLine& line) {
 
 const QPAreaFill& QPLegend::areaFill() const { return m_areaFill; }
 const QBrush& QPLegend::brush() const { return m_areaFill.asQBrush(); }
-void QPLegend::setAreaFill(const PlotAreaFill& fill) {
+void QPLegend::setAreaFill(const PlotAreaFill& fill, bool updateLegend) {
     if(fill != m_areaFill) {
         m_areaFill = QPAreaFill(fill);
-        if(isVisible()) update();
+        QBrush fillBrush = m_areaFill.asQBrush();
+        if(isVisible() && updateLegend ){
+        	update();
+        }
     }
 }
 
@@ -179,17 +204,25 @@ void QPLegend::drawOutlineAndBackground(QPainter* painter, const QRect& rect,
     
     painter->save();
     if(m_line.style() != PlotLine::NOLINE) painter->setPen(m_line.asQPen());
-    if(m_areaFill.pattern() != PlotAreaFill::NOFILL)
+    if(m_areaFill.pattern() != PlotAreaFill::NOFILL){
+    	QBrush brush = m_areaFill.asQBrush();
         painter->setBrush(m_areaFill.asQBrush());
-    if(useQwtPainter) QwtPainter::drawRect(painter, rect);
-    else              painter->drawRect(rect);
+    }
+
+    if(useQwtPainter){
+    	QwtPainter::drawRect(painter, rect);
+    }
+    else {
+    	painter->drawRect(rect);
+    }
     painter->restore();
 }
 
 
 void QPLegend::paintEvent(QPaintEvent* event) {
     // Draw outline and background if needed.
-    QRect geom(QPoint(0, 0), size());
+	QSize legendSize = size();
+    QRect geom(QPoint(0, 0), legendSize);
     geom.setRight(geom.right() - 1);   // Compensate for +1 in sizeHint().
     geom.setBottom(geom.bottom() - 1);
     QPainter painter(this);
@@ -202,7 +235,9 @@ void QPLegend::paintEvent(QPaintEvent* event) {
     rect.setBottom(rect.bottom() - 1);
     
     int width = 0;
-    if(m_line.style() != PlotLine::NOLINE) width = (int)(m_line.width() + 0.5);
+    if(m_line.style() != PlotLine::NOLINE){
+    	width = (int)(m_line.width() + 0.5);
+    }
     if(width > 0) {
         rect.setTop(rect.top() + width);
         rect.setLeft(rect.left() + width);
@@ -413,6 +448,8 @@ QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
       case QwtPlot::yRight:   m_scaleDraw.setAlignment(QwtScaleDraw::RightScale);  break;
       case QwtPlot::xTop:     m_scaleDraw.setAlignment(QwtScaleDraw::TopScale);    break;
       case QwtPlot::xBottom:  m_scaleDraw.setAlignment(QwtScaleDraw::BottomScale); break;
+      default:
+    	  qDebug() << "Unrecognized Axis: "<<master;
     }
     
     setZ(BASE_Z_CARTAXIS);
@@ -425,8 +462,8 @@ QPCartesianAxis::~QPCartesianAxis() { }
 
 
 void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect& drawRect,
-                  unsigned int drawIndex, unsigned int drawCount) const {
+                  const QwtScaleMap& yMap, const QRect& /*drawRect*/,
+                  unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
 	
     QwtScaleDraw* s = const_cast<QwtScaleDraw*>(&m_scaleDraw);
     if(m_axis == QwtPlot::yLeft || m_axis == QwtPlot::yRight) 

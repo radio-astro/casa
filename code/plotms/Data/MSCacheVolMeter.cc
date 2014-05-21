@@ -256,6 +256,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::TSYS:
 			case PMS::OPAC:
 			case PMS::NONE:
+			case PMS::WTxAMP:
 				break;
 			} // switch
 			totalVol+=axisVol;

@@ -1,4 +1,4 @@
-//# Copyright (C) 2009
+//# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,31 +23,28 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef PLOTINFORMATIONMANAGER_H_
-#define PLOTINFORMATIONMANAGER_H_
+#ifndef CASAQT_EXTERNALAXISWIDGETBOTTOM_H_
+#define CASAQT_EXTERNALAXISWIDGETBOTTOM_H_
+
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetHorizontal.h>
 
 namespace casa {
 
-/**
- * Abstracts directions to the PlotMSPlotTab for GUI implementation
- * independence.
- */
-
-class PlotInformationManager {
+class ExternalAxisWidgetBottom : public ExternalAxisWidgetHorizontal {
 public:
-	 virtual void insertData( int insertIndex ) = 0;
-	 virtual void insertAxes( int insertIndex ) = 0;
-	 virtual void insertIterate( int insertIndex ) = 0;
-	 virtual void insertTransformations( int insertIndex ) = 0;
-	 virtual void insertDisplay( int insertIndex ) = 0;
-	 virtual void insertCanvas( int insertIndex ) = 0;
-	 virtual void insertExport( int insertIndex ) = 0;
-	 virtual void clearAfter( int startClearIndex) = 0;
+	ExternalAxisWidgetBottom(QWidget* parent, QwtPlot* plot,
+			bool leftAxisInternal, bool bottomAxisInternal,
+			bool rightAxisInternal );
+
+	virtual ~ExternalAxisWidgetBottom();
 protected:
-	 PlotInformationManager(){};
-	 virtual ~PlotInformationManager(){};
+
+	virtual void defineAxis( QLine& axisLine );
+	//virtual void drawTicks( QPainter* painter, int tickLength);
+	virtual void drawAxisLabel( QPainter* painter );
+	virtual void drawTick( QPainter* painter, double xPixel, double value, int tickLength);
+
 };
 
-}
-
-#endif /* PLOTINFORMATIONMANAGER_H_ */
+} /* namespace casa */
+#endif /* EXTERNALAXISWIDGETBOTTOM_H_ */

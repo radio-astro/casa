@@ -26,7 +26,6 @@
 #include "ActionSelectUnflag.h"
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
-#include <plotms/Data/PlotMSIndexer.h>
 #include <plotms/Client/Client.h>
 namespace casa {
 
@@ -44,8 +43,7 @@ PlotLogMessage* ActionSelectUnflag::doFlagOperation( PlotMSPlot* plot,
 		int canvasIndex, vector<PlotRegion>& regions,
 		bool /*showUnflagged*/, bool /*showFlagged*/){
 	PlotMSFlagging flagging = client->getFlagging();
-	PlotLogMessage* m = plot->cache().indexer(plot->iter()+canvasIndex).flagRange(
-				flagging, Vector<PlotRegion>(regions), false);
+	PlotLogMessage* m = plot->flagRange(canvasIndex,flagging, Vector<PlotRegion>(regions), false);
 	return m;
 }
 

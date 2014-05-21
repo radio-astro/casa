@@ -70,6 +70,9 @@ public:
     
     virtual void cancelOperation();
 
+    virtual QString getName() const;
+    virtual bool isCacheThread() const;
+
 protected:
 
     
@@ -120,6 +123,7 @@ private:
     
     // Last set status.
     String itsLastStatus_;
+
 };
 
 }

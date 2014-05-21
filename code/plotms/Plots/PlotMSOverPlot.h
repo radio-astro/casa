@@ -28,12 +28,18 @@
 #define PLOTMSOVERPLOT_H_
 
 #include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPage.h>
 #include <plotms/Data/PlotMSIndexer.h>
-//#include <casaqt/QwtPlotter/QPScatterPlot.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+class PMS_PP_Cache;
+class PMS_PP_Canvas;
+class PMS_PP_Axes;
+class PMS_PP_Iteration;
+class PMS_PP_Display;
 
 class PlotMSOverPlot : public PlotMSPlot {
 public:
@@ -59,6 +65,7 @@ public:
         bool updateDisplay;
         bool endCacheLog;
         bool updateIteration;
+
         // </group>
 
         // Constructor
@@ -68,6 +75,7 @@ public:
             updateCanvas(false),
             updateDisplay(false),
             endCacheLog(false)
+
         {}
     };
 
@@ -76,27 +84,38 @@ public:
     String spectype() const { return "Over"; }
     vector<MaskedScatterPlotPtr> plots() const;
     vector<PlotCanvasPtr> canvases() const;
-    //void setupPlotSubtabs(PlotMSPlotTab &tab) const;
-    virtual void setupPlotSubtabs(PlotInformationManager& tab) const;
+
     void attachToCanvases();
     void detachFromCanvases();
     //void plotTabHasChanged(PlotMSPlotTab&) {}
     Int iter() { return iter_; }
 
-protected:
-    // Template pattern methods
     bool assignCanvases(PlotMSPages &pages);
+    virtual void updateLocation();
+
+    //Clear the title and axes from all this plots canvases.
+    virtual void clearCanvases();
+
+    //The cache load did not succeed so clear the plot and the cache.
+    virtual void dataMissing();
+
+    //Returns true if the plot is an iteration plot.
+    virtual bool isIteration() const;
+
+
+protected:
+
     bool initializePlot();
     bool parametersHaveChanged_(const PlotMSWatchedParameters &params,
                                 int updateFlag, bool releaseWhenDone);
-    void updateCanvasesAndPlotsForAxes();
+
     PlotMSRegions selectedRegions(const vector<PlotCanvasPtr> &canvases) const;
 
-    void resize(PlotMSPages&, uInt rows, uInt cols);
+    virtual void resize(PlotMSPages&, uInt rows, uInt cols);
 
     void constructorSetup();
     void updatePages();
-    bool updateCache();
+    bool updateCache( );
     bool updateCanvas();
     bool updateDisplay();
     void setColors();
@@ -106,7 +125,10 @@ protected:
     bool nextIter();
     bool lastIter();
     bool resetIter();
+    bool setIter( int index );
     void recalculateIteration();
+    virtual Int nIter();
+
 
     void updatePlots();
     bool updateIndexing();
@@ -114,11 +136,32 @@ protected:
     void logPoints();
     void logIter(Int iter, Int nIter);
 
+    virtual int getPageIterationCount( const PlotMSPage& page );
+
 private:
+    //Adjust the amount of plot data that this plot is holding.
+    void resizePlots( int rows, int cols );
+
+    //Return the dimensions of the plot data that this plot should hold.
+    void getPlotSize( Int& rows, Int& cols );
+
+    //Returns the iteration for the canvas located at row, r, and column, c.
+    int getIterationIndex( int r, int c, const PlotMSPage& page );
+
+
+
+    //Note:  First index for a plot is the dataCount,
+    //second index is the number of iteration.
     vector<vector<MaskedScatterPlotPtr> > itsPlots_;
+
+    //Note:  First index for a canvas is the number of rows,
+    //second index is the column withen a grid.
     vector<vector<PlotCanvasPtr> > itsCanvases_;
+
     vector<vector</*QPScatterPlot**/ColoredPlotPtr> > itsColoredPlots_;
     TCLParams itsTCLParams_;
+    int gridRow;
+    int gridCol;
 
     Int iter_;
     Int iterStep_;
@@ -128,16 +171,22 @@ private:
     PlotMSOverPlot(const PlotMSOverPlot&);
     PlotMSOverPlot& operator=(const PlotMSOverPlot&);
     // </group>
+    //const PMS_PP_Display* getDisplayParams();
+    void clearCanvasProperties( int row, int col);
+    void setCanvasProperties (int row, int col, PMS_PP_Cache*,
+    		PMS_PP_Axes* axes, bool set, PMS_PP_Canvas *canv,
+    		uInt rows, uInt cols, PMS_PP_Iteration *iter,
+    		uInt iteration );
 
 public:
     static void cacheLoaded(void *obj, bool wasCanceled)
     {
         PlotMSOverPlot *cobj = static_cast<PlotMSOverPlot*>(obj);
-        if(cobj != NULL)
+        if(cobj != NULL){
             cobj->cacheLoaded_(wasCanceled);
+        }
     }
-private:
-    void cacheLoaded_(bool wasCanceled);
+    virtual void cacheLoaded_(bool wasCanceled);
 
 };
 

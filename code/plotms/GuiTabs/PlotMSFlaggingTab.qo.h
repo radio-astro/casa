@@ -53,7 +53,7 @@ public:
     
     
     // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Flagging"; }
+    QString tabName() const { return /*"Flagging";*/"Flag"; }
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Currently
     // does nothing.
@@ -66,6 +66,8 @@ public:
     
     // See PlotMSFlaggingWidget::setValue().
     void setValue(const PlotMSFlagging& value);
+
+
 };
 
 }

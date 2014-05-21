@@ -498,7 +498,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
 
 void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 			 Vector<Int>& flchunks, Vector<Int>& flrelids, 
-			 Bool flag, PlotMSIndexer* indexer) {
+			 Bool flag, PlotMSIndexer* indexer, int dataIndex ) {
   
   // Sort the flags by chunk:
   Sort sorter;
@@ -511,8 +511,8 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
   stringstream ss;
 
   // Make the VisIterator writable, with selection revised as appropriate
-  Bool selectchan(netAxesMask_(1) && !flagging.channel());
-  Bool selectcorr(netAxesMask_(0) && !flagging.corrAll());
+  Bool selectchan(netAxesMask_[dataIndex](1) && !flagging.channel());
+  Bool selectcorr(netAxesMask_[dataIndex](0) && !flagging.corrAll());
 
   // Set up a write-able CTIter (ci_p also points to it)
   setUpCalIter(filename_,selection_,False,selectchan,selectcorr);
@@ -569,7 +569,7 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	Slice par,chan,bsln;
 	
 	// Set flag range on par axis:
-	if (netAxesMask_(0) && !flagging.corrAll()) {
+	if (netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
 	  // A specific single par
 	  Int ipar=indexer->getIndex1000(currChunk,irel);
 	  par=Slice(ipar,1,1);
@@ -579,7 +579,7 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	  par=Slice(0,npar,1);
 
 	// Set Flag range on channel axis:
-	if (netAxesMask_(1) && !flagging.channel()) {
+	if (netAxesMask_[dataIndex](1) && !flagging.channel()) {
 	  // A single specific channel 
 	  Int ichan=indexer->getIndex0100(currChunk,irel);
 	  chan=Slice(ichan,1,1);
@@ -591,7 +591,7 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	// Set Flags on the baseline axis:
 	Int thisA1=Int(getAnt1(currChunk,indexer->getIndex0010(currChunk,irel)));
 	Int thisA2=Int(getAnt2(currChunk,indexer->getIndex0010(currChunk,irel)));
-	if (netAxesMask_(2) && 
+	if (netAxesMask_[dataIndex](2) &&
 	    !flagging.antennaBaselinesBased() &&
 	    thisA1>-1 ) {
 	  // i.e., if baseline is an explicit data axis, 

@@ -35,6 +35,10 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
+
+/**
+ * Tests whether a simple plot can be exported.
+ */
 int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
@@ -60,8 +64,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
-	bool interactive = false;
-	bool ok = app.save(format, interactive );
+	bool ok = app.save(format);
 	cout << "tExport:: Result of save="<<ok<<endl;
     
 	ok = tUtil::checkFile( outFile, 160000, 170000, -1 );

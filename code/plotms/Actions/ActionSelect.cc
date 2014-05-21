@@ -28,7 +28,6 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Client/Client.h>
-#include <plotms/Data/PlotMSIndexer.h>
 
 namespace casa {
 
@@ -67,15 +66,13 @@ bool ActionSelect::doActionSpecific(PlotMSApp* plotms){
 			if(!visible) continue;
 
 			// Get selected regions on that canvas.
-			vector<PlotRegion> regions= canv[j]->standardMouseTools()
-                                            		->selectTool()->getSelectedRects();
+			vector<PlotRegion> regions= canv[j]->getSelectedRects();
 			if(regions.size() == 0) continue;
 
 			// Actually do locate/flag/unflag...
 			PlotLogMessage* m = NULL;
 			try {
-				m = doFlagOperation( plot,
-							j, regions, showUnflagged, showFlagged );
+				m = doFlagOperation( plot, j, regions, showUnflagged, showFlagged );
 
 				// ...and catch any reported errors.
 			} catch(AipsError& err) {
@@ -166,8 +163,7 @@ void ActionSelect::redrawPlots(PlotMSPlot* plot, vector<PlotCanvasPtr>& visibleC
 				if(canv[j] == visibleCanv[k]) visible = true;
 			if(!visible) continue;
 
-			canv[j]->standardMouseTools()->selectTool()
-	                            						->clearSelectedRects();
+			canv[j]->clearSelectedRects();
 		}
 	}
 

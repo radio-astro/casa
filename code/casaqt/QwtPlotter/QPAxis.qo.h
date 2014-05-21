@@ -1,4 +1,4 @@
-//# QPCanvas.qo.h: Qwt implementation of generic PlotCanvas class.
+//# QPAxis.qo.h: Qwt implementation of generic PlotCanvas class.
 //# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -29,13 +29,14 @@
 
 #ifdef AIPS_HAS_QWT
 
-#include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
 #include <casaqt/QwtPlotter/QPImageCache.h>
 #include <casaqt/QwtPlotter/QPLayeredCanvas.qo.h>
+#include <casaqt/QwtPlotter/QPExportCanvas.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
+#include <casaqt/QwtPlotter/AxisListener.h>
 #include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
 #include <qwt_plot_picker.h>
@@ -51,11 +52,11 @@ namespace casa {
 
 //# Forward declarations
 class QPPlotter;
-
+class ExternalAxisWidget;
 
 // Implementation of PlotCanvas for the Qwt plotter.  Mainly consists of
 // wrappers and containers around a QwtPlot object.
-class QPAxis : public QFrame, public PlotCanvas {
+class QPAxis : public QFrame, public QPExportCanvas, public AxisListener {
     Q_OBJECT
     
     friend class QPAxesCache;
@@ -76,48 +77,29 @@ public:
     // Convenient access to "origin" names for logging.
     // <group>
     static const String DRAW_NAME;
-    static const String EXPORT_NAME;
+
     // </group>
     
     
-    // Exports the given plotter to the given format.
-    static bool exportPlotter(QPPlotter* plotter,
-            const PlotExportFormat& format);
-    
-    // Exports the given canvas to the given format.
-    static bool exportCanvas(QPCanvas* canvas, const PlotExportFormat& format);
-    
+
     
     // Non-Static //
     
     // Constructor which takes (optional) parent QPPlotter.
-    QPAxis(QPPlotter* parent = NULL);
+    QPAxis(PlotAxis axis, QPPlotter* parent, QwtPlot* associatedPlot,
+    		bool leftAxisInternal, bool bottomAxisInternal,
+    		bool rightAxisInternal );
 
     // Destructor.
-    ~QPAxis();
+    virtual ~QPAxis();
     
-    
-    // Include overloaded methods.
-    using PlotCanvas::setBackground;
-    using PlotCanvas::setSelectLine;
-    using PlotCanvas::setTitleFont;
-    using PlotCanvas::showAxes;
-    using PlotCanvas::showCartesianAxis;
-    using PlotCanvas::setAxisFont;
-    using PlotCanvas::setAxisRange;
-    using PlotCanvas::setAxesRanges;
-    using PlotCanvas::showGrid;
-    using PlotCanvas::setGridMajorLine;
-    using PlotCanvas::setGridMinorLine;
-    using PlotCanvas::setLegendLine;
-    using PlotCanvas::setLegendFill;
-    using PlotCanvas::setLegendFont;
+
 
     // Implements PlotCanvas::legendShown().
        bool legendShown() const{return false;};
 
        // Implements PlotCanvas::showLegend().
-       void showLegend(bool on = true, LegendPosition position = EXT_BOTTOM){}
+       void showLegend(bool /*on = true*/, LegendPosition /*position = EXT_BOTTOM*/){}
 
        // Implements PlotCanvas::legendPosition().
        LegendPosition legendPosition() const {
@@ -125,15 +107,17 @@ public:
        }
 
        // Implements PlotCanvas::setLegendPosition().
-       void setLegendPosition(LegendPosition position){}
+       void setLegendPosition(LegendPosition /*position*/){}
 
        // Implements PlotCanvas::legendLine().
        PlotLinePtr legendLine() const {
     	   return PlotLinePtr();
        }
 
+       virtual void setMinimumSizeHint( int width, int height );
+
        // Implements PlotCanvas::setLegendLine().
-       void setLegendLine(const PlotLine& line){}
+       void setLegendLine(const PlotLine& /*line*/){}
 
        // Implements PlotCanvas::legendFill().
        PlotAreaFillPtr legendFill() const {
@@ -141,7 +125,7 @@ public:
        }
 
        // Implements PlotCanvas::setLegendFill().
-       void setLegendFill(const PlotAreaFill& area){}
+       void setLegendFill(const PlotAreaFill& /*area*/){}
 
        // Implements PlotCanvas::legendFont().
        PlotFontPtr legendFont() const {
@@ -149,15 +133,18 @@ public:
        }
 
        // Implements PlotCanvas::setLegendFont().
-       void setLegendFont(const PlotFont& font){}
+       void setLegendFont(const PlotFont& /*font*/){}
 
     // PlotCanvas Methods //
+    virtual void setCommonAxes( bool /*commonX*/, bool /*commonY*/ ){}
     
     // Implements PlotCanvas::size().
     pair<int, int> size() const;
     virtual void setMinimumSize( int width, int height ){
     	QFrame::setMinimumSize( width, height );
     }
+
+    bool isDrawing() const;
 
     virtual void show(){
     	QFrame::show();
@@ -316,6 +303,8 @@ public:
     // Overrides PlotCanvas::clearPlots().
     void clearPlots();
     
+    virtual void setNotUsed(){}
+
     // Overrides PlotCanvas::clearLayer().
     void clearLayer(PlotCanvasLayer layer);
 
@@ -399,29 +388,23 @@ public:
     
     // Implements PlotCanvas::implementationFactory().
     PlotFactory* implementationFactory() const;
-    
+    virtual bool print( QPrinter& printer );
+    virtual QImage grabImageFromCanvas(const PlotExportFormat& format );
+    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
+    		double widgetHeight, int axisWidth, int axisHeight, int rowIndex, int colIndex, QRect imageRect );
+    virtual const QPalette& palette() const;
+    virtual QPalette::ColorRole backgroundRole() const;
+    virtual bool isAxis() const {
+    		return true;
+    	}
+    virtual bool isVertical() const {
+    	bool vertical = false;
+    	if ( axisType == QwtPlot::yLeft || axisType == QwtPlot::yRight ){
+    		vertical = true;
+    	}
+    	return vertical;
+    }
 
-    // QPCanvas Methods //
-    
-    // Provides access to the underlying QPLayeredCanvas.
-    // <group>
-    QPLayeredCanvas& asQwtPlot();
-    const QPLayeredCanvas& asQwtPlot() const;
-    // </group>
-    
-    // Provides access to the QwtPlotPicker used for selection events.
-    QwtPlotPicker& getSelecter();
-    
-    // Reinstalls the tracker filter (in case another QwtPlotPicker is added to
-    // the QwtPlotCanvas).
-    void reinstallTrackerFilter();
-    
-    // Overrides QWidget::sizeHint() to return an invalid size.
-    QSize sizeHint() const;
-    
-    // Overrides QWidget::minimumSizeHint() to return an invalid size.
-    QSize minimumSizeHint() const;
-    
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas
     // is added to the plotter so that it can use the plotter's logger if
@@ -429,7 +412,7 @@ protected:
     void setQPPlotter(QPPlotter* parent);
     
     // Returns the parent's logger.
-    PlotLoggerPtr logger() const;
+    virtual PlotLoggerPtr logger() const;
     
     // See QPPlotter::logObject().  If called before setQPPlotter() is called,
     // creates a queue that is then posted when setQPPlotter() is called.
@@ -447,85 +430,32 @@ protected:
     //const QPAxesCache& axesCache() const;
     // </group>
     
-    // For catching Qt press events.
-    void mousePressEvent(QMouseEvent* event);
-    
-    // For catching Qt click and release events.
-    void mouseReleaseEvent(QMouseEvent* event);
-    
-    // For catching Qt double-click events.
-    void mouseDoubleClickEvent(QMouseEvent* event);
-    
-    // For catching Qt key events.
-    void keyReleaseEvent(QKeyEvent* event);
-    
-    // For catching Qt scroll wheel events.
-    void wheelEvent(QWheelEvent* event);
-    
-    // For catching Qt resize events.
-    void resizeEvent(QResizeEvent* event);
+
 
 private:
     // Parent QPPlotter.
     QPPlotter* m_parent;
     
+    QwtPlot::Axis axisType;
+
     // Queued log messages before parent is set.
     vector<PlotLogObject> m_queuedLogs;
     
-    // Main QwtPlot object.
-    QPLayeredCanvas m_canvas;
 
-    // Main-layer plot items.
-    vector<pair<PlotItemPtr, QPPlotItem*> > m_plotItems;
-    
-    // Annotation-layer plot items.
-    vector<pair<PlotItemPtr, QPPlotItem*> > m_layeredItems;
-    
-    // Scale draws.
-    QPScaleDraw* m_scaleDraws[QwtPlot::axisCnt];
-    
     // Whether the axes ratio is locked or not.
     bool m_axesRatioLocked;
     
     // Used for recalculating axes ranges if the ratio is locked.
     vector<double> m_axesRatios;
-    
-    // Cached axes stack.
-    //QPAxesCache m_stackCache;
 
-    // Whether auto-increment colors is turned on or not.
-    bool m_autoIncColors;
-    
-    // Used auto-incremented colors.
-    vector<int> m_usedColors;
-    
-    // Picker used for select events.
-    QwtPlotPicker m_picker;
-    
-    // Filter used for mouse move events.  Has to initialize after the picker
-    // to be first in the filter.
-    QPMouseFilter m_mouseFilter;
-    
-    
-
-    // Flag for whether we're in mouse dragging mode or not.
-    bool m_inDraggingMode;
-    
-    /*
-    // For catching single vs. double clicks.
-    // <group>
-    bool m_ignoreNextRelease;
-    QTimer m_timer;
-    QMouseEvent* m_clickEvent;
-    // </group>
-     */
-    
     // Date formats.
     // <group>
     String m_dateFormat;
     String m_relativeDateFormat;
     // </group>
     
+    //External Axis
+    ExternalAxisWidget* axisWidget;
        
     // Converts the given Qt global position to a pixel PlotCoordinate.
     // <group>
@@ -536,43 +466,6 @@ private:
         return globalPosToPixelCoord(event->globalX(), event->globalY()); }
     // </group>
     
-    
-    // Static //
-    
-    // Method for static exportPlotter() and exportCanvas() methods.
-    // (Formerly exportHelper.  "Helper" in a class or method name is a code smell!)
-    static bool exportCanvases(vector<PlotCanvasPtr>& canvases,
-            const PlotExportFormat& format, QPCanvas* grabCanvas,
-            QPPlotter* grabPlotter);
-
-	
-	
-	// Methods to perform particular types of exports - internal use only!
-	static 
-	bool  exportToImageFile(
-					const PlotExportFormat& format, 
-					vector<QPCanvas*> &qcanvases,
-					QPCanvas* grabCanvas,
-					QPPlotter* grabPlotter
-					);
-    static 
-    QImage produceHighResImage(
-					const PlotExportFormat& format,
-					vector<QPCanvas*> &qcanvases,
-					int width, int height,
-					bool &wasCanceled
-					);   
-    static 
-    QImage  grabImageFromCanvas(
-			        const PlotExportFormat& format, 
-			        QPCanvas* grabCanvas,
-			        QPPlotter* grabPlotter
-			        );
-    static 
-    bool   exportPostscript(
-			        const PlotExportFormat& format, 
-			        vector<QPCanvas*> &qcanvases
-			        );
 
     
     // Converts between axes bitset flags (1,2,4,8 in PlotAxis and vector indices (0-3).
@@ -583,15 +476,14 @@ private:
     // </group>
     
     
-private slots:    
-    // For when the selecter has selected a region; emit a PlotSelectEvent.
-    void regionSelected(const QwtDoubleRect&);
-    
-    // For catching single vs. double clicks.
-    // void timeout();
-    
-    // For catching mouse move events from the filter.
-    void trackerMouseEvent(QMouseEvent* event);
+    virtual int canvasWidth() const{
+      	return width();
+      }
+      virtual int canvasHeight() const {
+      	return height();
+      }
+
+
 };
 
 }

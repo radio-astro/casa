@@ -31,6 +31,7 @@
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
+#include <plotms/Plots/PlotMSPage.h>
 
 #include <casa/namespace.h>
 
@@ -39,8 +40,7 @@ namespace casa {
 //# Forward declarations
 class PlotMSApp;
 class PlotMSPages;
-//class PlotMSPlotTab;
-class PlotInformationManager;
+
 
 // Abstract class for a single "plot" concept.  Generally speaking this one
 // plot handles one data source across potentially many scatter plots and
@@ -71,7 +71,8 @@ public:
     
     
     // ABSTRACT METHODS //
-    
+    virtual void resize(PlotMSPages&, uInt rows, uInt cols) = 0;
+
     // Returns a human-readable name for this plot.  Does not have to be
     // unique.
     virtual String name() const = 0;
@@ -85,9 +86,6 @@ public:
     // Returns the canvases that have been assigned to this plot.
     virtual vector<PlotCanvasPtr> canvases() const = 0;
     
-    // Sets up subtabs for the given plot tab, using the add/insert subtab
-    // methods.
-    virtual void setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const = 0;
     
     // Attaches/Detaches internal plot objects to their assigned canvases.
     // <group>
@@ -95,12 +93,19 @@ public:
     virtual void detachFromCanvases() = 0;
     // </group>
     
-    // Called when the GUI settings in the plot tab have changed.
-    //virtual void plotTabHasChanged(PlotMSPlotTab& tab) = 0;
+    //The cache load did not succeed so clear the plot and the cache.
+    virtual void dataMissing() = 0;
     
-    
+
     // IMPLEMENTED METHODS //
-    
+
+    //This method was written because in scripting mode, there was a segfault when
+    //the grid size was changed (for example 2 x 3 to 1x1).  It was in a draw thread
+    //that had stale data it was touching after its associated canvas was deleted.
+    //The purpose of the method is to wait for the draw threads to finish and then
+    //keep them from redrawing while the deletion is in progress.
+    void waitForDrawing( bool holdDrawing );
+
     // Returns a reference to the plot's parameters.
     // <group>
     virtual const PlotMSPlotParameters& parameters() const;
@@ -124,13 +129,14 @@ public:
     // method, then calls parametersUpdated() to properly set the plot.
     // Drawing is held before these operations, and then released afterwards.
     // Returns true if all operations succeeded; false if at least one failed.
-    virtual bool initializePlot(PlotMSPages& pages);
+    bool initializePlot(PlotMSPages& pages);
     
     // Gets the plot's data source.
     // <group>
     virtual PlotMSCacheBase& cache() { return *itsCache_; };
     virtual const PlotMSCacheBase& cache() const { return *itsCache_; };
     virtual Int iter() { return 0; };
+    virtual Int nIter() { return 1; };
     // </group>
     
     // Gets the plot's parent.
@@ -141,6 +147,7 @@ public:
     virtual bool prevIter() { return False;};
     virtual bool nextIter() { return False;};
     virtual bool lastIter() { return False;};
+    virtual bool setIter( int /*index*/ ){ return False; };
 
 
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
@@ -152,25 +159,46 @@ public:
     // cause a redraw of the affected canvases.
     virtual void plotDataChanged();
     
+    virtual bool isIteration() const;
+
     // Exports canvases associated with this plot to the given format.  Exports
     // to multiple files if the plot has more than one canvas.
     virtual bool exportToFormat(const PlotExportFormat& format);
     void exportToFormatCancel();
     
+    virtual void cacheLoaded_(bool wasCanceled) = 0;
+
     // This method should be called when the given canvas (which was owned by
     // this plot) was disowned.
     virtual void canvasWasDisowned(PlotCanvasPtr canvas);
     vector<PMS::Axis> getCachedAxes();
     vector<PMS::DataColumn> getCachedData();
+
+    Record locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+    		bool showUnflagged, bool showFlagged, bool selectAll ) const ;
+
+    PlotLogMessage* locateRange( int plotIterIndex, const Vector<PlotRegion> & regions,
+    		bool showUnflagged, bool showFlagged);
+
+    PlotLogMessage* flagRange( int canvasIndex, casa::PlotMSFlagging& flagging,
+    		const Vector<PlotRegion>& regions, bool showFlagged);
+
+    // Generates and assigns canvases that this plot will be using, with the
+      // given PlotMSPages object.  This is called when the plot is first
+      // created, and can be called by the plot itself if its canvas layout
+      // has changed (in which case this method should check for the canvases
+      // that have already been assigned to it in the page).
+      virtual bool assignCanvases(PlotMSPages& pages) = 0;
+      virtual void updateLocation() = 0;
+
+      //Clear the title and axes from all this plots canvases.
+      virtual void clearCanvases()=0;
+
+      //Whether a thread is currently updating the cache.
+      bool isCacheUpdating() const;
+      void setCacheUpdating( bool updating );
 protected:
     // ABSTRACT METHODS //
-    
-    // Generates and assigns canvases that this plot will be using, with the
-    // given PlotMSPages object.  This is called when the plot is first
-    // created, and can be called by the plot itself if its canvas layout
-    // has changed (in which case this method should check for the canvases
-    // that have already been assigned to it in the page).
-    virtual bool assignCanvases(PlotMSPages& pages) = 0;
     
     // Initializes any internal plot objects, but does NOT set parameters or
     // attach to canvases.  Will only be called ONCE, before assignCanvases and
@@ -182,7 +210,7 @@ protected:
     // Returns true if the drawing should be released right away; if false is
     // returned, the child class is expect to release drawing when finished.
     virtual bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
-            int updateFlag, bool releaseWhenDone) = 0;
+            int updateFlag, bool releaseWhenDone ) = 0;
     
     // Helper method for selectedRegions() and visibleSelectedRegions() that
     // returns the selected regions for plots in the given canvases.
@@ -197,7 +225,7 @@ protected:
     virtual void constructorSetup();
     
     // Force data update by clearing the cache
-    virtual bool updateData() { itsCache_->clear(); return True; };   
+    virtual bool updateData();
     
     // Returns true if drawing is currently being held on all plot canvases,
     // false otherwise.
@@ -209,6 +237,7 @@ protected:
     // Releases drawing on all plot canvases, which will also cause a redraw.
     virtual void releaseDrawing();
     
+    virtual int getPageIterationCount( const PlotMSPage& page )=0;
 
     // MEMBERS //
     
@@ -224,7 +253,12 @@ protected:
     // Cache.
     PlotMSCacheBase* itsCache_;
     
+    //Used to determine if a thread is running to update the cache.
+    volatile bool cacheUpdating;
+
 private:
+    void waitOnCanvas( const PlotCanvasPtr& canvas );
+
     // Disable copy constructor and operator for now.
     // <group>
     PlotMSPlot(const PlotMSPlot& copy);

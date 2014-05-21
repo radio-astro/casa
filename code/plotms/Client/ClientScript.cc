@@ -31,7 +31,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Actions/ActionExport.h>
-//#include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <QDebug>
 #include <QWidget>
@@ -42,8 +42,6 @@ ClientScript::ClientScript(PlotMSApp* controllerApp, Plotter::Implementation imp
 	SCRIPT_CLIENT( "PlotMS Script Client"){
 	plotController = controllerApp;
 	initialize( impl );
-	currentPlot = NULL;
-	//taskRunning = false;
 }
 
 bool ClientScript::isActionEnabled( PlotMSAction::Type /*type*/ ) const {
@@ -52,32 +50,34 @@ bool ClientScript::isActionEnabled( PlotMSAction::Type /*type*/ ) const {
 }
 
 void ClientScript::plot() {
-	if ( currentPlot == NULL ){
-		initializeCurrentPlot();
+	if ( currentPlots.size() > 0 ){
+		//initializeCurrentPlot();
+		currentPlots.clear();
 	}
-	if ( currentPlot != NULL ){
-		 // Tell the plot to redraw itself because of the cache.
-		PlotMSPlotParameters& params = currentPlot->parameters();
-		currentPlot->parametersHaveChanged(params,PlotMSWatchedParameters::ALL_UPDATE_FLAGS());
-	}
+	initializeCurrentPlot();
 
+	if ( currentPlots.size() > 0 ){
+		//This is present because it forces a hidden widget to update.
+		//Without it, sometimes the exported plot was not appearing correctly,
+		//i.e., a missing y-axis.
+		itsPlotter_->updateScriptGui();
+	}
 }
+
+
 
 void ClientScript::initializeCurrentPlot() {
-	if ( currentPlot == NULL ){
+	if ( currentPlots.size() == 0){
 		PlotMSPlotManager& manager = plotController->getPlotManager();
 		int plotCount = manager.numPlots();
-		if ( plotCount > 0 ){
-			currentPlot = manager.plot( 0 );
-		}
-		else {
-			qDebug() << "Plot manager did not have any plots";
+		for ( int i = 0; i < plotCount; i++ ){
+			currentPlots.push_back(manager.plot( i ));
 		}
 	}
 }
 
-PlotMSPlot* ClientScript::getCurrentPlot() const {
-	return currentPlot;
+vector<PlotMSPlot*> ClientScript::getCurrentPlots() const {
+	return currentPlots;
 }
 
 bool ClientScript::isInteractive() const {
@@ -88,13 +88,6 @@ void ClientScript::setOperationCompleted( bool completed ){
 	plotController->setOperationCompleted( completed );
 }
 
-bool ClientScript::isMSSummaryVerbose() const {
-	return false;
-}
-
-PMS::SummaryType ClientScript::getMSSummaryType() const{
-	return PMS::S_ALL;
-}
 
 //Retrieve flagging information specified by the client.
 PlotMSFlagging ClientScript::getFlagging() const {
@@ -106,8 +99,7 @@ void ClientScript::setFlagging(PlotMSFlagging flag) {
 }
 
 bool ClientScript::exportPlot(const PlotExportFormat& format,
-			const bool /*interactive*/, const bool /*async*/){
-	//taskRunning = true;
+		 const bool /*async*/){
 
 	//Make sure there is data in the plot.
 	plot();
@@ -123,13 +115,26 @@ bool ClientScript::exportPlot(const PlotExportFormat& format,
 	if ( !result ){
 		showError( action.doActionResult(), "Export Failed!", false );
 	}
-	//taskRunning = false;
 	return result;
+}
+
+//Retrieve the plot load axes the user has specified.
+vector<vector<PMS::Axis> > ClientScript::getSelectedLoadAxes() const {
+	vector<vector<PMS::Axis> > axes;
+	return axes;
+}
+
+//Retrieve the release axes the user has specified.
+vector<vector<PMS::Axis> > ClientScript::getSelectedReleaseAxes() const {
+	vector<vector<PMS::Axis> > axes;
+	return axes;
 }
 
 
 ThreadController* ClientScript::getThreadController( PlotMSAction::Type /*type*/,
-			PMSPTMethod /*postThreadMethod*/, PMSPTObject /*postThreadObject*/ ) {
+			PMSPTMethod /*postThreadMethod*/,
+			PlotMSPlot* /*postThreadObject*/,
+			int /*index*/ ) {
 	return NULL;
 }
 
@@ -137,7 +142,7 @@ void ClientScript::showGUI( bool /*show*/ ) {
 	//itsPlotter_->showGUI(true);
 }
 
-void ClientScript::showMessage(const String& message, const String& title) {
+void ClientScript::showMessage(const String& message, const String& title, bool /*warning*/) {
 	PlotLoggerPtr infoLog = itsPlotter_->logger();
 	infoLog->postMessage(SCRIPT_CLIENT, title, message,PlotLogger::MSG_INFO);
 }
@@ -150,6 +155,11 @@ void ClientScript::showError(const String& message, const String& title, bool wa
 	else {
 		infoLog->postMessage(SCRIPT_CLIENT, title, message,PlotLogger::MSG_ERROR);
 	}
+}
+
+void ClientScript::gridSizeChanged( int /*rowCount*/, int /*colCount*/ ){
+	currentPlots.resize( 0 );
+
 }
 
 
@@ -169,7 +179,7 @@ void ClientScript::initialize(Plotter::Implementation impl){
 
 	// Set up plotter.
 	itsPlotter_ = itsFactory_->plotter("PlotMS", false, false,
-	    		plotController->getParameters().logEvents(), false);
+		    		plotController->getParameters().logEvents(), false);
 
 }
 

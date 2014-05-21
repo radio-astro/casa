@@ -1,132 +1,121 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>ToolsTab</class>
- <widget class="QWidget" name="ToolsTab" >
-  <property name="geometry" >
+ <widget class="QWidget" name="ToolsTab">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>275</width>
-    <height>565</height>
+    <height>594</height>
    </rect>
   </property>
-  <property name="sizePolicy" >
-   <sizepolicy vsizetype="Preferred" hsizetype="Maximum" >
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="maximumSize" >
+  <property name="maximumSize">
    <size>
-    <width>275</width>
+    <width>325</width>
     <height>16777215</height>
    </size>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>PlotMS Tools Tab</string>
   </property>
-  <layout class="QVBoxLayout" >
-   <property name="spacing" >
+  <layout class="QVBoxLayout">
+   <property name="spacing">
     <number>3</number>
    </property>
-   <property name="leftMargin" >
-    <number>3</number>
-   </property>
-   <property name="topMargin" >
-    <number>3</number>
-   </property>
-   <property name="rightMargin" >
-    <number>3</number>
-   </property>
-   <property name="bottomMargin" >
+   <property name="margin">
     <number>3</number>
    </property>
    <item>
-    <widget class="QGroupBox" name="handBox" >
-     <property name="title" >
+    <widget class="QGroupBox" name="handBox">
+     <property name="title">
       <string>Hand Tool</string>
      </property>
-     <layout class="QVBoxLayout" >
-      <property name="spacing" >
+     <layout class="QVBoxLayout">
+      <property name="spacing">
        <number>3</number>
       </property>
-      <property name="leftMargin" >
-       <number>3</number>
-      </property>
-      <property name="topMargin" >
-       <number>3</number>
-      </property>
-      <property name="rightMargin" >
-       <number>3</number>
-      </property>
-      <property name="bottomMargin" >
+      <property name="margin">
        <number>3</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="handMarkRegions" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handMarkRegions">
+        <property name="text">
          <string>Mark Regions</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/mark.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/mark.png</normaloff>:/actions/images/mark.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="handSubtractRegions" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handSubtractRegions">
+        <property name="text">
          <string>Subtract Regions</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/minus-bv.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/minus-bv.png</normaloff>:/actions/images/minus-bv.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="handZoom" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handZoom">
+        <property name="text">
          <string>Zoom</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/zoom.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/zoom.png</normaloff>:/actions/images/zoom.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="handPan" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handPan">
+        <property name="text">
          <string>Pan</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/pan.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/pan.png</normaloff>:/actions/images/pan.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="handAnnotateText" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handAnnotateText">
+        <property name="text">
          <string>Annotate Text</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/annotate_text.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/annotate_text.png</normaloff>:/actions/images/annotate_text.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="handAnnotateRectangle" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handAnnotateRectangle">
+        <property name="text">
          <string>Annotate Rectangle</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/annotate_rectangle.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/annotate_rectangle.png</normaloff>:/actions/images/annotate_rectangle.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="handNone" >
-        <property name="text" >
+       <widget class="QRadioButton" name="handNone">
+        <property name="text">
          <string>None</string>
         </property>
-        <property name="checked" >
+        <property name="checked">
          <bool>true</bool>
         </property>
        </widget>
@@ -135,84 +124,79 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="regionsBox" >
-     <property name="title" >
+    <widget class="QGroupBox" name="regionsBox">
+     <property name="title">
       <string>Selected Regions</string>
      </property>
-     <layout class="QHBoxLayout" >
-      <property name="spacing" >
+     <layout class="QHBoxLayout">
+      <property name="spacing">
        <number>3</number>
       </property>
-      <property name="leftMargin" >
-       <number>3</number>
-      </property>
-      <property name="topMargin" >
-       <number>3</number>
-      </property>
-      <property name="rightMargin" >
-       <number>3</number>
-      </property>
-      <property name="bottomMargin" >
+      <property name="margin">
        <number>3</number>
       </property>
       <item>
-       <widget class="QToolButton" name="regionsClear" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="regionsClear">
+        <property name="toolTip">
          <string>Clear Regions</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Clear Regions</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/clear.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/clear.png</normaloff>:/actions/images/clear.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="regionsFlag" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="regionsFlag">
+        <property name="toolTip">
          <string>Flag Regions</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Flag Regions</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/flag.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/flag.png</normaloff>:/actions/images/flag.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="regionsUnflag" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="regionsUnflag">
+        <property name="toolTip">
          <string>Unflag Regions</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Unflag Regions</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/unflag.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/unflag.png</normaloff>:/actions/images/unflag.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="regionsLocate" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="regionsLocate">
+        <property name="toolTip">
          <string>Locate</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Locate</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/locate.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/locate.png</normaloff>:/actions/images/locate.png</iconset>
         </property>
        </widget>
       </item>
       <item>
        <spacer>
-        <property name="orientation" >
+        <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <property name="sizeHint" >
+        <property name="sizeHint" stdset="0">
          <size>
           <width>40</width>
           <height>20</height>
@@ -224,71 +208,65 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="stackBox" >
-     <property name="title" >
+    <widget class="QGroupBox" name="stackBox">
+     <property name="title">
       <string>Zoom/Pan Stack</string>
      </property>
-     <layout class="QHBoxLayout" >
-      <property name="spacing" >
+     <layout class="QHBoxLayout">
+      <property name="spacing">
        <number>3</number>
       </property>
-      <property name="leftMargin" >
-       <number>3</number>
-      </property>
-      <property name="topMargin" >
-       <number>3</number>
-      </property>
-      <property name="rightMargin" >
-       <number>3</number>
-      </property>
-      <property name="bottomMargin" >
+      <property name="margin">
        <number>3</number>
       </property>
       <item>
-       <widget class="QToolButton" name="stackBack" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="stackBack">
+        <property name="toolTip">
          <string>Back</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Back</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/stack_back.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/stack_back.png</normaloff>:/actions/images/stack_back.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="stackBase" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="stackBase">
+        <property name="toolTip">
          <string>Base</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Base</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/stack_base.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/stack_base.png</normaloff>:/actions/images/stack_base.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="stackForward" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="stackForward">
+        <property name="toolTip">
          <string>Forward</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Forward</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/stack_forward.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/stack_forward.png</normaloff>:/actions/images/stack_forward.png</iconset>
         </property>
        </widget>
       </item>
       <item>
        <spacer>
-        <property name="orientation" >
+        <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <property name="sizeHint" >
+        <property name="sizeHint" stdset="0">
          <size>
           <width>40</width>
           <height>20</height>
@@ -300,51 +278,42 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="trackerBox" >
-     <property name="title" >
+    <widget class="QGroupBox" name="trackerBox">
+     <property name="title">
       <string>Tracker</string>
      </property>
-     <layout class="QVBoxLayout" >
-      <property name="spacing" >
+     <layout class="QVBoxLayout">
+      <property name="spacing">
        <number>3</number>
       </property>
-      <property name="leftMargin" >
-       <number>3</number>
-      </property>
-      <property name="topMargin" >
-       <number>3</number>
-      </property>
-      <property name="rightMargin" >
-       <number>3</number>
-      </property>
-      <property name="bottomMargin" >
+      <property name="margin">
        <number>3</number>
       </property>
       <item>
-       <layout class="QHBoxLayout" >
-        <property name="spacing" >
+       <layout class="QHBoxLayout">
+        <property name="spacing">
          <number>3</number>
         </property>
         <item>
-         <widget class="QCheckBox" name="trackerHoverChk" >
-          <property name="text" >
+         <widget class="QCheckBox" name="trackerHoverChk">
+          <property name="text">
            <string>Hover</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="trackerDisplayChk" >
-          <property name="text" >
+         <widget class="QCheckBox" name="trackerDisplayChk">
+          <property name="text">
            <string>Display</string>
           </property>
          </widget>
         </item>
         <item>
          <spacer>
-          <property name="orientation" >
+          <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <property name="sizeHint" >
+          <property name="sizeHint" stdset="0">
            <size>
             <width>40</width>
             <height>20</height>
@@ -353,8 +322,8 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="clearRecordedValuesBut" >
-          <property name="text" >
+         <widget class="QPushButton" name="clearRecordedValuesBut">
+          <property name="text">
            <string>clear</string>
           </property>
          </widget>
@@ -362,100 +331,95 @@
        </layout>
       </item>
       <item>
-       <widget class="QLineEdit" name="trackerValueDisplay" >
-        <property name="readOnly" >
+       <widget class="QLineEdit" name="trackerValueDisplay">
+        <property name="readOnly">
          <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QTextEdit" name="trackerRecordedValues" />
+       <widget class="QTextEdit" name="trackerRecordedValues"/>
       </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="iterationBox" >
-     <property name="enabled" >
+    <widget class="QGroupBox" name="iterationBox">
+     <property name="enabled">
       <bool>false</bool>
      </property>
-     <property name="title" >
+     <property name="title">
       <string>Iteration</string>
      </property>
-     <layout class="QHBoxLayout" >
-      <property name="spacing" >
+     <layout class="QHBoxLayout">
+      <property name="spacing">
        <number>3</number>
       </property>
-      <property name="leftMargin" >
-       <number>3</number>
-      </property>
-      <property name="topMargin" >
-       <number>3</number>
-      </property>
-      <property name="rightMargin" >
-       <number>3</number>
-      </property>
-      <property name="bottomMargin" >
+      <property name="margin">
        <number>3</number>
       </property>
       <item>
-       <widget class="QToolButton" name="iterationFirst" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="iterationFirst">
+        <property name="toolTip">
          <string>First</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>First</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/first.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/first.png</normaloff>:/actions/images/first.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="iterationPrev" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="iterationPrev">
+        <property name="toolTip">
          <string>Previous</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Previous</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/prev.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/prev.png</normaloff>:/actions/images/prev.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="iterationNext" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="iterationNext">
+        <property name="toolTip">
          <string>Next</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Next</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/next.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/next.png</normaloff>:/actions/images/next.png</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="iterationLast" >
-        <property name="toolTip" >
+       <widget class="QToolButton" name="iterationLast">
+        <property name="toolTip">
          <string>Last</string>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>Last</string>
         </property>
-        <property name="icon" >
-         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/last.png</iconset>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/actions/images/last.png</normaloff>:/actions/images/last.png</iconset>
         </property>
        </widget>
       </item>
       <item>
        <spacer>
-        <property name="orientation" >
+        <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <property name="sizeHint" >
+        <property name="sizeHint" stdset="0">
          <size>
           <width>40</width>
           <height>20</height>
@@ -467,16 +431,16 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" >
-     <property name="spacing" >
+    <layout class="QHBoxLayout">
+     <property name="spacing">
       <number>0</number>
      </property>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -485,21 +449,21 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="holdReleaseDrawing" >
-       <property name="text" >
+      <widget class="QPushButton" name="holdReleaseDrawing">
+       <property name="text">
         <string>Hold Drawing</string>
        </property>
-       <property name="checkable" >
+       <property name="checkable">
         <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -511,10 +475,10 @@
    </item>
    <item>
     <spacer>
-     <property name="orientation" >
+     <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeHint" >
+     <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
        <height>111</height>
@@ -525,7 +489,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../Gui/PlotMSPlotter.qrc" />
+  <include location="../Gui/PlotMSPlotter.qrc"/>
  </resources>
  <connections/>
 </ui>

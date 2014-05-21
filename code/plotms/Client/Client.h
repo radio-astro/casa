@@ -48,42 +48,40 @@ public:
 	virtual bool isActionEnabled( PlotMSAction::Type type ) const = 0;
 
 	//Return the current client plot.
-	virtual PlotMSPlot* getCurrentPlot() const = 0;
+	virtual vector<PlotMSPlot*> getCurrentPlots() const = 0;
 
 	//Retrieve the plot load axes the user has specified.
-	virtual vector<PMS::Axis> getSelectedLoadAxes() const = 0;
+	virtual vector<vector<PMS::Axis> > getSelectedLoadAxes() const = 0;
 
 	//Retrieve the release axes the user has specified.
-	virtual vector<PMS::Axis> getSelectedReleaseAxes() const = 0;
+	virtual vector<vector<PMS::Axis> > getSelectedReleaseAxes() const = 0;
 
-	//Retrieve information specified by the user for saving (exporting)
-	//the plot to a variety of formats.
-	virtual PlotExportFormat getPlotExportFormat() const = 0;
+
 
 	//Retrieve flagging information specified by the client.
 	virtual PlotMSFlagging getFlagging() const = 0;
 
 	//In the case of a grid of plots whether to use common x- or y- axes.
 	virtual void setCommonAxes( bool commonX, bool commonY );
+	virtual bool isCommonAxisX() const;
+	virtual bool isCommonAxisY() const;
+
+	virtual void setAxisLocation( PlotAxis locationX, PlotAxis locationY );
+	virtual PlotAxis getAxisLocationX() const;
+	virtual PlotAxis getAxisLocationY() const;
 
 	//Flagging
 	virtual void setFlagging(PlotMSFlagging flag) = 0;
-	virtual PlotMSPlotParameters getPlotParameters() const = 0;
 
 	//Return whether the client is interactive (a GUI) or noninteractive
 	//(a script)
 	virtual bool isInteractive() const = 0;
 
-	//Return whether the client would like a verbose summary.
-	virtual bool isMSSummaryVerbose() const = 0;
-	//Return the type of summary.
-	virtual PMS::SummaryType getMSSummaryType() const = 0;
-
 	virtual bool exportToFormat(const PlotExportFormat& format);
 
 	//Save the current plot to a file.
 	virtual bool exportPlot(const PlotExportFormat& format,
-			const bool interactive, const bool async) = 0;
+			const bool async) = 0;
 
 	//Display an error in a client dependent way.  For a GUI, this may
 	//mean popping up a dialog; for a script, this may mean writing the
@@ -94,7 +92,7 @@ public:
 	//Display a message.  For a GUI client, this may mean popping up a dialog;
 	//for a script client, this may mean writing the message to a log file or
 	//a web log.
-	virtual void showMessage(const String& message, const String& title) = 0;
+	virtual void showMessage(const String& message, const String& title, bool warning = false) = 0;
 
 
 	virtual void setCanvasCachedAxesStackImageSize(int width, int height );
@@ -136,7 +134,9 @@ public:
 	//of threaded operation.  Examples include caching, exporting a plot, and
 	//drawing.
 	virtual ThreadController* getThreadController( PlotMSAction::Type type,
-			PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL ) = 0;
+			PMSPTMethod postThreadMethod = NULL,
+			PlotMSPlot* postThreadObject = NULL,
+			int index = 0) = 0;
 
 
 
@@ -157,6 +157,9 @@ public:
 	virtual bool isDrawing() const = 0;
 	virtual bool isClosed() const = 0;
 	virtual PlotFactoryPtr getPlotFactory();
+	virtual void gridSizeChanged( int /*rowCount*/, int /*colCount*/ )=0;
+
+
 protected:
 	// Plotter.
 	PlotterPtr itsPlotter_;

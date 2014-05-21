@@ -60,7 +60,7 @@ public:
   virtual ~CalCache();
 
   // Identify myself
-  PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::CAL; };
+  PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::CAL; };
 
   // Is the underlying table complex?
   inline Bool parsAreComplex() { return parsAreComplex_; };
@@ -114,7 +114,7 @@ private:
 			  Vector<Int>& chunks, 
 			  Vector<Int>& relids,
 			  Bool flag,
-			  PlotMSIndexer* indexer);
+			  PlotMSIndexer* indexer, int index);
   
 
   // A container for channel averaging bounds

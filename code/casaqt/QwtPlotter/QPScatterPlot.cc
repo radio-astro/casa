@@ -31,6 +31,7 @@
 #include <casaqt/QwtPlotter/QPFactory.h>
 
 #include <QPainter>
+#include <QDebug>
 
 namespace casa {
 
@@ -118,7 +119,9 @@ bool QPScatterPlot::isValid() const {
 
 
 bool QPScatterPlot::shouldDraw() const {
-    return isValid() && m_data->size() > 0; }
+    bool shouldDraw = isValid() && m_data->size() > 0;
+    return shouldDraw;
+}
 
 QwtDoubleRect QPScatterPlot::boundingRect() const {
     bool ret;
@@ -150,7 +153,13 @@ QwtDoubleRect QPScatterPlot::boundingRect() const {
 }
 
 QWidget* QPScatterPlot::legendItem() const {
-    QwtLegendItem* i= new QwtLegendItem(m_symbol, m_line.asQPen(), qwtTitle());
+	QPen legendPen = m_line.asQPen();
+	if ( !linesShown() ){
+		QBrush symbolBrush = m_symbol.drawBrush();
+		QColor brushColor = symbolBrush.color();
+		legendPen = QPen(brushColor );
+	}
+    QwtLegendItem* i= new QwtLegendItem(m_symbol, legendPen, qwtTitle());
     i->setIdentifierMode(QwtLegendItem::ShowLine | QwtLegendItem::ShowSymbol |
                          QwtLegendItem::ShowText);
     return i;
@@ -175,7 +184,9 @@ void QPScatterPlot::setLine(const PlotLine& line) {
 }
 
 
-PlotPointDataPtr QPScatterPlot::pointData() const { return m_data; }
+PlotPointDataPtr QPScatterPlot::pointData() const {
+	return m_data;
+}
 
 bool QPScatterPlot::symbolsShown() const {
     return m_symbol.symbol() != PlotSymbol::NOSYMBOL; }
@@ -301,7 +312,9 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         return;
     }
         
-    if(drawIndex + drawCount > n) drawCount = n - drawIndex;
+    if(drawIndex + drawCount > n){
+    	drawCount = n - drawIndex;
+    }
     n = drawIndex + drawCount;
 
     p->save();

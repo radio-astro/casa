@@ -39,75 +39,82 @@ namespace casa {
 
 ActionCache::ActionCache( Client* client )
 : PlotMSAction( client ){
-	plot = NULL;
 }
 
-ActionCache::ActionCache( Client* client, PlotMSPlot* cachePlot,
+ActionCache::ActionCache( Client* client, vector<PlotMSPlot*> cachePlots,
 		PMSPTMethod postThreadMethod )
-:PlotMSAction( client, postThreadMethod, cachePlot ){
-	plot = cachePlot;
+:PlotMSAction( client, postThreadMethod, cachePlots ){
+	int plotCount = cachePlots.size();
+	for ( int i = 0; i < plotCount; i++ ){
+		plots.push_back( cachePlots[i] );
+	}
 }
 
 bool ActionCache::doActionSpecific( PlotMSApp* plotms ){
 	bool ok = true;
-	PlotMSPlotParameters& params = plot->parameters();
-	PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
-	PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
-	if(paramsData == NULL || paramsData->filename().empty()) {
-		itsDoActionResult_ = "MS has not been loaded into the cache!";
-		ok = false;
-	}
-	else {
-
-		if(paramsCache == NULL) {
-			itsDoActionResult_ = "Cache parameters not available!  (Shouldn't "
-					"happen.)";
+	int plotCount = plots.size();
+	for ( int k = 0; k < plotCount; k++ ){
+		PlotMSPlotParameters& params = plots[k]->parameters();
+		PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
+		PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
+		if(paramsData == NULL || paramsData->filename().empty()) {
+			itsDoActionResult_ = "MS has not been loaded into the cache!";
 			ok = false;
 		}
 		else {
-			PlotMSCacheBase& cache = plot->cache();
-			vector<PMS::Axis> a;
+			if(paramsCache == NULL) {
+				itsDoActionResult_ = "Cache parameters not available!  (Shouldn't "
+						"happen.)";
+				ok = false;
+			}
+			else {
+				PlotMSCacheBase& cache = plots[k]->cache();
+				vector<PMS::Axis> a;
 
-			// Remove any duplicates or axes.  If loading, also make sure that the
-			// given axes are not already loaded.  If releasing, make sure that the
-			// axes are loaded.
-			vector<pair<PMS::Axis, unsigned int> > loaded = cache.loadedAxes();
-			for(unsigned int i = 0; i < axes.size(); i++) {
-				bool valid = true;
-				for(unsigned int j = 0;  j < a.size(); j++){
-					if(a[j] == axes[i]){
-						valid = false;
-						break;
+				// Remove any duplicates or axes.  If loading, also make sure that the
+				// given axes are not already loaded.  If releasing, make sure that the
+				// axes are loaded.
+				vector<pair<PMS::Axis, unsigned int> > loaded = cache.loadedAxes();
+				int axisCount = axes[k].size();
+
+				for(int i = 0; i < axisCount; i++) {
+					bool valid = true;
+					//Should be no duplicates at this point.
+					/*for(unsigned int j = 0;  j < a.size(); j++){
+						if(a[j] == axes[k][i]){
+
+							valid = false;
+							break;
+						}
+					}
+					qDebug() << "k="<<k<<" i="<<i<<" axes="<<axes[k][i]<<" valid="<<valid;
+					*/
+					if(valid) {
+						valid = isAxesValid( loaded, k, i );
+					}
+					if(valid){
+						a.push_back(axes[k][i]);
 					}
 				}
 
-				if(valid) {
-					valid = isAxesValid( loaded, i );
+				// Make sure that currently used axes and/or meta-data isn't being
+				// released.
+				checkFeasibility( plotms, k,  a );
+				if(a.size() > 0) {
+					CacheThread* cacheThread = new CacheThread();
+					cacheThread->setAxes( a );
+					cacheThread->setSetupPlot( false );
+					setUpWorkParameters( cacheThread, k, a );
+					setUpClientCommunication( cacheThread, k );
+					ok = initiateWork( cacheThread );
 				}
-
-				if(valid){
-					a.push_back(axes[i]);
-				}
-			}
-
-			// Make sure that currently used axes and/or meta-data isn't being
-			// released.
-			checkFeasibility( plotms, a );
-			if(a.size() > 0) {
-				CacheThread* cacheThread = new CacheThread();
-				cacheThread->setAxes( a );
-				cacheThread->setSetupPlot( false );
-				setUpWorkParameters( cacheThread, a );
-				setUpClientCommunication( cacheThread );
-				ok = initiateWork( cacheThread );
 			}
 		}
-
 	}
 	return ok;
 }
 
-void ActionCache::checkFeasibility(PlotMSApp* /*plotms*/, vector<PMS::Axis>& /*a*/ ) const {
+void ActionCache::checkFeasibility(PlotMSApp* /*plotms*/, int /*plotIndex*/, vector<PMS::Axis>& /*a*/ ) const {
 }
 
 
@@ -117,10 +124,10 @@ bool ActionCache::loadParameters(){
 	if ( client != NULL ){
 		//Only load the plot from the client
 		//if one has not already been specified.
-		if ( plot == NULL ){
-			plot = client->getCurrentPlot();
+		if ( plots.size() == 0 ){
+			plots = client->getCurrentPlots();
 		}
-		if ( plot != NULL ){
+		if ( plots.size() > 0 ){
 			parametersLoaded = loadAxes();
 		}
 	}

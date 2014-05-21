@@ -273,14 +273,17 @@ void PlotMSAnnotator::plotsChanged(const PlotMSPlotManager& manager) {
     bool found;
     unsigned int n = manager.numPlots();
     for(unsigned int i = 0; i < n; i++) {
-        temp = manager.plot(i)->canvases();
-        for(unsigned int j = 0; j < temp.size(); j++) {
-            if(temp[j].null()) continue;
-            found = false;
-            for(unsigned int k = 0; !found && k < canv.size(); k++)
-                if(canv[k] == temp[j]) found = true;
-            if(!found) canv.push_back(temp[j]);
-        }
+    	const PlotMSPlot* plot = manager.plot(i);
+    	if ( plot != NULL ){
+        	temp = plot->canvases();
+        	for(unsigned int j = 0; j < temp.size(); j++) {
+        		if(temp[j].null()) continue;
+        		found = false;
+        		for(unsigned int k = 0; !found && k < canv.size(); k++)
+        			if(canv[k] == temp[j]) found = true;
+        		if(!found) canv.push_back(temp[j]);
+        	}
+		}
     }
     
     // Check that stored canvases are in the list.

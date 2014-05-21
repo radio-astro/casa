@@ -131,7 +131,30 @@ PlotCanvas::~PlotCanvas() {
     // Virtual methods in constructors and destructors do not resolve!
     //operationDraw()->finish();
 }
+bool PlotCanvas::hasSelectedRectangles(){
+	bool selectedRectangles = false;
+	if ( !m_standardTools.null() ){
+		int rectCount = m_standardTools->getSelectedRectCount();
+		if ( rectCount > 0 ){
+			selectedRectangles = true;
+		}
+	}
+	return selectedRectangles;
+}
 
+vector<PlotRegion> PlotCanvas::getSelectedRects(){
+	vector<PlotRegion> regions;
+	if ( !m_standardTools.null()){
+		regions = m_standardTools->getSelectedRects();
+	}
+	return regions;
+}
+
+void PlotCanvas::clearSelectedRects(){
+	if ( !m_standardTools.null()){
+		m_standardTools->clearSelectedRects();
+	}
+}
 
 bool PlotCanvas::hasThreadedDrawing() const {
     PlotFactory* f = implementationFactory();

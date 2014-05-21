@@ -31,6 +31,9 @@
 #include <plotms/Client/ClientFactory.h>
 #include <plotms/Actions/ActionFactory.h>
 #include <plotms/Actions/ActionCacheLoad.h>
+#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/PlotMS/PlotMSParameters.h>
+#include <plotms/PlotMS/PlotMSExportParam.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 #include <QDebug>
@@ -58,13 +61,15 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMSApp::PlotMSApp(bool connectToDBus, bool userGui) : itsDBus_(NULL) {
+PlotMSApp::PlotMSApp(bool connectToDBus, bool userGui) :
+		itsExportFormat( PlotExportFormat::JPG, ""), itsDBus_(NULL){
     initialize(connectToDBus, userGui);
 }
 
 PlotMSApp::PlotMSApp(const PlotMSParameters& params, bool connectToDBus,
 		bool userGui) :
-        itsPlotter_(NULL), itsParameters_(params), itsDBus_(NULL) {
+        itsPlotter_(NULL), itsParameters_(params),
+        itsExportFormat( PlotExportFormat::JPG, ""), itsDBus_(NULL) {
     initialize(connectToDBus, userGui);
 }
 
@@ -87,11 +92,33 @@ void PlotMSApp::showError(const String& message, const String& title,
 void PlotMSApp::showWarning(const String& message, const String& title) {
     itsPlotter_->showError(message, title, true); }
 void PlotMSApp::showMessage(const String& message, const String& title) {
-    itsPlotter_->showMessage(message, title); }
+    itsPlotter_->showMessage(message, title);
+}
 
-PlotMSParameters& PlotMSApp::getParameters() { return itsParameters_; }
+PlotMSParameters& PlotMSApp::getParameters() {
+	return itsParameters_;
+}
+
 void PlotMSApp::setParameters(const PlotMSParameters& params) {
-    itsParameters_ = params; }
+    itsParameters_ = params;
+    parametersHaveChanged(itsParameters_,
+                PlotMSWatchedParameters::ALL_UPDATE_FLAGS());
+}
+
+PlotMSExportParam& PlotMSApp::getExportParameters() {
+	return itsExportParameters_;
+}
+void PlotMSApp::setExportParameters(const PlotMSExportParam& params) {
+    itsExportParameters_ = params;
+}
+
+PlotExportFormat PlotMSApp::getExportFormat(){
+	return itsExportFormat;
+}
+
+void PlotMSApp::setExportFormat( const PlotExportFormat format ){
+	itsExportFormat = format;
+}
 
 void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
             int updateFlag) {
@@ -102,19 +129,16 @@ void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
         itsLogger_->setFilterEventFlags(itsParameters_.logEvents());
         itsLogger_->setFilterMinPriority(itsParameters_.logPriority());
         
-        pair<int, int> cis = itsParameters_.cachedImageSize();
-        /*if(itsPlotter_ != NULL && !itsPlotter_->getPlotter().null() &&
-           !itsPlotter_->getPlotter()->canvasLayout().null()) {
-            vector<PlotCanvasPtr> canv = itsPlotter_->getPlotter()
-                                     ->canvasLayout()->allCanvases();
-            for(unsigned int i = 0; i < canv.size(); i++)
-                if(!canv[i].null())
-                    canv[i]->setCachedAxesStackImageSize(cis.first,cis.second);
-        }*/
-
-
+        int rowCount = itsParameters_.getRowCount();
+        int colCount = itsParameters_.getColCount();
+        bool gridChanged = itsPlotManager_.pageGridChanged( rowCount, colCount, false );
         if ( itsPlotter_ != NULL ){
+        	pair<int, int> cis = itsParameters_.cachedImageSize();
         	itsPlotter_->setCanvasCachedAxesStackImageSize( cis.first, cis.second );
+        	if ( gridChanged ){
+        		itsPlotter_->gridSizeChanged( rowCount, colCount );
+        		itsPlotter_->plot();
+        	}
         }
     }
 }
@@ -140,17 +164,14 @@ PlotSymbolPtr PlotMSApp::createSymbol (const String& descriptor,
 PlotLoggerPtr PlotMSApp::getLogger() { return itsLogger_; }
 PlotMSPlotManager& PlotMSApp::getPlotManager() { return itsPlotManager_; }
 
-/*PlotMSPlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
-    return itsPlotManager_.addSinglePlot(p); }
-*/
-/*PlotMSPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
-    return itsPlotManager_.addMultiPlot(p); }
-*/
-/*PlotMSPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {
-    return itsPlotManager_.addIterPlot(p); }
-*/
+
 PlotMSOverPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
-    return itsPlotManager_.addOverPlot(p); }
+    return itsPlotManager_.addOverPlot(p);
+}
+
+void PlotMSApp::clearPlots(){
+	return itsPlotManager_.clearPlotsAndCanvases( false );
+}
 
 bool PlotMSApp::isDrawing() const {
 	return itsPlotter_->isDrawing();
@@ -165,8 +186,8 @@ bool PlotMSApp::isClosed() const {
                itsPlotter_->isClosed();
 }
 
-bool PlotMSApp::save(const PlotExportFormat& format, const bool interactive) {
-	return itsPlotter_->exportPlot(format, interactive, false);
+bool PlotMSApp::save(const PlotExportFormat& format) {
+	return itsPlotter_->exportPlot(format, false);
 }
 
 PlotFactoryPtr PlotMSApp::getPlotFactory(){
@@ -214,7 +235,11 @@ PlotterPtr PlotMSApp::getPlotter(){
 
 bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 		void (*f)(void*, bool), bool setupPlot){
-	 ActionCacheLoad loadCacheAction( itsPlotter_, plot, f);
+	vector<PlotMSPlot*> updatePlots;
+	if ( plot != NULL ){
+		updatePlots.push_back( plot );
+	}
+	 ActionCacheLoad loadCacheAction( itsPlotter_, updatePlots, f);
 	 bool threading = itsPlotter_->isInteractive();
 
 	 loadCacheAction.setUseThreading( threading );
@@ -227,6 +252,26 @@ void PlotMSApp::setCommonAxes(bool commonX, bool commonY ){
 	itsPlotter_->setCommonAxes( commonX, commonY );
 }
 
+bool PlotMSApp::isCommonAxisX() const {
+	return itsPlotter_->isCommonAxisX();
+}
+
+bool PlotMSApp::isCommonAxisY() const {
+	return itsPlotter_->isCommonAxisY();
+}
+
+void PlotMSApp::setAxisLocation( PlotAxis locationX, PlotAxis locationY ){
+	itsPlotter_->setAxisLocation( locationX, locationY );
+}
+
+PlotAxis PlotMSApp::getAxisLocationX() const {
+	return itsPlotter_->getAxisLocationX();
+}
+
+PlotAxis PlotMSApp::getAxisLocationY() const {
+	return itsPlotter_->getAxisLocationY();
+}
+
 bool PlotMSApp::isOperationCompleted() const {
 	return operationCompleted;
 }
@@ -234,23 +279,29 @@ bool PlotMSApp::isOperationCompleted() const {
 void PlotMSApp::setOperationCompleted( bool completed ){
 	operationCompleted = completed;
 }
+
+
+vector<String> PlotMSApp::getFiles() const {
+	vector<String> files = itsPlotManager_.getFiles();
+	return files;
+}
+
 // Private Methods //
 
-void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
+void PlotMSApp::initialize(bool connectToDBus, bool userGui) {
 
 	its_want_avoid_popups=false;
 	operationCompleted = true;
 	
     itsParameters_.addWatcher(this);
+
     ClientFactory::ClientType clientType = ClientFactory::GUI;
     if ( !userGui ){
     	clientType = ClientFactory::SCRIPT;
     }
 
     itsPlotter_ = ClientFactory::makeClient( clientType, this );
-    //itsPlotter_->showIterationButtons(true);
     itsLogger_ = itsPlotter_->getLogger();
-    
     itsPlotManager_.setParent(this);
     
     // Update internal state to reflect parameters.

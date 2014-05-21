@@ -28,11 +28,9 @@
 #define PLOTMSPLOTTAB_QO_H_
 
 #include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
-
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
-#include <plotms/Plots/PlotInformationManager.h>
 
 #include <casa/namespace.h>
 
@@ -80,6 +78,8 @@ public:
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
             int updateFlag)   {  (void)params,(void)updateFlag; }
     
+
+
 signals:
     // This signal should be emitted whenever the value of the widget changes
     // because of user interaction.
@@ -98,16 +98,14 @@ protected:
 // Subclass of PlotMSTab that manages PlotMSPlots in the GUI.  Watches the
 // current PlotMSPlot's parameters for changes to update the GUI as needed and
 // watches the PlotMSPlotManager for changes to the plots.
-class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
-                      public PlotMSPlotManagerWatcher,
-                      public PlotInformationManager {
+class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab /*,
+                      public PlotMSPlotManagerWatcher*/{
     Q_OBJECT
     
     //# Friend class declarations.
     friend class PlotMSOverPlot;
     friend class PlotMSPlot;
     friend class PlotMSPlotter;
-    friend class PlotMSIterPlot;
     
 public:
     // Constructor which takes the parent plotter.
@@ -118,7 +116,7 @@ public:
     
     
     // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Plots"; }
+    QString tabName() const { return "Plot"; }
     
     // Overrides PlotMSTab::toolButtons().  Should be called AFTER any tabs
     // are added using addTab().
@@ -131,9 +129,14 @@ public:
             int updateFlag);
     
     // Implements PlotMSPlotManagerWatcher::plotsChanged().
-    void plotsChanged(const PlotMSPlotManager& manager);
+    void plotsChanged(const PlotMSPlotManager& manager, int index=-1, bool show = true);
     
-    
+    //Return the data to support overplots.
+    PlotMSDataTab* getData();
+    String getFileName() const;
+
+    String getAveragingSummary() const;
+
     // Returns the currently selected plot.
     PlotMSPlot* currentPlot() const;
     
@@ -141,28 +144,46 @@ public:
     // necessarily set on the underlying plot parameters).
     PlotMSPlotParameters currentlySetParameters() const;
     
-    // Returns the PlotExportFormat currently set by the user on the GUI.
-    PlotExportFormat currentlySetExportFormat() const;
     
     // Returns the axes that the user has selected to load into the cache.
     vector<PMS::Axis> selectedLoadAxes() const {
-        return selectedLoadOrReleaseAxes(true); }
+        return selectedLoadOrReleaseAxes(true);
+    }
     
     // Returns the axes that the user has selected to release from the cache.
     vector<PMS::Axis> selectedReleaseAxes() const {
-        return selectedLoadOrReleaseAxes(false); }
-    
-    // Returns the MS summary type the user has selected.
-    // <group>
-    bool msSummaryVerbose() const;
-    PMS::SummaryType msSummaryType() const;
-    // </group>
-    
+        return selectedLoadOrReleaseAxes(false);
+    }
+
+    // Returns true if the location of this plot is still valid after the grid
+    // size has changed; false otherwise.
+    bool setGridSize( int rowCount, int colCount );
+
+    //Return the location on the grid for this plot.
+    void getLocation( Int& rowIndex, Int& colIndex );
+
+    // Remove this plot.
+    void removePlot();
+
+    //Returns whether this plot has a valid location on the page where
+    //it can be displayed.
+    bool isPlottable() const;
+
+    //This was put in to support overplotting.  When two plots are sharing the
+    //same canvas, we don't want to trigger a redraw until all the plots sharing
+    //the same canvas are done updating their data in background threads.
+    void completePlotting( bool success );
+
+    //Remove old data from the plot.
+    void clearData();
+
+signals:
+	void plottableChanged();
+
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
-    void plot();
-	void observeModKeys();
+    bool plot( bool forceReload);
     
     
 protected:
@@ -183,6 +204,7 @@ protected:
     // <group>
     PlotMSAxesTab* addAxesSubtab();
     PlotMSAxesTab* insertAxesSubtab(int index);
+
     void insertAxes(int index);
     PlotMSCacheTab* addCacheSubtab();
     PlotMSCacheTab* insertCacheSubtab(int index);
@@ -199,9 +221,7 @@ protected:
     PlotMSIterateTab* addIterateSubtab();
     PlotMSIterateTab* insertIterateSubtab(int index);
     void insertIterate(int index);
-    PlotMSExportTab* addExportSubtab();
-    PlotMSExportTab* insertExportSubtab(int index);
-    void insertExport(int index);
+
     PlotMSTransformationsTab* addTransformationsSubtab();
     PlotMSTransformationsTab* insertTransformationsSubtab(int index);
     void insertTransformations(int index);
@@ -218,9 +238,15 @@ protected:
     }
     
 private:    
+
+    PlotMSDataTab* findOrCreateDataTab();
+    PlotMSIterateTab* findIterateTab() const;
+    PlotMSDisplayTab* findDisplayTab();
+
     // PlotMSPlotSubtab objects in tab widget.
     QList<PlotMSPlotSubtab*> itsSubtabs_;
     
+
     // Reference to plot manager.
     PlotMSPlotManager& itsPlotManager_;
     
@@ -233,33 +259,30 @@ private:
     // Whether or not to check for changed parameters and update the GUI
     // accordingly.
     bool itsUpdateFlag_;
-    
-    // Bitflags report if shift, etc were down during click of Plot button
-    Qt::KeyboardModifiers itsModKeys;  
-    
-    // Flag set if user uses shift+plot or otherwise requests reload&replot
-    bool its_force_reload;
+    bool closing;
+    int plotIndex;
+
     int forceReloadCounter_;
     
     // Sets up the GUI to display the parameters for the given plot.
-    void setupForPlot(PlotMSPlot* plot);
+    void setupForPlot();
     
     // Returns the axes the user has selected to load or release, depending on
     // the load flag. 
     vector<PMS::Axis> selectedLoadOrReleaseAxes(bool load) const;
     
 private slots:
-    // Slot for when the user changes the "go" chooser on the top.
-    void goChanged(int index);
-
-    // Slot for when the user clicks "go" on the top of the tab.
-    void goClicked();
 
     // Slot for when the user changes the value for any parameters.  Updates
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
 
-    
+    //A y-axis has changed its internal data.
+    void changeAxisIdentifier( int index, QString id );
+
+    //y-axis data has been removed.
+    void removeAxisIdentifier( int index );
+
 };
 
 }

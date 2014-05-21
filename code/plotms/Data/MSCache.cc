@@ -33,6 +33,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Sort.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -50,7 +51,10 @@ namespace casa {
 
 MSCache::MSCache(PlotMSApp* parent):
 		  PlotMSCacheBase(parent)
-{}
+{
+	ephemerisAvailable = false;
+
+	}
 
 MSCache::~MSCache() {}
 
@@ -75,6 +79,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 			for (uInt i=0;i<loadData.size();++i) {
 				switch (loadData[i]) {
 				case PMS::CORRECTED:
+				case PMS::CORRECTED_DIVIDE_MODEL:
 				case PMS::CORRMODEL: {
 					//Exception was removed - see CAS-5214
 					loadData[i] = PMS::DATA;
@@ -108,11 +113,12 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	setUpVisIter(filename_,selection_,True,True,True);
 	ROVisIterator& viter(*rvi_p);
 
-	if (averaging_.channel())
+	if (averaging_.channel()){
 		viter.setChanAveBounds(averaging_.channelValue(),chanAveBounds_p);
-	else
+	}
+	else {
 		viter.setChanAveBounds(-1.0,chanAveBounds_p);
-
+	}
 	// Remember how many antennas there are
 	//   (should remove this)
 	nAnt_ = viter.numberAnt();
@@ -172,9 +178,9 @@ void MSCache::setUpVisIter(const String& msname,
 	Block<Int> columns(nsortcol);
 	Int i(0);
 	Double iterInterval(0.0);
-	if (averaging_.time())
+	if (averaging_.time()){
 		iterInterval= averaging_.timeValue();
-
+	}
 	columns[i++]=MS::ARRAY_ID;
 	if (!combscan) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
 	if (!combfld) columns[i++]=MS::FIELD_ID;      // force field boundaries
@@ -216,7 +222,6 @@ void MSCache::setUpVisIter(const String& msname,
 	// Apply chan/corr selction
 	if (chanselect) rvi_p->selectChannel(chansel);
 	if (corrselect) rvi_p->selectCorrelation(corrsel);
-
 }
 
 void MSCache::countChunks(ROVisibilityIterator& vi,
@@ -365,7 +370,6 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 			// Keep track of the maximum # of rows that might get averaged
 			maxAveNRows=max(maxAveNRows,vb.nRow());
 
-
 			// Increment chunk-per-sol count for current solution
 			nIterPerAve(ave)++;
 
@@ -407,7 +411,14 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 	try {
 		String s;
-		s=vm_.evalVolume(pendingLoadAxes,netAxesMask(currentX_,currentY_));
+		Vector<Bool> mask(4,False);
+		int dataCount = getDataCount();
+		for ( int i = 0; i < dataCount; i++ ){
+			Vector<Bool> subMask = netAxesMask( currentX_[i], currentY_[i]);
+			mask = mask || subMask;
+		}
+
+		s=vm_.evalVolume(pendingLoadAxes, mask);
 		logLoad(s);
 	} catch(AipsError& log) {
 		// catch detected volume excess, clear the existing cache, and rethrow
@@ -556,7 +567,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	vi.originChunks();
 	vi.origin();
 
-
 	Double time0=86400.0*floor(vb.time()(0)/86400.0);
 	for (Int chunk=0;chunk<nChunk_;++chunk) {
 
@@ -630,7 +640,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 		}
 
 		if (verby) logLoad(ss.str());
-
 
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
@@ -732,12 +741,18 @@ void MSCache::forceVBread(VisBuffer& vb,
 				vb.correctedVisCube();
 				break;
 			}
+			case PMS::CORRECTED_DIVIDE_MODEL:
 			case PMS::CORRMODEL: {
 				vb.correctedVisCube();
 				vb.modelVisCube();
 				break;
 			}
 			case PMS::DATAMODEL: {
+				vb.visCube();
+				vb.modelVisCube();
+				break;
+			}
+			case PMS::DATA_DIVIDE_MODEL: {
 				vb.visCube();
 				vb.modelVisCube();
 				break;
@@ -788,6 +803,7 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 				vba.setDoCVC();
 				break;
 			}
+			case PMS::CORRECTED_DIVIDE_MODEL:
 			case PMS::CORRMODEL: {
 				// cout << "Arranging to load CVC & MVC." << endl;
 				vba.setDoCVC();
@@ -795,6 +811,10 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 				break;
 			}
 			case PMS::DATAMODEL: {
+				vba.setDoVC();
+				vba.setDoMVC();
+			}
+			case PMS::DATA_DIVIDE_MODEL: {
 				vba.setDoVC();
 				vba.setDoMVC();
 			}
@@ -1030,6 +1050,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		}
 		case PMS::CORRECTED: {
+
 			*amp_[vbnum] = amplitude(vb.correctedVisCube());
 			break;
 		}
@@ -1039,6 +1060,14 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATAMODEL: {
 			*amp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+			break;
+		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*amp_[vbnum] = amplitude( vb.visCube() / vb.modelVisCube());
+			break;
+		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*amp_[vbnum] = amplitude( vb.correctedVisCube() / vb.modelVisCube());
 			break;
 		}
 		}
@@ -1058,6 +1087,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*pha_[vbnum] = phase(vb.correctedVisCube()) * 180.0 / C::pi;
 			break;
 		}
+
 		case PMS::CORRMODEL: {
 			*pha_[vbnum] = phase(vb.correctedVisCube() - vb.modelVisCube()) *
 					180.0 / C::pi;
@@ -1065,6 +1095,14 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATAMODEL: {
 			*pha_[vbnum] = phase(vb.visCube() - vb.modelVisCube()) * 180 / C::pi;
+			break;
+		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*pha_[vbnum] = phase(vb.visCube() / vb.modelVisCube()) * 180 / C::pi;
+			break;
+		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*pha_[vbnum] = phase(vb.correctedVisCube() / vb.modelVisCube()) * 180 / C::pi;
 			break;
 		}
 		}
@@ -1093,6 +1131,14 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*real_[vbnum] = real(vb.visCube()) - real(vb.modelVisCube());
 			break;
 		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*real_[vbnum] = real(vb.visCube()) / real(vb.modelVisCube());
+			break;
+		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*real_[vbnum] = real(vb.correctedVisCube()) / real(vb.modelVisCube());
+			break;
+		}
 		}
 		break;
 	}
@@ -1116,6 +1162,14 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::DATAMODEL: {
 			*imag_[vbnum] = imag(vb.visCube()) - imag(vb.modelVisCube());
+			break;
+		}
+		case PMS::DATA_DIVIDE_MODEL: {
+			*imag_[vbnum] = imag(vb.visCube()) / imag(vb.modelVisCube());
+			break;
+		}
+		case PMS::CORRECTED_DIVIDE_MODEL: {
+			*imag_[vbnum] = imag(vb.correctedVisCube()) / imag(vb.modelVisCube());
 			break;
 		}
 		}
@@ -1149,6 +1203,12 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		case PMS::DATAMODEL:
 			*wtxamp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+			break;
+		case PMS::DATA_DIVIDE_MODEL:
+			*wtxamp_[vbnum] = amplitude(vb.visCube() / vb.modelVisCube());
+			break;
+		case PMS::CORRECTED_DIVIDE_MODEL:
+			*wtxamp_[vbnum] = amplitude(vb.correctedVisCube() / vb.modelVisCube());
 			break;
 		}
 		uInt nchannels = vb.nChannel();
@@ -1216,22 +1276,22 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 }
 
 bool MSCache::isEphemeris(){
-	setUpVisIter(filename_,selection_,True,True,True);
-	ROVisIterator& viter(*rvi_p);
-	VisBuffer vb( viter );
-	Int fieldId = vb.fieldId();
-	const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
-	String ephemerisExists = fieldColumns.ephemPath( fieldId );
-	bool ephemerisAvailable = true;
-	if ( ephemerisExists.empty()){
-		ephemerisAvailable = false;
-	}
+	if ( !ephemerisInitialized ){
+		Table::TableOption tabopt(Table::Old);
 
-	vb.detachFromVisIter();
-	//Release the lock.
-	if (rvi_p != NULL ){
-		delete rvi_p;
-		rvi_p=NULL;
+		MeasurementSet ms(filename_,TableLock(TableLock::AutoLocking), tabopt);
+		ROMSColumns msc(ms);
+		const ROMSFieldColumns& fieldColumns = msc.field();
+
+		const ROMSMainColumns& mainColumns(ms);
+		const ROScalarColumn<int> scalerColumn = mainColumns.fieldId();
+
+		String ephemerisExists = fieldColumns.ephemPath( scalerColumn.asInt( MS::FIELD_ID) );
+		ephemerisAvailable = true;
+		if ( ephemerisExists.empty()){
+			ephemerisAvailable = false;
+		}
+		ephemerisInitialized = true;
 	}
 	return ephemerisAvailable;
 }
@@ -1239,7 +1299,7 @@ bool MSCache::isEphemeris(){
 
 void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 		Vector<Int>& flchunks, Vector<Int>& flrelids,
-		Bool flag, PlotMSIndexer* indexer) {
+		Bool flag, PlotMSIndexer* indexer, int dataIndex) {
 
 	// Sort the flags by chunk:
 	Sort sorter;
@@ -1252,8 +1312,8 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 	stringstream ss;
 
 	// Make the VisIterator writable, with selection revised as appropriate
-	Bool selectchan(netAxesMask_(1) && !flagging.channel());
-	Bool selectcorr(netAxesMask_(0) && !flagging.corrAll());
+	Bool selectchan(netAxesMask_[dataIndex](1) && !flagging.channel());
+	Bool selectcorr(netAxesMask_[dataIndex](0) && !flagging.corrAll());
 
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
@@ -1315,7 +1375,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 						Slice corr,chan,bsln;
 
 						// Set flag range on correlation axis:
-						if (netAxesMask_(0) && !flagging.corrAll()) {
+						if (netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
 							// A specific single correlation
 							Int icorr=indexer->getIndex1000(currChunk,irel);
 							corr=Slice(icorr,1,1);
@@ -1324,7 +1384,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 							corr=Slice(0,ncorr,1);
 
 						// Set Flag range on channel axis:
-						if (netAxesMask_(1) && !flagging.channel()) {
+						if (netAxesMask_[dataIndex](1) && !flagging.channel()) {
 							Int ichan=indexer->getIndex0100(currChunk,irel);
 							if (averaging_.channel() && averaging_.channelValue()>0) {
 								Int start=chanAveBounds_p(vb.spectralWindow())(ichan,2);
@@ -1342,7 +1402,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 						// Set Flags on the baseline axis:
 						Int thisA1=Int(getAnt1(currChunk,indexer->getIndex0010(currChunk,irel)));
 						Int thisA2=Int(getAnt2(currChunk,indexer->getIndex0010(currChunk,irel)));
-						if (netAxesMask_(2) &&
+						if (netAxesMask_[dataIndex](2) &&
 								!flagging.antennaBaselinesBased() &&
 								thisA1>-1 ) {
 							// i.e., if baseline is an explicit data axis,

@@ -148,9 +148,9 @@ public:
     // **If these are changed, also update: xmlcasa/tasks/plotms.xml.**
     // <group>
     PMS_ENUM1(DataColumn, dataColumns, dataColumnStrings, dataColumn,
-              DATA, CORRECTED, MODEL, CORRMODEL, DATAMODEL)
+              DATA, CORRECTED, MODEL, CORRMODEL, DATAMODEL, DATA_DIVIDE_MODEL, CORRECTED_DIVIDE_MODEL)
     PMS_ENUM2(DataColumn, dataColumns, dataColumnStrings, dataColumn,
-              "data", "corrected", "model", "corrected-model", "data-model")
+              "data", "corrected", "model", "corrected-model", "data-model", "data/model", "corrected/model")
     // </group>
               
     // Returns whether or not the given axis needs the second data parameter to
@@ -175,9 +175,13 @@ public:
     // Enum for different axes units.  Currently only used in labels.
     // <group>
     PMS_ENUM1(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
-              UNONE, UDATETIME)
+              UNONE, UDATETIME, GHERTZ, METERS_PER_SECOND, KILOMETERS_PER_SECOND,
+              KILOMETERS, METERS, HOURS, WAVELENGTHS, DEGREES, NANOSECONDS, KELVIN,
+              NEPERS);
     PMS_ENUM2(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
-              "", "date-time")
+              "", "s", "GHz", "m/s", "km/s", "km", "m", "hours",
+              "<html>&lambda;</html>", "degrees", "ns", "K", "neper");
+
     // </group>
               
     // Returns the unit for the given axis.
@@ -238,7 +242,14 @@ public:
               "SysCal", "Weather")
     // </group>
               
+
+   // Enum for export range.
+   // <group>
+   PMS_ENUM1(ExportRange, exportRanges, exportRangeStrings, exportRange, PAGE_CURRENT, PAGE_ALL)
+   PMS_ENUM2(ExportRange, exportRanges, exportRangeStrings, exportRange, "Current Page", "All Pages")
+   // </group>
               
+
     // Colorizing Values //
               
     // Returns the list of unique colors used to colorize plots.
@@ -255,6 +266,8 @@ public:
     static const bool DEFAULT_CLEAR_SELECTIONS;
     static const int DEFAULT_CACHED_IMAGE_WIDTH;
     static const int DEFAULT_CACHED_IMAGE_HEIGHT;
+    static const int DEFAULT_GRID_ROWS;
+    static const int DEFAULT_GRID_COLS;
     // </group>
     
     // Default values for PMS_PP_Cache.
@@ -278,6 +291,9 @@ public:
     static const String DEFAULT_TITLE_FORMAT;
     // </group>
     
+    // Default values for export range;
+    static const ExportRange DEFAULT_EXPORT_RANGE;
+
     // Default values for PMS_PP_Display.
     // <group>
     static PlotSymbolPtr DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory);

@@ -39,7 +39,9 @@
 namespace casa {
 
 //# Forward Declarations
+class QPExportCanvas;
 class QPCanvas;
+class QPAxis;
 class PlotFactory;
 
 // Implementation of Plotter for Qwt plotter.  A QWidget that can be used as a
@@ -80,10 +82,14 @@ public:
     ~QPPlotter();
     
     
+
     // Plotter Methods //
-    
+   
     // Implements Plotter::showGUI().
     void showGUI(bool showGUI = true);
+    
+    //Kludge for updating the plot when we are in Non-GUI mode.
+    void updateScriptGui();
     
     // Implements Plotter::size().
     pair<int, int> size() const;
@@ -121,6 +127,7 @@ public:
     // Implements Plotter::close().
     void close();
     
+    vector<QPExportCanvas*> getGridComponents();
     
     // Implements Plotter::canvasLayout().
     PlotCanvasLayoutPtr canvasLayout();
@@ -214,8 +221,11 @@ public:
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
     
-    virtual bool exportPlot(const PlotExportFormat& format);
+    virtual bool exportPlot(const PlotExportFormat& format );
 
+	//Return the number of rows and columns in the current grid.
+    int getRowCount();
+    int getColCount();
 protected:
     // For catching resize events.
     void resizeEvent(QResizeEvent* event);
@@ -250,6 +260,7 @@ private:
     String m_relativeDateFormat;
     // </group>
     
+    QList<QPAxis*> externalAxes;
     
     // Sets up the canvas QFrame for the current layout.
     void setupCanvasFrame();
@@ -257,7 +268,9 @@ private:
     // Initializes GUI (to be called from constructors).
     void initialize();
     
-    
+    void clearExternalAxes();
+    void emptyLayout();
+
     // Static //
     
     // Used to initialize GLOBAL_COLORS.
@@ -266,6 +279,16 @@ private:
     static bool initColors();
     // </group>
     
+    //Returns true if the given axis is drawn by the Qwt plot; false if
+    //the drawing is external and custom.
+    // <group>
+    bool isLeftAxisInternal() const;
+    bool isBottomAxisInternal() const;
+    bool isRightAxisInternal() const;
+    // </group>
+
+    //Reset the size hints of the canvases this plotter holds based on its current size.
+    void resetCanvasMinSizeHints();
 private slots:
     // Default panel: hand tool changed.
     void handToolChanged(bool on);

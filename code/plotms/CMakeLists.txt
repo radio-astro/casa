@@ -28,18 +28,21 @@ qt4_wrap_cpp( outfiles_qoh
   Gui/PlotMSLoggerWidget.qo.h
   Gui/PlotMSPlotter.qo.h
   Gui/PlotMSSelectionWidget.qo.h
+  Gui/PlotMSSummaryDialog.qo.h
   Gui/PlotMSTransformationsWidget.qo.h
   Gui/PlotRangeWidget.qo.h
   GuiTabs/PlotMSAnnotatorTab.qo.h
   GuiTabs/PlotMSAxesTab.qo.h
   GuiTabs/PlotMSCacheTab.qo.h
   GuiTabs/PlotMSCanvasTab.qo.h
+  GuiTabs/PlotMSDataCollapsible.qo.h
+  GuiTabs/PlotMSDataSummaryTab.qo.h
+  GuiTabs/PlotMSDataSymbolWidget.qo.h
   GuiTabs/PlotMSDataTab.qo.h
   GuiTabs/PlotMSDisplayTab.qo.h
   GuiTabs/PlotMSIterateTab.qo.h
   GuiTabs/PlotMSExportTab.qo.h
   GuiTabs/PlotMSFlaggingTab.qo.h
-#  GuiTabs/PlotMSMultiAxesTab.qo.h
   GuiTabs/PlotMSOptionsTab.qo.h
   GuiTabs/PlotMSPlotTab.qo.h
   GuiTabs/PlotMSTab.qo.h
@@ -56,6 +59,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Gui/PlotMSAxisWidget.ui
   Gui/PlotMSFlaggingWidget.ui
   Gui/PlotMSPlotter.ui
+  Gui/PlotMSSummaryDialog.ui
   Gui/PlotMSTransformationsWidget.ui
   Gui/PlotRangeWidget.ui
   GuiTabs/PlotMSAnnotatorTab.ui
@@ -63,11 +67,13 @@ casa_qt4_wrap_ui( outfiles_ui
   GuiTabs/PlotMSCacheTab.ui
   GuiTabs/PlotMSCanvasTab.ui
   GuiTabs/PlotMSDataTab.ui
+  GuiTabs/PlotMSDataCollapsible.ui
+  GuiTabs/PlotMSDataSummaryTab.ui
+  GuiTabs/PlotMSDataSymbolWidget.ui
   GuiTabs/PlotMSDisplayTab.ui
   GuiTabs/PlotMSIterateTab.ui
   GuiTabs/PlotMSExportTab.ui
   GuiTabs/PlotMSFlaggingTab.ui
-#  GuiTabs/PlotMSMultiAxesTab.ui
   GuiTabs/PlotMSOptionsTab.ui
   GuiTabs/PlotMSPlotTab.ui
   GuiTabs/PlotMSToolsTab.ui
@@ -90,6 +96,7 @@ casa_add_library( plotms
   Actions/ActionClearPlotter.cc
   Actions/ActionClearRegions.cc
   Actions/ActionExport.cc
+  Actions/ActionExportDialog.cc
   Actions/ActionFactory.cc
   Actions/ActionHoldReleaseDrawing.cc
   Actions/ActionInformation.cc
@@ -111,6 +118,7 @@ casa_add_library( plotms
   Actions/ActionStackForward.cc
   Actions/ActionSubtractRegions.cc
   Actions/ActionSummary.cc
+  Actions/ActionSummaryDialog.cc
   Actions/ActionTool.cc
   Actions/ActionTracker.cc
   Actions/ActionTrackerDisplay.cc
@@ -141,12 +149,16 @@ casa_add_library( plotms
   Gui/PlotMSLoggerWidget.cc
   Gui/PlotMSPlotter.cc
   Gui/PlotMSSelectionWidget.cc
+  Gui/PlotMSSummaryDialog.cc
   Gui/PlotMSTransformationsWidget.cc
   Gui/PlotRangeWidget.cc
   GuiTabs/PlotMSAnnotatorTab.cc
   GuiTabs/PlotMSAxesTab.cc
   GuiTabs/PlotMSCacheTab.cc
   GuiTabs/PlotMSCanvasTab.cc
+  GuiTabs/PlotMSDataCollapsible.cc
+  GuiTabs/PlotMSDataSummaryTab.cc
+  GuiTabs/PlotMSDataSymbolWidget.cc
   GuiTabs/PlotMSDataTab.cc
   GuiTabs/PlotMSDisplayTab.cc
   GuiTabs/PlotMSIterateTab.cc
@@ -161,6 +173,7 @@ casa_add_library( plotms
   PlotMS/PlotMS.cc
   PlotMS/PlotMSConstants.cc
   PlotMS/PlotMSDBusApp.cc
+  PlotMS/PlotMSExportParam.cc
   PlotMS/PlotMSFlagging.cc
   PlotMS/PlotMSIterParam.cc
   PlotMS/PlotMSLabelFormat.cc
@@ -169,8 +182,8 @@ casa_add_library( plotms
   PlotMS/PlotMSSelection.cc
   PlotMS/PlotMSTransformations.cc
   PlotMS/PlotMSWatchedParameters.cc
-  Plots/PlotMSIterPlot.cc
   Plots/PlotMSPage.cc
+  Plots/PlotMSPages.cc
   Plots/PlotMSPlot.cc
   Plots/PlotMSPlotManager.cc
   Plots/PlotMSPlotParameterGroups.cc
@@ -202,6 +215,7 @@ INSTALL (FILES
         Gui/PlotMSLoggerWidget.qo.h
         Gui/PlotMSPlotter.qo.h
         Gui/PlotMSSelectionWidget.qo.h
+        Gui/PlotMSSummaryDialog.qo.h
         Gui/PlotMSTransformationsWidget.qo.h
         Gui/PlotRangeWidget.qo.h
 	DESTINATION include/casacode/plotms/Gui )
@@ -211,6 +225,9 @@ INSTALL (FILES
         GuiTabs/PlotMSAxesTab.qo.h
         GuiTabs/PlotMSCacheTab.qo.h
         GuiTabs/PlotMSCanvasTab.qo.h
+        GuiTabs/PlotMSDataCollapsible.qo.h
+        GuiTabs/PlotMSDataSummaryTab.qo.h
+        GuiTabs/PlotMSDataSymbolWidget.qo.h
         GuiTabs/PlotMSDataTab.qo.h
         GuiTabs/PlotMSDisplayTab.qo.h
         GuiTabs/PlotMSExportTab.qo.h
@@ -228,6 +245,7 @@ INSTALL (FILES
         PlotMS/PlotMSAveraging.h
         PlotMS/PlotMSConstants.h
         PlotMS/PlotMSDBusApp.h
+        PlotMS/PlotMSExportParam.h
         PlotMS/PlotMSFlagging.h
         PlotMS/PlotMSIterParam.h
         PlotMS/PlotMSLabelFormat.h
@@ -241,8 +259,8 @@ INSTALL (FILES
 
 INSTALL (FILES
         Plots/PlotMSOverPlot.h
-        Plots/PlotMSIterPlot.h
         Plots/PlotMSPage.h
+        Plots/PlotMSPages.h
         Plots/PlotMSPlot.h
         Plots/PlotMSPlotManager.h
         Plots/PlotMSPlotParameterGroups.h
@@ -256,3 +274,22 @@ casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )
 casa_add_executable( plotms tExportPlot test/tExportPlot.cc )
 casa_add_executable( plotms tDataSelection test/tDataSelection.cc )
 casa_add_executable( plotms tSymbol test/tSymbol.cc )
+casa_add_executable( plotms tLegend test/tLegend.cc )
+casa_add_executable( plotms tOverPlot test/tOverPlot.cc )
+casa_add_executable( plotms tOverPlot2Files test/tOverPlot2Files.cc )
+casa_add_executable( plotms tOverLeftRightPlot test/tOverLeftRightPlot.cc )
+casa_add_executable( plotms tOverIterationPlot test/tOverIterationPlot.cc )
+casa_add_executable( plotms tExportRange test/tExportRange.cc )
+casa_add_executable( plotms tExportRangeRightTop test/tExportRangeRightTop.cc )
+casa_add_executable( plotms tExportRangeRightBottom test/tExportRangeRightBottom.cc )
+casa_add_executable( plotms tExportRangeLeftTop test/tExportRangeLeftTop.cc )
+casa_add_executable( plotms tExportRangeLeftBottom test/tExportRangeLeftBottom.cc )
+casa_add_executable( plotms tExportRangeInternal test/tExportRangeInternal.cc )
+casa_add_executable( plotms tExportRangePipeline test/tExportRangePipeline.cc )
+casa_add_executable( plotms tTimeColorization test/tTimeColorization.cc )
+casa_add_executable( plotms tTimeColorizationAveraging test/tTimeColorizationAveraging.cc )
+casa_add_executable( plotms tTimeIteration test/tTimeIteration.cc )
+casa_add_executable( plotms tTimeAveragingIteration test/tTimeAveragingIteration.cc )
+casa_add_executable( plotms tGridPlacement test/tGridPlacement.cc )
+casa_add_executable( plotms tGridPlacementMultiplePlots test/tGridPlacementMultiplePlots.cc )
+casa_add_executable( plotms tGridPlacementMultipleRuns test/tGridPlacementMultipleRuns.cc )

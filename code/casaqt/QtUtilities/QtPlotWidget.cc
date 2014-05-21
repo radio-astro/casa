@@ -29,6 +29,7 @@
 #include <casaqt/QtUtilities/QtUtilities.h>
 
 #include <QColorDialog>
+#include <QDebug>
 
 namespace casa {
 
@@ -78,7 +79,10 @@ void PlotColorWidget::setColor(PlotColorPtr color) {
         if(alpha->isVisible()) alpha->setValue(color->alpha());
         
         blockSignals(false);
-        if(changed) emit this->changed();
+        if(changed){
+
+        	emit this->changed();
+        }
     }
 }
 
@@ -90,7 +94,12 @@ void PlotColorWidget::setColor(const String& color) {
 
 void PlotColorWidget::colorChoose() {
     QColor color = QColorDialog::getColor(QColor("#" + colorEdit->text()));
-    if(color.isValid()) colorEdit->setText(color.name().replace('#', ""));
+    if(color.isValid()){
+    	QString colorStr = color.name().replace( '#', "");
+    	//setColor( colorStr.toStdString());
+    	colorEdit->setText( colorStr );
+    	colorChanged();
+    }
 }
 
 void PlotColorWidget::colorChanged() {
@@ -105,12 +114,13 @@ void PlotColorWidget::colorChanged() {
 ////////////////////////////////
 
 PlotFillWidget::PlotFillWidget(PlotFactoryPtr factory, bool showAlpha,
-        QWidget* parent) : QtPlotWidget(factory, parent) {
+		String fillColor, QWidget* parent) :
+		QtPlotWidget(factory, parent) {
     setupUi(this);
     itsColorWidget_ = new PlotColorWidget(factory, showAlpha);
     QtUtilities::putInFrame(colorFrame, itsColorWidget_);
     
-    setFill(factory->areaFill("black"));
+    setFill(factory->areaFill(fillColor));
     
     connect(itsColorWidget_, SIGNAL(changed()), SLOT(fillChanged()));
     connect(fillChooser, SIGNAL(currentIndexChanged(int)), SLOT(fillChanged()));
@@ -159,6 +169,8 @@ void PlotFillWidget::fillChanged() {
     PlotAreaFillPtr currFill = getFill();
     if(*currFill != *itsFill_) emit differentFromSet();
 }
+
+
 
 
 ////////////////////////////////
@@ -252,21 +264,28 @@ PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
         bool showAlphaLine, bool showCharacter, QWidget* parent) :
         QtPlotWidget(factory, parent) {
     setupUi(this);
-    itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill);
+
+    //Line
     itsLineWidget_ = new PlotLineWidget(factory, false, showAlphaLine);
-    QtUtilities::putInFrame(fillFrame, itsFillWidget_);
     QtUtilities::putInFrame(outlineFrame, itsLineWidget_);
     outlineFrame->setEnabled(false);
     
     if(!showCustom) outlineCustomFrame->setVisible(false);
     
-    if(defaultSymbol.null())
+    //Symbol
+    if(defaultSymbol.null()){
         itsDefault_ = itsFactory_->symbol(PlotSymbol::AUTOSCALING);
-    else
+    }
+    else {
         itsDefault_ = itsFactory_->symbol(*defaultSymbol);
-    
+    }
     setSymbol(itsDefault_);
     
+    //Fill
+    String symbolColor = itsDefault_->getColor();
+    itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill, symbolColor );
+    QtUtilities::putInFrame(fillFrame, itsFillWidget_);
+
     if(!showCharacter && itsDefault_->symbol() != PlotSymbol::CHARACTER) {
         SymbolWidget::style->removeItem(4);
         charEdit->hide();
@@ -312,7 +331,10 @@ PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
         
         int i = SymbolWidget::size->value();
         sym->setSize(i, i);
-        sym->setAreaFill(itsFillWidget_->getFill());
+
+        PlotAreaFillPtr areaFill = itsFillWidget_->getFill();
+        sym->setAreaFill(areaFill);
+        sym->setColor( areaFill->color());
         
         if(outlineNone->isChecked())
             sym->setLine(itsFactory_->line("black", PlotLine::NOLINE, 1));
@@ -361,7 +383,7 @@ void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
     if(s == PlotSymbol::CHARACTER)
         charEdit->setText(QString(itsSymbol_->symbolUChar()));
 
-    itsFillWidget_->setFill(itsSymbol_->areaFill());
+    //itsFillWidget_->setFill(itsSymbol_->areaFill());
     PlotLinePtr line = itsSymbol_->line();
     if(line->style() == PlotLine::NOLINE) outlineNone->setChecked(true);
     else if(*line == *itsFactory_->line("black", PlotLine::SOLID, 1))
@@ -415,7 +437,6 @@ void PlotSymbolWidget::symbolChanged(bool check) {
     SymbolWidget::size->setEnabled(
         currSymbol->symbol() != PlotSymbol::PIXEL &&
         currSymbol->symbol() != PlotSymbol::AUTOSCALING);
-
     emit changed();
     if(*currSymbol != *itsSymbol_) emit differentFromSet();
 }

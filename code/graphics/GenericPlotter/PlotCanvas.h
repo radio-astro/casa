@@ -164,9 +164,10 @@ public:
     // Returns the canvas size in pixels (width x height).
     virtual pair<int, int> size() const = 0;
     virtual void setMinimumSize( int width, int height ) = 0;
+    virtual void setMinimumSizeHint( int width, int height ) = 0;
     virtual void show() = 0;
     virtual void hide() = 0;
-    
+    virtual bool isDrawing() const = 0;
     // Returns the text of the canvas title, or an empty String if none is
     // shown.  The title is shown above the plotting area.
     virtual String title() const = 0;
@@ -238,6 +239,7 @@ public:
     // Shows/hides the given axis.
     // DEFAULT IMPLEMENTATION.
     virtual void showAxis(PlotAxis axis, bool show = true);
+    virtual void setCommonAxes( bool commonX, bool commonY ) = 0;
     
     // Convenience method for showing/hiding two axes at once.
     // DEFAULT IMPLEMENTATION.
@@ -796,6 +798,10 @@ public:
     virtual PlotCoordinate convertCoordinate(const PlotCoordinate& coord,
            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const = 0;
     
+    bool hasSelectedRectangles();
+    vector<PlotRegion> getSelectedRects();
+    void clearSelectedRects();
+
     // Converts the given region into a region with the given system.
     // DEFAULT IMPLEMENTATION.
     virtual PlotRegion convertRegion(const PlotRegion& region,

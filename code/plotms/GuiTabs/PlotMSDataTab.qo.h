@@ -28,9 +28,7 @@
 #define PLOTMSDATATAB_QO_H_
 
 #include <plotms/GuiTabs/PlotMSDataTab.ui.h>
-
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
-
 #include <casa/namespace.h>
 
 namespace casa {
@@ -43,7 +41,7 @@ class QtFileWidget;
 
 // Subclass of PlotMSTab that handles picking MS filename, selection, and
 // averaging parameters.
-class PlotMSDataTab : public PlotMSPlotSubtab, Ui::MSDataTab {
+class PlotMSDataTab : public PlotMSPlotSubtab {
     Q_OBJECT
     
 public:    
@@ -51,12 +49,8 @@ public:
     PlotMSDataTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
     // Destructor.
-    ~PlotMSDataTab();
-    
-    
-    // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Data"; }
-    
+    virtual ~PlotMSDataTab();
+
     // Implements PlotMSPlotSubtab::getValue().
     void getValue(PlotMSPlotParameters& params) const;
     
@@ -66,22 +60,31 @@ public:
     // Implements PlotMSPlotSubtab::update().
     void update(const PlotMSPlot& plot);
     
-    
-    // Returns whether the summary "verbose" button is checked or not.
-    bool summaryVerbose() const;
-    
-    // Returns which summary type is currently selected.
-    PMS::SummaryType summaryType() const;
-    
+    QString tabName() const { return "Data"; }
+
+    //Returns the name of the file that will be plotted.
+    String getFileName() const;
+
+    //Returns any selection criteria for the data.
+    String getSelection() const;
+
+    //Returns the type of averaging for the data.
+    String getAveraging() const;
+
+signals:
+	void changed();
+
 private:
-    // Widget for MS filename.
-    QtFileWidget* itsFileWidget_;
     
     // Widget for MS selection.
     PlotMSSelectionWidget* itsSelectionWidget_;
     
     // Widget for MS averaging.
     PlotMSAveragingWidget* itsAveragingWidget_;
+
+    QtFileWidget* itsFileWidget_;
+
+    Ui::PlotMSDataTabClass ui;
 };
 
 }

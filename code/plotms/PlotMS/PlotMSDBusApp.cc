@@ -27,7 +27,6 @@
 #include <plotms/PlotMS/PlotMSDBusApp.h>
 #include <plotms/Actions/ActionFactory.h>
 #include <plotms/Actions/PlotMSAction.h>
-//#include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 
@@ -53,9 +52,15 @@ const String PlotMSDBusApp::APP_LOGFILTER_SWITCH = "--logfilter";
 const String PlotMSDBusApp::PARAM_AVERAGING = "averaging";
 const String PlotMSDBusApp::PARAM_AXIS_X = "xAxis";
 const String PlotMSDBusApp::PARAM_AXIS_Y = "yAxis";
+const String PlotMSDBusApp::PARAM_AXIS_Y_LOCATION = "yAxisLocation";
+const String PlotMSDBusApp::PARAM_GRIDROWS = "gridRows";
+const String PlotMSDBusApp::PARAM_GRIDCOLS = "gridCols";
+const String PlotMSDBusApp::PARAM_SHOWLEGEND = "showLegend";
+const String PlotMSDBusApp::PARAM_LEGENDPOSITION = "legendPosition";
 const String PlotMSDBusApp::PARAM_CLEARSELECTIONS = "clearSelections";
 const String PlotMSDBusApp::PARAM_DATACOLUMN_X = "xDataColumn";
 const String PlotMSDBusApp::PARAM_DATACOLUMN_Y = "yDataColumn";
+const String PlotMSDBusApp::PARAM_DATA_INDEX = "overplotDataIndex";
 const String PlotMSDBusApp::PARAM_FILENAME = "filename";
 const String PlotMSDBusApp::PARAM_FLAGGING = "flagging";
 const String PlotMSDBusApp::PARAM_HEIGHT = "height";
@@ -67,12 +72,10 @@ const String PlotMSDBusApp::PARAM_TRANSFORMATIONS = "transformations";
 const String PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY = "updateImmediately";
 const String PlotMSDBusApp::PARAM_WIDTH = "width";
 
-//const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "exportfilename";
 const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "plotfile";
 const String PlotMSDBusApp::PARAM_EXPORT_FORMAT = "expformat";
+const String PlotMSDBusApp::PARAM_EXPORT_RANGE = "exprange";
 const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "highres";
-//const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "exporthighres";
-const String PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE = "exportinteractive";
 const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 
 const String PlotMSDBusApp::PARAM_COLORIZE = "colorize";
@@ -116,6 +119,7 @@ const String PlotMSDBusApp::METHOD_SETLOGPARAMS = "setLogParams";
 
 const String PlotMSDBusApp::METHOD_GETPLOTMSPARAMS = "getPlotMSParams";
 const String PlotMSDBusApp::METHOD_SETPLOTMSPARAMS = "setPlotMSParams";
+const String PlotMSDBusApp::METHOD_SETEXPORTPARAMS = "setExportParams";
 const String PlotMSDBusApp::METHOD_SETCACHEDIMAGESIZETOSCREENRES =
     "setCachedImageSizeToScreenResolution";
 
@@ -129,6 +133,7 @@ const String PlotMSDBusApp::METHOD_SHOW   = "show";
 const String PlotMSDBusApp::METHOD_HIDE   = "hide";
 const String PlotMSDBusApp::METHOD_UPDATE = "update";
 const String PlotMSDBusApp::METHOD_QUIT   = "quit";
+const String PlotMSDBusApp::METHOD_CLEARPLOTS = "clearPlots";
 
 const String PlotMSDBusApp::METHOD_SAVE   = "save";
 const String PlotMSDBusApp::METHOD_ISDRAWING   = "isDrawing";
@@ -228,7 +233,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     const String& /*callerName*/, bool isAsync) {
 
     // Common parameters: plot index.
-    int index = -1;
+    int index = 0;
     bool indexSet = parameters.isDefined(PARAM_PLOTINDEX) &&
                     (parameters.dataType(PARAM_PLOTINDEX) == TpInt ||
                      parameters.dataType(PARAM_PLOTINDEX) == TpUInt);
@@ -240,6 +245,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     // set, and 3) index is in bounds.
     bool indexValid= indexSet&& index>=0 && index<(int)itsPlotParams_.size() &&
                      !isAsync;
+
     
     // Common parameters: update immediately.
     bool updateImmediately = true;
@@ -303,12 +309,49 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ci.first = parameters.dataType(PARAM_WIDTH) == TpInt ?
                     parameters.asInt(PARAM_WIDTH) :
                     parameters.asuInt(PARAM_WIDTH);
-        itsPlotms_.getParameters().setCachedImageSize(ci.first, ci.second);   
+        itsPlotms_.getParameters().setCachedImageSize(ci.first, ci.second);
+        int gridRows = itsPlotms_.getParameters().getRowCount();
+        int gridCols = itsPlotms_.getParameters().getColCount();
+
+        if ( parameters.isDefined( PARAM_GRIDROWS) &&
+        		(parameters.dataType( PARAM_GRIDROWS) == TpInt ||
+        				parameters.dataType(PARAM_GRIDROWS)==TpUInt)){
+        		gridRows = parameters.dataType(PARAM_GRIDROWS) == TpInt ?
+                        parameters.asInt(PARAM_GRIDROWS) :
+                        parameters.asuInt(PARAM_GRIDROWS);
+
+        }
+        if ( parameters.isDefined( PARAM_GRIDCOLS) &&
+               		(parameters.dataType( PARAM_GRIDCOLS) == TpInt ||
+               				parameters.dataType(PARAM_GRIDCOLS)==TpUInt)){
+                gridCols = parameters.dataType(PARAM_GRIDCOLS) == TpInt ?
+                               parameters.asInt(PARAM_GRIDCOLS) :
+                               parameters.asuInt(PARAM_GRIDCOLS);
+
+        }
+
+        bool changedSize = itsPlotms_.getParameters().setGridSize( gridRows, gridCols );
+        if ( changedSize ){
+        	itsPlotParams_.clear();
+        }
         
-    } else if(methodName == METHOD_SETCACHEDIMAGESIZETOSCREENRES) {
+    }
+    else if ( methodName == METHOD_SETEXPORTPARAMS ){
+    	if ( parameters.isDefined( PARAM_EXPORT_RANGE) ){
+    		if (parameters.dataType(PARAM_EXPORT_RANGE) == TpString ){
+    			PlotMSExportParam& exportParams = itsPlotms_.getExportParameters();
+    			exportParams.setExportRange( parameters.asString(PARAM_EXPORT_RANGE));
+    		}
+    	}
+    }
+    else if(methodName == METHOD_SETCACHEDIMAGESIZETOSCREENRES) {
         itsPlotms_.getParameters().setCachedImageSizeToResolution();
         
-    } else if(methodName == METHOD_GETPLOTPARAMS) {
+    }
+    else if ( methodName == METHOD_CLEARPLOTS ){
+    	itsPlotms_.clearPlots();
+    }
+    else if(methodName == METHOD_GETPLOTPARAMS) {
         if(indexValid) {
             const PlotMSPlotParameters& p = itsPlotParams_[index];
             const PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
@@ -366,8 +409,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         } else callError = true;
         
     } 
+
+
     else if (methodName == METHOD_SETPLOTPARAMS)  {
         bool resized = plotParameters(index);
+
         PlotMSPlotParameters& ppp = itsPlotParams_[index];
 
         PMS_PP_Axes* ppaxes = ppp.typedGroup<PMS_PP_Axes>();
@@ -405,7 +451,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ppiter = ppp.typedGroup<PMS_PP_Iteration>();
         }
         
-        
+
         if(parameters.isDefined(PARAM_FILENAME) &&
            parameters.dataType(PARAM_FILENAME) == TpString){
             ppdata->setFilename(parameters.asString(PARAM_FILENAME));
@@ -437,32 +483,44 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             iter.fromRecord(parameters.asRecord(PARAM_ITERATE));
             ppiter->setIterParam(iter);
         }
-
-
         
         bool ok;
         PMS::Axis a;
+        int dataIndex = 0;
+        if ( parameters.isDefined( PARAM_DATA_INDEX) &&
+        		parameters.dataType( PARAM_DATA_INDEX) == TpInt){
+        	dataIndex = parameters.asInt( PARAM_DATA_INDEX );
+        }
+
         if(parameters.isDefined(PARAM_AXIS_X) &&
            parameters.dataType(PARAM_AXIS_X) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_X), &ok);
-            if(ok) ppcache->setXAxis(a);
+            if(ok){
+            	ppcache->setXAxis(a, dataIndex );
+            }
         }
         if(parameters.isDefined(PARAM_AXIS_Y) &&
            parameters.dataType(PARAM_AXIS_Y) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_Y), &ok);
-            if(ok) ppcache->setYAxis(a);
+            if(ok) {
+            	ppcache->setYAxis(a, dataIndex);
+            }
         }
         
         PMS::DataColumn dc;
         if(parameters.isDefined(PARAM_DATACOLUMN_X) &&
            parameters.dataType(PARAM_DATACOLUMN_X) == TpString) {
             dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_X), &ok);
-            if(ok) ppcache->setXDataColumn(dc);
+            if(ok){
+            	ppcache->setXDataColumn(dc, dataIndex );
+            }
         }
         if(parameters.isDefined(PARAM_DATACOLUMN_Y) &&
            parameters.dataType(PARAM_DATACOLUMN_Y) == TpString) {
             dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_Y), &ok);
-            if(ok) ppcache->setYDataColumn(dc);
+            if(ok){
+            	ppcache->setYDataColumn(dc, dataIndex);
+            }
         }
 
 
@@ -501,6 +559,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
               ppcan->setYLabelFormat(f);
         }
 
+        if (parameters.isDefined( PARAM_AXIS_Y_LOCATION ) &&
+        		parameters.dataType( PARAM_AXIS_Y_LOCATION) == TpString){
+        	String axisLocation = parameters.asString( PARAM_AXIS_Y_LOCATION );
+        	if ( axisLocation.size() > 0 ){
+        		ppaxes->setYAxis( axisLocation, dataIndex );
+        	}
+        }
 
         if (parameters.isDefined(PARAM_XAUTORANGE)  &&
             parameters.dataType(PARAM_XAUTORANGE)==TpBool)         {
@@ -519,7 +584,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 if (xmax>xmin)       
                     minmax = prange_t(xmin, xmax);
               }
-              ppaxes->setXRange(!wantauto, minmax);
+              ppaxes->setXRange(!wantauto, minmax, dataIndex);
         }
 
 
@@ -540,7 +605,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 if (ymax>ymin)   
                     minmax = prange_t(ymin, ymax);
               }
-              ppaxes->setYRange(!wantauto, minmax);
+              ppaxes->setYRange(!wantauto, minmax, dataIndex);
         }
 
         if(parameters.isDefined(PARAM_SYMBOL) &&
@@ -553,7 +618,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             bool outline = parameters.asBool(PARAM_SYMBOLOUTLINE);
             PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
                         		fill, outline );
-            ppdisp->setUnflaggedSymbol(ps);
+            ppdisp->setUnflaggedSymbol(ps, dataIndex);
         }
 
         if(parameters.isDefined(PARAM_FLAGGEDSYMBOL) &&
@@ -566,14 +631,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             bool outline = parameters.asBool(PARAM_FLAGGEDSYMBOLOUTLINE);
             PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
             		fill, outline );
-
-            ppdisp->setFlaggedSymbol(ps);
+            ppdisp->setFlaggedSymbol(ps, dataIndex);
         }
         
         if(parameters.isDefined(PARAM_COLORIZE) &&
            parameters.dataType(PARAM_COLORIZE) == TpBool)   {
             bool want = parameters.asBool(PARAM_COLORIZE);
-            ppdisp->setColorize(want);
+            ppdisp->setColorize(want, dataIndex);
         }
 
         if(parameters.isDefined(PARAM_COLORAXIS) &&
@@ -597,7 +661,6 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             bool want = parameters.asBool(PARAM_SHOWMINORGRID);
             ppcan->showGridMinor(want);
         }
-        
 
         if (parameters.isDefined(PARAM_MAJORCOLOR)  && 
            parameters.dataType(PARAM_MAJORCOLOR) == TpString)   {
@@ -647,6 +710,18 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             PlotLinePtr plp = ppcan->gridMinorLine();
             plp->setWidth(w);
             ppcan->setGridMinorLine(plp);
+        }
+
+
+        if (parameters.isDefined( PARAM_SHOWLEGEND) &&
+        		parameters.dataType(PARAM_SHOWLEGEND) == TpBool ){
+        	bool showLegend = parameters.asBool( PARAM_SHOWLEGEND);
+        	String legendPosition = "upperRight";
+        	if ( parameters.isDefined( PARAM_LEGENDPOSITION ) &&
+        			parameters.dataType( PARAM_LEGENDPOSITION ) ){
+        		legendPosition = parameters.asString( PARAM_LEGENDPOSITION );
+        	}
+        	ppcan->showLegend( showLegend, legendPosition, index );
         }
 
         if(updateImmediately && itsPlotms_.guiShown()) {
@@ -740,8 +815,7 @@ Record PlotMSDBusApp::_locateInfo(const Record&) {
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	bool ok = true;
 	String methodName = "_savePlot";
-	//CountedPtr<PlotMSAction> action = ActionFactory::getAction( PlotMSAction::PLOT_EXPORT );
-	//PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+
 	String filename;
 	if(parameters.isDefined(PARAM_EXPORT_FILENAME)) {
 		filename = parameters.asString(PARAM_EXPORT_FILENAME);
@@ -756,6 +830,7 @@ bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	}
 
 	if (ok) {
+
 		String format;
 		PlotExportFormat::Type type;
 		if ( ! parameters.isDefined(PARAM_EXPORT_FORMAT)
@@ -785,12 +860,8 @@ bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 						&& parameters.asBool(PARAM_EXPORT_HIGHRES)
 					)
 					? PlotExportFormat::HIGH : PlotExportFormat::SCREEN;
-			bool interactive = ! (
-				parameters.isDefined(PARAM_EXPORT_INTERACTIVE)
-				&& ! parameters.asBool(PARAM_EXPORT_INTERACTIVE)
-			);
 
-			if (! (ok = itsPlotms_.save(format, interactive))) {
+			if (! (ok = itsPlotms_.save(format))) {
 				log("Method " + methodName + ": failed to save plot to file ");
 			}
 		}
@@ -804,28 +875,6 @@ void PlotMSDBusApp::dbusXmlReceived(const QtDBusXML& xml) {
 
 // Private Methods //
 
-/*
-bool plotms::exportPlot(const string& filename, const bool highResolution,
-        const int dpi, const int width, const int height, const int plotIndex){
-    //if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size() ||
-    //   itsCurrentPlotMS_ == NULL) return false;
-
-    //PlotMSAction action(PlotMSAction::PLOT_EXPORT);
-    //action.setParameter(PlotMSAction::P_FILE, filename);
-    //action.setParameter(PlotMSAction::P_HIGHRES, highResolution);
-    //action.setParameter(PlotMSAction::P_DPI, dpi);
-    //action.setParameter(PlotMSAction::P_WIDTH, width);
-    //action.setParameter(PlotMSAction::P_HEIGHT, height);
-    //action.setParameter(PlotMSAction::P_PLOT,
-    //        itsCurrentPlotMS_->getPlotManager().plot(plotIndex));
-
-    //return false;
-}
-*/
-
-
-// Private Methods //
-
 void PlotMSDBusApp::log(const String& m) {
     itsPlotms_.getLogger()->postMessage(PMS::LOG_ORIGIN, PMS::LOG_ORIGIN_DBUS,
             m, PMS::LOG_EVENT_DBUS);
@@ -833,16 +882,15 @@ void PlotMSDBusApp::log(const String& m) {
 
 bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
     if(plotIndex < 0) plotIndex = 0;
-    if((unsigned int)plotIndex > itsPlotParams_.size())
+    if((unsigned int)plotIndex > itsPlotParams_.size()){
         plotIndex = itsPlotParams_.size();
-
+    }
     bool resized = false;
     if((unsigned int)plotIndex >= itsPlotParams_.size()) {
         resized = true;
         const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(plotIndex + 1,
                 PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
     }
-
     return resized;
 }
 
@@ -850,17 +898,20 @@ bool PlotMSDBusApp::update() {
 	// single threaded here
     itsUpdateFlag_ = false;
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
+
     // update plot parameters
     PlotMSPlotParameters* p;
     for(unsigned int i = 0; i < n; i++) {
         p = itsPlotms_.getPlotManager().plotParameters(i);
         if(p == NULL) continue;
+
         if(*p != itsPlotParams_[i]) {
-            p->holdNotification(this);
-            *p = itsPlotParams_[i];
-            p->releaseNotification();
+        	p->holdNotification(this);
+        	*p = itsPlotParams_[i];
+        	p->releaseNotification();
         }
     }
+
     bool successfulUpdate = itsPlotms_.isOperationCompleted();
     if ( successfulUpdate ){
     	// check for added plots
@@ -875,6 +926,11 @@ bool PlotMSDBusApp::update() {
     		}
     	}
     }
+    else {
+    	//Clear the failure flag so the next one can start.
+    	itsPlotms_.setOperationCompleted( true );
+    }
+
     return successfulUpdate;
 }
 

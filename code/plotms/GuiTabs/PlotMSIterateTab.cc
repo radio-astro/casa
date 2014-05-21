@@ -32,7 +32,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-
+#include <QDebug>
 namespace casa {
 
 //////////////////////////////////
@@ -43,6 +43,8 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
 	: PlotMSPlotSubtab(tab, parent) 
 {
     setupUi(this);
+    gridRow = 1;
+    gridCol = 1;
     
     // Fill list of available iteration axis choices
     // For now, is same as colorize list
@@ -52,60 +54,136 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
     iterationAxisChooser->addItem(PMS::axis(PMS::SPW).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::BASELINE).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA).c_str());
+    iterationAxisChooser->addItem(PMS::axis(PMS::TIME).c_str());
     /* not yet:
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA1).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA2).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::CHANNEL).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::CORR).c_str());
     */
+    hideGridLocation( true );
 
     // Set up label defaults.
-///    itsLabelDefaults_.insert(enableIterationChk,  enableIterationChk->text());
 	itsLabelDefaults_.insert(iterationAxisChooserLabel,  iterationAxisChooserLabel->text());
-	itsLabelDefaults_.insert(rowsLabel,           rowsLabel->text());
-	itsLabelDefaults_.insert(columnsLabel,        columnsLabel->text());
-//    itsLabelDefaults_.insert(VertAxesGroupBox,    VertAxesGroupBox->title());
-//    itsLabelDefaults_.insert(HorizAxesGroupBox,   HorizAxesGroupBox->title());
+	 itsLabelDefaults_.insert(rowIndexLabel, rowIndexLabel->text());
+	 itsLabelDefaults_.insert(colIndexLabel, colIndexLabel->text());
 
     // Connect widgets.
     connect(iterationAxisChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()) );
-    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SLOT(gridChanged()) );
-    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SLOT(gridChanged()) );
-    //connect(sharedXCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
-    //connect(sharedYCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
-    
-    QLayout* iterLayout = layout();
-    iterLayout->removeWidget( sharedXCheck );
-    iterLayout->removeWidget( sharedYCheck );
-    iterLayout->removeWidget( commonAxisLabel );
-    sharedXCheck->setParent( NULL );
-    sharedYCheck->setParent( NULL );
-    commonAxisLabel->setParent( NULL );
+    connect(globalXCheck, SIGNAL(stateChanged(int)), SLOT(globalChanged()));
+    connect(globalYCheck, SIGNAL(stateChanged(int)), SLOT(globalChanged()));
+    connect(sharedXCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
+    connect(sharedYCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
+    connect(gridRowSpin, SIGNAL(valueChanged(int)), SLOT(locationChanged()));
+    connect(gridColSpin, SIGNAL(valueChanged(int)), SLOT(locationChanged()));
+
+    //Initialize the check box indicating whether to use a shared scale and/or axis.
+    sharedXCheck->setEnabled( false );
+    sharedYCheck->setEnabled( false );
+    globalXCheck->setEnabled( true );
+    globalYCheck->setEnabled( true );
 }
 
-void PlotMSIterateTab::gridChanged(){
-	int rowCount = nRowsSpinBox->value();
-	//Common x-axis
-	if ( rowCount <= 1 ){
-		sharedXCheck->setEnabled( false );
-		sharedXCheck->setChecked( false );
-	}
-	else {
-		sharedXCheck->setEnabled( true );
-	}
 
-	//Common y-axis
-	int colCount = nColsSpinBox->value();
-	if ( colCount <= 1 ){
-		sharedYCheck->setEnabled( false );
-		sharedYCheck->setChecked( false );
+
+bool PlotMSIterateTab::isPlottable() const {
+	bool plottable = true;
+	if ( gridRowSpin->value() == 0 || gridColSpin->value() == 0 ){
+		plottable = false;
 	}
-	else {
-		sharedYCheck->setEnabled( true );
+	return plottable;
+}
+
+
+void PlotMSIterateTab::locationChanged(){
+	int newRow = gridRowSpin->value();
+	int newCol = gridColSpin->value();
+	bool plottabilityChange = false;
+	if ( newRow == 0 && gridRow > 0 ){
+		plottabilityChange = true;
+	}
+	else if ( newRow > 0 && gridRow == 0 ){
+		plottabilityChange = true;
+	}
+	else if ( newCol == 0 && gridCol > 0 ){
+		plottabilityChange = true;
+	}
+	else if ( newCol > 0 && gridCol == 0 ){
+		plottabilityChange = true;
+	}
+	if ( plottabilityChange ){
+		emit plottableChanged();
 	}
 	emit changed();
 }
 
+
+
+bool PlotMSIterateTab::setGridSize(unsigned int nRows,unsigned int nCols){
+    //Decide whether we let the user choose the location of the plot
+	//or not based on the grid size.
+	bool hideGrid = true;
+    if ( nRows > 1 || nCols > 1 ){
+    	hideGrid = false;
+    }
+    hideGridLocation( hideGrid );
+
+    //Decide whether the current location exceeds the number of rows/columns
+    //available now.
+    bool validLocation = true;
+    int currentRow = gridRowSpin->value() - 1;
+    int currentCol = gridColSpin->value() - 1;
+    if ( currentRow >= static_cast<int>(nRows) ||
+    		currentCol >= static_cast<int>(nCols) ){
+    	validLocation = false;
+    }
+
+    //Reset the limits on the spins.
+    gridRowSpin->setMaximum( nRows );
+    gridColSpin->setMaximum( nCols );
+    //gridChanged( nRows, nCols );
+    return validLocation;
+}
+
+void PlotMSIterateTab::globalChanged(){
+	bool globalYChecked = globalYCheck->isChecked();
+	bool globalXChecked = globalXCheck->isChecked();
+	sharedYCheck->setEnabled( globalYChecked );
+	sharedXCheck->setEnabled( globalXChecked );
+	if ( !globalYChecked ){
+		sharedYCheck->setChecked( false );
+	}
+	if ( !globalXChecked ){
+		sharedXCheck->setChecked( false );
+	}
+	emit changed();
+}
+
+void PlotMSIterateTab::hideGridLocation( bool hide ) {
+    chooserFrame->setVisible(!hide);
+}
+
+
+void PlotMSIterateTab::setGridIndices( int rowIndex, int colIndex ){
+	//Note that the rows and columns we display to the user begin with 1,
+	//whereas what we store in the code begins at 0.
+	int maxRows = gridRowSpin->maximum();
+	if ( 0<= rowIndex && rowIndex <= maxRows ){
+		gridRowSpin->setValue( rowIndex );
+	}
+	else {
+	    qDebug() << "PlotMSIterateTab::setValue maxRows="<<maxRows<<" rowIndex="<<rowIndex;
+	}
+	int maxCols = gridColSpin->maximum();
+	if ( 0 <= colIndex && colIndex <= maxCols ){
+		gridColSpin->setValue( colIndex );
+	}
+	else {
+		 qDebug() << "PlotMSIterateTab::setValue maxCols="<<maxCols<<" colIndex="<<colIndex;
+	}
+	gridRow = rowIndex;
+	gridCol = colIndex;
+}
 
 PlotMSIterateTab::~PlotMSIterateTab() { }
 
@@ -121,22 +199,19 @@ void PlotMSIterateTab::getValue(PlotMSPlotParameters& params) const   {
 	
     d->setIterationAxis(
            PMS::axis(iterationAxisChooser->currentText().toStdString()) );
-           
-           
-	if      (VertAxisRadio_common->isChecked())  
-		d->setYAxisScaleMode( PMS_PP_Iteration::GLOBAL );
-	else if (VertAxisRadio_indiv->isChecked())  
-		d->setYAxisScaleMode( PMS_PP_Iteration::SELF );
-		
-	if      (HorizAxisRadio_common->isChecked())  
-		d->setXAxisScaleMode( PMS_PP_Iteration::GLOBAL );
-	else if (HorizAxisRadio_indiv->isChecked())  
-		d->setXAxisScaleMode( PMS_PP_Iteration::SELF );
-	
-	d->setNumColumns( nColsSpinBox->value() );
-	d->setNumRows( nRowsSpinBox->value() );
+
+	d->setGlobalScaleX( globalXCheck->isChecked());
+	d->setGlobalScaleY( globalYCheck->isChecked());
+
 	d->setCommonAxisX( sharedXCheck->isChecked());
 	d->setCommonAxisY( sharedYCheck->isChecked());
+
+	//Note, we are subtracting 1 because UI values start with 1, but internal
+	//values are 0 based.
+	int rowSpinIndex = gridRowSpin->value() - 1;
+	int colSpinIndex = gridColSpin->value() - 1;
+	d->setGridRow( rowSpinIndex );
+	d->setGridCol( colSpinIndex );
 }
 
 
@@ -146,21 +221,15 @@ void PlotMSIterateTab::setValue(const PlotMSPlotParameters& params) {
   const PMS_PP_Iteration* d = params.typedGroup<PMS_PP_Iteration>();
   
   PlotMSTab::setChooser(iterationAxisChooser, PMS::axis(d->iterationAxis()));
-  
-  switch (d->xAxisScaleMode())   {
-  case PMS_PP_Iteration::GLOBAL:  HorizAxisRadio_common->setChecked(true); break;
-  case PMS_PP_Iteration::SELF:   HorizAxisRadio_indiv->setChecked(true); break;
-  }
-  
-  switch (d->yAxisScaleMode())   {
-  case PMS_PP_Iteration::GLOBAL:  VertAxisRadio_common->setChecked(true); break;
-  case PMS_PP_Iteration::SELF:   VertAxisRadio_indiv->setChecked(true); break;
-  }
-  
-  nRowsSpinBox->setValue( d->numRows() );
-  nColsSpinBox->setValue( d->numColumns() );
+
   sharedXCheck->setChecked( d->isCommonAxisX() );
   sharedYCheck->setChecked( d->isCommonAxisY() );
+  globalXCheck->setChecked( d->isGlobalScaleX() );
+  globalYCheck->setChecked( d->isGlobalScaleY() );
+
+  int rowIndex = d->getGridRow();
+  int colIndex = d->getGridCol();
+  setGridIndices( rowIndex+ 1, colIndex+1 );
 }
 
 
@@ -177,17 +246,28 @@ void PlotMSIterateTab::update(const PlotMSPlot& plot) {
 	if (d==0 || d2==0)  return;
 
 	highlightWidgetText(iterationAxisChooserLabel, d->iterationAxis() != d2->iterationAxis() );
-	highlightWidgetText(columnsLabel,  d->numColumns() != d2->numColumns() );
-	highlightWidgetText(rowsLabel,     d->numRows() != d2->numRows() );
+
 	bool commonXChange = d->isCommonAxisX() != d2->isCommonAxisX();
 	bool commonYChange = d->isCommonAxisY() != d2->isCommonAxisY();
+	bool globalXChange = d->isGlobalScaleX() != d2->isGlobalScaleX();
+	bool globalYChange = d->isGlobalScaleY() != d2->isGlobalScaleY();
 	highlightWidgetText(commonAxisLabel, commonXChange || commonYChange );
+	highlightWidgetText(globalAxisLabel, globalXChange || globalYChange );
 
-
-#if (1)  // turn on for testing, off for demo - somehow thisis crashing
-	highlightWidgetText(HorizAxisSharingGroup, d->xAxisScaleMode() != d2->xAxisScaleMode());
-	highlightWidgetText(VertAxisSharingGroup, d->yAxisScaleMode() != d2->yAxisScaleMode());	
-#endif
+	bool gridRowChanged = false;
+	int oldRowCount = d->getGridRow();
+	int newRowCount = d2->getGridRow();
+	if (oldRowCount != newRowCount ){
+		 gridRowChanged = true;
+	}
+	highlightWidgetText( rowIndexLabel, gridRowChanged );
+	bool gridColChanged = false;
+	int oldColCount = d->getGridCol();
+	int newColCount = d2->getGridCol();
+	if (oldColCount != newColCount ){
+		 gridColChanged = true;
+	}
+	highlightWidgetText(colIndexLabel, gridColChanged );
 }
 
 } //namespace

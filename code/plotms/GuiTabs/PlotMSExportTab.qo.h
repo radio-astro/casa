@@ -28,10 +28,8 @@
 #define PLOTMSEXPORTTAB_QO_H_
 
 #include <plotms/GuiTabs/PlotMSExportTab.ui.h>
-
-#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
-
-#include <casa/namespace.h>
+#include <plotms/PlotMS/PlotMSExportParam.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
 
 namespace casa {
 
@@ -40,36 +38,33 @@ class QtFileWidget;
 
 
 // Subclass of PlotMSPlotSubtab to manage exporting plots.
-class PlotMSExportTab : public PlotMSPlotSubtab, Ui::ExportTab {
+class PlotMSExportTab : public QDialog {
     Q_OBJECT
     
 public:
     // Constructor which takes the parent tab and plotter.
-    PlotMSExportTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
+    PlotMSExportTab(QWidget* parent = NULL);
     
     // Destructor.
-    ~PlotMSExportTab();
-    
-    
-    // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Export"; }
-    
-    // Implements PlotMSPlotSubtab::getValue().  Does nothing.
-    void getValue(PlotMSPlotParameters& params) const { (void)params; }
-    
-    // Implements PlotMSPlotSubtab::setValue().  Does nothing.
-    void setValue(const PlotMSPlotParameters& params) { (void)params; }
-    
-    // Implements PlotMSPlotSubtab::update().  Does nothing.
-    void update(const PlotMSPlot& plot) { (void)plot; }
-    
+    virtual ~PlotMSExportTab();
     
     // See PlotMSTab::currentlySetExportFormat().
     PlotExportFormat currentlySetExportFormat() const;
     
+    //Returns the export range (All, Current, etc).
+    PlotMSExportParam getExportParams() const;
+
+signals:
+	void exportRangeChanged();
+
+private slots:
+	void closeDialog();
+	void doExport();
+
 private:
     // Widget for file selection.
     QtFileWidget* itsFileWidget_;
+    Ui::ExportTab ui;
 };
 
 }

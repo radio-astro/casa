@@ -35,6 +35,8 @@
 #include <casaqt/QwtPlotter/QPScatterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 
+#include <QTime>
+
 #include <qwt_painter.h>
 
 namespace casa {
@@ -343,6 +345,9 @@ QPDrawThread::QPDrawThread(const QList<const QPPlotItem*>& items,
     }
     
     m_cancelFlag = false;
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+    id = qrand() % 100;
 }
 
 QPDrawThread::~QPDrawThread() {
@@ -361,9 +366,13 @@ void QPDrawThread::run() {
     QPCanvas* canvas;
     bool found = false;
     for(int i = 0; i < m_items.size(); i++) {
-        if(m_items[i] == NULL) continue;
+        if(m_items[i] == NULL){
+        	continue;
+        }
         canvas = dynamic_cast<QPCanvas*>(m_items[i]->canvas());
-        if(canvas == NULL) continue;
+        if(canvas == NULL){
+        	continue;
+        }
         found = false;
         for(unsigned int j = 0; !found && j < canvases.size(); j++)
             if(canvases[j] == canvas) found = true;
@@ -400,7 +409,9 @@ void QPDrawThread::run() {
     // Item draw loop.
     for(int i = 0; i < m_items.size(); i++) {
         // Check the PlotOperation to see if cancel is requested.
-        if(!op.null() && op->cancelRequested()) cancel();
+        if(!op.null() && op->cancelRequested()){
+        	cancel();
+        }
         
         // Cancel if needed.
         if(m_cancelFlag) break;
@@ -435,7 +446,9 @@ void QPDrawThread::run() {
         // Segment draw loop.
         for(unsigned int j = 0; j < drawCount; j += m_segmentThreshold) {
             // Check the PlotOperation to see if cancel is requested.
-            if(!op.null() && op->cancelRequested()) cancel();
+            if(!op.null() && op->cancelRequested()){
+            	cancel();
+            }
             
             // Cancel if needed.
             if(m_cancelFlag) break;
@@ -450,11 +463,11 @@ void QPDrawThread::run() {
                 op->setCurrentProgress((unsigned int)(progress * 100));
             }
         }
-        
+
         // Finish logging.
         if(!log.null()) log->releaseMeasurement();
     }
-    
+
     // Clean up painters.
     foreach(QPainter* painter, painters) delete painter;
     painters.clear();

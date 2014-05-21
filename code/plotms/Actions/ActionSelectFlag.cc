@@ -27,7 +27,6 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Client/Client.h>
-#include <plotms/Data/PlotMSIndexer.h>
 namespace casa {
 
 ActionSelectFlag::ActionSelectFlag( Client* client )
@@ -44,8 +43,8 @@ PlotLogMessage* ActionSelectFlag::doFlagOperation( PlotMSPlot* plot,
 		bool /*showUnflagged*/, bool /*showFlagged*/){
 	// Get flagging parameters.
 	PlotMSFlagging flagging = client->getFlagging();
-	PlotLogMessage* m = plot->cache().indexer(plot->iter()+canvasIndex).flagRange(
-				flagging, Vector<PlotRegion>(regions), true);
+	PlotLogMessage* m = plot->flagRange(canvasIndex,
+			flagging, Vector<PlotRegion>(regions), true);
 	return m;
 
 }

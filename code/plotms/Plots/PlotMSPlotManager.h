@@ -28,7 +28,7 @@
 #define PLOTMSPLOTMANAGER_H_
 
 #include <graphics/GenericPlotter/PlotFactory.h>
-#include <plotms/Plots/PlotMSPage.h>
+#include <plotms/Plots/PlotMSPages.h>
 
 #include <casa/namespace.h>
 
@@ -36,12 +36,9 @@ namespace casa {
 
 //# Forward Declararations
 class PlotMSApp;
-  //-class PlotMSMultiPlot;
 class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
 class PlotMSPlotParameters;
-  //-class PlotMSSinglePlot;
-class PlotMSIterPlot;
 class PlotMSOverPlot;
 
 
@@ -52,7 +49,7 @@ class PlotMSOverPlot;
 class PlotMSPlotManager {
     
     //# Friend class declarations.
-    friend class PlotMSMultiPlot;
+    friend class PlotMSPlot;
     friend class PlotMSOverPlot;
     
 public:
@@ -88,8 +85,15 @@ public:
     const vector<PlotMSPlot*>& plots() const;
     PlotMSPlot* plot(unsigned int index);
     const PlotMSPlot* plot(unsigned int index) const;
+    QList<PlotMSPlot*> getCanvasPlots( int row, int col ) const;
     // </group>
     
+    //Set the new size of a multi-plot display.
+    bool pageGridChanged( int rows, int cols, bool override );
+    
+    //Return the current size of a multi-plot page grid.
+    void getGridSize( Int& rows, Int& cols );
+
     // Returns all or one of the plot parameters.
     // <group>
     const vector<PlotMSPlotParameters*>& plotParameters() const;
@@ -101,14 +105,29 @@ public:
     // used; otherwise the defaults are used.
     PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
-    // These are now deprecated and will throw an exception...
-    PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
-    PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
-    PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
-
-    // Clears out all plots and canvases.
-    void clearPlotsAndCanvases();
+    //Remove a plot from the display.
+    void removePlot( PlotMSPlot* plot );
     
+    // Clears out all plots and canvases.
+    void clearPlotsAndCanvases( bool clearCanvases = true );
+    void clearCanvas(int row, int col );
+    bool findEmptySpot( Int& row, Int& col );
+
+    void unassignPlots();
+
+    vector<String> getFiles() const;
+
+    //Returns the parameters that control the page display (grid rows & cols).
+    PlotMSParameters getPageParameters();
+    
+    //Returns whether or not a canvas has been allocated
+    //for the plot.
+    bool isPlottable( PlotMSPlot* plot );
+
+    bool isOwner( int row, int col, PlotMSPlot* plot );
+
+
+
 private:
     // Parent.
     PlotMSApp* itsParent_;
@@ -137,6 +156,11 @@ private:
     
     // Notifies any watchers that the managed plots have changed.
     void notifyWatchers() const;
+
+    //Wait for existing draw threads to finish before we proceed so
+    //we don't get a seg fault from a draw thread hanging onto deleted
+    //data.
+    void waitForDrawing();
 };
 
 

@@ -27,6 +27,7 @@
 #include <plotms/Threads/Gui/PlotMSDrawThread.qo.h>
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -61,6 +62,7 @@ void PlotMSDrawThread::updatePlotterCanvases() {
     for(unsigned int i = 0; i < canvases.size(); i++) {
         if(canvases[i].null()) continue;
         op = canvases[i]->operationDraw();
+        
         if(op.null()) continue;
         
         found = false;        
@@ -95,14 +97,21 @@ void PlotMSDrawThread::updatePlotterCanvases() {
     // Add list to itsOperations_, registering this thread as a watcher in the
     // process.
     for(unsigned int i = 0; i < ops.size(); i++) {
-        op = ops[i];
-        op->addWatcher(this);
-        itsOperations_.push_back(op);
+        //op = ops[i];
+        //op->addWatcher(this);
+        itsOperations_.push_back(ops[i]);
+    }
+
+    for ( unsigned int i = 0; i < itsOperations_.size(); i++ ){
+    	itsOperations_[i]->addWatcher( this );
     }
     
     itsOperationsMutex_.unlock();
 }
 
+QString PlotMSDrawThread::getName() const {
+	return "Draw Thread";
+}
 
 void PlotMSDrawThread::startOperation() {
     itsOperationsMutex_.lock();
@@ -112,8 +121,9 @@ void PlotMSDrawThread::startOperation() {
     bool done = itsOperations_.size() == 0;
     if(!done) {
         done = true;
-        for(unsigned int i = 0; i < itsOperations_.size(); i++)
+        for(unsigned int i = 0; i < itsOperations_.size(); i++){
             done &= itsOperations_[i]->isFinished();
+        }
     }
     
     if(done) {

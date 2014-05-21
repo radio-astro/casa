@@ -29,25 +29,41 @@
 namespace casa {
 
 ExportThread::ExportThread()
-	: format( PlotExportFormat::JPG, "" ) {
-	exportPlot = NULL;
+: format( PlotExportFormat::JPG, "" ) {
 }
 
 void ExportThread::setExportFormat(PlotExportFormat exportFormat ){
 	format = exportFormat;
 }
 
-void ExportThread::setPlot( PlotMSPlot* plot ){
-	exportPlot = plot;
+void ExportThread::setPlots( vector<PlotMSPlot*> plots ){
+	exportPlots = plots;
 }
 
 bool ExportThread::doWork(){
-	bool result = exportPlot->exportToFormat( format );
+	bool result = true;
+	int count = exportPlots.size();
+	if ( count > 0 ){
+		PlotMSPlot* exportPlot = exportPlots[0];
+		//If we can find an iteration plot, we want to export it instead since it
+		//may extend to more than one page.
+		for ( int i = 0; i < count; i++ ){
+			if ( exportPlots[i]->isIteration() ){
+				exportPlot = exportPlots[i];
+			}
+		}
+		result = exportPlot->exportToFormat( format );
+	}
 	return result;
 }
 
 void ExportThread::cancelWork(){
-	exportPlot->exportToFormatCancel();
+	int count = exportPlots.size();
+	//for ( int i = 0; i < count; i++ ){
+	if ( count > 0 ){
+		exportPlots[0]->exportToFormatCancel();
+	}
+	//}
 }
 
 ExportThread::~ExportThread() {

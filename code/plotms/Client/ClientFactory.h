@@ -1,4 +1,3 @@
-//# PlotMSAction.h: Actions on plotms that can be triggered.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#

@@ -134,6 +134,9 @@ public:
     // Refreshes the plotter GUI.
     virtual void refresh() = 0;
     
+    //Forces the script client to refresh.
+    virtual void updateScriptGui() = 0;
+
     // Closes the plotter window.
     virtual void close() = 0;
    
@@ -209,7 +212,7 @@ public:
     
     // Clears all plot panels from the plotter.
     virtual void clearPanels() = 0;
-    
+
     // Removes the given plot panel from the plotter.
     virtual void removePanel(PlotPanelPtr panel) = 0;
     
@@ -223,6 +226,11 @@ public:
     //Use a common x-/y- axis when plotting multiple graphs.
     void setCommonAxisX(Bool commonAxis );
     void setCommonAxisY(Bool commonAxis );
+    bool isCommonAxisX() const;
+    bool isCommonAxisY() const;
+    void setAxisLocation( PlotAxis xLocation, PlotAxis yLocation );
+    PlotAxis getAxisLocationX() const;
+    PlotAxis getAxisLocationY() const;
 
     // Plotting Functionality methods //
     
@@ -297,6 +305,8 @@ protected:
     PlotLoggerPtr m_logger;
     Bool commonAxisX;
     Bool commonAxisY;
+    PlotAxis axisLocationX;
+    PlotAxis axisLocationY;
 };
 typedef CountedPtr<Plotter> PlotterPtr;
 
