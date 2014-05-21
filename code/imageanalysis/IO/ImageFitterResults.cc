@@ -27,7 +27,7 @@
 
 #include <imageanalysis/IO/ImageFitterResults.h>
 
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <casa/OS/File.h>
 #include <casa/Quanta/QLogical.h>
 #include <casa/Utilities/Precision.h>

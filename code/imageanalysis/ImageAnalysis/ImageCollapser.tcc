@@ -28,8 +28,7 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 #include <casa/Arrays/ArrayLogical.h>
-//#include <casa/Arrays/ArrayMath.h>
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>

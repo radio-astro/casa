@@ -25,7 +25,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <casa/Utilities/Precision.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
