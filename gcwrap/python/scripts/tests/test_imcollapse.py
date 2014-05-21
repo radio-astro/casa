@@ -379,7 +379,8 @@ class imcollapse_test(unittest.TestCase):
     def test_median(self):
         """Test median when collapsing along multiple axes"""
         myia = iatool()
-        myia.fromshape("", [3, 3, 3])
+        imagename = "median.im"
+        myia.fromshape(imagename, [3, 3, 3])
         bb = myia.getchunk()
         count = 0
         for i in range(3):
@@ -389,11 +390,29 @@ class imcollapse_test(unittest.TestCase):
                     count += 1
         myia.putchunk(bb)
         collapsed = myia.collapse(axes=[0, 1], function="median")
-        myia.done()
         bb = collapsed.getchunk()
         self.assertTrue(bb[0, 0, 0] == 12)
         self.assertTrue(bb[0, 0, 1] == 13)
         self.assertTrue(bb[0, 0, 2] == 14)
+        collapsed.done()
+        
+        collapsed = myia.collapse(
+            axes=[0, 1], function="median",
+            mask=imagename + "<14 || " + imagename + ">16" 
+        )
+        bb = collapsed.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 10.5)
+        self.assertTrue(bb[0, 0, 1] == 11.5)
+        self.assertTrue(bb[0, 0, 2] == 14)
+        collapsed.done()
+        
+        myia.fromshape("", [20, 20, 5])
+        reg = rg.fromtext(
+            "circle [[10pix, 10pix], 5pix]", csys=myia.coordsys().torecord(),
+            shape=myia.shape()
+        )
+        collapsed = myia.collapse(axes=[0, 1], function="median", region=reg)
+        myia.done()
         collapsed.done()
 
     def test_CAS_3418(self):
