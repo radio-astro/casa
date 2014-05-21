@@ -75,7 +75,7 @@ def fillTsys( filename, specif, tsysif=None, mode='linear', extrap=False, skipav
             filler.fillScanAveragedTsys( mode=mode )
         del filler
     else:
-        filler = SimpleTsysFiller( filename=filename, ifno=specif )
+        filler = SimpleTsysFiller( filename=filename, ifno=specif, skip_channelaveraged=skipaveragedspw )
         polnos = filler.getPolarizations()
         for pol in polnos:
             filler.setPolarization( pol )
@@ -237,6 +237,32 @@ class TsysFillerBase( object ):
                 ret.append( None )
         return ret
 
+    def _search( self, tcol, t, startpos=0 ):
+        """
+        Simple search
+        
+        Return minimum index that satisfies tcol[index] > t.
+        If such index couldn't be found, return -1.
+
+        tcol -- array
+        t -- target value
+        startpos -- optional start position (default 0)
+        """
+        n = len(tcol)
+        idx = min( n-1, max( 0, startpos ) )
+        if tcol[idx] > t:
+            idx = 0
+        while ( idx < n and tcol[idx] < t ):
+            #print '%s: tcol[%s] = %s, t = %s'%(idx,idx,tcol[idx],t)
+            idx += 1
+        if idx == n:
+            idx = -1
+            #print 'Index not found, return -1'
+        #else:
+            #print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
+
+        return idx
+
 
 #
 # class SimpleTsysFiller
@@ -250,7 +276,7 @@ class SimpleTsysFiller( TsysFillerBase ):
     """
     Simply Fill Tsys
     """
-    def __init__( self, filename, ifno ):
+    def __init__( self, filename, ifno, skip_channelaveraged=False ):
         """
         Constructor
 
@@ -260,6 +286,9 @@ class SimpleTsysFiller( TsysFillerBase ):
         super(SimpleTsysFiller,self).__init__( filename )
         self.ifno = ifno
         print 'IFNO to be processed: %s'%(self.ifno)
+        self.skip_channelaveraged = skip_channelaveraged
+        if skip_channelaveraged is True:
+            print 'SimpleTsysFiller: skip channel averaged spws (%s)'%(self.ifno + 1)
 
     def getPolarizations( self ):
         """
@@ -325,13 +354,12 @@ class SimpleTsysFiller( TsysFillerBase ):
                     tsys1 = atsys[idx]
                     tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
             stab.putcell( 'TSYS', irow, tsys )
-            if tptab.nrows() > 0:
+            if self.skip_channelaveraged is False and tptab.nrows() > 0:
                 tptab.putcell( 'TSYS', irow, numpy.median(tsys) )
         stab.close()
         ttab.close()
         tptab.close()
         
-
 #
 # class TsysFiller
 #
@@ -617,29 +645,4 @@ class TsysFiller( TsysFillerBase ):
             atsys[i][ext0:len(abctsys)-ext1] = b[i]
         return (abctsys,atsys)
                 
-    def _search( self, tcol, t, startpos=0 ):
-        """
-        Simple search
-        
-        Return minimum index that satisfies tcol[index] > t.
-        If such index couldn't be found, return -1.
-
-        tcol -- array
-        t -- target value
-        startpos -- optional start position (default 0)
-        """
-        n = len(tcol)
-        idx = min( n-1, max( 0, startpos ) )
-        if tcol[idx] > t:
-            idx = 0
-        while ( idx < n and tcol[idx] < t ):
-            #print '%s: tcol[%s] = %s, t = %s'%(idx,idx,tcol[idx],t)
-            idx += 1
-        if idx == n:
-            idx = -1
-            #print 'Index not found, return -1'
-        #else:
-            #print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
-
-        return idx
 
