@@ -425,19 +425,20 @@ template<class T> void ImageCollapser<T>::_doMedian(
 	Bool hasMaskedPixels = ! allTrue(mask);
 	for (stepper.reset(); !stepper.atEnd(); stepper++) {
 		Slicer slicer(stepper.position(), stepper.endPosition(), Slicer::endIsLast);
-		Vector<T> kk(ary(slicer).tovector());
+		// Vector<T> kk(ary(slicer).tovector());
+		vector<T> data = ary(slicer).tovector();
 		if (hasMaskedPixels) {
-			Vector<Bool> maskSlice(mask(slicer));
+			Vector<Bool> maskSlice(mask(slicer).tovector());
 			if (! anyTrue(maskSlice)) {
 				if (outMask.get() == 0) {
 					outMask.reset(new Array<Bool>(outImage.shape(), True));
 				}
 				(*outMask)(stepper.position()) = False;
-				kk.resize(0);
+				//kk.resize(0);
+				data.resize(0);
 			}
 			else if (! allTrue(maskSlice)) {
-				vector<T> data;
-				kk.tovector(data);
+				//vector<T> data = kk.tovector();
 				typename vector<T>::iterator diter = data.begin();
 				Vector<Bool>::iterator miter = maskSlice.begin();
 				while (diter != data.end()) {
@@ -452,18 +453,22 @@ template<class T> void ImageCollapser<T>::_doMedian(
 					}
 					miter++;
 				}
-				kk.resize(data.size());
-				kk = Vector<T>(data);
+				//kk.resize(data.size());
+				//kk = Vector<T>(data);
 			}
 		}
-		GenSort<T>::sort(kk);
-		uInt s = kk.size();
+		//GenSort<T>::sort(kk);
+		uInt s = data.size();
+		if (s > 0) {
+			sort(data.begin(), data.end());
+		}
+		// uInt s = kk.size();
 		outImage.putAt(
 			s == 0
 				? 0
 				: s % 2 == 1
-				  ? kk[s/2]
-				  : (kk[s/2] + kk[s/2 - 1])/2,
+				  ? data[s/2]
+				  : (data[s/2] + data[s/2 - 1])/2,
 			stepper.position()
 		);
 	}
