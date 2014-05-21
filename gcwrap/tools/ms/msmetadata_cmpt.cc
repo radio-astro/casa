@@ -33,7 +33,7 @@
 #include <tools/ms/msmetadata_forward.h>
 
 #include <casa/Containers/Record.h>
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>

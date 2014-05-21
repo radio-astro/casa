@@ -34,7 +34,7 @@
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <ms_cmpt.h>
 #include <msmetadata_cmpt.h>
 #include <tools/ms/Statistics.h>
