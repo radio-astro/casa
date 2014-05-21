@@ -160,10 +160,22 @@ void plotms::setCachedImageSizeToScreenResolution() {
 }
 int plotms::getCachedImageWidth() {
     launchApp();
-    GETSINGLEINT(GETPLOTMSPARAMS, WIDTH) }
+    GETSINGLEINT(GETPLOTMSPARAMS, WIDTH)
+}
 int plotms::getCachedImageHeight() {
     launchApp();
-    GETSINGLEINT(GETPLOTMSPARAMS, HEIGHT) }
+    GETSINGLEINT(GETPLOTMSPARAMS, HEIGHT)
+}
+
+void plotms::setGridSize( int rowCount, int colCount ){
+	launchApp();
+    Record params;
+	params.define(PlotMSDBusApp::PARAM_GRIDROWS, rowCount);
+    params.define(PlotMSDBusApp::PARAM_GRIDCOLS, colCount );
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+	            PlotMSDBusApp::METHOD_SETPLOTMSPARAMS, params, /*true*/asyncCall);
+}
+
 
 
 void plotms::setPlotMSFilename(
@@ -269,27 +281,30 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
 }
 
 void plotms::setPlotMSIterate(const std::string& iteraxis,
-			      const bool xselfscale,
-			      const bool yselfscale,
+				  const int rowIndex, const int colIndex,
+			      const bool xselfscale, const bool yselfscale,
+			      const bool commonAxisX, const bool commonAxisY,
 			      const bool updateImmediately, 
 			      const int plotIndex) {
 
     PlotMSIterParam iter;
-    
     iter.setIterAxis(iteraxis);
+    iter.setGridRow( rowIndex );
+    iter.setGridCol( colIndex );
     if (iteraxis=="") {
-      iter.setXSelfScale(False);
-      iter.setYSelfScale(False);
+      iter.setGlobalScaleX( False);
+      iter.setGlobalScaleY( False);
+      iter.setCommonAxisX( False );
+      iter.setCommonAxisY( False );
     }
     else {
-      iter.setXSelfScale(xselfscale);
-      iter.setYSelfScale(yselfscale);
+    	iter.setGlobalScaleX( xselfscale);
+    	iter.setGlobalScaleY( yselfscale);
+    	iter.setCommonAxisX( commonAxisX );
+    	iter.setCommonAxisY( commonAxisY );
     }
 
-    // Only if iteration enabled...
-    //if (doIter_)
-      setPlotMSIterate_(iter, updateImmediately, plotIndex);
-   
+    setPlotMSIterate_(iter, updateImmediately, plotIndex);
 }
 
 void plotms::setPlotMSTransformationsRec(const record& transformations, 
@@ -343,7 +358,7 @@ void plotms::setColorAxis(const string&  coloraxis, const bool updateImmediately
 void plotms::setSymbol(const string& symbolshape, const int symbolsize,
                        const string& symbolcolor, const string& symbolfill,
                        const bool symboloutline, const bool updateImmediately,
-                       const int plotIndex)
+                       const int plotIndex, int dataIndex)
 {
     launchApp();
     Record params;
@@ -355,6 +370,7 @@ void plotms::setSymbol(const string& symbolshape, const int symbolsize,
     params.define(PlotMSDBusApp::PARAM_SYMBOLOUTLINE, symboloutline);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    params.define(PlotMSDBusApp::PARAM_DATA_INDEX, dataIndex );
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
         PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
@@ -363,7 +379,7 @@ void plotms::setFlaggedSymbol(
     const string& flaggedsymbolshape, const int flaggedsymbolsize,
     const string& flaggedsymbolcolor, const string& flaggedsymbolfill,
     const bool flaggedsymboloutline, const bool updateImmediately,
-    const int plotIndex)
+    const int plotIndex, int dataIndex)
 {
     launchApp();
     Record params;
@@ -375,6 +391,7 @@ void plotms::setFlaggedSymbol(
     params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLOUTLINE, flaggedsymboloutline);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    params.define(PlotMSDBusApp::PARAM_DATA_INDEX, dataIndex );
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
         PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
@@ -411,7 +428,18 @@ void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, co
 }
 
 
-void plotms::setYAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
+
+void plotms::setExportRange(const string& range )
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_EXPORT_RANGE,  range);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETEXPORTPARAMS, params, asyncCall);
+}
+
+void plotms::setYAxisLabel(const string& text,  const bool updateImmediately,
+		const int plotIndex)
 {
     launchApp();
     Record params;
@@ -446,7 +474,7 @@ string plotms::getYAxisLabel(const int plotIndex)
 
 
 
-void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
+/*void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
                    const bool updateImmediately, const int plotIndex) 
 {
     setPlotAxes(xAxis, xDataColumn, "", "", updateImmediately, plotIndex); 
@@ -457,27 +485,37 @@ void plotms::setPlotYAxis(const string& yAxis, const string& yDataColumn,
                    const bool updateImmediately, const int plotIndex) 
 {
     setPlotAxes("", "", yAxis, yDataColumn, updateImmediately, plotIndex); 
-}
-
-
-
+}*/
 
 
 void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
-        const string& xDataColumn, const string& yDataColumn,
-        const bool updateImmediately, const int plotIndex) {
+        const string& xDataColumn, const string& yDataColumn, const string& yAxisLocation,
+        const bool updateImmediately, const int plotIndex, const int dataIndex) {
     launchApp();
     string xdc = xDataColumn, ydc = yDataColumn;
     if(xdc == "residual") xdc = "corrected-model";
     if(ydc == "residual") ydc = "corrected-model";
     Record params;
-    if(!xAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
-    if(!xdc.empty())
+    if(!xAxis.empty()){
+    	params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
+    }
+    if(!xdc.empty()){
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_X, xdc);
-    if(!yAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
-    if(!ydc.empty())
+    }
+    if(!yAxis.empty()){
+    	params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
+    }
+    if(!ydc.empty()){
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_Y, ydc);
+    }
+    if (!yAxisLocation.empty()){
+    	params.define(PlotMSDBusApp::PARAM_AXIS_Y_LOCATION, yAxisLocation);
+    }
+
     if(params.nfields() == 0) return;
+    params.define( PlotMSDBusApp::PARAM_DATA_INDEX, dataIndex );
+
+
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
@@ -627,16 +665,22 @@ void plotms::setShowGui( bool showGui ){
 	}
 }
 
+void plotms::clearPlots(){
+	launchApp();
+	QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ), PlotMSDBusApp::METHOD_CLEARPLOTS,
+	                                   Record(), asyncCall );
+}
 
 
-bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {
+
+bool plotms::save(const string& filename, const string& format,
+		const bool highres) {
 	 launchApp();
     Record params;
     bool retValue;
     params.define(PlotMSDBusApp::PARAM_EXPORT_FILENAME, filename);
     params.define(PlotMSDBusApp::PARAM_EXPORT_FORMAT, format);
     params.define(PlotMSDBusApp::PARAM_EXPORT_HIGHRES, highres);
-    params.define(PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE, interactive);
     params.define(PlotMSDBusApp::PARAM_EXPORT_ASYNC, false);
     QtDBusXmlApp::dbusXmlCall(
     	dbus::FROM_NAME, app.dbusName( ),
@@ -760,7 +804,7 @@ void plotms::setPlotMSSelection_(const PlotMSSelection& selection,
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
-            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
 }
 
 void plotms::setPlotMSAveraging_(const PlotMSAveraging& averaging,
@@ -771,7 +815,7 @@ void plotms::setPlotMSAveraging_(const PlotMSAveraging& averaging,
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
-            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
 }
 
 void plotms::setPlotMSTransformations_(const PlotMSTransformations& trans,
@@ -862,7 +906,25 @@ void plotms::setGridParams(
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
 
+void plotms::setLegend( const bool showLegend,  const string& legendPosition,
+                const bool updateImmediately, const int plotIndex)
+{
+    launchApp();
+    string legendPos = legendPosition;
+    if ( showLegend ){
+    	if ( legendPosition=="" ){
+    		legendPos="upperright";
+    	}
+    }
 
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_SHOWLEGEND,  showLegend);
+    params.define(PlotMSDBusApp::PARAM_LEGENDPOSITION,  legendPos);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
+}
 
 void plotms::setXRange(const bool xautorange,  const double xmin, const double xmax,
                 const bool updateImmediately, const int plotIndex) 

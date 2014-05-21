@@ -243,6 +243,25 @@ Application-Wide Options Methods
   </returns>
 </method>
 
+<method type="function" name="setGridSize">
+  <keyword>setGridSize</keyword>  
+  <shortdescription>Sets the number of rows and columns in multiple plot displays.</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="rowCount">
+      <description>The number of rows in a multiple plot display.</description>
+      <value>1</value>
+    </param>
+    <param type="int" name="colCount">
+      <description>The number of columns in a multiple plot display.</description>
+      <value>1</value>
+    </param>
+  </input>
+  <example />
+  <returns />
+</method>
+
+
 
 <!--
 ###############################################################################
@@ -649,6 +668,16 @@ specifying multiple plots per page will be added here)
       <value />
     </param>
     
+    <param type="int" name="iterRowCount">
+      <description>Number of rows of iteration plots on a page.</description>
+      <value>1</value>
+    </param>
+
+    <param type="int" name="iterColCount">
+      <description>Number of columns of iteration plots on a page.</description>
+      <value>1</value>
+    </param>
+    
     <param type="bool" name="xselfscale">
       <description>Selfscale X axis</description>
       <value>false</value>
@@ -656,6 +685,16 @@ specifying multiple plots per page will be added here)
 
     <param type="bool" name="yselfscale">
       <description>Selfscale Y axis</description>
+      <value>false</value>
+    </param>
+    
+    <param type="bool" name="commonAxisX">
+      <description>Plots should share a common x-axis.</description>
+      <value>false</value>
+    </param>
+
+    <param type="bool" name="commonAxisY">
+      <description>Plots should share a common y-axis.</description>
       <value>false</value>
     </param>
 
@@ -734,6 +773,26 @@ Gets the MS transformations parameters for the plot at the given index as a reco
   </returns>
 </method>
 
+<method type="function" name="setExportRange">
+  <keyword>setExportRange</keyword>
+  
+  <shortdescription>Sets the export range.</shortdescription>
+  
+  <description>
+	Sets the export range (applies to iteration plots where there may be more than one page).
+  </description>
+  
+  <input>
+    <param type="string" name="range">
+      <description>Export range (or none).</description>
+      <value />
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
 
 <!--
 ###############################################################################
@@ -875,83 +934,10 @@ Plot Axes Parameters Methods
 
 
 
-<method type="function" name="setPlotXAxis">
-  <keyword>setPlotXAxis</keyword>
-  
-  <shortdescription>Sets the plot x axis to the given.</shortdescription>
-  
-  <description>
-Sets the x plot axis and data column, as Strings.  If updateImmediately is
-true, this change takes effect immediately IF the plotms window is currently
-shown; otherwise it will only be applied next time update() and/or show() is
-called.
-  </description>
-  
-  <input>
-    <param type="string" name="xAxis">
-      <description>name of the axis choice for x (blank to keep current)</description>
-    </param>
-    
-    <param type="string" name="xDataColumn">
-      <description>name of the data column to use for the x axis, if applicable (blank to keep current)</description>
-      <value />
-    </param>
-    
-    <param type="bool" name="updateImmediately">
-      <description>whether to apply this change immediately, IF the window is currently shown</description>
-      <value>true</value>
-    </param>
-    
-    <param type="int" name="plotIndex">
-      <description>the index of the plot to apply this change</description>
-      <value>0</value>
-    </param>
-  </input>
-  
-  <example />
-  
-  <returns />
-</method>
 
-<method type="function" name="setPlotYAxis">
-  <keyword>setPlotYAxis</keyword>
-  
-  <shortdescription>Sets the plot y axis to the given.</shortdescription>
-  
-  <description>
-Sets the y plot axis and data column, as Strings.  If updateImmediately is
-true, this change takes effect immediately IF the plotms window is currently
-shown; otherwise it will only be applied next time update() and/or show() is
-called.
-  </description>
-  
-  <input>
-    <param type="string" name="yAxis">
-      <description>name of the axis choice for y (blank to keep current)</description>
-    </param>
-    
-    <param type="string" name="yDataColumn">
-      <description>name of the data column to use for the y axis, if applicable (blank to keep current)</description>
-      <value />
-    </param>
-    
-    <param type="bool" name="updateImmediately">
-      <description>whether to apply this change immediately, IF the window is currently shown      </description>
-      <value>true</value>
-    </param>
-    
-    <param type="int" name="plotIndex">
-      <description>the index of the plot to apply this change</description>
-      <value>0</value>
-    </param>
-  </input>
-  
-  <example />
-  
-  <returns />
-</method>
 
 <method type="function" name="setPlotAxes">
+
   <keyword>setPlotAxes</keyword>
   
   <shortdescription>Sets the plot axes to the given.</shortdescription>
@@ -984,6 +970,11 @@ called.
       <value />
     </param>
     
+     <param type="string" name="yAxisLocation">
+      <description>The whether to plot the y-data against a left or right axis (blank for default)</description>
+      <value />
+    </param>
+    
     <param type="bool" name="updateImmediately">
       <description>whether to apply this change immediately, IF the window is currently shown</description>
       <value>true</value>
@@ -993,12 +984,21 @@ called.
       <description>the index of the plot to apply this change</description>
       <value>0</value>
     </param>
+    
+    <param type="int" name="dataIndex">
+      <description>When overplotting data, the index of the data being overplotted.</description>
+      <value>0</value>
+    </param>
+    
+    
   </input>
   
   <example />
   
   <returns />
 </method>
+
+
 
 <method type="function" name="getPlotXAxis">
   <keyword>getPlotXAxis</keyword>
@@ -1283,6 +1283,10 @@ and outline.
       <description>the index of the plot to apply this change</description>
       <value>0</value>
     </param>
+    <param type="int" name="dataIndex">
+      <description>the index of the data in an overplot to apply this change</description>
+      <value>0</value>
+    </param>
   </input>
   <example />
   <returns />
@@ -1326,6 +1330,11 @@ and outline.
       <description>the index of the plot to apply this change</description>
       <value>0</value>
     </param>
+    <param type="int" name="dataIndex">
+      <description>the index of the data in an overplot plot to apply this change</description>
+      <value>0</value>
+    </param>
+    
   </input>
   <example />
   <returns />
@@ -1481,7 +1490,7 @@ Locates points in all selected plot regions and returns their meta information a
 
 <!--
 ###############################################################################
-Grid Methods
+Canvas Methods
 ###############################################################################
 -->
 
@@ -1610,6 +1619,33 @@ Grid Methods
 </method>
 
 
+<method type="function" name="setLegend">
+    <keyword>setLegend</keyword>
+    <shortdescription>Set whether or not to display a legend and the position of a legend.</shortdescription>
+    <description />
+    <input>
+        <param type="bool" name="showLegend">
+          <description>Show a legend with the plot?</description>
+          <value>false</value>
+        </param>
+        <param type="string" name="legendPosition">
+          <description>Location for the legend.</description>
+          <value>upperright</value>
+        </param>
+        
+        <param type="bool" name="updateImmediately">
+          <description>whether to apply this change immediately, IF the window is currently shown</description>
+          <value>true</value>
+        </param>
+        <param type="int" name="plotIndex">
+          <description>the index of the plot to apply this change</description>
+          <value>0</value>
+        </param>
+
+    </input>
+  <example />
+  <returns />
+</method>
 
 
 
@@ -1651,10 +1687,6 @@ Execution Methods
      </param>
      <param type="bool" name="highres">
          <description>Use high resolution? Always true for jpg and png.</description>
-         <value>false</value>
-     </param>
-     <param type="bool" name="interactive">
-         <description>Interactive mode (will pop up confirmation window if true, set false for automated scripts to prevent blocking).</description>
          <value>false</value>
      </param>
   </input>
@@ -1742,6 +1774,19 @@ State Methods
   </input>
   <example />
   
+  <returns />
+ 
+</method>
+
+<method type="function" name="clearPlots">
+  <keyword>clearPlots</keyword>
+  
+  <shortdescription>Remove existing plots so that new plots can replace them.</shortdescription>
+  
+  <description />
+  
+  <input />
+  <example />
   <returns />
  
 </method>
