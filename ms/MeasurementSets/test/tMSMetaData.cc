@@ -36,7 +36,7 @@
 #include <casa/Quanta/QLogical.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <iomanip>
 
 #include <casa/namespace.h>
