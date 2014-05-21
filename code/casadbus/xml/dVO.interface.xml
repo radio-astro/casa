@@ -2,23 +2,10 @@
 <!-- with Qt generate with: qdbusxml2cpp  -v -c QtdVO -i "casaqt/QtUtilities/QtStringMap.h" -p QtdVO.h:QtdVO.cc dVO.interface.xml -->
 <node name="/casa/vo/sevice">
   <interface name="edu.nrao.casa.dVO">
-    <method name="fetch">
-      <!-- input:  string                   = URL to fetch
-		           string                   = path to save fetched URL
-                   bool                     = progress (progress signals?)
-           output: int                      = observable id
-        -->
-      <arg direction="in"  type="s" name="url"/>
-      <arg direction="in"  type="s" name="output"/>
-      <arg direction="in"  type="b"  name="progress"/>
-      <arg direction="out" type="i"/>
-    </method>
-    <method name="request">
+    <method name="cancel">
       <!-- input:  int                      = observable id
-           output: (string,array<string>)   = [some|none|done|error], [result|error|empty]
         -->
       <arg direction="in"  type="i" name="id"/>
-      <arg direction="out" type="av"/>
     </method>
     <method name="query">
       <!-- input:  ra: double               = right ascension, ICRS
@@ -79,6 +66,17 @@
       <arg type="s" name="service" />
       <arg type="s" name="message" />
     </signal>
+    <method name="fetch">
+      <!-- input:  string                   = URL to fetch
+		           string                   = path to save fetched URL
+                   bool                     = progress (progress signals?)
+           output: int                      = observable id
+        -->
+      <arg direction="in"  type="s" name="url"/>
+      <arg direction="in"  type="s" name="output"/>
+      <arg direction="in"  type="b"  name="progress"/>
+      <arg direction="out" type="i"/>
+    </method>
     <signal name="fetch_error">
       <arg type="i" name="id" />
       <arg type="s" name="path" />

@@ -390,6 +390,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void vo_action_with_timeout_complete( );
 
     private slots:
+
+		void vo_service_select( const QString &service ) { vo_selected_service = service; }
+		void vo_selection_changed( );
+
+		void vo_clear_table( ) {
+			vo_table->clear( );
+			vo_table->setRowCount( 0 );
+			vo_init_columns( );
+			vo_label2col.clear( );
+			vo_urls.clear( );
+			vo_labels.clear( );
+			vo_labels_tip.clear( );
+		}
         void vo_launch_query( );
 		void vo_fetch_data( );
         void vo_clear_param( );
@@ -397,6 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         void vo_query_complete( int, const QString&, const QtStringMap& );
         void vo_query_description( int, const QString&, const QtStringMap& );
         void vo_query_row( int, const QString&, const QtStringMap& );
+		void vo_error( int, const QString&, const QString& );
 		void vo_dismiss_row( );
 		void vo_fetch_complete( int, QString );
 		void vo_fetch_progress(int,QString,double,double,double,double);
@@ -406,9 +420,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void vo_enable_actions( );
 		void vo_action_timed_out( );
 
-		void vo_table_selection_change( );
-
 	private:
+		void error( const QString &msg ) {
+			vo_status->setStyleSheet("color: red");
+			vo_status->setText( msg );
+		}
+		void status( const QString &msg ) {
+			vo_status->setStyleSheet("color: black");
+			vo_status->setText( msg );
+		}
+		void warning( const QString &msg ) {
+			vo_status->setStyleSheet("color: orange");
+			vo_status->setText( msg );
+		}
+
+		void vo_init_columns( ) {
+			vo_table->setColumnCount( 2 );
+			vo_table->setColumnWidth(0,30);
+			QTableWidgetItem *first = new QTableWidgetItem( "" );
+			vo_table->setHorizontalHeaderItem(0,first);
+			QTableWidgetItem *second = new QTableWidgetItem( "1" );
+			vo_table->setHorizontalHeaderItem(1,second);
+		}
+
         QDoubleValidator *ra_val;
         QDoubleValidator *dec_val;
         QDoubleValidator *ra_size_val;
@@ -418,6 +452,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int vo_action_timeout_id;
 		QString vo_action_timeout_msg;
 		bool vo_actions_are_enabled;
+
+		std::map<QString,QString> vo_service_name_to_url;
+		QString vo_selected_service;
+		std::vector<int> vo_selected_rows;
 
 		friend void lambda_dsoc_test_pre_( QtDataManager& );
 	};

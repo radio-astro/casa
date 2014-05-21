@@ -70,12 +70,15 @@ using std::set;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	struct dismiss_button_t : public QPushButton {
-		dismiss_button_t( QTableWidgetItem *i, QString u, QString t, QWidget *parent=0 ) : QPushButton(parent), item(i), url(u), file_type(t) { }
+		dismiss_button_t( QTableWidgetItem *i, QString u, QString t, QString s, QWidget *parent=0 ) : QPushButton(parent), item(i), url(u),
+                                                                                                      file_type(t), service(s) { }
+		~dismiss_button_t( ) { }
 		QTableWidgetItem *item;
 		QString url;
 		QString path;
 		QString file_type;
 		QString display_type;
+		QString service;
 	};
 
 // forward declare...
@@ -2042,10 +2045,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
     void QtDataManager::setupVO( ) {
+
+		// initialize the default service name...
+		vo_selected_service = vo_service->currentText( );
+
+		const char *vo_service_service_map[] = { "NRAO/DSOC Test Service", "http://vaosa-vm1.aoc.nrao.edu/ivoa-dal/siapv2-vao",
+												 "Chandra X-ray Observatory Data Archive", "http://cda.harvard.edu/cxcsiap/queryImages?",
+												 "Chandra Source Catalog", "http://cda.harvard.edu/cscsiap/queryImages?",
+												 0, 0 };
+
         const char *vo_labels_to_params_defaults[] = { "Band", "BAND", "1.0E-8/5",
                                                        "Time", "TIME", "1990-07-04/2014",
                                                        "Mode", "MODE", "archival",
-                                                       "Collection", "COLLECTION", "alma,jvla,vla", 0 };
+                                                       "Collection", "COLLECTION", "alma,jvla,vla",
+													   0, 0, 0 };
+
+		for ( const char **name=vo_service_service_map, **url=vo_service_service_map+1; *name; name+=2, url+=2 ) {
+			vo_service_name_to_url[*name] = *url;
+		}
 
         // save the default background for QLineEdit...
         QPalette pal = vo_ra->palette( );
@@ -2071,6 +2088,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             vo_flex_params->addItem(valp[0]);
         }
 
+		connect( vo_clear, SIGNAL(pressed( )), SLOT(vo_clear_table( )) );
         connect( vo_query, SIGNAL(pressed( )), SLOT(vo_launch_query( )) );
 		connect( vo_raster, SIGNAL(pressed( )), SLOT(vo_fetch_data( )) );
 		connect( vo_contour, SIGNAL(pressed( )), SLOT(vo_fetch_data( )) );
@@ -2083,27 +2101,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         connect( vo_dec, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
         connect( vo_dec_size, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
 
+		connect( vo_service, SIGNAL(currentIndexChanged(QString)), this, SLOT(vo_service_select(QString)) );
+
         connect( &dvo, SIGNAL(query_begin(int,QString,QtStringMap)), this, SLOT(vo_query_begin(int,QString,QtStringMap)) );
         connect( &dvo, SIGNAL(query_data(int,QString,QtStringMap)), this, SLOT(vo_query_row(int,QString,QtStringMap)) );
         connect( &dvo, SIGNAL(query_description(int,QString,QtStringMap)), this, SLOT(vo_query_description(int,QString,QtStringMap)) );
         connect( &dvo, SIGNAL(query_end(int,QString,QtStringMap)), this, SLOT(vo_query_complete(int,QString,QtStringMap)) );
+		connect( &dvo, SIGNAL(query_error(int,QString,QString)), this, SLOT(vo_error(int,QString,QString)) );
 		connect( &dvo, SIGNAL(fetch_complete(int,QString)), this, SLOT(vo_fetch_complete(int,QString)) );
-		connect( &dvo, SIGNAL(fetch_progress(int,QString,double,double,double,double)), 
+		connect( &dvo, SIGNAL(fetch_progress(int,QString,double,double,double,double)),
 				 this, SLOT(vo_fetch_progress(int,QString,double,double,double,double)) );
+		connect( &dvo, SIGNAL(fetch_error(int,QString,QString)), this, SLOT(vo_error(int,QString,QString)) );
 
         vo_flex_params->setCurrentRow(0);
         vo_table->setSelectionBehavior(QAbstractItemView::SelectRows);
-		connect( vo_table, SIGNAL(itemSelectionChanged( )), this, SLOT(vo_table_selection_change( )) );
-		// connect( vo_table, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
-		// 		 this, SLOG(vo_table_selection_change(QTableWidgetItem*,QTableWidgetItem*)) );
+		connect( vo_table, SIGNAL(itemSelectionChanged( )), SLOT(vo_selection_changed( )) );
 
-        vo_table->setColumnCount(2);
+		vo_init_columns( );
 
-        vo_table->setColumnWidth(0,30);
-		QTableWidgetItem *first = new QTableWidgetItem( "" );
-		vo_table->setHorizontalHeaderItem(0,first);
-		QTableWidgetItem *second = new QTableWidgetItem( "1" );
-		vo_table->setHorizontalHeaderItem(1,second);
     }
 
      bool QtDataManager::updateVOstatus( ) {
@@ -2115,7 +2130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return true;
         } else {
 			vo_disable_actions( );
-			vo_status->setText( "DBus Virtual Observatory Service is NOT available..." );
+			error( "DBus Virtual Observatory Service is NOT available..." );
 			dvo_service_down = true;
 			return false;
         }
@@ -2153,12 +2168,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     void QtDataManager::vo_query_description( int count, const QString &service, const QtStringMap &values ) {
+		qDebug( ) << "------------------------------------------- description -------------------------------------------";
+		qDebug( ) << service;
+		qDebug( ) << "---------------------------------------------------------------------------------------------------";
+		qDebug( ) << values;
 		vo_action_with_timeout_reset( );
         int initial_columns = vo_labels.size( );
         vector<QString>::size_type cur_row = vo_urls.size( );
         bool found_url = false;
         for ( QtStringMap::const_iterator it=values.begin( ); it != values.end( ); ++it ) {
-            if ( it.key( ) == "access_url" )
+            if ( it.key( ) == "access_url" || it.key( ) == "accref" )
                  found_url = true;
             else if ( vo_label2col.find(it.key( )) == vo_label2col.end( ) ) {
                  vo_labels.push_back(it.key( ));
@@ -2187,13 +2206,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		vo_action_with_timeout_complete( );
     }
 
+    void QtDataManager::vo_error( int id, const QString &service, const QString &err ) {
+		error( err );
+		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
+		if ( iter != dvo_working_set.end( ) ) dvo_working_set.erase(iter);
+		vo_action_with_timeout_complete( );
+    }
+
     void QtDataManager::vo_query_row( int id, const QString &service, const QtStringMap &values ) {
 		vo_action_with_timeout_reset( );
 		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
 		if ( dvo_working_set.find(id) == dvo_working_set.end( ) ) return;
-		if ( iter->count > 500 ) {
-			vo_status->setText( "Truncating query results after 500 entries..." );
+		if ( iter->count < 3 ) {
+			qDebug( ) << "-------------------------------------------      row    -------------------------------------------";
+			qDebug( ) << service;
+			qDebug( ) << "---------------------------------------------------------------------------------------------------";
+			qDebug( ) << values;
+		}
+		const int truncate_length = 500;
+		if ( iter->count >= truncate_length ) {
+			warning( QString("Truncating query results after %1 entries...").arg(truncate_length) );
+			dvo.cancel(id);
 			dvo_working_set.erase(iter);
+			vo_action_with_timeout_complete( );
 			return;
 		}
 		iter->increment( );
@@ -2202,12 +2237,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         vo_table->insertRow(row);
         QString url;
 		QString type;
+		bool skip_row = false;
 		QTableWidgetItem *reference_item = 0;
         for ( QtStringMap::const_iterator it=values.begin( ); it != values.end( ); ++it ) {
-            if ( it.key( ) == "access_url" ) {
+            if ( it.key( ) == "access_url" || it.key( ) == "accref" ) {
                  url = it.value( );
             } else {
-				if ( it.key( ) == "access_format" ) type = it.value( );
+				if ( it.key( ) == "access_format" || it.key( ) == "imgfmt" ) {
+					type = it.value( );
+					if ( type != "image/fits" ) {
+						// drop any non-fits rows...
+						skip_row = true;
+						break;
+					}
+				}
                 std::map<QString,int>::iterator col = vo_label2col.find(it.key( ));
                 if ( col != vo_label2col.end( ) ) {
                      QTableWidgetItem *cell = new QTableWidgetItem(it.value( ));
@@ -2218,7 +2261,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             }
         }
 
-		if ( reference_item && ! url.isEmpty( ) ) {
+		if ( reference_item && ! url.isEmpty( ) && ! skip_row ) {
 			vo_table->setCellWidget(row,0,new_vo_dismiss_button(reference_item,url,type));
 		} else vo_table->removeRow( row );
 
@@ -2242,7 +2285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDataManager::vo_fetch_progress( int id, QString path, double total_size, double total_done, double ultotal, double uldone ) {
 		// if ( dvo_working_set.find(id) == dvo_working_set.end( ) ) return;
-		vo_status->setText( QString("%1% (of %2MB) complete").arg(total_done/total_size * 100.0,0,'f',0).arg(total_size/(1024.0*1024.0),0,'f',1) );
+		status( QString("%1% (of %2MB) complete").arg(total_done/total_size * 100.0,0,'f',0).arg(total_size/(1024.0*1024.0),0,'f',1) );
 		vo_action_with_timeout_reset( );
 	}
 
@@ -2297,21 +2340,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return OK;
     }
 
-
     void QtDataManager::vo_launch_query( ) {
-         if ( ! updateVOstatus( ) ) return;
-         double ra, dec, ra_size, dec_size;
-         QVariantMap flex_params;
-         QStringList vos;
-         collect_vo_parameters( ra, dec, ra_size, dec_size, flex_params );
-		 int id = dvo.query(ra,dec,ra_size,dec_size, "", flex_params,vos);
-         dvo_working_set.insert(id);
-		 vo_action_with_timeout( id, 5, "VO query" );
+        if ( ! updateVOstatus( ) ) return;
+        double ra, dec, ra_size, dec_size;
+        QVariantMap flex_params;
+        collect_vo_parameters( ra, dec, ra_size, dec_size, flex_params );
+		QStringList vos;
+		vos.push_back(vo_service_name_to_url[vo_selected_service]);
+		int id = dvo.query(ra,dec,ra_size,dec_size, "image/fits", flex_params,vos);
+        dvo_working_set.insert(id);
+		vo_action_with_timeout( id, 5, "VO query" );
     }
+
+	void QtDataManager::vo_selection_changed( ) {
+		vo_selected_rows.clear( );
+		QList<QTableWidgetSelectionRange> range = vo_table->selectedRanges( );
+		for ( QList<QTableWidgetSelectionRange>::iterator it = range.begin( ); it != range.end( ); ++it ) {
+			for ( int r=it->topRow( ); r <= it->bottomRow( ); ++r )vo_selected_rows.push_back(r);
+		}
+		if ( vo_selected_rows.size( ) > 0 ) {
+			vo_contour->setEnabled( true );
+			vo_raster->setEnabled( true );
+		} else {
+			vo_contour->setEnabled( false );
+			vo_raster->setEnabled( false );
+		}
+	}
 
 	void QtDataManager::vo_fetch_data( ) {
 		if ( vo_table->currentRow( ) < 0 )
-			vo_status->setText( "No row is currently selected..." );
+			error( "No row is currently selected..." );
 		else {
 			QWidget *widget = vo_table->cellWidget(vo_table->currentRow( ),0);
 			if ( widget ) {
@@ -2437,7 +2495,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     QPushButton *QtDataManager::new_vo_dismiss_button( QTableWidgetItem *i, QString url, QString type ) {
         QSizePolicy sizepolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		QPushButton *dismiss = new dismiss_button_t(i,url,type,vo_table);
+		QPushButton *dismiss = new dismiss_button_t(i,url,type,vo_selected_service,vo_table);
 		connect( dismiss, SIGNAL(pressed( )), SLOT(vo_dismiss_row( )) );
         dismiss->setObjectName(QString::fromUtf8("dismiss"));
         sizepolicy.setHeightForWidth(dismiss->sizePolicy().hasHeightForWidth());
@@ -2449,7 +2507,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return dismiss;
     }
 
-	void QtDataManager::vo_clear_status( ) { vo_status->setText( "" ); }
+	void QtDataManager::vo_clear_status( ) { status( "" ); }
 	void QtDataManager::vo_clear_status_delayed( int seconds ) {
 		QTimer::singleShot( seconds * 1000, this, SLOT(vo_clear_status( )) );
 	}
@@ -2473,7 +2531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDataManager::vo_enable_actions( ) {
 		vo_action_timeout->stop( );
 		vo_action_timeout->setInterval( 0 );
-		if ( vo_table->currentRow( ) >= 0 ) {
+		if ( vo_selected_rows.size( ) > 0 ) {
 			vo_contour->setEnabled(true);
 			vo_raster->setEnabled(true);
 		}
@@ -2481,14 +2539,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		vo_clear->setEnabled(true);
 		vo_actions_are_enabled = true;
 	}
-	
+
 	void QtDataManager::vo_action_timed_out( ) {
-		QApplication::restoreOverrideCursor();
-		vo_status->setText( vo_action_timeout_msg + " timed out..." );
-		vo_enable_actions( );
+		vo_action_with_timeout_complete( );
+		error( vo_action_timeout_msg + " timed out..." );
 		updateVOstatus( );
-		vo_action_timeout_id = 0;
-		vo_action_timeout_msg = "";
 	}
 
 	void QtDataManager::vo_action_with_timeout_complete( ) {
@@ -2496,16 +2551,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		vo_enable_actions( );
 		vo_action_timeout_id = 0;
 		vo_action_timeout_msg = "";
-	}
-
-	void QtDataManager::vo_table_selection_change( ) {
-		if ( vo_actions_are_enabled && vo_table->currentRow( ) >= 0 ) {
-			vo_contour->setEnabled( true );
-			vo_raster->setEnabled( true );
-		} else {
-			vo_contour->setEnabled( false );
-			vo_raster->setEnabled( false );
-		}
 	}
 
 } //# NAMESPACE CASA - END
