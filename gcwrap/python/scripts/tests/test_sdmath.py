@@ -184,6 +184,15 @@ class sdmath_unittest_base:
             self.assertEqual(ret,True,
                              msg='SPECTRA: data differ in row%s'%(irow))
 
+    def _getspectra( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp=tb.getcol('SPECTRA').transpose()
+        tb.close()
+        return sp
+
 ###
 # Test on bad parameter settings
 ###
@@ -1647,7 +1656,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '<25'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,23]}
+        tbsel = {'IFNO': [20,21,22,23,24]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1657,7 +1666,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '>21'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [23,25]}
+        tbsel = {'IFNO': [22,23,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1667,7 +1676,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '21~24'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,23]}
+        tbsel = {'IFNO': [21,22,23,24]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1677,7 +1686,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '21,22,23,25'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,23,25]}
+        tbsel = {'IFNO': [21,22,23,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1687,7 +1696,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '<22,>24'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,25]}
+        tbsel = {'IFNO': [20,21,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1705,7 +1714,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '299.5~310GHz'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [23,25]}
+        tbsel = {'IFNO': [22,23,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1715,7 +1724,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '-50~50km/s'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [23]}
+        tbsel = {'IFNO': [22,23]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1725,7 +1734,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '150~550km/s,>23'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,25]}
+        tbsel = {'IFNO': [20,21,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1735,7 +1744,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     def _comparecal_with_selection( self, name, tbsel={} ):
         self._checkfile(name)
-        sp=self._getspectra_selected(name, tbsel)
+        sp=self._getspectra_selected(name, {})
         spref=self._getspectra_selected(self.reffile, tbsel)
 
         self._checkshape( sp, spref )
@@ -1747,15 +1756,6 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
             self.assertEqual( retval, True,
                              msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, spref
-
-    def _getspectra( self, name ):
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='file %s does not exist'%(name))        
-        tb.open(name)
-        sp=tb.getcol('SPECTRA').transpose()
-        tb.close()
-        return sp
 
     def _getspectra_selected( self, name, tbsel={} ):
         """
