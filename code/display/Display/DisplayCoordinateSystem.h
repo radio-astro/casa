@@ -123,7 +123,11 @@ namespace casa {
 
             const LinearCoordinate &linearCoordinate( unsigned int which ) const
                 { return cs_.linearCoordinate(which); }
+            bool hasPolarizationCoordinate() const { return cs_.hasPolarizationCoordinate(); }
 
+            Int polarizationAxisNumber(Bool doWorld=False) const {
+            	return cs_.polarizationAxisNumber(doWorld);
+            }
             const StokesCoordinate &stokesCoordinate( int which = -1 ) const
                 { return which < 0 ? cs_.stokesCoordinate( ) : cs_.stokesCoordinate(which); }
 

@@ -3783,7 +3783,7 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
 	return outImage;
 }
 
-Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
+/*Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		Vector<Float>& specVal, const CoordinateSystem& cs,
 		const String& xunits, const String& specFrame, const String& restValue,
 		int altAxisIndex) {
@@ -3889,10 +3889,10 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 
 	convertArray(specVal, xworld);
 	return True;
-}
+}*/
 
 
-Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
+/*Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 				   Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 				   const String& xytype,
 				   const String& specaxis, const Int&,
@@ -3992,9 +3992,9 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue, whichTabular);
-}
+}*/
 
-Bool ImageAnalysis::getFreqProfile(
+/*Bool ImageAnalysis::getFreqProfile(
 		const Vector<Double>& x, const Vector<Double>& y,
 		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 		const String& xytype, const String& specaxis,
@@ -4358,7 +4358,7 @@ Bool ImageAnalysis::getFreqProfile(
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue, whichTabular);
-}
+}*/
 
 // These should really go in a coordsys inside the casa name space
 

@@ -407,7 +407,7 @@ class ImageAnalysis
       * 	       regions (when the vectors x and y both have size 2).  Other types of region
       * 	       can be distinguished from the size of the x,y vectors.
       */
-    Bool getFreqProfile(const Vector<Double>& x,
+    /*Bool getFreqProfile(const Vector<Double>& x,
 			const Vector<Double>& y,
 			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 			const String& xytype="world",
@@ -421,7 +421,7 @@ class ImageAnalysis
 			const Int& whichQuality=0,
 			const String& restValue="",
 			Int beamChannel = -1,
-			const String& shape="rectangle");
+			const String& shape="rectangle");*/
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -452,7 +452,7 @@ class ImageAnalysis
     Bool isFloat() const { return _imageFloat; }
 
  private:
-
+    //Note:  getFreqProfile has been replaced by imageanalysis/PixelValueManipulator
     //Used for single point extraction.
     //Functions to get you back a spectral profile at direction position x, y.
      //x, y are to be in the world coord value or pixel value...user specifies
@@ -469,7 +469,7 @@ class ImageAnalysis
      // freq and "km/s" for vel, "mm" for wavelength and "um" for "air wavelength"
      //PLEASE note that the returned value of zyaxisval are the units of the image
      //specframe can be a valid frame from MFrequency...i.e LSRK, LSRD etc...
-     Bool getFreqProfile(const Vector<Double>& xy,
+     /*Bool getFreqProfile(const Vector<Double>& xy,
     		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
     		 const String& xytype="world",
     		 const String& specaxis="freq",
@@ -479,7 +479,7 @@ class ImageAnalysis
     		 const String& xunits="",
     		 const String& specframe="",
     		 const Int& whichQuality=0,
-    		 const String& restValue="");
+    		 const String& restValue="");*/
     
     SPIIF _imageFloat;
     SPIIC _imageComplex;
@@ -540,14 +540,17 @@ class ImageAnalysis
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
 
+
+    //Note:  getSpectralAxisVal has been replaced by imageanalysis/PixelValueManipulator
+
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already.  If a
     //valid tabular axis is specified (>=0) it takes precedence over the
     //spectral axis.
-    Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
+    /*Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal,
                             const CoordinateSystem& cSys, const String& xunits, 
                             const String& freqFrame="", const String& restValue="",
-                            int tabularAxisIndex = -1);
+                            int tabularAxisIndex = -1);*/
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
