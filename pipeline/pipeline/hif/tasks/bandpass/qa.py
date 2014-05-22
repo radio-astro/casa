@@ -13,19 +13,11 @@ LOG = logging.get_logger(__name__)
 
 
 class BandpassQAPool(pqa.QAScorePool):
-    score_types = {'AMPLITUDE_SCORE_DD'  : 'amplitude derivative',
-                   'AMPLITUDE_SCORE_FN'  : 'amplitude Wiener function',
-                   'AMPLITUDE_SCORE_SNR' : 'amplitude SNR',
-                   'PHASE_SCORE_DD'      : 'phase derivative',
-                   'PHASE_SCORE_FN'      : 'phase Wiener function',
-                   'PHASE_SCORE_RMS'     : 'phase RMS'}
+    score_types = {'AMPLITUDE_SCORE_SNR' : 'amplitude SNR',
+                   'PHASE_SCORE_DD'      : 'phase derivative'}
 
-    short_msg = {'AMPLITUDE_SCORE_DD'  : 'Amp derivative',
-                 'AMPLITUDE_SCORE_FN'  : 'Amp flatness',
-                 'AMPLITUDE_SCORE_SNR' : 'Amp SNR',
-                 'PHASE_SCORE_DD'      : 'Phase derivative',
-                 'PHASE_SCORE_FN'      : 'Phase flatness',
-                 'PHASE_SCORE_RMS'     : 'Phase RMS'}
+    short_msg = {'AMPLITUDE_SCORE_SNR' : 'Amp SNR',
+                 'PHASE_SCORE_DD'      : 'Phase derivative'}
 
     def __init__(self, rawdata, caltable):
         super(BandpassQAPool, self).__init__()
