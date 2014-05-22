@@ -13,7 +13,7 @@ from . import rules
 LOG = infrastructure.get_logger(__name__)
 
 class DetectLineInputs(common.SingleDishInputs):
-    def __init__(self, context, grid_table, spectra, window=None, edge=None, broadline=None):
+    def __init__(self, context, grid_table, spectra, masks, window=None, edge=None, broadline=None):
         self._init_properties(vars())
         
     @property
@@ -69,6 +69,7 @@ class DetectLine(common.SingleDishTaskTemplate):
         The process finds emission lines and determines protection regions for baselinefit
         """
         spectra = self.inputs.spectra
+        masks = self.inputs.masks
         grid_table = self.inputs.grid_table
         window = self.inputs.window
         edge = self.inputs.edge
@@ -172,7 +173,8 @@ class DetectLine(common.SingleDishTaskTemplate):
             else:
                 LOG.debug('Start Row %d' % (row))
 
-                protected = self._detect(spectrum = spectra[row],#spectrum = spectra[:,row], 
+                protected = self._detect(spectrum = spectra[row],
+                                         mask = masks[row],
                                          start=Start,
                                          end=len(Thre),
                                          binning=Binning,
@@ -208,7 +210,7 @@ class DetectLine(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _detect(self, spectrum, start, end, binning, threshold, box_size, min_nchan, avg_limit, tweak, edge):
+    def _detect(self, spectrum, mask, start, end, binning, threshold, box_size, min_nchan, avg_limit, tweak, edge):
         protected = []
 
         nchan = len(spectrum)
@@ -234,6 +236,7 @@ class DetectLine(common.SingleDishTaskTemplate):
                                            min_nchan=min_nchan, 
                                            avg_limit=avg_limit[y], 
                                            tweak=True,
+                                           mask=mask,
                                            edge=(int((EdgeL+Bin-1)/Bin), int((EdgeR+Bin-1)/Bin)))
             # len(line_ranges) is twice of number of lines detected
             # since line_ranges is a flat list of left/right edges of 
@@ -299,7 +302,7 @@ class DetectLine(common.SingleDishTaskTemplate):
                 else:
                     if len(protected) == 1 and protected[0] == [-1, -1]:
                         protected = []
-                    protected.extend([l[0:2] for l in linestat])
+                    #protected.extend([l[0:2] for l in linestat])
                     # Store line if max intensity exceeds 1/30 of the strongest one
                     #protected.extend([l[0:2] for l in linestat if l[2] > Threshold])
 

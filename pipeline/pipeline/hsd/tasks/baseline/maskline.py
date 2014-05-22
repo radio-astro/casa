@@ -11,6 +11,8 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
+NoData = common.NoData
+
 class MaskLineInputs(common.SingleDishInputs):
     def __init__(self, context, antenna_list, spwid_list, iteration, index_list, 
                  window=None, edge=None, broadline=None):
@@ -90,6 +92,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         gridding_task = simplegrid.SimpleGridding(gridding_inputs)
         gridding_result = self._executor.execute(gridding_task, merge=True)
         spectra = gridding_result.outcome['spectral_data']
+        masks = (spectra != NoData)
         grid_table = gridding_result.outcome['grid_table']
         t1 = time.time()
 
@@ -115,7 +118,7 @@ class MaskLine(common.SingleDishTaskTemplate):
 
         # line finding
         t0 = time.time()
-        detection_inputs = detection.DetectLine.Inputs(context, grid_table, spectra, window, edge, broadline)
+        detection_inputs = detection.DetectLine.Inputs(context, grid_table, spectra, masks, window, edge, broadline)
         line_finder = detection.DetectLine(detection_inputs)
         detection_result = self._executor.execute(line_finder, merge=True)
         detect_signal = detection_result.outcome
