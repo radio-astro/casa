@@ -112,9 +112,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     <param type="string" name="blfunc">
 	    <description>baseline model function</description>
-            <value>none</value>
+            <value>poly</value>
 	    <allowed kind="enum">
-                <value>none</value>
 	        <value>poly</value>
                 <value>chebyshev</value>
 	        <value>cspline</value>
@@ -185,11 +184,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="kernel">
             <description>type of spectral smoothing</description>
-            <value>none</value>
-            <allowed kind="enum">
-            <value>none</value>
-            <value>hanning</value>
             <value>gaussian</value>
+            <allowed kind="enum">
+            <value>gaussian</value>
+	    <value>hanning</value>
             <value>boxcar</value>
             </allowed>
     </param>
@@ -246,11 +244,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		</equals>
 	    </when>
             <when param="kernel">
-                <equals value="none"/>
-                <equals value="hanning"/>
                 <equals value="gaussian">
                         <default param="kwidth"><value>5</value></default>
                 </equals>
+                <equals value="hanning"/>
                 <equals value="boxcar">
                         <default param="kwidth"><value>5</value></default>
                 </equals>
@@ -267,7 +264,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		</equals>
             </when>
 	    <when param="blfunc">
-                <equals value="none"/>
 		<equals value="poly">
 			<default param="order"><value>5</value></default>
 	        </equals>
