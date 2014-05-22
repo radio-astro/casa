@@ -10,6 +10,14 @@ revision="@CASAREVISION@"
 srcurl="@CASASRCURL@"
 arch="@arch@"
 
+mplrc=""
+pythonhome=""
+pythonpath=""
+casapython=""
+tcllib=""
+qtplugin=""
+pgplot=""
+
 #SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#
 #######  code after this point is shared by both developer builds and binary
 #######  releases and should be written to support either using the variables
@@ -32,10 +40,59 @@ EOF
 }
 
 execute( ) {
-    if [ "${lddpreload}" ]; then
-        LD_PRELOAD="${lddpreload}"
-        export LD_PRELOAD
+
+    ####
+    #### setup matplotlib...
+    ####
+    if [ -z "$MATPLOTLIBRC" -a "$mplrc" ]; then
+        MATPLOTLIBRC="$mplrc"
+        export MATPLOTLIBRC
     fi
+    ####
+    ####    where fontList.cache...
+    ####    mixing this with different versions of python causes problems...
+    ####
+    MPLCONFIGDIR="$HOME/.casa/matplotlib"
+    export MPLCONFIGDIR
+    if [ ! -d "$MPLCONFIGDIR" ]; then
+        mkdir -p "$MPLCONFIGDIR"
+    fi
+    if [ ! -d "$MPLCONFIGDIR" ]; then
+        echo "could not create matplotlib config directory: $MPLCONFIGDIR"
+        exit 1
+    fi
+
+    if [ "$pythonhome" ]; then
+        PYTHONHOME="$pythonhome"
+        export PYTHONHOME
+    fi
+    if [ "$pythonpath" ]; then
+        _PYTHONPATH="$PYTHONPATH"
+        PYTHONPATH="$pythonpath:$_PYTHONPATH"
+        export PYTHONPATH
+    fi
+    if [ "$casapython" ]; then
+        __CASAPY_PYTHONDIR="$casapython"
+        export __CASAPY_PYTHONDIR
+    fi
+
+    if [ "$tcllib" ]; then
+        TCL_LIBRARY="$tcllib"
+        export TCL_LIBRARY
+    fi
+    if [ "$qtplugin" ]; then
+        QT_PLUGIN_PATH="$qtplugin"
+        export QT_PLUGIN_PATH
+    fi
+    if [ "$pgplot" ]; then
+        PGPLOT_FONT="$pgplot/grfont.dat"
+        PGPLOT_RGB="$pgplot/rgb.txt"
+		export PGPLOT_FONT PGPLOT_RGB
+    fi
+
+    CASAPATH="${prefix} ${arch}"
+    export CASAPATH
+
     if [ "${lddpath}" ]; then
         case "${os}" in
         Darwin)
@@ -48,8 +105,26 @@ execute( ) {
                 ;;
         esac
     fi
-    CASAPATH="${prefix} ${arch}"
-    export CASAPATH
+
+    if [ "$lddpreload" ]; then
+        ###
+        ### newer versions of fedora have trouble with the older libtermcap
+        ### that comes with the RHEL5 build casa binary distributions...
+        ### interposing libtinfo resolves the issue...
+        ###
+        ### displaying task help, when remotely logged into a newer linux
+        ### system from another linux system causes a segv without also
+        ### including the ncurses that is linked against libtinfo...
+        ###
+        interpose=`find -H /lib64 -type f -name 'libtinfo.*' 2> /dev/null | head -1`
+        if test -n "$interpose"; then
+            ncurses=`find -H /lib64 -type f -name 'libncurses.*' 2> /dev/null | head -1`
+            interpose="$interpose:$ncurses:"
+        fi
+
+        LD_PRELOAD="$interpose$lddpreload"
+        export LD_PRELOAD
+    fi
     exec $1
 }
 
@@ -75,7 +150,7 @@ while [ $# -gt 0 ]; do
             echo "${srcurl}"
             ;;
     --exec)
-            if [ $1 <= 1 ]; then
+            if [ $# -lt 2 ]; then
                 usage 1
             fi
             execute "$2"
