@@ -1,44 +1,12 @@
 <%!
 navbar_active='By Topic'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.domain.measures as measures
 import pipeline.extern.asizeof as asizeof
 import pipeline.infrastructure.logging as logging
 import math
-
-def get_bar_class(pqascore):
-	score = pqascore.score
-	if score in (None, '', 'N/A'):
-		return ''
-	elif score <= 0.1:
-		return ' bar-danger'
-	elif score <= 0.5:
-		return ' bar-warning'
-	else:
-		return ' bar-success'
-
-def get_badge_class(pqascore):
-	score = pqascore.score
-	if score in (None, '', 'N/A'):
-		return ''
-	elif score <= 0.1:
-		return ' badge-important'
-	elif score <= 0.5:
-		return ' badge-warning'
-	else:
-		return ' badge-success'
-
-def get_bar_width(pqascore):
-	if pqascore.score in (None, '', 'N/A'):
-		return 0
-	else:
-		return 100.0 * pqascore.score
-
-def format_score(pqascore):
-	if pqascore.score in (None, '', 'N/A'):
-		return 'N/A'
-	return '%0.2f' % pqascore.score
 
 def get_lowest_scoring_results(topic):
 	all_results_lists = topic.results_by_type.values()
@@ -169,8 +137,8 @@ def flagcolortable(flagpct):
 			<tr>
 				<td><a href="${topic.url}">${topic.description}</a></td>
 				<td>${task_description}</a><span class="pull-right">${pqascore.shortmsg}</span></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${get_bar_class(pqascore)}" style="width:${get_bar_width(pqascore)}%;"><span class="text-center"></span></div></div></td>
-				<td><span class="badge${get_badge_class(pqascore)}">${format_score(pqascore)}</span></td>
+				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${rendererutils.get_bar_class(pqascore)}" style="width:${rendererutils.get_bar_width(pqascore)}%;"><span class="text-center"></span></div></div></td>
+				<td><span class="badge${rendererutils.get_badge_class(pqascore)}">${rendererutils.format_score(pqascore)}</span></td>
 			</tr>
 			% endfor
 		</tbody>
