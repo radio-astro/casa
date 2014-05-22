@@ -251,7 +251,9 @@ class ASDM2MSFiller
 		int                       observationId_,
 		vector<int>               &stateId_,
 		vector<pair<int, int> >   &nChanNPol_,
-		vector<double>            &uvw_);
+		vector<double>            &uvw_,
+		vector<double>            &weight_,
+		vector<double>            &sigma_);
 
   void addData (bool                      complexData,
 		vector<double>            &time_,
