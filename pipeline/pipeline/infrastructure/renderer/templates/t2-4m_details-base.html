@@ -3,6 +3,7 @@ import pipeline.domain.measures as measures
 import pipeline.extern.asizeof as asizeof
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
 def get_logrecords(result, loglevel):
     """
@@ -32,12 +33,12 @@ def get_qascores(pool, lo, hi):
 
 <ul class="unstyled">
 %if result.qa.pool:
-	% for qascore in get_qascores(result.qa.pool, -0.1, 0.1):
+	% for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
 	<li class="alert alert-error">
 		<i class="icon-remove-sign"></i> <strong>QA</strong> ${qascore.longmsg}
 	</li>
 	% endfor
-	% for qascore in get_qascores(result.qa.pool, 0.1, 0.5):
+	% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
 	<li class="alert">
 		<i class="icon-question-sign"></i> <strong>QA</strong> ${qascore.longmsg}
 	</li>
@@ -126,25 +127,25 @@ Help disabled until the task descriptions from John's presentation are added
 				        </tr>
 				    </thead>
 					<tbody>
-					% for qascore in get_qascores(result.qa.pool, -0.1, 0.1):
+					% for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
 					<tr class="error">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
 				  	% endfor
-					% for qascore in get_qascores(result.qa.pool, 0.1, 0.5):
+					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
 					<tr class="warning">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
 				  	% endfor
-					% for qascore in get_qascores(result.qa.pool, 0.5, 0.9):
+					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_WARNING, rendererutils.SCORE_THRESHOLD_SUBOPTIMAL):
 					<tr class="info">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
 				  	% endfor
-					% for qascore in get_qascores(result.qa.pool, 0.9, 1.0):
+					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_SUBOPTIMAL, 1.0):
 					<tr class="success">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>

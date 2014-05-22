@@ -1,12 +1,15 @@
 from __future__ import absolute_import
 
 import numpy as np
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
+
+SCORE_THRESHOLD_ERROR = 0.33
+SCORE_THRESHOLD_WARNING = 0.66
+SCORE_THRESHOLD_SUBOPTIMAL = 0.9
 
 
 def printTsysFlags(tsystable, htmlreport):
@@ -74,3 +77,41 @@ def renderflagcmds(flagcmds, htmlflagcmds):
         stream.write('</body>')
         stream.write('</html>')
 
+
+
+def get_bar_class(pqascore):
+    score = pqascore.score
+    if score in (None, '', 'N/A'):
+        return ''
+    elif score <= SCORE_THRESHOLD_ERROR:
+        return ' bar-danger'
+    elif score <= SCORE_THRESHOLD_WARNING:
+        return ' bar-warning'
+    elif score <= SCORE_THRESHOLD_SUBOPTIMAL:
+        return ' bar-info'
+    else:
+        return ' bar-success'
+
+def get_badge_class(pqascore):
+    score = pqascore.score
+    if score in (None, '', 'N/A'):
+        return ''
+    elif score <= SCORE_THRESHOLD_ERROR:
+        return ' badge-important'
+    elif score <= SCORE_THRESHOLD_WARNING:
+        return ' badge-warning'
+    elif score <= SCORE_THRESHOLD_SUBOPTIMAL:
+        return ' badge-info'
+    else:
+        return ' badge-success'
+
+def get_bar_width(pqascore):
+    if pqascore.score in (None, '', 'N/A'):
+        return 0
+    else:
+        return 100.0 * pqascore.score
+
+def format_score(pqascore):
+    if pqascore.score in (None, '', 'N/A'):
+        return 'N/A'
+    return '%0.2f' % pqascore.score
