@@ -5680,7 +5680,8 @@ class WebLogGenerator(object):
         # copy all uncompressed non-python resources to output directory
         src = os.path.dirname(resources.__file__)
         dst = outdir
-        ignore_fn = shutil.ignore_patterns('*.zip','*.py','*.pyc','CVS*')
+        ignore_fn = shutil.ignore_patterns('*.zip', '*.py', '*.pyc', 'CVS*',
+                                           '.svn')
         shutil.copytree(src, 
                         dst, 
                         symlinks=False, 
