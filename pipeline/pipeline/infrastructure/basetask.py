@@ -1271,7 +1271,7 @@ def _log_task(task, dry_run):
                                 break_long_words=False)
         comment = '%s\n' % '\n'.join(wrapped)
 
-    comment += '\n# %s\n#\n' % task.inputs._pipeline_casa_task
+    comment += '\n# %s\n#\n' % getattr(task.inputs, '_pipeline_casa_task', 'unknown pipeline task')
 
     for task_classes, task_comment in casataskdict.TASK_COMMENTS.items():
         if task.__class__ in task_classes:

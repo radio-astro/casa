@@ -186,6 +186,7 @@ except:
 
 %if ampuv_allant_plots:
     <h3>Flux Calibrator Model Comparison</h3>
+    Antenna selection used for flux transfer to the secondary calibrators.
 
 	% for ms in ampuv_allant_plots:
 	    <h4>
@@ -251,13 +252,12 @@ except:
 		
 		                    <div class="caption">
                                             <h4>Baseband ${antplot.parameters['baseband']}</h4>
-					    <p>Amp vs. uvdist for 
+					    <p>Selection for 
 					    <%
 						antlist = antplot.parameters['ant'].split(',')
 						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
 					    %>
-					    ${'all antennae.' if antplot.parameters['ant'] == '' else 'antennae: '+antdisp}
-					    Color coded by spw.<br> Flux calibrator fields: ${antplot.parameters['field']}.
+					    ${' all antennae.' if antplot.parameters['ant'] == '' else ' antennae: '+antdisp}
 					    </p>
 					</div>
 		                </div>
