@@ -47,6 +47,9 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         end = time.time()
         LOG.debug('Elapsed time: %s sec' % (end - start))
         
+        #outcome = {'spectral_data': retval[0],
+        #           'flag_data': retval[1],
+        #           'grid_table': retval[2]}
         outcome = {'spectral_data': retval[0],
                    'grid_table': retval[1]}
         result = SimpleGriddingResults(task=self.__class__,
@@ -204,7 +207,9 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         
         # create storage for output
         StorageOut = numpy.zeros((nrow, nchan), dtype=numpy.float32)
-        StorageWeight = numpy.zeros((nrow), dtype=numpy.float32)
+        #FlagOut = numpy.zeros((nrow, nchan), dtype=numpy.int)
+        StorageWeight = numpy.zeros((nrow, nchan), dtype=numpy.float32)
+        #StorageNumSp = numpy.zeros((nrow, nchan), dtype=numpy.int)
         StorageNumSp = numpy.zeros((nrow), dtype=numpy.int)
         StorageNumFlag = numpy.zeros((nrow), dtype=numpy.int)
         StorageNoData = numpy.ones((nchan), dtype=numpy.float32) * NoData
@@ -242,13 +247,16 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         for i in xrange(len(antenna_list)):
             AntID = antenna_list[i]
             with casatools.TableReader(infiles[i]) as tb:
+                get = lambda col, row: tb.getcell(col, row)
+                query = lambda condition: 1 if condition else 0
                 for entry in bind_to_grid[AntID]:
                     [tROW, ROW, Weight, tSFLAG] = entry
                     if tSFLAG == 1:
-                        Sp = tb.getcell('SPECTRA', tROW)
-                        StorageOut[ROW] += Sp * Weight
-                        StorageWeight[ROW] += Weight
-                        StorageNumSp[ROW] += 1
+                        Sp = get('SPECTRA', tROW)
+                        Mask = numpy.array(map(query, get('FLAGTRA', tROW) == 0), dtype=numpy.int)
+                        StorageOut[ROW] += Sp * Mask * Weight
+                        StorageWeight[ROW] += Mask * Weight
+                        StorageNumSp[ROW] += query(any(Mask == 1))
                     else:
                         StorageNumFlag[ROW] += 1
                     Timer.count()
@@ -258,13 +266,20 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         # Weight = 1/(RMS**2) = (Exptime/(Tsys**2))
         for ROW in range(nrow):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
-            if StorageNumSp[ROW] == 0:
+            if StorageNumSp[ROW] == 0 or all(StorageWeight[ROW] == 0.0):
                 StorageOut[ROW] = StorageNoData
+                #FlagOut[ROW,:] = 1
                 RMS = 0.0
             else:
-                StorageOut[ROW] /= StorageWeight[ROW]
+                for ichan in xrange(nchan):
+                    if StorageWeight[ROW,ichan] == 0.0:
+                        StorageOut[ROW,ichan] = NoData
+                        #FlagOut[ROW,ichan] = 1
+                    else:
+                        StorageOut[ROW,ichan] /= StorageWeight[ROW,ichan]
                 RMS = 1.0
             OutputTable.append([IF, POL, X, Y, RAcent, DECcent, StorageNumSp[ROW], StorageNumFlag[ROW], RMS])
 
         del StorageWeight, StorageNumSp, StorageNumFlag, StorageNoData, Timer
+        #return (StorageOut, FlagOut, OutputTable)
         return (StorageOut, OutputTable)
