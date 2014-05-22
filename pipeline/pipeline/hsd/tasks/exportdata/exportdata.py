@@ -203,8 +203,8 @@ class SDExportData(basetask.StandardTaskTemplate):
             pprfiles = self._export_pprfile (inputs.context,inputs.products_dir, inputs.pprfile)
         
             # Export the processing log independently of the web log
-            casa_commands_file = self._export_casa_commands_log (inputs.context,
-            'casa_commands.log', inputs.products_dir)
+            casa_commands_file = self._export_casa_commands_log(inputs.context,
+                    inputs.context.logs['casa_commands'], inputs.products_dir)
     
             # Export a text format list of files whithin a products directory
             newlist = [flag_version_list,apply_file_list,fitsfiles,caltable_file_list,weblog,pprfiles,casa_commands_file]

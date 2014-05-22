@@ -343,7 +343,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	# Export the processing log independently of the web log
 	casa_commands_file = self._export_casa_commands_log (inputs.context,
-	    'casa_commands.log', inputs.products_dir)
+	    inputs.context.logs['casa_commands'], inputs.products_dir)
 
 	# Export the processing script independently of the web log
 	casa_pipescript = self._export_casa_commands_log (inputs.context,

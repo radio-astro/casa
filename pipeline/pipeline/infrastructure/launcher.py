@@ -139,6 +139,8 @@ class Context(object):
         LOG.todo('Add OUS registration task. Hard-coding log type to MOUS')
         self.logtype = 'MOUS'
 
+        self.logs['casa_commands'] = 'casa_commands.log'
+
     @property
     def stage(self):
         return '%s_%s' % (self.task_counter, self.subtask_counter) 

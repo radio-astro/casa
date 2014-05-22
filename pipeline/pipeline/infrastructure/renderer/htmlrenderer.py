@@ -110,10 +110,10 @@ def _get_task_description_for_class(task_cls):
         return 'ALMA deterministic flagging'
 
     if task_cls is hifa.tasks.FluxcalFlag:
-        return 'Flag solar system flux calibrators'
+        return 'Flag spectral features in solar system flux calibrators'
 
     if task_cls is hifa.tasks.GcorFluxscale:
-        return 'Phased-up fluxscale'
+        return 'Transfer fluxscale from amplitude calibrator'
 
     if task_cls is hif.tasks.GTypeGaincal:
         return 'G-type gain calibration'
@@ -136,7 +136,7 @@ def _get_task_description_for_class(task_cls):
         return 'Calculate mean fluxes of calibrators'
 
     if task_cls is hif.tasks.PhcorBandpass:
-        return 'Phase-up bandpass calibration'
+        return 'Bandpass calibration'
 
     if task_cls is hif.tasks.RefAnt:
         return 'Select reference antennas'
@@ -170,10 +170,10 @@ def _get_task_description_for_class(task_cls):
         return 'Flag spectra in Tsys calibration'
 
     if task_cls is hifa.tasks.Wvrgcal:
-        return 'Calculate wvr calibration'
+        return 'Calculate WVR calibration'
 
     if task_cls is hifa.tasks.Wvrgcalflag:
-        return 'Calculate and flag wvr calibration'
+        return 'Calculate and flag WVR calibration'
 
     if task_cls is hsd.tasks.SDInspectData:
         return 'Inspect data'

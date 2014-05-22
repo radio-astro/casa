@@ -1038,6 +1038,11 @@ class StandardTaskTemplate(api.Task):
             LOG.info('Starting execution for stage %s', 
                      self.inputs.context.task_counter)
             self.inputs.context.subtask_counter = 0
+
+            # log the invoked pipeline task and its comment to 
+            # casa_commands.log
+            _log_task(self, dry_run)
+
         else:
             self.inputs.context.subtask_counter += 1
 
@@ -1192,7 +1197,8 @@ class Executor(object):
     def __init__(self, context, dry_run=True):
         self._dry_run = dry_run
         self._context = context
-        self._cmdfile = os.path.join(context.report_dir, 'casa_commands.log')
+        self._cmdfile = os.path.join(context.report_dir, 
+                                     context.logs['casa_commands'])
 
     @capture_log
     def execute(self, job, merge=False):
@@ -1205,39 +1211,78 @@ class Executor(object):
 
         :rtype: :class:`~pipeline.api.Result`
         """
-        # if this is a JobRequest, log it to our command log
-        if not self._dry_run and isinstance(job, jobrequest.JobRequest):
-            with open(self._cmdfile, 'a') as cmdfile:
-                # CAS-5262: casa_commands.log written by the pipeline should
-                # be formatted to be more easily readable.
-
-                # replace the working directory with ''..
-                job_str = re.sub('%s/' % self._context.output_dir, '',
-                                 str(job))
-
-                # wrap the text at the first open bracket
-                if '(' in job_str:
-                    indent = (1+job_str.index('(')) * ' '
-                else:
-                    indent = 10 * ' '
-
-                wrapped = textwrap.wrap(job_str,
-                                        subsequent_indent=indent,
-                                        width=80,
-                                        break_long_words=False)
-
-                cmdfile.write('%s\n' % '\n'.join(wrapped))
-
-
         # execute the job, capturing its results object                
         result = job.execute(dry_run=self._dry_run)
-        
+
+        if self._dry_run:
+            return result
+
+        # if the job was a JobRequest, log it to our command log
+        if isinstance(job, jobrequest.JobRequest):
+            self._log_jobrequest(job)    
+
         # if requested, merge the result with the context. No type checking
         # here.
         if merge and not self._dry_run:
             result.accept(self._context)
 
         return result
+
+    def _log_jobrequest(self, job):
+        # CAS-5262: casa_commands.log written by the pipeline should
+        # be formatted to be more easily readable.
+
+        # replace the working directory with ''..
+        job_str = re.sub('%s/' % self._context.output_dir, '',
+                         str(job))
+
+        # wrap the text at the first open bracket
+        if '(' in job_str:
+            indent = (1+job_str.index('(')) * ' '
+        else:
+            indent = 10 * ' '
+
+        wrapped = textwrap.wrap(job_str,
+                                subsequent_indent=indent,
+                                width=80,
+                                break_long_words=False)
+
+        with open(self._cmdfile, 'a') as cmdfile:
+            cmdfile.write('%s\n' % '\n'.join(wrapped))
+
+
+def _log_task(task, dry_run):
+    if dry_run:
+        return
+    
+    context = task.inputs.context
+    filename = os.path.join(context.report_dir, 
+                            context.logs['casa_commands'])
+    comment = ''
+    
+    # run-time import as casataskdict loads in all tasks, some of which will
+    # extend classes inside this module
+    import pipeline.infrastructure.casataskdict as casataskdict
+
+    if not os.path.exists(filename):
+        wrapped = textwrap.wrap('#\n# ' + casataskdict.CASA_COMMANDS_PROLOGUE,
+                                subsequent_indent='# ',
+                                width=78,
+                                break_long_words=False)
+        comment = '%s\n' % '\n'.join(wrapped)
+
+    comment += '\n# %s\n#\n' % task.inputs._pipeline_casa_task
+
+    for task_classes, task_comment in casataskdict.TASK_COMMENTS.items():
+        if task.__class__ in task_classes:
+            wrapped = textwrap.wrap('# ' + task_comment,
+                                    subsequent_indent='# ',
+                                    width=78,
+                                    break_long_words=False)
+            comment += '%s\n#\n' % '\n'.join(wrapped)
+                        
+    with open(filename, 'a') as cmdfile:
+        cmdfile.write(comment)
 
 
 def property_with_default(name, default, doc=None):
