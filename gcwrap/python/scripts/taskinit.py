@@ -27,8 +27,10 @@ def __taskinit_casa( ) :
 	a=inspect.stack()
 	stacklevel=0
 	for k in range(len(a)):
-		if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+		if a[k][1] == "<string>" or string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0:
 			stacklevel=k
+			# jagonzal: Take the first level that matches the requirement
+			break
 
 	myf=sys._getframe(stacklevel).f_globals
 
@@ -84,13 +86,32 @@ utilstool = casac.utils
 cu = casac.cu = utilstool()
 vftask = casac.vlafillertask()
 vlafiller=vftask.fill
-casalog =  casac.logsink()
-__taskinit_setlogfile(casalog)
-casalog.setglobal(True)
 at = casac.atmosphere()
 ca = casac.calanalysis()
 mttool = casac.mstransformer
 mt = mttool()
+
+# Log initialization ###################################################################################################
+
+# IMPORTANT: The following steps must be follow the described order, 
+#            otherwise a seg fault occurs when setting the log file.
+# 1st Create casalog object, it will be used by tasks when importing taskinit
+casalog = casac.logsink()
+# 2nd Set log file accessing CASA dictionary of calling context via stack inspection
+__taskinit_setlogfile(casalog)
+# 3rd Set logger as global
+casalog.setglobal(True)
+
+# Set processor origin (normally "casa" but in the MPI case we use the hostname and rank involved)
+from mpi4casa.MPIEnvironment import MPIEnvironment
+processor_origin = MPIEnvironment.processor_origin
+casalog.processor_origin(processor_origin)
+
+# Set showconsole to false for MPIServers
+casalog.showconsole(MPIEnvironment.log_to_console)
+ 
+
+# Log initialization ###################################################################################################
 
 def gentools(tools=None):
 	"""
@@ -212,7 +233,7 @@ def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=
 ###done with common tools
 
 # setup viewer tool
-# jagonzal (CAS-4322): Don't load task manager at the engine level
+# jagonzal (CAS-4322): Don't load viewer at the engine level
 if not os.environ.has_key('CASA_ENGINE'):
 	try : 
 		if casa.has_key('state') and casa['state'].has_key('startup') :

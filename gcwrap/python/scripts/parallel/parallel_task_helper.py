@@ -9,6 +9,10 @@ import partitionhelper as ph
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
 
+# jagonzal (Migration to MPI)
+from mpi4casa.MPIEnvironment import MPIEnvironment
+from mpi4casa.MPICommandClient import MPICommandClient
+
 class ParallelTaskHelper:
     """
     This is the extension of the TaskHelper to allow for parallel
@@ -28,10 +32,17 @@ class ParallelTaskHelper:
         # Cache the initial inputs
         self.__originalParams = args
         # jagonzal: Add reference to cluster object
+        self._cluster = None
+        self._mpi_cluster = False
+        self._command_request_id_list = None
         if (self.__bypass_parallel_processing == 0):
-            self._cluster = simple_cluster.simple_cluster.getCluster()
-        else:
-            self._cluster = None
+            # jagonzal (Migration to MPI)
+            if MPIEnvironment.is_mpi_enabled and MPIEnvironment.is_mpi_client:
+                self._mpi_cluster = True
+                self._command_request_id_list = []
+                self._cluster = MPICommandClient()
+            else:
+                self._cluster = simple_cluster.simple_cluster.getCluster()
         # jagonzal: To inhibit return values consolidation
         self._consolidateOutput = True
         # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
@@ -45,8 +56,13 @@ class ParallelTaskHelper:
         This is the setup portion.
         Currently it:
            * Finds the full path for the input vis.
+           * Initialize the MPICommandClient
         """
         self._arg['vis'] = os.path.abspath(self._arg['vis'])
+        
+        # jagonzal (Migration to MPI)
+        if self._mpi_cluster:
+            self._cluster.start_services()
 
     def generateJobs(self):
         """
@@ -74,8 +90,10 @@ class ParallelTaskHelper:
                     localArgs[key] = self._arguser[key][subMs_idx]
                 subMs_idx += 1
                 
-                self._executionList.append(
-                    simple_cluster.JobData(self._taskName,localArgs))
+                if not self._mpi_cluster:
+                    self._executionList.append(simple_cluster.JobData(self._taskName,localArgs))
+                else:
+                    self._executionList.append([self._taskName + '()',localArgs])
                 
             msTool.close()
             return True
@@ -108,10 +126,15 @@ class ParallelTaskHelper:
                     else:
                         casalog.post("Ignoring NullSelection error from %s" % (parameters['vis']),"INFO","executeJobs")
             self._executionList = []
-        else:
+        elif not self._mpi_cluster:
             self._jobQueue = simple_cluster.JobQueueManager(self._cluster)
             self._jobQueue.addJob(self._executionList)
             self._jobQueue.executeQueue()
+        # jagonzal (Migration to MPI)
+        else:
+            for job in self._executionList:
+                command_request_id = self._cluster.push_command_request(job[0],False,None,job[1])
+                self._command_request_id_list.append(command_request_id[0])
 
     def postExecution(self):   
         
@@ -122,7 +145,15 @@ class ParallelTaskHelper:
             ret_list = self._sequential_return_list
             self._sequential_return_list = {}        
         elif (self._cluster != None):
-            ret_list =  self._cluster.get_return_list()
+            if self._mpi_cluster:
+                command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
+                # Format list in the form of vis dict
+                ret_list = {}
+                for command_response in command_response_list:
+                    vis = command_response['parameters']['vis']
+                    ret_list[vis] = command_response['ret']
+            else:
+                ret_list =  self._cluster.get_return_list()
         else:
             return None
         

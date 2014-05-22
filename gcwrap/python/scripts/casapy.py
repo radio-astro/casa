@@ -4,7 +4,15 @@ if os.environ.has_key('LD_PRELOAD'):
 import sys
 import time
 import signal
+import traceback # To pretty-print tracebacks
 
+
+# jagonzal: MPIServer initialization before wathdog fork
+from mpi4casa.MPIEnvironment import MPIEnvironment
+if MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client:
+    import mpi4casa.mpi4casapy as mpi4casapy
+    mpi4casapy.run()
+    exit()
 
 ##
 ## tweak path... where necessary...
@@ -57,10 +65,15 @@ if os.fork( ) == 0 :
         except:
             break
         time.sleep(3)
-    os.killpg(ppid, signal.SIGTERM)
-    time.sleep(120)
-    os.killpg(ppid, signal.SIGKILL)
-    sys.exit(1)
+    # jagonzal: Don't be gentle in a MPI environment in order not to block the mpirun command
+    if MPIEnvironment.mpi_initialized and MPIEnvironment.mpi_world_size > 1:
+        os.killpg(ppid, signal.SIGTERM)
+        sys.exit(1)
+    else:
+        os.killpg(ppid, signal.SIGTERM)
+        time.sleep(120)
+        os.killpg(ppid, signal.SIGKILL)
+        sys.exit(1)
 
 ##
 ## ensure that we're the process group leader
@@ -1343,6 +1356,16 @@ except Exception, instance:
 ## warn when available memory is < 512M (clean throws and exception)
 if cu.hostinfo( )['memory']['available'] < 524288:
     casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
+    
+# jagonzal: MPIClient initialization after watchdog fork
+if MPIEnvironment.is_mpi_enabled:
+    # Instantiate MPICommunicator singleton in order not to block the clients
+    from mpi4casa.MPICommunicator import MPICommunicator
+    mpi_comunicator = MPICommunicator()    
+    # Post MPI related info
+    casalog.post(MPIEnvironment.mpi_info_msg,"INFO","casapy" )
+elif MPIEnvironment.mpi_initialized and MPIEnvironment.mpi_world_size > 1 and not MPIEnvironment.is_mpi_thread_safe:
+    casalog.post(MPIEnvironment.mpi_thread_safe_info_msg,"WARN","casapy" )
 
 casa['state']['startup'] = False
 

@@ -8,7 +8,8 @@ import commands
 import numpy as np
 from __main__ import *
 from taskinit import *
-from tasks import *
+# jagonzal: Import only needed tasks in the calling context to avoid circular dependencies
+# from tasks import *
 
 
 class convertToMMS():

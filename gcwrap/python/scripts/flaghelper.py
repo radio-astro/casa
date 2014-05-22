@@ -8,8 +8,7 @@ import time
 import ast
 import copy
 from taskinit import *
-from tasks import *
-import flagdata as flagdata
+from parallel.parallel_task_helper import ParallelTaskHelper
 from collections import deque
 # needed in Python 2.6
 from OrderedDictionary import OrderedDict
@@ -151,7 +150,7 @@ def isCalTable(msname):
     
     elif tbinfo['type'] == 'Measurement Set':
         # MMS type
-        if tbinfo['subType'] == 'CONCATENATED':
+        if tbinfo['subType'] == 'CONCATENATED' and ParallelTaskHelper.isParallelMS(msname):
             retval = 2
         else:
             # MS type
@@ -4261,4 +4260,8 @@ def evalString(cmdline):
     
     return cmddict
 
+
+
+
+    
 

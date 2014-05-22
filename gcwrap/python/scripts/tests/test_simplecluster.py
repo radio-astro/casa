@@ -12,6 +12,16 @@ import multiprocessing
 import testhelper
 from parallel.parallel_task_helper import ParallelTaskHelper
 
+def sortFile(input_file,output_file,sort_order=None):
+    
+    if sort_order is None:
+        sort_order = ['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']
+        
+    mymstool = mstool()
+    mymstool.open(input_file)
+    mymstool.sort(output_file,sort_order)
+    mymstool.done()
+
 class test_simplecluster(unittest.TestCase):
 
     projectname="test_simplecluster"
@@ -517,8 +527,10 @@ class test_applycal_mms(test_simplecluster):
     def setUp(self):
         # Set-up MMS
         self.setUpFile("ngc5921.applycal.mms",'vis')
+        self.vis_sorted = "ngc5921.applycal.sorted.mms"
         # Set-up reference MMS
-        self.setUpFile("ngc5921.split.mms",'ref')
+        self.setUpFile("ngc5921.applycal.ms",'ref')
+        self.ref_sorted = "ngc5921.applycal.sorted.ms"
         # Set-up auxiliary files
         self.setUpFile(["ngc5921.fluxscale", "ngc5921.gcal", "ngc5921.bcal"],'aux')
         
@@ -532,30 +544,44 @@ class test_applycal_mms(test_simplecluster):
             self.stopCluster()
         # Remove MMS
         os.system('rm -rf ' + self.vis) 
+        os.system('rm -rf ' + self.vis_sorted) 
         # Remove ref MMS
         os.system('rm -rf ' + self.ref) 
+        os.system('rm -rf ' + self.ref_sorted) 
         # Remove aux files
         for file in self.aux:
-            os.system('rm -rf ' + file)         
+            os.system('rm -rf ' + file)        
         
     def test1_applycal_fluxscale_gcal_bcal(self):
         """Test 1: Apply calibration using fluxscal gcal and bcal tables"""
 
         # Repository caltables are pre-v4.1, and we
         # must update them _before_ applycal to avoid contention
-        print 'Updating pre-v4.1 caltables, FIRST:'
+        casalog.post("Updating pre-v4.1 caltables: %s" % str(self.aux),"WARN","test1_applycal_fluxscale_gcal_bcal")
         cblocal = cbtool()
         for oldct in self.aux:
             cblocal.updatecaltable(oldct)
-        print 'Now it is safe to run applycal.'
-
+        casalog.post("Pre-v4.1 caltables updated","INFO","test1_applycal_fluxscale_gcal_bcal")
+        
+        # Run applycal in MS mode
+        applycal(vis=self.ref,field='',spw='',selectdata=False,gaintable=self.aux,
+                 gainfield=['nearest','nearest','0'],
+                 interp=['linear', 'linear','nearest'],spwmap=[])
+        
+        # Run applycal in MMS mode
         applycal(vis=self.vis,field='',spw='',selectdata=False,gaintable=self.aux,
                  gainfield=['nearest','nearest','0'],
                  interp=['linear', 'linear','nearest'],spwmap=[])
         
-        compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
+        # Sort file to properly match rows for comparison
+        casalog.post("Sorting vis file: %s" % str(self.vis),"INFO","test1_applycal_fluxscale_gcal_bcal")
+        sortFile(self.vis,self.vis_sorted)  
+        casalog.post("Sorting ref file: %s" % str(self.ref),"INFO","test1_applycal_fluxscale_gcal_bcal")    
+        sortFile(self.ref,self.ref_sorted)        
         
-        self.assertTrue(compare)        
+        # Compare files
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted,['FLAG_CATEGORY'])
+        self.assertTrue(compare)          
         
         
 class test_uvcont_mms(test_simplecluster):

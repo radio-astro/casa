@@ -46,6 +46,11 @@ logsink::logsink()
      char *mybuff = getcwd(buff, MAXPATHLEN);
      theLogName = string(mybuff) + string("/casapy.log");
   }
+
+  // jagonzal: Set task and processor name
+  taskname = new casa::String("casa");
+  processor_name = casa::String("casa");
+
   //cout << "thelogsink=" << thelogsink << endl;
   thelogsink = new casa::TSLogSink();
   setlogfile(theLogName);
@@ -109,12 +114,23 @@ bool logsink::origin(const std::string &fromwhere)
        thelogsink = &LogSink().globalSink();
     }
     delete itsorigin;
-    itsorigin = new LogOrigin("casa");
+    itsorigin = new LogOrigin(processor_name);
     //String* taskname = new String(fromwhere);
     taskname = new String(fromwhere);
     itsorigin->taskName(*taskname);
     thelogsink->setTaskName(*taskname);
     LogSink().globalSink().setTaskName(*taskname);
+    return rstat;
+}
+
+// jagonzal: Allow to set the processor origin (normally "casa"
+// but in the MPI case we use the hostname and rank involved)
+bool logsink::processor_origin(const std::string &fromwhere)
+{
+	bool rstat = true;
+
+    processor_name = casa::String(fromwhere);
+
     return rstat;
 }
 
@@ -189,7 +205,7 @@ logsink::postLocally(const std::string& message,
        thelogsink = &LogSink().globalSink();
     }
     if(!itsorigin)
-       itsorigin = new LogOrigin("casa");
+       itsorigin = new LogOrigin(processor_name);
     itsorigin->className(origin);
     taskname = new String(origin);
     //String* taskname = new String(origin);
