@@ -46,7 +46,7 @@ class sdstat_worker(sdutil.sdtask_template):
                                                          self.restfreq)
         
         # scantable selection
-        sorg.set_selection(self.get_selector(sorg))
+        self.set_selection(sorg)
 
         # this is bit tricky
         # set fluxunit here instead of self.set_to_scan
