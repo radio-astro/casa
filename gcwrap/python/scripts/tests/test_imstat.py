@@ -26,6 +26,7 @@ class imstat_test(unittest.TestCase):
     s0_00015 = '0.00015arcsec_pix.im'
     linear_coords = 'linearCoords.fits'
     fourdim = '4dim.im'
+    kimage = "ktest.im"
     res = None
 
     def setUp(self):
@@ -403,6 +404,14 @@ class imstat_test(unittest.TestCase):
         myia.fromshape("", [1290, 1290, 1290])
         stats = myia.statistics()
         self.assertTrue(stats['npts'][0] == myia.shape().prod())
+        
+    def test_kflux(self):
+        """Test flux determination for image with units of K - CAS-5779"""
+        myia = self._myia
+        myia.open(self.datapath + self.kimage)
+        res = myia.statistics()
+        self.assertTrue(abs(res['flux']/65265.98528085 - 1) < 1e-9)
+        
  
 def suite():
     return [imstat_test]
