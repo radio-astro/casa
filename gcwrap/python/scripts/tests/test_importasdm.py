@@ -972,10 +972,10 @@ class asdm_import7(test_base):
             ms.open(themsname)
             ms.close()
             print  myname, ": MS can be opened. Now testing the changing of the asdmref ..."
-            os.system("mv "+myasdmname+" moved_"+myasdmname)
             ms.open(themsname)
             ms.asdmref("./moved_"+myasdmname)
             ms.close()
+            os.system("mv "+myasdmname+" moved_"+myasdmname)
             
             ms.open(themsname)
             
@@ -996,14 +996,22 @@ class asdm_import7(test_base):
                     print "ERROR: DATA does not agree with reference."
                 else:
                     print "DATA columns agree."
+
                 retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
-                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.WEIGHT,t2.WEIGHT, 1.e-06)))") == 0
                 if not retValueTmp:
+                    print "ERROR: WEIGHT does not agree with reference."
+                else:
+                    print "WEIGHT columns agree."
+                    
+                retValueTmp2 = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
+                if not retValueTmp2:
                     print "ERROR: FLAG does not agree with reference."
                 else:
                     print "FLAG columns agree."
 
-                retValue['success'] = retValue['success'] and retValueTmp
+                retValue['success'] = retValue['success'] and retValueTmp and retValueTmp2
 
                 for subtname in ["ANTENNA",
                                  "DATA_DESCRIPTION",
