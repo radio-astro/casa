@@ -45,8 +45,8 @@ def ssdreduce(vis,
     # query_list is a list of TaQL query per DATA_DESC_ID and ANTENNA
     # row_list instead of query_list?
     if selectdata:
-        query_list = rh.generage_query(vis, field, spw)
-        #row_list = rh.generage_rowlist(vis, field, spw)
+        query_list = rh.generate_query(vis, field, spw)
+        #row_list = rh.generate_rowlist(vis, field, spw)
     else:
         query_list = rh.generate_query(vis, field, spw, timerange, antenna,
                                        scan, pol, observation, msselect)
