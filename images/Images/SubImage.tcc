@@ -42,8 +42,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T>
 SubImage<T>::SubImage()
-: itsImagePtr  (0),
-  itsSubLatPtr (0)
+: itsImagePtr  (),
+  itsSubLatPtr ()
 {}
 
 template<class T>
@@ -51,7 +51,7 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
                AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII())
 {
-  itsSubLatPtr.set(new SubLattice<T> (image, axesSpec));
+  itsSubLatPtr.reset(new SubLattice<T> (image, axesSpec));
   setCoords (image.coordinates(), preserveAxesOrder);
   setMembers();
 }
@@ -61,7 +61,7 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
                Bool writableIfPossible,
                AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.set(
+	itsSubLatPtr.reset(
 		new SubLattice<T> (image, writableIfPossible, axesSpec)
 	);
   setCoords (image.coordinates(), preserveAxesOrder);
@@ -73,7 +73,7 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
                const LattRegionHolder& region,
                AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.set(
+	itsSubLatPtr.reset(
 		new SubLattice<T> (
 			image,
 			region.toLatticeRegion(
@@ -101,7 +101,7 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
                Bool writableIfPossible,
                AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.set(
+	itsSubLatPtr.reset(
 		new SubLattice<T> (
 			image,
 			region.toLatticeRegion(
@@ -130,7 +130,7 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
                AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII())
 {
-  itsSubLatPtr.set(new SubLattice<T> (image, slicer, axesSpec));
+  itsSubLatPtr.reset(new SubLattice<T> (image, slicer, axesSpec));
   const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
 //
   Vector<Float> blc, inc;
@@ -148,7 +148,7 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
                Bool writableIfPossible,
                AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.set(
+	itsSubLatPtr.reset(
 		new SubLattice<T>(
 			image, slicer, writableIfPossible,
 			axesSpec
@@ -181,7 +181,7 @@ SubImage<T>& SubImage<T>::operator= (const SubImage<T>& other)
   if (this != &other) {
     ImageInterface<T>::operator= (other);
     itsImagePtr.set(other.itsImagePtr->cloneII());
-    itsSubLatPtr.set(new SubLattice<T> (*other.itsSubLatPtr));
+    itsSubLatPtr.reset(new SubLattice<T> (*other.itsSubLatPtr));
   }
   return *this;
 }
