@@ -39,18 +39,19 @@ class SakuraArrayConverter {
 protected:
 
 public:
-	explicit SakuraArrayConverter();
-	virtual ~SakuraArrayConverter();
-	virtual void ConvertComplexMatrixToSakura(Int const num_pol,
+	static void ConvertComplexMatrixToSakura(Int const num_pol,
 			Int const num_data, Matrix<Complex> &spectrum_matrix,
 			float output_data[]);
-	virtual void ConvertFloatMatrixToSakura(Int const num_pol,
+	static void ConvertFloatMatrixToSakura(Int const num_pol,
 			Int const num_data, Matrix<Float> &spectrum_matrix,
 			float output_data[]);
+	static void ConvertSakuraToComplexMatrix(Int const num_pol,
+			Int const num_data, float input_data[],
+			Matrix<Complex> &output_spectrum_matrix);
+	static void ConvertSakuraToFloatMatrix(Int const num_pol,
+			Int const num_data, float input_data[],
+			Matrix<Float> &output_spectrum_matrix);
 private:
-	SakuraArrayConverter(const SakuraArrayConverter&);
-	SakuraArrayConverter& operator=(const SakuraArrayConverter&);
-	LogIO logger_;
 };
 
 } //# NAMESPACE CASA - END

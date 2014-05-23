@@ -36,34 +36,19 @@
 
 namespace casa {
 
-SakuraArrayConverter::SakuraArrayConverter() :
-		logger_() {
-	try {
-		logger_ << _ORIGIN;
-	} catch (AipsError x) {
-		logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-;
-
-SakuraArrayConverter::~SakuraArrayConverter() {
-}
-;
-
 void SakuraArrayConverter::ConvertComplexMatrixToSakura(Int const num_pol,
 		Int const num_data, Matrix<Complex> &spectrum_matrix,
 		float output_data[]) {
 	try {
-		logger_ << _ORIGIN;
 		Vector<Float> real_vector(casa::real(spectrum_matrix.row(num_pol)));
 		for (Int i = 0; i < num_data; ++i) {
 			output_data[i] = real_vector[i];
 		}
 	} catch (AipsError x) {
-		logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		LogIO logger(LogOrigin("SakuraArrayConverter", __func__, WHERE));
+		logger << _ORIGIN;
+		logger << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -72,15 +57,64 @@ void SakuraArrayConverter::ConvertFloatMatrixToSakura(Int const num_pol,
 		Int const num_data, Matrix<Float> &spectrum_matrix,
 		float output_data[]) {
 	try {
-		logger_ << _ORIGIN;
 		for (Int i = 0; i < num_data; ++i) {
 			output_data[i] = spectrum_matrix.row(num_pol)[i];
 		}
 	} catch (AipsError x) {
-		logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		LogIO logger(LogOrigin("SakuraArrayConverter", __func__, WHERE));
+		logger << _ORIGIN;
+		logger << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-}  // End of casa namespace.
+void SakuraArrayConverter::ConvertSakuraToComplexMatrix(Int const num_pol,
+		Int const num_data, float input_data[],
+		Matrix<Complex> &output_spectrum_matrix) {
+	try {
+		Vector<Float> input_vector(2 * num_data);
+		Int j = 0;
+		for (Int i = 0; i < num_data; ++i) {
+			if (i % 2 == 0) {
+				input_vector[i] = input_data[j++];
+			} else
+				input_vector[i] = 0;
+		}
+		Array<Float> input_array;
+		input_array.assign(input_vector);
+		Array<Complex> complex_array(RealToComplex(input_array));
+		Matrix<Complex> complex_matrix(2, num_data);
+		complex_matrix.row(num_pol) = complex_array;
+		output_spectrum_matrix.resize(2, num_data, False);
+		output_spectrum_matrix.row(num_pol) = complex_matrix.row(num_pol);
+	} catch (AipsError x) {
+		LogIO logger(LogOrigin("SakuraArrayConverter", __func__, WHERE));
+		logger << _ORIGIN;
+		logger << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+void SakuraArrayConverter::ConvertSakuraToFloatMatrix(Int const num_pol,
+		Int const num_data, float input_data[],
+		Matrix<Float> &output_spectrum_matrix) {
+	try {
+		Matrix<Float> float_matrix(2, num_data);
+		for (Int i = 0; i < num_data; ++i) {
+			float_matrix(num_pol, i) = input_data[i];
+		}
+		output_spectrum_matrix.resize(2, num_data, False);
+		output_spectrum_matrix.row(num_pol) = float_matrix.row(num_pol);
+	} catch (AipsError x) {
+		LogIO logger(LogOrigin("SakuraArrayConverter", __func__, WHERE));
+		logger << _ORIGIN;
+		logger << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+}
+  // End of casa namespace.
