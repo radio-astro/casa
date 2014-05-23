@@ -340,6 +340,10 @@ public:
     	Int channel, Int stokes, const DirectionCoordinate& dc
     ) const;
 
+    static Double getBeamAreaInPixels(
+    	const GaussianBeam& beam, const DirectionCoordinate& dc
+    );
+
 private:
     ImageBeamSet _beams;
     mutable Bool _warnBeam;   //# tell if warning is already given

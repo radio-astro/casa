@@ -860,8 +860,14 @@ Double ImageInfo::getBeamAreaInPixels(
 		! hasBeam(),
 		"There is no beam set associated with this object"
 	);
+	return getBeamAreaInPixels(restoringBeam(channel, stokes), dc);
+}
+
+Double ImageInfo::getBeamAreaInPixels(
+	const GaussianBeam& beam, const DirectionCoordinate& dc
+) {
 	Quantity pixelArea = dc.getPixelArea();
-	return restoringBeam(channel, stokes).getArea(pixelArea.getUnit())/pixelArea.getValue();
+	return beam.getArea(pixelArea.getUnit())/pixelArea.getValue();
 }
 
 } //# NAMESPACE CASA - END
