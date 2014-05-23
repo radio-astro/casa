@@ -156,11 +156,12 @@ class AgentFlagger(basetask.StandardTaskTemplate):
                 summary_reps.append(summary_stats_list[repname])
 
         # parseAgents does not set the summary name, so we have to replace
-        # it with the name extracted from the command
-        for summary in summary_reps:
-            _, agent_num = summary['name'].split('_')
-            agent_num = int(agent_num)
-            summary['name'] = agent_cmds[agent_num]['command']['name'] 
+        # it with the name extracted from the command. This should no
+	# longer be necesssary
+        #for summary in summary_reps:
+        #    _, agent_num = summary['name'].split('_')
+        #    agent_num = int(agent_num)
+        #    summary['name'] = agent_cmds[agent_num]['command']['name'] 
 
         return AgentFlaggerResults(summary_reps, flagcmds)
 
