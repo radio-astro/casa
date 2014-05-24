@@ -436,7 +436,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsMapperType == "multiterm" )
       { return new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms, useweightimage );   }
     else
-      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
+      { return new SIImageStore( imagename, csys, shp, False, useweightimage );   }
+    //      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
   }
 
 

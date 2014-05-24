@@ -467,6 +467,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
+	os << "Define image [" << impars.imageName << "]" << LogIO::POST;
+
 	//MeasurementSet tms(*mss_p[0]);
 	//csys = impars.buildCoordinateSystem( tms );
 	csys = impars.buildCoordinateSystem( rvi_p );
@@ -480,15 +482,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsMaxCoordSys=csys;
 	  }
 
-	os << "Adding " << impars.imageName << " (nchan : " << impars.nchan 
+	/*
+	os << "Define image  [" << impars.imageName << "] : nchan : " << impars.nchan 
 	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
 	   << ", start:" << impars.start
 	   <<  ", imsize:" << impars.imsize 
 	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
 	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
-	   << "] ) to imager list " 
 	   << LogIO::POST;
-
+	*/
       }
     catch(AipsError &x)
       {
@@ -724,7 +726,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
     	Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
       os << LogIO::NORMAL // Loglevel INFO
-         << "Imaging weights : " ; //<< LogIO::POST;
+         << "Set imaging weights : " ; //<< LogIO::POST;
 
       if (type=="natural") {
         os << LogIO::NORMAL // Loglevel INFO
@@ -857,7 +859,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if( mappertype=="default" || mappertype=="imagemosaic" )
 	  {
-	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
+	    imstor=new SIImageStore(imageName, cSys, imShape, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
+	    //	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
 	  }
 	else if (mappertype == "multiterm" )  // Currently does not support imagemosaic.
 	  {

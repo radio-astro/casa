@@ -723,6 +723,7 @@ class ImagerParameters():
                  cellsize=[10.0,10.0],
                  phasecenter='',
                  stokes='I',
+                 projection='SIN',
 
                  ## Spectral Parameters
                  mode='mfs', 
@@ -737,7 +738,7 @@ class ImagerParameters():
                  sysvelframe='',
                  interpolation='nearest',
 
-                 ftmachine='ft', 
+                 ftmachine='gridft', 
                  facets=1, 
 
                  wprojplanes=1,
@@ -757,14 +758,13 @@ class ImagerParameters():
                  normtype='flatnoise',
 
                  outlierfile='',
-                 reuse=True,
+                 overwrite=True,
                  startmodel='', 
 
                  weighting='natural', 
                  robust=0.5,
                  npixels=0,
-                 outertaper=[],
-                 innertaper=[],
+                 uvtaper=[],
 
                  niter=0, 
                  cycleniter=0, 
@@ -775,7 +775,7 @@ class ImagerParameters():
                  maxpsffraction=0.8,
                  interactive=False,
 
-                 algo='hogbom',
+                 deconvolver='hogbom',
                  scales=[],
                  ntaylorterms=1, 
                  restoringbeam=[],
@@ -808,7 +808,9 @@ class ImagerParameters():
                                  #'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
                                  'mode':mode, 'start':start, 'step':step, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
-                                 'frame':frame, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe  }      }
+                                 'frame':frame, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
+                                 'projection':projection,
+                                 'overwrite':overwrite }    }
         ######### Gridding
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
@@ -817,18 +819,15 @@ class ImagerParameters():
                                    'rotatepastep':rotatepastep, 'mtype':mtype, # 'weightlimit':weightlimit,
                                    'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes   }     }
         ######### weighting
-        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels}
-#        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,
-#                           'outertaper':outertaper,'innertaper':innertaper } 
-        
+        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels} #,'outertaper':uvtaper}
+
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
-#        self.allnormpars = { '0' : {'imagename':imagename, 'mtype': mtype,
         self.allnormpars = { '0' : {'mtype': mtype,
                                  'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
                                  'normtype':normtype, 'workdir':workdir }     }
 
         ######### Deconvolution
-        self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms, 
+        self.alldecpars = { '0' : { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
                                     'scales':scales, 'restoringbeam':restoringbeam } }
 
         ######### Iteration control. 
@@ -836,7 +835,7 @@ class ImagerParameters():
                           'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
 
 
-        self.reusename=reuse
+        #self.reusename=reuse
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
@@ -845,7 +844,7 @@ class ImagerParameters():
                              'ntaylorterms','reffreq','mode']
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
-        self.outdecparlist=['algo','startmodel','ntaylorterms']
+        self.outdecparlist=['deconvolver','startmodel','ntaylorterms']
         self.outnormparlist=['mtype','weightlimit','ntaylorterms']
 #        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
 
@@ -1022,7 +1021,8 @@ class ImagerParameters():
                         os.mkdir( dirname )
                     
             ### Check for name increments 
-            if self.reusename == False:
+            #if self.reusename == False:
+            if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
                 ## Get a list of image names for all fields (to sync name increment ids across fields)
                 inpnamelist={}
                 for immod in self.allimpars.keys() :

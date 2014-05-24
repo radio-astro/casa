@@ -1,4 +1,4 @@
-//# SDAlgorithmMSMFS.h: Definition for SDAlgorithmMSMFS
+//# SDAlgorithmMSClean.h: Definition for SDAlgorithmMSClean
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SDALGORITHMMSMFS_H
-#define SYNTHESIS_SDALGORITHMMSMFS_H
+#ifndef SYNTHESIS_SDALGORITHMMSCLEAN_H
+#define SYNTHESIS_SDALGORITHMMSCLEAN_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <synthesis/MeasurementComponents/SkyModel.h>
@@ -40,7 +40,7 @@
 #include <casa/System/PGPlotter.h>
 
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
-#include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
+#include <synthesis/MeasurementEquations/MatrixCleaner.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -48,51 +48,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SIMinorCycleController;
 
 
-  class SDAlgorithmMSMFS : public SDAlgorithmBase 
+  class SDAlgorithmMSClean : public SDAlgorithmBase 
   {
   public:
     
     // Empty constructor
-    SDAlgorithmMSMFS(uInt nTaylorTerms, Vector<Float> scalesizes);
-    virtual  ~SDAlgorithmMSMFS();
+    SDAlgorithmMSClean(Vector<Float> scalesizes,
+		       Float smallscalebias=0.6, 
+		       // Int stoplargenegatives=-2, 
+		       Int stoppointmode=-1 );
+    virtual  ~SDAlgorithmMSClean();
     
-    void restore( CountedPtr<SIImageStore> imagestore );
+    //    void restore( CountedPtr<SIImageStore> imagestore );
     
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
+    void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, 
+		      Float &peakresidual, Float &modelflux, Int &iterdone );
     void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     void finalizeDeconvolver();
-    void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
-    //    virtual void restorePlane();
 
-    uInt getNTaylorTerms(){ return itsNTerms; };
-    
-    //    void initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim);
-
-    Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
-
-    //    CountedPtr<SIImageStore> itsImages;
-
-    Vector< Array<Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
+    Array<Float> itsMatPsf, itsMatResidual, itsMatModel;
     Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
 
-    /*    
-    IPosition itsMaxPos;
-    Float itsPeakResidual;
-    Float itsModelFlux;
-
-    Matrix<Float> itsMatMask;
-    */
-
-    uInt itsNTerms;
+    MatrixCleaner itsCleaner;
     Vector<Float> itsScaleSizes;
-
-    MultiTermMatrixCleaner itsMTCleaner;
+    Float itsSmallScaleBias;
+    //Int itsStopLargeNegatives;
+    Int itsStopPointMode;
 
   private:
-    Bool itsMTCsetup; 
+    Bool itsMCsetup; 
 
   };
 

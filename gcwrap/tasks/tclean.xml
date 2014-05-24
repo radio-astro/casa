@@ -118,6 +118,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string">I</value>
     </param>
 
+    <param type="string" name="projection" subparam="true">
+      <description>Coordinate projection (SIN, HPX) </description>
+      <value type="string">SIN</value>
+    </param>
+
 <!--============================================== -->
 
     <param type="string" name="outlierfile">
@@ -125,7 +130,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
-    <param type="bool" name="reuse">
+    <param type="bool" name="overwrite">
       <description>True : Re-use existing images. False : Increment imagename</description>
       <value type="bool">True</value>
     </param>
@@ -147,7 +152,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="nchan" subparam="true">
       <description>Number of channels in the output image</description>
-      <value type="int">-1</value>
+      <value type="int">1</value>
     </param>
 
     <param type="any" name="start" subparam="true">
@@ -288,30 +293,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="int">0</value>
     </param>
 
-
+<!--
     <param type="bool" name="uvtaper">
             <description>Apply additional uv tapering of visibilities</description>
 	    <value type="bool">False</value>
     </param>
+-->
 
-    <param type="stringArray" name="outertaper" subparam="true">
+    <param type="stringArray" name="uvtaper" subparam="true">
 	    <description>uv-taper on outer baselines in uv-plane</description>
 	    <value type="vector">
 	      <value></value>
 	    </value>
     </param>
 
+<!--
     <param type="stringArray" name="innertaper" subparam="true">
 	    <description>uv-taper in center of uv-plane (not implemented)</description>
 	    <value>1.0</value>
     </param>
-
+-->
 <!--============================================== -->
 <!--                            Deconvolution Parameters                                            -->
 <!--============================================== -->
 
 
-    <param type="string" name="decmode">
+    <param type="string" name="deconvolver">
             <description>Name of minor cycle algorithm</description>
 	    <value type="string">hogbom</value>
 	    <allowed kind="enum">
@@ -323,9 +330,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    </allowed>
     </param>
 
-    <param type="intArray" name="scales" subparam="true">
+    <param type="any" name="scales" subparam="true">
             <description>List of scale sizes (in pixels) for multi-scale cleaning</description>
-	    <value type="intArray">[0,3,10]</value>
+	    <any type="variant" limittypes="intArray floatArray"/>
+	    <value type="intArray"></value>
     </param>
 
     <param type="int" name="ntaylorterms" subparam="true">
@@ -459,6 +467,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="cellsize"><value>"1arcsec"</value></default>
 	 <default param="phasecenter"><value>""</value></default>
 	 <default param="stokes"><value>"I"</value></default>
+	 <default param="projection"><value>"SIN"</value></default>
        </notequals>
       </when> 
 
@@ -529,13 +538,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
      <when param="weighting">
        <equals type="string" value="natural">
+	 <default param="uvtaper"><value>[]</value></default>
+       </equals>
+       <equals type="string" value="uniform">
        </equals>
        <equals type="string" value="briggs">
 	 <default param="robust"><value>0.5</value></default>
 	 <default param="npixels"><value>0</value></default>
+	 <default param="uvtaper"><value>[]</value></default>
        </equals>
      </when>
 
+<!--
      <when param="uvtaper">
        <equals type="bool" value="False">
        </equals>
@@ -544,15 +558,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="innertaper"><value>[]</value></default>
        </equals>
      </when>
+-->
 
-     <when param="decmode">
+     <when param="deconvolver">
        <equals type="string" value="hogbom">
        </equals>
        <equals type="string" value="multiscale">
-	 <default param="scales"><value>[]</value></default>
+	 <default param="scales"><value type="intArray"></value></default>
        </equals>
        <equals type="string" value="mtmfs">
-	 <default param="scales"><value>[]</value></default>
+	 <default param="scales"><value type="intArray"></value></default>
 	 <default param="ntaylorterms"><value>2</value></default>  
        </equals>
      </when>
@@ -561,7 +576,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <notequals type="int" value="0">
 	 <default param="gain"><value>0.1</value></default>
 	 <default param="threshold"><value>0.0</value></default>
-	 <default param="cycleniter"><value>100</value></default>
+	 <default param="cycleniter"><value>-1</value></default>
 	 <default param="cyclefactor"><value>1.0</value></default>
 	 <default param="minpsffraction"><value>0.05</value></default>
 	 <default param="maxpsffraction"><value>0.8</value></default>

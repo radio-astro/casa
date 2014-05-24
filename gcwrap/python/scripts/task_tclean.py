@@ -36,9 +36,10 @@ def tclean(
     cellsize=['1.0arcsec','1.0arcsec'],
     phasecenter='J2000 19:59:28.500 +40.44.01.50',
     stokes='I',
+    projection='SIN',
 
     outlierfile='',
-    reuse=True,
+    overwrite=True,
 
     ## Spectral parameters
     specmode='mfs',
@@ -74,12 +75,11 @@ def tclean(
     weighting='natural',
     robust=0.5,
     npixels=0,
-    uvtaper=False,
-    outertaper=[],
-    innertaper=[],
+#    uvtaper=False,
+    uvtaper=[],
 
     ####### Deconvolution parameters
-    decmode='hogbom',
+    deconvolver='hogbom',
     scales=[],
     ntaylorterms=1,
     restoringbeam=[],
@@ -110,12 +110,12 @@ def tclean(
         return
 
     ### Move these checks elsewhere ? 
-    if specmode=='mfs' and ntaylorterms>1 and decmode != "msmfs":
-        casalog.post( "MSMFS is the only available deconvolution algorithm for ntaylorterms>1.\
-                              Please set decmode='msmfs'.", "WARN", "task_tclean" )
+    if specmode=='mfs' and ntaylorterms>1 and deconvolver != "mtmfs":
+        casalog.post( "MTMFS is the only available deconvolution algorithm for ntaylorterms>1.\
+                              Please set deconvolver='mtmfs'.", "WARN", "task_tclean" )
         return
 
-    if specmode!='mfs' and decmode=="msmfs":
+    if specmode!='mfs' and deconvolver=="mtmfs":
         casalog.post( "The MSMFS algorithm applies only to specmode='mfs'.", "WARN", "task_tclean" )
         return
 
@@ -189,6 +189,7 @@ def tclean(
         cellsize=cellsize, 
         phasecenter=phasecenter,
         stokes=stokes,
+        projection=projection,
 
         ### Spectral Image Coords
         mode=specmode,
@@ -222,14 +223,13 @@ def tclean(
         normtype=normtype,
 
         outlierfile=outlierfile,
-        reuse=reuse,
+        overwrite=overwrite,
         # startmodel=startmodel
 
         weighting=weighting,
         robust=robust,
         npixels=npixels,
-        outertaper=outertaper,
-        innertaper=innertaper,
+        uvtaper=uvtaper,
 
         ### Deconvolution
         niter=niter,
@@ -241,7 +241,7 @@ def tclean(
         maxpsffraction=maxpsffraction,
         interactive=interactive,
 
-        algo=decmode,
+        deconvolver=deconvolver,
         scales=scales,
         ntaylorterms=ntaylorterms,
         restoringbeam=restoringbeam,

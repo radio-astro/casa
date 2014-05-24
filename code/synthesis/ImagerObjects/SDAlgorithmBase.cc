@@ -88,13 +88,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
-    os << "Run " << itsAlgorithmName << " minor-cycle on " << nSubChans*nSubPols 
-       << " slices of [" << deconvolverid << "]:" << imagestore->getName()
-       << " [ CycleThreshold=" << loopcontrols.getCycleThreshold()
+    os << "Run " << itsAlgorithmName << " minor-cycle on " ;
+    if( nSubChans >1 ) os << nSubChans << " chans " ;
+    if( nSubPols >1 ) os << nSubPols << " pols ";
+    if( nSubChans>1 || nSubPols>1) os << "of ";
+    os << "[" << imagestore->getName() << "]"
+       << " CycleThreshold=" << loopcontrols.getCycleThreshold()
        << ", CycleNiter=" << loopcontrols.getCycleNiter() 
        << ", Gain=" << loopcontrols.getLoopGain()
-       << " ]" << LogIO::POST;
-
+       << LogIO::POST;
+    
     for( Int chanid=0; chanid<nSubChans;chanid++)
       {
 	for( Int polid=0; polid<nSubPols; polid++)
@@ -112,15 +115,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	Bool converged=False;
 
 	    // Or, call this from outside... in SynthesisImager.....
-	    itsMaskHandler.makeAutoMask( itsImages );
-	    //itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
+	    //itsMaskHandler.makeAutoMask( itsImages );
+	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    
 	    initializeDeconvolver( peakresidual, modelflux );
 	    
 	    Float startpeakresidual = peakresidual;
 	    Float startmodelflux = modelflux;
-	    
-	    while ( ! checkStop( loopcontrols,  peakresidual ) )
+
+	    Int stopCode = checkStop( loopcontrols,  peakresidual );
+
+	    //	    while ( ! checkStop( loopcontrols,  peakresidual ) )
+	    while ( stopCode==0 )
 	      {
 		
 		takeOneStep( loopcontrols.getLoopGain(), 
@@ -136,6 +142,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		loopcontrols.setPeakResidual( peakresidual );
 		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
 					      modelflux, peakresidual );
+
+		stopCode = checkStop( loopcontrols,  peakresidual );
+
 	      }// end of minor cycle iterations for this subimage.
 	    
 	    finalizeDeconvolver();
@@ -146,11 +155,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "[" << imagestore->getName();
 	    if(nSubChans>1) os << ":C" << chanid ;
 	    if(nSubPols>1) os << ":P" << polid ;
+	    Int iterend = loopcontrols.getIterDone();
 	    os << "]"
-	       <<" iters=" << startiteration+1 << "->" << loopcontrols.getIterDone()
+	       <<" iters=" << ( (iterend>startiteration) ? startiteration+1 : startiteration )<< "->" << iterend
 	       << ", model=" << startmodelflux << "->" << modelflux
-	       << ", peakres=" << startpeakresidual << "->" << peakresidual 
-	       << LogIO::POST;
+	       << ", peakres=" << startpeakresidual << "->" << peakresidual ;
+
+	    switch (stopCode)
+	      {
+	      case 1: 
+		os << ", Reached cycleniter.";
+		break;
+	      case 2:
+		os << ", Reached cyclethreshold.";
+		break;
+	      case 3:
+		os << ", Minor cycle algorithm decided to stop early.";
+		break;
+	      default:
+		break;
+	      }
+
+	       os << LogIO::POST;
 	    
 	    loopcontrols.resetCycleIter(); 
 	    
@@ -158,7 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }// end of deconvolve
   
-  Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
+  Int SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
 				   Float currentresidual )
   {
     return loopcontrols.majorCycleRequired(currentresidual);
@@ -182,22 +208,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    imagestore->image();
     //    imagestore->model();
 
+    os << "Restore [" << itsImages->getName() << "] with fitted beam ";
+
     ImageInfo ii = (imagestore->image())->imageInfo();
     ImageBeamSet beamset;
     beamset.resize( nSubChans, nSubPols ); // Won't work if nSubChans or nSubPols > 1. 
                                                                 // Send beamset into restorePlane to do it right....
-    for( Int chanid=0; chanid<nSubChans;chanid++)
-      {
-	for( Int polid=0; polid<nSubPols; polid++)
-	  {
-	    //	    itsImages = imagestore->getSubImageStoreOld( chanid, onechan, polid, onepol );
-	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
-	    GaussianBeam beam = itsImages->restorePlane();
-	    //	    os << "Setting restoring beam : " << beam.getMajor(Unit("arcmin")) << " arcmin" << endl;
-	    beamset.setBeam( chanid, polid, beam );
-	  }
-      }
+    for( Int chanid=0; chanid<nSubChans;chanid++)   {
+	for( Int polid=0; polid<nSubPols; polid++) {
+
+	  if( nSubChans > 1 || nSubPols > 1 ) os << LogIO::POST;
+
+	  if( !(  chanid==0 || chanid==nSubChans-1 )  ) os << LogIO::NORMAL1;
+	  if( nSubChans > 1 ) os << "C" << chanid << ":";
+	  if( nSubPols > 1 ) os << "P" << polid << ":";
+	  
+	  itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
+	  GaussianBeam beam = itsImages->restorePlane();
+	  beamset.setBeam( chanid, polid, beam );
+
+	  os << " " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+
+	}
+    }
     ii.setBeams( beamset );
+
     try
       {
 	(imagestore->image())->setImageInfo(ii);

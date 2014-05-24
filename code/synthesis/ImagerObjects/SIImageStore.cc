@@ -88,110 +88,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //===========================================================================
 
-   void SIImageStore::validate()
-  {
-    /// There are three valid states. Check for at least one of them. 
-    Bool state = False;
-
-    
-    stringstream oss;
-    oss << "shape:" << itsImageShape << " parentimageshape:" << itsParentImageShape 
-	<< " nfacets:" << itsNFacets << "x" << itsNFacets << " facetid:" << itsFacetId 
-	<< " nchanchunks:" << itsNChanChunks << " chanid:" << itsChanId 
-	<< " npolchunks:" << itsNPolChunks << " polid:" << itsPolId 
-	<< " coord-dim:" << itsCoordSys.nPixelAxes() 
-	<< " psf/res:" << (hasPsf() || hasResidual()) ;
-    if( hasSumWt() ) oss << " sumwtshape : " << sumwt()->shape() ; 
-	oss << endl;
-
-
-    try {
-
-    if( itsCoordSys.nPixelAxes() != 4 ) state=False;
-    
-    /// (1) Regular imagestore 
-    if( itsNFacets==1 && itsFacetId==0 
-	&& itsNChanChunks==1 && itsChanId==0
-	&& itsNPolChunks==1 && itsPolId==0 )  {
-      Bool check1 = hasSumWt() && sumwt()->shape()[0]==1;
-      if(  (itsImageShape.isEqual(itsParentImageShape) ) && ( check1 || !hasSumWt() )
-	   && itsParentImageShape.product() > 0 ) state=True;
-      }
-    /*
-    /// (2) Facet parent 
-    else if ( ( itsNFacets>1 && itsFacetId == -1 ) 
-	      || ( itsNChanChunks>1 && itsChanId == -1 )
-	      || ( itsNPolChunks>1 && itsPolId == -1 )    ) {
-      Bool check1 = hasSumWt() && sumwt()->shape()[0]==itsNFacets;
-      if(  ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) ) && ( itsParentImageShape.product() > 0 ) &&
-	   ( check1 || !hasSumWt() ) ) state=True;
-    }
-    */
-    /// (3) Reference Sub Imagestore 
-    else if ( ( itsNFacets>1 && itsFacetId >=0 )
-	      || ( itsNChanChunks>1 && itsChanId >=0 ) 
-	      || ( itsNPolChunks>1 && itsPolId >=0 )   ) {
-      // If shape is still unset, even when the first image has been made....
-      Bool check1 = ( itsImageShape.product() > 0 && ( hasPsf() || hasResidual() ) );
-      Bool check2 = ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) && ( !hasPsf() && !hasResidual() ) );
-      Bool check3 = hasSumWt() && sumwt()->shape()[0]==1; // One facet only.
-
-      if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) 
-	  && ( itsFacetId < itsNFacets*itsNFacets ) 
-	  && ( itsChanId < itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
-	  && ( check3 || !hasSumWt() ) )  state = True;
-    }
-
-    } catch( AipsError &x )  {
-      state = False;
-      oss << "  |||||  " << x.getMesg() << endl;
-    }
-
-    //cout << " SIIM:validate : " << oss.str() << endl;
-
-    if( state == False )  throw(AipsError("Internal Error : Invalid ImageStore state : "+ oss.str()) );
-    
-    return;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  /*
-   try {
-
-    if( itsCoordSys.nPixelAxes() != 4 ) state=False;
-    
-    /// (1) Regular imagestore 
-    ///       [ imshape == parentimshape, nfacets=1, facetid=-1 ]
-    if( itsNFacets==1 && itsFacetId==-1 )  {
-      Bool check1 = hasSumWt() && sumwt()->shape()[0]==1;
-      if(  (itsImageShape.isEqual(itsParentImageShape) ) && ( check1 || !hasSumWt() ) ) state=True;
-      }
-    /// (2) Facet parent 
-    ///        [ imshape = IPosition(), parentimshape != IPosition(), nfacets>1, facetid=-1 ]
-    else if ( itsNFacets>1 && itsFacetId == -1 ) {
-      Bool check1 = hasSumWt() && sumwt()->shape()[0]==itsNFacets;
-      if(  ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) ) && ( itsParentImageShape.product() > 0 ) &&
-	   ( check1 || !hasSumWt() ) ) state=True;
-    }
-    /// (3) Facet imagestore 
-    ///       [ imshape != IPosition() and != parentimshape, nfacets>1, facetid >=0 ]
-    else if ( itsNFacets>1 && itsFacetId >=0 ) {
-      // If shape is still unset, even when the first image has been made....
-      Bool check1 = ( itsImageShape.product() > 0 && ( hasPsf() || hasResidual() ) );
-      Bool check2 = ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) && ( !hasPsf() && !hasResidual() ) );
-      Bool check3 = hasSumWt() && sumwt()->shape()[0]==1; // One facet only.
-
-      if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) && 
-	  ( itsFacetId < itsNFacets*itsNFacets ) && ( check3 || !hasSumWt() ) )  state = True;
-    }
-
-    } 
-*/
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   /////       START of SIIMAGESTORE implementation
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   SIImageStore::SIImageStore() 
@@ -219,7 +121,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCoordSys=CoordinateSystem();
     itsMiscInfo=Record();
     init();
-    //    itsValidity = False;
     
     //    validate();
 
@@ -228,7 +129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIImageStore::SIImageStore(String imagename, 
 			     CoordinateSystem &imcoordsys, 
 			     IPosition imshape, 
-			     const Int nfacets, 
+			     //			     const Int nfacets, 
 			     const Bool /*overwrite*/,
 			     const Bool useweightimage)
   // TODO : Add parameter to indicate weight image shape. 
@@ -246,7 +147,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsUseWeight=useweightimage;
     itsPBScaleFactor=1.0;
 
-    //    itsNFacets=nfacets;
     itsNFacets=1;
     itsFacetId=0;
     itsNChanChunks = 1;
@@ -372,7 +272,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //    cout << " In ref imstore, hasSensitivity : " << hasSensitivity() << endl;
 	
-    //    itsValidity=((!itsPsf.null()) &&   (!itsResidual.null()) && (!itsWeight.null()));
     init();
     validate();
   }
@@ -436,6 +335,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     validate();
   }
   
+   void SIImageStore::validate()
+  {
+    /// There are two valid states. Check for at least one of them. 
+    Bool state = False;
+    
+    stringstream oss;
+    oss << "shape:" << itsImageShape << " parentimageshape:" << itsParentImageShape 
+	<< " nfacets:" << itsNFacets << "x" << itsNFacets << " facetid:" << itsFacetId 
+	<< " nchanchunks:" << itsNChanChunks << " chanid:" << itsChanId 
+	<< " npolchunks:" << itsNPolChunks << " polid:" << itsPolId 
+	<< " coord-dim:" << itsCoordSys.nPixelAxes() 
+	<< " psf/res:" << (hasPsf() || hasResidual()) ;
+    if( hasSumWt() ) oss << " sumwtshape : " << sumwt()->shape() ; 
+	oss << endl;
+
+
+    try {
+
+    if( itsCoordSys.nPixelAxes() != 4 ) state=False;
+    
+    /// (1) Regular imagestore 
+    if( itsNFacets==1 && itsFacetId==0 
+	&& itsNChanChunks==1 && itsChanId==0
+	&& itsNPolChunks==1 && itsPolId==0 )  {
+      Bool check1 = hasSumWt() && sumwt()->shape()[0]==1;
+      if(  (itsImageShape.isEqual(itsParentImageShape) ) && ( check1 || !hasSumWt() )
+	   && itsParentImageShape.product() > 0 ) state=True;
+      }
+    /// (2) Reference Sub Imagestore 
+    else if ( ( itsNFacets>1 && itsFacetId >=0 )
+	      || ( itsNChanChunks>1 && itsChanId >=0 ) 
+	      || ( itsNPolChunks>1 && itsPolId >=0 )   ) {
+      // If shape is still unset, even when the first image has been made....
+      Bool check1 = ( itsImageShape.product() > 0 && ( hasPsf() || hasResidual() ) );
+      Bool check2 = ( itsImageShape.isEqual(IPosition(4,0,0,0,0)) && ( !hasPsf() && !hasResidual() ) );
+      Bool check3 = hasSumWt() && sumwt()->shape()[0]==1; // One facet only.
+
+      if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) 
+	  && ( itsFacetId < itsNFacets*itsNFacets ) 
+	  && ( itsChanId < itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
+	  && ( check3 || !hasSumWt() ) )  state = True;
+    }
+
+    } catch( AipsError &x )  {
+      state = False;
+      oss << "  |||||  " << x.getMesg() << endl;
+    }
+
+    //cout << " SIIM:validate : " << oss.str() << endl;
+
+    if( state == False )  throw(AipsError("Internal Error : Invalid ImageStore state : "+ oss.str()) );
+    
+    return;
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////make a facet image store which refers to a sub section of images 
@@ -1304,8 +1258,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if( validbeam==True )
 	  {
-	    os << "[" << itsImageName << "] " ;  // Add when parent image name is available.
-	    os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	    //os << "[" << itsImageName << "] " ;  // Add when parent image name is available.
+	    //os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
 	    
 	    // Initialize restored image
 	    image()->set(0.0);
@@ -1529,9 +1483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Int itsNFacets;
     outFile << "itsNFacets: " << itsNFacets << endl;
-    //Bool itsUseWeight, itsValidity;
     outFile << "itsUseWeight: " << itsUseWeight << endl;
-    outFile << "itsValidity: " << itsValidity << endl;
     
 
     // Misc Information to go into the header. 
@@ -1578,9 +1530,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Int itsNFacets;
     inFile >> token; if (token=="itsNFacets:") inFile >> itsNFacets;
-    //Bool itsUseWeight, itsValidity;
     inFile >> token; if (token=="itsUseWeight:") inFile >> itsUseWeight;
-    inFile >> token; if (token=="itsValidity:") inFile >> itsValidity;
 
     Bool coordSysLoaded=False;
     String itsName;

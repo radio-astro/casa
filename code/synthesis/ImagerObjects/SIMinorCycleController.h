@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          - exceeded number maxcycleniter
          - exceeded cycle threshold
     */
-    virtual bool majorCycleRequired(Float currentPeakResidual);
+    virtual Int majorCycleRequired(Float currentPeakResidual);
 
     /* This method sets the following controls for the Minor Cycle Controller:
        - niter

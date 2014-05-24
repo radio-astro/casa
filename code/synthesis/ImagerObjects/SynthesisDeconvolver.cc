@@ -64,8 +64,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       //				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
 				       //                                       itsPartImageNames(Vector<String>(0)),
+				       itsBeam(0.0),
 				       itsDeconvolverId(0),
-				       itsBeam(0.0)
+				       itsScales(Vector<Float>())
   {
     
   }
@@ -74,6 +75,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
         LogIO os( LogOrigin("SynthesisDeconvolver","descructor",WHERE) );
 	os << LogIO::DEBUG1 << "SynthesisDeconvolver destroyed" << LogIO::POST;
+  }
+
+  void SynthesisDeconvolver::setupDeconvolution(const SynthesisParamsDeconv& decpars)
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","setupDeconvolution",WHERE) );
+
+    itsImageName = decpars.imageName;
+    itsStartingModelName = decpars.startModel;
+    itsDeconvolverId = decpars.deconvolverId;
+    
+    os << "Set Deconvolution Options for [" << itsImageName << "] : " << decpars.algorithm ;
+    if( itsStartingModelName.length() > 0 ) os << " , starting from model : " << itsStartingModelName;
+    os << LogIO::POST;
+
+    try
+      {
+	if(decpars.algorithm==String("hogbom"))
+	  {
+	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
+	  }
+	  else if(decpars.algorithm==String("mtmfs"))
+	    {
+	      itsDeconvolver = new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales ); 
+	    } 
+	  else if(decpars.algorithm==String("multiscale"))
+	    {
+	      itsDeconvolver = new SDAlgorithmMSClean( decpars.scales ); 
+	    } 
+	  else
+	    {
+	      throw( AipsError("Un-known algorithm : "+decpars.algorithm) );
+	    }
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
+      }
+    
+    itsAddedModel=False;
   }
   
   
@@ -114,9 +154,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //	{ Int nt; decpars.get( RecordFieldId("ntaylorterms") , nt ); nTaylorTerms=nt;}
 
 
-      // Scale sizes...
-
-
+      // Scale sizes..
+      if( decpars.isDefined("scales") )
+	//      	{ decpars.get( "scales" , itsScales );}
+	{ cout << "scales datatype : " << decpars.dataType("scales") << endl;
+	  itsScales = decpars.asArrayFloat("scales"); }
+      else
+	{itsScales.resize(1);itsScales[0]=0.0;}
+      
       }
     catch(AipsError &x)
       {
@@ -124,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in reading deconvolution parameters: "+x.getMesg()) );
       }
     
-    os << "Set Deconvolution Options for image [" << itsDeconvolverId << "] :" << itsImageName ;
+    os << "Set Deconvolution Options for [" << itsImageName << "] : " << algorithm ;
     if( itsStartingModelName.length() > 0 ) os << " , starting from model : " << itsStartingModelName;
     //    if( itsPartImageNames.nelements()>0 ) os << " constructed from : " << itsPartImageNames;
     os << LogIO::POST;
@@ -143,7 +188,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	  else if(algorithm==String("mtmfs"))
 	  {
-	    itsDeconvolver = new SDAlgorithmMSMFS( nTaylorTerms ); 
+	    itsDeconvolver = new SDAlgorithmMSMFS( nTaylorTerms, itsScales ); 
+	  } 
+	  else if(algorithm==String("multiscale"))
+	    {
+	      itsDeconvolver = new SDAlgorithmMSClean( itsScales ); 
 	    } 
 	else
 	  {

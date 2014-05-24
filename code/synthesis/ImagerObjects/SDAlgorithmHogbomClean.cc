@@ -101,29 +101,32 @@ void REFHogbomCleanImageSkyModelstopnow (Int *yes) {
 
 void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* px, Int* py,
 				    Float* fMaxVal) {
-  LogMessage message(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
-  ostringstream o; 
-  LogSink logSink(LogMessage::NORMAL2);
+  LogIO os(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
+   ostringstream o; 
+//  LogSink logSink(LogMessage::NORMAL2);
   
   if(*npol<0) {
     StokesVector maxVal(fMaxVal[0], fMaxVal[1], fMaxVal[2], fMaxVal[3]);
     if(*iter==0) {
       //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      message.message(o);
-      logSink.post(message);
+      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
+      //      message.message(o);
+      //      logSink.post(message);
     }
     else if(*iter>-1) {
       //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      message.message(o);
-      logSink.post(message);
+      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
+      //      message.message(o);
+      //      logSink.post(message);
     }
     else {
       //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      message.message(o);
-      logSink.post(message);
+      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
+      //      message.message(o);
+      //      logSink.post(message);
     }
   }
   else {
@@ -131,20 +134,23 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     if(*iter==0) {
       //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      message.message(o);
-      logSink.post(message);
+      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
+      //      message.message(o);
+      //      logSink.post(message);
     }
     else if(*iter>-1) {
       //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      message.message(o);
-      logSink.post(message);
+      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
+      //      message.message(o);
+      //      logSink.post(message);
     }
     else {
       //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      message.message(o);
-      logSink.post(message);
+      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
+      //      message.message(o);
+      //      logSink.post(message);
     }
   }
   
@@ -243,9 +249,9 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     
 
     Int fxbeg=xbeg+1;
-    Int fxend=xend;
+    Int fxend=xend+1;
     Int fybeg=ybeg+1;
-    Int fyend=yend;
+    Int fyend=yend+1;
     
     Int domaskI = 1;
     
@@ -282,65 +288,6 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     (itsImages->residual())->put( itsMatResidual );
     (itsImages->model())->put( itsMatModel );
   }
-
-  /*
-  void SDAlgorithmHogbomClean::restorePlane()
-  {
-
-    LogIO os( LogOrigin("SDAlgorithmHogbomClean","restorePlane",WHERE) );
-    
-    //     << ". Optionally, PB-correct too." << LogIO::POST;
-
-    try
-      {
-	// Fit a Gaussian to the PSF.
-	GaussianBeam beam = getPSFGaussian();
-
-	os << "Smooth model with and add residuals. beam(" << beam.getMajor(Unit("arcmin")) << "," << beam.getMinor(Unit("arcmin"))<< "," << beam.getPA(Unit("deg")) << ")" << LogIO::POST; 
-	
-	// Initialize restored image
-	itsImage.set(0.0);
-	// Copy model into it
-	itsImage.copyData( LatticeExpr<Float>(itsModel )  );
-	// Smooth model by beam
-	StokesImageUtil::Convolve( itsImage, beam);
-	// Add residual image
-	itsImage.copyData( LatticeExpr<Float>( itsImage + itsResidual ) );
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Restoration Error " + x.getMesg() ) );
-      }
-
-  }
-*/
-
-  /*
-    void SDAlgorithmHogbomClean::restore(CountedPtr<SIImageStore> imagestore )
-  {
-
-    LogIO os( LogOrigin("SDAlgorithmHogbomClean","restore",WHERE) );
-    
-    os << "Smooth model and add residuals for " << imagestore->getName() 
-       << ". Optionally, PB-correct too." << LogIO::POST;
-
-    // Fit a Gaussian to the PSF.
-    GaussianBeam beam = getPSFGaussian();
-
-    //    imagestore->allocateRestoredImage();
-
-    // Initialize restored image
-    imagestore->image()->set(0.0);
-    // Copy model into it
-    imagestore->image()->copyData( LatticeExpr<Float>(* (imagestore->model()) )  );
-    // Smooth model by beam
-    StokesImageUtil::Convolve(*(imagestore->image()), beam);
-    // Add residual image
-    imagestore->image()->copyData( LatticeExpr<Float>( *(imagestore->image()) + *(imagestore->residual())) );
-    
-
-  }
-*/
 
 
 } //# NAMESPACE CASA - END

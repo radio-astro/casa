@@ -420,13 +420,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( rec.isDefined( id ) )
       {
-	if( rec.dataType( id )==TpArrayFloat || rec.dataType( id )==TpArrayDouble ) 
-	  { rec.get( id , val ); return String(""); }
+	if( rec.dataType( id )==TpArrayFloat )
+	  { 
+	    rec.get( id , val ); return String(""); 
+	    /*
+	    Array<Float> vec; rec.get(id, vec );
+	    cout << " vec : " << vec << endl;
+	    if( vec.shape().nelements()==1 )
+	      {
+		val.resize( vec.shape()[0] );
+		for(uInt i=0;i<val.nelements();i++){val[i]=(Float)vec(IPosition(1,i));}
+		return String("");
+	      }
+	    else { return String(id + " must be a 1D vector of floats"); }
+	    */
+	  }
+	else if ( rec.dataType( id ) ==TpArrayDouble ) 
+	  {
+	    Vector<Double> vec; rec.get( id, vec );
+	    val.resize(vec.nelements());
+	    for(uInt i=0;i<val.nelements();i++){val[i]=(Float)vec[i];}
+	    return String("");
+	  }
+	else if ( rec.dataType( id ) ==TpArrayInt ) 
+	  {
+	    Vector<Int> vec; rec.get( id, vec );
+	    val.resize(vec.nelements());
+	    for(uInt i=0;i<val.nelements();i++){val[i]=(Float)vec[i];}
+	    return String("");
+	  }
 	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
 	  {
 	    Vector<Bool> vec; rec.get( id, vec );
-	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    if( vec.shape().product()==0 ){val.resize(0); return String("");}
 	    else{ return String(id + " must be a vector of strings.\n"); }
+	    // val.resize(0); return String("");
 	  }
 	else { return String(id + " must be a vector of floats\n"); }
       }
@@ -845,8 +873,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		String pstr;
 		inrec.get("projection",pstr);
+
 		try
 		  {
+		    if( pstr.matches("NCP") )
+		      {
+			pstr ="SIN";
+			useNCP=True;
+		      }
 		    projection=Projection::type( pstr );
 		  }
 		catch(AipsError &x)
@@ -1189,6 +1223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     phaseCenter=MDirection();
     phaseCenterFieldId=-1;
     projection=Projection::SIN;
+    useNCP=False;
     startModel=String("");
     overwrite=False;
 
@@ -1233,7 +1268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("ntaylorterms", nTaylorTerms);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
     impar.define("phasecenterfieldid",phaseCenterFieldId);
-    impar.define("projection", projection.name() );
+    impar.define("projection", (useNCP? "NCP" : projection.name()) );
 
     impar.define("mode", mode );
     // start and step can be one of these types
@@ -1358,9 +1393,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     deltas(1)=cellsize[1].get("rad").getValue();
     Matrix<Double> xform(2,2);
     xform=0.0;xform.diagonal()=1.0;
+
+    Vector<Double> projparams(2); 
+    projparams = 0.0;
+    if( useNCP==True ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
+    Projection projTo( projection.type(), projparams );
+
     DirectionCoordinate
       myRaDec(MDirection::Types(phaseCenterToUse.getRefPtr()->getType()),
-	      projection,
+	      //	      projection,
+	      projTo,
 	      refCoord(0), refCoord(1),
 	      deltas(0), deltas(1),
 	      xform,
@@ -1982,6 +2024,90 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return gridpar;
   }
 
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ /////////////////////// Deconvolver Parameters
+
+  SynthesisParamsDeconv::SynthesisParamsDeconv():SynthesisParams()
+  {
+    setDefaults();
+  }
+
+  SynthesisParamsDeconv::~SynthesisParamsDeconv()
+  {
+  }
+
+
+  void SynthesisParamsDeconv::fromRecord(Record &inrec)
+  {
+    setDefaults();
+
+    String err("");
+
+    try
+      {
+	
+	err += readVal( inrec, String("imagename"), imageName );
+	err += readVal( inrec, String("deconvolver"), algorithm );
+	err += readVal( inrec, String("startmodel"), startModel );
+
+	err += readVal( inrec, String("id"), deconvolverId );
+	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
+
+	err += readVal( inrec, String("scales"), scales );
+
+	err += readVal( inrec, String("mask"), maskType );
+
+	err += verify();
+	
+      }
+    catch(AipsError &x)
+      {
+	err = err + x.getMesg() + "\n";
+      }
+      
+      if( err.length()>0 ) throw(AipsError("Invalid Deconvolver Parameter set : " + err));
+      
+  }
+
+  String SynthesisParamsDeconv::verify()
+  {
+    String err;
+
+
+    return err;
+  }
+
+  void SynthesisParamsDeconv::setDefaults()
+  {
+    imageName="";
+    algorithm="clark";
+    startModel="";
+    deconvolverId=0;
+    nTaylorTerms=1;
+    scales.resize(1); scales[0]=0.0;
+    maskType="none";
+    
+  }
+
+  Record SynthesisParamsDeconv::toRecord()
+  {
+    Record decpar;
+
+    decpar.define("imagename", imageName);
+    decpar.define("deconvolver", algorithm);
+    decpar.define("startmodel",startModel);
+    decpar.define("id",deconvolverId);
+    decpar.define("ntaylorterms",nTaylorTerms);
+    decpar.define("scales",scales);
+    decpar.define("mask",maskType);
+
+    return decpar;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } //# NAMESPACE CASA - END
