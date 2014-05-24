@@ -127,11 +127,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void SynthesisIterBot::setupIteration(Record iterpars) {
 		LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
-		os << "Set Iteration Control Options." << LogIO::POST;
+		os << "Set Iteration Control Options" << LogIO::POST;
 		try {
 			setIterationDetails(iterpars);
 		} catch(AipsError &x) {
-			throw( AipsError("Error in constructing SkyModel : "+x.getMesg()) );
+			throw( AipsError("Error in setting iteration parameters : "+x.getMesg()) );
 		}
 	} //end of setupIteration
   

@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMinorCycleController::~SIMinorCycleController(){}
 
 
-  bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual)
+  Int SIMinorCycleController::majorCycleRequired(Float currentPeakResidual)
   {
     LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
 
@@ -66,19 +66,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return true;
     return false;
     */
-    
+
+    /*
     Bool doStop=False;
 
     if (itsCycleIterDone >= itsCycleNiter ) 
-      { doStop = True; os << "Reached cycleniter." ;  }
+      { doStop = True; os << LogIO::NORMAL << "Reached cycleniter." ;  }
     if( fabs(currentPeakResidual) <= itsCycleThreshold )
-      { doStop = True; os << "Reached cyclethreshold." ; }
+      { doStop = True; os << LogIO::NORMAL << "Reached cyclethreshold." ; }
     if( itsIterDiff==0 )
-      { doStop = True; os << "Minor cycle algorithm decided to stop early.";  }
+      { doStop = True; os << LogIO::NORMAL << "Minor cycle algorithm decided to stop early.";  }
     
-    if( doStop == True ) {os << " Triggering major cycle." << LogIO::POST;}
+    if( doStop == True ) {os << LogIO::NORMAL1 << " Triggering major cycle." << LogIO::POST;}
+
+    //cout << "MajorCycleRequired : " << currentPeakResidual << " : " << itsCycleIterDone << "  stop : " << doStop << endl;
     
     return doStop;
+    */
+
+    Int stopCode=0;
+
+    if (itsCycleIterDone >= itsCycleNiter ) {stopCode=1;}
+    //      { doStop = True; os << LogIO::NORMAL << "Reached cycleniter." ;  }
+    if( fabs(currentPeakResidual) <= itsCycleThreshold ) { stopCode=2; }
+      //  { doStop = True; os << LogIO::NORMAL << "Reached cyclethreshold." ; }
+    if( itsIterDiff==0 ) {stopCode=3;}
+    //      { doStop = True; os << LogIO::NORMAL << "Minor cycle algorithm decided to stop early.";  }
+
+    return stopCode;
+
   }
 
 

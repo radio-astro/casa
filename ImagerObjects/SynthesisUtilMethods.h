@@ -179,6 +179,7 @@ public:
   Vector<Int> imsize;
   Vector<Quantity> cellsize;
   Projection projection;
+  Bool useNCP;
   MDirection phaseCenter;
   Int phaseCenterFieldId;
 
@@ -242,6 +243,31 @@ public:
   String mType;
 
 };
+
+
+  class SynthesisParamsDeconv: public SynthesisParams
+{
+public:
+
+  SynthesisParamsDeconv();
+  ~SynthesisParamsDeconv();
+
+  void fromRecord(Record &inrec);
+  void setDefaults();
+  String verify();
+  Record toRecord();
+
+  String imageName, algorithm, startModel;
+
+  Int deconvolverId; // maybe remove ? It's only to tag summary info.
+
+  Int nTaylorTerms; 
+
+  Vector<Float> scales;
+
+  String maskType;
+
+  };
 
 
 } //# NAMESPACE CASA - END

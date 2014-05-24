@@ -552,7 +552,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			cout << prefix << " : " 
 				 << " ItsNiter=" << itsNiter
-				 << "  itsCycleNiter=" << itsCycleNiter
+				 << " itsCycleNiter=" << itsCycleNiter
 				 << " itsThreshold=" << itsThreshold
 				 << " itsCycleThreshold=" << itsCycleThreshold
 				 << " itsStopFlag=" << itsStopFlag

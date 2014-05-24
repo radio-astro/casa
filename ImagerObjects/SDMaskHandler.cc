@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SDMaskHandler::makeMask()
   {
     LogIO os( LogOrigin("SDMaskHandler","makeMask",WHERE) );
-    os << "Make mask" << LogIO::POST;
+    //os << "Make mask" << LogIO::POST;
   }
 
 
@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //cout << "Sum of mask : " << sum(localmask) << endl;
     Float summask = sum(localmask);
     if( summask==0.0 ) { localmask=1.0; summask = sum(localmask); }
-    os << "Make Autobox mask with " << summask << " available pixels " << LogIO::POST;
+    os << LogIO::NORMAL1 << "Make Autobox mask with " << summask << " available pixels " << LogIO::POST;
 
     imstore->mask()->put( localmask );
 

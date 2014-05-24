@@ -63,15 +63,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-  SDAlgorithmMSMFS::SDAlgorithmMSMFS( uInt nTaylorTerms ):
+  SDAlgorithmMSMFS::SDAlgorithmMSMFS( uInt nTaylorTerms, Vector<Float> scalesizes ):
     SDAlgorithmBase(),
     //    itsImages(),
     itsMatPsfs(), itsMatResiduals(), itsMatModels(),
     itsNTerms(nTaylorTerms),
+    itsScaleSizes(scalesizes),
     itsMTCleaner(),
     itsMTCsetup(False)
  {
    itsAlgorithmName=String("mtmfs");
+   if( itsScaleSizes.nelements()==0 ){ itsScaleSizes.resize(1); itsScaleSizes[0]=0.0; }
  }
 
   SDAlgorithmMSMFS::~SDAlgorithmMSMFS()
@@ -109,8 +111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsMTCsetup == False)
       {
 	//cout << "Setting up the MT Cleaner once" << endl;
-	Vector<Float> scalesizes(1); scalesizes[0]=0.0;
-	itsMTCleaner.setscales( scalesizes );
+	//Vector<Float> scalesizes(1); scalesizes[0]=0.0;
+	itsMTCleaner.setscales( itsScaleSizes );
 	itsMTCleaner.setntaylorterms( itsNTerms );
 	itsMTCleaner.initialise( itsImages->getShape()[0], itsImages->getShape()[1] );
 	

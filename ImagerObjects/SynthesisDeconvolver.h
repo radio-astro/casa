@@ -38,8 +38,12 @@
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
 #include<synthesis/ImagerObjects/SDAlgorithmHogbomClean.h>
 #include<synthesis/ImagerObjects/SDAlgorithmMSMFS.h>
+#include<synthesis/ImagerObjects/SDAlgorithmMSClean.h>
+
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include <synthesis/ImagerObjects/SIMinorCycleController.h>
+
+#include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -60,6 +64,9 @@ class SynthesisDeconvolver
   // Copy constructor and assignment operator
 
   // make all pure-inputs const
+
+  void setupDeconvolution(const SynthesisParamsDeconv& decpars);
+
   void setupDeconvolution(Record recpars);
 
   Record initMinorCycle();
@@ -102,22 +109,13 @@ protected:
   CountedPtr<SDMaskHandler> itsMaskHandler;
 
   CountedPtr<SIImageStore> itsImages;
-  //  Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
   
   String itsImageName;
-  //  Vector<String> itsPartImageNames;
   String itsStartingModelName;
   Bool itsAddedModel;
 
-  uInt itsDeconvolverId;
-
-  //  Vector<Slicer> itsDecSlices;
-
-  //  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsResidual, itsWeight;
-  //CountedPtr<PagedImage<Float> > itsModel;
-  //Vector<CountedPtr<PagedImage<Float> > > itsPartImages, itsPartPsfs, itsPartResiduals, itsPartWeights;
 
   Float itsBeam;
 
@@ -125,6 +123,8 @@ protected:
 
   /////////////// All input parameters
 
+  uInt itsDeconvolverId;
+  Vector<Float> itsScales;
  
 };
 
