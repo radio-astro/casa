@@ -33,11 +33,29 @@ class sdimprocess_unittest_base:
         self.assertEqual(isthere,True,
                          msg='output file %s was not created because of the task failure'%(name))
 
+    def _flux(self, csys, ref):
+        # see CAS-5779, images/Images/ImageStatistics.tcc
+        axis_ra = csys.findaxis('ra')['axisincoordinate']
+        axis_dec = csys.findaxis('dec')['axisincoordinate']
+        print axis_ra, axis_dec
+        units = csys.units()
+        increments = csys.increment()['numeric']
+        incr_ra = qa.quantity(abs(increments[axis_ra]), units[axis_ra])
+        incr_dec = qa.quantity(abs(increments[axis_dec]), units[axis_dec])
+        area = qa.convert(incr_ra, 'arcsec')['value'] * qa.convert(incr_dec, 'arcsec')['value']
+        return area * ref['sum']
+        
     def _checkstats(self,name,ref):
         self._checkfile(name)
         ia.open(name)
         stats=ia.statistics(list=True, verbose=True)
+
+        # set 'flux' value to ref
+        if not ref.has_key('flux'):
+            ref['flux'] = self._flux(ia.coordsys(), ref)
+
         ia.close()
+        
         for key in stats.keys():
         #for key in self.keys:
             message='statistics \'%s\' does not match'%(key)
