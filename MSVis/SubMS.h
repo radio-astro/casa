@@ -53,6 +53,7 @@ namespace subms {
 // NOT a member function, so it can be easily passed to other functions
 // (i.e. arrayTransformInPlace).
 Double wtToSigma(Double wt);
+Double sigToWeight(Double sig);
 }
 
 // <summary>

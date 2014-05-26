@@ -107,9 +107,21 @@ typedef ROVisibilityIterator ROVisIter;
 typedef VisibilityIterator VisIter;
 
 namespace subms {
+
+
+// Weight <-> Sigma routines
+//   A value in zero in either will be interpretted as 
+//    practically zero weight (~inf noise), w/out generating
+//    inf or NaN
 Double wtToSigma(Double wt)
 {
-  return wt > 0.0 ? 1.0 / sqrt(wt) : -1.0;
+  // sig = 1/sqrt(wt)
+  return wt > 0.0 ? 1.0 / sqrt(wt) : FLT_MAX;
+}
+Double sigToWeight(Double sig)
+{
+  // wt = 1/square(sig)
+  return sig > 0.0 ? 1.0 / square(sig) : FLT_EPSILON;
 }
 }
   
@@ -7388,13 +7400,18 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
           viIn.flagCategory(flagcat);
           viOut.setFlagCategory(flagcat);
         }
-        viIn.weightMat(wtmat);
-        viOut.setWeightMat(wtmat);
-        if(fromCorrToData)                           // Use SIGMA like a storage place
+        if(fromCorrToData) {
+	  viIn.weightMat(wtmat);
+	  viOut.setWeightMat(wtmat);
           arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
-        else
+	  viOut.setSigmaMat(wtmat);
+	}
+        else {
           viIn.sigmaMat(wtmat);           // Yes, I'm reusing wtmat.
-        viOut.setSigmaMat(wtmat);
+	  viOut.setSigmaMat(wtmat);
+          arrayTransformInPlace(wtmat, subms::sigToWeight);   // for corrected weights.
+	  viOut.setWeightMat(wtmat);
+	}	  
 
         if(doWtSp){
           viIn.weightSpectrum(wtsp);
@@ -8532,6 +8549,9 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   viIn.originChunks();                                // Makes me feel better.
 
   const Bool doSpWeight = viIn.existsWeightSpectrum();
+
+  cout << "doSpWeight = " << doSpWeight << endl;
+
   Bool doFC = existsFlagCategory();
   uInt rowsdone = 0;
   ProgressMeter meter(0.0, mssel_p.nrow() * 1.0, "split", "rows averaged", "", "",
@@ -8573,7 +8593,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
         if(doFC)
           vb.flagCategory();
       
-        vb.channelAve(chanAveBounds[viIn.spectralWindow()]);
+        vb.channelAve(chanAveBounds[viIn.spectralWindow()],False);
 
         if(nCmplx > 0){
           if(vb.flagCube().shape() !=
@@ -8605,17 +8625,24 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
         if(doFC)
           viOut.setFlagCategory(vb.flagCategory());
 
-        wtmat.reference(vb.weightMat());
 
         if(doSpWeight)
           viOut.setWeightSpectrum(vb.weightSpectrum());
-        viOut.setWeightMat(wtmat);
-        if(fromCorrToData)                           // Use SIGMA like a storage place
+
+
+        if(fromCorrToData) {
+	  wtmat.reference(vb.weightMat());
+	  viOut.setWeightMat(wtmat);
           arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
-        else
+	  viOut.setSigmaMat(wtmat);
+	}
+        else {
           wtmat.reference(vb.sigmaMat());           // Yes, I'm reusing wtmat.
-        viOut.setSigmaMat(wtmat);
-      
+	  viOut.setSigmaMat(wtmat);
+          arrayTransformInPlace(wtmat, subms::sigToWeight);   // for corrected weights.
+	  viOut.setWeightMat(wtmat);
+	}
+
         rowsdone += rowsnow;
       }
     }
@@ -9010,13 +9037,20 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
 
       if(doSpWeight)
         msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
-      wtmat.reference(avb.weightMat());
-      msc_p->weight().putColumnCells(rowstoadd, wtmat);
-      if(fromCorrToData)                           // Use SIGMA like a storage place
-        arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
-      else
+
+      if(fromCorrToData) {                          
+	wtmat.reference(avb.weightMat());
+	msc_p->weight().putColumnCells(rowstoadd, wtmat);
+        arrayTransformInPlace(wtmat, subms::wtToSigma);   // sig=1/sqrt(wt)
+	msc_p->sigma().putColumnCells(rowstoadd, wtmat);
+      }
+      else {
         wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.
-      msc_p->sigma().putColumnCells(rowstoadd, wtmat);
+	msc_p->sigma().putColumnCells(rowstoadd, wtmat);
+        arrayTransformInPlace(wtmat, subms::sigToWeight);   // wt=1/sig^2
+	msc_p->weight().putColumnCells(rowstoadd, wtmat);
+      }
+
 
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
       msc_p->time().putColumnCells(rowstoadd, avb.time());
@@ -9214,13 +9248,18 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       if(doSpWeight)
         msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
 
-      wtmat.reference(avb.weightMat());
-      msc_p->weight().putColumnCells(rowstoadd, wtmat);
-      if(fromCorrToData)                           // Use SIGMA like a storage place
-        arrayTransformInPlace(wtmat, subms::wtToSigma);   // for corrected weights.
-      else
+      if(fromCorrToData) {
+	wtmat.reference(avb.weightMat());
+	msc_p->weight().putColumnCells(rowstoadd, wtmat);
+        arrayTransformInPlace(wtmat, subms::wtToSigma);  // sig=1/sqrt(wt)
+	msc_p->sigma().putColumnCells(rowstoadd, wtmat);
+      }
+      else {
         wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.     
-      msc_p->sigma().putColumnCells(rowstoadd, wtmat);
+	msc_p->sigma().putColumnCells(rowstoadd, wtmat);
+        arrayTransformInPlace(wtmat, subms::sigToWeight);  // wt = 1/sig^2
+	msc_p->weight().putColumnCells(rowstoadd, wtmat);
+      }
 
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
       msc_p->time().putColumnCells(rowstoadd, avb.time());
