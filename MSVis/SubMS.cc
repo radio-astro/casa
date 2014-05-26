@@ -2093,6 +2093,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     vector<MPosition> mObsPosV;
     vector<MFrequency::Types> fromFrameTypeV; // original ref frame of the SPW
     vector<MFrequency::Ref> outFrameV; // new ref frame
+    vector<Double> weightScaleV; // the scaling factor for the WEIGHTs
     vector< Vector<Double> > xold; // the frequencies of the original SPW in the old ref frame
     vector< Vector<Double> > xout; // the frequencies of the new SPW in the new ref frame
     vector< Vector<Double> > xin;  // the frequencies of the old SPW in the new ref frame
@@ -2115,6 +2116,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    mObsPosV,
 			    fromFrameTypeV,
 			    outFrameV,
+			    weightScaleV,
 			    xold,
 			    xout, 
 			    xin, 
@@ -2150,6 +2152,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	 << LogIO::POST;
     }
 
+    vector<Double> sigmaScaleV(weightScaleV.size());
+    for(uInt i=0; i<weightScaleV.size(); i++){
+      if(weightScaleV[i]<=0.){
+	os << LogIO::WARN << "Internal error: Encountered non-positive weight scaling factor " << weightScaleV[i] <<endl
+	   << "Aborting." << LogIO::POST;
+	return -1;
+      }
+      else if(doHanningSmooth){
+	weightScaleV[i] *= 1.32;
+      }
+      sigmaScaleV[i] = 1./sqrt(weightScaleV[i]);
+    }
+
     // Loop 2: Write modified DD, SPW, and SOURCE tables
 
     if(!setRegridParameters(oldSpwId,
@@ -2161,6 +2176,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    mObsPosV,
 			    fromFrameTypeV,
 			    outFrameV,
+			    weightScaleV,
 			    xold,
 			    xout, 
 			    xin, 
@@ -2259,6 +2275,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ArrayColumn<Bool>* oldFLAGColP = 0;
     ArrayColumn<Bool> FLAG_CATEGORYCol =  mainCols.flagCategory();
     ArrayColumn<Bool>* oldFLAG_CATEGORYColP = 0;
+
+    // WEIGHT and SIGMA will possibly need to be modified (these are also arrays but only for corr. product)
+    ArrayColumn<Float> SIGMACol = mainCols.sigma();
+    ArrayColumn<Float> WEIGHTCol = mainCols.weight();
 
     if(needRegridding){
 
@@ -2688,16 +2708,21 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
 							 yinf, yinFlags, methodF, False, doExtrapolate);
-	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf);
+	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf * sigmaScaleV[iDone]); //  an approximation
 	}
 	if(!WEIGHT_SPECTRUMCol.isNull() && oldWEIGHT_SPECTRUMColP->isDefined(mainTabRow)){ // required column, but can be empty
 	  yinf.assign((*oldWEIGHT_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone],
                                                          xindd, yinf, yinFlags,
                                                          methodF, False, doExtrapolate);
-	  WEIGHT_SPECTRUMCol.put(mainTabRow, youtf);
+	  WEIGHT_SPECTRUMCol.put(mainTabRow, youtf * weightScaleV[iDone]); // an approximation
 	}
 	
+
+	SIGMACol.put(mainTabRow, SIGMACol(mainTabRow)*sigmaScaleV[iDone]);
+	WEIGHTCol.put(mainTabRow, WEIGHTCol(mainTabRow)*weightScaleV[iDone]);
+
+
 	// deal with FLAG_CATEGORY
 	// note: FLAG_CATEGORY is a required column, but it can be undefined (empty)
 	
@@ -4458,6 +4483,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  vector<MPosition>& mObsPosV,
 				  vector<MFrequency::Types>& fromFrameTypeV,
 				  vector<MFrequency::Ref>& outFrameV,
+				  vector< Double >& weightScaleV, 
 				  vector< Vector<Double> >& xold, 
 				  vector< Vector<Double> >& xout, 
 				  vector< Vector<Double> >& xin, 
@@ -4495,6 +4521,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     mObsPosV.resize(0);
     fromFrameTypeV.resize(0);
     outFrameV.resize(0);
+    weightScaleV.resize(0);
     MFrequency::Ref outFrame;
     method.resize(0);
     regrid.resize(0);	
@@ -4710,6 +4737,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else if (theFrame == theOldRefFrame){
 	  needTransform = False;
 	}
+
+	Double weightScale = 1.;
 
 	//   4) direction of the field, i.e. the phase center
 	MDirection theFieldDir;
@@ -5187,6 +5216,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  } // end if there is a source table
 	}
 
+	weightScale = newCHAN_WIDTH[0]/transCHAN_WIDTH[0]; // = deltaNuNew/deltaNuOld (both in outframe)
+
 	//Put a new row into the "done" table.
 	// (do all the push_backs in one place)
 	oldSpwId.push_back(theSPWId);
@@ -5195,6 +5226,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         // anticipate the deletion of the original DD rows
 	newDataDescId.push_back(theDataDescId - origNumDataDescs);
 
+	weightScaleV.push_back(weightScale);
 	xold.push_back(newXin);
 	xin.push_back(transNewXin);
 	xout.push_back(newXout);
@@ -5252,7 +5284,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	uInt sIndex=0;
 	for(Int i=0; i<origNumSourceRows; i++){
 	  Bool sFound=False;
-	  for(Int j=0; j<newSourceIds.size(); j++){
+	  for(uInt j=0; j<newSourceIds.size(); j++){
 	    if(sourceIdCol(sIndex)==newSourceIds[j] && spwIdCol(sIndex)==newSourceSPWIds[j]){
 	      sFound=True;
 	      break;
@@ -6651,6 +6683,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }	  
 	  // copy the rest of the row contents from mainTabRow
 	  mainCols.sigma().put(newMainTabRow, SIGMACol(mainTabRow));
+	  mainCols.weight().put(newMainTabRow, oldMainCols.weight()(mainTabRow));
+
 	  mainCols.fieldId().put(newMainTabRow, fieldCol(mainTabRow));
 	  mainCols.antenna1().put(newMainTabRow, antenna1Col(mainTabRow));
 	  mainCols.antenna2().put(newMainTabRow, antenna2Col(mainTabRow));
@@ -6659,7 +6693,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  mainCols.interval().put(newMainTabRow, intervalCol(mainTabRow));
 
 	  mainCols.uvw().put(newMainTabRow, oldMainCols.uvw()(mainTabRow));
-	  mainCols.weight().put(newMainTabRow, oldMainCols.weight()(mainTabRow));
 	  mainCols.arrayId().put(newMainTabRow, oldMainCols.arrayId()(mainTabRow));
 	  mainCols.feed1().put(newMainTabRow, oldMainCols.feed1()(mainTabRow));
 	  mainCols.feed2().put(newMainTabRow, oldMainCols.feed2()(mainTabRow));
