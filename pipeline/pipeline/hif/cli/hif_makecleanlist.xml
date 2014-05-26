@@ -71,6 +71,11 @@ Create a a list of images to be cleaned.
     <value></value>
   </param>
 
+  <param type="int" name="calmaxpix" subparam="true">
+    <description>Maximum X and Y size of calibrator images in pixels</description>
+    <value>300</value>
+  </param>
+
   <param type="any" name="phasecenter" subparam="true">
     <description>Image center (direction or field index, \'\' for default)</description>
     <any type="variant"/>
@@ -208,6 +213,11 @@ imsize -- Image X and Y size in pixels. The sizes must be even and divisible
 	    pixels required. 
     example: [120, 120]
 
+calmaxpix -- Maximum image X or Y size in pixels if a calibrator is being 
+    imaged ('PHASE', 'BANDPASS', 'AMPLITUDE' or 'FLUX').
+    default: 300
+    example: 300
+
 width -- Output channel width.
     default: '' Difference in frequency between first 2 selected channels.
         for frequency mode images.
@@ -279,7 +289,9 @@ By default the output image cellsize is set to the minimum cell size
 consistent with the UV coverage.
 
 By default the image size in pixels is set to values determined by the
-cell size and the single dish beam size.
+cell size and the single dish beam size. If a calibrator is being
+imaged (intents 'PHASE', 'BANDPASS', 'FLUX' or 'AMPLITUDE') then the
+image dimensions are limited to 'calmaxpix' pixels.
 
 By default science target images are cubes and calibrator target images
 are single channel. Science target images may be mosaics or single fields.
@@ -299,9 +311,10 @@ one image per science spw.
 
     hif_makecleanlist(intent='PHASE,BANDPASS')
 
-3. Make a list of PHASE calibrator images observed in spw 1.
+3. Make a list of PHASE calibrator images observed in spw 1, images limited to 
+50 pixels on a side.
 
-    hif_makecleanlist(intent='PHASE',spw='1')
+    hif_makecleanlist(intent='PHASE',spw='1',calmaxpix=50)
 
 </example>
 
