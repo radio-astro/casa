@@ -14,8 +14,8 @@ class MakeCleanListInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, 
       imagename=None, intent=None, field=None, spw=None, 
       uvrange=None, mode=None, outframe=None,
-      imsize=None, cell=None, phasecenter=None, nchan=None, start=None,
-      width=None):
+      imsize=None, cell=None, calmaxpix=None, phasecenter=None,
+      nchan=None, start=None, width=None):
 
         self._init_properties(vars())
 
@@ -114,6 +114,16 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @cell.setter
     def cell(self, value):
         self._cell = value
+
+    @property
+    def calmaxpix(self):
+        return self._calmaxpix
+
+    @calmaxpix.setter
+    def calmaxpix(self, value):
+        if value is None:
+            value = 300
+        self._calmaxpix = value
 
     @property
     def phasecenter(self):
@@ -252,9 +262,11 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                     try:
                         field_ids = self.heuristics.field(
                           field_intent[1], field_intent[0])
-                        imsizes[(field_intent[0],spwspec)] = \
-                          self.heuristics.imsize(fields=field_ids,
+                        himsize = self.heuristics.imsize(fields=field_ids,
                           cell=cells[spwspec], beam=beams[spwspec])
+                        if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX']:
+                            himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
+                        imsizes[(field_intent[0],spwspec)] = himsize
                     except Exception, e:
                         # problem defining imsize
                         LOG.warn(e)
