@@ -1653,7 +1653,7 @@ std::set<Int> MSMetaData::getScansForTimes(
 	return scans;
 }
 
-std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTimesMap() {
+std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTimesMap() const {
 	if (_scanToTimesMap && ! _scanToTimesMap->empty()) {
 		return _scanToTimesMap;
 	}
@@ -1687,7 +1687,7 @@ std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTi
 	return scanToTimesMap;
 }
 
-std::tr1::shared_ptr<Vector<Double> > MSMetaData::_getTimes() {
+std::tr1::shared_ptr<Vector<Double> > MSMetaData::_getTimes() const {
 	if (_times && ! _times->empty()) {
 		return _times;
 	}
@@ -1737,20 +1737,25 @@ std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaData::_getFlags() const {
 
 
 std::set<Double> MSMetaData::getTimesForScans(
-	const std::set<Int>& scans
-) {
+	std::set<Int> scans
+) const {
 	std::set<Double> times;
+	if (scans.empty()) {
+		Vector<Double> allTimes = *_getTimes();
+		times.insert(allTimes.begin(), allTimes.end());
+		return times;
+	}
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
 	std::set<Int> scanNumbers = getScanNumbers();
-	for (
-		std::set<Int>::const_iterator scan=scans.begin();
-		scan!=scans.end(); scan++
-	) {
+	std::set<Int>::const_iterator scan = scans.begin();
+	std::set<Int>::const_iterator end = scans.end();
+	while (scan != end) {
 		_checkScan(*scan, scanNumbers);
 		times.insert(
 			scanToTimesMap->find(*scan)->second.begin(),
 			scanToTimesMap->find(*scan)->second.end()
 		);
+		scan++;
 	}
 	return times;
 }

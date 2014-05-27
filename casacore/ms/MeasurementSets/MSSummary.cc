@@ -236,18 +236,18 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		return;
 	}
 
-	// Make objects
-	ROMSColumns msc(*pMS);
-	Double startTime, stopTime;
-	minMax(startTime, stopTime, msc.time().getColumn());
+	//ROMSColumns msc(*pMS);
+	std::set<Double> times = _msmd->getTimesForScans(std::set<Int>());
+	Double startTime = *times.begin();
+	Double stopTime = *(--times.end());
+	//minMax(startTime, stopTime, msc.time().getColumn());
 	Double exposTime = stopTime - startTime;
-	//    Double exposTime = sum(msc.exposure().getColumn());
 	MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
 	ROMSMainColumns msmc(*pMS);
 	String timeref=msmc.time().keywordSet().subRecord("MEASINFO").asString("Ref");
 
 	// Output info
-	os << "Data records: " << nrow() << "       Total integration time = "
+	os << "Data records: " << nrow() << "       Total elapsed time = "
 			<< exposTime << " seconds" << endl
 			<< "   Observed from   " << MVTime(startTime/C::day).string(MVTime::DMY,7)  //startMVT.string()
 			<< "   to   " << MVTime(stopTime/C::day).string(MVTime::DMY,7)  // stopMVT.string()
