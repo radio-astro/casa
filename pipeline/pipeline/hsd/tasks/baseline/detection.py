@@ -302,7 +302,7 @@ class DetectLine(common.SingleDishTaskTemplate):
                 else:
                     if len(protected) == 1 and protected[0] == [-1, -1]:
                         protected = []
-                    #protected.extend([l[0:2] for l in linestat])
+                    protected.extend([l[0:2] for l in linestat])
                     # Store line if max intensity exceeds 1/30 of the strongest one
                     #protected.extend([l[0:2] for l in linestat if l[2] > Threshold])
 
