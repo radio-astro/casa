@@ -191,7 +191,7 @@ public:
 	std::set<Int> getScansForTimes(const Double center, const Double tol);
 
 	// Get the times for the specified scans
-	std::set<Double> getTimesForScans(const std::set<Int>& scans);
+	std::set<Double> getTimesForScans(std::set<Int> scans) const;
 
 	// get the times for the specified scan.
 	// The return values come from the TIME column.
@@ -389,9 +389,9 @@ private:
 		_fieldToStatesMap, _stateToFieldsMap;
 	vector<String> _fieldNames, _antennaNames, _observatoryNames, _stationNames;
 	std::map<String, uInt> _antennaNameToIDMap;
-	std::tr1::shared_ptr<Vector<Double> > _times;
+	mutable std::tr1::shared_ptr<Vector<Double> > _times;
 	std::tr1::shared_ptr<Quantum<Vector<Double> > > _exposures;
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
+	mutable std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
 	mutable std::map<String, std::set<Int> > _intentToFieldIDMap, _intentToScansMap;
 	std::map<String, std::set<uInt> > _intentToSpwsMap;
 
@@ -464,7 +464,7 @@ private:
 
 	std::tr1::shared_ptr<Vector<Int> > _getDataDescIDs() const;
 
-	std::tr1::shared_ptr<Vector<Double> > _getTimes();
+	std::tr1::shared_ptr<Vector<Double> > _getTimes() const;
 
 	std::tr1::shared_ptr<Quantum<Vector<Double> > > _getExposureTimes();
 
@@ -565,7 +565,7 @@ private:
 
 	vector<String> _getStationNames();
 
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _getScanToTimesMap();
+	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _getScanToTimesMap() const;
 
 	void _getRowStats(
 		uInt& nACRows, uInt& nXCRows,
