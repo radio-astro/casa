@@ -187,7 +187,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
             else:
                 SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
                 
-        edgespw_cmd = ["mode=manual spw=" + SPWtoflag]
+        edgespw_cmd = ["mode=manual spw=" + SPWtoflag + "reason=edgespw name=edgespw"]
         
         return edgespw_cmd
         
@@ -211,7 +211,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
             int_time = context.evla['msinfo'][m.name].int_time
             
             quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + \
-                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False reason=quack'
+                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False reason=quack name=quack'
             
             return quack_mode_cmd
 
@@ -257,7 +257,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW
-            baseband_cmd = 'mode=manual spw=' + SPWtoflag + ' reason=baseband'
+            baseband_cmd = 'mode=manual spw=' + SPWtoflag + ' reason=baseband name=baseband'
 
         return baseband_cmd
     
