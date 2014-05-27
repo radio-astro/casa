@@ -610,6 +610,31 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="fieldsforsource">
+            <shortdescription>Get an array of the unique fields for the specified source ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="source">
+                    <description>Zero-based source ID for which to return the fields.</description>
+                    <value>-1</value>
+                </param>
+                <param type="bool" direction="in" name="asnames">
+                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="any"/>
+            <description>
+                Get an array of the unique fields for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field names for source ID 1
+    field_names = msmd.fieldsforsource(1, True)
+    # get the field IDs for source ID 1
+    field_IDs = msmd.fieldsforsource(1, False)
+    msmd.done()
+            </example>
+        </method>
         
         <method type="function" name="fieldsforspw">
             <shortdescription>Get an array of the unique fields for the specified spectral window.</shortdescription>

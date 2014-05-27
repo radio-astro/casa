@@ -708,7 +708,7 @@ endif()
 #
 
 casa_find( CASACODE
-           VERSION 1.0.145
+           VERSION 1.0.147
            PREFIX_HINTS ${CASACODE_ROOT_DIR}
            INCLUDES stdcasa/version.h
            INCLUDES_SUFFIXES casacode

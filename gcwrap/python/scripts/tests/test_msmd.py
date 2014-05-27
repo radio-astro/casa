@@ -1007,7 +1007,7 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((got == expec).all())
         
     def test_namesforspw(self):
-        """Test anemsforspws()"""
+        """Test namesforspws()"""
         md = self.md
         got = md.namesforspws()
         i = 0
@@ -1022,6 +1022,25 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((got == numpy.array(["", "BB_1#SQLD"])).all())
         got = md.namesforspws(3)
         self.assertTrue((got == numpy.array(["BB_1#SQLD"])).all())
+        
+    def test_fieldsforsource(self):
+        """Test fieldsforsource()"""
+        md = self.md
+        names = [
+            "3C279", "J1337-129", "Titan",
+            "J1625-254", "V866 Sco", "RNO 90"
+        ]
+        for i in range(7):
+            res = md.fieldsforsource(i, False)
+            if i == 6:
+                self.assertTrue(len(res) == 0)
+            else:
+                self.assertTrue(len(res) == 1 and res[0] == i)
+            res2 = md.fieldsforsource(i, True)
+            if i == 6:
+                self.assertTrue(len(res2) == 0)
+            else:
+                self.assertTrue(len(res2) == 1 and res2[0] == names[i])
 
 def suite():
     return [msmd_test]

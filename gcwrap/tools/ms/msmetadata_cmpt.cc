@@ -666,6 +666,34 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 	return 0;
 }
 
+variant* msmetadata::fieldsforsource(const int sourceID, const bool asnames) {
+	_FUNC(
+		if (asnames) {
+			std::map<Int COMMA std::set<String> > res = _msmd->getFieldNamesForSourceMap();
+			if (res.find(sourceID) == res.end()) {
+				return new variant(vector<string>());
+			}
+			else {
+				return new variant(
+					_setStringToVectorString(res[sourceID])
+				);
+			}
+		}
+		else {
+			std::map<Int COMMA std::set<Int> > res = _msmd->getFieldsForSourceMap();
+			if (res.find(sourceID) == res.end()) {
+				return new variant(vector<int>());
+			}
+			else {
+				return new variant(
+					_setIntToVectorInt(res[sourceID])
+				);
+			}
+		}
+	)
+	return 0;
+}
+
 variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
 	_FUNC(
 		_checkSpwId(spw, True);
