@@ -553,7 +553,7 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getArrayIDs() const {
 }
 
 std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getFieldIDs() const {
-	if (_fieldIDs && _fieldIDs->size() > 0) {
+	if (_fieldIDs && ! _fieldIDs->empty()) {
 		return _fieldIDs;
 	}
 	String fieldIdColName = MeasurementSet::columnName(MSMainEnums::FIELD_ID);
@@ -1003,7 +1003,7 @@ std::set<uInt> MSMetaData::getSpwsForField(const String& fieldName) {
 	return spws;
 }
 
-vector<String> MSMetaData::_getFieldNames() {
+vector<String> MSMetaData::_getFieldNames() const {
 	if (! _fieldNames.empty()) {
 		return _fieldNames;
 	}
@@ -2762,6 +2762,58 @@ void MSMetaData::_getFieldsAndStatesMaps(
 		_stateToFieldsMap = stateToFieldsMap;
 	}
 }
+
+map<Int, std::set<String> > MSMetaData::getFieldNamesForSourceMap() const {
+	map<Int, std::set<Int> > idsToSource = getFieldsForSourceMap();
+	map<Int, std::set<Int> >::const_iterator iter = idsToSource.begin();
+	map<Int, std::set<Int> >::const_iterator end = idsToSource.end();
+	map<Int, std::set<String> > namesMap;
+	vector<String> names = _getFieldNames();
+	while (iter != end) {
+		Int sourceID = iter->first;
+		namesMap[sourceID] = std::set<String>();
+		std::set<Int> fieldIDs = idsToSource[sourceID];
+		std::set<Int>::const_iterator siter = fieldIDs.begin();
+		std::set<Int>::const_iterator send = fieldIDs.end();
+		while (siter != send) {
+			namesMap[sourceID].insert(names[*siter]);
+			siter++;
+		}
+		iter++;
+	}
+	return namesMap;
+}
+
+map<Int, std::set<Int> > MSMetaData::getFieldsForSourceMap() const {
+	// This method sets _sourceToFieldsMap
+	if (! _sourceToFieldsMap.empty()) {
+		return _sourceToFieldsMap;
+	}
+	String sourceIDName = MSField::columnName(MSFieldEnums::SOURCE_ID);
+	Vector<Int> sourceIDs = ROScalarColumn<Int>(_ms->field(), sourceIDName).getColumn();
+	map<Int, std::set<Int> > mymap;
+	std::set<Int> uSourceIDs(sourceIDs.begin(), sourceIDs.end());
+	std::set<Int>::const_iterator iter = uSourceIDs.begin();
+	std::set<Int>::const_iterator  end = uSourceIDs.end();
+	while (iter != end) {
+		mymap[*iter] = std::set<Int>();
+		iter++;
+	}
+	Vector<Int>::const_iterator miter = sourceIDs.begin();
+	Vector<Int>::const_iterator mend = sourceIDs.end();
+	Int rowNumber = 0;
+	while (miter != mend) {
+		mymap[*miter].insert(rowNumber);
+		miter++;
+		rowNumber++;
+	}
+	uInt mysize = _sizeof(mymap);
+	if (_cacheUpdated(mysize)) {
+		_sourceToFieldsMap = mymap;
+	}
+	return mymap;
+}
+
 
 void MSMetaData::_getFieldsAndIntentsMaps(
 	vector<std::set<String> >& fieldToIntentsMap,

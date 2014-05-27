@@ -229,6 +229,13 @@ public:
 	// get the field IDs associated with the specified intent.
 	std::set<Int> getFieldsForIntent(const String& intent);
 
+	// get the field IDs associated with the specified source.
+	std::set<Int> getFieldsForIntent(uInt sourceID) const;
+
+	std::map<Int, std::set<Int> > getFieldsForSourceMap() const;
+
+	std::map<Int, std::set<String> > getFieldNamesForSourceMap() const;
+
 	// get the field names associated with the specified field IDs. If <src>fieldIDs</src>
 	// is empty, a vector of all the field names is returned.
 	vector<String> getFieldNamesForFieldIDs(const vector<uInt>& fieldIDs);
@@ -386,8 +393,8 @@ private:
 	std::map<Int, std::set<uInt> > _fieldToSpwMap;
 	mutable vector<std::set<Int> > _spwToFieldIDsMap, _spwToScansMap, _ddidToScansMap;
 	mutable std::map<Int, std::set<Int> > _scanToStatesMap, _scanToFieldsMap, _fieldToScansMap,
-		_fieldToStatesMap, _stateToFieldsMap;
-	vector<String> _fieldNames, _antennaNames, _observatoryNames, _stationNames;
+		_fieldToStatesMap, _stateToFieldsMap, _sourceToFieldsMap;
+	mutable vector<String> _fieldNames, _antennaNames, _observatoryNames, _stationNames;
 	std::map<String, uInt> _antennaNameToIDMap;
 	mutable std::tr1::shared_ptr<Vector<Double> > _times;
 	std::tr1::shared_ptr<Quantum<Vector<Double> > > _exposures;
@@ -432,8 +439,6 @@ private:
 
 	// set metadata from OBSERVATION table
 	void _setObservation(const MeasurementSet& ms);
-
-	// static vector<uInt> _toUIntVector(const Vector<Int>& v);
 
 	static void _checkScan(const Int scan, const std::set<Int> allScans);
 
@@ -561,7 +566,7 @@ private:
 
 	std::map<Int, uInt> _getDataDescIDToPolIDMap();
 
-	vector<String> _getFieldNames();
+	vector<String> _getFieldNames() const;
 
 	vector<String> _getStationNames();
 
