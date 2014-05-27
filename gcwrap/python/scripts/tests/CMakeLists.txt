@@ -153,6 +153,19 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdsmooth.py
   test_sdstat.py
   test_sdtpimaging.py
+  test_tsdaverage.py
+  test_tsdbaseline.py
+  test_tsdcal.py
+  test_tsdcal2.py
+  test_tsdfit.py
+  test_tsdflag.py
+  test_tsdgrid.py
+  test_tsdimaging.py
+  test_tsdmath.py
+  test_tsdplot.py
+  test_tsdreduce.py
+  test_tsdsave.py
+  test_tsdstat.py
   test_setjy.py
   test_simobserve.py
   test_simplecluster.py
@@ -172,5 +185,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_visstat.py
   test_vpmanager.py
   test_wvrgcal.py
+  selection_syntax.py
   unittests_list.txt
 )

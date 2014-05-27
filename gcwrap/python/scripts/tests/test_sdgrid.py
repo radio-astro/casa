@@ -757,7 +757,7 @@ class sdgrid_dec_correction(sdgrid_unittest_base,unittest.TestCase):
         dir1=tb.getcell('DIRECTION',2)
         dir2=tb.getcell('DIRECTION',npix*2)
         tb.close()
-        dx=dir1[0]-dir0[0]
+        dx=dir0[0]-dir1[0]
         dy=dir2[1]-dir0[1]
         #print 'dx=',dx,',dy=',dy
         diff=abs((0.5*dx-dy)/dy)
@@ -788,7 +788,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.outfile)
 
     def test700(self):
-        """Test 700: Test to change center for gridding"""
+        """Test 700: Test to change center for gridding (DEC)"""
         tb.open(self.rawfile)
         dir=tb.getcell('DIRECTION',0)
         tb.close()
@@ -813,6 +813,37 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         # shift 3 pixels downward
         nonzeropix_ref[0]-=nshift*npol*npix
         nonzeropix_ref[1]-=nshift*npol*npix
+        nonzeropix=self.data.nonzero()[1]
+        #print nonzeropix_ref
+        #print nonzeropix
+        self.nonzero(nonzeropix_ref,nonzeropix)
+        
+    def test701(self):
+        """Test 701: Test to change center for gridding (RA)"""
+        tb.open(self.rawfile)
+        dir=tb.getcell('DIRECTION',0)
+        tb.close()
+
+        #shift center 3 pixels upward
+        nshift=3
+        pix=20.0
+        dir[0]+=nshift*pix/3600.0*numpy.pi/180.0
+
+        npix=17
+        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='%sarcsec'%(pix),outfile=self.outfile,plot=False,center=dir)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during gridding')
+
+        self.getdata()
+        
+        # center is only nonzero pixel
+        npol=2
+        width=1
+        nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
+        #print nonzeropix_ref
+        # shift 3 pixels rightwards
+        nonzeropix_ref[0]+=nshift*npol
+        nonzeropix_ref[1]+=nshift*npol
         nonzeropix=self.data.nonzero()[1]
         #print nonzeropix_ref
         #print nonzeropix

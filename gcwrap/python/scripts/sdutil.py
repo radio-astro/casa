@@ -11,7 +11,7 @@ from casac import casac
 from taskinit import casalog, gentools, qatool
 import asap as sd
 from asap import _to_list
-from asap.scantable import is_scantable, is_ms
+from asap.scantable import is_scantable, is_ms, scantable
 
 def sdtask_decorator(func):
     """
@@ -100,6 +100,13 @@ class sdtask_interface(object):
     def __init__(self, **kwargs):
         for (k,v) in kwargs.items():
             setattr(self, k, v)
+        # special treatment for selection parameters
+        select_params = ['scan', 'pol','beam']
+        for param in select_params:
+            if hasattr(self, param):
+                setattr(self, param+'no', getattr(self, param))
+                #print("renaming self.%s -> self.%sno='%s'" % (param, param, getattr(self, param)))
+                delattr(self, param)
 
     def __del__(self):
         pass
@@ -133,6 +140,9 @@ class sdtask_template(sdtask_interface):
         super(sdtask_template,self).__init__(**kwargs)
         if not hasattr(self, 'outform'):
             self.outform = 'undefined'
+        ### WORKAROUND to support old telescopeparm parameter
+        if hasattr(self, 'telescopeparm'):
+            self.telescopeparam = self.telescopeparm
         self.is_disk_storage = (sd.rcParams['scantable.storage'] == 'disk')
         # attribute for tasks that return any result
         self.result = None
@@ -189,14 +199,17 @@ class sdtask_template(sdtask_interface):
         # do nothing by default
         pass
         
-    def get_selector(self):
+    def get_selector_by_list(self):
         attributes = ['scanlist','iflist','pollist','beamlist',
                       'rowlist','field']
         for a in attributes:
             if not hasattr(self,a): setattr(self,a,None)
-        selector = get_selector(in_scans=self.scanlist, in_ifs=self.iflist,
-                                in_pols=self.pollist, in_beams=self.beamlist,
-                                in_rows=self.rowlist, in_field=self.field)
+        selector = get_selector_by_list(in_scans=self.scanlist,
+                                        in_ifs=self.iflist,
+                                        in_pols=self.pollist,
+                                        in_beams=self.beamlist,
+                                        in_rows=self.rowlist,
+                                        in_field=self.field)
 
         # CAS-5496 selection by timerange
         if hasattr(self, 'timerange') and len(self.timerange) > 0:
@@ -216,11 +229,107 @@ class sdtask_template(sdtask_interface):
             casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
         return selector
-                
+
+
+    def get_selector(self, scantb=None):
+        """
+        Get selector instance that select scan(s), IF(s), polarization(s),
+        beam(s), field(s), and timerange set to this class.
+        This method parses attributes of string selection parameter,
+        scan(no), spw, pol(no), and beam(no), and converts to lists of
+        selected IDs, scanlist, iflist, pollist, and beamlist. The lists
+        are saved as attributes of this class.
+        Available range of IDs and time are obtained from a scantable.
+
+        Parameter
+            scantb : input scantable instance to get ID and time range from.
+                     The scantable defined as self.scan is used if scantb
+                     is not defined (default).
+        """
+        if not scantb:
+            if hasattr(self,'scan') and isinstance(self.scan, scantable):
+                scantb = self.scan
+            else:
+                raise Exception, "Internal Error. No valid scantable."
+        
+        attributes = ['scanno','spw','polno','beamno','field']
+        for a in attributes:
+            if not hasattr(self,a): setattr(self,a,"")
+
+        
+        self.scanlist = scantb.parse_idx_selection("SCAN",self.scanno)
+        self.iflist = []
+        if self.spw != "":
+            rfreq = None if not hasattr(self, 'restfreq') else self.restfreq
+            frame = None if (not hasattr(self, 'frame') or self.frame == '') else self.frame
+            doppler = None if (not hasattr(self, 'doppler') or self.doppler == '') else self.doppler
+            masklist = scantb.parse_spw_selection(self.spw, restfreq=rfreq,
+                                                  frame=frame, doppler=doppler)
+            if len(masklist) == 0:
+                raise ValueError, "Invalid spectral window selection. Selection contains no data."
+            self.iflist = masklist.keys()
+        self.pollist = scantb.parse_idx_selection("POL",self.polno)
+        self.beamlist = scantb.parse_idx_selection("BEAM",self.beamno)
+        
+        attributes = ['scanlist','iflist','pollist','beamlist',
+                      'rowlist','field']
+        for a in attributes:
+            if not hasattr(self,a): setattr(self,a,None)
+        selector = get_selector(in_scans=self.scanlist,
+                                in_ifs=self.iflist,
+                                in_pols=self.pollist,
+                                in_beams=self.beamlist,
+                                in_rows=self.rowlist,
+                                in_field=self.field)
+
+        # CAS-5496 selection by timerange
+        if hasattr(self, 'timerange') and len(self.timerange) > 0:
+            # base scantable
+            if hasattr(self, 'infile'):
+                base_table = self.infile
+            elif hasattr(self, 'infiles'):
+                base_table = self.infiles[0]
+            else:
+                base_table = None
+            taql_for_timerange = select_by_timerange(base_table, self.timerange)
+            query_org = selector.get_query()
+            if len(query_org) > 0:
+                selector.set_query(' && '.join([query_org, taql_for_timerange]))
+            else:
+                selector.set_query(taql_for_timerange)
+            casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
+
+        return selector
+
+    def assert_no_channel_selection_in_spw(self, mode='warn'):
+        """
+        Assert 'spw' does not have channel selection
+        Returns True if spw string does not have channel selecton
+        Returns False or raises an error if spw has channel selection
+
+        Available modes are
+            'result' : just returns the result (true or false)
+            'warn'   : warn user if channel selection is set
+            'error'  : raise an error if channel seledtion is set
+        """
+        if not hasattr(self, 'spw'): return True
+        # find pattern spw = 'spwID:channelRange'
+        has_chan = (self.spw.find(':') > -1)
+        ## TODO: also need to do something with "###Hz" and "###km/s"?
+        #quantap = re.compile('[a-z]', re.IGNORECASE)
+        #has_chan = has_chan or len(quantap.findall(self.spw))
+        if has_chan:
+            if mode.upper().startswith('E'):
+                raise ValueError, "spw parameter should not contain channel selection."
+            elif mode.upper().startswith('W'):
+                casalog.post("Channel selection found in spw parameter. It would be ignored", priority='WARN')
+        
+        return has_chan
+        
         
     def set_to_scan(self):
         if hasattr(self,'fluxunit'):
-            set_fluxunit(self.scan, self.fluxunit, self.telescopeparm)
+            set_fluxunit(self.scan, self.fluxunit, self.telescopeparam)
         if hasattr(self,'frame'):
             set_freqframe(self.scan, self.frame)
         if hasattr(self,'doppler'):
@@ -236,6 +345,12 @@ class sdtask_template(sdtask_interface):
                         fval = normalise_restfreq(self.restfreq)
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
+        elif hasattr(self, 'spw') and self.spw != '' and \
+                hasattr(self,'restfreq'):
+           if self.restfreq not in ['',[]]:
+               fval = normalise_restfreq(self.restfreq)
+               casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
+               self.scan.set_restfreqs(freqs=fval)
 
 class sdtask_template_imaging(sdtask_interface):
     """
@@ -381,9 +496,9 @@ def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overw
 def get_listvalue(value):
     return _to_list(value, int) or []
 
-def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
-                 in_field=None, in_beams=None, in_rows=None,
-                 in_timerange=None):
+def get_selector_by_list(in_scans=None, in_ifs=None, in_pols=None, \
+                         in_field=None, in_beams=None, in_rows=None,
+                         in_timerange=None):
     scans = get_listvalue(in_scans)
     ifs   = get_listvalue(in_ifs)
     pols  = get_listvalue(in_pols)
@@ -397,6 +512,23 @@ def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
         # set of names this way, will probably
         # need to do a set_query eventually
         selector.set_name(in_field)
+
+    return selector
+
+
+def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
+                 in_field=None, in_beams=None, in_rows=None,
+                 in_timerange=None):
+    scans = get_listvalue(in_scans)
+    ifs   = get_listvalue(in_ifs)
+    pols  = get_listvalue(in_pols)
+    beams = get_listvalue(in_beams)
+    rows = get_listvalue(in_rows)
+    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams,
+                           rows=rows)
+
+    if (in_field != ""):
+        selector.set_msselection_field(in_field)
 
     return selector
 
@@ -531,7 +663,7 @@ def set_freqframe(s, frame):
     else:
         casalog.post('Using current frequency frame')
 
-def set_fluxunit(s, fluxunit, telescopeparm, insitu=True):
+def set_fluxunit(s, fluxunit, telescopeparam, insitu=True):
     ret = None
     
     # check current fluxunit
@@ -556,7 +688,7 @@ def set_fluxunit(s, fluxunit, telescopeparm, insitu=True):
 
         
     # fix the fluxunit if necessary
-    if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
+    if ( telescopeparam == 'FIX' or telescopeparam == 'fix' ):
         if ( fluxunit_local != '' ):
             if ( fluxunit_local == fluxunit_now ):
                 #print "No need to change default fluxunits"
@@ -576,18 +708,18 @@ def set_fluxunit(s, fluxunit, telescopeparm, insitu=True):
             #print "No need to convert fluxunits"
             casalog.post( "No need to convert fluxunits" )
 
-    elif ( type(telescopeparm) == list ):
+    elif ( type(telescopeparam) == list ):
         # User input telescope params
-        if ( len(telescopeparm) > 1 ):
-            D = telescopeparm[0]
-            eta = telescopeparm[1]
+        if ( len(telescopeparam) > 1 ):
+            D = telescopeparam[0]
+            eta = telescopeparam[1]
             #print "Use phys.diam D = %5.1f m" % (D)
             #print "Use ap.eff. eta = %5.3f " % (eta)
             casalog.post( "Use phys.diam D = %5.1f m" % (D) )
             casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
             ret = s.convert_flux(eta=eta,d=D,insitu=insitu)
-        elif ( len(telescopeparm) > 0 ):
-            jypk = telescopeparm[0]
+        elif ( len(telescopeparam) > 0 ):
+            jypk = telescopeparam[0]
             #print "Use gain = %6.4f Jy/K " % (jypk)
             casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
             ret = s.convert_flux(jyperk=jypk,insitu=insitu)
@@ -595,7 +727,7 @@ def set_fluxunit(s, fluxunit, telescopeparm, insitu=True):
             #print "Empty telescope list"
             casalog.post( "Empty telescope list" )
 
-    elif ( telescopeparm=='' ):
+    elif ( telescopeparam=='' ):
         if ( antennaname == 'GBT'):
             # needs eventually to be in ASAP source code
             #print "Convert fluxunit to "+fluxunit
@@ -973,6 +1105,8 @@ def to_datetime(date):
 def to_timedelta(delta):
     delta_elements_list = split_date_string(delta, full=False)
     delta_list = map(int, delta_elements_list[:-1]) + [float(delta_elements_list[-1])]
+    while len(delta_list) < 3:
+        delta_list.insert(0, 0)
     dummy1 = datetime.datetime(1999, 1, 1)
     dummy2 = datetime.datetime(1999, 1, 1,
                                delta_list[0], delta_list[1], int(delta_list[2]),

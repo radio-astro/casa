@@ -39,7 +39,8 @@ class sdplot_worker(sdutil.sdtask_template):
             self.pollist = sorg.parse_idx_selection("POL",self.pollist)
         if type(self.beamlist) == str:
             self.beamlist = sorg.parse_idx_selection("BEAM",self.beamlist)
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         sorg.set_selection(sel)
         self.ssel=sel.__str__()
         del sel
@@ -120,7 +121,7 @@ class sdplot_worker(sdutil.sdtask_template):
         self.__dogrid(nx, ny, cellx, celly, mapcenter)
 
         # Now set fluxunit, specunit, frame, and doppler
-        sdutil.set_fluxunit(self.scan, self.fluxunit, telescopeparm='fix')
+        sdutil.set_fluxunit(self.scan, self.fluxunit, 'fix')
         sdutil.set_spectral_unit(self.scan, self.specunit)
         sdutil.set_freqframe(self.scan, self.frame)
         sdutil.set_doppler(self.scan, self.doppler)

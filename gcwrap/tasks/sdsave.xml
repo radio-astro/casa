@@ -26,7 +26,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
-    <param type="any" name="antenna">
+    <param type="bool" name="splitant">
+            <description>split output file by antenna (True,False) (only effective for MS input and ASAP output)</description>
+            <value>False</value>
+    </param>
+
+    <param type="any" name="antenna" subparam="true">
             <description>antenna name or id (only effective for MS input)</description>
             <any type="variant" limittype="string int"/>
             <value type="int">0</value>
@@ -127,6 +132,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <constraints>
+            <when param="splitant">                
+                 <equals type="bool" value="False">
+                        <default param="antenna"><value type='any'>0</value></default>
+                 </equals>
+                 <equals type="bool" value="True"/>
+            </when>
             <when param="timeaverage">                
                  <equals type="bool" value="False"/>
                  <equals type="bool" value="True">
@@ -148,12 +159,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         infile -- name of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
+        splitant -- split output file by antenna (True,False) 
+                (only effective for MS input and ASAP output).
+                default: False
+                &gt;&gt;&gt;splitant expandable parameter
+                 antenna -- antenna name or id (only effective for MS input). 
+                         default: 0
         getpt -- fill DIRECTION column properly, or reuse POINTING table 
-                 in original MS (only effective for MS input)
-                 default: True
-                 options: True (fill DIRECTION column properly)
-                          False (reuse POINTING table in original MS)
+                in original MS (only effective for MS input)
+                default: True
+                options: True (fill DIRECTION column properly)
+                         False (reuse POINTING table in original MS)
         rowlist -- list of row numbers to process
                 default: [] (use all rows)
                 example: [0,2,4,6]

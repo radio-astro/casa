@@ -86,7 +86,8 @@ class sdflag_worker(sdutil.sdtask_template):
             self.scan = sorg
 
         # data selection
-        self.scan.set_selection(self.get_selector())
+        #self.scan.set_selection(self.get_selector())
+        self.scan.set_selection(self.get_selector_by_list())
         
     def execute(self):
         self.set_to_scan()

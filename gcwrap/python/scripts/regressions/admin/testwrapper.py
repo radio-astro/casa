@@ -11,6 +11,9 @@ import traceback
 import casac
 import unittest
 
+import tests.selection_syntax as selection_syntax
+SyntaxTestClasses = [selection_syntax.SelectionSyntaxTest]
+
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
@@ -144,7 +147,14 @@ class UnitTest:
                     if len(attr) >= len("test") and \
                         attr[:len("test")] == "test" : \
                         testlist.append(c(attr))
-                        
+                for base in SyntaxTestClasses:
+                    if issubclass(c, base):
+                        test_name_list = [t._testMethodName for t in testlist]
+                        for attr, value in base.__dict__.iteritems():
+                            if len(attr) >= len("test") and \
+                                attr[:len("test")] == "test" :
+                                if attr not in test_name_list:
+                                    testlist.append(c(attr))                        
         else:
             # verify if list contains classes and/or methods
             for input in list:
@@ -158,12 +168,27 @@ class UnitTest:
                                 attr[:len("test")] == "test" : \
                                 # append each test method to the list    
                                 testlist.append(c(attr))
+                        for base in SyntaxTestClasses:
+                            if issubclass(c, base):
+                                test_name_list = [t._testMethodName for t in testlist]
+                                for attr, value in base.__dict__.iteritems():
+                                    if len(attr) >= len("test") and \
+                                        attr[:len("test")] == "test" :
+                                        if attr not in test_name_list:
+                                            testlist.append(c(attr))
                     else:
                         # maybe it is a method. Get only this one
 #                        print "maybe it is a method"
                         for attr, value in c.__dict__.iteritems():
                             if input == attr:
                                 testlist.append(c(attr))
+                        for base in SyntaxTestClasses:
+                            if issubclass(c, base):
+                                test_name_list = [t._testMethodName for t in testlist]
+                                for attr, value in base.__dict__.iteritems():
+                                    if input == attr:
+                                        if attr not in test_name_list:
+                                            testlist.append(c(attr))
                                                                                         
 #            for attr, value in c.__dict__.iteritems():
 #                print attr, value

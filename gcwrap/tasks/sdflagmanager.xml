@@ -5,101 +5,113 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
+
 <task type="function" name="sdflagmanager" startup="false" category="single dish">
-        <shortdescription>ASAP SD task: enable list, save, restore, delete and rename flag version files</shortdescription>
-        <description>
-        ASAP SD task to list, save, restore, delete and rename flag version files. 
-        </description>
-        <input>
-                <param type="string" name="infile" mustexist="true">
-                        <description>Name of input SD dataset (ASAP scantable)</description>
-                        <value></value>
-                        <example>infile='ngc5921.asap'</example>
-                </param>
+  <shortdescription>ASAP SD task to manipulate flag version files</shortdescription>
 
-                <param type="string" name="mode">
-                        <description>Operation: list, save, restore, delete, rename</description>
-                        <value>list</value>
-                        <allowed kind="enum">
-                                <value>list</value>
-                                <value>save</value>
-                                <value>restore</value>
-                                <value>delete</value>
-                                <value>rename</value>
-                        </allowed>
-                </param>
-                <param type="string" name="versionname" subparam="true">
-                        <description>Flag version name</description>
-                        <value></value>
-                </param>
-                <param type="string" name="oldname" subparam="true">
-                        <description>Flag version to rename</description>
-                        <value></value>
-                </param>
-                <param type="string" name="comment" subparam="true">
-                        <description>Short description of a versionname</description>
-                        <value></value>
-                </param>
-                <param type="string" name="merge" subparam="true">
-                        <description>Merge option: replace will save or over-write the flags</description>
-                        <value>replace</value>
-                </param>
-                <constraints>
-                        <when param="mode">
-                                <equals value="list"/>
-                                <equals value="save">
-                                        <default param="versionname"><value type="string"></value></default>
-                                        <default param="comment"><value type="string"></value></default>
-                                        <default param="merge"><value type="string">replace</value></default>
-                                </equals>
-                                <equals value="restore">
-                                        <default param="versionname"><value type="string"></value></default>
-                                        <default param="merge"><value type="string">replace</value></default>
-                                </equals>
-                                <equals value="delete">
-                                        <default param="versionname"><value type="string"></value></default>
-                                </equals>
-                                <equals value="rename">
-                                        <default param="oldname"><value type="string"></value></default>
-                                        <default param="versionname"><value type="string"></value></default>
-                                        <default param="comment"><value type="string"></value></default>
-                                </equals>
-                        </when>
-                </constraints>
-        </input>
-<returns type="void"/>
+  <description>
+Task sdflagmanager enables users to save the current flag information 
+(both channel and row flags) in the given SD dataset out to a separate 
+'flag version file'. In the current implementation, sdflagmanager calls 
+flagmanager internally, so these flag version files are copies of the 
+flag columns for a measurement set actually. They can be restored to 
+the data set to obtain a previous flag version. Users can also list, 
+delete and rename flag version files using sdflagmanager. It is wise 
+to save a flagversion at the beginning or after serious editing.    
+  </description>
 
-<example>
+  <input>
 
+    <param type="string" name="infile" mustexist="true">
+      <description>name of input SD dataset (ASAP scantable)</description>
+      <value></value>
+      <example>infile='ngc5921.asap'</example>
+    </param>
 
-        These flag version files are copies of the flag column for a
-        measurement set.  They can be restored to the data set to obtain
-        a previous flag version.  It is wise to
-        save a flagversion at the beginning or after serious editing.    
+    <param type="string" name="mode">
+      <shortdescription>operation mode [\'list\',\'save\',\'restore\',\'delete\', or \'rename\']</shortdescription>
+      <description>operation mode</description>
+      <value>list</value>
+      <allowed kind="enum">
+        <value>list</value>
+        <value>save</value>
+        <value>restore</value>
+        <value>delete</value>
+        <value>rename</value>
+      </allowed>
+    </param>
 
-        Keyword arguments:
-        infile -- Name of input SD dataset
-                default: ''. example: infile='ngc5921.asap'
-        mode -- Flag version operation
-                default: 'list'; to list existing flagtables
-                'save' will save flag column from infile to a specified flag file
-                'restore' will place the specified flag file into infile
-                'delete' will delete specified flag file
-                'rename' will rename a specified flag file
+    <param type="string" name="versionname" subparam="true">
+      <description>Flag version name</description>
+      <value></value>
+    </param>
 
-            &gt;&gt;&gt; mode expandable parameters             
-                 versionname -- Flag version name
-                         default: none; example: versionname='original_data'
-                         No imbedded blanks in the versionname
-                 comment -- Short description of a versionname, when mode is 'save' 
-                            or 'rename'
-                         default: ''; example: comment='Clip above 1.85'
+    <param type="string" name="oldname" subparam="true">
+      <description>Flag version to rename</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="comment" subparam="true">
+      <description>Short description of a versionname</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="merge" subparam="true">
+      <description>Merge option: replace will save or over-write the flags</description>
+      <value>replace</value>
+    </param>
+
+    <constraints>
+      <when param="mode">
+        <equals value="list"/>
+        <equals value="save">
+          <default param="versionname"><value type="string"></value></default>
+          <default param="comment"><value type="string"></value></default>
+          <default param="merge"><value type="string">replace</value></default>
+        </equals>
+        <equals value="restore">
+          <default param="versionname"><value type="string"></value></default>
+          <default param="merge"><value type="string">replace</value></default>
+        </equals>
+        <equals value="delete">
+          <default param="versionname"><value type="string"></value></default>
+        </equals>
+        <equals value="rename">
+          <default param="oldname"><value type="string"></value></default>
+          <default param="versionname"><value type="string"></value></default>
+          <default param="comment"><value type="string"></value></default>
+        </equals>
+      </when>
+    </constraints>
+  </input>
+
+  <returns type="void"/>
+
+  <example>
+Keyword arguments:
+infile -- name of input SD dataset
+        default: ''
+        example: infile='ngc5921.asap'
+mode -- Flag version operation
+        default: 'list';   to list existing flagtables
+                 'save'    to copy flag columns of infile to a flag file
+                 'restore' to place the specified flag file into infile
+                 'delete'  to delete the specified flag file
+                 'rename'  to rename the specified flag file
+    &gt;&gt;&gt; mode expandable parameters             
+        versionname -- Flag version name
+                default: none; example: versionname='original_data'
+                No imbedded blanks in the versionname
+        comment -- Short description of a versionname, when mode is 'save' 
+                   or 'rename'
+                default: ''
+                example: comment='Clip above 1.85'
                          comment = versionname
-                 oldname -- When mode='rename', the flag file to rename
-                 merge -- Merge operation
-                         Options: 'or','and', but not recommended for now.
+        oldname -- When mode='rename', the flag file to rename
+        merge -- merge operation
+                options: 'or','and', but not recommended for now.
+  </example>
 
- </example>
- </task>
- </casaxml>
+</task>
 
+</casaxml>

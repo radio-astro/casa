@@ -25,7 +25,8 @@ class sdcal_worker(sdutil.sdtask_template):
             raise Exception, 'Scantable data %s, is not found'
 
         # A scantable selection
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         sorg.set_selection(sel)
         
         # Copy scantable when usign disk storage not to modify
@@ -101,7 +102,7 @@ class sdcal_engine(sdutil.sdtask_engine):
 
         # Plot final spectrum
         if ( abs(self.plotlevel) > 0 ):
-            pltfile = project + '_calspec.eps'
+            pltfile = self.project + '_calspec.eps'
             sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel)
 
     def __mark(self):

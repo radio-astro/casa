@@ -85,7 +85,8 @@ default(sdreduce)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-scanlist = [236,237,238,239,248,249,250,251]
+#scanlist = [236,237,238,239,248,249,250,251]
+scanlist = [237,238,239,240,249,250,251,252]
 iflist = [17]
 average = True
 scanaverage = False

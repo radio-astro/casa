@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdcal -->
+
+<task type="function" name="tsdcal2" startup="false" category="single dish" visibility="experimental">
+
+  <shortdescription>ASAP SD calibration task</shortdescription>
+
+  <description>
+Task sdcal2 is an implementation of a calibration scheme like as 
+interferometry, i.e., generate caltables and apply them. Available 
+calibration modes are 'ps', 'otf', 'otfraster', and 'tsys'. Those 
+modes generates caltables for sky or Tsys calibration. Those 
+caltables can be applied to the data by using calmode 'apply'.
+
+The above three calibration modes, 'ps', 'otf', and 'otfraster',
+generate sky calibration tables. The user should choose appropriate 
+calibration mode depending on the data. Use case for each mode is 
+as follows:
+
+    'ps': position switch (including OTF) with explicit
+          reference (OFF) spectra
+    'otf': non-raster OTF scan without explicit OFFs
+           (e.g. Lissajous, double circle, etc.)
+           intends to calibrate fast scan data
+    'otfraster': raster OTF scan without explicit OFFs
+
+So, if the data contains explicit reference spectra, 'ps' should
+be used. Otherwise, 'otfraster' and 'otf' are appropriate for raster 
+OTF and non-raster OTF, respectively. In 'otf' and 'otfraster' modes, 
+the task first try to find several integrations near edge as OFF 
+spectra, then the data are calibrated using those OFFs. If the 
+observing pattern is raster, you should use the 'otfraster' mode to 
+calibrate data. Otherwise, the 'otf' mode should be used. For detail 
+about edge marking, see inline help of sd.edgemarker module and its 
+methods. Those modes are designed for OTF observations without 
+explicit OFF spectra. However, these modes should work even if 
+explicit reference spectra exist. In this case, these spectra will 
+be ignored and spectra near edges detected by edge marker will be 
+used as reference.
+
+Except for how to choose OFFs, the procedure to derive calibrated
+spectra is common for the above three modes. Selected (or preset) 
+OFF integrations are separated by its continuity in time domain, 
+averaged in each segment, then interpolated to timestamps for ON 
+integrations. Effectively, it means that OFF integrations are 
+averaged by each OFF spectrum for 'ps' mode, averaged by either ends 
+of each raster row for 'otfraster' mode, averaged by each temporal 
+segments of detected edges for 'otf' mode. The formula for calibrated 
+spectrum is
+
+    Tsys * (ON - OFF) / OFF. 
+
+  </description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+      <description>name of input SD dataset (must be in scantable format)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="calmode">
+      <shortdescription>SD calibration mode [\'ps\',\'otf\',\'otfraster\',\'tsys\',\'apply\', and their possible combinations]</shortdescription>
+      <description>SD calibration mode</description>
+      <value>ps</value>
+      <allowed kind="enum">
+	<value>ps</value>
+        <value>otf</value>
+        <value>otfraster</value>
+	<value>tsys</value>
+	<value>apply</value>
+        <value>ps,apply</value>
+        <value>ps,tsys,apply</value>
+        <value>otf,apply</value>
+        <value>otf,tsys,apply</value>
+        <value>otfraster,apply</value>
+        <value>otfraster,tsys,apply</value>
+      </allowed>
+    </param>
+
+    <param type="any" name="fraction" subparam="true">
+      <description>fraction of the OFF data to mark</description>
+      <any type="variant" limittype="string double"/>
+      <value type="string">10%</value>
+    </param>
+
+    <param type="int" name="noff" subparam="true">
+      <description>number of the OFF data to mark</description>
+      <value>-1</value>
+    </param>
+
+    <param type="double" name="width" subparam="true">
+      <description>width of the pixel for edge detection</description>
+      <value>0.5</value>
+    </param>
+
+    <param type="bool" name="elongated" subparam="true">
+      <description>whether observed area is elongated in one direction or not</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="tsysavg" subparam="true">
+      <description>Whether Tsys is averaged in spectral axis or not</description>
+      <value>False</value>
+    </param>
+    
+    <param type="string" name="tsysspw" subparam="true">
+      <description>list of IF IDs (spectral windows) and their channel ranges of averaging for Tsys calibration.</description>
+      <value></value>
+    </param>
+
+    <param type="any" name="applytable" subparam="true">
+      <description>(List of) sky and/or tsys tables</description>
+      <any type="variant" limittype="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="interp" subparam="true">
+      <description>Interpolation type in time[,freq]. Valid options are "nearest", "linear", "cspline", or any numeric string that indicates an order of polynomial interpolation. You can specify interpolation type for time and frequency separately by joining two of the above options by comma (e.g., "linear,cspline").</description>
+      <value></value>
+    </param>
+
+    <param type="any" name="ifmap" subparam="true">
+      <description>A dictionary indicating IFNO combinations to apply Tsys calibration to target. The key should be IFNO for Tsys calibration and its associated value must be a list of science IFNOs to be applied.</description>
+      <any type="variant"/>
+      <value type="dict">{}</value>
+    </param>
+
+    <param type="string" name="field">
+      <description>select data by field IDs and names, e.g. \'3C2*\' (\'\' = all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="spw">
+      <description>select data by IF IDs (spectral windows), e.g., \'3,5,7\' (\'\' = all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="scan">
+      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="pol">
+      <description>select data by polarization IDs, e.g, \'0,1\' (\'\' = all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>name of output file (See a WARNING in help)</description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+      <shortdescription>overwrite the output file if already exists [True, False]</shortdescription>
+      <description>overwrite the output file if already exists</description>
+      <value>False</value>
+    </param>
+
+    <constraints>
+      <when param="calmode">
+        <equals value="ps"/>
+        <equals value="otf">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="width"><value type="double">0.5</value></default>
+          <default param="elongated"><value type="bool">False</value></default>
+        </equals>
+        <equals value="otfraster">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="noff"><value type="int">-1</value></default>
+        </equals>
+        <equals value="tsys">
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
+        </equals>
+        <equals value="apply">
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="ps,apply">
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="ps,tsys,apply">
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="otf,apply">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="width"><value type="double">0.5</value></default>
+          <default param="elongated"><value type="bool">False</value></default>
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="otf,tsys,apply">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="width"><value type="double">0.5</value></default>
+          <default param="elongated"><value type="bool">False</value></default>
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="otfraster,apply">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="noff"><value type="int">-1</value></default>
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="otfraster,tsys,apply">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="noff"><value type="int">-1</value></default>
+          <default param="tsysavg"><value type="bool">False</value></default>
+          <default param="tsysspw"><value type="string"/></default>
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="ifmap"><value type="dict">{}</value></default>
+        </equals>
+      </when>
+    </constraints>
+
+  </input>
+
+  <returns type="void"/>
+
+  <example>
+Keyword arguments:
+infile -- Name of input SD dataset
+calmode -- Calibration mode. If you want to generate calibration table 
+           or apply existing calibration tables, set calmode to simple 
+           string. On the other hand, if you want to calibrate data 
+           on-the-fly, you have to set calmode to a composite calmode 
+           string separated by comma. So far, sky calibration has three 
+           types, 'ps', 'otf', and 'otfraster'. If observation is 
+           configured to observe reference position, calmode must be 
+           'ps'. Otherwise, 'otf' or 'otfraster' should be used
+           depending on observing pattern. If observing pattern is 
+           raster scan, calmode must be 'otfraster' while 'otf' must 
+           be used when observing pattern is non-raster 
+           (e.g., Lissajous).
+        options: 'ps','otf','otfraster','tsys','apply'
+        default: 'ps'
+        example: Here is an example for composite calmode.
+                 'ps,apply' (do sky cal and apply)
+                 'ps,tsys,apply' (do sky and Tsys cal and apply)
+    &gt;&gt;&gt; calmode expandable parameter
+        fraction -- Edge marker parameter of 'otf' and 'otfraster'.
+                    Specify a number of OFF integrations (at each
+                    side of the raster rows in 'otfraster' mode)
+                    as a fraction of total number of integrations.
+                    In 'otfraster' mode, number of integrations 
+                    to be marked as OFF, n_off, is determined by 
+                    the following formula,
+
+                        n_off = floor(fraction * n),
+
+                    where n is number of integrations per raster 
+                    row. Note that n_off from both sides will be  
+                    marked as OFF so that twice of specified 
+                    fraction will be marked at most. For example, 
+                    if you specify fraction='10%', resultant 
+                    fraction of OFF integrations will be 20% at 
+                    most.
+                    In 'otf' mode, n_off is given by,
+
+                        n_off = floor(fraction * n),
+
+                    where n is number of total integrations.
+                    n_off is used as criterion of iterative marking
+                    process. Therefore, resulting total number of 
+                    OFFs will be larger than n_off. In practice,
+                    fraction is a geometrical fraction of edge
+                    region. Thus, if integrations are concentrated
+                    on edge region (e.g. some of Lissajous
+                    patterns), then resulting n_off may be 
+                    unexpectedly large.
+                default: '10%'
+                options: '20%' in string style or float value less 
+                         than 1.0 (e.g. 0.15).
+                         'auto' is available only for 'otfraster'. 
+        noff -- Edge marking parameter for 'otfraster'.
+                It is used to specify a number of OFF spectra near 
+                edge directly. Value of noff comes before setting 
+                by fraction. Note that n_off from both sides will 
+                be marked as OFF so that twice of specified noff 
+                will be marked at most.
+                default: -1 (use fraction)
+                options: any positive integer
+        width -- Edge marking parameter for 'otf'.
+                 Pixel width with respect to a median spatial 
+                 separation between neighboring two data in time.
+                 Default will be fine in most cases.
+                default: 0.5
+                options: float value
+        elongated -- Edge marking parameter for 'otf'.
+                     Set True only if observed area is elongated 
+                     in one direction.
+                default: False
+        tsysavg -- Whether Tsys is averaged in spectral axis or not.
+                default: False
+                options: (bool) True, False
+        tsysspw -- list of IF IDs (spectral windows) and their channel
+                   ranges of averaging for Tsys calibration.
+                   It does no effect if you don't want to do Tsys 
+                   calibration. the user is able to specify channel
+                   range for averaging (effective if tsysavg is True). 
+                default: '' (auto-detect tsys spws)
+                example: tsysspw='3,5,7' (IF IDs 3,5,7; all channels)
+                         tsysspw='&lt;2' (IF IDs less than 2; all channels)
+                         tsysspw='1:0~100' (IF ID1; between channels 0 and 100)
+        applytable -- List of sky/Tsys calibration tables you want to 
+                      apply.
+                default: ''
+        interp -- Interpolation method in time and frequency axis. 
+                  Set comma separated method strings if you want 
+                  to use different interpolation in time and 
+                  frequency. 
+                options: 'linear', 'cspline', 'nearest', 
+                         any numeric string indicating an order 
+                         of polynomial.
+                default: '' (linear in time and frequency)
+                example: 'linear,cspline' (linear in time, cubic 
+                                           spline in frequency)
+                         'linear,3' (linear in time, third order 
+                                     polynomial in frequency)
+                         'nearest' (nearest in time and frequency)
+        ifmap -- Dictionary defining transfer of Tsys calibration. 
+                 Key must be IFNO for Tsys and its value must be 
+                 a list of IFNOs for science target.
+                default: {}
+                example: {1: [5,6], 3: [7,8]}
+                         Tsys in IFNO1 is transferred to IFNO5, 6 
+                         while Tsys in IFNO3 is to IFNO7, 8.
+field -- select data by field IDs and names
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 0 or field named 3C273)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)
+        NOTE this task only supports IF ID selction and ignores channel
+        selection.
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+outfile -- Name of output file
+        NOTE if you omit, behavior of the task depends on calmode. 
+        If calmode includes 'apply', then omitting outfile indicates 
+        that infile is overwritten by the calibrated data. In this case, 
+        you have to set overwrite to True. If calmode doesn't include 
+        'apply', omitting outfile indicates that the task will use 
+        default outfile name based on infile and predefined suffix 
+        ('_sky' for sky, '_tsys' for Tsys).
+        default: '' (&lt;infile&gt;_&lt;suffix&gt; for calibration 
+                     while overwrite infile for apply mode)
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+        NOTE this parameter is ignored when outform='ASCII'
+
+
+DESCRIPTION:
+
+Task sdcal2 is an implementation of a calibration scheme like as 
+interferometry, i.e., generate caltables and apply them. Available 
+calibration modes are 'ps', 'otf', 'otfraster', and 'tsys'. Those 
+modes generates caltables for sky or Tsys calibration. Those 
+caltables can be applied to the data by using calmode 'apply'.
+
+The above three calibration modes, 'ps', 'otf', and 'otfraster',
+generate sky calibration tables. The user should choose
+appropriate calibration mode depending on the data. Use case
+for each mode is as follows:
+
+    'ps': position switch (including OTF) with explicit
+          reference (OFF) spectra
+    'otf': non-raster OTF scan without explicit OFFs
+           (e.g. Lissajous, double circle, etc.)
+           intends to calibrate fast scan data
+    'otfraster': raster OTF scan without explicit OFFs
+
+So, if the data contains explicit reference spectra, 'ps' should
+be used. Otherwise, 'otfraster' and 'otf' are appropriate for
+raster OTF and non-raster OTF, respectively. In 'otf' and
+'otfraster' modes, the task first try to find several integrations 
+near edge as OFF spectra, then the data are calibrated using those 
+OFFs. If the observing pattern is raster, you 
+should use the 'otfraster' mode to calibrate data. Otherwise, the 
+'otf' mode should be used. For detail about edge marking, see 
+inline help of sd.edgemarker module and its methods.
+Those modes are designed for OTF observations without 
+explicit OFF spectra. However, these modes should work even if
+explicit reference spectra exist. In this case, these spectra
+will be ignored and spectra near edges detected by edge
+marker will be used as reference.
+
+Except for how to choose OFFs, the procedure to derive calibrated
+spectra is common for the
+above three modes. Selected (or preset) OFF integrations are
+separated by its continuity in time domain, averaged in
+each segment, then interpolated to timestamps for ON integrations.
+Effectively, it means that OFF integrations are averaged by each
+OFF spectrum for 'ps' mode, averaged by either ends of each raster
+row for 'otfraster' mode, averaged by each temporal segments of
+detected edges for 'otf' mode. The formula for calibrated spectrum
+is
+
+    Tsys * (ON - OFF) / OFF. 
+  
+You can calibrate data on-the-fly like sdcal task by setting 
+calmode to a composite calmode string separated by comma. 
+For example, calmode='ps,apply' means doing sky calibration and 
+apply it on-the-fly. In this case, caltable is generated as a 
+temporary plain table and will be deleted at the end.
+Allowed calibration modes in this task is as follows:
+
+    ps
+        generate sky caltable using 'ps' mode
+    otf
+        generate sky caltable using 'otf' mode
+    otfraster
+        generate sky caltable using 'otfraster' mode
+    tsys
+        generate tsys caltable
+    apply
+        apply caltables specified by applytable parameter
+    ps,apply
+        generate temporary sky caltable using 'ps' mode and
+        apply it. also apply caltables specified by applytable 
+    ps,tsys,apply
+        generate temporary sky caltable using 'ps' mode as well
+        as temporary tsys caltable, and apply them. 
+    otf,apply
+        generate temporary sky caltable using 'otf' mode and
+        apply it. also apply caltables specified by applytable 
+    otf,tsys,apply
+        generate temporary sky caltable using 'otf' mode as well
+        as temporary tsys caltable, and apply them. 
+    otfraster,apply
+        generate temporary sky caltable using 'otfraster' mode
+        and apply it. also apply caltables specified by applytable 
+    otfraster,tsys,apply
+        generate temporary sky caltable using 'otfraster' mode
+        as well as temporary tsys caltable, and apply them. 
+
+There are several control parameters for sky/Tsys calibration and 
+application of caltables. See the above parameter description.
+
+For Tsys calibration, the user is able to choose whether Tsys is
+averaged in spectral axis or not. If tsysavg is False (default),
+resulting Tsys is spectral value. On the other hand, when tsysavg
+is True, Tsys is averaged in spectral axis before output. The channel
+range for averaging is whole channels by default. If channel range is
+specified by tsysspw string, it is used for averaging. The user can
+specify channel range with ms selection syntax. For example,
+
+    tsysspw = '1:0~100'
+
+specifies spw 1 for Tsys calibration and channel range between channel
+0 and 100 for averaging. You can specify more than one ranges per spw.
+
+    tsysspw = '1:0~100;200~400'
+
+In this case, selected ranges are between 0 and 100 plus 200 and 400.
+Note that even if multiple ranges are selected, the task average whole
+ranges together and output single averaged value. You can specify multiple
+spws by separating comma.
+
+    tsysspw = '1:0~100,3:400~500'
+
+Note that specified channel range is ignored if tsysavg is False.
+  </example>
+
+</task>
+
+</casaxml>

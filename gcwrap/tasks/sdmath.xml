@@ -10,10 +10,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdmath" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: do simple arithmatic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
+  <shortdescription>ASAP SD task: do simple arithmetic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
 
   <description>ASAP SD task:
-        Do simple arithmatic (subtraction, addition, multiplication, and division) for spectra
+        Do simple arithmetic (subtraction, addition, multiplication, and division) for spectra
 
         Task Version 2009-02-04 TT
 </description>
@@ -93,7 +93,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="outfile">
-	    <description>output file name</description>
+	    <description>output file name (must be specified)</description>
 	    <value></value>
     </param>
 
@@ -147,8 +147,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   Keyword arguments:
         expr -- Mathematical expression using scantables 
         varlist -- Dictionary of variables in expr and their values.
-                   Keys must be coincide with variables used in expr.
-                   Values are substituted in each value in expr.
+                Keys must be coincide with variables used in expr.
+                Values are substituted in each value in expr.
         antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
@@ -199,7 +199,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: [1]
                 this selection is in addition to scanlist, field, and iflist
         outfile -- Name of output file
-                default: '' (&lt;infile&gt;_cal)
+                default: '' (must be specified)
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'

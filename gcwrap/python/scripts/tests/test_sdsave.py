@@ -243,7 +243,7 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 
         default(sdsave)
         self._setAttributes()
-        self.scanno=0
+        self.scanno=1
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -1394,10 +1394,208 @@ class sdsave_flagging(unittest.TestCase,sdsave_unittest_base):
                                 msg='all FLAG values must be False in row %s'%(irow))
         finally:
             tb.close()        
-        
+
+###
+# Test for scan number (CAS-5841)
+###
+class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
+    """
+    Check scan number
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_cal2123.asap'
+    vis='OrionS_rawACSmod_cal2123.ms'
+    prefix=sdsave_unittest_base.taskname+'Test2'
+    outfile=prefix+'.asap'
+    outvis=prefix+'.ms'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        if (not os.path.exists(self.vis)):
+            shutil.copytree(self.datapath+self.vis, self.vis)
+
+        default(sdsave)
+        #self._setAttributes()
+        #self.scanno=0
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.vis)):
+            shutil.rmtree(self.vis)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_import(self):
+        """Test if SCANNO is consistent with original MS."""
+        self.res = sdsave(infile=self.vis, outfile=self.outfile,
+                          outform='ASAP')
+
+        # compare scan number
+        tb.open(self.vis)
+        scan_number_org = numpy.unique(tb.getcol('SCAN_NUMBER'))
+        tb.close()
+        tb.open(self.outfile)
+        scan_number = numpy.unique(tb.getcol('SCANNO'))
+        tb.close()
+        print 'scan_number_org=', scan_number_org
+        print 'scan_number=', scan_number
+        self.assertEqual(len(scan_number_org), len(scan_number))
+        self.assertTrue(all(scan_number_org == scan_number))
+
+    def test_export(self):
+        """Test if SCAN_NUMBER is consistent with original Scantable."""
+        self.res = sdsave(infile=self.infile, outfile=self.outvis,
+                          outform='MS2')
+
+        # compare scan number
+        tb.open(self.infile)
+        scan_number_org = numpy.unique(tb.getcol('SCANNO'))
+        tb.close()
+        tb.open(self.outvis)
+        scan_number = numpy.unique(tb.getcol('SCAN_NUMBER'))
+        tb.close()
+        print 'scan_number_org=', scan_number_org
+        print 'scan_number=', scan_number
+        self.assertEqual(len(scan_number_org), len(scan_number))
+        self.assertTrue(all(scan_number_org == scan_number))
+
+###
+# Test for splitant (CAS-5842)
+###
+class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
+    """
+    Read MS data, write various types of format.
+    """
+    # Input and output names
+    infile='uid___A002_X6321c5_X3a7.ms'
+    prefix=sdsave_unittest_base.taskname+'TestSplitant'
+    outfile=prefix+'.asap'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        if (not os.path.exists(self.basefile)):
+            shutil.copytree(self.datapath+self.basefile, self.basefile)
+
+        default(sdsave)
+        self._setAttributes()
+        self.scanno=1
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testSplitant(self):
+        """Test Splitant: test for splitant"""
+        self.res=sdsave(infile=self.infile,splitant=True,outfile=self.outfile,outform='ASAP')
+        outsplitfile1 = self.prefix+'_PM01.asap'
+        outsplitfile2 = self.prefix+'_PM04.asap'
+        if (os.path.exists(outsplitfile1)) and (os.path.exists(outsplitfile2)):
+            s0 = sd.scantable(self.infile, False)
+            s1 = sd.scantable(outsplitfile1, False)
+            s2 = sd.scantable(outsplitfile2, False)
             
+            self.assertEqual(s0.nrow(), s1.nrow())
+            self.assertEqual(s0.nrow(), s2.nrow())
+
+            s0sp0 = s0.get_spectrum(0)
+            s1sp0 = s1.get_spectrum(0)
+            for i in range(len(s0sp0)):
+                self.assertEqual(s0sp0[i], s1sp0[i])
+            
+            del s0, s1, s2
+
+class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
+    """
+    Verify that MSWriter handles a conversion from DIRECTION and SCANRATE
+    columns properly
+    """
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    prefix = 'sdsave_scanrate'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _run_and_verify(self, infile):
+        outfile = self.prefix + '.asap'
+        self.res = sdsave(infile=infile, outfile=outfile, outform='MS2', overwrite=True)
+        self.assertIsNone(self.res, msg='invalid return value')
+
+        tb.open(infile)
+        tsel = tb.query('POLNO==0')
+        time_in = tsel.getcol('TIME')
+        _dir_in = tsel.getcol('DIRECTION')
+        scanrate_in = tsel.getcol('SCANRATE')
+        tsel.close()
+        tb.close()
+        num_expected = 0 if all(scanrate_in.flatten() == 0.0) else 1
+        newshape = (_dir_in.shape[0],1,_dir_in.shape[1])
+        if num_expected == 0:
+            dir_in = _dir_in.reshape(newshape)
+        else:
+            dir_in = numpy.concatenate((_dir_in.reshape(newshape), scanrate_in.reshape(newshape)), axis=1)
+        tb.open(os.path.join(outfile, 'POINTING'))
+        time_out = tb.getcol('TIME')
+        num_poly = tb.getcol('NUM_POLY')
+        dir_out = tb.getcol('DIRECTION')
+        casalog.post('dir_in.shape=%s, dir_out.shape=%s'%(list(dir_in.shape),list(dir_out.shape)))
+        tb.close()
+        sort_index = numpy.argsort(time_out)
+        time_out_sorted = time_out.take(sort_index) / 86400.0
+        num_poly_sorted = num_poly.take(sort_index)
+        dir_out_sorted = dir_out.take(sort_index, axis=2)
+
+        self.assertEqual(dir_in.shape, dir_out.shape,
+                         msg='DIRECTION shape is not correct.')
+        self.assertTrue(all(time_in == time_out_sorted),
+                        msg='TIME is not correct.')
+        self.assertTrue(all(num_poly_sorted == num_expected),
+                        msg='NUM_POLY is not correct.')
+        self.assertTrue(all(dir_in.flatten() == dir_out_sorted.flatten()),
+                        msg='DIRECTION value is not correct.')
+        
+    def test_zero_scanrate(self):
+        """test_zero_scanrate: Verify DIRECTION column shape is (2,1) if SCANRATE is all zero"""
+        self._run_and_verify(self.infile)
+
+    def test_nonzero_scanrate(self):
+        """test_nonzero_scanrate: Verify DIRECTION column shape is (2,2) if SCANRATE is all nonzero"""
+        tb.open(self.infile, nomodify=False)
+        scanrate = tb.getcol('SCANRATE')
+        scanrate[:] = 1.0
+        tb.putcol('SCANRATE', scanrate)
+        tb.close()
+
+        self._run_and_verify(self.infile)
+
+    def test_any_scanrate(self):
+        """test_any_scanrate: Verify DIRECTION column shape is (2,2) if SCANRATE is partly nonzero"""
+        tb.open(self.infile, nomodify=False)
+        tb.putcell('SCANRATE', 0, [1.0, 0.0])
+        tb.close()
+
+        self._run_and_verify(self.infile)
+        
+
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
-            sdsave_freq_labeling,sdsave_flagging]
+            sdsave_freq_labeling,sdsave_flagging,
+            sdsave_scan_number, sdsave_test_splitant,
+            sdsave_scanrate]

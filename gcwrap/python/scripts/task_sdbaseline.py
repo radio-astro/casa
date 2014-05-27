@@ -31,7 +31,8 @@ class sdbaseline_worker(sdutil.sdtask_template):
     def initialize_scan(self):
         sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
         
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         sorg.set_selection(sel)
         del sel
 

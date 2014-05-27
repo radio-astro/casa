@@ -16,9 +16,9 @@ def asap_init():
             break
     myf=sys._getframe(stacklevel).f_globals
     casapath=os.environ['CASAPATH']
-    print '*** Loading ATNF ASAP Package...'
+    print('*** Loading ATNF ASAP Package...')
     import asap as sd
-    print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
+    print('*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__))
     os.environ['CASAPATH']=casapath
     from sdbaseline_cli import sdbaseline_cli as sdbaseline
     from sdcal_cli import sdcal_cli as sdcal
@@ -40,6 +40,19 @@ def asap_init():
     from sdsmooth_cli import sdsmooth_cli as sdsmooth
     from sdstat_cli import sdstat_cli as sdstat
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
+    from tsdaverage_cli import tsdaverage_cli as tsdaverage
+    from tsdbaseline_cli import tsdbaseline_cli as tsdbaseline
+    from tsdcal_cli import tsdcal_cli as tsdcal
+    from tsdcal2_cli import tsdcal2_cli as tsdcal2
+    from tsdfit_cli import tsdfit_cli as tsdfit
+    from tsdflag_cli import tsdflag_cli as tsdflag
+    from tsdgrid_cli import tsdgrid_cli as tsdgrid
+    from tsdimaging_cli import tsdimaging_cli as tsdimaging
+    from tsdmath_cli import tsdmath_cli as tsdmath
+    from tsdplot_cli import tsdplot_cli as tsdplot
+    from tsdreduce_cli import tsdreduce_cli as tsdreduce
+    from tsdsave_cli import tsdsave_cli as tsdsave
+    from tsdstat_cli import tsdstat_cli as tsdstat
     myf['sd']=sd
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
@@ -61,3 +74,36 @@ def asap_init():
     myf['sdsmooth']=sdsmooth
     myf['sdstat']=sdstat
     myf['sdtpimaging']=sdtpimaging
+    myf['tsdaverage']=tsdaverage
+    myf['tsdbaseline']=tsdbaseline
+    myf['tsdcal']=tsdcal
+    myf['tsdcal2']=tsdcal2
+    myf['tsdfit']=tsdfit
+    myf['tsdflag']=tsdflag
+    myf['tsdgrid']=tsdgrid
+    myf['tsdimaging']=tsdimaging
+    myf['tsdmath']=tsdmath
+    myf['tsdplot']=tsdplot
+    myf['tsdreduce']=tsdreduce
+    myf['tsdsave']=tsdsave
+    myf['tsdstat']=tsdstat
+    ### WARNINGS for interface changes ###
+    print("#"*50)
+    print("")
+    print("Major interface changes to SINGLE DISH tasks are")
+    print("planned in CASA 4.2.2 release.")
+    print("")
+    print("For CASA 4.2.2 these interface changes will be implemented in new versions")
+    print("of the existing tasks: sdbaseline, sdcal, sdcal2, sdfit, sdflag,")
+    print("sdgrid, sdimaging, sdmath, sdplot, sdsave, and sdstat with the")
+    print("current name preceded by the letter 't'. Additionally a new task called")
+    print("tsdaverage will also be available. Task sdsmooth is incorporated in the")
+    print("new task and will be removed. ")
+    print("")
+    print("The experimental tasks beginning with the letter 't' will replace the")
+    print("current tasks in the next release. The current tasks will be renamed as")
+    print("{taskname}_old and kept for one release period. Users are encouraged to")
+    print("update your existing scripts.")
+    print("")
+    print("#"*50)
+

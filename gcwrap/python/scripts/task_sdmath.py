@@ -29,6 +29,8 @@ class sdmath_worker(sdutil.sdtask_template):
             raise Exception, 'expr is undefined'
 
         # check outfile
+        if (self.outfile.strip() == ''):
+            raise Exception("'outfile' must be specified.")
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
                                                           self.outform,
                                                           self.overwrite)
@@ -41,6 +43,7 @@ class sdmath_worker(sdutil.sdtask_template):
     def execute(self):
         # insert varlist into expr
         varlist = self.varlist
+
         for key in varlist.keys():
             regex = re.compile( key )
             if isinstance( varlist[key], str ):
@@ -55,7 +58,8 @@ class sdmath_worker(sdutil.sdtask_template):
         self.__parse()
 
         # selector
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
 
         # actual operation
         scanlist = {}
@@ -110,7 +114,7 @@ class sdmath_worker(sdutil.sdtask_template):
             tmpout.set_fluxunit(fluxunit_now)
 
         self.scan = tmpout
-
+        
     def save(self):
         # avoid to call set_fluxunit
         del self.fluxunit

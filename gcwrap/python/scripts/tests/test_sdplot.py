@@ -1209,7 +1209,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     single dish regression data,
     'FLS3a_calfs', as follows:
     sdsave(infile='FLS3a_calfs',outfile='FLS3a_calfs.asap')
-    sdgrid(infiled=['FLS3a_calfs.asap'], ifno=0, npix=[6,6],
+    sdgrid(infiles=['FLS3a_calfs.asap'], ifno=0, npix=[6,6],
            outfile='FLS3a_calfs.6x6.asap')
     """
     # Input and output names
