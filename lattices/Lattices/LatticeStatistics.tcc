@@ -1383,7 +1383,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 
 
 	if ( _canDoFlux()) {
-	    sprintf( buffer, "%e", _flux(sum, area ));
+	    sprintf( buffer, "%e", _flux(sum, area ).getValue());
 	    stats.push_back(stat_element("FluxDensity",buffer));
 	}
 
@@ -1459,9 +1459,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 		if (_canDoFlux()) {
 			ord(i,FLUX) = _flux(matrix(i,SUM), area).getValue();
 		}
-	    /*
-		ord(i,VARIANCE) = LattStatsSpecialize::getVariance( matrix(i,SUM), matrix(i,SUMSQ), nPts);
-	    */
+		//ord(i,VARIANCE) = LattStatsSpecialize::getVariance( matrix(i,SUM), matrix(i,SUMSQ), nPts);
 		ord(i,SIGMA) = LattStatsSpecialize::getSigma(matrix(i,VARIANCE));
 		ord(i,RMS) =  LattStatsSpecialize::getRms(matrix(i,SUMSQ), nPts);
 	    }
@@ -1533,6 +1531,7 @@ Bool LatticeStatistics<T>::getLayerStats(
     }
     return True;
 }
+
 
 template <class T>
 Bool LatticeStatistics<T>::listLayerStats (
