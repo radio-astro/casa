@@ -780,7 +780,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                 #logprint ("Flux density calibrator(s) are fields "+flux_field_select_string, logfileout='logs/msinfo.log')
         
             if (len(self.bandpass_state_IDs) == 0):
-                logprint ("No bandpass calibration scans defined, using flux density calibrator(s)")
+                #logprint ("No bandpass calibration scans defined, using flux density calibrator(s)")
                 self.bandpass_scan_select_string=self.flux_scan_select_string
                 #logprint ("Bandpass calibrator(s) scans are "+bandpass_scan_select_string, logfileout='logs/msinfo.log')
                 self.bandpass_field_select_string=self.flux_field_select_string
