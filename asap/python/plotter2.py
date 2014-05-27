@@ -4,6 +4,7 @@ from asap._asap import Plotter2
 class plotter2:
     def __init__(self):
         self._plotter = Plotter2()
+        self.current_vs_unit = 'cm'
 
     def set_output(self, filename=None, dev=None):
         """\
@@ -36,7 +37,84 @@ class plotter2:
 
         self._plotter.set_filename(expanduser(expandvars(filename)))
         self._plotter.set_device(dev.strip())
+        self.device = dev.strip()
 
+    def get_vs(self):
+        """\
+        returns size and shape information on 'view surface' (a word used
+        in PGPLOT, meaning the entire region of plotting) as a dictionary.
+        """
+        width = self._plotter.get_viewsurface_width()
+        unit = self.current_vs_unit
+        if unit == 'cm':
+            width = width * 2.54 # inch to centimeter
+        elif unit == 'mm':
+            width = width * 25.4 # inch to millimeter
+        elif unit == 'pixel':
+            width = width * 85.0 + 1.0 # inch to pixel (plus correction for 1pixel)
+
+        aspect = self._plotter.get_viewsurface_aspect()
+
+        return {'width': width, 'unit': unit, 'aspect': aspect}
+
+    def set_vs(self, width=None, unit=None, aspect=None):
+        """\
+        set size and shape of 'view surface', namely, the entire region
+        of plotting including graphic window or output file. ('view
+        surface' is a word used in PGPLOT)
+        Parameters:
+            width:  width of graphic window or output file.
+            unit:   unit of width. default value is 'cm'. 'mm', 'inch'
+                    and 'pixel' are also available.
+            aspect: aspect ratio (= height / width).
+        
+        Example:
+            set_vs(width=10, unit='cm', aspect=1.0) -- set the output
+                window/file as a square 10cm on a side.
+            set_vs(width=400, unit='pixel', aspect=0.75) -- set the output
+                window/file as a rectangle with 400 pixels in width and
+                300 pixels in height.
+
+        Note:
+            setting unit to 'cm', 'mm' or 'inch' results in output with the
+            correct size when output device is X Window or PostScript, but
+            not for the other cases (png). also, setting unit to 'pixel'
+            works correctly only when output device is 'png': this arises
+            from PGPLOT's assumption on device resolution of 85 pixel/inch,
+            though actual resolution will vary depending on device type.
+            thus, for output with a correct size specified, users are
+            recommended to use 'pixel' for 'png' output, and other units
+            for 'xwindow' (the default) or PostScript output.
+        """
+        if width is None:
+            width = self._plotter.get_viewsurface_width() # inch
+            if self.current_vs_unit == 'cm':
+                width = width * 2.54 # inch to centimeter
+            elif self.current_vs_unit == 'mm':
+                width = width * 25.4 # inch to millimeter
+            elif self.current_vs_unit == 'pixel':
+                width = width * 85.0 + 1.0 # inch to pixel (plus correction for 1pixel)
+        if unit is None: unit = self.current_vs_unit
+        if aspect is None: aspect = self._plotter.get_viewsurface_aspect()
+        
+        if not ((isinstance(width, int) or isinstance(width, float)) and (width > 0)):
+            raise ValueError("Width must be positive float or integer.")
+        if not (isinstance(aspect, int) or isinstance(aspect, float)):
+            raise ValueError("Aspect must be positive float or integer.")
+
+        unit = unit.lower().strip()
+        if unit == 'cm':
+            width = width / 2.54 # centimeter to inch
+        elif unit == 'mm':
+            width = width / 25.4 # millimeter to inch
+        elif unit == 'pixel':
+            width = (width - 1.0) / 85.0 # pixel to inch (plus correction for 1pixel)
+        elif unit != 'inch':
+            raise ValueError("Unit must be 'cm', 'mm', 'inch' or 'pixel'.")
+        self.current_vs_unit = unit
+
+        self._plotter.set_viewsurface(width, aspect)
+        
     def set_vp(self, xmin, xmax, ymin, ymax, id=None):
         """\
         change the position/shape of viewport in which data are to be plotted.
@@ -439,7 +517,7 @@ class plotter2:
 
     def set_xmask(self, xmin, xmax, color=None, fstyle=None, width=None, hsep=None, vpid=None):
         """\
-        add a rectangle which spans full y range.
+        add a rectangle which spans the full y range.
 
         Parameters:
             xmin:   the smaller end of mask region
@@ -458,9 +536,102 @@ class plotter2:
         if width  is None: width  = 1
         if hsep   is None: hsep   = 1.0
         if vpid   is None: vpid   = -1
+        
         coloridx = self.get_colorindex(color)
         fstyleidx = self.get_fillstyleindex(fstyle)
+        
         self._plotter.set_mask_x(xmin, xmax, coloridx, fstyleidx, width, hsep, vpid)
+
+    def set_arrow(self, xtail, xhead, ytail, yhead, color=None, width=None, linestyle=None, headsize=None, headfs=None, headangle=None, headvent=None, vpid=None, arrowid=None):
+        """\
+        draw an arrow or change existing arrow attributes.
+
+        Parameters:
+            xtail:     x position of arrow tail
+            xhead:     x position of arrow head
+            ytail:     y position of arrow tail
+            yhead:     y position of arrow head
+            color:     color of arrow. see output of list_colornames().
+                       default is "black".
+            width:     width of arrow line and outline of arrow head.
+                       default is 1.
+            linestyle: line style. available styles can be listed via
+                       list_linestyles().
+            headsize:  size of arrow head. default is 1.0.
+            headfs:    fill style of arrow head. see output of
+                       list_arrowheadfillstyles(). default is "solid".
+            headangle: acute angle of arrow head in unit of degree.
+                       default is 45.0.
+            headvent:  fraction of the triangular arrow-head that is
+                       cut away from the back. 0.0 gives a triangular
+                       wedge arrow head while 1.0 gives an open
+                       '>'-shaped one. default is 0.3.
+            vpid:      viewport id. when not given, the last viewport
+                       will be the target.
+            arrowid:   arrow id. when not given, the arrow having the
+                       final arrow id for the specified viewport will
+                       be the target.
+        """
+        if color     is None: color     = "black"
+        if width     is None: width     = 1
+        if linestyle is None: linestyle = "solid"
+        if headsize  is None: headsize  = 1.0
+        if headfs    is None: headfs    = "solid"
+        if headangle is None: headangle = 45.0
+        if headvent  is None: headvent  = 0.3
+        if vpid      is None: vpid      = -1
+        if arrowid   is None: arrowid   = -1
+        
+        coloridx = self.get_colorindex(color)
+        linestyleidx = self.get_linestyleindex(linestyle)
+        headfsidx = self.get_arrowheadfillstyleindex(headfs)
+        
+        self._plotter.set_arrow(xtail, xhead, ytail, yhead, coloridx, width, linestyleidx, headsize, headfsidx, headangle, headvent, vpid, arrowid)
+
+    def set_text(self, text, posx=None, posy=None, angle=None, fjust=None, size=None, style=None, color=None, bgcolor=None, vpid=None, textid=None):
+        """\
+        write text string or change existing text attributes.
+        
+        Parameters:
+            text:    text string.
+            posx:    x position of text in world coordinate.
+                     default is center of x axis.
+            posy:    y position of text in world coordinate.
+                     default is center of y axis.
+            angle:   rotation angle of text in unit of degree.
+                     0.0 (default) is horizontal.
+            fjust:   horizontal justification of text string. if 0.0
+                     (default) is given, the text is left-justified at
+                     (posx, posy). if 0.5, the text is centered, and if
+                     1.0, the text is right-justified.
+            size:    size of text string. the default is 1.0.
+            style:   font style. "normal", "roman", "italic" and "script"
+                     are available. default is "normal".
+            color:   color of text. see output of list_colornames().
+                     default is "black".
+            bgcolor: background color of text. see output of
+                     list_colornames(). default is transparent(-1).
+            vpid:    viewport id. when not given, the last viewport will
+                     be the target.
+            textid:  text id independently defined for each viewport.
+                     when not given, the text having the final text id
+                     for the specified viewport will be the target.
+        """
+        if posx    is None: posx    = -1.0
+        if posy    is None: posy    = -1.0
+        if angle   is None: angle   = 0.0
+        if fjust   is None: fjust   = 0.0
+        if size    is None: size    = 1.0
+        if style   is None: style   = ""
+        if color   is None: color   = "black"
+        if bgcolor is None: bgcolor = "" # transparent
+        if vpid    is None: vpid    = -1
+        if textid  is None: textid  = -1
+        
+        coloridx = self.get_colorindex(color)
+        bgcoloridx = self.get_colorindex(bgcolor) if (bgcolor.strip() != "") else -1 #bgcolor
+        
+        self._plotter.set_text(text, posx, posy, angle, fjust, size, style, coloridx, bgcoloridx, vpid, textid)
 
     def set_xlabel(self, label, style=None, size=None, posx=None, posy=None, vpid=None):
         """\
@@ -476,7 +647,7 @@ class plotter2:
                    of number labels)
             posx:  x position of label string in window coordinate.
                    default is the center of x axis.
-            posy:  y position of label string.
+            posy:  y position of label string in window coordinate.
             vpid:  viewport id. when not given, the last viewport
                    will be the target. 
         """
@@ -501,7 +672,7 @@ class plotter2:
             size:  font size. default is 1.1 (10% larger than that
                    of number labels)
             posx:  x position of label string in window coordinate. 
-            posy:  y position of label string.
+            posy:  y position of label string in window coordinate. 
                    default is the center of y axis.
             vpid:   viewport id. when not given, the last viewport
                     will be the target. 
@@ -706,19 +877,30 @@ class plotter2:
         print "  (4) crosshatched"
         print "------------------------------"
 
-"""
-    def set_annotation(self, label, posx=None, posy=None, angle=None, fjust=None, size=None, style=None, color=None, bgcolor=None, vpid=None):
-        if posx    is None: posx    = -1.0
-        if posy    is None: posy    = -1.0
-        if angle   is None: angle   = 0.0
-        if fjust   is None: fjust   = 0.5
-        if size    is None: size    = 2.0
-        if style   is None: style   = ""
-        if color   is None: color   = 1 #default foreground colour (b)
-        if bgcolor is None: bgcolor = 0 #default backgound colour (w)
-        if vpid    is None: vpid    = -1
+    @classmethod
+    def get_arrowheadfillstyleindex(cls, fstyle):
+        """\
+        convert the given arrowhead fill style into style index used in PGPLOT.
+        """
+        style = fstyle.strip().lower()
+        available_style = True
         
-        coloridx = self.get_colorindex(color)
-        bgcoloridx = self.get_colorindex(bgcolor)
-        self._plotter.set_annotation(label, posx, posy, angle, fjust, size, style, coloridx, bgcoloridx, vpid)
-"""
+        if   style == "solid":   idx = 1
+        elif style == "outline": idx = 2
+        else: available_style = False
+
+        if (available_style):
+            return idx
+        else:
+            raise ValueError("Unavailable fill style for arrow head.")
+
+    @classmethod
+    def list_arrowheadfillstyles(cls):
+        """\
+        list the available fill styles for arrow head.
+        """
+        print "plotter2: arrow head fill style list ----"
+        print "  (1) solid"
+        print "  (2) outline"
+        print "-----------------------------------------"
+

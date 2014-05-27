@@ -1,4 +1,6 @@
 import re
+import math
+import string
 from asap._asap import selector as _selector, srctype
 from asap.utils import unique, _to_list
 
@@ -199,6 +201,46 @@ class selector(_selector):
         else:
             raise TypeError('Unknown row number type. Use lists of integers.')
 
+    def set_msselection_field(self, selection):
+        """
+        Set a field selection in msselection syntax. The msselection
+        suppports the following syntax:
+
+        pattern match:
+            - UNIX style pattern match for source name using '*'
+              (compatible with set_name)
+
+        field id selection:
+            - simple number in string ('0', '1', etc.)
+            - range specification using '~' ('0~1', etc.)
+            - range specification using '>' or '<' in combination
+              with '=' ('>=1', '<3', etc.)
+
+        comma separated multiple selection:
+            - selections can be combined by using ',' ('0,>1',
+              'mysource*,2~4', etc.)
+        """
+        selection_list =  map(string.strip, selection.split(','))
+        query_list = list(self.generate_query(selection_list))
+        if len(query_list) > 0:
+            original_query = self.get_query()
+            if len(original_query) == 0 or re.match('.*(SRC|FIELD)NAME.*',original_query):
+                query = 'SELECT FROM $1 WHERE ' + ' || '.join(query_list)
+            else:
+                query = 'SELECT FROM $1 WHERE (' + original_query + ') && (' + ' || '.join(query_list) + ')'
+            self._settaql(query)
+
+    def generate_query(self, selection_list):
+        for s in selection_list:
+            if s.isdigit() or re.match('^[<>]=?[0-9]*$', s) or \
+                    re.match('^[0-9]+~[0-9]+$', s):
+                #print '"%s" is ID selection using < or <='%(s)
+                a = FieldIdRegexGenerator(s)
+                yield '(%s)'%(a.get_regex())
+            elif len(s) > 0:
+                #print '"%s" is UNIX style pattern match'%(s)
+                yield '(SRCNAME == pattern(\'%s\'))'%(s)
+        
     def get_scans(self):
         return list(self._getscans())
     def get_cycles(self):
@@ -274,3 +316,112 @@ class selector(_selector):
             elif len(qs):
                 union.set_query(qs)
         return union
+
+class FieldIdRegexGenerator(object):
+    def __init__(self, pattern):
+        if pattern.isdigit():
+            self.regex = 'FIELDNAME == regex(\'.+__%s$\')'%(pattern)
+        else:
+            self.regex = None
+            ineq = None
+            if pattern.find('<') >= 0:
+                ineq = '<'
+                s = pattern.strip().lstrip(ineq).lstrip('=')
+                if not s.isdigit():
+                    raise RuntimeError('Invalid syntax: %s'%(pattern))
+                self.id = int(s) + (-1 if pattern.find('=') < 0 else 0)
+                self.template = string.Template('FIELDNAME == regex(\'.+__${reg}$\')')
+            elif pattern.find('>') >= 0:
+                ineq = '>'
+                s = pattern.strip().lstrip(ineq).lstrip('=')
+                if not s.isdigit():
+                    raise RuntimeError('Invalid syntax: %s'%(pattern))
+                self.id = int(s) + (-1 if pattern.find('=') >= 0 else 0)
+                self.template = string.Template('FIELDNAME == regex(\'.+__[0-9]+$\') && FIELDNAME != regex(\'.+__${reg}$\')')
+            elif pattern.find('~') >= 0:
+                s = map(string.strip, pattern.split('~'))
+                if len(s) == 2 and s[0].isdigit() and s[1].isdigit():
+                    id0 = int(s[0])
+                    id1 = int(s[1])
+                    if id0 == 0:
+                        self.id = id1
+                        self.template = string.Template('FIELDNAME == regex(\'.+__${reg}$\')')
+                    else:
+                        self.id = [id0-1,id1]
+                        self.template = string.Template('FIELDNAME == regex(\'.+__${reg}$\') && FIELDNAME != regex(\'.+__${optreg}$\')')
+                else:
+                    raise RuntimeError('Invalid syntax: %s'%(pattern))
+            else:
+                raise RuntimeError('Invalid syntax: %s'%(pattern))
+            #print 'self.id=',self.id
+
+    def get_regex(self):
+        if self.regex is not None:
+            # 'X'
+            return self.regex
+        elif isinstance(self.id, list):
+            # 'X~Y'
+            return self.template.safe_substitute(reg=self.__compile(self.id[1]),
+                                                 optreg=self.__compile(self.id[0]))
+        else:
+            # '<(=)X' or '>(=)X'
+            return self.template.safe_substitute(reg=self.__compile(self.id))
+
+    def __compile(self, idx):
+        pattern = ''
+        if idx >= 0:
+            numerics = map(int,list(str(idx)))
+            #numerics.reverse()
+            num_digits = len(numerics)
+            #print 'numerics=',numerics
+            if num_digits == 1:
+                if numerics[0] == 0:
+                    pattern = '0'
+                else:
+                    pattern = '[0-%s]'%(numerics[0])
+            elif num_digits == 2:
+                pattern = '(%s)'%('|'.join(
+                        list(self.__gen_two_digit_pattern(numerics))))
+            elif num_digits == 3:
+                pattern = '(%s)'%('|'.join(
+                        list(self.__gen_three_digit_pattern(numerics))))
+            else:
+                raise RuntimeError('ID > 999 is not supported')
+        else:
+            raise RuntimeError('ID must be >= 0')
+        return pattern
+
+    def __gen_two_digit_pattern(self, numerics):
+        assert len(numerics) == 2
+        yield '[0-9]'
+        if numerics[0] == 2:
+            yield '1[0-9]'
+        elif numerics[0] > 2:
+            yield '[1-%s][0-9]'%(numerics[0]-1)
+        if numerics[1] == 0:
+            yield '%s%s'%(numerics[0],numerics[1])
+        else:
+            yield '%s[0-%s]'%(numerics[0],numerics[1])
+
+    def __gen_three_digit_pattern(self, numerics):
+        assert len(numerics) == 3
+        yield '[0-9]'
+        yield '[1-9][0-9]'
+        if numerics[0] == 2:
+            yield '1[0-9][0-9]'
+        elif numerics[0] > 2:
+            yield '[1-%s][0-9][0-9]'%(numerics[0]-1)
+        if numerics[1] == 0:
+            if numerics[2] == 0:
+                yield '%s00'%(numerics[0])
+            else:
+                yield '%s0[0-%s]'%(numerics[0],numerics[2])
+        else:
+            if numerics[1] > 1:
+                yield '%s[0-%s][0-9]'%(numerics[0],numerics[1]-1)
+            elif numerics[1] == 1:
+                yield '%s0[0-9]'%(numerics[0])
+            if numerics[0] == 0:
+                yield '%s%s%s'%(numerics[0],numerics[1],numerics[2])
+            else:
+                yield '%s%s[0-%s]'%(numerics[0],numerics[1],numerics[2])

@@ -35,6 +35,10 @@ target_link_libraries( ${PYRAPLIB}
                        ${LAPACK_LIBRARIES} )
 add_dependencies( inst ${PYRAPLIB} )
 
+if ( DEFINED asap_soversion )
+    set_target_properties( ${PYRAPLIB} PROPERTIES SOVERSION ${asap_soversion} )
+endif( )
+
 # install directory
 install( TARGETS ${PYRAPLIB}
          LIBRARY DESTINATION ${LIB_INSTALL_DIR} )

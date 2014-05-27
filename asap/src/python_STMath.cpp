@@ -69,7 +69,8 @@ namespace asap {
         .def("_convertflux", &STMathWrapper::convertFlux)
         .def("_convertpol", &STMathWrapper::convertPolarisation)
         .def("_opacity", &STMathWrapper::opacity)
-        .def("_merge", &STMathWrapper::merge)
+        .def("_merge", &STMathWrapper::merge,
+	     (boost::python::arg("freqTol")=std::string("")) )
         .def("_rotate_xyphase", &STMathWrapper::rotateXYPhase)
         .def("_rotate_linpolphase", &STMathWrapper::rotateLinPolPhase)
         .def("_invert_phase", &STMathWrapper::invertPhase)

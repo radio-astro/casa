@@ -33,6 +33,9 @@ void python_CalibrationManager() {
     .def("set_calibration_options", &CalibrationManager::setCalibrationOptions)
     .def("reset", &CalibrationManager::reset)
     .def("set_tsys_spw", &CalibrationManager::setTsysSpw)
+    .def("set_tsys_spw_withrange", &CalibrationManager::setTsysSpwWithRange,
+         (boost::python::arg("spwlist"),
+	  boost::python::arg("average")=false))
     .def("set_tsys_transfer", &CalibrationManager::setTsysTransfer)
     .def("calibrate", &CalibrationManager::calibrate)
     .def("apply", &CalibrationManager::apply,

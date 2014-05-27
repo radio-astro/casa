@@ -34,7 +34,7 @@ namespace asap {
  */
 class STCalibration {
 public:
-  STCalibration(casa::CountedPtr<Scantable> &s);
+  STCalibration(casa::CountedPtr<Scantable> &s, const casa::String target_column);
 
   void calibrate();
 
@@ -48,14 +48,19 @@ public:
 
 protected:
   virtual void setupSelector(const STSelector &sel) = 0;
-  virtual void fillCalTable() = 0;
+  virtual void fillCalTable();
+  virtual void appenddata(casa::uInt scanno, casa::uInt cycleno, 
+			  casa::uInt beamno, casa::uInt ifno, casa::uInt polno, 
+			  casa::uInt freqid, casa::Double time, casa::Float elevation, 
+			  casa::Vector<casa::Float> any_data) = 0;
 
   STSelector sel_;
   casa::CountedPtr<Scantable> scantable_;
   casa::CountedPtr<STApplyTable> applytable_; 
   casa::LogIO os_;
   casa::Record options_;
+  const casa::String target_column_;
 };
-
+ 
 }
 #endif

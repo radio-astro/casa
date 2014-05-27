@@ -76,9 +76,9 @@ void EdgeMarker::examine()
   {
     ROArrayColumn<uChar> flagCol( st_->table(), "FLAGTRA" ) ;
     vector<string> cols( 1, "IFNO" ) ;
-    STIdxIterAcc iter( st_, cols ) ;
+    STIdxIter2 iter( st_, cols ) ;
     while( !iter.pastEnd() ) {
-      uInt current = iter.current()[0] ;
+      uInt current = iter.currentValue().asuInt("IFNO") ;
       uInt firstRow = iter.getRows()[0] ;
       uInt nchan = flagCol( firstRow ).nelements() ;
       if ( nchan == 4 ) 
@@ -109,21 +109,22 @@ void EdgeMarker::detect()
   cols[1] = "POLNO" ;
   cols[2] = "IFNO" ;
   cols[3] = "SRCTYPE" ;
-  STIdxIterExAcc iter( st_, cols ) ;
+  STIdxIter2 iter( st_, cols ) ;
   ROScalarColumn<Double> timeCol( st_->table(), "TIME" ) ;
   ROArrayColumn<Double> directionCol( st_->table(), "DIRECTION" ) ;
   while( !iter.pastEnd() ) {
-    Vector<uInt> current = iter.current() ;
-    Int srcType = iter.getSrcType() ;
+    Record current = iter.currentValue() ;
+    Int srcType = current.asInt("SRCTYPE");
+    uInt ifno = current.asuInt("IFNO");
     os_ << LogIO::DEBUGGING
-        << "BEAMNO=" << current[0] 
-        << " POLNO=" << current[1]
-        << " IFNO=" << current[2]
+        << "BEAMNO=" << current.asuInt("BEAMNO")
+        << " POLNO=" << current.asuInt("POLNO")
+        << " IFNO=" << ifno
         << " SRCTYPE=" << srcType << LogIO::POST ;
     // only process ON position and no WVR
     Vector<uInt> rows = iter.getRows( SHARE ) ;
     uInt nrow = rows.nelements() ;
-    if ( srcType == Int(SrcType::PSON) && allNE( wvr_, current[2] ) && nrow > 0 ) {
+    if ( srcType == Int(SrcType::PSON) && allNE( wvr_, ifno ) && nrow > 0 ) {
       Vector<Double> t( nrow ) ;
       Matrix<Double> d( 2, nrow ) ;
       for ( uInt irow = 0 ; irow < nrow ; irow++ ) {

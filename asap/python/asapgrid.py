@@ -485,8 +485,8 @@ class _SDGridPlotter:
                     irow += chunk.shape[1]
                     #print irow
         # show image
-        extent=[self.trc[0]+0.5*self.cellx,
-                self.blc[0]-0.5*self.cellx,
+        extent=[self.blc[0]-0.5*self.cellx,
+                self.trc[0]+0.5*self.cellx,
                 self.blc[1]-0.5*self.celly,
                 self.trc[1]+0.5*self.celly]
         deccorr = 1.0/numpy.cos(0.5*(self.blc[1]+self.trc[1]))

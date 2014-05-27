@@ -15,6 +15,7 @@
 #include <casa/Containers/RecordField.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/BasicMath/Math.h>
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -449,4 +450,25 @@ void STFrequencies::shiftRefPix(int npix, uInt id)
   tcol.put(0, tcol(0)+Double(npix));
 }
 
+bool STFrequencies::match( Double refpix, Double refval,
+			   Double inc, Double freqTolInHz,
+			   uInt &id)
+{
+  ROScalarColumn<uInt> idCol(table_, "ID");
+  ROScalarColumn<Double> refPixCol(table_, "REFPIX");
+  ROScalarColumn<Double> refValCol(table_, "REFVAL");
+  ROScalarColumn<Double> incCol(table_, "INCREMENT");
+  for (uInt irow = 0; irow < table_.nrow(); ++irow) {
+    Double refInc = incCol(irow);
+    Double refFreq = refValCol(irow) - refPixCol(irow) * refInc;
+    Double freq0 = refval - refpix * inc;
+    if (nearAbs(inc, refInc, freqTolInHz) &&
+	nearAbs(refFreq, freq0, freqTolInHz)) {
+      id = irow;
+      return true;
+    }
+  }
+  return false;
+}
+  
 } // namespace

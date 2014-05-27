@@ -553,7 +553,7 @@ struct STContext {
   STGrid *const self;
   const Int pol;
   STContext(STGrid *obj, STCommonData &common, Int pol)
-    : self(obj), common(common), pol(pol) {}
+    : common(common), self(obj), pol(pol) {}
 };
 
 struct STContextWithClipping {
@@ -562,7 +562,7 @@ struct STContextWithClipping {
   STGrid *const self;
   const Int pol;
   STContextWithClipping(STGrid *obj, STCommonDataWithClipping &common, Int pol)
-    : self(obj), common(common), pol(pol) {}
+    : common(common), self(obj), pol(pol) {}
 };
 
 
@@ -1020,11 +1020,9 @@ void STGrid::setData( Array<Complex> &gdata,
   double t0, t1 ;
   t0 = mathutil::gettimeofday_sec() ;
   uInt len = data_.nelements() ;
-  const Complex *w1_p ;
-  Float *w2_p ;
   Bool b1, b2, b3 ;
   const Complex *gdata_p = gdata.getStorage( b1 ) ;
-  Float *gwgt_p = data_.getStorage( b2 ) ;
+  Float *gwgt_p = gwgt.getStorage( b2 ) ; // storage shared with data_
   uChar *gflg_p = flag_.getStorage( b3 ) ;
   for ( uInt i = 0 ; i < len ; i++ ) {
     if (gwgt_p[i] > 0.0) {
@@ -1238,7 +1236,7 @@ void STGrid::mapExtent( Double &xmin, Double &xmax,
 
 void STGrid::table( Table &tab, uInt i )
 {
-  if ( i >= 0 && i < nfile_ )
+  if ( i < nfile_ )
     tab = Table( infileList_[i] ) ;
 }
 
@@ -1307,7 +1305,7 @@ void STGrid::attach( Table &tab )
 Int STGrid::getDataChunk(
 			 IPosition const &wshape,
 			 IPosition const &vshape,
-			 IPosition const &dshape,
+			 IPosition const &/* dshape */,
 			 Array<Complex> &spectra,
 			 Array<Double> &direction,
 			 Array<Int> &flagtra,
@@ -1798,7 +1796,7 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
   else if ( convType_ == "GAUSS" ) {
     // determine pixel gwidth
     // default is HWHM corresponding to b = 1.0 (Mangum et al. 2007)
-    Double pixelGW;
+    Double pixelGW = -1.0;
     Quantum<Double> q ;
     if (!gwidth_.empty()) {
       readQuantity( q, gwidth_ );
@@ -1816,7 +1814,7 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
     }
     // determine truncation radius
     // default is 3 * HWHM
-    Double truncate;
+    Double truncate = -1.0;
     if (!truncate_.empty()) {
       readQuantity( q, truncate_ );
       if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
@@ -1842,7 +1840,7 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
   else if ( convType_ == "GJINC" ) {
     // determine pixel gwidth
     // default is HWHM corresponding to b = 2.52 (Mangum et al. 2007)
-    Double pixelGW;
+    Double pixelGW = -1.0;
     Quantum<Double> q ;
     if (!gwidth_.empty()) {
       readQuantity( q, gwidth_ );
@@ -1860,7 +1858,7 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
     }
     // determine pixel c
     // default is c = 1.55 (Mangum et al. 2007)
-    Double pixelJW;
+    Double pixelJW = -1.0;
     if (!jwidth_.empty()) {
       readQuantity( q, jwidth_ );
       if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
@@ -1964,7 +1962,7 @@ void STGrid::prepareTable( Table &tab, String &name )
 
 void STGrid::fillTable( Table &tab )
 {
-  IPosition dshape = data_.shape() ;
+  //IPosition dshape = data_.shape() ;
   Int nrow = nx_ * ny_ * npol_ ;
   tab.rwKeywordSet().define( "nPol", npol_ ) ;
   tab.addRow( nrow ) ;
@@ -1993,7 +1991,7 @@ void STGrid::fillTable( Table &tab )
   for ( Int iy = 0 ; iy < ny_ ; iy++ ) {
     pix(1) = (Double)(iy);
     for ( Int ix = 0 ; ix < nx_ ; ix++ ) {
-      pix(0) = (Double)(nx_-1-ix);
+      pix(0) = (Double)(ix);
       dircoord_->toWorld(dir,pix);
       //os << "dir[" << ix << "," << iy << "]=" << dir << LogIO::POST;
       for ( Int ipol = 0 ; ipol < npol_ ; ipol++ ) {

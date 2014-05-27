@@ -77,23 +77,35 @@ PKSreader* getPKSreader(
 
     } else {
       RegularFileIO file(name);
-      char buf[32];
-      file.read(30, buf, False);
-      buf[30] = '\0';
-      if (String(buf) == "SIMPLE  =                    T") {
-        file.seek(560);
-        file.read(26, buf, False);
-        buf[26] = '\0' ;
-        if ( String(buf) == "ORIGIN  = 'NRAO Green Bank" ) {
-          // Looks like GBT SDFITS
-          format = "GBTFITS" ;
-          reader = new PKSFITSreader("GBTFITS") ;
-        }
-        else {
-          // Looks like SDFITS.
-          format = "SDFITS";
-          reader = new PKSFITSreader("SDFITS");
-        }
+      //char buf[32];
+      char buf[80];
+      //file.read(30, buf, False);
+      file.read(80, buf, False);
+      //buf[30] = '\0';
+      //if (String(buf) == "SIMPLE  =                    T") {
+      if (String(buf).contains("SIMPLE  =                    T")) {
+        //file.seek(560);
+        //file.read(26, buf, False);
+        //buf[26] = '\0' ;
+        Int nbread=1;
+        while (nbread) {
+          nbread=file.read(80, buf, False);
+        //if ( String(buf) == "ORIGIN  = 'NRAO Green Bank" ) {
+          if ( String(buf).contains("ORIGIN  = 'NRAO Green Bank" )) {
+            // Looks like GBT SDFITS
+            format = "GBTFITS" ;
+            reader = new PKSFITSreader("GBTFITS") ;
+            break;
+          }
+          else {
+            if ( String(buf).find("END ")==0 ) {
+              // Looks like SDFITS.
+              format = "SDFITS";
+              reader = new PKSFITSreader("SDFITS");
+              break;
+            }
+          }
+        }//while loop  
        } else {
          // Assume it's MBFITS.
          format = "MBFITS";

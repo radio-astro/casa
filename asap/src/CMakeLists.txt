@@ -118,6 +118,11 @@ endif()
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} )
 add_library( ${ASAPPYLIB} SHARED ${ASAP_PYSRCS} )
 
+if ( DEFINED asap_soversion )
+    set_target_properties( ${ASAPLIB} PROPERTIES SOVERSION ${asap_soversion} )
+    set_target_properties( ${ASAPPYLIB} PROPERTIES SOVERSION ${asap_soversion} )
+endif( )
+
 # library name must be _asap.so
 set_target_properties( ${ASAPPYLIB}
                        PROPERTIES

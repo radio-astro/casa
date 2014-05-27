@@ -6,8 +6,8 @@
 # environment dependent settings
 if( APPLE )
    if( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-11 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-12 )
+	CMAKE_SYSTEM MATCHES ^Darwin-11 OR
+	CMAKE_SYSTEM MATCHES ^Darwin-12 )
       if ( NOT arch )
          set( arch darwin64 )
       endif()
@@ -100,6 +100,24 @@ include( CASA )
 #
 set( CASACORE_PATHS "${casaroot}/${arch};${casaroot};/usr/local;/usr" )
 
+SET(NO_SOVERSION FALSE CACHE BOOL "do not add version information to shared libraries")
+if( NOT NO_SOVERSION )
+    set( epochdelta 1385403204 )
+    if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
+        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
+                         OUTPUT_VARIABLE __asap_soversion )
+    elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
+        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
+                         OUTPUT_VARIABLE __asap_soversion )
+    else( )
+        execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
+                         OUTPUT_VARIABLE __asap_soversion )
+    endif( )
+    set(asap_soversion ${__asap_soversion} CACHE STRING "version for shared objects")
+    message( STATUS "Shared object version number ${asap_soversion}" )
+else( )
+    message( STATUS "User disabled shared library versioning" )
+endif( )
 
 #
 # Boost

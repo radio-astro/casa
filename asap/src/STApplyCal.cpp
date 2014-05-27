@@ -205,34 +205,37 @@ void STApplyCal::apply(Bool insitu, Bool filltsys)
   //os_ << "work_->nrow()=" << work_->nrow() << LogIO::POST;
 
   // list of apply tables for sky calibration
-  Vector<uInt> skycalList;
+  Vector<uInt> skycalList(skytable_.size());
   uInt numSkyCal = 0;
-  uInt nrowSky = 0;
 
   // list of apply tables for Tsys calibration
   for (uInt i = 0 ; i < skytable_.size(); i++) {
     STCalEnum::CalType caltype = STApplyTable::getCalType(skytable_[i]);
     if (caltype == caltype_) {
-      skycalList.resize(numSkyCal+1, True);
       skycalList[numSkyCal] = i;
       numSkyCal++;
-      nrowSky += skytable_[i]->nrow();
     }
   }
+  skycalList.resize(numSkyCal, True);
 
 
   vector<string> cols( 3 ) ;
   cols[0] = "BEAMNO" ;
   cols[1] = "POLNO" ;
   cols[2] = "IFNO" ;
-  CountedPtr<STIdxIter> iter = new STIdxIterAcc(work_, cols) ;
+  CountedPtr<STIdxIter2> iter = new STIdxIter2(work_, cols) ;
+  double start = mathutil::gettimeofday_sec();
+  os_ << LogIO::DEBUGGING << "start iterative doapply: " << start << LogIO::POST;
   while (!iter->pastEnd()) {
-    Vector<uInt> ids = iter->current();
+    Record ids = iter->currentValue();
     Vector<uInt> rows = iter->getRows(SHARE);
     if (rows.nelements() > 0)
-      doapply(ids[0], ids[2], ids[1], rows, skycalList, filltsys);
+      doapply(ids.asuInt("BEAMNO"), ids.asuInt("IFNO"), ids.asuInt("POLNO"), rows, skycalList, filltsys);
     iter->next();
   }
+  double end = mathutil::gettimeofday_sec();
+  os_ << LogIO::DEBUGGING << "end iterative doapply: " << end << LogIO::POST;
+  os_ << LogIO::DEBUGGING << "elapsed time for doapply: " << end - start << " sec" << LogIO::POST;
 
   target_->unsetSelection();
 }
@@ -297,43 +300,53 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   }
 
   uInt nchanSp = skytable_[skylist[0]]->nchan(ifno);
-  Vector<Double> timeSky(nrowSky);
-  Matrix<Float> spoff(nchanSp, nrowSky);
-  Vector<Float> iOff(nchanSp);
-  nrowSky = 0;
-  for (uInt i = 0 ; i < skylist.nelements(); i++) {
-    STCalSkyTable *p = skytable_[skylist[i]];
-    Vector<Double> t = p->getTime();
-    Matrix<Float> sp = p->getSpectra();
-    for (uInt j = 0; j < t.nelements(); j++) {
-      timeSky[nrowSky] = t[j];
-      spoff.column(nrowSky) = sp.column(j);
-      nrowSky++;
+  uInt nrowSkySorted = nrowSky;
+  Vector<Double> timeSkySorted;
+  Matrix<Float> spoffSorted;
+  {
+    Vector<Double> timeSky(nrowSky);
+    Matrix<Float> spoff(nrowSky, nchanSp);
+    nrowSky = 0;
+    for (uInt i = 0 ; i < skylist.nelements(); i++) {
+      STCalSkyTable *p = skytable_[skylist[i]];
+      Vector<Double> t = p->getTime();
+      Matrix<Float> sp = p->getSpectra();
+      for (uInt j = 0; j < t.nelements(); j++) {
+	timeSky[nrowSky] = t[j];
+	spoff.row(nrowSky) = sp.column(j);
+	nrowSky++;
+      }
+    }
+    
+    Vector<uInt> skyIdx = timeSort(timeSky);
+    nrowSkySorted = skyIdx.nelements();
+    
+    timeSkySorted.takeStorage(IPosition(1, nrowSkySorted),
+			      new Double[nrowSkySorted],
+			      TAKE_OVER);
+    for (uInt i = 0 ; i < nrowSkySorted; i++) {
+      timeSkySorted[i] = timeSky[skyIdx[i]];
+    }
+    interpolatorS_->setX(timeSkySorted.data(), nrowSkySorted);
+    
+    spoffSorted.takeStorage(IPosition(2, nrowSky, nchanSp),
+			    new Float[nrowSky * nchanSp],
+			    TAKE_OVER);
+    for (uInt i = 0 ; i < nrowSky; i++) {
+      spoffSorted.row(i) = spoff.row(skyIdx[i]);
     }
   }
 
-  Vector<uInt> skyIdx = timeSort(timeSky);
-
-  Double *xa = new Double[skyIdx.nelements()];
-  Float *ya = new Float[skyIdx.nelements()];
-  IPosition ipos(1, skyIdx.nelements());
-  Vector<Double> timeSkySorted(ipos, xa, TAKE_OVER);
-  Vector<Float> tmpOff(ipos, ya, TAKE_OVER);
-  for (uInt i = 0 ; i < skyIdx.nelements(); i++) {
-    timeSkySorted[i] = timeSky[skyIdx[i]];
-  }
-
-  interpolatorS_->setX(xa, skyIdx.nelements());
-
-  Vector<uInt> tsysIdx;
-  Vector<Double> timeTsys(nrowTsys);
-  Matrix<Float> tsys;
+  uInt nrowTsysSorted = nrowTsys;
+  Matrix<Float> tsysSorted;
   Vector<Double> timeTsysSorted;
-  Vector<Float> tmpTsys;
   if (doTsys) {
     //os_ << "doTsys" << LogIO::POST;
-    timeTsys.resize(nrowTsys);
-    tsys.resize(nchanTsys, nrowTsys);
+    Vector<Double> timeTsys(nrowTsys);
+    Matrix<Float> tsys(nrowTsys, nchanTsys);
+    tsysSorted.takeStorage(IPosition(2, nrowTsys, nchanTsys),
+			   new Float[nrowTsys * nchanTsys],
+			   TAKE_OVER);
     nrowTsys = 0;
     for (uInt i = 0 ; i < tsystable_.size(); i++) {
       STCalTsysTable *p = tsystable_[i];
@@ -341,21 +354,24 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
       Matrix<Float> ts = p->getTsys();
       for (uInt j = 0; j < t.nelements(); j++) {
         timeTsys[nrowTsys] = t[j];
-        tsys.column(nrowTsys) = ts.column(j);
+        tsys.row(nrowTsys) = ts.column(j);
         nrowTsys++;
       }
     }
-    tsysIdx = timeSort(timeTsys);
+    Vector<uInt> tsysIdx = timeSort(timeTsys);
+    nrowTsysSorted = tsysIdx.nelements();
 
-    Double *xb = new Double[tsysIdx.nelements()];
-    Float *yb = new Float[tsysIdx.nelements()];
-    IPosition ipos(1, tsysIdx.nelements());
-    timeTsysSorted.takeStorage(ipos, xb, TAKE_OVER);
-    tmpTsys.takeStorage(ipos, yb, TAKE_OVER);
-    for (uInt i = 0 ; i < tsysIdx.nelements(); i++) {
+    timeTsysSorted.takeStorage(IPosition(1, nrowTsysSorted),
+			       new Double[nrowTsysSorted],
+			       TAKE_OVER);
+    for (uInt i = 0 ; i < nrowTsysSorted; i++) {
       timeTsysSorted[i] = timeTsys[tsysIdx[i]];
     }
-    interpolatorT_->setX(xb, tsysIdx.nelements());
+    interpolatorT_->setX(timeTsysSorted.data(), nrowTsysSorted);
+
+    for (uInt i = 0; i < nrowTsys; ++i) {
+      tsysSorted.row(i) = tsys.row(tsysIdx[i]);
+    }
   }
 
   Table tab = work_->table();
@@ -363,6 +379,17 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   ArrayColumn<Float> tsysCol(tab, "TSYS");
   ScalarColumn<Double> timeCol(tab, "TIME");
   Vector<Float> on;
+
+  // Array for scaling factor (aka Tsys)
+  Vector<Float> iTsys(IPosition(1, nchanSp), new Float[nchanSp], TAKE_OVER);
+  // Array for Tsys interpolation
+  // This is empty array and is never referenced if doTsys == false
+  // (i.e. nchanTsys == 0)
+  Vector<Float> iTsysT(IPosition(1, nchanTsys), new Float[nchanTsys], TAKE_OVER);
+
+  // Array for interpolated off spectrum
+  Vector<Float> iOff(IPosition(1, nchanSp), new Float[nchanSp], TAKE_OVER);
+  
   for (uInt i = 0; i < rows.nelements(); i++) {
     //os_ << "start i = " << i << " (row = " << rows[i] << ")" << LogIO::POST;
     uInt irow = rows[i];
@@ -375,30 +402,19 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     // interpolation
     Double t0 = timeCol(irow);
     for (uInt ichan = 0; ichan < nchanSp; ichan++) {
-      Vector<Float> spOffSlice = spoff.row(ichan);
-      //os_ << "spOffSlice = " << spOffSlice << LogIO::POST;
-      for (uInt j = 0; j < skyIdx.nelements(); j++) {
-        tmpOff[j] = spOffSlice[skyIdx[j]];
-      }
-      interpolatorS_->setY(ya, skyIdx.nelements());
+      Float *tmpY = &(spoffSorted.data()[ichan * nrowSkySorted]); 
+      interpolatorS_->setY(tmpY, nrowSkySorted);
       iOff[ichan] = interpolatorS_->interpolate(t0);
     }
     //os_ << "iOff=" << iOff[0] << LogIO::POST;
     calibrator_->setReference(iOff);
     
-    Float *Y = new Float[nchanSp];
-    Vector<Float> iTsys(IPosition(1,nchanSp), Y, TAKE_OVER);
     if (doTsys) {
       // Tsys correction
-      Float *yt = new Float[nchanTsys];
-      Vector<Float> iTsysT(IPosition(1,nchanTsys), yt, TAKE_OVER);
-      Float *yb = tmpTsys.data();
+      Float *yt = iTsysT.data();
       for (uInt ichan = 0; ichan < nchanTsys; ichan++) {
-        Vector<Float> tsysSlice = tsys.row(ichan);
-        for (uInt j = 0; j < tsysIdx.nelements(); j++) {
-          tmpTsys[j] = tsysSlice[tsysIdx[j]];
-        }
-        interpolatorT_->setY(yb, tsysIdx.nelements());
+	Float *tmpY = &(tsysSorted.data()[ichan * nrowTsysSorted]);
+	interpolatorT_->setY(tmpY, nrowTsysSorted);
         iTsysT[ichan] = interpolatorT_->interpolate(t0);
       }
       if (nchanSp == 1) {

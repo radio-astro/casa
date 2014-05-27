@@ -1728,7 +1728,7 @@ int Scantable::checkScanInfo(const std::vector<int>& scanlist) const
     // check each scan if other scan of the pair exist
     int nscan = scanlist.size();
     for (int i = 0; i < nscan; i++) {
-      Table subt = t( t.col("SCAN") == scanlist[i]+1 );
+      Table subt = t( t.col("SCAN") == scanlist[i] );
       if (subt.nrow()==0) {
         //cerr <<"Scan "<<scanlist[i]<<" cannot be found in the scantable."<<endl;
         LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
@@ -1742,7 +1742,7 @@ int Scantable::checkScanInfo(const std::vector<int>& scanlist) const
       int laston1 = rec.asuInt("LASTON");
       if ( rec.asuInt("PROCSIZE")==2 ) {
         if ( i < nscan-1 ) {
-          Table subt2 = t( t.col("SCAN") == scanlist[i+1]+1 );
+	  Table subt2 = t( t.col("SCAN") == scanlist[i+1] );
           if ( subt2.nrow() == 0) {
             LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
 
@@ -1863,21 +1863,21 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   }
 
   // update FREQUENCIES subtable
+  Vector<uInt> freqIdArray = mfreqidCol_.getColumn();
+  uInt numFreqId = GenSort<uInt>::sort(freqIdArray, Sort::Ascending,
+				       Sort::HeapSort | Sort::NoDuplicates);
   Double refpix ;
   Double refval ;
   Double increment ;
-  int freqnrow = freqTable_.table().nrow() ;
-  Vector<uInt> oldId( freqnrow ) ;
-  Vector<uInt> newId( freqnrow ) ;
-  for ( int irow = 0 ; irow < freqnrow ; irow++ ) {
-    freqTable_.getEntry( refpix, refval, increment, irow ) ;
+  for (uInt irow  = 0; irow < numFreqId; irow++) { 
+    freqTable_.getEntry( refpix, refval, increment, freqIdArray[irow] ) ;
     /***
      * need to shift refpix to nmin
      * note that channel nmin in old index will be channel 0 in new one
      ***/
     refval = refval - ( refpix - nmin ) * increment ;
     refpix = 0 ;
-    freqTable_.setEntry( refpix, refval, increment, irow ) ;
+    freqTable_.setEntry( refpix, refval, increment, freqIdArray[irow] ) ;
   }
 
   // update nchan
@@ -3371,17 +3371,19 @@ double Scantable::getChebyshevPolynomial(int n, double x) {
   } else if (n == 1) {
     return x;
   } else {
-    double res = 0.0;
-    for (int m = 0; m <= n/2; ++m) {
-      double c = 1.0;
-      if (m > 0) {
-	for (int i = 1; i <= m; ++i) {
-	  c *= (double)(n-2*m+i)/(double)i;
-	}
+    double res[n+1];
+    for (int i = 0; i < n+1; ++i) {
+      double res0 = 0.0;
+      if (i == 0) {
+	res0 = 1.0;
+      } else if (i == 1) {
+	res0 = x;
+      } else {
+	res0 = 2.0 * x * res[i-1] - res[i-2];
       }
-      res += (m%2 == 0 ? 1.0 : -1.0)*(double)n/(double)(n-m)*pow(2.0*x, (double)(n-2*m))/2.0*c;
+      res[i] = res0;
     }
-    return res;
+    return res[n];
   }
 }
 
@@ -3553,10 +3555,21 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
   int j = 0;
   for (int i = 0; i < nChan; ++i) {
     maskArray[i] = mask[i] ? 1 : 0;
+    if (isnan(data[i])) maskArray[i] = 0;
+    if (isinf(data[i])) maskArray[i] = 0;
+
+    finalMask[i] = (maskArray[i] == 1);
+    if (finalMask[i]) {
+      j++;
+    }
+
+    /*
+    maskArray[i] = mask[i] ? 1 : 0;
     if (mask[i]) {
       j++;
     }
     finalMask[i] = mask[i];
+    */
   }
 
   int initNData = j;
@@ -3608,6 +3621,7 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
       }
     }
 
+    //compute inverse matrix of the left half of xMatrix
     std::vector<double> invDiag(nDOF);
     for (int i = 0; i < nDOF; ++i) {
       invDiag[i] = 1.0 / xMatrix[i][i];
@@ -3666,7 +3680,8 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
 
     double stdDev = 0.0;
     for (int i = 0; i < nChan; ++i) {
-      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+      if (maskArray[i] == 0) continue;
+      stdDev += residual[i]*residual[i];
     }
     stdDev = sqrt(stdDev/(double)nData);
     rms = (float)stdDev;
@@ -3687,7 +3702,7 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
 	}
       }
       if (newNData == nData) {
-	break; //no more flag to add. iteration stops.
+	break; //no more flag to add. stop iteration.
       } else {
 	nData = newNData;
       }
@@ -3709,7 +3724,7 @@ std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& dat
   }
 
   return result;
-}
+} //xMatrix
 
 void Scantable::cubicSplineBaseline(const std::vector<bool>& mask, int nPiece, 
 				    float thresClip, int nIterClip, 
@@ -3952,11 +3967,23 @@ std::vector<float> Scantable::doCubicSplineLeastSquareFitting(const std::vector<
   int j = 0;
   for (int i = 0; i < nChan; ++i) {
     maskArray[i] = mask[i] ? 1 : 0;
+    if (isnan(data[i])) maskArray[i] = 0;
+    if (isinf(data[i])) maskArray[i] = 0;
+
+    finalMask[i] = (maskArray[i] == 1);
+    if (finalMask[i]) {
+      x[j] = i;
+      j++;
+    }
+
+    /*
+    maskArray[i] = mask[i] ? 1 : 0;
     if (mask[i]) {
       x[j] = i;
       j++;
     }
     finalMask[i] = mask[i];
+    */
   }
 
   int initNData = j;
@@ -4167,7 +4194,8 @@ std::vector<float> Scantable::doCubicSplineLeastSquareFitting(const std::vector<
 
     double stdDev = 0.0;
     for (int i = 0; i < nChan; ++i) {
-      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+      if (maskArray[i] == 0) continue;
+      stdDev += residual[i]*residual[i];
     }
     stdDev = sqrt(stdDev/(double)nData);
     rms = (float)stdDev;
@@ -5224,6 +5252,15 @@ void Scantable::setMoleculeIdColumnData(const std::vector<uint>& molids)
   if ( molIds.nelements() != arr.nelements() )
     throw AipsError("The input data size must be the number of rows.");
   mmolidCol_.putColumn(molIds);
+}
+
+
+std::vector<uint> Scantable::getRootTableRowNumbers() const
+{
+  Vector<uInt> rowIds(table_.rowNumbers());
+  vector<uint> res;
+  rowIds.tovector(res);
+  return res;
 }
 
 

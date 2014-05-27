@@ -168,6 +168,7 @@ void python_Scantable() {
     //.def("_test_cin", &ScantableWrapper::testCin)
     .def("_getmolidcol_list", &ScantableWrapper::getMoleculeIdColumnData)
     .def("_setmolidcol_list", &ScantableWrapper::setMoleculeIdColumnData)
+    .def("_get_root_row_idx", &ScantableWrapper::getRootTableRowNumbers)
     .def("_calc_aic", &ScantableWrapper::calculateModelSelectionCriteria)
     .def("drop_xpol", &ScantableWrapper::dropXPol)
   ;

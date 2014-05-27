@@ -1716,7 +1716,7 @@ class asapplotter:
             selstr += '\n'
             self._headtext['selstr'] = selstr
         ssel=(selstr+self._data.get_selection().__str__()+self._selection.__str__() or 'none')
-        headstr.append('***Selections***\n'+ssel)
+        headstr.append('\n\n***Selections***\n'+ssel.replace('$','\$'))
 
         if plot:
             errmsg = "Can plot header only after the first call to plot()."

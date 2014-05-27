@@ -54,6 +54,10 @@ target_link_libraries( ${ATNFLIB}
                        ${LAPACK_LIBRARIES} )
 add_dependencies( inst ${ATNFLIB} )
 
+if ( DEFINED asap_soversion )
+    set_target_properties( ${ATNFLIB} PROPERTIES SOVERSION ${asap_soversion} )
+endif( )
+
 # install directory
 install( TARGETS ${ATNFLIB}
          LIBRARY DESTINATION ${LIB_INSTALL_DIR} )

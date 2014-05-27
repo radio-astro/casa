@@ -1847,7 +1847,7 @@ int GBTFITSreader::read(
   readData(FqDelt,   cRowR, mbrec.fqDelt);
 
   // Convert frequency reference to LSRK if GBT TOPO
-  if ( cGBT ) {
+  if ( cGBT && numHDU > 1 ) {
     char sampler[10];
     readData(SAMPLER,cRowR,sampler);
     //Double fqrefval = getRefValLSR( cRow, idx_GBT, sampler, mbrec.restFreq ) ;

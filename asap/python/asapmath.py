@@ -1,3 +1,4 @@
+import re
 from asap.scantable import scantable
 from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
@@ -822,17 +823,24 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
     return resspec
 
 @asaplog_post_dec
-def merge(*args):
+def merge(*args, **kwargs):
     """
     Merge a list of scanatables, or comma-sperated scantables into one
     scnatble.
     Parameters:
         A list [scan1, scan2] or scan1, scan2.
+        freq_tol: frequency tolerance for merging IFs. numeric values
+                  in units of Hz (1.0e6 -> 1MHz) and string ('1MHz')
+                  is allowed.
     Example:
         myscans = [scan1, scan2]
         allscans = merge(myscans)
         # or equivalent
         sameallscans = merge(scan1, scan2)
+        # with freqtol
+        allscans = merge(scan1, scan2, freq_tol=1.0e6)
+        # or equivalently
+        allscans = merge(scan1, scan2, freq_tol='1MHz')
     """
     varlist = vars()
     if isinstance(args[0],list):
@@ -841,6 +849,12 @@ def merge(*args):
         lst = args[0]
     else:
         lst = tuple(args)
+    if kwargs.has_key('freq_tol'):
+        freq_tol = str(kwargs['freq_tol'])
+        if len(freq_tol) > 0 and re.match('.+[GMk]Hz$', freq_tol) is None:
+            freq_tol += 'Hz'
+    else:
+        freq_tol = ''
     varlist["args"] = "%d scantables" % len(lst)
     # need special formatting her for history...
     from asap._asap import stmath
@@ -849,7 +863,7 @@ def merge(*args):
         if not isinstance(s,scantable):
             msg = "Please give a list of scantables"
             raise TypeError(msg)
-    s = scantable(stm._merge(lst))
+    s = scantable(stm._merge(lst, freq_tol))
     s._add_history("merge", varlist)
     return s
 

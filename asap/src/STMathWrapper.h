@@ -174,12 +174,12 @@ public:
   { return ScantableWrapper(STMath::opacity(in.getCP(), tau)); }
 
   ScantableWrapper
-    merge(const std::vector<ScantableWrapper >& in)
-
+    merge(const std::vector<ScantableWrapper >& in,
+	  const std::string &freqTol)
   {
     std::vector<casa::CountedPtr<Scantable> > sts;
     for (unsigned int i=0; i<in.size(); ++i) sts.push_back(in[i].getCP());
-    return ScantableWrapper(STMath::merge(sts)); }
+    return ScantableWrapper(STMath::merge(sts, freqTol)); }
 
   ScantableWrapper rotateXYPhase( const ScantableWrapper& in, float angle)
   { return ScantableWrapper(STMath::rotateXYPhase(in.getCP(), angle)); }

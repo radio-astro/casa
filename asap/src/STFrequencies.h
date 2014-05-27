@@ -171,6 +171,22 @@ public:
 
   const casa::String& name() const { return name_; }
 
+  /**
+   * Examine given set of refpix, refval, and increment matches
+   * any of the rows within a tolerance of freqTolInHz. If match,
+   * return true and id is filled properly. Otherwise, return false
+   * and id may have invalid value.
+   *
+   * @param[in] refpix
+   * @param[in] refval
+   * @param[in] inc
+   * @param[in] freqTolInHz
+   * @param[out] id
+   * @return boolean indicating match with any rows or not
+   */
+  bool match( casa::Double refpix, casa::Double refval, casa::Double inc,
+	      casa::Double freqTolInHz, casa::uInt &id);
+
 private:
 
   /**

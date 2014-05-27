@@ -49,6 +49,7 @@ public:
   void setTimeInterpolation(const std::string &interp, int order=-1);
   void setFrequencyInterpolation(const std::string &interp, int order=-1);
   void setTsysSpw(const std::vector<int> &spwlist);
+  void setTsysSpwWithRange(const casa::Record &spwlist, bool average=false);
   void setTsysTransfer(unsigned int from, 
                        const std::vector<unsigned int> &to);
   void setCalibrationOptions(const casa::Record &options) {options_ = options;}
@@ -73,6 +74,8 @@ private:
 
   casa::String calmode_;
   std::vector<int> spwlist_;
+  casa::Record spwlist_withrange_;
+  bool do_average_;
 
   casa::LogIO os_;
 

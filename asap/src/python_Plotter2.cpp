@@ -43,6 +43,9 @@ namespace asap {
          .def("set_filename",&Plotter2::setFileName)
          .def("get_device",&Plotter2::getDevice)
          .def("set_device",&Plotter2::setDevice)
+         .def("get_viewsurface_width",&Plotter2::getViewSurfaceWidth)
+         .def("get_viewsurface_aspect",&Plotter2::getViewSurfaceAspect)
+         .def("set_viewsurface",&Plotter2::setViewSurface)
          .def("add_viewport",&Plotter2::addViewport)
          .def("set_viewport",&Plotter2::setViewport)
          .def("show_viewport",&Plotter2::showViewport)
@@ -77,11 +80,12 @@ namespace asap {
          .def("show_point",&Plotter2::showPoint)
          .def("hide_point",&Plotter2::hidePoint)
          .def("set_mask_x",&Plotter2::setMaskX)
+         .def("set_arrow",&Plotter2::setArrow)
+         .def("set_text",&Plotter2::setText)
          .def("set_label_x",&Plotter2::setLabelX)
          .def("set_label_y",&Plotter2::setLabelY)
          .def("set_title",&Plotter2::setTitle)
          .def("set_vpbgcolor",&Plotter2::setViewportBackgroundColor)
-         //.def("set_annotation",&Plotter2::setAnnotation)
 
          .def("plot",&Plotter2::plot)
        ;

@@ -674,7 +674,8 @@ class MSWriterVisitor: public BaseMSWriterVisitor, public MSWriterUtils {
 public:
   MSWriterVisitor(const Table &table, Table &mstable)
     : BaseMSWriterVisitor(table),
-      ms(mstable)
+      ms(mstable),
+      addScanrate_(False)
   { 
     rowidx = 0 ;
     fieldName = "" ;
@@ -715,6 +716,11 @@ public:
     // attach to MS columns
     attachMain() ;
     attachPointing() ;
+
+    // decide whether put SCANRATE to MS POINTING column
+    if (anyNE(scanRateCol.getColumn(), (Double)0.0)) {
+      addScanrate_ = True;
+    }
   }
   
   virtual void enterFieldName(const uInt recordNo, const String &/*columnValue*/) {
@@ -755,9 +761,9 @@ public:
   virtual void enterScanNo(const uInt /*recordNo*/, uInt columnValue) {
     //printf("%u: ScanNo: %u\n", recordNo, columnValue);
 
-    // put value 
-    // SCAN_NUMBER is 0-based in Scantable while 1-based in MS
-    *scanNumberRF = (Int)columnValue + 1 ;
+    // put value
+    // CAS-5841: SCANNO should be consistent with MS SCAN_NUMBER
+    *scanNumberRF = (Int)columnValue ;
   }
   virtual void leaveScanNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
     subscan = 1 ;
@@ -802,7 +808,8 @@ public:
     if ( ptName.empty() ) {
       Vector<Double> dir = directionCol( recordNo ) ;
       Vector<Double> rate = scanRateCol( recordNo ) ;
-      if ( anyNE( rate, 0.0 ) ) {
+      //if ( anyNE( rate, 0.0 ) ) {
+      if (addScanrate_) {
         Matrix<Double> msdir( 2, 2 ) ;
         msdir.column( 0 ) = dir ;
         msdir.column( 1 ) = rate ;
@@ -1479,6 +1486,7 @@ private:
   String ptName;
   Bool useFloat;
   String poltype;
+  Bool addScanrate_;
 
   // MS subtables
   Table spwtab;
