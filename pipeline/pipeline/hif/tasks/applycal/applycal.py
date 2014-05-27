@@ -226,6 +226,7 @@ class Applycal(basetask.StandardTaskTemplate):
             args['spwmap']    = calapp.spwmap
             args['interp']    = calapp.interp
             args['calwt']     = calapp.calwt
+	    args['applymode'] = 'calflagstrict'
             
             jobs.append(casa_tasks.applycal(**args))
 
