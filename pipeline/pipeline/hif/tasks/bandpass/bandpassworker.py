@@ -107,7 +107,7 @@ class BandpassWorker(basetask.StandardTaskTemplate):
         # to nearestperobs to handle situation where vis is a concat of
         # 2 or more measurement sets.
         calfrom = callibrary.CalFrom(inputs.caltable, caltype='bandpass',
-          interp='linearperobs,linear')
+          interp='linearperobs,linearflag')
 
         calapp = callibrary.CalApplication(calto, calfrom, origin)
 
