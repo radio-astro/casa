@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_applycal(vis=None, field=None, intent=None, spw=None, antenna=None,
-    pipelinemode=None, calwt=None, flagbackup=None, dryrun=None,
+    pipelinemode=None, applymode=None, calwt=None, flagbackup=None, dryrun=None,
     acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

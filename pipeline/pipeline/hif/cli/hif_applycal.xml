@@ -36,14 +36,18 @@ Apply the calibration to the data.
 	<value></value>
    </param>
 
-    <param type="string" name="pipelinemode">
-	<description>The pipeline operating mode</description>
-	<value>automatic</value>
-	<allowed kind="enum">
-	    <value>automatic</value>
-	    <value>interactive</value>
-	    <value>getinputs</value>
-	</allowed>
+    <param type="string" name="applymode">
+        <description>Calibration mode: ""="calflagstrict","calflag","calflagstrict","trial","flagonly","flagonlystrict", or "calonly"</description>
+        <value></value>
+        <allowed kind="enum">
+            <value></value>
+            <value>calflag</value>
+            <value>calflagstrict</value>
+            <value>trial</value>
+            <value>flagonly</value>
+            <value>flagonlystrict</value>
+            <value>calonly</value>
+        </allowed>
     </param>
 
     <param type="boolArray" name="calwt" subparam="true">
@@ -54,6 +58,16 @@ Apply the calibration to the data.
     <param type="bool" name="flagbackup" subparam="true">
 	<description>Backup the flags before the apply</description>
 	<value type="bool">True</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
@@ -85,7 +99,7 @@ Apply the calibration to the data.
 	        <default param="field"><value type="string"></value></default>
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
-			<default param="antenna"><value type="string"></value></default>
+		<default param="antenna"><value type="string"></value></default>
 	        <default param="calwt"><value type="boolArray">True</value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	    </equals>
@@ -107,6 +121,19 @@ Apply the calibration to the data.
 Apply precomputed calibrations to the data.
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
+
+applymode -- Calibration apply mode 
+    ''='calflagstrict': calibrate data and apply flags from solutions using
+        the strict flagging convention
+    'trial': report on flags from solutions, dataset entirely unchanged
+    'flagonly': apply flags from solutions only, data not calibrated
+    'calonly': calibrate data only, flags from solutions NOT applied
+    'calflagstrict':
+    'flagonlystrict':same as above except flag spws for which calibration is
+        unavailable in one or more tables (instead of allowing them to pass
+        uncalibrated and unflagged)
+   default: ''
+
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs automatically.
