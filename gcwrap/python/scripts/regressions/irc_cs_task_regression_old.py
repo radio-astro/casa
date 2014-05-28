@@ -1,12 +1,14 @@
 ###############################
 #
-# IRC+10216 HC3N Reduction Script
+# IRC+10216 13CS Reduction Script
 # using new sd tasks
 # Nod data
 # 
 # tasks used
 # sdlist
-# sdreduce (new)
+# sdcal
+# sdsmooth
+# sdbaseline
 # sdplot
 # sdstat
 # sdsave
@@ -14,10 +16,10 @@
 import time
 import os
 
-os.system('rm -rf IRC+10216_rawACSmod IRC+10216_rawACSmod_cal IRC+10216_rawACSmod_cal_sm IRC+10216_rawACSmod_cal_sm_bs  irc_hc3n_reducedSCAN0_CYCLE0_BEAM0_IF0.txt irc_hc3n_reduced.eps irc_cs_fit.txt')
+os.system('rm -rf IRC+10216_rawACSmod IRC+10216_rawACSmod_cal IRC+10216_rawACSmod_cal_sm IRC+10216_rawACSmod_cal_sm_bs  irc_cs_reducedSCAN0_CYCLE0_BEAM0_IF0.txt irc_cs_reduced.eps irc_cs_fit.txt')
 
 #enable/disable plotting
-doplot = False 
+doplot = False
 
 casapath = os.environ['CASAPATH'].split()[0]
 datapath = casapath+'/data/regression/ATST5/IRC+10216/IRC+10216_rawACSmod'
@@ -79,65 +81,84 @@ if doplot:
 else:
    localplotlevel = 0
 
-# calibartion,averaging, smoothing, and baseline removal
+# calibartion and averaging
 # calibrate nod scans for CS line (IF=3)
-default(sdreduce)
+default(sdcalold)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-#scanlist = [237,238,239,240,249,250,251,252]
-scan = '237~240,249~252'
-#iflist = [17]
-spw = '17'
-average = True
-timeaverage = True # average in time
-tweight = 'tintsys' # weighted by iteg time and Tsys for time averaging
+#scanlist = [229,230]
+scanlist = [230,231]
+iflist = [3]
 scanaverage = False
+timeaverage = True # average in time
+tweight = 'tintsys' # weighted by integ time and Tsys for time averaging
 polaverage = True  # average polarization
-pweight = 'tsys'   # weighted by Tsys for polarization averaging
+pweight = 'tsys'   # weighted by Tsys for pol. averaging
 tau = 0.09         # do opacity correction
-# do boxcar smoothing with channel width=5
-kernel = 'boxcar'
-kwidth = 5
-# output
-#fit and remove baselines
-maskmode = 'auto'
-thresh = 5
-avg_limit = 4
-blfunc = 'poly'
-order = 2
 overwrite = True
 plotlevel = localplotlevel
-sdreduce()
+sdcalold()
+# output
 localoutfile = infile+'_cal'
+
+#smoothing
+# do boxcar smoothing with channel width=5
+default(sdsmoothold)
+infile = localoutfile
+kernel = 'boxcar'
+kwidth = 5
+overwrite = True
+plotlevel = localplotlevel
+sdsmoothold()
+localoutfile = infile+'_sm'
+
+#fit and remove baselines
+# do baseline fit with cubic spline with one knot (npiece=2)
+# 3-sigma clipping plus 1 iteration applied.
+# automatically detect lines to exclude from fitting
+default(sdbaselineold)
+infile = localoutfile
+maskmode = 'auto'
+#edge = [50]
+thresh = 5
+avg_limit = 4
+#blfunc = 'poly'
+#order = 1
+blfunc = 'cspline'
+npiece = 2
+clipthresh = 3.0
+clipniter = 1
+overwrite = True
+plotlevel = localplotlevel
+sdbaselineold()
+localoutfile = infile+'_bs'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplot)
+   default(sdplotold)
    infile = localoutfile
    specunit = 'GHz'
-   outfile = 'irc_hc3n_reduced.eps'
+   outfile = 'irc_cs_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplot()
+   sdplotold()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstat)
+default(sdstatold)
 # select line free regions to get rms
 infile = localoutfile
-#masklist = [200,1500]
-spw = '*:200~1500'
-xstat = sdstat()
+masklist = [800,1500]
+xstat = sdstatold()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
-#masklist = [1800,2400]
-spw = '*:1800~2400'
-xstat = sdstat()
+masklist = [1850,2300]
+xstat = sdstatold()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -146,36 +167,44 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsave)
+default(sdsaveold)
 infile = localoutfile
-outfile = 'irc_hc3n_reduced'
+outfile = 'irc_cs_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsave()
-#outfile = 'irc_hc3n_reduced.ms'
+sdsaveold()
+#outfile = 'irc_cs_reduced.ms'
 #outform = 'MS2'
-#sdsave()
+#sdsaveold()
 
 #
 endProc = time.clock()
 endTime = time.time()
 
 # --- end of irc cs script
-#irc_max=1.827
-#irc_rms=0.022
-#irc_sum=474.123
+
+#irc_max=3.3
+#irc_rms=0.147
+#irc_sum=627.5
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-irc_max = 1.827
-irc_rms = 0.02213
-irc_sum = 474.1
+#irc_max=3.325
+#irc_rms=0.1473
+#irc_sum=627.9
+# Regression values of CASA 3.1+ASAP3 on 64bit RHEL5.5 (2010/10?)
+# Regression values of CASA 3.2(#14238)+ASAP3(#2031) on 64bit RHEL5.5
+#   using cspline with (npiece,clipthresh,clipniter)=(2,3.0,1) in sdbaseline (2011/03/25 WK)
+irc_max = 3.3270
+irc_rms = 0.1472
+irc_sum = 630.75
+
 diff_max = abs( (irc_max - curr_max) / irc_max )
 diff_rms = abs( (irc_rms - curr_rms) / irc_rms )
 diff_sum = abs( (irc_sum - curr_sum) / irc_sum )
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile = 'irc.hc3n.task'+datestring+'.log'
+outfile = 'irc.cs.task'+datestring+'.log'
 logfile = open(outfile,'w')
 
 print >>logfile,''
@@ -193,14 +222,14 @@ if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
         print 'Regression PASSED'
         print ''
         print >>logfile,'---'
-        print >>logfile,'Passed Regression test for IRC-HC3N'
+        print >>logfile,'Passed Regression test for IRC-CS'
         print >>logfile,'---'
 else:
 	regstate = False
         print ''
         print 'Regression FAILED'
         print ''
-        print >>logfile,'----FAILED Regression test for IRC-HC3N'
+        print >>logfile,'----FAILED Regression test for IRC-CS'
 print >>logfile,'*********************************'
 
 print >>logfile,''

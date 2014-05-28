@@ -101,6 +101,12 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
         </allowed>
     </param>
 
+    <param type="bool" name="fillweight" subparam="true">
+        <shortdescription>fill the WEIGHT and SIGMA columns for output MS [True, False]</shortdescription>
+	<description>fill the WEIGHT and SIGMA columns for output MS</description>
+	<value>False</value>
+    </param>
+    
     <param type="bool" name="overwrite">
         <shortdescription>overwrite the output file if already exists [True, False] </shortdescription>
         <description>overwrite the output file if already exists</description>
@@ -114,6 +120,12 @@ or sdimaging/sdtpimaging, save the data to the Measurement Set
                  </equals>
                  <equals type="bool" value="True"/>
             </when>
+	    <when param="outform">
+	        <equals type="string" value="ASAP"/>
+	        <equals type="string" value="MS2">
+		    <default param="fillweight"><value type="bool">False</value></default>
+		</equals>
+	    </when>
     </constraints>
 
     </input>
@@ -126,7 +138,7 @@ Keyword arguments
 -----------------
 infile -- name of input SD dataset
 splitant -- split output file by antenna. this parameter is only
-            effective for MS input and ASAP output.
+            effective for MS input.
         options: (bool) True, False
         default: False
     &gt;&gt;&gt;splitant expandable parameter
@@ -150,7 +162,7 @@ spw -- select data by IF IDs (spectral windows)/channels
         default: '' (use all IFs and channels)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
-                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
                  spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
                  spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
                  spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
@@ -197,6 +209,11 @@ restfreq -- the rest frequency
                  [{'name':'CO','value':345}]
 outfile -- name of output file
         default: '' ((&lt;infile&gt;_saved)
+        NOTE actual output file name(s) will be modified if splitant 
+        is True as antenna names are to be included. If outfile has a 
+        suffix '.asap' or '.ASAP', antenna name will be inserted before 
+        the suffix like 'out.antName.asap', otherwise, antenna name 
+        will be simply appended to outfile like 'out.sdfits.antName'. 
 outform -- output file format
         options: 'ASAP','MS2', 'ASCII','SDFITS'
         default: 'ASAP'
@@ -204,6 +221,9 @@ outform -- output file format
         processing; use MS2 for CASA imaging.
         If ASCII, then will append some stuff to
         the outfile name
+fillweight -- fill WEIGHT and SIGMA column for output MS
+        default: True
+        options: True, False
 
 -----------
 DESCRIPTION

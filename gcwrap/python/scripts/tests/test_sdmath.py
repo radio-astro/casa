@@ -184,6 +184,15 @@ class sdmath_unittest_base:
             self.assertEqual(ret,True,
                              msg='SPECTRA: data differ in row%s'%(irow))
 
+    def _getspectra( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp=tb.getcol('SPECTRA').transpose()
+        tb.close()
+        return sp
+
 ###
 # Test on bad parameter settings
 ###
@@ -743,6 +752,142 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
 
+###
+# Test on operation of scantable given in infiles
+###
+class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
+    """
+    Test on operation of scantable given in infiles
+
+    Test data, sdmath0.asap, is artificial data with the following
+    status:
+
+       - nrow = 2
+       - nchan = 4 for spectral data
+       - all spectral values are 1.0
+
+    Another test data, sdmath1.asap, is artificial data with the
+    following status:
+
+       - shape is identical with sdmath0.asap
+       - all spectral values are 0.1
+       
+    """
+    # Input and output names
+    rawfile0='sdmath0.asap'
+    rawfile1='sdmath1.asap'
+    prefix='sdmathTest4'
+    outfile=prefix+'.asap'
+    factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
+    datafile=prefix+'.dat'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile0)):
+            shutil.copytree(self.datapath+self.rawfile0, self.rawfile0)
+        if (not os.path.exists(self.rawfile1)):
+            shutil.copytree(self.datapath+self.rawfile1, self.rawfile1)
+        self._makedata(self.datafile,self.factor)
+        
+        default(sdmath)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile0)):
+            shutil.rmtree(self.rawfile0)
+        if (os.path.exists(self.rawfile1)):
+            shutil.rmtree(self.rawfile1)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test400(self):
+        """Test 400: Addition of scantables given in infiles"""
+        op='+'
+        ex='IN0'+op+'IN1'
+        infiles=[self.rawfile0, self.rawfile1]
+        res=sdmath(expr=ex,infiles=infiles,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
+
+    def test401(self):
+        """Test 401: Addition of scantables from infiles(first) and varnames"""
+        op='+'
+        ex='IN0'+op+'V0'
+        infiles=[self.rawfile0]
+        v={'V0':self.rawfile1}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
+
+    def test402(self):
+        """Test 402: Addition of scantables from varnames(first) and infiles"""
+        op='+'
+        ex='V0'+op+'IN0'
+        infiles=[self.rawfile0]
+        v={'V0':self.rawfile1}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
+
+    def test403(self):
+        """Test 403: Addition of scantables from infiles and scalar"""
+        op='+'
+        ex='IN0'+op+'V0'
+        infiles=[self.rawfile0]
+        factor403=1.0
+        v={'V0':factor403}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(self.outfile,self.rawfile0,factor403,op)
+
+    def test404(self):
+        """Test 404: Addition of scantables from infiles and 1D array of [nchan]"""
+        op='+'
+        ex='IN0'+op+'V0'
+        infiles=[self.rawfile0]
+        factor404=[0.1,0.2,0.3,0.4]
+        v={'V0':factor404}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(self.outfile,self.rawfile0,factor404,op)
+
+    def test405(self):
+        """Test 405: Addition of scantables from infiles and 2D array of [nrow,1]"""
+        op='+'
+        ex='IN0'+op+'V0'
+        infiles=[self.rawfile0]
+        factor405=[[0.1],[0.2]]
+        v={'V0':factor405}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(self.outfile,self.rawfile0,factor405,op)
+
+    def test406(self):
+        """Test 406: Addition of scantables from infiles and 2D array of [nrow,nchan]"""
+        op='+'
+        ex='IN0'+op+'V0'
+        infiles=[self.rawfile0]
+        factor406=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
+        v={'V0':factor406}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(self.outfile,self.rawfile0,factor406,op)
+
+    def test407(self):
+        """Test 407: Addition of scantables from infiles and ASCII text data"""
+        op='+'
+        ex='IN0'+op+'V0'
+        infiles=[self.rawfile0]
+        v={'V0':self.datafile}
+        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(self.outfile,self.rawfile0,self.factor,op)
 
 ###
 # Test on scantable storage and insitu settings
@@ -1511,7 +1656,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '<25'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,23]}
+        tbsel = {'IFNO': [20,21,22,23,24]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1521,7 +1666,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '>21'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [23,25]}
+        tbsel = {'IFNO': [22,23,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1531,7 +1676,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '21~24'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,23]}
+        tbsel = {'IFNO': [21,22,23,24]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1541,7 +1686,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '21,22,23,25'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,23,25]}
+        tbsel = {'IFNO': [21,22,23,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1551,7 +1696,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '<22,>24'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,25]}
+        tbsel = {'IFNO': [20,21,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1565,11 +1710,11 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         self._compare(outname, self.reffile)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~310GHz')"""
+        """test spw selection (spw='299.5~310GHz')"""
         outname=self.prefix+self.postfix
-        spw = '300~310GHz'
+        spw = '299.5~310GHz'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [23,25]}
+        tbsel = {'IFNO': [22,23,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1579,17 +1724,17 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         outname=self.prefix+self.postfix
         spw = '-50~50km/s'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [23]}
+        tbsel = {'IFNO': [22,23]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
     
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='150~500km/s,>23')"""
+        """test spw selection (spw='150~550km/s,>23')"""
         outname=self.prefix+self.postfix
-        spw = '150~500km/s,>23'
+        spw = '150~550km/s,>23'
         self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
-        tbsel = {'IFNO': [21,25]}
+        tbsel = {'IFNO': [20,21,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
@@ -1599,7 +1744,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     def _comparecal_with_selection( self, name, tbsel={} ):
         self._checkfile(name)
-        sp=self._getspectra_selected(name, tbsel)
+        sp=self._getspectra_selected(name, {})
         spref=self._getspectra_selected(self.reffile, tbsel)
 
         self._checkshape( sp, spref )
@@ -1611,15 +1756,6 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
             self.assertEqual( retval, True,
                              msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, spref
-
-    def _getspectra( self, name ):
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='file %s does not exist'%(name))        
-        tb.open(name)
-        sp=tb.getcol('SPECTRA').transpose()
-        tb.close()
-        return sp
 
     def _getspectra_selected( self, name, tbsel={} ):
         """
@@ -1653,6 +1789,8 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         return sp
 
 def suite():
-    return [sdmath_test0,sdmath_test1,sdmath_test2,sdmath_test3,
-            sdmath_storageTest,sdmath_test_selection
+    return [sdmath_test0,sdmath_test1,sdmath_test2,
+            sdmath_test3,sdmath_test4,
+            sdmath_storageTest,
+            sdmath_test_selection
             ]

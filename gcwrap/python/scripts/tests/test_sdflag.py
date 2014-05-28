@@ -887,22 +887,22 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         self._test_flag(self.rawfile, ref_row)        
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~300.1GHz', all channels)"""
-        spw = '300~300.1GHz' # IFNO=23 will be selected
+        """test spw selection (spw='299.52~300.47GHz', all channels)"""
+        spw = '299.52~300.47GHz' # IFNO=23 will be selected
         ref_row = [0,3]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row)        
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-450.~0.km/s', all channels)"""
-        spw = '-450.~0km/s' # IFNO=23,25 will be selected
+        """test spw selection (spw='-510.~470.km/s', all channels)"""
+        spw = '-510.~470km/s' # IFNO=23,25 will be selected
         ref_row = [0,1,3]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row)        
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='25,0~500km/s', all channels)"""
-        spw = '25,0~500km/s' # all IFs will be selected
+        """test spw selection (spw='25,0~501km/s', all channels)"""
+        spw = '25,0~501km/s' # all IFs will be selected
         ref_row = [0,1,2,3]
         # it's possible to flag all rows if user explicitly specify IDs
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
@@ -1008,32 +1008,32 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_channel(self):
-        """test spw selection w/ channel selection (spw='299.490~299.500GHz:40~50')"""
-        spw = '299.490~299.500GHz:40~50' # IFNO=21, channel 40~50 will be selected
+        """test spw selection w/ channel selection (spw='299.490~299.510GHz:40~50')"""
+        spw = '299.490~299.510GHz:40~50' # IFNO=21, channel 40~50 will be selected
         ref_row = [2]
         ref_chanlist = [ (40,50) ]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_frequency(self):
-        """test spw selection w/ channel selection (spw='299.490~299.500GHz:299.490~299.500GHz')"""
-        spw = '299.490~299.500GHz:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
+        """test spw selection w/ channel selection (spw='299.490~299.510GHz:299.490~299.500GHz')"""
+        spw = '299.490~299.510GHz:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
         ref_row = [2]
         ref_chanlist = [ (40,50) ]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_velocity(self):
-        """test spw selection w/ channel selection (spw='300.45~300.5GHz:-519.650~-509.640km/s')"""
-        spw = '300.45~300.5GHz:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
+        """test spw selection w/ channel selection (spw='300.49~300.51GHz:-519.650~-509.640km/s')"""
+        spw = '300.49~300.51GHz:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
         ref_row = [1]
         ref_chanlist = [ (60,70) ]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_frequency_list(self):
-        """test spw selection w/ channel selection (spw='300.45~300.5GHz:20~30;80~90')"""
-        spw = '300.45~300.5GHz:20~30;80~90' # IFNO=25, channel=20~30 and 80~90 will be selected
+        """test spw selection w/ channel selection (spw='300.49~300.51GHz:20~30;80~90')"""
+        spw = '300.49~300.51GHz:20~30;80~90' # IFNO=25, channel=20~30 and 80~90 will be selected
         ref_row = [1]
         ref_chanlist = ( (20,30), (80,90) )
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
@@ -1048,24 +1048,24 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_frequency(self):
-        """test spw selection w/ channel selection (spw='450~500km/s:299.490~299.500GHz')"""
-        spw = '450~500km/s:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
+        """test spw selection w/ channel selection (spw='490~510km/s:299.490~299.500GHz')"""
+        spw = '490~510km/s:299.490~299.500GHz' # IFNO=21, channel 40~50 will be selected
         ref_row = [2]
         ref_chanlist = [ (40,50) ]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_velocity(self):
-        """test spw selection w/ channel selection (spw='-500~-450km/s:-519.650~-509.640km/s')"""
-        spw = '-500~-450km/s:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
+        """test spw selection w/ channel selection (spw='-510~-490km/s:-519.650~-509.640km/s')"""
+        spw = '-510~-490km/s:-519.650~-509.640km/s'  # IFNO=25, channel=60~70 will be selected
         ref_row = [1]
         ref_chanlist = [ (60,70) ]
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)        
 
     def test_spw_value_velocity_list(self):
-        """test spw selection w/ channel selection (spw='-519.650~-509.640km/s:20~30;80~90')"""
-        spw = '-519.650~-509.640km/s:20~30;80~90' # IFNO=25, channel=20~30 and 80~90 will be selected
+        """test spw selection w/ channel selection (spw='-510~-490km/s:20~30;80~90')"""
+        spw = '-510~-490km/s:20~30;80~90' # IFNO=25, channel=20~30 and 80~90 will be selected
         ref_row = [1]
         ref_chanlist = ( (20,30), (80,90) )
         self.res=self.run_task(infile=self.rawfile,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')

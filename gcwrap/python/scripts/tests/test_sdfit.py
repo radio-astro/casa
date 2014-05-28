@@ -20,7 +20,62 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
-class sdfit_test(unittest.TestCase):
+class sdfit_unittest_base:
+    """
+    Base class for sdfit unit test.
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
+
+    def setUp(self):
+        if hasattr(self, 'inputs'):
+            for infile in self.inputs:
+                #print 'copying %s...'%(infile)
+                if os.path.exists(infile):
+                    shutil.rmtree(infile)
+                shutil.copytree(os.path.join(self.datapath, infile), infile)
+        default(sdfit)
+
+    def tearDown(self):
+        if hasattr(self, 'inputs'):
+            for infile in self.inputs:
+                #print 'removing %s...'%(infile)
+                if os.path.exists(infile):
+                    shutil.rmtree(infile)
+
+        if hasattr(self, 'outputs'):
+            for outfile in self.outputs:
+                #print 'removing %s...'%(outfile)
+                os.system('rm -rf %s'%(outfile))
+    
+    def read_result(self, outfile):
+        # basic check
+        #   - check if self.outfile exists
+        #   - check if self.outfile is a regular file
+        self.assertTrue(os.path.exists(outfile))
+        self.assertTrue(os.path.isfile(outfile))
+
+        result = {}
+        with open(outfile, 'r') as f:
+            for line in f:
+                if line[0] == '#':
+                    continue
+                s = line.split()
+                scanno = int(s[0])
+                ifno = int(s[1])
+                polno = int(s[2])
+                peak = float(s[4])
+                center = float(s[5])
+                fwhm = float(s[6])
+                key = (scanno, ifno, polno)
+                #self.assertFalse(result.has_key(key))
+                if result.has_key(key):
+                    result[key].extend([peak, center, fwhm])
+                else:
+                    result[key] = [peak, center, fwhm]
+        return result
+    
+class sdfit_test(sdfit_unittest_base, unittest.TestCase):
     """
     Unit tests for task sdfit. No interactive testing.
 
@@ -44,27 +99,10 @@ class sdfit_test(unittest.TestCase):
 
     created 21/04/2011 by Wataru Kawasaki
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
     # Input and output names
     infile_gaussian   = 'Artificial_Gaussian.asap'
     infile_lorentzian = 'Artificial_Lorentzian.asap'
-
-    def setUp(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
-        shutil.copytree(self.datapath+self.infile_gaussian, self.infile_gaussian)
-        if os.path.exists(self.infile_lorentzian):
-            shutil.rmtree(self.infile_lorentzian)
-        shutil.copytree(self.datapath+self.infile_lorentzian, self.infile_lorentzian)
-
-        default(sdfit)
-
-    def tearDown(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
-        if os.path.exists(self.infile_lorentzian):
-            shutil.rmtree(self.infile_lorentzian)
+    inputs = [infile_gaussian, infile_lorentzian]
 
     def testGaussian00(self):
         """Test Gaussian00: single broad profile """
@@ -343,24 +381,13 @@ class sdfit_test(unittest.TestCase):
                 within_errorrange = (abs(ans - val) <= abs(err * threshold))
                 self.assertTrue(within_errorrange)
 
-class sdfit_test_exceptions(unittest.TestCase):
+class sdfit_test_exceptions(sdfit_unittest_base, unittest.TestCase):
     """
     test the case when sdfit throws exception.
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
     # Input and output names
     infile_gaussian   = 'Artificial_Gaussian.asap'
-
-    def setUp(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
-        shutil.copytree(self.datapath+self.infile_gaussian, self.infile_gaussian)
-        default(sdfit)
-
-    def tearDown(self):
-        if os.path.exists(self.infile_gaussian):
-            shutil.rmtree(self.infile_gaussian)
+    inputs = [infile_gaussian]
 
     def testNoData(self):
         try:
@@ -373,15 +400,18 @@ class sdfit_test_exceptions(unittest.TestCase):
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
-class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
+class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSyntaxTest):
     
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
+    
     # Input and output names
     infile_convolve = 'sd_analytic_type3-1.asap'
     infile_shift = 'sd_analytic_type4-1.asap'
     infile_duplicate = 'sd_analytic_type5-1.asap'
     prefix = 'sdfit_selection_syntax'
+    inputs = [infile_convolve, infile_shift, infile_duplicate]
+    outputs = [prefix+'*']
 
     # line information
     # | row | line channel | intensity |
@@ -426,18 +456,6 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     @property
     def spw_channel_selection(self):
         return True
-
-    def setUp(self):
-        for infile in [self.infile_convolve, self.infile_shift, self.infile_duplicate]:
-            if os.path.exists(infile):
-                shutil.rmtree(infile)
-            shutil.copytree(self.datapath+infile, infile)
-        default(sdfit)
-
-    def tearDown(self):
-        for infile in [self.infile_convolve, self.infile_shift, self.infile_duplicate]:
-            if os.path.exists(infile):
-                shutil.rmtree(infile)
 
     def __test_result(self, infile, result_ret, result_out, rows):
         casalog.post('result=%s'%(result_ret))
@@ -484,34 +502,6 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
                 # check fwhm
                 self.assertEqual(v[offset+2], _ref[2])
 
-    def __read_result(self, outfile):
-        # basic check
-        #   - check if self.outfile exists
-        #   - check if self.outfile is a regular file
-        self.assertTrue(os.path.exists(outfile))
-        self.assertTrue(os.path.isfile(outfile))
-
-        result = {}
-        with open(outfile, 'r') as f:
-            for line in f:
-                if line[0] == '#':
-                    continue
-                s = line.split()
-                scanno = int(s[0])
-                ifno = int(s[1])
-                polno = int(s[2])
-                peak = float(s[4])
-                center = float(s[5])
-                fwhm = float(s[6])
-                key = (scanno, ifno, polno)
-                #self.assertFalse(result.has_key(key))
-                if result.has_key(key):
-                    result[key].extend([peak, center, fwhm])
-                else:
-                    result[key] = [peak, center, fwhm]
-        return result
-                
-
     def __exec_complex_test(self, infile, params, exprs, rows, regular_test=True):
         num_param = len(params)
         test_name = self._get_test_name(regular_test)
@@ -536,7 +526,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
             result = sdfit(**kwargs)
 
         # read outfile
-        result_out = self.__read_result(outfile)
+        result_out = self.read_result(outfile)
 
         self.__test_result(infile, result, result_out, rows)
                           
@@ -763,7 +753,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_id_default_list(self):
         """test_spw_id_default_list: Test spw selection with multiple channel range (':CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = ':30~70;55~95'
+        spw = ':40~60;65~85'
         rows = [0,1,2,3]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -795,7 +785,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_id_exact_list(self):
         """test_spw_id_exact_list: Test spw selection with channel range ('N:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '23:30~70;55~95'
+        spw = '23:40~60;65~85'
         rows = [0,3]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -827,7 +817,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_id_pattern_list(self):
         """test_spw_id_pattern_list: Test spw selection with channel range ('*:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '*:30~70;55~95'
+        spw = '*:40~60;65~85'
         rows = [0,1,2,3]
         
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -859,7 +849,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_value_frequency_list(self):
         """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '299.4~299.6GHz:30~70;55~95'
+        spw = '299.4~299.6GHz:40~60;65~85'
         rows = [2]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -891,7 +881,7 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
     def test_spw_value_velocity_list(self):
         """test_spw_value_velocity_list: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1;CH2~CH3')"""
         infile = self.infile_duplicate
-        spw = '400~600km/s:30~70;55~95'
+        spw = '400~600km/s:40~60;65~85'
         rows = [2]
 
         self.__exec_simple_test(infile, 'spw', spw, rows)
@@ -1032,6 +1022,112 @@ class sdfit_selection_syntax(selection_syntax.SelectionSyntaxTest):
 
         self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
+class sdfit_average(sdfit_unittest_base, unittest.TestCase):
+    """
+    """
+    infile = 'sdfit_average.asap'
+    inputs = [infile]
+    outfile = 'sdfit_average.txt'
+    outputs = [outfile]
+    fitmode = 'list'
+    spw = ':0~40'
+    nfit = [1]
+    tweight = 'tint'
+    pweight = 'tsys'
+
+    def _execute_task(self, timeaverage, scanaverage, polaverage):
+        kwargs={'infile': self.infile,
+                'outfile': self.outfile,
+                'spw': self.spw,
+                'nfit': self.nfit,
+                'fitmode': self.fitmode,
+                'timeaverage': timeaverage,
+                'polaverage': polaverage}
+        if timeaverage is True:
+            kwargs['scanaverage'] = scanaverage
+            kwargs['tweight'] = self.tweight
+        if polaverage is True:
+            kwargs['pweight'] = self.pweight
+
+        return sdfit(**kwargs)
+
+    def _verify(self, expected):
+        # dictionary for verification
+        # key: tuple consisting of SCANNO, IFNO, and POLNO
+        #     (SCANNO,IFNO,POLNO), e.g.,
+        #
+        #         (0,0,0)
+        #
+        # value: flattened list of 'peak', 'cent', and 'fwhm'.
+        #     If there are multiple rows for one key, the list
+        #     is extended, e.g.,
+        #
+        #         [peak0, cent0, fwhm0, peak1, cent1, fwhm1, ...]
+        #
+        result = self.read_result(self.outfile)
+        tol = 1.0e-4
+        properties = ['peak', 'cent', 'fwhm']
+        nprop = len(properties)
+        for key in expected.keys():
+            self.assertTrue(result.has_key(key),
+                            msg='result does\'t have key %s'%(list(key)))
+            e = expected[key]
+            r = result[key]
+            ne = len(e)
+            nr = len(r)
+            self.assertEqual(nr, ne,
+                             msg='%s: number of row mismatch (expected %s, actual %s)'%(list(key), ne/nprop, nr/nprop))
+            for irow in xrange(len(e)):
+                diff = abs((r[irow] - e[irow])/e[irow])
+                self.assertLessEqual(diff, tol,
+                                     msg='%s (%s): result differ (expected %s, actual %s)'%(properties[irow % nprop], irow, e[irow], r[irow]))
+
+    def testaverageFFF(self):
+        """testaverageFFF: test average (timeaverage=False, scanaverage=False, polaverage=False)"""
+        result = self._execute_task(timeaverage=False, scanaverage=False, polaverage=False)
+        expected = {(0,0,0): [8.0, 20.0, 5.0, 16.0, 20.0, 5.0],
+                    (0,0,1): [16.0, 20.0, 5.0, 32.0, 20.0, 5.0],
+                    (1,0,0): [64.0, 20.0, 5.0, 128.0, 20.0, 5.0],
+                    (1,0,1): [128.0, 20.0, 5.0, 256.0, 20.0, 5.0]}
+        self._verify(expected)
+
+    def testaverageTFF(self):
+        """testaverageTFF: test average (timeaverage=True, scanaverage=False, polaverage=False)"""
+        result = self._execute_task(timeaverage=True, scanaverage=False, polaverage=False)
+        expected = {(0,0,0): [54.0, 20.0, 5.0],
+                    (0,0,1): [108.0, 20.0, 5.0]}
+        self._verify(expected)
+
+    def testaverageTTF(self):
+        """testaverageTTF: test average (timeaverage=True, scanaverage=True, polaverage=False)"""
+        result = self._execute_task(timeaverage=True, scanaverage=True, polaverage=False)
+        expected = {(0,0,0): [12.0, 20.0, 5.0],
+                    (0,0,1): [24.0, 20.0, 5.0],
+                    (1,0,0): [96.0, 20.0, 5.0],
+                    (1,0,1): [192.0, 20.0, 5.0]}
+        self._verify(expected)
+
+    def testaverageTTT(self):
+        """testaverageTTT: test average (timeaverage=True, scanaverage=True, polaverage=True)"""
+        result = self._execute_task(timeaverage=True, scanaverage=True, polaverage=True)
+        expected = {(0,0,0): [18.0, 20.0, 5.0],
+                    (1,0,0): [144.0, 20.0, 5.0]}
+        self._verify(expected)
+
+    def testaverageFFT(self):
+        """testaverageFFT: test average (timeaverage=False, scanaverage=False, polaverage=True)"""
+        result = self._execute_task(timeaverage=False, scanaverage=False, polaverage=True)
+        expected = {(0,0,0): [81.0, 20.0, 5.0]}
+        self._verify(expected)
+        
+
+    def testaverageTFT(self):
+        """testaverageTFT: test average (timeaverage=True, scanaverage=False, polaverage=True)"""
+        result = self._execute_task(timeaverage=True, scanaverage=False, polaverage=True)
+        expected = {(0,0,0): [81.0, 20.0, 5.0]}
+        self._verify(expected)
+    
+
 def suite():
     return [sdfit_test, sdfit_test_exceptions,
-            sdfit_selection_syntax]
+            sdfit_selection_syntax, sdfit_average]

@@ -861,6 +861,37 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
+    def test701(self):
+        """Test 701: Test to change center for gridding (RA)"""
+        tb.open(self.rawfile)
+        dir=tb.getcell('DIRECTION',0)
+        tb.close()
+
+        #shift center 3 pixels upward
+        nshift=3
+        pix=20.0
+        dir[0]+=nshift*pix/3600.0*numpy.pi/180.0
+
+        npix=17
+        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='%sarcsec'%(pix),outfile=self.outfile,plot=False,center=dir)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during gridding')
+
+        self.getdata()
+        
+        # center is only nonzero pixel
+        npol=2
+        width=1
+        nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
+        #print nonzeropix_ref
+        # shift 3 pixels rightwards
+        nonzeropix_ref[0]+=nshift*npol
+        nonzeropix_ref[1]+=nshift*npol
+        nonzeropix=self.data.nonzero()[1]
+        #print nonzeropix_ref
+        #print nonzeropix
+        self.nonzero(nonzeropix_ref,nonzeropix)
+    
 class sdgrid_flagging2(sdgrid_unittest_base,unittest.TestCase):
     """
     This is test suite for handling flag information in sdgrid.
@@ -1286,13 +1317,13 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
             shutil.rmtree(reffile0)
     
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='150~500km/s,>23')"""
+        """test spw selection (spw='150~550km/s,>23')"""
         infiles=[self.rawfile]
         outname=self.prefix+self.postfix
         reffile0='sdgrid_test_selection_spw150to500kmsgt23.asap.ref'
         if (not os.path.exists(reffile0)):
             shutil.copytree(self.datapath+reffile0, reffile0)
-        spw='150~500km/s,>23'
+        spw='150~550km/s,>23'
         self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, reffile0)

@@ -81,17 +81,18 @@ else:
 
 # calibartion,averaging, smoothing, and baseline removal
 # calibrate nod scans for SiO line (IF=30)
-default(sdreduceold)
+default(sdreduce)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-#scanlist = [240,241,242,243,244,245,246,247]
-scanlist = [241,242,243,244,245,246,247, 248]
-iflist = [30]
+#scanlist = [241,242,243,244,245,246,247, 248]
+scan = '241~244,245~248'
+#iflist = [30]
+spw = '30'
 average = True
-scanaverage = False
 timeaverage = True # average in time
 tweight = 'tintsys' # weighted by integ. time and Tsys for time averaging 
+scanaverage = False
 polaverage = True  # average polarization
 pweight = 'tsys'   # weighted by Tsys for polarization averaging
 tau = 0.09         # do opacity correction
@@ -107,34 +108,36 @@ blfunc = 'poly'
 order = 1
 overwrite = True
 plotlevel = localplotlevel
-sdreduceold()
+sdreduce()
 localoutfile = infile+'_cal'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplotold)
+   default(sdplot)
    infile = localoutfile
    specunit = 'GHz'
    outfile = 'irc_sio_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplotold()
+   sdplot()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstatold)
+default(sdstat)
 # select line free regions to get rms
 infile = localoutfile
-masklist = [800, 1500]
-xstat = sdstatold()
+#masklist = [800, 1500]
+spw = '*:800~1500'
+xstat = sdstat()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
-masklist = [1850,2300]
-xstat = sdstatold()
+#masklist = [1850,2300]
+spw = '*:1850~2300'
+xstat = sdstat()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -143,15 +146,15 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsaveold)
+default(sdsave)
 infile = localoutfile
 outfile = 'irc_sio_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsaveold()
+sdsave()
 #outfile = 'irc_sio_reduced.ms'
 #outform = 'MS2'
-#sdsaveold()
+#sdsave()
 
 #
 endProc = time.clock()

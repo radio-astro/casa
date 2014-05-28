@@ -289,7 +289,7 @@ spw -- select data by IF IDs (spectral windows)/channels
         default: '' (use all IFs and channels)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
-                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
                  spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
                  spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
                  spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
@@ -416,8 +416,8 @@ for these.  Note that you can use sdsave to do selection, writing
 out a new scantable.
 
 Note that multiple scans, IFs, and polarizations can in principle 
-be handled, but we recommend that you use scanlist, field, iflist, 
-and pollist to give a single selection for each fit.
+be handled, but we recommend that you use scan, field, spw, and pol
+to give a single selection for each fit.
 
 Currently, you can choose Gaussian or Lorentzian profile as a 
 fitting model. 
@@ -428,8 +428,29 @@ you use sd.fitter in the toolkit which has more options, such
 as fixing components in the fit and supplying starting guesses
 by hand.
 
-WARNING: sdfit will currently return the fit for the first
-row in the scantable.
+-------
+FITMODE
+-------
+As described in the parameter description section, sdfit implements
+three fitting mode, 'auto', 'list', and 'interact'. Only difference
+between these modes are a method to set initial guess for line fitting.
+In 'auto' mode, initial guess is automatically set by executing line
+finder. On the other hand, 'list' and 'interact' allow to set initial
+guess manually. In these modes, only controllable parameter for the
+guess is range of the line region and number of lines per region.
+In 'list' mode, the user must give line region via spw parameter by using
+ms selection syntax while number of lines per region can be specified
+via nfit parameter. For example,
+ 
+    spw = '17:1500~2500'
+    nfit = [1]
+
+will set line region between channels 1500 and 2500 for spw 17, and
+indicate that there is only one line in this region. Specifying single
+region with multiple line is also possible but is not recommended.
+In 'interact' mode, spectral data to be fitted will be displayed
+with pre-defined line region specified by spw parameter. The user is
+able to customize line region interactively. 
 
 --------------------
 FLUX UNIT CONVERSION

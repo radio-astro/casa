@@ -1,13 +1,14 @@
+import os
 import numpy
 
-from taskinit import casalog
+from taskinit import casalog, gentools
 
 import asap as sd
 from asap.scantable import is_scantable, is_ms
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdsave(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, overwrite):
+def sdsave(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, fillweight, overwrite):
     with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -41,14 +42,13 @@ class sdsave_worker(sdutil.sdtask_template):
             self.scans = []
             self.antenna_names = []
             for split_infile in self.split_infiles:
-                work_scan = sd.scantable(split_infile,
-                                         average=False)
+                work_scan = sd.scantable(split_infile, average=False)
                 # scantable selection
                 #work_scan.set_selection(self.get_selector_by_list())
                 work_scan.set_selection(self.get_selector(work_scan))
                 self.scans.append(work_scan)
 
-                #retrieve antenna names
+                # retrieve antenna names
                 self.antenna_names.append(split_infile.split('.')[1])
             
         else:
@@ -107,7 +107,7 @@ class sdsave_worker(sdutil.sdtask_template):
     def save(self):
         if self.splitant:
             outfile_ext = ''
-            elem_outfilename = self.outfile.split('.')
+            elem_outfilename = self.project.split('.')
             len_elem = len(elem_outfilename)
             if (len_elem > 1):
                 outfile_ext = elem_outfilename.pop().lower()
@@ -117,7 +117,7 @@ class sdsave_worker(sdutil.sdtask_template):
                     elem_outfilename.append(outfile_ext)
                     outfile_ext = ''
 
-            outfile_prefix = '.'.join(elem_outfilename) + '_'
+            outfile_prefix = '.'.join(elem_outfilename) + '.'
 
             i = 0
             for work_scan in self.scans:
@@ -125,18 +125,19 @@ class sdsave_worker(sdutil.sdtask_template):
                 sdutil.save(work_scan, split_outfile, self.outform, self.overwrite)
                 i += 1
 
-            for tempfile in self.split_infiles:
-                import os
-                os.system('rm -rf %s' % tempfile)
-            
         else:
             # save
-            sdutil.save(self.scan, self.outfile, self.outform, self.overwrite)
-        
+            sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+
+            if self.outform == 'MS2' and self.fillweight:
+                _fillweight(self.project)
+            
     def cleanup(self):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
+        if hasattr(self,'temp_prefix') and self.splitant:
+            os.system('rm -rf %s*' % self.temp_prefix)
 
     def __dochannelrange(self, scantab):
         if len(self.spw) > 0:
@@ -172,4 +173,57 @@ class sdsave_worker(sdutil.sdtask_template):
             casalog.post('ifs_new = %s'%(ifs_new))
             sel.set_ifs(ifs_new)
             scantab.set_selection(sel)
+
+def _fillweight(vis):
+    if not os.path.exists(vis):
+        return
+
+    casalog.post('fill WEIGHT and SIGMA columns for %s ...'%(vis))
+
+    # work with private cb tool
+    with sdutil.cbmanager(vis, compress=False, addcorr=False, addmodel=False) as cb:
+        status = cb.initweights()
+
+    if status:
+        # cb.initweights() succeeded so try to apply Tsys to
+        # weight column
+        # procedure:
+        # 1. generate temporary Tsys caltable
+        # 2. apply temporary Tsys caltable to vis
+        # 3. remove temporary Tsys caltable
+        import time
+        from gencal import gencal
+        from applycal import applycal
+        caltable = 'temporary_caltable%s.tsys'%(str(time.time()).replace('.',''))
+        casalog.post('tempolary caltable name: %s'%(caltable))
+        try:
+            gencal(vis=vis, caltable=caltable, caltype='tsys')
+            applycal(vis=vis, docallib=False, gaintable=[caltable], applymode='calonly')
+        except Exception, e:
+            # Tsys application failed so that reset WEIGHT and SIGMA to 1.0
+            _resetweight(vis)
+            raise e
+        finally:
+            if os.path.exists(caltable):
+                casalog.post('remove %s...'%(caltable))
+                os.system('rm -rf %s'%(caltable))
+            # remove CORRECTED_DATA column
+            casalog.post('remove CORRECTED_DATA from %s...'%(vis))
+            with sdutil.tbmanager(vis, nomodify=False) as tb:
+                if 'CORRECTED_DATA' in tb.colnames():
+                    tb.removecols('CORRECTED_DATA')
+        
+    else:
+        # initweights failed so reset WEIGHT and SIGMA to 1.0
+        _resetweight(vis)
+
+def _resetweight(vis):
+    # work with private tb tool
+    casalog.post('fill WEIGHT and SIGMA failed. reset all WEIGHT and SIGMA to 1.0...', priority='WARN')
+    with sdutil.tbmanager(vis, nomodify=False) as tb:
+        for column in ['WEIGHT', 'SIGMA']:
+            values = tb.getvarcol(column)
+            for v in values.values():
+                v[:] = 1.0
+            tb.putvarcol(column, values)
 

@@ -83,41 +83,44 @@ else:
 
 # calibartion and averaging
 # calibrate nod scans for CS line (IF=3)
-default(sdcalold)
+default(sdcal)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-#scanlist = [229,230]
-scanlist = [230,231]
-iflist = [3]
-scanaverage = False
-timeaverage = True # average in time
-tweight = 'tintsys' # weighted by integ time and Tsys for time averaging
-polaverage = True  # average polarization
-pweight = 'tsys'   # weighted by Tsys for pol. averaging
+#scanlist = [230,231]
+scan = '230,231'
+#iflist = [3]
+spw = '3'
 tau = 0.09         # do opacity correction
 overwrite = True
 plotlevel = localplotlevel
-sdcalold()
+sdcal()
 # output
 localoutfile = infile+'_cal'
 
+#  averaging and smoothing
+default(sdaverage)
+infile = localoutfile
+# do time and polarization average
+timeaverage = True # average in time
+tweight = 'tintsys' # weighted by integ time and Tsys for time averaging
+scanaverage = False
+polaverage = True  # average polarization
+pweight = 'tsys'   # weighted by Tsys for pol. averaging
 #smoothing
 # do boxcar smoothing with channel width=5
-default(sdsmoothold)
-infile = localoutfile
 kernel = 'boxcar'
 kwidth = 5
 overwrite = True
 plotlevel = localplotlevel
-sdsmoothold()
-localoutfile = infile+'_sm'
+sdaverage()
+localoutfile = infile+'_ave'
 
 #fit and remove baselines
 # do baseline fit with cubic spline with one knot (npiece=2)
 # 3-sigma clipping plus 1 iteration applied.
 # automatically detect lines to exclude from fitting
-default(sdbaselineold)
+default(sdbaseline)
 infile = localoutfile
 maskmode = 'auto'
 #edge = [50]
@@ -131,34 +134,36 @@ clipthresh = 3.0
 clipniter = 1
 overwrite = True
 plotlevel = localplotlevel
-sdbaselineold()
+sdbaseline()
 localoutfile = infile+'_bs'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplotold)
+   default(sdplot)
    infile = localoutfile
    specunit = 'GHz'
    outfile = 'irc_cs_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplotold()
+   sdplot()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstatold)
+default(sdstat)
 # select line free regions to get rms
 infile = localoutfile
-masklist = [800,1500]
-xstat = sdstatold()
+#masklist = [800,1500]
+spw = '*:800~1500'
+xstat = sdstat()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
-masklist = [1850,2300]
-xstat = sdstatold()
+#masklist = [1850,2300]
+spw = '*:1850~2300'
+xstat = sdstat()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -167,15 +172,15 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsaveold)
+default(sdsave)
 infile = localoutfile
 outfile = 'irc_cs_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsaveold()
+sdsave()
 #outfile = 'irc_cs_reduced.ms'
 #outform = 'MS2'
-#sdsaveold()
+#sdsave()
 
 #
 endProc = time.clock()

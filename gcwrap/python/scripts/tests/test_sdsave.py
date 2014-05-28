@@ -17,6 +17,7 @@ except:
     import tests.selection_syntax as selection_syntax
 
 from sdsave import sdsave
+from sdutil import tbmanager
 import asap as sd
 
 # Unit test of sdsave task.
@@ -1738,7 +1739,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def test_spw_value_frequency(self):
         """test_spw_value_frequency: Test spw selection by frequency range ('FREQ0~FREQ1')"""
         iflist = [0]
-        spw='114~115GHz'
+        spw='114.5~115.5GHz'
         expected_nrow = 16
 
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
@@ -1754,7 +1755,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def test_spw_mix_exprlist(self):
         """test_spw_mix_exprlist: Test spw selection by id and frequency/velocity range"""
         iflist = [0,2,3]
-        spw='114~115GHz,>1'
+        spw='114.5~115.5GHz,>1'
         expected_nrow = 48
 
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
@@ -1863,7 +1864,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_frequency_channel: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1')"""
         iflist = [0,1,2]
         channelrange = [0,100]
-        spw = '113~117GHz:0~100'
+        spw = '113.5~117.5GHz:0~100'
         expected_nrow = 48
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1872,7 +1873,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_frequency_frequency: Test spw selection with channel range ('FREQ0~FREQ1:FREQ2~FREQ3')"""
         iflist = [0]
         channelrange = [0,1919]
-        spw = '113~117GHz:114~115GHz'
+        spw = '113.5~117.5GHz:114~115GHz'
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1881,7 +1882,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_frequency_velocity: Test spw selection with channel range ('FREQ0~FREQ1:VEL0~VEL1')"""
         iflist = [1]
         channelrange = [1904, 1935]
-        spw = '113~117GHz:-10~10km/s'
+        spw = '113.5~117.5GHz:-10~10km/s'
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1889,14 +1890,14 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def test_spw_value_frequency_list(self):
         """test_spw_value_frequency_list: Test spw selection with channel range ('FREQ0~FREQ1:CH0~CH1;CH2~CH3')"""
         # raise exception
-        spw = '114~115GHz:0~100;200~400'
+        spw = '114.5~115.5GHz:0~100;200~400'
         self.__exec_exception_test(spw)
         
     def test_spw_value_velocity_channel(self):
         """test_spw_value_velocity_channel: Test spw selection with channel range ('VEL0~VEL1:CH0~CH1')"""
         iflist = [0,1,2]
         channelrange = [0,100]
-        spw = '-2000~2000km/s:0~100'
+        spw = '-3000~3000km/s:0~100'
         expected_nrow = 48
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -1905,7 +1906,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         """test_spw_value_velocity_frequency: Test spw selection with channel range ('VEL0~VEL1:FREQ0~FREQ1')"""
         iflist = [0]
         channelrange = [0,1919]
-        spw = '-2000~2000km/s:114~115GHz'
+        spw = '1000~3000km/s:114~115GHz'
         expected_nrow = 16
 
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
@@ -2311,11 +2312,106 @@ class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
 
         self._run_and_verify(self.infile)
 
+class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
+    """
+    Verify that fillweight option works fine.
+    """
+    infile = 'weighttest.asap'
+    outfile = 'weighttest.ms'
+    tol = 1.0e-5
 
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.outfile)):
+            shutil.rmtree(self.outfile)
+
+    def test_weigting(self):
+        """
+        Test fillweight=True
+        """
+        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=True)
+        self.verify()
+
+    def test_noweighting(self):
+        """
+        Test fillweight=False
+        """
+        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
+        with tbmanager(self.outfile) as tb:
+            weight = tb.getvarcol('WEIGHT')
+            sigma  = tb.getvarcol('SIGMA')
+            for key in weight.keys():
+                self.assertTrue(all(weight[key] == 1.0),
+                                msg = 'Failed for weight at %s'%(key))
+                self.assertTrue(all(sigma[key] == 1.0),
+                                msg = 'Failed for sigma at %s'%(key))
+    
+    def verify(self):
+        datadesc = 'DATA_DESCRIPTION'
+        syscal = 'SYSCAL'
+        spwin = 'SPECTRAL_WINDOW'
+        # DATA_DESC_ID mapping from DATA_DESCRIPTION table
+        with tbmanager(os.path.join(self.outfile, datadesc)) as tb:
+            spwmap = {}
+            for irow in xrange(tb.nrows()):
+                spwmap[irow] = tb.getcell('SPECTRAL_WINDOW_ID', irow)
+        
+        # Tsys from SYSCAL table
+        with tbmanager(os.path.join(self.outfile, syscal)) as tb:
+            tsys = {}
+            for irow in xrange(tb.nrows()):
+                tsys[tb.getcell('SPECTRAL_WINDOW_ID', irow)] = tb.getcell('TSYS_SPECTRUM', irow)
+            #print tsys
+                
+        # bandwidth from SPECTRAL_WINDOW table
+        with tbmanager(os.path.join(self.outfile, spwin)) as tb:
+            channelwidth = {}
+            for irow in xrange(tb.nrows()):
+                channelwidth[irow] = tb.getcell('EFFECTIVE_BW', irow)
+            #print channelwidth
+                
+        # test MAIN
+        with tbmanager(self.outfile) as tb:
+            for irow in xrange(tb.nrows()):
+                ddid = tb.getcell('DATA_DESC_ID', irow)
+                spwid = spwmap[ddid]
+                (npol,nchan) = tb.getcell('FLAG', irow).shape
+
+                dt = tb.getcell('EXPOSURE', irow)
+                df = channelwidth[spwid].mean()
+
+                weight_ref = numpy.ones(npol, dtype=float) * (df * dt)
+                sigma_ref = 1.0 / numpy.sqrt(weight_ref)
+                # apply Tsys correction
+                if tsys.has_key(spwid):
+                    meantsys = tsys[spwid].mean(axis=1)
+                    weight_ref /= (meantsys * meantsys)
+
+                weight = tb.getcell('WEIGHT', irow)
+                sigma = tb.getcell('SIGMA', irow)
+
+                diff_weight = numpy.abs((weight - weight_ref) / weight_ref)
+                diff_sigma = numpy.abs((sigma - sigma_ref) / sigma_ref)
+
+                #print 'weight(%s) = %s (ref %s), diff_weight(%s) = %s'%(irow,weight,weight_ref,irow,diff_weight)
+                #print 'sigma(%s) = %s (ref %s), diff_sigma(%s) = %s'%(irow,sigma,sigma_ref,irow,diff_sigma)
+                
+                self.assertTrue(all(diff_weight < self.tol))
+                self.assertTrue(all(diff_sigma < self.tol))        
+                
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
             sdsave_freq_labeling,sdsave_flagging,
             sdsave_scan_number, sdsave_test_splitant,
-            sdsave_selection_syntax, sdsave_scanrate]
+            sdsave_selection_syntax, sdsave_scanrate,
+            sdsave_weighting]

@@ -127,7 +127,7 @@ spectrum is
       <value></value>
     </param>
 
-    <param type="any" name="ifmap" subparam="true">
+    <param type="any" name="spwmap" subparam="true">
       <description>A dictionary indicating IFNO combinations to apply Tsys calibration to target. The key should be IFNO for Tsys calibration and its associated value must be a list of science IFNOs to be applied.</description>
       <any type="variant"/>
       <value type="dict">{}</value>
@@ -183,19 +183,19 @@ spectrum is
         <equals value="apply">
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,apply">
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,tsys,apply">
           <default param="tsysavg"><value type="bool">False</value></default>
           <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otf,apply">
           <default param="fraction"><value type="string">10%</value></default>
@@ -203,7 +203,7 @@ spectrum is
           <default param="elongated"><value type="bool">False</value></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otf,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
@@ -213,14 +213,14 @@ spectrum is
           <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otfraster,apply">
           <default param="fraction"><value type="string">10%</value></default>
           <default param="noff"><value type="int">-1</value></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="otfraster,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
@@ -229,7 +229,7 @@ spectrum is
           <default param="tsysspw"><value type="string"/></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
-          <default param="ifmap"><value type="dict">{}</value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
       </when>
     </constraints>
@@ -339,9 +339,9 @@ calmode -- Calibration mode. If you want to generate calibration table
                          'linear,3' (linear in time, third order 
                                      polynomial in frequency)
                          'nearest' (nearest in time and frequency)
-        ifmap -- Dictionary defining transfer of Tsys calibration. 
-                 Key must be IFNO for Tsys and its value must be 
-                 a list of IFNOs for science target.
+        spwmap -- Dictionary defining transfer of Tsys calibration. 
+                  Key must be IFNO for Tsys and its value must be 
+                  a list of IFNOs for science target.
                 default: {}
                 example: {1: [5,6], 3: [7,8]}
                          Tsys in IFNO1 is transferred to IFNO5, 6 
@@ -358,7 +358,7 @@ spw -- select data by IF IDs (spectral windows)
         default: '' (use all IFs and channels)
         example: spw='3,5,7' (IF IDs 3,5,7; all channels)
                  spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
-                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
         this selection is in addition to the other selections to data
 scan -- select data by scan numbers
         default: '' (use all scans)
@@ -470,6 +470,40 @@ Allowed calibration modes in this task is as follows:
 
 There are several control parameters for sky/Tsys calibration and 
 application of caltables. See the above parameter description.
+
+In ALMA, Tsys measurement is usually done using different spectral
+setup from spectral windows for science target. In this case, sdcal2
+transfers Tsys values to science spectral windows in the application
+stage. To do that, the user has to give a list of spectral windows for
+Tsys measurement as well as mapping between spectral windows for Tsys
+measurement and scicence target. These can be specified by parameters
+'tsysspw' and 'spwmap', which are defined as subparameters of 'calmode'.
+For example, suppose that Tsys measurements for science windows 17, 19,
+21, and 23 are done in spw 9, 11, 13, and 15, respectively. 
+In this case, tsysspw and spwmap should be specified as follows:
+
+    tsysspw = '9,11,13,15'
+    spwmap = {9:[17],11:[19],13:[21],15:[23]}
+
+Below is an example of full specification of task parameters for calmode
+of 'ps,tsys,apply':
+
+    default(sdcal2)
+    infile = 'foo.asap'
+    calmode = 'ps,tsys,apply'
+    spw = ''
+    tsysspw = '9,11,13,15'
+    spwmap = {9:[17],11:[19],13:[21],15:[23]}
+    outfile = 'bar.asap'
+    sdcal2()
+
+Note that, in contrast to applycal task, spwmap must be a dictionary
+with Tsys spectral window as key and a list of corresponding science
+spectral window as value. Note also that the parameter 'spw' should
+not be used to specify a list of spectral windows for Tsys measurement.
+It is intended to select data to be calibrated so that the list should
+contain spectral windows for both science target and Tsys measurement.
+The task will fail if you use 'spw' instead of 'tsysspw'. 
 
 For Tsys calibration, the user is able to choose whether Tsys is
 averaged in spectral axis or not. If tsysavg is False (default),

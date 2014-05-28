@@ -165,7 +165,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
     outfile=prefix+'.asap.out'
     skytable=prefix+'.sky'
     tsystable=prefix+'.tsys'
-    ifmap={1:[5,6]}
+    spwmap={1:[5,6]}
 
     def setUp(self):
         self.res=None
@@ -214,7 +214,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception02: invalid interp string"""
         interp='invalid_interpolation'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,spwmap=self.spwmap)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -255,7 +255,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception06: Non-existing sky table"""
         dummytable='dummy.sky'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',ifmap=self.ifmap,applytable=[dummytable,self.tsystable],outfile=self.outfile)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',spwmap=self.spwmap,applytable=[dummytable,self.tsystable],outfile=self.outfile)
             #self.assertFalse(self.res)
             self.fail("The task must throw exception.")
         except Exception, e:
@@ -267,7 +267,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception07: Non-existing tsys table"""
         dummytable='dummy.tsys'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',ifmap=self.ifmap,applytable=[self.skytable,dummytable],outfile=self.outfile)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',spwmap=self.spwmap,applytable=[self.skytable,dummytable],outfile=self.outfile)
             #self.assertFalse(self.res)
             self.fail("The task must throw exception.")
         except Exception, e:
@@ -279,7 +279,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         """test_exception08: Invalid interp string format (more than one comma)"""
         interp='linear,linear,linear'
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,spwmap=self.spwmap)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -290,7 +290,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
     def test_exception09(self):
         """test_exception09: Update infile without setting overwrite to False"""
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],ifmap=self.ifmap)
+            self.res=sdcal2(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],spwmap=self.spwmap)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -673,7 +673,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     reftables=[prefix+'.asap.ref',prefix+'.asap.noTsys.ref',prefix+'.asap.cspline.ref']
     calmode='apply'
     tsysspw='1'#[1]
-    ifmap={1:[5,6]}
+    spwmap={1:[5,6]}
     
     def setUp(self):
         self.res=None
@@ -696,25 +696,25 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
 
     def test_applycal00(self):
         """test_applycal00: apply existing sky table and Tsys table"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], True)
         
     def test_applycal01(self):
         """test_applycal01: apply existing skytable (ps)"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=self.skytable,ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=self.skytable,spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[1], False)
 
     def test_applycal02(self):
         """test_applycal02: apply existing sky table and Tsys table with cubic spline interpolation along frequency axis"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],interp='linear,cspline',ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],interp='linear,cspline',spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[2], True)
 
     def test_applycal03(self):
         """test_applycal03: test update mode (overwrite infile)"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],ifmap=self.ifmap,overwrite=True)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],spwmap=self.spwmap,overwrite=True)
 
         tb.open(self.rawfile)
         tsel=tb.query('IFNO IN [5,6] && SRCTYPE==0')
@@ -734,14 +734,14 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     def test_applycal05(self):
         """test_applycal05: calibrate sky and apply it on-the-fly with existing Tsys table"""
         self.calmode='ps,apply'
-        sdcal2(infile=self.rawfile,calmode=self.calmode,ifmap=self.ifmap,applytable=self.tsystable,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,spwmap=self.spwmap,applytable=self.tsystable,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 
     def test_applycal06(self):
         """test_applycal06: calibrate sky as well as Tsys and apply them on-the-fly"""
         self.calmode='ps,tsys,apply'
-        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysspw=self.tsysspw,spwmap=self.spwmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 
@@ -749,7 +749,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
         """test_applycal07: overwrite existing scantable"""
         if not os.path.exists(self.outfile):
             shutil.copytree(self.rawfile, self.outfile)
-        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],ifmap=self.ifmap,outfile=self.outfile,overwrite=True)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,applytable=[self.skytable,self.tsystable],spwmap=self.spwmap,outfile=self.outfile,overwrite=True)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 
@@ -760,17 +760,21 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     field, spw (no channel selection), scan, pol
     
     Data used for this test are sd_analytic_type1-3.asap (raw data)
-    and sd_analytic_type1-3.cal.asap (reference data).
+    and sd_analytic_type1-3_ref.asap (reference data).
 
     """
     # Input and output names
     rawfile='sd_analytic_type1-3.asap'
-    reffile='sdcal2TestSel.pstsysapply.asap.ref'
-    reffile2='sdcal2TestSel.psapply.asap.ref'
+    reffile='sd_analytic_type1-3_ref.asap'
     prefix=sdcal2_unittest_base.taskname+'TestSel'
     postfix='.cal.asap'
-    calmode='ps,tsys,apply'
-    calmode2='ps,apply'
+
+    calmode='apply'
+    interp='linear,cspline'
+    sky_table='sd_analytic_type1-3.asap_sky'
+    tsys_table='sd_analytic_type1-3.asap_tsys'
+    applytable=[tsys_table,sky_table]
+    spwmap={'20':[21],'22':[23],'24':[25]}
     field_prefix = 'M100__'
     
     @property
@@ -787,8 +791,10 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
-        if (not os.path.exists(self.reffile2)):
-            shutil.copytree(self.datapath+self.reffile2, self.reffile2)
+        if (not os.path.exists(self.sky_table)):
+            shutil.copytree(self.datapath+self.sky_table, self.sky_table)
+        if (not os.path.exists(self.tsys_table)):
+            shutil.copytree(self.datapath+self.tsys_table, self.tsys_table)
 
         default(sdcal2)
 
@@ -797,8 +803,10 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
             shutil.rmtree(self.rawfile)
         if (os.path.exists(self.reffile)):
             shutil.rmtree(self.reffile)
-        if (os.path.exists(self.reffile2)):
-            shutil.rmtree(self.reffile2)
+        if (os.path.exists(self.sky_table)):
+            shutil.rmtree(self.sky_table)
+        if (os.path.exists(self.tsys_table)):
+            shutil.rmtree(self.tsys_table)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     ####################
@@ -808,7 +816,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """test scan selection (scan='')"""
         outname=self.prefix+self.postfix
         scan=''
-        self.res=self.run_task(infile=self.rawfile,calmode=self.calmode,scan=scan,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.reffile)
@@ -817,7 +825,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='15')"""
         outname=self.prefix+self.postfix
         scan = '15'
-        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'SCANNO': [15]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -827,7 +835,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='<17')"""
         outname=self.prefix+self.postfix
         scan = '<17'
-        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'SCANNO': [15,16]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -837,7 +845,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='>15')"""
         outname=self.prefix+self.postfix
         scan = '>15'
-        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'SCANNO': [16,17]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -847,7 +855,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='15~16')"""
         outname=self.prefix+self.postfix
         scan = '15~16'
-        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'SCANNO': [15,16]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -857,7 +865,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='15,17')"""
         outname=self.prefix+self.postfix
         scan = '15,17'
-        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'SCANNO': [15,17]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -867,7 +875,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='<16, 17')"""
         outname=self.prefix+self.postfix
         scan = '<16, 17'
-        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'SCANNO': [15,17]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -877,69 +885,69 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     # pol
     ####################
     def test_pol_id_default(self):
-        """test pol selection (pol='')"""
+        #test pol selection (pol='')
         outname=self.prefix+self.postfix
         pol=''
-        self.res=self.run_task(infile=self.rawfile,calmode=self.calmode,pol=pol,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.reffile)
 
     def test_pol_id_exact(self):
-        """ test pol selection (pol='1')"""
+        #test pol selection (pol='1')
         outname=self.prefix+self.postfix
         pol = '1'
-        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'POLNO': [1]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_pol_id_lt(self):
-        """ test pol selection (pol='<1')"""
+        #test pol selection (pol='<1')
         outname=self.prefix+self.postfix
         pol = '<1'
-        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'POLNO': [0]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_pol_id_gt(self):
-        """ test pol selection (pol='>0')"""
+        #test pol selection (pol='>0')
         outname=self.prefix+self.postfix
         pol = '>0'
-        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'POLNO': [1]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_pol_id_range(self):
-        """ test pol selection (pol='0~1')"""
+        #test pol selection (pol='0~1')
         outname=self.prefix+self.postfix
         pol = '0~1'
-        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_pol_id_list(self):
-        """ test pol selection (pol='0,1')"""
+        #test pol selection (pol='0,1')
         outname=self.prefix+self.postfix
         pol = '0,1'
-        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_pol_id_exprlist(self):
-        """test pol selection (pol='1,<1')"""
+        #test pol selection (pol='1,<1')
         outname=self.prefix+self.postfix
         pol='1,<1'
-        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -949,59 +957,59 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     # field
     ####################
     def test_field_value_default(self):
-        """test field selection (field='')"""
+        #test field selection (field='')
         outname=self.prefix+self.postfix
         field=''
-        self.res=self.run_task(infile=self.rawfile,calmode=self.calmode,field=field,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.reffile)
 
     def test_field_id_exact(self):
-        """ test field selection (field='6')"""
+        #test field selection (field='6')
         outname=self.prefix+self.postfix
         field = '6'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__6']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_lt(self):
-        """ test field selection (field='<6')"""
+        #test field selection (field='<6')
         outname=self.prefix+self.postfix
         field = '<6'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_gt(self):
-        """ test field selection (field='>7')"""
+        #test field selection (field='>7')
         outname=self.prefix+self.postfix
         field = '>7'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_range(self):
-        """ test field selection (field='5~7')"""
+        #test field selection (field='5~7')
         outname=self.prefix+self.postfix
         field = '5~7'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', 'M30__7']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_list(self):
-        """ test field selection (field='5,7')"""
+        #test field selection (field='5,7')
         outname=self.prefix+self.postfix
         field = '5,7'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         fieldid = [1]
         tbsel = {'FIELDNAME': ['M100__5', 'M30__7']}
         self.assertEqual(self.res,None,
@@ -1009,10 +1017,10 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_id_exprlist(self):
-        """ test field selection (field='<7,8')"""
+        #test field selection (field='<7,8')
         outname=self.prefix+self.postfix
         field = '<7,8'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         fieldid = [1]
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', '3C273__8']}
         self.assertEqual(self.res,None,
@@ -1020,10 +1028,10 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_value_exact(self):
-        """ test field selection (field='M100')"""
+        #test field selection (field='M100')
         outname=self.prefix+self.postfix
         field = 'M100'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         fieldid = [1]
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6']}
         self.assertEqual(self.res,None,
@@ -1031,30 +1039,30 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_value_pattern(self):
-        """ test field selection (field='M*')"""
+        #test field selection (field='M*')
         outname=self.prefix+self.postfix
         field = 'M*'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', 'M30__7']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_value_list(self):
-        """ test field selection (field='M30,3C273')"""
+        #test field selection (field='M30,3C273')
         outname=self.prefix+self.postfix
         field = 'M30,3C273'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['M30__7', '3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_field_mix_exprlist(self):
-        """ test field selection (field='<7,3C273')"""
+        #test field selection (field='<7,3C273')
         outname=self.prefix+self.postfix
         field = '<7,3C273'
-        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', '3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1064,29 +1072,29 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     # spw 
     ####################
     def test_spw_id_default(self):
-        """test spw selection (spw='')"""
+        #test spw selection (spw='')
         outname=self.prefix+self.postfix
         spw=''
-        self.res=self.run_task(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.reffile)
 
     def test_spw_id_exact(self):
-        """ test spw selection (spw='21')"""
+        #test spw selection (spw='21')
         outname=self.prefix+self.postfix
         spw = '21'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode2,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [21]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
-        self._comparecal_with_selection(outname, tbsel, self.reffile2)
+        self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_id_lt(self):
-        """ test spw selection (spw='<25')"""
+        #test spw selection (spw='<25')
         outname=self.prefix+self.postfix
         spw = '<25'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [21,23]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1094,79 +1102,79 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
 
 
     def test_spw_id_gt(self):
-        """ test spw selection (spw='>21')"""
+        #test spw selection (spw='>21')
         outname=self.prefix+self.postfix
         spw = '>21'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [23,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_id_range(self):
-        """ test spw selection (spw='21~24')"""
+        #test spw selection (spw='21~24')
         outname=self.prefix+self.postfix
         spw = '21~24'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [21,23]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_id_list(self):
-        """ test spw selection (spw='21,22,23,25')"""
+        #test spw selection (spw='21,22,23,25')
         outname=self.prefix+self.postfix
         spw = '21,22,23,25'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [21,23,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_id_exprlist(self):
-        """ test spw selection (spw='<22,>24')"""
+        #test spw selection (spw='<22,>24')
         outname=self.prefix+self.postfix
         spw = '<22,>24'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [21,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_id_pattern(self):
-        """test spw selection (spw='*')"""
+        #test spw selection (spw='*')
         outname=self.prefix+self.postfix
         spw='*'
-        self.res=self.run_task(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,calmode=self.calmode,spw=spw,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.reffile)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~310GHz')"""
+        #test spw selection (spw='299.5~310GHz')
         outname=self.prefix+self.postfix
-        spw = '300~310GHz'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        spw = '299.5~310GHz'
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [23,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-50~50km/s')"""
+        #test spw selection (spw='-50~50km/s')
         outname=self.prefix+self.postfix
         spw = '-50~50km/s'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [23]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal_with_selection(outname, tbsel)
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='150~500km/s,>23')"""
+        #test spw selection (spw='150~500km/s,>23')
         outname=self.prefix+self.postfix
-        spw = '150~500km/s,>23'
-        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=outname)
+        spw = '150~550km/s,>23'
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,interp=self.interp,spwmap=self.spwmap,applytable=self.applytable,outfile=outname)
         tbsel = {'IFNO': [21,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1175,14 +1183,10 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     # Helper functions
     ####################
-    def _comparecal_with_selection( self, name, tbsel={}, ref=None ):
+    def _comparecal_with_selection( self, name, tbsel={} ):
         self._checkfile(name)
         sp=self._getspectra(name)
-        if ref == None:
-            spref=self._getspectra_selected(self.reffile, tbsel)
-        else:
-            spref=self._getspectra_selected(ref, tbsel)
-
+        spref=self._getspectra_selected(self.reffile, tbsel)
         self._checkshape( sp, spref )
         
         for irow in xrange(sp.shape[0]):

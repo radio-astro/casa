@@ -1,6 +1,6 @@
 ###############################
 #
-# IRC+10216 HC3N Reduction Script
+# IRC+10216 SiO Reduction Script
 # using new sd tasks
 # Nod data
 # 
@@ -14,10 +14,10 @@
 import time
 import os
 
-os.system('rm -rf IRC+10216_rawACSmod IRC+10216_rawACSmod_cal IRC+10216_rawACSmod_cal_sm IRC+10216_rawACSmod_cal_sm_bs  irc_hc3n_reducedSCAN0_CYCLE0_BEAM0_IF0.txt irc_hc3n_reduced.eps irc_cs_fit.txt')
+os.system('rm -rf IRC+10216_rawACSmod IRC+10216_rawACSmod_cal IRC+10216_rawACSmod_cal_sm IRC+10216_rawACSmod_cal_sm_bs  irc_sio_reducedSCAN0_CYCLE0_BEAM0_IF0.txt irc_sio_reduced.eps irc_sio_fit.txt')
 
 #enable/disable plotting
-doplot = False 
+doplot = False
 
 casapath = os.environ['CASAPATH'].split()[0]
 datapath = casapath+'/data/regression/ATST5/IRC+10216/IRC+10216_rawACSmod'
@@ -80,19 +80,18 @@ else:
    localplotlevel = 0
 
 # calibartion,averaging, smoothing, and baseline removal
-# calibrate nod scans for CS line (IF=3)
-default(sdreduce)
+# calibrate nod scans for SiO line (IF=30)
+default(sdreduceold)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-#scanlist = [237,238,239,240,249,250,251,252]
-scan = '237~240,249~252'
-#iflist = [17]
-spw = '17'
+#scanlist = [240,241,242,243,244,245,246,247]
+scanlist = [241,242,243,244,245,246,247, 248]
+iflist = [30]
 average = True
-timeaverage = True # average in time
-tweight = 'tintsys' # weighted by iteg time and Tsys for time averaging
 scanaverage = False
+timeaverage = True # average in time
+tweight = 'tintsys' # weighted by integ. time and Tsys for time averaging 
 polaverage = True  # average polarization
 pweight = 'tsys'   # weighted by Tsys for polarization averaging
 tau = 0.09         # do opacity correction
@@ -105,39 +104,37 @@ maskmode = 'auto'
 thresh = 5
 avg_limit = 4
 blfunc = 'poly'
-order = 2
+order = 1
 overwrite = True
 plotlevel = localplotlevel
-sdreduce()
+sdreduceold()
 localoutfile = infile+'_cal'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplot)
+   default(sdplotold)
    infile = localoutfile
    specunit = 'GHz'
-   outfile = 'irc_hc3n_reduced.eps'
+   outfile = 'irc_sio_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplot()
+   sdplotold()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstat)
+default(sdstatold)
 # select line free regions to get rms
 infile = localoutfile
-#masklist = [200,1500]
-spw = '*:200~1500'
-xstat = sdstat()
+masklist = [800, 1500]
+xstat = sdstatold()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
-#masklist = [1800,2400]
-spw = '*:1800~2400'
-xstat = sdstat()
+masklist = [1850,2300]
+xstat = sdstatold()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -146,36 +143,36 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsave)
+default(sdsaveold)
 infile = localoutfile
-outfile = 'irc_hc3n_reduced'
+outfile = 'irc_sio_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsave()
-#outfile = 'irc_hc3n_reduced.ms'
+sdsaveold()
+#outfile = 'irc_sio_reduced.ms'
 #outform = 'MS2'
-#sdsave()
+#sdsaveold()
 
 #
 endProc = time.clock()
 endTime = time.time()
 
-# --- end of irc cs script
-#irc_max=1.827
-#irc_rms=0.022
-#irc_sum=474.123
+# --- end of irc sio script
+#irc_max = 0.611
+#irc_rms = 0.018
+#irc_sum = 157.074
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-irc_max = 1.827
-irc_rms = 0.02213
-irc_sum = 474.1
+irc_max = 0.6180
+irc_rms = 0.01853
+irc_sum = 159.8
 diff_max = abs( (irc_max - curr_max) / irc_max )
 diff_rms = abs( (irc_rms - curr_rms) / irc_rms )
 diff_sum = abs( (irc_sum - curr_sum) / irc_sum )
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile = 'irc.hc3n.task'+datestring+'.log'
+outfile = 'irc.sio.task'+datestring+'.log'
 logfile = open(outfile,'w')
 
 print >>logfile,''
@@ -189,18 +186,18 @@ if (diff_sum < 0.05): print >>logfile,'* Passed spectrum (line) sum test'
 print >>logfile,'*  Line integral '+str(curr_sum)
 if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
 	regstate = True
+        print >>logfile,'---'
+        print >>logfile,'Passed Regression test for IRC-SiO'
+        print >>logfile,'---'
         print ''
         print 'Regression PASSED'
         print ''
-        print >>logfile,'---'
-        print >>logfile,'Passed Regression test for IRC-HC3N'
-        print >>logfile,'---'
 else:
 	regstate = False
+        print >>logfile,'----FAILED Regression test for IRC-SiO'
         print ''
         print 'Regression FAILED'
         print ''
-        print >>logfile,'----FAILED Regression test for IRC-HC3N'
 print >>logfile,'*********************************'
 
 print >>logfile,''

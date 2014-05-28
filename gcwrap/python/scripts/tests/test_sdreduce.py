@@ -787,8 +787,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~300.1GHz', all channels)"""
-        spw = '300~300.1GHz' # IFNO=23 will be selected
+        """test spw selection (spw='299.52~300.47GHz', all channels)"""
+        spw = '299.52~300.47GHz' # IFNO=23 will be selected
         ref_idx = [0,3]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -797,8 +797,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-450.~0.km/s', all channels)"""
-        spw = '-450.~0km/s' # IFNO=23,25 will be selected
+        """test spw selection (spw='-510.~470.km/s', all channels)"""
+        spw = '-510.~470km/s' # IFNO=23,25 will be selected
         ref_idx = [0,1,3]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -807,8 +807,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='25,0~500km/s', all channels)"""
-        spw = '25,0~500km/s' # all IFs will be selected
+        """test spw selection (spw='25,0~501km/s', all channels)"""
+        spw = '25,0~501km/s' # all IFs will be selected
         ref_idx = []
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -941,8 +941,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_channel(self):
-        """test spw selection w/ channel selection (spw='300~300.1GHz:21~79')"""
-        spw = '300~300.1GHz:21~79' # IFNO=23
+        """test spw selection w/ channel selection (spw='299.9~300.1GHz:21~79')"""
+        spw = '299.9~300.1GHz:21~79' # IFNO=23
         ref_idx = [0,3]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -951,8 +951,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_frequency(self):
-        """test spw selection w/ channel selection (spw='300.491~300.549GHz:300.491~300.549GHz')"""
-        spw = '300.491~300.549GHz:300.491~300.549GHz' # IFNO=25 channel=41~99 will be selected
+        """test spw selection w/ channel selection (spw='300.4~300.6GHz:300.491~300.549GHz')"""
+        spw = '300.4~300.6GHz:300.491~300.549GHz' # IFNO=25 channel=41~99 will be selected
         ref_idx = [1]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -961,8 +961,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_velocity(self):
-        """test spw selection w/ channel selection (spw='300.4~300.5GHz:-548.7~-490.5km/s')"""
-        spw = '300.4~300.5GHz:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        """test spw selection w/ channel selection (spw='300.4~300.6GHz:-548.7~-490.5km/s')"""
+        spw = '300.4~300.6GHz:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
         ref_idx = [1]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -971,8 +971,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_frequency_list(self):
-        """test spw selection w/ channel selection (spw='300~300.1GHz:0~19;21~79;81~100')"""
-        spw = '300~300.1GHz:0~19;21~79;81~100' # IFNO=23
+        """test spw selection w/ channel selection (spw='299.9~300.1GHz:0~19;21~79;81~100')"""
+        spw = '299.9~300.1GHz:0~19;21~79;81~100' # IFNO=23
         ref_idx = [0,3]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -991,8 +991,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity_frequency(self):
-        """test spw selection w/ channel selection (spw='-500~-450km/s:-548.7~-490.5km/s')"""
-        spw = '-500~-450km/s:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        """test spw selection w/ channel selection (spw='-500~-499km/s:-548.7~-490.5km/s')"""
+        spw = '-500~-499km/s:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
         ref_idx = [1]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)
@@ -1001,8 +1001,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.ref_data, ref_idx)
 
     def test_spw_value_velocity_velocity(self):
-        """test spw selection w/ channel selection (spw='-500~-450km/s:-548.7~-490.5km/s')"""
-        spw = '-500~-450km/s:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
+        """test spw selection w/ channel selection (spw='-500~-499km/s:-548.7~-490.5km/s')"""
+        spw = '-500~-499km/s:-548.7~-490.5km/s' # IFNO=25 channel=41~99 will be selected
         ref_idx = [1]
         # blflag = T (channel selection: average+baseline)
         #          F (no channel selection: only smoothing)

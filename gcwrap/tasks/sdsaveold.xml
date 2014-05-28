@@ -27,7 +27,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="splitant">
-            <description>split output file by antenna (True,False) (only effective for MS input and ASAP output)</description>
+            <description>split output file by antenna (True,False) (only effective for MS input)</description>
             <value>False</value>
     </param>
 
@@ -160,7 +160,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   Keyword arguments:
         infile -- name of input SD dataset
         splitant -- split output file by antenna (True,False) 
-                (only effective for MS input and ASAP output).
+                (only effective for MS input).
                 default: False
                 &gt;&gt;&gt;splitant expandable parameter
                  antenna -- antenna name or id (only effective for MS input). 
@@ -234,6 +234,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          [{'name':'CO','value':345e9}] (a value with name)
         outfile -- name of output dataset
                 default: '' 
+                NOTE actual output file name(s) will be modified if splitant 
+                is True as antenna names are to be included. If outfile has a 
+                suffix '.asap' or '.ASAP', antenna name will be inserted before 
+                the suffix like 'out.antName.asap', otherwise, antenna name 
+                will be simply appended to outfile like 'out.sdfits.antName'. 
         outform -- output data format
                 default: 'ASAP'
                 Options: 'ASAP', 'MS2', 'SDFITS', 'ASCII'

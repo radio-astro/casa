@@ -9,7 +9,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdcal2(infile, calmode, fraction, noff, width, elongated, tsysavg, tsysspw, applytable, interp, ifmap, field, spw, scan, pol, outfile, overwrite):
+def sdcal2(infile, calmode, fraction, noff, width, elongated, tsysavg, tsysspw, applytable, interp, spwmap, field, spw, scan, pol, outfile, overwrite):
     casalog.post(str(locals()))
     with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 
         worker.initialize()
@@ -45,7 +45,7 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.check_applytable()
                 self.check_outfile()
                 self.check_interp()
-                #self.check_ifmap2()
+                #self.check_spwmap2()
                 self.check_update()
                 self.doapply = True
             elif self.calmode == 'tsys':
@@ -60,7 +60,7 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.skymode = self.calmode
         elif num_separator == 1:
             # generate sky table and apply it on-the-fly
-            #self.check_ifmap2()
+            #self.check_spwmap2()
             self.check_interp()
             self.check_update()
             self.dosky = True
@@ -69,7 +69,7 @@ class sdcal2_worker(sdutil.sdtask_template):
         else:
             # generate sky and Tsys table and apply them on-the-fly
             self.check_tsysspw()
-            #self.check_ifmap()
+            #self.check_spwmap()
             self.check_interp()
             self.check_update()
             self.dosky = True
@@ -127,12 +127,12 @@ class sdcal2_worker(sdutil.sdtask_template):
             if not re.match(valid_types,self.interp_freq):
                 raise Exception('Interpolation type \'%s\' is invalid or not supported yet.'%(self.interp_freq))
             
-    def check_ifmap(self):
-        if not isinstance(self.ifmap, dict) or len(self.ifmap) == 0:
-            raise Exception('ifmap must be non-empty dictionary.')
+    def check_spwmap(self):
+        if not isinstance(self.spwmap, dict) or len(self.spwmap) == 0:
+            raise Exception('spwmap must be non-empty dictionary.')
 
-    def check_ifmap2(self):
-        self.check_ifmap()
+    def check_spwmap2(self):
+        self.check_spwmap()
             
     def check_tsysspw(self):
         pass
@@ -188,7 +188,7 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.manager.set_time_interpolation(self.interp_time)
             if len(self.interp_freq) > 0:
                 self.manager.set_freq_interpolation(self.interp_freq)
-            for (k,v) in self.ifmap.items():
+            for (k,v) in self.spwmap.items():
                 self.manager.set_tsys_transfer(int(k),list(v))
             self.manager.apply(self.insitu, True)
 

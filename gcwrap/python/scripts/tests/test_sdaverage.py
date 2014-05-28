@@ -19,6 +19,8 @@ import asap as sd
 from sdaverage import sdaverage
 from sdstatold import sdstatold
 
+from sdutil import tbmanager
+
 #
 # Unit test of sdaverage task.
 #
@@ -1985,8 +1987,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300.4~300.5GHz', polaverage)"""
-        spw = '300.4~300.5GHz'
+        """test spw selection (spw='300.03~300.50GHz', polaverage)"""
+        spw = '300.03~300.50GHz' # IFNO=25 will be selected
         mode = 'polaverage'
         ref_idx = [2]
         self._set_average_mode(mode)
@@ -1994,8 +1996,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-500~-450km/s', polaverage)"""
-        spw = '-500~-450km/s'
+        """test spw selection (spw='-510~-30km/s', polaverage)"""
+        spw = '-510~-30km/s'  # IFNO=25 will be selected
         mode = 'polaverage'
         ref_idx = [2]
         self._set_average_mode(mode)
@@ -2003,8 +2005,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_polynomial(self.outname, self.refdata, ref_idx)
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='23,450~500km/s', timeaverage)"""
-        spw = '23,450~500km/s'
+        """test spw selection (spw='23,500~501km/s', timeaverage)"""
+        spw = '23,500~501km/s'   #IFNO=23,25 will be selected
         mode = 'timeaverage'
         ref_idx = [0,1]
         self._set_average_mode(mode)
@@ -2346,22 +2348,22 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
 
     def test_spw_value_frequency(self):
-        """test spw selection (spw='300~300.1GHz', boxcar)"""
-        spw = '300~300.1GHz' # IFNO=23 will be selected
+        """test spw selection (spw='299.52~300.47GHz', boxcar)"""
+        spw = '299.52~300.47GHz' # IFNO=23 will be selected
         ref_idx = [0,3]
         self.res=self.run_task(infile=self.rawfile, spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
 
     def test_spw_value_velocity(self):
-        """test spw selection (spw='-450.~0.km/s', boxcar)"""
-        spw = '-450.~0km/s' # IFNO=23,25 will be selected
+        """test spw selection (spw='-510.~470.km/s', boxcar)"""
+        spw = '-510.~470km/s' # IFNO=23,25 will be selected
         ref_idx = [0,1,3]
         self.res=self.run_task(infile=self.rawfile, spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
 
     def test_spw_mix_exprlist(self):
-        """test spw selection (spw='25,0~500km/s', boxcar)"""
-        spw = '25,0~500km/s' # all IFs will be selected
+        """test spw selection (spw='25,0~501km/s', boxcar)"""
+        spw = '25,0~501km/s' # all IFs will be selected
         ref_idx = []
         self.res=self.run_task(infile=self.rawfile, spw=spw, timeaverage=self.timeaverage,scanaverage=self.scanaverage,polaverage=self.polaverage,kernel=self.kernel,kwidth=self.kwidth,outfile=self.outname,outform='ASAP')
         self._compare_with_tophat(self.outname, self.refval, ref_idx)
@@ -2414,8 +2416,67 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
             ref_data[schan:echan+1] = valuelist[irange % nval]
         return ref_data
 
+###
+# Test weighting by integration time
+###
+class sdaverage_test_weighting_tint(unittest.TestCase):
+    """
+    Test TINT weighting.
+
+    Data is testaverage.asap
+    """
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdaverage/'
+    rawfile = 'testaverage.asap'
+    prefix = 'sdaverage_test_weighting_tint'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+
+        default(sdaverage)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def verify(self, outfile, weight_tsys):
+        with tbmanager(outfile) as tb:
+            sp = tb.getcol('SPECTRA')
+
+        with tbmanager(self.rawfile) as tb:
+            raw_sp = tb.getcol('SPECTRA')
+            exposure = tb.getcol('INTERVAL')
+            tsys = tb.getcol('TSYS')
+
+        weight = numpy.ones(raw_sp.shape, dtype=float) * exposure.reshape((1,len(exposure)))
+        if weight_tsys:
+            weight /= (tsys * tsys)
+
+        expected = numpy.sum(raw_sp * weight, axis=1) / numpy.sum(weight, axis=1)
+        diff = abs((sp.flatten() - expected.flatten()) / expected.flatten())
+        self.assertTrue(all(diff < 1.0e-6),
+                        msg='Averaging failed to verify: actual %s expected %s'%(sp.flatten()[0], expected.flatten()[0]))
+
+    def test_weighting_tint(self):
+        """test_weighing_tint: test averaging by tint"""
+        outfile = self.prefix + '_tint.asap'
+        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        self.verify(outfile, weight_tsys=False)
+
+    def test_weighting_tintsys(self):
+        """test_weighting_tintsys: test averaging by tintsys"""
+        outfile = self.prefix + '_tintsys.asap'
+        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        self.verify(outfile, weight_tsys=True)
+        
+    
 
 def suite():
     return [sdaverage_badinputs, sdaverage_smoothTest, sdaverage_storageTest,
             sdaverage_test6, sdaverage_test7, sdaverage_test8, sdaverage_test9,
-            sdaverage_test_flag, sdaverage_avetest_selection, sdaverage_smoothtest_selection]
+            sdaverage_test_flag, sdaverage_avetest_selection, sdaverage_smoothtest_selection,
+            sdaverage_test_weighting_tint]
