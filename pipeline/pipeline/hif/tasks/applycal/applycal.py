@@ -133,6 +133,17 @@ class ApplycalInputs(basetask.StandardInputs,
     def spw(self, value):
         self._spw = value
 
+    @property
+    def applymode(self):
+        return self._applymode
+
+    @applymode.setter
+    def applymode(self, value):
+        if value is None:
+            value = 'calflagstrict'
+	elif value == '':
+            value = 'calflagstrict'
+        self._applymode = value
 
 class ApplycalResults(basetask.Results):
     """
@@ -226,7 +237,7 @@ class Applycal(basetask.StandardTaskTemplate):
             args['spwmap']    = calapp.spwmap
             args['interp']    = calapp.interp
             args['calwt']     = calapp.calwt
-	    args['applymode'] = 'calflagstrict'
+	    args['applymode'] = inputs.applymode
             
             jobs.append(casa_tasks.applycal(**args))
 
