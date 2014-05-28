@@ -197,3 +197,10 @@ def get_valid_members(group_desc, antenna_filter, spwid_filter):
         if antenna in antenna_filter:
             if spwid_filter is None or spwid in spwid_filter:
                 yield i
+
+def _collect_logrecords(logger):
+    capture_handlers = [h for h in logger.handlers if h.__class__.__name__ == 'CapturingHandler']
+    logrecords = []
+    for handler in capture_handlers:
+        logrecords.extend(handler.buffer[:])
+    return logrecords

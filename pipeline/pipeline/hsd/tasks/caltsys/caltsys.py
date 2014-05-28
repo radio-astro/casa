@@ -92,8 +92,12 @@ class SDCalTsys(common.SingleDishTaskTemplate):
             inputs.infiles = infiles[:]
 
             LOG.todo('logrecords for SDCalTsysResults must be handled properly')
-            for r in result:
-                r.logrecords = []
+            # only add logrecords to first result
+            logrecords = common._collect_logrecords(LOG)
+            if len(result) > 0:
+                result[0].logrecords = logrecords
+                for r in result[1:]:
+                    r.logrecords = []
 
             return result
 

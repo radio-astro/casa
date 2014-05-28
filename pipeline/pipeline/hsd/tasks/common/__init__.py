@@ -12,6 +12,7 @@ from .utils import asdm_name
 from .utils import temporary_filename
 from .utils import get_index_list
 from .utils import get_valid_members
+from .utils import _collect_logrecords
 
 # constants 
 NoData = -32767.0

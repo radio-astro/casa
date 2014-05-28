@@ -91,17 +91,20 @@ class SDCalSky(common.SingleDishTaskTemplate):
                 result.append(self.prepare())
             # do I need to restore self.inputs.infiles?
             inputs.infiles = infiles[:]
-
             LOG.todo('logrecords for SDCalSKyResults must be handled properly')
-            for r in result:
-                r.logrecords = []
+            # only add logrecords to first result
+            logrecords = common._collect_logrecords(LOG)
+            if len(result) > 0:
+                result[0].logrecords = logrecords
+                for r in result[1:]:
+                    r.logrecords = []
             
             return result
 
         # In the following, inputs.infiles should be a string,
         # not a list of string
         args = inputs.to_casa_args()
-
+        
         if args['calmode'] == 'none':
             # Return empty Results object if calmode='none'
             LOG.info('Calibration is already done for scantable %s'%(args['infile'])) 
