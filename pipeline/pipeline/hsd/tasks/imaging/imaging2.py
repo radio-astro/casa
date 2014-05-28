@@ -70,6 +70,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
         pollist = self.inputs.pollist
         st_names = context.observing_run.st_names
         reffile = self.inputs.reffile
+        logrecords = []
         
         # task returns ResultsList
         results = basetask.ResultsList()
@@ -82,6 +83,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
         applyflag_inputs = applyflag.SDApplyFlag.Inputs(context, infiles)
         applyflag_task = applyflag.SDApplyFlag(applyflag_inputs)
         applyflag_results = self._executor.execute(applyflag_task, merge=True)
+        logrecords.extend(applyflag_results.logrecords)
 
         # Step 2.
         # Export each scantable to MS
@@ -90,6 +92,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
         export_task = exportms.ExportMS(export_inputs)
         export_results = self._executor.execute(export_task, merge=True)
         exported_mses = export_results.outcome
+        logrecords.extend(export_results.logrecords)
         
         # to register exported_ms to each scantable instance
         #results.append(export_results)
@@ -102,6 +105,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                          reffile=reffile)
         scaling_task = scaling.IntensityScaling(scaling_inputs)
         scaling_results = self._executor.execute(scaling_task, merge=True)
+        logrecords.extend(scaling_results.logrecords)
 
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
@@ -226,6 +230,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                                  onsourceid=srctype)
                     weighting_task = weighting.WeightMS(weighting_inputs)
                     weighting_result = self._executor.execute(weighting_task, merge=True)
+                    logrecords.extend(weighting_result.logrecords)
 
                 # Step 5.
                 # Imaging
@@ -236,6 +241,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                                vislist=exported_mses)
                 imager_task = worker.SDImaging2Worker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
+                logrecords.extend(imager_result.logrecords)
 
                 # Additional Step.
                 # Make grid_table and put rms and valid spectral number array 
@@ -259,6 +265,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task, merge=True)
                     grid_tables.append(gridding_result.outcome)
+                    logrecords.extend(gridding_result.logrecords)
                 for i in xrange(len(pols)):
                     validsps.append([r[6] for r in grid_tables[i]])
                     rmss.append([r[8] for r in grid_tables[i]])
@@ -286,7 +293,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                         result.stage_number = self.inputs.context.task_counter - 1
                     else:
                         result.stage_number = self.inputs.context.task_counter 
-
+                                                
                     results.append(result)
                     
             # Make combined image
@@ -310,6 +317,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                            vislist=exported_mses)
             imager_task = worker.SDImaging2Worker(imager_inputs)
             imager_result = self._executor.execute(imager_task, merge=True)
+            logrecords.extend(imager_result.logrecords)
 
             # Additional Step.
             # Make grid_table and put rms and valid spectral number array 
@@ -332,6 +340,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                          nx=nx, ny=ny)
                 gridding_task = grid_task_class(gridding_inputs)
                 gridding_result = self._executor.execute(gridding_task, merge=True)
+                logrecords.extend(gridding_result.logrecords)
                 grid_tables.append(gridding_result.outcome)
             for i in xrange(len(pols)):
                 validsps.append([r[6] for r in grid_tables[i]])
@@ -364,14 +373,18 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     result.stage_number = self.inputs.context.task_counter - 1
                 else:
                     result.stage_number = self.inputs.context.task_counter 
-
+                    
                 results.append(result)
                     
         LOG.todo('logrecords for SDImaging2Results must be handled properly')
-        for r in results:
-            r.logrecords = []
+        # only add logrecords to first result
+        if len(results) > 0:
+            results[0].logrecords = logrecords
+            for r in results[1:]:   
+                r.logrecords = []
 
         return results
     
     def analyse(self, result):
         return result
+    
