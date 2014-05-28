@@ -10,10 +10,12 @@ def get_bar_class(scores, result):
 	score = qascore.score
 	if score in (None, '', 'N/A'):
 		return ''
-	elif score <= 0.1:
+	elif score <= 0.33:
 		return ' bar-danger'
-	elif score <= 0.5:
+	elif score <= 0.66:
 		return ' bar-warning'
+	elif score <= 0.9:
+		return ' bar-info'
 	else:
 		return ' bar-success'
 
@@ -22,10 +24,12 @@ def get_badge_class(scores, result):
 	score = qascore.score
 	if score in (None, '', 'N/A'):
 		return ''
-	elif score <= 0.1:
+	elif score <= 0.33:
 		return ' badge-important'
-	elif score <= 0.5:
+	elif score <= 0.66:
 		return ' badge-warning'
+	elif score <= 0.9:
+		return ' badge-info'
 	else:
 		return ' badge-success'
 
