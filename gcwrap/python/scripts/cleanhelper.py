@@ -2223,9 +2223,12 @@ class cleanhelper:
         #else:
           # obstime not included here
         if debug: print "before ms.cvelfreqs (start,width,nchan)===>",start, width, nchan
-        newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
-                              start=start,width=width,phasec=inphasec, restfreq=restf,
-                              outframe=self.usespecframe,veltype=veltype).tolist()
+        try:
+            newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
+                                  start=start,width=width,phasec=inphasec, restfreq=restf,
+                                  outframe=self.usespecframe,veltype=veltype).tolist()
+        finally:
+            ms.close()
         #print newfreqs
         descendingnewfreqs=False
         if len(newfreqs)>1:
@@ -2244,7 +2247,6 @@ class cleanhelper:
             print "len(newfreqs)===>",len(newfreqs)
           else:
             print "newfreqs=",newfreqs
-        ms.close()
 
         # set output number of channels
         if nchan ==1:
