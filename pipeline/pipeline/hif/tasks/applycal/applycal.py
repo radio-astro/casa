@@ -25,7 +25,7 @@ class ApplycalInputs(basetask.StandardInputs,
                  # data selection arguments
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
-                 opacity=None, parang=None, calwt=None,
+                 opacity=None, parang=None, applymode=None, calwt=None,
                  flagbackup=None, scan=None):
         self._init_properties(vars())
 
