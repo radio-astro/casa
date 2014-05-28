@@ -535,6 +535,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ListNcluster = []
         ListScore = []
         ListBestScore = []
+        converged = False
         #
         elapsed = 0.0
         for Ncluster in xrange(1, MaxCluster + 1):
@@ -652,11 +653,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                ListBestScore[-4] <= ListBestScore[-2] and \
                ListBestScore[-4] <= ListBestScore[-1]:
                 LOG.info('Determined the Number of Clusters to be %d' % (BestNcluster))
+                converged = True
                 break
 
         #Ncluster = BestNcluster
         #Region = BestRegion
         #category = BestCategory[:]
+        if converged is False:
+            LOG.warn('Clustering analysis not converged. Number of clusters may be greater than upper limit (MaxCluster=%s)'%(MaxCluster))
         lines = [[book[1], book[0], True] for book in BestCodebook[:Ncluster]]
         LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, lines = %s' % (Ncluster, BestScore, category, BestCodebook, lines))
         self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
