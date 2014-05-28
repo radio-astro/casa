@@ -303,13 +303,8 @@ class DataTableImpl( object ):
 
     def _close( self ):
         if self.isopened:
-            try:
-                self.tb1.close()
-                self.tb2.close()
-            except AttributeError, e:
-                print 'WARN: Exception raised, %s'%(e)
-            except Exception, e:
-                raise e
+            self.tb1.close()
+            self.tb2.close()
             self.isopened = False
 
     def _copyfrom( self, name, minimal=True ):
