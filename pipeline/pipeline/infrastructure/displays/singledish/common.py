@@ -203,7 +203,7 @@ class SDInspectionDisplay(object):
         self.inputs = inputs
         self.context = self.inputs.context
         self.result = self.inputs.result
-        self.datatable = self.result.outcome['instance']
+        self.datatable = self.context.observing_run.datatable_instance
 
     def plot(self):
         inputs = self.inputs

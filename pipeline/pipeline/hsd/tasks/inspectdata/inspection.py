@@ -29,26 +29,11 @@ class SDInspectDataResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(SDInspectDataResults,self).__init__(task, success, outcome)
 
-    def __getstate__(self):
-        mydict = self.__dict__.copy()
-        outcome = mydict['outcome'].copy()
-        outcome['instance'] = None
-        mydict['outcome'] = outcome
-        return mydict
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        name = self.__dict__['outcome']['name']
-        if self.__dict__['outcome']['instance'] is None:
-            datatable = DataTable(name)
-            self.__dict__['outcome']['instance'] = datatable        
-    
     def merge_with_context(self, context):
-        #context.observing_run.set_datatable(**self.outcome)
         super(SDInspectDataResults,self).merge_with_context(context)
         
         # merge outcome with datatable
-        datatable = self.outcome['instance']
+        datatable = DataTable(self.outcome['name'])
         datatable.putcol('POSGRP', self.outcome.pop('position_group'))
         datatable.putkeyword('POSGRP_REP', self.outcome.pop('position_group_rep'))
         datatable.putkeyword('POSGRP_LIST', self.outcome.pop('position_group_list'))
@@ -64,7 +49,7 @@ class SDInspectDataResults(common.SingleDishResults):
         datatable.exportdata(minimal=False)
 
         # merge
-        context.observing_run.merge_inspection(**self.outcome)
+        context.observing_run.merge_inspection(instance=datatable, **self.outcome)
 
     def _outcome_name(self):
         name = self.outcome['name']
@@ -111,7 +96,9 @@ class SDInspectData(common.SingleDishTaskTemplate):
 
         outcome = {}
         outcome['name'] = table_name
-        outcome['instance'] = worker.get_datatable()#self.DataTable
+        datatable = worker.get_datatable()
+        # export datatable (both RO and RW)
+        datatable.exportdata(minimal=False)
 
         result = SDInspectDataResults(task=self.__class__,
                                       success=True,
@@ -127,7 +114,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
 
     def analyse(self, result):
 
-        datatable = result.outcome['instance']
+        datatable = DataTable(result.outcome['name'])
         scantablelist = self.inputs.context.observing_run
         worker = analyser.DataTableAnalyser(scantablelist,
                                             datatable)
