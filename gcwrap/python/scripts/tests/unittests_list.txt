@@ -109,6 +109,7 @@ test_rg_frombcs                 dmehring@nrao.edu
 test_rg_fromtextfile            dmehring@nrao.edu
 test_rg_selectedchannels        dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
+test_sdaverage                   kana.sugi@nao.ac.jp
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      takeshi.nakazato@nao.ac.jp
 test_sdcal2                     takeshi.nakazato@nao.ac.jp
@@ -125,7 +126,6 @@ test_sdmath                     takeshi.nakazato@nao.ac.jp
 test_sdreduce                   kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
 test_sdscale                    takeshi.nakazato@nao.ac.jp
-test_sdsmooth                   kana.sugi@nao.ac.jp
 test_sdstat                     kana.sugi@nao.ac.jp
 test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			ttsutsum@nrao.edu

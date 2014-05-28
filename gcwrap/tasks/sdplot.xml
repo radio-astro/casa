@@ -10,668 +10,706 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdplot" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD plotting task </shortdescription>
+  <shortdescription>ASAP SD plotting task</shortdescription>
 
-  <description>ASAP SD plotting task
+  <description>
+Task sdplot displays single-dish spectra, total power,
+or pointing direction of input data.
+It assumes that the spectra have been calibrated.
+It does allow selection of scans, spectral windows, polarizations, 
+and some time and channel averaging/smoothing options also, but 
+does not write out this data.
 
-        Task Version 2007-03-04 STM
-</description>
+This task adds an additional toolbar to Matplotlib plotter. 
+See the cookbook for details of its capability.
+  </description>
 
   <input>
 
     <param type="string" name="infile"  mustexist="true">
-    <description>name of input SD dataset</description>
-    <value></value>
+      <description>name of input SD dataset</description>
+      <value></value>
     </param>
 
     <param type="any" name="antenna">
-            <description>antenna name or id (only effective for MS input)</description>
-            <any type="variant" limittype="string int"/>
-            <value type="int">0</value>
+      <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
+      <any type="variant" limittype="string int"/>
+      <value type="int">0</value>
     </param> 
 
     <param type="string" name="fluxunit">
-	    <description>units for line flux (K,Jy) (''=current)</description>
-	    <value></value>
+      <description>units of the flux (\'\'=current)</description>
+      <value></value>
     </param>
 
-    <param type="any" name="telescopeparm" subparam='true'>
-	    <description>param of telescope for flux conversion</description>
-            <any type='variant' limittype='string doubleArray'/>
-	    <value type='string'/>
+    <param type="any" name="telescopeparam" subparam='true'>
+      <description>parameters of telescope for flux conversion (see examples in help)</description>
+      <any type='variant' limittype='string doubleArray'/>
+      <value type='string'/>
     </param>
 
     <param type="string" name="specunit">
-	    <description>units for spectral axis (channel,km/s,GHz)</description>
-	    <value></value>
-	    <allowed kind="enum">
-	        <value></value>
-	        <value>channel</value>
-	        <value>km/s</value>
-	        <value>GHz</value>
-	        <value>MHz</value>
-	        <value>kHz</value>
-	        <value>Hz</value>
-	    </allowed>
+      <shortdescription>units for spectral axis [\'\',\'channel\',\'km/s\',\'GHz\',\'MHz\',\'kHz\', or \'Hz\']</shortdescription>
+      <description>units for spectral axis</description>
+      <value></value>
+      <allowed kind="enum">
+        <value></value>
+        <value>channel</value>
+        <value>km/s</value>
+        <value>GHz</value>
+        <value>MHz</value>
+        <value>kHz</value>
+        <value>Hz</value>
+      </allowed>
     </param>
 
     <param type="any" name="restfreq" subparam="true">
-            <description>rest frequency (default unit: Hz)</description>
-            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
-            <value type="string"/>
+      <description>rest frequency (default unit: Hz)</description>
+      <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+      <value type="string"/>
     </param>
 
     <param type="string" name="frame">
-	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
-	    <value></value>
+      <description>frequency reference frame (\'\'=current)</description>
+      <value></value>
     </param>
 
     <param type="string" name="doppler">
-	    <description>doppler convention, e.g. RADIO (''=current)</description>
-	    <value></value>
-    </param>
-
-    <param type="any" name="scanlist">
-	    <description>list or string of scans to use (e.g. [1,2,3,4] or "1~4")</description>
-            <any type="variant" limittype="string  intArray"/>
-	    <value type="intArray"></value>
+      <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit</description>
+      <value></value>
     </param>
 
     <param type="string" name="field">
-	    <description>string for selection by source name</description>
-	    <value></value>
+      <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
+      <value></value>
     </param>
 
-    <param type="any" name="iflist">
-	    <description>list or string of IF ids to select (e.g. [0,1] or "0~1")</description>
-            <any type="variant" limittype="string  intArray"/>
-	    <value type="intArray"></value>
+    <param type="string" name="spw">
+      <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+      <value></value>
     </param>
 
-    <param type="any" name="pollist">
-            <description>list or string of polarization ids to select (e.g. [0,1])</description>
-            <any type="variant" limittype="string  intArray"/>
-	    <value type="intArray"></value>
+    <param type="string" name="scan">
+      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+      <value></value>
     </param>
 
-    <param type="any" name="beamlist">
-            <description>list or string of beam ids to select (e.g. [0,1])</description>
-            <any type="variant" limittype="string  intArray"/>
-	    <value type="intArray"></value>
+    <param type="string" name="pol">
+      <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+      <value></value>
     </param>
 
-    <param type="bool" name="scanaverage">
-            <description>average integs within scans (True,False)</description>
-            <value>False</value>
+    <param type="string" name="beam">
+      <description>select data by beam IDs, e.g. \'0,1\' (\'\'=all)</description>
+      <value></value>
     </param>
 
     <param type="bool" name="timeaverage">
-            <description>average scans over time (True,False)</description>
-            <value>False</value>
+      <description>average spectra over time [True, False] (see examples in help)</description>
+      <value>False</value>
     </param>
 
     <param type="string" name="tweight" subparam="true">
-            <description>weighting for time averaging</description>
-            <value>tintsys</value>
-            <allowed kind="enum">
-            <value>none</value>
-            <value>var</value>
-            <value>tsys</value>
-            <value>tint</value>
-            <value>tintsys</value>
-            <value>median</value>
-            </allowed>
+      <shortdescription>weighting for time averaging [\'tintsys\', \'tsys\', \'tint\', \'var\', or \'median\']</shortdescription>
+      <description>weighting for time averaging</description>
+      <value>tintsys</value>
+      <allowed kind="enum">
+        <value>none</value>
+        <value>var</value>
+        <value>tsys</value>
+        <value>tint</value>
+        <value>tintsys</value>
+        <value>median</value>
+      </allowed>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam="true">
+      <description>average spectra within a scan number [True, False] (see examples in help)</description>
+      <value>False</value>
     </param>
 
     <param type="bool" name="polaverage">
-            <description>average over polarizations (True,False)</description>
-            <value>False</value>
+      <description>average spectra over polarizations [True, False]</description>
+      <value>False</value>
     </param>
 
     <param type="string" name="pweight" subparam="true">
-            <value>tsys</value>
-            <allowed kind="enum">
-            <value>none</value>
-            <value>var</value>
-            <value>tsys</value>
-            </allowed>
+      <shortdescription>weighting for polarization averaging [\'tsys\' or \'var\']</shortdescription>
+      <description>weighting for polarization averaging</description>
+      <value>tsys</value>
+      <allowed kind="enum">
+        <value>none</value>
+        <value>var</value>
+        <value>tsys</value>
+      </allowed>
     </param>
 
-
     <param type="string" name="kernel">
-            <description>type of spectral smoothing</description>
-            <value>none</value>
-            <allowed kind="enum">
-            <value>none</value>
-            <value>hanning</value>
-            <value>gaussian</value>
-            <value>boxcar</value>
-            </allowed>
+      <shortdescription>type of spectral smoothing [\'hanning\',\'gaussian\', or \'boxcar\']</shortdescription>
+      <description>type of spectral smoothing</description>
+      <value>none</value>
+      <allowed kind="enum">
+        <value>none</value>
+        <value>hanning</value>
+        <value>gaussian</value>
+        <value>boxcar</value>
+      </allowed>
     </param>
 
     <param type="int" name="kwidth" subparam="true">
-            <description>width of spectral kernel in channels</description>
-            <value>5</value>
+      <description>width of spectral kernel in channels</description>
+      <value>5</value>
     </param>
 
     <param type="string" name="plottype">
-            <description>type of plot (spectra, totalpower, azel, pointing, grid)</description>
-            <value>spectra</value>
-            <allowed kind="enum">
-            <value>pointing</value>
-            <value>azel</value>
-            <value>totalpower</value>
-            <value>spectra</value>
-            <value>grid</value>
-	    </allowed>
+      <shortdescription>type of plot [\'spectra\',\'totalpower\',\'azel\',\'pointing\', or \'grid\']</shortdescription>
+      <description>type of plot</description>
+      <value>spectra</value>
+      <allowed kind="enum">
+        <value>pointing</value>
+        <value>azel</value>
+        <value>totalpower</value>
+        <value>spectra</value>
+        <value>grid</value>
+      </allowed>
     </param>
 
     <param type="string" name="stack" subparam="true">
-            <description>code for stacking on single plot for spectral plotting</description>
-            <value>p</value>
+      <description>code for stacking on single plot for spectral plotting</description>
+      <value>p</value>
     </param>
 
     <param type="string" name="panel" subparam="true">
-            <description>code for splitting into multiple panels for spectral plotting</description>
-            <value>i</value>
+      <description>code for splitting into multiple panels for spectral plotting</description>
+      <value>i</value>
     </param>
 
     <param type="doubleArray" name="flrange" subparam="true">
-            <description>range for flux axis of plot for spectral plotting</description>
-            <value></value>
+      <description>range for flux axis of plot for spectral plotting</description>
+      <value></value>
     </param>
 
     <param type="any" name="sprange" subparam="true">
-            <description>range for spectral axis of plot</description>
-            <any type='variant' limittype='intArray doubleArray'/>
-            <value type="doubleArray"></value>
+      <description>range for spectral axis of plot</description>
+      <any type='variant' limittype='intArray doubleArray'/>
+      <value type="doubleArray"></value>
     </param>
 
     <param type="string" name="linecat" subparam="true">
-            <description>control for line catalog plotting for spectral plotting</description>
-            <value>none</value>
+      <description>control for line catalog plotting for spectral plotting</description>
+      <value>none</value>
     </param>
 
-    <param type="double" name="linedop" subparam='true'>
-            <description>doppler offset for line catalog plotting (spectral plotting)</description>
-            <value>0.0</value>
+    <param type="double" name="linedop" subparam="true">
+      <description>doppler offset for line catalog plotting (spectral plotting)</description>
+      <value>0.0</value>
     </param>
 
-    <param type="int" name="subplot" subparam='true'>
-            <description>number of subplots (row and column)</description>
-            <value type="int">-1</value>
-            <allowed kind="range">
-            <value range="min">-1</value>
-            <value range="max">99</value>
-            </allowed>
+    <param type="int" name="subplot" subparam="true">
+      <description>number of subplots (row and column)</description>
+      <value type="int">-1</value>
+      <allowed kind="range">
+        <value range="min">-1</value>
+        <value range="max">99</value>
+      </allowed>
     </param>
 
     <param type="string" name="colormap" subparam="true">
-            <description>the colours to be used for plot lines</description>
-            <value>none</value>
+      <description>the colours to be used for plot lines</description>
+      <value>none</value>
     </param>
 
     <param type="string" name="linestyles" subparam="true">
-            <description>the linestyles to be used for plot lines</description>
-            <value>none</value>
+      <description>the linestyles to be used for plot lines</description>
+      <value>none</value>
     </param>
 
     <param type="any" name="linewidth" subparam="true">
-            <description>width of plotted lines</description>
-            <any type='variant' limittype='int double'/>
-            <value>1</value>
+      <description>width of plotted lines</description>
+      <any type='variant' limittype='int double'/>
+      <value>1</value>
     </param>
 
-    <param type="bool" name="histogram" subparam='true'>
-            <description>plot histogram</description>
-            <value>False</value>
+    <param type="bool" name="histogram" subparam="true">
+      <description>plot histogram</description>
+      <value>False</value>
     </param>
 
     <param type="string" name="center" subparam="true">
-            <description>the central direction of gridding. (default: map center)</description>
-            <value></value>
+      <description>the central direction of gridding. (default: map center)</description>
+      <value></value>
     </param>
 
     <param type="doubleArray" name="cell" subparam="true">
-            <description>x and y cell size, e.g., ["1arcmin","1arcmin"]. (default map extent/subplot number)</description>
-            <value type="vector"></value>
+      <description>x and y cell size, e.g., ["1arcmin","1arcmin"]. (default map extent/subplot number)</description>
+      <value type="vector"></value>
     </param>
 
-    <param type="bool" name="scanpattern" subparam='true'>
-            <description>plot scan patterns.</description>
-            <value>False</value>
+    <param type="bool" name="scanpattern" subparam="true">
+      <description>plot scan patterns.</description>
+      <value>False</value>
     </param>
 
     <param type="bool" name="header">
-	    <description>print header information on the plot</description>
-	    <value>True</value>
+      <description>print header information on the plot</description>
+      <value>True</value>
     </param>
 
-    <param type="int" name="headsize" subparam='true'>
-            <description>header fontsize</description>
-            <value>9</value>
+    <param type="int" name="headsize" subparam="true">
+      <description>header fontsize</description>
+      <value>9</value>
     </param>
 
     <param type="bool" name="plotstyle">
-	    <description>customise plot settings</description>
-	    <value>False</value>
+      <description>customize plot settings</description>
+      <value>False</value>
     </param>
 
-    <param type="doubleArray" name="margin" subparam='true'>
-            <description>subplot margins in figure coordinate</description>
-            <value type="vector"></value>
+    <param type="doubleArray" name="margin" subparam="true">
+      <description>subplot margins in figure coordinate</description>
+      <value type="vector"></value>
     </param>
 
-    <param type="int" name="legendloc" subparam='true'>
-            <description>legend location</description>
-            <value>1</value>
+    <param type="int" name="legendloc" subparam="true">
+      <description>legend location</description>
+      <value>1</value>
     </param>
 
     <param type="string" name="outfile">
-	    <description>file name for hardcopy output</description>
-	    <value></value>
+      <description>file name for hardcopy output</description>
+      <value></value>
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite the output file if already exists</description>
-            <value>False</value>
+      <description>overwrite the output file if already exists</description>
+      <value>False</value>
     </param>
 
-
     <constraints>
-	    <when param="fluxunit">
-		<equals value=""/>
-		<equals value="K">
-			<default param="telescopeparm"><value>""</value></default>
-		</equals>
-	        <equals value="k">
-			<default param="telescopeparm"><value>""</value></default>
-	        </equals>
-	        <equals value="Jy">
-			<default param="telescopeparm"><value>""</value></default>
-	        </equals>
-	        <equals value="jy">
-			<default param="telescopeparm"><value>""</value></default>
-	        </equals>
-	    </when>
-	    <when param="specunit">
-		<equals value=""/>
-	        <equals value="channel"/>
-	        <equals value="km/s">
-                       <default param="restfreq"><value type='string'></value></default>
-                </equals>
-	        <equals value="GHz"/>
-	        <equals value="MHz"/>
-	        <equals value="kHz"/>
-	        <equals value="Hz"/>
-	    </when>
-            <when param="kernel">
-                <equals value="none"/>
-                <equals value="hanning"/>
-                <equals value="gaussian">
-                        <default param="kwidth"><value>5</value></default>
-                </equals>
-                <equals value="boxcar">
-                        <default param="kwidth"><value>5</value></default>
-                </equals>
-            </when>
-            <when param="plottype">
-                <equals value="spectra">
-                        <default param="stack"><value type="string">p</value></default>
-                        <default param="panel"><value type="string">i</value></default>
-                        <default param="flrange"><value type="vector"></value></default>
-                        <default param="sprange"><value type="vector"></value></default>
-                        <default param="linecat"><value type="string">none</value></default>
-                        <default param="linedop"><value>0.0</value></default>
-                        <default param="subplot"><value type="int">-1</value></default>
-                        <default param="colormap"><value type="string">none</value></default>
-                        <default param="linestyles"><value type="string">none</value></default>
-                        <default param="linewidth"><value>1</value></default>
-                        <default param="histogram"><value>False</value></default>
-                </equals>
-                <equals value="grid">
-                        <default param="center"><value type="string"></value></default>
-                        <default param="cell"><value type="vector"></value></default>
-                        <default param="subplot"><value type="int">-1</value></default>
-                        <default param="flrange"><value type="vector"></value></default>
-                        <default param="sprange"><value type="vector"></value></default>
-                        <default param="colormap"><value type="string">none</value></default>
-                        <default param="linestyles"><value type="string">none</value></default>
-                        <default param="linewidth"><value>1</value></default>
-                        <!-- <default param="histogram"><value>False</value></default> -->
-                </equals>
-                <equals value="totalpower"/>
-                <equals value="pointing">
-                        <default param="stack"><value type="string">t</value></default>
-                        <default param="colormap"><value type="string">none</value></default>
-                        <default param="scanpattern"><value>False</value></default>
-
-                </equals>
-                <equals value="azel"/>
-            </when>
-
-            <when param="timeaverage">
-                <equals type="bool" value="False"/>
-                <equals type="bool" value="True">
-                        <default param="tweight"><value type='string'>tintsys</value></default>
-                </equals>
-            </when>
-            <when param="polaverage">
-                <equals type="bool" value="False"/>
-                <equals type="bool" value="True">
-                        <default param="pweight"><value type='string'>tsys</value></default>
-                </equals>
-            </when>
-
-            <when param="header">
-                <equals type="bool" value="True">
-                        <default param="headsize"><value type="int">9</value></default>
-                </equals>
-                <equals type="bool" value="False"/>
-            </when>
-
-            <when param="plotstyle">
-                <equals type="bool" value="False"/>
-                <equals type="bool" value="True">
-                        <default param="margin"><value type="vector"></value></default>
-                        <default param="legendloc"><value type="int">1</value></default>
-                </equals>
-            </when>
-
-
+      <when param="fluxunit">
+        <equals value=""/>
+        <equals value="K">
+          <default param="telescopeparam"><value>""</value></default>
+        </equals>
+	<equals value="k">
+          <default param="telescopeparam"><value>""</value></default>
+        </equals>
+        <equals value="Jy">
+          <default param="telescopeparam"><value>""</value></default>
+        </equals>
+        <equals value="jy">
+          <default param="telescopeparam"><value>""</value></default>
+        </equals>
+      </when>
+      <when param="specunit">
+        <equals value=""/>
+        <equals value="channel"/>
+        <equals value="km/s">
+          <default param="restfreq"><value type='string'></value></default>
+        </equals>
+        <equals value="GHz"/>
+        <equals value="MHz"/>
+        <equals value="kHz"/>
+        <equals value="Hz"/>
+      </when>
+      <when param="kernel">
+        <equals value="none"/>
+        <equals value="hanning"/>
+        <equals value="gaussian">
+          <default param="kwidth"><value>5</value></default>
+        </equals>
+        <equals value="boxcar">
+          <default param="kwidth"><value>5</value></default>
+        </equals>
+      </when>
+      <when param="plottype">
+        <equals value="spectra">
+          <default param="stack"><value type="string">p</value></default>
+          <default param="panel"><value type="string">i</value></default>
+          <default param="flrange"><value type="vector"></value></default>
+          <default param="sprange"><value type="vector"></value></default>
+          <default param="linecat"><value type="string">none</value></default>
+          <default param="linedop"><value>0.0</value></default>
+          <default param="subplot"><value type="int">-1</value></default>
+          <default param="colormap"><value type="string">none</value></default>
+          <default param="linestyles"><value type="string">none</value></default>
+          <default param="linewidth"><value>1</value></default>
+          <default param="histogram"><value>False</value></default>
+        </equals>
+        <equals value="grid">
+          <default param="center"><value type="string"></value></default>
+          <default param="cell"><value type="vector"></value></default>
+          <default param="subplot"><value type="int">-1</value></default>
+          <default param="flrange"><value type="vector"></value></default>
+          <default param="sprange"><value type="vector"></value></default>
+          <default param="colormap"><value type="string">none</value></default>
+          <default param="linestyles"><value type="string">none</value></default>
+          <default param="linewidth"><value>1</value></default>
+          <!-- <default param="histogram"><value>False</value></default> -->
+        </equals>
+        <equals value="totalpower"/>
+        <equals value="pointing">
+          <default param="stack"><value type="string">t</value></default>
+          <default param="colormap"><value type="string">none</value></default>
+          <default param="scanpattern"><value>False</value></default>
+        </equals>
+        <equals value="azel"/>
+      </when>
+      <when param="timeaverage">
+        <equals type="bool" value="False"/>
+        <equals type="bool" value="True">
+          <default param="tweight"><value type='string'>tintsys</value></default>
+          <default param="scanaverage"><value type='bool'>False</value></default>
+        </equals>
+      </when>
+      <when param="polaverage">
+        <equals type="bool" value="False"/>
+        <equals type="bool" value="True">
+          <default param="pweight"><value type='string'>tsys</value></default>
+        </equals>
+      </when>
+      <when param="header">
+        <equals type="bool" value="True">
+          <default param="headsize"><value type="int">9</value></default>
+        </equals>
+        <equals type="bool" value="False"/>
+      </when>
+      <when param="plotstyle">
+        <equals type="bool" value="False"/>
+        <equals type="bool" value="True">
+          <default param="margin"><value type="vector"></value></default>
+          <default param="legendloc"><value type="int">1</value></default>
+        </equals>
+      </when>
     </constraints>
 
-    </input>
+  </input>
 
   <returns type="void"/>
 
   <example>
-  Keyword arguments:
-        infile -- name of input SD dataset
-        antenna -- antenna name or id (only effective for MS input). 
-        fluxunit -- units for line flux
-                options: 'K','Jy',''
-                default: '' (keep current fluxunit)
-                WARNING: For GBT data, see description below.
-            &gt;&gt;&gt; fluxunit expandable parameter
-                 telescopeparm -- the telescope characteristics
-                        options: (str) name or (list) list of gain info
-                        default: '' (none set)
-                        example: if telescopeparm='', it tries to get the telescope
-                                 name from the data.
-                                 Full antenna parameters (diameter,ap.eff.) known
-                                 to ASAP are
-                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
-                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
-                                 to 'K' first then convert to a new fluxunit.
-                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
-                                 telescopeparm=[0.743] gain in Jy/K
-                                 telescopeparm='FIX' to change default fluxunit
-                                 see description below
-
-        specunit -- units for spectral axis
-                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
-                default: '' (=current)
-                example: this will be the units for masklist
-            &gt;&gt;&gt; specunit expandable parameter
-                 restfreq -- rest frequency
-                         default: '' (use current setting)
-                         example: 4.6e10 (float value in Hz),
-                                  '46GHz' (string with unit),
-                                  ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
-                                  [{'name':'CO','value':345e9}] (a value with name)
-        frame -- frequency frame for spectral axis
-                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
-                         'GEO','GALACTO','LGROUP','CMB'
-                default: currently set frame in scantable
-                WARNING: frame='REST' not yet implemented
-        doppler -- doppler mode
-                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
-                default: currently set doppler in scantable
-        scanlist -- list or string of scan numbers to process
-                default: [] (use all scans)
-                example: [21,22,23,24], or "21~24"
-                this selection is in addition to field, iflist, pollist,
-                and beamlist
-        field -- selection string for selecting scans by name
-                default: '' (no name selection)
-                example: 'FLS3a*'
-                this selection is in addition to scanlist, iflist, pollist,
-                and beamlist
-        iflist -- list or string of IF id numbers to select
-                default: [] (use all IFs)
-                example: [15]
-                this selection is in addition to scanlist, field, pollist,
-                and beamlist
-        pollist -- list or string of polarization id numbers to select
-                default: [] (use all polarizations)
-                example: [1]
-                this selection is in addition to scanlist, field, iflist,
-                and beamlist
-        beamlist -- list or string of beam id numbers to select
-                default: [] (use all beams)
-                example: [1]
-                this selection is in addition to scanlist, field, iflist,
-                and pollist
-        scanaverage -- average integs within scans
-                options: (bool) True,False
-                default: False
-        timeaverage -- average times for multiple scan cycles
-                options: (bool) True,False
-                default: False
-                example: if True, this happens after calibration
-                &gt;&gt;&gt;timeaverage expandable parameter
-                 tweight -- weighting for time average
-                         options: 'var'   (1/var(spec) weighted)
-                                  'tsys'  (1/Tsys**2 weighted)
-                                  'tint'  (integration time weighted)
-                                  'tintsys'  (Tint/Tsys**2)
-                                  'median'  ( median averaging)
-                         default: 'tintsys'
-        polaverage -- average polarizations
-                options: (bool) True,False
-                default: False
-                &gt;&gt;&gt;polaverage expandable parameter
-                 pweight -- weighting for polarization average
-                         options: 'var'  (1/var(spec) weighted)
-                                  'tsys' (1/Tsys**2 weighted)
-                         default: 'tsys'
-        kernel -- type of spectral smoothing
-                options: 'hanning','gaussian','boxcar', 'none'
-                default: 'none'
-                &gt;&gt;&gt;kernel expandable parameter
-                 kwidth -- width of spectral smoothing kernel
-                         options: (int) in channels
-                         default: 5
-                         example: 5 or 10 seem to be popular for boxcar
-                                  ignored for hanning (fixed at 5 chans)
-                                  (0 will turn off gaussian or boxcar)
-        plottype -- type of plot
-                 options: 'spectra','totalpower','pointing','azel','grid'
-                 default: 'spectra'
-            &gt;&gt;&gt; plottype expandable parameters
-                stack -- code for stacking on single plot for spectral plotting
-                        options: 'p','b','i','t','s','r' or
-                                 'pol', 'beam', 'if', 'time', 'scan', 'row'
-                        default: 'p'
-                        example: maximum of 16 stacked spectra
-                                 stack by pol, beam, if, time, scan
-                        Note stack selection is ignored when panel='r'.
-                panel -- code for splitting into multiple panels for spectral plotting
-                        options: 'p','b','i','t','s','r' or
-                                 'pol', 'beam', 'if', 'time', 'scan', 'row'
-                        default: 'i'
-                        example: maximum of 16 panels
-                                 panel by pol, beam, if, time, scan
-                        Note panel selection is ignored when stack='r'.
-                flrange -- range for flux axis of plot for spectral plotting
-                        options: (list) [min,max]
-                        default: [] (full range)
-                        example: flrange=[-0.1,2.0] if 'K'
-                                 assumes current fluxunit
-                sprange -- range for spectral axis of plot
-                        options: (list) [min,max]
-                        default: [] (full range)
-                        example: sprange=[42.1,42.5] if 'GHz'
-                                 assumes current specunit
-                linecat -- control for line catalog plotting for spectral plotting
-                        options: (str) 'all','none' or by molecule
-                        default: 'none' (no lines plotted)
-                        example: linecat='SiO' for SiO lines
-                                 linecat='*OH' for alcohols
-                                 uses sprange to limit catalog
-                        WARNING: specunit must be in frequency (*Hz)
-                                 to plot from the line catalog!
-                                 and must be 'GHz' or 'MHz' to use
-                                 sprange to limit catalog
-                linedop -- doppler offset for line catalog plotting (spectral plotting)
-                        options: (float) doppler velocity (km/s)
-                        default: 0.0
-                        example: linedop=-30.0
-                center -- the central direction of gridding
-                        default: '' (map center)
-                        example: 'J2000 19h30m00 -40d00m00'
-                        Note currently only supports 'J2000' as direction frame
-                cell -- x and y cell size of gridding
-                        default: [] (map extent devided by # of subplots in x and y)
-                        example: cell=['1.0arcmin','1.0arcmin']
-                                 cell='1.0arcmin' (equivalent to the example above)
-                        Note default number of subplots is 1 x 1 in plottype='grid'.
-                subplot -- number of subplots (row and column) on a page
-                           NOTICE plotter will slow down when a large number is specified
-                           default: -1 (auto. for plottype='spectra', 1x1 for plottype='grid')
-                           example: 23 (2 rows by 3 columns)
-                colormap -- the colours to be used for plot lines. 
-                        default: None
-                        example: colormap="green red black cyan magenta" (html standard)
-                                 colormap="g r k c m" (abbreviation)
-                                 colormap="#008000 #00FFFF #FF0090" (RGB tuple)
-                                 The plotter will cycle through these colours 
-                                 when lines are overlaid (stacking mode).
-                linestyles -- the linestyles to be used for plot lines. 
-                        default: None
-                        example: linestyles="line dashed dotted dashdot dashdotdot dashdashdot". 
-                                 The plotter will cycle through these linestyles 
-                                 when lines are overlaid (stacking mode). 
-                        WARNING: Linestyles can be specified only one color has been set. 
-                linewidth -- width of plotted lines. 
-                        default: 1
-                        example: linewidth=1 (integer)
-                                 linewidth=0.75 (double)
-                histogram -- plot histogram
-                        options: (bool) True, False
-                        default: False
-                scanpattern -- plot additional lines on the plot to indicate scan patterns
-                               when plottype='pointing'
-                        options: (bool) True, False
-                        default: False
-        header -- print header information on the plot
-                options: (bool) True, False
-                default: True
-                The header information is printed only on the logger when 
-                plottype = 'azel' and 'pointing'. 
-            &gt;&gt;&gt; header expandable parameter
-                headsize -- header font size
-                        options: (int)
-                        default: 9
-        plotstyle -- customise plot settings
+Keyword arguments:
+infile -- name of input SD dataset
+antenna -- select an antenna name or ID
+        default: 0
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+fluxunit -- units for line flux
+        options: 'K','Jy',''
+        default: '' (keep current fluxunit in data)
+        WARNING: For GBT data, see description below.
+    &gt;&gt;&gt; fluxunit expandable parameter
+        telescopeparam -- parameters of telescope for flux conversion
+                options: (str) name or (list) list of gain info
+                default: '' (none set)
+                example: if telescopeparam='', it tries to get the telescope
+                         name from the data.
+                         Full antenna parameters (diameter,ap.eff.) known
+                         to ASAP are
+                         'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                         'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                         to 'K' first then convert to a new fluxunit.
+                         telescopeparam=[104.9,0.43] diameter(m), ap.eff.
+                         telescopeparam=[0.743] gain in Jy/K
+                         telescopeparam='FIX' to change default fluxunit
+                         see description below
+specunit -- units for spectral axis
+        options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
+        default: '' (=current)
+        example: this will be the units for masklist
+    &gt;&gt;&gt; specunit expandable parameter
+        restfreq -- the rest frequency
+                available type includes float, int, string, list of float, 
+                list of int, list of string, and list of dictionary. the 
+                default unit of restfreq in case of float, int, or string 
+                without unit is Hz. string input can be a value only 
+                (treated as Hz) or a value followed by unit for which 'GHz',
+                'MHz','kHz',and 'Hz' are available. 
+                a list can be used to set different rest frequencies for 
+                each IF. the length of list input must be number of IFs. 
+                dictionary input should be a pair of line name and 
+                frequency with keys of 'name' and 'value', respectively. 
+                values in the dictionary input follows the same manner as 
+                as for single float or string input. 
+                example: 345.796
+                         '1420MHz'
+                         [345.8, 347.0, 356.7]
+                         ['345.8MHz', '347.0MHz', '356.7MHz']
+                         [{'name':'CO','value':345}]
+frame -- frequency reference frame
+        options: 'LSRK', 'TOPO', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB'
+        default: '' (keep current frame in data)
+doppler -- doppler convention (effective only when spw is in
+           velocity unit)
+        options: 'RADIO', 'OPTICAL', 'Z', 'BETA', or 'GAMMA'
+        default: '' (keep current doppler setting in data)
+field -- select data by field IDs and names
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 0 or field named 3C273)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)
+       NOTE this task only supports IF ID selction and ignores channel
+       selection.
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+beam -- select data by beam IDs
+        default: '' (use all beams)
+        example: beam='0,1' (beam IDs 0,1)
+        this selection is in addition to the other selections to data
+timeaverage -- average spectra over time
+        options: (bool) True, False
+        default: False
+    &gt;&gt;&gt;timeaverage expandable parameter
+        tweight -- weighting for time averaging
+                options: 'var'     (1/var(spec) weighted)
+                         'tsys'    (1/Tsys**2 weighted)
+                         'tint'    (integration time weighted)
+                         'tintsys' (Tint/Tsys**2)
+                         'median'  (median averaging)
+                default: 'tintsys'
+        scanaverage -- average spectra within a scan number
+                       when True, spectra are NOT averaged over
+                       different scan numbers.
                 options: (bool) True, False
                 default: False
-            &gt;&gt;&gt; plotstyle expandable parameter
-                margin -- a list of subplot margins in figure coordinate (0-1), 
-                          i.e., fraction of the figure width or height.
-                          The order of elements should be:
-                          [left, bottom, right, top, horizontal space btw panels,
-                          vertical space btw panels]
-                        example: margin = [0.125, 0.1, 0.9, 0.9, 0.2, 0.2]
-                legendloc -- legend location on the axes (0-10)
-                           options: (integer) 0 -10 
-                                    see help of "sd.plotter.set_legend" for 
-                                    the detail of location. Note that 0 ('best')
-                                    is very slow. 
-                           default: 1 ('upper right')
-        outfile -- file name for hardcopy output
-                options: (str) filename.eps,.ps,.png
-                default: '' (no hardcopy)
-                example: 'specplot.eps','specplot.png'
-                Note this autodetects the format from the suffix (.eps,.ps,.png).
-        overwrite -- overwrite the output file if already exists
-                options: (bool) True,False
+polaverage -- average spectra over polarizations
+        options: (bool) True, False
+        default: False
+    &gt;&gt;&gt;polaverage expandable parameter
+        pweight -- weighting for polarization average
+                options: 'var'  (1/var(spec) weighted)
+                         'tsys' (1/Tsys**2 weighted)
+                default: 'tsys'
+kernel -- type of spectral smoothing
+        options: 'hanning','gaussian','boxcar', 'none'
+        default: 'none'
+    &gt;&gt;&gt;kernel expandable parameter
+        kwidth -- width of spectral smoothing kernel
+                options: (int) in channels
+                default: 5
+                example: 5 or 10 seem to be popular for boxcar
+                         ignored for hanning (fixed at 5 chans)
+                         (0 will turn off gaussian or boxcar)
+plottype -- type of plot
+        options: 'spectra','totalpower','pointing','azel','grid'
+        default: 'spectra'
+    &gt;&gt;&gt; plottype expandable parameters
+        stack -- code for stacking on single plot for spectral plotting
+                options: 'p','b','i','t','s','r' or
+                         'pol', 'beam', 'if', 'time', 'scan', 'row'
+                default: 'p'
+                example: maximum of 16 stacked spectra
+                         stack by pol, beam, if, time, scan
+                Note stack selection is ignored when panel='r'.
+        panel -- code for splitting into multiple panels for spectral plotting
+                options: 'p','b','i','t','s','r' or
+                         'pol', 'beam', 'if', 'time', 'scan', 'row'
+                default: 'i'
+                example: maximum of 16 panels
+                         panel by pol, beam, if, time, scan
+                Note panel selection is ignored when stack='r'.
+        flrange -- range for flux axis of plot for spectral plotting
+                options: (list) [min,max]
+                default: [] (full range)
+                example: flrange=[-0.1,2.0] if 'K'
+                         assumes current fluxunit
+        sprange -- range for spectral axis of plot
+                options: (list) [min,max]
+                default: [] (full range)
+                example: sprange=[42.1,42.5] if 'GHz'
+                         assumes current specunit
+        linecat -- control for line catalog plotting for spectral plotting
+                options: (str) 'all','none' or by molecule
+                default: 'none' (no lines plotted)
+                example: linecat='SiO' for SiO lines
+                         linecat='*OH' for alcohols
+                         uses sprange to limit catalog
+                WARNING: specunit must be in frequency (*Hz)
+                         to plot from the line catalog!
+                         and must be 'GHz' or 'MHz' to use
+                         sprange to limit catalog
+        linedop -- doppler offset for line catalog plotting (spectral plotting)
+                options: (float) doppler velocity (km/s)
+                default: 0.0
+                example: linedop=-30.0
+        center -- the central direction of gridding
+                default: '' (map center)
+                example: 'J2000 19h30m00 -40d00m00'
+                Note currently only supports 'J2000' as direction frame
+        cell -- x and y cell size of gridding
+                default: [] (map extent devided by # of subplots in x and y)
+                example: cell=['1.0arcmin','1.0arcmin']
+                         cell='1.0arcmin' (equivalent to the example above)
+                Note default number of subplots is 1 x 1 in plottype='grid'.
+        subplot -- number of subplots (row and column) on a page
+                NOTICE plotter will slow down when a large number is specified
+                default: -1 (auto. for plottype='spectra', 1x1 for plottype='grid')
+                example: 23 (2 rows by 3 columns)
+        colormap -- the colours to be used for plot lines. 
+                default: None
+                example: colormap="green red black cyan magenta" (html standard)
+                         colormap="g r k c m" (abbreviation)
+                         colormap="#008000 #00FFFF #FF0090" (RGB tuple)
+                         The plotter will cycle through these colours 
+                         when lines are overlaid (stacking mode).
+        linestyles -- the linestyles to be used for plot lines. 
+                default: None
+                example: linestyles="line dashed dotted dashdot dashdotdot dashdashdot". 
+                         The plotter will cycle through these linestyles 
+                         when lines are overlaid (stacking mode). 
+                WARNING: Linestyles can be specified only one color has been set. 
+        linewidth -- width of plotted lines. 
+                default: 1
+                example: linewidth=1 (integer)
+                         linewidth=0.75 (double)
+        histogram -- plot histogram
+                options: (bool) True, False
                 default: False
+        scanpattern -- plot additional lines on the plot to indicate scan patterns
+                       when plottype='pointing'
+                options: (bool) True, False
+                default: False
+header -- print header information on the plot
+        options: (bool) True, False
+        default: True
+        The header information is printed only on the logger when 
+        plottype = 'azel' and 'pointing'. 
+    &gt;&gt;&gt; header expandable parameter
+        headsize -- header font size
+                options: (int)
+                default: 9
+plotstyle -- customise plot settings
+        options: (bool) True, False
+        default: False
+    &gt;&gt;&gt; plotstyle expandable parameter
+        margin -- a list of subplot margins in figure coordinate (0-1), 
+                  i.e., fraction of the figure width or height.
+                  The order of elements should be:
+                  [left, bottom, right, top, horizontal space btw panels,
+                  vertical space btw panels]
+                example: margin = [0.125, 0.1, 0.9, 0.9, 0.2, 0.2]
+        legendloc -- legend location on the axes (0-10)
+                options: (integer) 0 -10 
+                         see help of "sd.plotter.set_legend" for 
+                         the detail of location. Note that 0 ('best')
+                         is very slow. 
+                default: 1 ('upper right')
+outfile -- file name for hardcopy output
+        options: (str) filename.eps,.ps,.png
+        default: '' (no hardcopy)
+        example: 'specplot.eps','specplot.png'
+        Note this autodetects the format from the suffix (.eps,.ps,.png).
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
 
 
-        DESCRIPTION:
+DESCRIPTION:
 
-        Task sdplot displays single-dish spectra, total power,
-        or pointing direction of input data.
-        It assumes that the spectra have been calibrated.
-        It does allow selection of scans, IFs, polarizations, and
-        some time and channel averaging/smoothing options also,
-        but does not write out this data.
+Task sdplot displays single-dish spectra, total power,
+or pointing direction of input data.
+It assumes that the spectra have been calibrated.
+It does allow selection of scans, IFs, polarizations, and
+some time and channel averaging/smoothing options also,
+but does not write out this data.
 
-        This task adds an additional toolbar to Matplotlib plotter. 
-        See the cookbook for details of its capability.
+This task adds an additional toolbar to Matplotlib plotter. 
+See the cookbook for details of its capability.
 
-        *** Data selection ***
-        This task allows data selection via field name, scan, IF,
-        polarization and beam IDs. Selection of field allows pattern
-        matching using asterisk, e.g., 'FLS3a*'. Selection of scans,
-        IFs, polarizations, and beams, is possible either by a list
-        of IDs or by a CASA type selection syntax using a string of 
-        comma separated numbers with operaters, i.e., '~', '&gt;', '&gt;=',
-        '&lt;', and '&lt;='.
-        For example, the following two selections are equivalent:
-        scanlist = [0, 1, 2, 7, 8, 9, 15]
-        scanlist = "&lt;3,7~9,15"
+*** Data selection ***
+This task allows data selection via field name, scan, IF,
+polarization and beam IDs. Selection of field allows pattern
+matching using asterisk, e.g., 'FLS3a*'. Selection of scans,
+IFs, polarizations, and beams, is possible by a CASA type 
+selection syntax using a string of comma separated numbers 
+with operaters, i.e., '~', '&gt;', and '&lt;'.
+For example, the following selection
+scan = "&lt;3,7~9,15"
+is to select scan IDs 0, 1, 2, 7, 8, 9, and 15.
 
-        *** control of plot lines in 'spectra' and 'grid' plottype ***
-        Note that colormap and linestyles cannot be controlled at a time.
-        The 'linestyles' is ignored if both of them are specified.
-        Some plot options, like changing titles, legends, fonts,
-        and the like are not supported in this task.  You should use
-        sd.plotter from the ASAP toolkit directly for this.
+-------------------------------------
+AVERAGING OF SPECTRA
+-------------------------------------
+Task sdplot has two averaging modes, i.e., time and polarization average.
 
-        *** available plottypes ***
-        * plottype = 'spectra' plots single dish spectra. Multiple scans,
-          IFs, polarizations, and beams can be handles through stacking
-          and panelling.
-          This task uses the JPL line catalog as supplied by ASAP.
-          If you wish to use a different catalog, or have it plot
-          the line IDs from top or bottom (rather than alternating),
-          then you will need to explore the sd toolkit also.
-        * plottype = 'grid' plots spectra based on their pointing direction.
-          The spectra are gridded by direction before plotting.
-          Multiple IFs and polarizations are not handled in this mode. Only
-          the first IF and polarizaion is gridded and plotted if data 
-          includes multiple IDs after selections are applied. Hence, over
-          plotting is not available
+When timeaverage=True, spectra are averaged over time for each IF
+(spectral window), polarization, and beam, independently. Note that,
+by default (scanaverage=False), timeaverage=True averages spectra
+irrespective of scan IDs.
+It is possible to average spectra separately for each scan ID by setting
+a sub-parameter scanaverage=True.
+For example, the combination of parameters: scan='0~2', timeaverage=True, and
+scanaverage=False: averages spectra in scan ID 0 through 2 all together
+                   to a spectrum,
+scanaverage=True : averages spectra per scan ID and end up with three
+                   spectra from scan 0, 1, and 2.
 
-        Currently most of the parameters are ignored in the following modes.
+When polaverage=True, spectra are averaged over polarization for
+each IF (spectral window) and beam. Note that, so far, time averaging is
+automatically switched on when polaverage is set to True. This behavior
+is not desirable and will be discarded in future.
 
-        * plottype='totalpower' is used to plot the total power data.
-          and only plot option is amplitude versus data row number.
-        * plottype='azel' plots azimuth and elevation tracks of the source.
-        * plottype='pointing' plots antenna poinitings.
 
-        ASAP recognizes the data of the "AT" telescopes, but currently
-        does not know about the GBT or any other telescope. This task
-        does know about GBT. Telescope name is obtained from the data.
-        If you wish to change the fluxunit (see below), and telescopeparm='',
-        for the AT telescopes it will use internal telescope parameters for
-        flux conversion. For GBT, it will use an approximate aperture
-        efficiency conversion.  If you give telescopeparm a list,
-        then if the list has a single float it is assumed to
-        be the gain in Jy/K, if two or more elements they are assumed
-        to be telescope diameter (m) and aperture efficiency
-        respectively.
+*** available plottypes ***
+* plottype = 'spectra' plots single dish spectra. Multiple scans,
+  IFs, polarizations, and beams can be handles through stacking
+  and panelling.
+  This task uses the JPL line catalog as supplied by ASAP.
+  If you wish to use a different catalog, or have it plot
+  the line IDs from top or bottom (rather than alternating),
+  then you will need to explore the sd toolkit also.
+* plottype = 'grid' plots spectra based on their pointing direction.
+  The spectra are gridded by direction before plotting.
+  Multiple IFs and polarizations are not handled in this mode. Only
+  the first IF and polarizaion is gridded and plotted if data 
+  includes multiple IDs after selections are applied. Hence, over
+  plotting is not available
 
-        WARNING: be careful plotting otf data with lots of fields!
+Currently most of the parameters are ignored in the following modes.
 
-        WARNING for the GBT raw SDFITS format data as input:
-        SDtasks are able to handle GBT raw SDFITS format data since the 
-        data filler is available. However, the functionality is not well 
-        tested yet, so that there may be unknown bugs.  
+* plottype='totalpower' is used to plot the total power data.
+  and only plot option is amplitude versus data row number.
+* plottype='azel' plots azimuth and elevation tracks of the source.
+* plottype='pointing' plots antenna poinitings.
 
+*** control of plot lines in 'spectra' and 'grid' plottype ***
+Note that colormap and linestyles cannot be controlled at a time.
+The 'linestyles' is ignored if both of them are specified.
+Some plot options, like changing titles, legends, fonts,
+and the like are not supported in this task.  You should use
+sd.plotter from the ASAP toolkit directly for this.
+
+ASAP recognizes the data of the "AT" telescopes, but currently
+does not know about the GBT or any other telescope. This task
+does know about GBT. Telescope name is obtained from the data.
+If you wish to change the fluxunit (see below), and telescopeparam='',
+for the AT telescopes it will use internal telescope parameters for
+flux conversion. For GBT, it will use an approximate aperture
+efficiency conversion.  If you give telescopeparam a list,
+then if the list has a single float it is assumed to
+be the gain in Jy/K, if two or more elements they are assumed
+to be telescope diameter (m) and aperture efficiency
+respectively.
+
+WARNING: be careful plotting otf data with lots of fields!
+
+WARNING for the GBT raw SDFITS format data as input:
+SDtasks are able to handle GBT raw SDFITS format data since the 
+data filler is available. However, the functionality is not well 
+tested yet, so that there may be unknown bugs.  
   </example>
 
 </task>

@@ -6,7 +6,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+def sdcal(infile, antenna, fluxunit, telescopeparam, field, spw, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, verify, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdcal_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -17,6 +17,9 @@ class sdcal_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdcal_worker,self).__init__(**kwargs)
         self.suffix = '_cal'
+        # Nothing to be done when calmode='none' and tau=0.0
+        if self.calmode=='none' and self.tau==0.0:
+            raise Exception, "No operation to be done for calmode='none' and tau=0.0. Exiting task."
 
     def initialize_scan(self):
         sorg=sd.scantable(self.infile,average=False,antenna=self.antenna)
@@ -25,9 +28,9 @@ class sdcal_worker(sdutil.sdtask_template):
             raise Exception, 'Scantable data %s, is not found'
 
         # A scantable selection
-        #sel = self.get_selector()
-        sel = self.get_selector_by_list()
+        sel = self.get_selector(sorg)
         sorg.set_selection(sel)
+        self.assert_no_channel_selection_in_spw('warn')
         
         # Copy scantable when usign disk storage not to modify
         # the original table.
@@ -44,24 +47,12 @@ class sdcal_worker(sdutil.sdtask_template):
         # apply inputs to scan
         self.set_to_scan()
 
-##         # do opacity (atmospheric optical depth) correction
-##         sdutil.doopacity(self.scan, self.tau)
-
-##         # channel splitting
-##         sdutil.dochannelrange(self.scan, self.channelrange)
-
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
         engine.execute()
         
         # do opacity (atmospheric optical depth) correction
         sdutil.doopacity(self.scan, self.tau)
-
-        # channel splitting
-        sdutil.dochannelrange(self.scan, self.channelrange)
-
-        # Average data if necessary
-        self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight, self.averageall)
 
         engine.finalize()
 

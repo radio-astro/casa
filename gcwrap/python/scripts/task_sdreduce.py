@@ -3,12 +3,12 @@ from taskinit import casalog
 import asap as sd
 import sdutil
 
-import task_sdcal
-import task_sdsmooth
-import task_sdbaseline
+import task_sdcal as task_sdcal
+import task_sdaverage as task_sdaverage
+import task_sdbaseline as task_sdbaseline
 
 @sdutil.sdtask_decorator
-def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdreduce(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, average, timeaverage, tweight, scanaverage, averageall, polaverage, pweight, kernel, kwidth, chanwidth, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdreduce_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -28,14 +28,13 @@ class sdreduce_worker(sdutil.sdtask_template):
         self.restorer = sdutil.scantable_restore_factory(self.scan,
                                                          self.infile,
                                                          self.fluxunit,
-                                                         self.specunit,
+                                                         '', # specunit=''
                                                          self.frame,
                                                          self.doppler,
                                                          self.restfreq)
         
         # Apply selection
-        #self.scan.set_selection(self.get_selector())
-        self.scan.set_selection(self.get_selector_by_list())
+        self.scan.set_selection(self.get_selector())
 
     def execute(self):
         # calibration stage
@@ -59,9 +58,11 @@ class sdreduce_worker(sdutil.sdtask_template):
         # opacity correction
         sdutil.doopacity(self.scan, self.tau)
 
-        # channel splitting
-        sdutil.dochannelrange(self.scan, self.channelrange)
-        
+        ## channel splitting
+        #sdutil.dochannelrange(self.scan, self.channelrange)
+
+        #WORKAROUND for new tasks (in future this should be done in sdutil)
+        if not self.timeaverage: self.scanaverage = False
         # averaging stage
         if self.average:
             self.scan = sdutil.doaverage(self.scan, self.scanaverage,
@@ -77,9 +78,9 @@ class sdreduce_worker(sdutil.sdtask_template):
         # smoothing stage
         casalog.post( "" )
         casalog.post( "*** sdsmooth stage ***" )
-        if self.kernel != 'none':
+        if self.kernel.lower() not in ['none', '']:
             self.verify = self.verifysm
-            engine = task_sdsmooth.sdsmooth_engine(self)
+            engine = task_sdaverage.sdsmooth_engine(self)
             engine.initialize()
             engine.execute()
 ##             self.scan = engine.get_result()

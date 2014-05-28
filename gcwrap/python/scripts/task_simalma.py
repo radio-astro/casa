@@ -12,7 +12,7 @@ from feather import feather
 from concat import concat
 from imregrid import imregrid
 from immath import immath
-from sdimaging import sdimaging
+from sdimagingold import sdimagingold
 
 def simalma(
     project=None,
@@ -1132,7 +1132,7 @@ def simalma(
                 if tp_kernel.upper() == 'SF':
                     msg("Generating TP image using 'SF' kernel.",\
                          priority=v_priority)
-                    # Parameters for sdimaging
+                    # Parameters for sdimagingold
                     task_param = {}
                     task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'sf'
@@ -1157,7 +1157,7 @@ def simalma(
                     gwidth = qa.tos(qa.mul(qhwhm, convfac))
                     jwidth = qa.tos(qa.mul(jfac/gfac/pl.log(2.),gwidth))
                     #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
-                    # Parameters for sdimaging
+                    # Parameters for sdimagingold
                     task_param = {}
 #                     task_param['infile'] = fileroot+"/"+vis_tp
                     task_param['infiles'] = vis_tp
@@ -1166,7 +1166,7 @@ def simalma(
                     task_param['jwidth'] = jwidth
                     task_param['outfile'] = temp_out
                     task_param['imsize'] = imsize_tp
-                    # sdimaging doesn't actually take a quantity,
+                    # sdimagingold doesn't actually take a quantity,
                     #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
                     #task_param['cell'] = cell_arcmin
                     task_param['cell'] = cell_tp
@@ -1174,14 +1174,14 @@ def simalma(
                     task_param['dochannelmap'] = True
                     task_param['nchan'] = model_nchan
 
-                saveinputs('sdimaging',
-                           fileroot+"/"+project+".sd.sdimaging.last",
+                saveinputs('sdimagingold',
+                           fileroot+"/"+project+".sd.sdimagingold.last",
                            myparams=task_param)
-                msg("Having set up the gridding parameters, the sdimaging task is called to actually creage the image:",priority=v_priority)
-                msg(get_taskstr('sdimaging', task_param), priority="info")
+                msg("Having set up the gridding parameters, the sdimagingold task is called to actually creage the image:",priority=v_priority)
+                msg(get_taskstr('sdimagingold', task_param), priority="info")
 
                 if not dryrun:
-                    sdimaging(**task_param)
+                    sdimagingold(**task_param)
                 del task_param
                 # TODO: scale TP image
                 

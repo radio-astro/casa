@@ -11,6 +11,15 @@ import numpy
 import re
 import string
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
+#to rethrow exception
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+g['__rethrow_casa_exceptions'] = True
 from sdmath import sdmath
 import asap as sd
 from asap.scantable import is_scantable
@@ -34,6 +43,34 @@ class sdmath_unittest_base:
         self.assertEqual(isthere,True,
                          msg='output file %s was not created because of the task failure'%(name))
 
+    def _getdim( self, sp ):
+        dim = 0
+        import copy
+        a = copy.deepcopy(sp)
+        while isinstance(a, list):
+            dim = dim + 1
+            a = a[0]
+        return dim
+    
+    def _checkshape( self, sp, ref ):
+        # check array dimension
+        self.assertEqual( self._getdim(sp), self._getdim(ref),
+                          msg='array dimension differ' )
+        # check number of spectra
+        self.assertEqual( len(sp), len(ref),
+                          msg='number of spectra differ' )
+        # check number of channel
+        self.assertEqual( len(sp[0]), len(ref[0]),
+                          msg='number of channel differ' )
+
+    def _diff(self, sp, ref):
+        diff=abs((sp-ref)/ref)
+        idx=numpy.argwhere(numpy.isnan(diff))
+        #print idx
+        if len(idx) > 0:
+            diff[idx]=sp[idx]
+        return diff
+        
     def _compare( self, name, ref, factor, op, scale=1.0 ):
         self._checkfile( name )
         # get original nchan and nrow
@@ -164,7 +201,8 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    prefix=sdmath_unittest_base.taskname+'Test0'
+    #prefix=sdmath_unittest_base.taskname+'Test0'
+    prefix='sdmathTest0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -191,11 +229,11 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test001(self):
-        """Test 001: Empty varlist"""
+        """Test 001: Empty varnames"""
         ex='V0+V1'
         v={}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -204,11 +242,11 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test002(self):
-        """Test 002: Lack of some variables in varlist"""
+        """Test 002: Lack of some variables in varnames"""
         ex='V0+V1'
         v={'V0': self.rawfile}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -224,7 +262,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=False)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -239,7 +277,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': factor,
            'V1': self.rawfile}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -255,7 +293,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': factor,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -270,7 +308,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -286,7 +324,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': infile2}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -303,7 +341,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': datafile}
         try:
-            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -329,7 +367,8 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    prefix=sdmath_unittest_base.taskname+'Test2'
+    #prefix=sdmath_unittest_base.taskname+'Test2'
+    prefix='sdmathTest2'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -351,7 +390,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -363,7 +402,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -375,7 +414,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -387,7 +426,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -399,7 +438,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -411,7 +450,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -423,7 +462,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -435,7 +474,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -447,7 +486,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -459,7 +498,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -471,7 +510,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -483,7 +522,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -495,7 +534,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -507,7 +546,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -519,7 +558,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]] 
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -531,7 +570,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -553,7 +592,8 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    prefix=sdmath_unittest_base.taskname+'Test2'
+    #prefix=sdmath_unittest_base.taskname+'Test2'
+    prefix='sdmathTest2'
     outfile=prefix+'.asap'
     factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
     datafile=prefix+'.dat'
@@ -577,7 +617,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -588,7 +628,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -599,7 +639,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -610,7 +650,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -639,7 +679,8 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
     # Input and output names
     rawfile0='sdmath0.asap'
     rawfile1='sdmath1.asap'
-    prefix=sdmath_unittest_base.taskname+'Test3'
+    #prefix=sdmath_unittest_base.taskname+'Test3'
+    prefix='sdmathTest3'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -664,7 +705,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -675,7 +716,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -686,7 +727,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -697,7 +738,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -706,7 +747,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
 ###
 # Test on scantable storage and insitu settings
 ###
-class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
+class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
     """
     Test on scantable sotrage and insitu.
 
@@ -741,14 +782,16 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
     rawfile='sdmath0.asap'
     rawfile1='sdmath1.asap'
     inlist = [rawfile, rawfile1]
-    outprefix=sdmath_unittest_base.taskname+'.Tstorage'
+    #outprefix=sdmath_unittest_base.taskname+'.Tstorage'
+    outprefix='sdmath.Tstorage'
     outsuffix='.asap'
 
     # specunit is ignored in current task script (CAS-4094)
     #out_uc = {'spunit': 'GHz', 'flunit': 'Jy',\
     #          'frame': 'LSRD', 'doppler': 'OPTICAL'}
-    out_uc = {'spunit': 'channel', 'flunit': 'Jy',\
-              'frame': 'LSRD', 'doppler': 'OPTICAL'}
+    #out_uc = {'spunit': 'channel', 'flunit': 'Jy',\
+    #          'frame': 'LSRD', 'doppler': 'OPTICAL'}
+    out_uc = {'flunit': 'Jy'}
 
     def setUp( self ):
         for infile in [self.rawfile, self.rawfile1]:
@@ -775,11 +818,11 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
                         "Input table is not a scantable: %s" % scanname)
         scan = sd.scantable(scanname, average=False,parallactify=False)
         retdict = {}
-        retdict['spunit'] = scan.get_unit()
+        #retdict['spunit'] = scan.get_unit()
         retdict['flunit'] = scan.get_fluxunit()
         coord = scan._getcoordinfo()
-        retdict['frame'] = coord[1]
-        retdict['doppler'] = coord[2]
+        #retdict['frame'] = coord[1]
+        #retdict['doppler'] = coord[2]
         return retdict
 
     def _get_uclist( self, stlist ):
@@ -892,11 +935,8 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
-                     fluxunit=self.out_uc['flunit'],\
-                     specunit=self.out_uc['spunit'])
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+                     fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -925,12 +965,9 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
-                     telescopeparm='FIX',\
-                     specunit=self.out_uc['spunit'])
+                     telescopeparam='FIX')
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -959,11 +996,8 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
-                     fluxunit=self.out_uc['flunit'],\
-                     specunit=self.out_uc['spunit'])
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+                     fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -992,12 +1026,9 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
-                     telescopeparm='FIX',\
-                     specunit=self.out_uc['spunit'])
+                     telescopeparam='FIX')
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -1026,11 +1057,8 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
-                     fluxunit=self.out_uc['flunit'],\
-                     specunit=self.out_uc['spunit'])
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+                     fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -1059,12 +1087,9 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
-                     telescopeparm='FIX',\
-                     specunit=self.out_uc['spunit'])
+                     telescopeparam='FIX')
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -1092,11 +1117,8 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
-                     fluxunit=self.out_uc['flunit'],\
-                     specunit=self.out_uc['spunit'])
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+                     fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -1123,12 +1145,9 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
-                     frame=self.out_uc['frame'],\
-                     doppler=self.out_uc['doppler'],\
+        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
-                     telescopeparm='FIX',\
-                     specunit=self.out_uc['spunit'])
+                     telescopeparam='FIX')
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
@@ -1137,9 +1156,503 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         self._comp_unit_coord(outfile,self.out_uc)
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord([self.rawfile, self.rawfile1],initval)
+
+class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
+                           sdmath_unittest_base,unittest.TestCase):
+    """
+    Test selection syntax. Selection parameters to test are:
+    field, spw (no channel selection), scan, pol
+    
+    Data used for this test are sd_analytic_type1-3.asap (raw data)
+    and sdmath_selection.asap.ref (reference data).
+    The reference data are generated using the following expr parameter:
+    expr='V1*V1+1.0' where V1='sd_analytic_type1-3.asap'.
+
+    """
+    # Input and output names
+    rawfile='sd_analytic_type1-3.asap'
+    reffile='sdmath_selection.asap.ref'
+    prefix=sdmath_unittest_base.taskname+'TestSel'
+    postfix='.math.asap'
+    field_prefix = 'M100__'
+
+    expr = '"' + rawfile + '"*"' + rawfile + '"+1.0'
+    
+    @property
+    def task(self):
+        return sdmath
+    
+    @property
+    def spw_channel_selection(self):
+        return False
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdmath)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _compare( self, name, ref ):
+        self._checkfile( name )
+        # reference data
+        tb.open(ref)
+        nrow0=tb.nrows()
+        rsp=[]
+        for irow in xrange(nrow0):
+            rsp.append(tb.getcell('SPECTRA',irow))
+        tb.close()
+        # check shape
+        tb.open(name)
+        nrow=tb.nrows()
+        self.assertEqual(nrow,nrow0,msg='number of rows mismatch')
+        sp=[]
+        for irow in xrange(nrow):
+            sp.append(tb.getcell('SPECTRA',irow))
+            self.assertEqual(len(sp[irow]),len(rsp[irow]),
+                             msg='SPECTRA: number of channel mismatch in row%s'%(irow)) 
+        tb.close()
+        # check data
+        valuetype=type(sp[0][0])
+        #print ''
+        for irow in xrange(nrow):
+            #print 'irow=%s'%(irow)
+            #print '  rsp=%s'%(rsp[irow])
+            #print '   sp=%s'%(sp[irow])
+            ret=numpy.allclose(rsp[irow],sp[irow])
+            self.assertEqual(ret,True,
+                             msg='SPECTRA: data differ in row%s'%(irow))
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        outname=self.prefix+self.postfix
+        scan=''
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='15')"""
+        outname=self.prefix+self.postfix
+        scan = '15'
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        tbsel = {'SCANNO': [15]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<17')"""
+        outname=self.prefix+self.postfix
+        scan = '<17'
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        tbsel = {'SCANNO': [15,16]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>15')"""
+        outname=self.prefix+self.postfix
+        scan = '>15'
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        tbsel = {'SCANNO': [16,17]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    def test_scan_id_range(self):
+        """ test scan selection (scan='15~16')"""
+        outname=self.prefix+self.postfix
+        scan = '15~16'
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        tbsel = {'SCANNO': [15,16]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        outname=self.prefix+self.postfix
+        scan = '15,17'
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        tbsel = {'SCANNO': [15,17]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='<16, 17')"""
+        outname=self.prefix+self.postfix
+        scan = '<16, 17'
+        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        tbsel = {'SCANNO': [15,17]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        outname=self.prefix+self.postfix
+        pol=''
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    def test_pol_id_exact(self):
+        """ test pol selection (pol='1')"""
+        outname=self.prefix+self.postfix
+        pol = '1'
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {'POLNO': [1]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_lt(self):
+        """ test pol selection (pol='<1')"""
+        outname=self.prefix+self.postfix
+        pol = '<1'
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {'POLNO': [0]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+        outname=self.prefix+self.postfix
+        pol = '>0'
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {'POLNO': [1]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        outname=self.prefix+self.postfix
+        pol = '0~1'
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        outname=self.prefix+self.postfix
+        pol = '0,1'
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='<1,1')"""
+        outname=self.prefix+self.postfix
+        pol = '0,1'
+        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        tbsel = {}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='')"""
+        outname=self.prefix+self.postfix
+        field=''
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    def test_field_id_exact(self):
+        """ test field selection (field='6')"""
+        outname=self.prefix+self.postfix
+        field = '6'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__6']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_id_lt(self):
+        """ test field selection (field='<6')"""
+        outname=self.prefix+self.postfix
+        field = '<6'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_id_gt(self):
+        """ test field selection (field='>7')"""
+        outname=self.prefix+self.postfix
+        field = '>7'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['3C273__8']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_id_range(self):
+        """ test field selection (field='5~7')"""
+        outname=self.prefix+self.postfix
+        field = '5~7'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5', 'M100__6', 'M30__7']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_id_list(self):
+        """ test field selection (field='5,7')"""
+        outname=self.prefix+self.postfix
+        field = '5,7'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5', 'M30__7']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_id_exprlist(self):
+        """ test field selection (field='<7,8')"""
+        outname=self.prefix+self.postfix
+        field = '<7,8'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5', 'M100__6', '3C273__8']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_value_exact(self):
+        """ test field selection (field='M100')"""
+        outname=self.prefix+self.postfix
+        field = 'M100'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5', 'M100__6']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_value_pattern(self):
+        """ test field selection (field='M*')"""
+        outname=self.prefix+self.postfix
+        field = 'M*'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5', 'M100__6', 'M30__7']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_value_list(self):
+        """ test field selection (field='M30,3C273')"""
+        outname=self.prefix+self.postfix
+        field = 'M30,3C273'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M30__7', '3C273__8']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_field_mix_exprlist(self):
+        """ test field selection (field='<7,3C273')"""
+        outname=self.prefix+self.postfix
+        field = '<7,3C273'
+        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        tbsel = {'FIELDNAME': ['M100__5', 'M100__6', '3C273__8']}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        outname=self.prefix+self.postfix
+        spw=''
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='21')"""
+        outname=self.prefix+self.postfix
+        spw = '21'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<25')"""
+        outname=self.prefix+self.postfix
+        spw = '<25'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21,23]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>21')"""
+        outname=self.prefix+self.postfix
+        spw = '>21'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [23,25]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_id_range(self):
+        """ test spw selection (spw='21~24')"""
+        outname=self.prefix+self.postfix
+        spw = '21~24'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21,23]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,22,23,25')"""
+        outname=self.prefix+self.postfix
+        spw = '21,22,23,25'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21,23,25]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='<22,>24')"""
+        outname=self.prefix+self.postfix
+        spw = '<22,>24'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21,25]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        outname=self.prefix+self.postfix
+        spw='*'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300~310GHz')"""
+        outname=self.prefix+self.postfix
+        spw = '300~310GHz'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [23,25]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-50~50km/s')"""
+        outname=self.prefix+self.postfix
+        spw = '-50~50km/s'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [23]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='150~500km/s,>23')"""
+        outname=self.prefix+self.postfix
+        spw = '150~500km/s,>23'
+        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        tbsel = {'IFNO': [21,25]}
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    ####################
+    # Helper functions
+    ####################
+    def _comparecal_with_selection( self, name, tbsel={} ):
+        self._checkfile(name)
+        sp=self._getspectra_selected(name, tbsel)
+        spref=self._getspectra_selected(self.reffile, tbsel)
+
+        self._checkshape( sp, spref )
         
+        for irow in xrange(len(sp)):
+            diff=self._diff(numpy.array(sp[irow]),numpy.array(spref[irow]))
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def _getspectra( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp=tb.getcol('SPECTRA').transpose()
+        tb.close()
+        return sp
+
+    def _getspectra_selected( self, name, tbsel={} ):
+        """
+        Returns an array of spectra in rows selected in table.
+        
+        name  : the name of scantable
+        tbsel : a dictionary of table selection information.
+                The key should be column name and the value should be
+                a list of column values to select.
+        """
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp = []
+        if len(tbsel) == 0:
+            for i in range(tb.nrows()):
+                sp.append(tb.getcell('SPECTRA', i).tolist())
+        else:
+            command = ''
+            for key, val in tbsel.items():
+                if len(command) > 0:
+                    command += ' AND '
+                command += ('%s in %s' % (key, str(val)))
+            newtb = tb.query(command)
+            for i in range(newtb.nrows()):
+                sp.append(newtb.getcell('SPECTRA', i).tolist())
+            newtb.close()
+
+        tb.close()
+        return sp
 
 def suite():
-    return [sdmath_test0,sdmath_test1,
-            sdmath_test2,sdmath_test3,
-            sdmath_storageTest]
+    return [sdmath_test0,sdmath_test1,sdmath_test2,sdmath_test3,
+            sdmath_storageTest,sdmath_test_selection
+            ]

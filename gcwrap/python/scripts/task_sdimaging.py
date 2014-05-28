@@ -6,9 +6,10 @@ from taskinit import casalog, gentools, qatool
 
 import asap as sd
 import sdutil
+from cleanhelper import cleanhelper
 
 @sdutil.sdtask_decorator
-def sdimaging(infiles, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, minweight, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
+def sdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, mode, nchan, start, width, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -18,6 +19,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):
         super(sdimaging_worker,self).__init__(**kwargs)
         self.imager_param = {}
+        self.sorted_idx = []
 
     def parameter_check(self):
         # outfile check
@@ -27,54 +29,194 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile+'.weight',
                                                           'im',
                                                           self.overwrite)
+        # fix spw
+        if self.spw.strip() == '*': self.spw = ''
+        # WORKAROUND for CAS-6422, i.e., ":X~Y" fails while "*:X~Y" works.
+        if self.spw.startswith(":"): self.spw = '*' + self.spw
+        # check unit of start and width
+        # fix default
+        if self.mode == 'channel':
+            if self.start == '': self.start = 0
+            if self.width == '': self.width = 1
+        else:
+            if self.start == 0: self.start = ''
+            if self.width == 1: self.width = ''
+        # fix unit
+        if self.mode == 'frequency':
+            myunit = 'Hz'
+        elif self.mode == 'velocity':
+            myunit = 'km/s'
+        else: # channel
+            myunit = ''
+
+        for name in ['start', 'width']:
+            param = getattr(self, name)
+            new_param = self.__format_quantum_unit(param, myunit)
+            if new_param == None:
+                raise ValueError, "Invalid unit for %s in mode %s: %s" % \
+                      (name, self.mode, param)
+            setattr(self, name, new_param)
+
+        casalog.post("mode='%s': start=%s, width=%s, nchan=%d" % \
+                     (self.mode, self.start, self.width, self.nchan))
+
+        # check length of selection parameters
+        if type(self.infiles) == str:
+            nfile = 1
+            self.infiles = [ self.infiles ]
+        else:
+            nfile = len(self.infiles)
+
+        for name in ['field', 'spw', 'antenna', 'scanno']:
+            param = getattr(self, name)
+            if not self.__check_selection_length(param, nfile):
+                raise ValueError, "Length of %s != infiles." % (name)
+
+    def __format_quantum_unit(self, data, unit):
+        """
+        Returns False if data has an unit which in not a variation of
+        input unit.
+        Otherwise, returns input data as a quantum string. The input
+        unit is added to the return value if no unit is in data.
+        """
+        my_qa = qatool()
+        if data == '' or my_qa.compare(data, unit):
+            return data
+        if my_qa.getunit(data) == '':
+            casalog.post("No unit specified. Using '%s'" % unit)
+            return '%f%s' % (data, unit)
+        return None
+
+    def __check_selection_length(self, data, nfile):
+        """
+        Returns true if data is either a string, an array with length
+        1 or nfile
+        """
+        if type(data) != str and len(data) not in [1, nfile]:
+            return False
+        return True
+
+    def get_selection_param_for_ms(self, fileid, param):
+        """
+        Returns valid selection string for a certain ms
+
+        Arguments
+            fileid : file idx in infiles list
+            param : string (array) selection value
+        """
+        if type(param) == str:
+            return param
+        elif len(param) == 1:
+            return param[0]
+        else:
+            return param[fileid]
+
+    def get_selection_idx_for_ms(self, file_idx):
+        """
+        Returns a dictionary of selection indices for i-th MS in infiles
+
+        Argument: file idx in infiles list
+        """
+        if file_idx < len(self.infiles) and file_idx > -1:
+            vis = self.infiles[file_idx]
+            field = self.get_selection_param_for_ms(file_idx, self.field)
+            spw = self.get_selection_param_for_ms(file_idx, self.spw)
+            antenna = self.get_selection_param_for_ms(file_idx, self.antenna)
+            if antenna == -1: antenna = ''
+            scan = self.get_selection_param_for_ms(file_idx, self.scanno)
+            my_ms = gentools(['ms'])[0]
+            sel_ids = my_ms.msseltoindex(vis=vis, spw=spw, field=field,
+                                         baseline=antenna, scan=scan)
+            fieldid = list(sel_ids['field']) if len(sel_ids['field']) > 0 else -1
+            baseline = self.format_ac_baseline(sel_ids['antenna1'])
+            scanid = list(sel_ids['scan']) if len(sel_ids['scan']) > 0 else ""
+            # SPW (need to get a list of valid spws instead of -1)
+            if len(sel_ids['spw']) > 0:
+                spwid = list(sel_ids['spw'])
+            elif spw=="": # No spw selection
+                my_ms.open(vis)
+                try: spwinfo =  my_ms.getspectralwindowinfo()
+                except: raise
+                finally: my_ms.close()
+                
+                spwid = [int(idx) for idx in spwinfo.keys()]
+            else:
+                raise RuntimeError("Invalid spw selction, %s ,for MS %d" (str(spw), file_idx))
+            
+            return {'field': fieldid, 'spw': spwid, 'baseline': baseline, 'scan': scanid, 'antenna1': sel_ids['antenna1']}
+        else:
+            raise ValueError, ("Invalid file index, %d" % file_idx)
+
+    def format_ac_baseline(self, in_antenna):
+        """ format auto-correlation baseline string from antenna idx list """
+        # exact match string
+        if type(in_antenna) == str:
+            if (len(in_antenna) != 0) and (in_antenna.find('&') == -1) \
+                   and (in_antenna.find(';')==-1):
+                in_antenna =+ '&&&'
+            return in_antenna
+        # single integer -> list of int
+        if type(in_antenna)==int:
+            if in_antenna >=0:
+                in_antenna = [in_antenna]
+            else:
+                return -1
+        # format auto-corr string from antenna idices.
+        baseline = ''
+        for idx in in_antenna:
+            if len(baseline) > 0: baseline += ';'
+            if idx >= 0:
+                baseline += (str(idx) + '&&&')
+        return baseline
 
     def compile(self):
         # imaging mode
-        spunit = self.specunit.lower()
-        if spunit == 'channel' or len(spunit) == 0:
-            mode = 'channel'
-        elif spunit == 'km/s':
-            mode = 'velocity'
-        else:
-            mode = 'frequency'
-        if not self.dochannelmap and mode != 'channel':
-            casalog.post('Setting imaging mode as \'channel\'','INFO')
-            mode = 'channel'
-        self.imager_param['mode'] = mode
+        self.imager_param['mode'] = self.mode
 
-        # scanlist
-
+        # Work on selection of the first table in sorted list
+        # to get default restfreq and outframe
+        imhelper = cleanhelper(self.imager, self.infiles, casalog=casalog)
+        imhelper.sortvislist(self.spw, self.mode, self.width)
+        self.sorted_idx = imhelper.sortedvisindx
+        selection_ids = self.get_selection_idx_for_ms(self.sorted_idx[0])
         # field
-        self.fieldid=-1
-        self.sourceid=-1
+        fieldid = selection_ids['field'][0] if type(selection_ids['field']) != int else selection_ids['field']
+        sourceid=-1
         self.open_table(self.field_table)
-        field_names = self.table.getcol('NAME')
+#         field_names = self.table.getcol('NAME')
         source_ids = self.table.getcol('SOURCE_ID')
         self.close_table()
-        if type(self.field)==str:
-            try:
-                self.fieldid = field_names.tolist().index(self.field)
-            except:
-                msg = 'field name '+field+' not found in FIELD table of the first MS'
-                raise ValueError, msg
+#         if type(self.field)==str:
+#             try:
+#                 fieldid = field_names.tolist().index(self.field)
+#             except:
+#                 msg = 'field name '+field+' not found in FIELD table of the first MS'
+#                 raise ValueError, msg
+#         else:
+#             if self.field == -1:
+#                 sourceid = source_ids[0]
+#             elif self.field < len(field_names):
+#                 fieldid = self.field
+#                 sourceid = source_ids[self.field]
+#             else:
+#                 msg = 'field id %s does not exist in the first MS' % (self.field)
+#                 raise ValueError, msg
+        if self.field == '' or fieldid ==-1:
+            sourceid = source_ids[0]
+        elif fieldid >= 0 and fieldid < len(source_ids):
+            sourceid = source_ids[fieldid]
         else:
-            if self.field == -1:
-                self.sourceid = source_ids[0]
-            elif self.field < len(field_names):
-                self.fieldid = self.field
-                self.sourceid = source_ids[self.field]
-            else:
-                msg = 'field id %s does not exist in the first MS' % (self.field)
-                raise ValueError, msg
+            raise ValueError, "No valid field in the first MS."
 
         # restfreq
         if self.restfreq=='' and self.source_table != '':
             self.open_table(self.source_table)
             source_ids = self.table.getcol('SOURCE_ID')
             for i in range(self.table.nrows()):
-                if self.sourceid == source_ids[i] \
+                if sourceid == source_ids[i] \
                        and self.table.iscelldefined('REST_FREQUENCY',i) \
-                       and self.table.getcell('SPECTRAL_WINDOW_ID', i) in self.spw:
+                       and (selection_ids['spw'] == -1 or \
+                            self.table.getcell('SPECTRAL_WINDOW_ID', i) in selection_ids['spw']):
                     rf = self.table.getcell('REST_FREQUENCY',i)
                     if len(rf) > 0:
                         self.restfreq=self.table.getcell('REST_FREQUENCY',i)[0]
@@ -85,18 +227,22 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         
         # 
         # spw (define representative spw id = spwid_ref)
-        spwid_ref=-1
+        spwid_ref = selection_ids['spw'][0] if type(selection_ids['spw']) != int else selection_ids['spw']
+        # Invalid spw selection should have handled at msselectiontoindex().
+        # -1 means all spw are selected.
         self.open_table(self.spw_table)
-        nrows=self.table.nrows()
-        for id in self.spw:
-            if id < nrows:
-                spwid_ref=id
-                break
         if spwid_ref < 0:
-            self.close_table()
-            msg='No valid spw id exists in the first table'
-            raise ValueError, msg
-        self.allchannels=self.table.getcell('NUM_CHAN',spwid_ref)
+            for id in range(self.table.nrows()):
+                if self.table.getcell('NUM_CHAN',id) > 0:
+                    spwid_ref = id
+                    break
+            if spwid_ref < 0:
+                self.close_table()
+                msg='No valid spw id exists in the first table'
+                raise ValueError, msg
+        self.allchannels = self.table.getcell('NUM_CHAN',spwid_ref)
+        freq_chan0 = self.table.getcell('CHAN_FREQ',spwid_ref)[0]
+        freq_inc0 = self.table.getcell('CHAN_WIDTH',spwid_ref)[0]
         self.close_table()
         self.imager_param['spw'] = -1 #spwid_ref
 
@@ -125,15 +271,15 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         else:
             casalog.post("Using frequency frame defined by user, '%s'" % self.imager_param['outframe'])
         
-        # antenna
-        in_antenna = self.antenna # backup for future use
-        if type(self.antenna)==int:
-            if self.antenna >= 0:
-                self.antenna=str(self.antenna)+'&&&'
-        else:
-            if (len(self.antenna) != 0) and (self.antenna.find('&') == -1) \
-                   and (self.antenna.find(';')==-1):
-                self.antenna = self.antenna + '&&&'
+#         # antenna
+#         in_antenna = self.antenna # backup for future use
+#         if type(self.antenna)==int:
+#             if self.antenna >= 0:
+#                 self.antenna=str(self.antenna)+'&&&'
+#         else:
+#             if (len(self.antenna) != 0) and (self.antenna.find('&') == -1) \
+#                    and (self.antenna.find(';')==-1):
+#                 self.antenna = self.antenna + '&&&'
 
         # stokes
         if self.stokes == '':
@@ -154,8 +300,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if cell == '' or cell[0] == '':
             # Calc PB
             grid_factor = 3.
-            casalog.post("The cell size will be calculated using PB size")
-            qPB = self._calc_PB(in_antenna)
+            casalog.post("The cell size will be calculated using PB size of antennas in the first MS")
+            qPB = self._calc_PB(selection_ids['antenna1'])
             cell = '%f%s' % (qPB['value']/grid_factor, qPB['unit'])
             casalog.post("Using cell size = PB/%4.2F = %s" % (grid_factor, cell))
 
@@ -190,81 +336,40 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # phasecenter
         self.imager_param['phasecenter'] = phasecenter
-#         # if empty, it should be determined here...
-#         if len(self.phasecenter) == 0:
-#             Self.open_table(self.pointing_table)
-#             dir = self.table.getcol('DIRECTION')
-#             dirinfo = self.table.getcolkeywords('DIRECTION')
-#             units = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
-#                     else ['rad', 'rad']
-#             mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
-#                    else 'J2000'
-#             forms = ['dms','dms'] if mref.find('AZEL') != -1 else ['hms','dms']
-#             # CAS-5410 Use private tools inside task scripts
-#             my_qa = qatool()
-#             qx = my_qa.quantity(numpy.median(dir[0,:,:]),units[0])
-#             qy = my_qa.quantity(numpy.median(dir[1,:,:]),units[1])
-#             self.close_table()
-#             phasecenter = ' '.join([mref,
-#                                     my_qa.formxxx(qx,forms[0]),
-#                                     my_qa.formxxx(qy,forms[1])])
-#             self.imager_param['phasecenter'] = phasecenter
-#         else:
-#             self.imager_param['phasecenter'] = self.phasecenter
+
         self.imager_param['movingsource'] = self.ephemsrcname
 
         # channel map
-        if self.dochannelmap:
-            # start
-            if mode == 'velocity':
-                #startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
-                startval = [self.imager_param['outframe'], '%s%s'%(self.start,self.specunit)]
-            elif mode == 'frequency':
-                #startval = '%s%s'%(self.start,self.specunit)
-                startval = [self.imager_param['outframe'], '%s%s'%(self.start,self.specunit)]
-            else:
-                startval = self.start
-
-            # step
-            if mode in ['velocity', 'frequency']:
-                stepval = '%s%s'%(self.step,self.specunit)
-            else:
-                stepval = self.step
-        else:
-            startval = 0
-            stepval = self.allchannels
-            self.nchan = 1
-        self.imager_param['start'] = startval
-        self.imager_param['step'] = stepval
-        self.imager_param['nchan'] = self.nchan
+        spwsel = str(',').join([str(spwid) for spwid in selection_ids['spw']])
+        srestf = self.imager_param['restfreq'] if type(self.imager_param['restfreq'])==str else "%fHz" % self.imager_param['restfreq']
+        (imnchan, imstart, imwidth) = imhelper.setChannelizeDefault(self.mode, spwsel, self.field, self.nchan, self.start, self.width, self.imager_param['outframe'], self.veltype,self.imager_param['phasecenter'], srestf)
+        del imhelper
         
-#         ### WORKAROUND for image unit ###
-#         datacol_lookup = ['FLOAT_DATA', 'DATA']
-#         self.tb_fluxunit = ''
-#         for name in self.infiles:
-#             self.open_table(name)
-#             valid_cols = self.table.colnames()
-#             datacol = ''
-#             for colname in datacol_lookup:
-#                 if colname in valid_cols:
-#                     datacol = colname
-#                     break
+        # start and width
+        if self.mode == 'velocity':
+#             startval = [self.imager_param['outframe'], self.start]
+#             widthval = self.width
+            startval = [self.imager_param['outframe'], imstart]
+            widthval = imwidth
+        elif self.mode == 'frequency':
+#             chan0 = "%fHz" % (freq_chan0)
+#             startval = [self.imager_param['outframe'], self.start if self.start!='' else chan0]
+#             width0 = "%fHz" % (freq_inc0)
+#             widthval = self.width if self.width!='' else width0
+            startval = [self.imager_param['outframe'], imstart]
+            widthval = imwidth
+        else: #self.mode==channel
+            startval = int(self.start)
+            widthval = int(self.width)
 
-#             if len(datacol) == 0:
-#                 self.close_table()
-#                 raise Exception, "Could not find a column that stores data."
-
-#             datakw = self.table.getcolkeywords(datacol)
-#             curr_fluxunit = datakw['UNIT'] if datakw.has_key('UNIT') else self.tb_fluxunit
-
-#             if len(self.tb_fluxunit) == 0:
-#                 self.tb_fluxunit = curr_fluxunit
-#             elif curr_fluxunit != self.tb_fluxunit:
-#                 self.close_table()
-#                 raise Exception, "Mixed flux unit in input MSes (%s and %s). You cannot image data sets with different flux units." % (self.tb_fluxunit, curr_fluxunit)
-
-#             self.close_table()
-        ###
+        #startval = 0
+        #widthval = self.allchannels
+        #self.nchan = 1
+        if self.nchan < 0: self.nchan = self.allchannels
+        self.imager_param['start'] = startval
+        self.imager_param['step'] = widthval
+        self.imager_param['nchan'] = imnchan #self.nchan
+        
 
     def execute(self):
         # imaging
@@ -272,19 +377,37 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Using phasecenter \"%s\""%(self.imager_param['phasecenter']), "INFO")
         if len(self.infiles) == 1:
             self.open_imager(self.infiles[0])
-            self.imager.selectvis(field=self.fieldid, spw=self.spw, nchan=-1,\
-                                  start=0, step=1, baseline=self.antenna, scan=self.scanlist)
+            selection_ids = self.get_selection_idx_for_ms(0)
+            spwsel = self.get_selection_param_for_ms(0, self.spw)
+            if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
+            ### TODO: channel selection based on spw
+            self.imager.selectvis(field=selection_ids['field'],\
+                                  #spw=selection_ids['spw'],\
+                                  spw=spwsel,\
+                                  nchan=-1, start=0, step=1,\
+                                  baseline=selection_ids['baseline'],\
+                                  scan=selection_ids['scan'])
         else:
             self.close_imager()
-            for name in self.infiles:
-                self.imager.selectvis(vis=name, field=self.fieldid, spw=self.spw, nchan=-1,\
-                                      start=0, step=1, baseline=self.antenna, scan=self.scanlist)
+            self.sorted_idx.reverse()
+#             for idx in (len(self.infiles)):
+            for idx in self.sorted_idx:
+                name = self.infiles[idx]
+                selection_ids = self.get_selection_idx_for_ms(idx)
+                spwsel = self.get_selection_param_for_ms(idx, self.spw)
+                if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
+                ### TODO: channel selection based on spw
+                self.imager.selectvis(vis=name, field=selection_ids['field'],\
+                                      #spw=selection_ids['spw'],\
+                                      spw = spwsel,\
+                                      nchan=-1, start=0, step=1,\
+                                      baseline=selection_ids['baseline'],\
+                                      scan=selection_ids['scan'])
                 # need to do this
                 self.is_imager_opened = True
         self.imager.defineimage(**self.imager_param)#self.__get_param())
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = 0.)
-#         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = self.minweight)
         self.imager.makeimage(type='singledish', image=self.outfile)
         weightfile = self.outfile+".weight"
         self.imager.makeimage(type='coverage', image=weightfile)
@@ -300,10 +423,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         csys = my_ia.coordsys()
         csys.setconversiontype(spectral=csys.referencecode('spectra')[0])
         my_ia.setcoordsys(csys.torecord())
-
-#         ### WORKAROUND to fix image unit
-#         if self.tb_fluxunit == 'K' and my_ia.brightnessunit() != 'K':
-#             my_ia.setbrightnessunit(self.tb_fluxunit)
 
         my_ia.close()
 
@@ -340,8 +459,11 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
     def _calc_PB(self, antenna):
         """
-        Calculate the primary beam size of antenna,
-        using dish diamenter and rest frequency
+        Calculate the primary beam size of antenna, using dish diamenter
+        and rest frequency
+        Average antenna diamter and reference frequency are adopted for
+        calculation.
+        The input argument should be a list of antenna IDs.
         """
         casalog.post("Calculating Pirimary beam size:")
         # CAS-5410 Use private tools inside task scripts
@@ -360,23 +482,30 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             raise Exception, msg
         # Antenna diameter
         self.open_table(self.antenna_table)
-        antid = -1
+#         antid = -1
         try:
-            if type(antenna) == int and antenna < self.table.nrows():
-                antid = antenna
-            elif type(antenna) == str and len(antenna) > 0:
-                for idx in range(self.table.nrows()):
-                    if (antenna.upper() == self.table.getcell('NAME', idx)):
-                        antid = idx
-                        break
+#             if type(antenna) == int and antenna < self.table.nrows():
+#                 antid = antenna
+#             elif type(antenna) == str and len(antenna) > 0:
+#                 for idx in range(self.table.nrows()):
+#                     if (antenna.upper() == self.table.getcell('NAME', idx)):
+#                         antid = idx
+#                         break
             antdiam_unit = self.table.getcolkeyword('DISH_DIAMETER', 'QuantumUnits')[0]
-            if antid > 0:
-                antdiam_ave = my_qa.quantity(self.table.getcell('DISH_DIAMETER'),antdiam_unit)
-            else:
-                diams = self.table.getcol('DISH_DIAMETER')
-                antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
+            diams = self.table.getcol('DISH_DIAMETER')
+#             if antid > 0:
+#                 antdiam_ave = my_qa.quantity(self.table.getcell('DISH_DIAMETER', antid),antdiam_unit)
+#             else:
+#                 diams = self.table.getcol('DISH_DIAMETER')
+#                 antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
         finally:
             self.close_table()
+
+        if len(antenna) == 0:
+            antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
+        else:
+            d_ave = sum([diams[idx] for idx in antenna])/float(len(antenna))
+            antdiam_ave = my_qa.quantity(d_ave, antdiam_unit)
         # Calculate PB
         wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(ref_freq),'GHz')['value']
         D_m = my_qa.convert(antdiam_ave, 'm')['value']

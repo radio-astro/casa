@@ -8,13 +8,11 @@ from asap.scantable import is_scantable, is_ms
 from asap.flagplotter import flagplotter
 import sdutil
 
-@sdutil.sdtask_decorator
-def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
+def sdflag(infile, antenna, mode, unflag, field, spw, timerange, scan, pol, beam, restfreq, frame, doppler, clipminmax, clipoutside, showflagged, row, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
         worker.finalize()
-
 
 class sdflag_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -22,6 +20,10 @@ class sdflag_worker(sdutil.sdtask_template):
 
         # initialize plotter
         self.__init_plotter()
+        # map selection parameters
+        self.__map_selection_param()
+        # define valid modes
+        self.valid_modes = ('m', 'c', 'i', 'r')
 
     def parameter_check(self):
         # by default, the task overwrite infile
@@ -60,18 +62,10 @@ class sdflag_worker(sdutil.sdtask_template):
 
         # check restfreq
         self.rfset = (self.restfreq != '') and (self.restfreq != [])
-        self.restore = (self.specunit == 'km/s') and self.rfset
+        self.restore = self.rfset
 
-        # Do at least one
-        self.docmdflag = ((len(self.flagrow)+len(self.maskflag)>0) \
-                          or self.clip)
-        if (not self.docmdflag) and (not self.interactive):
-            raise Exception, 'No flag operation specified.'
-
-        # check flagmode
-        if not self.flagmode.lower() in ['flag','unflag']:
-            raise Exception, 'unexpected flagmode'
-        self.unflag = (self.flagmode.lower() == 'unflag')
+        if self.mode.lower()[0] not in self.valid_modes:
+            raise Exception, "Invalide mode, '%s'" % self.mode
 
         # check whether any flag operation is done or not
         self.anyflag = False
@@ -83,41 +77,74 @@ class sdflag_worker(sdutil.sdtask_template):
             casalog.post( "Initial Scantable:" )
             sorg._summary()
 
-        # data selection
-        #sorg.set_selection(self.get_selector())
-        sorg.set_selection(self.get_selector_by_list())
-        
         # Copy the original data (CAS-3987)
         if self.is_disk_storage \
-           and (sdutil.get_abspath(self.project) == sdutil.get_abspath(self.infile)):
+           and (sdutil.get_abspath(self.project) != sdutil.get_abspath(self.infile)):
             self.scan = sorg.copy()
         else:
             self.scan = sorg
 
+        # data selection
+        self.scan.set_selection(self.get_selector())
+        
     def execute(self):
         self.set_to_scan()
+        # backup spec unit
+        unit_org = self.scan.get_unit()
+        self.scan.set_unit('channel')
 
-        if (len(self.maskflag) > 0):
-            self.masks = self.scan.create_mask(self.maskflag)
-        else:
-            self.masks = [False for i in xrange(self.scan.nchan())]
-        
+        # setup clip threshold
         self.threshold = [None,None]
         if isinstance(self.clipminmax, list):
             if (len(self.clipminmax) == 2):
                 self.threshold = self.clipminmax[:]
                 self.threshold.sort()
-            
-        if self.docmdflag and (abs(self.plotlevel) > 0):
-            # plot flag and update self.docmdflag by the user input
-            self.prior_plot()
+        # loop over spw and flag
+        basesel = self.scan.get_selection()
+        maskdict = {-1: []}
+        if self.spw != '' and self.spw.strip() != '*':
+            maskdict = self.scan.parse_spw_selection(self.spw)
+        for ifno, masklist in maskdict.items():
+            if ifno > -1:
+                sel = sd.selector(basesel)
+                sel.set_ifs([ifno])
+                self.scan.set_selection(sel)
+                del sel
+                msg = "Working on IF%s" % (ifno)
+                if (self.mode.lower().startswith('i')):
+                    # interactive mode
+                    print "===%s===" % (msg)
+                del msg
 
-        if self.docmdflag:
-            self.command_flag()
+            mask_array = self.scan.create_mask(masklist) if len(masklist) > 0 else [True]
+            self.masklist = [] if all(mask_array) else masklist
+            if self.mode.lower().startswith('m') and (len(self.masklist) > 0):
+                # channel flag
+                self.masks = mask_array
+            else:
+                self.masks = [False for i in xrange(self.scan.nchan())]
+            # Pring warnings if channel range selection is found in mode!='manual'
+            if (len(self.masklist) > 0) and \
+                   not self.mode.lower().startswith('m'):
+                casalog.post("Channel range selection found in IFNO=%d. It would be ignored." % ifno, priority='WARN')
 
-        if self.interactive:
-            self.interactive_flag()
-        
+            if self.mode.lower().startswith('i'):
+                # interactive mode
+                self.interactive_flag()
+            else:
+                # the other mode
+                if (abs(self.plotlevel) > 0):
+                    # plot flag and update self.docmdflag by the user input
+                    self.prior_plot()
+
+                self.command_flag()
+
+            # reset selection
+            if ifno > -1: self.scan.set_selection(basesel)
+
+        # restore spec unit
+        self.scan.set_unit(unit_org)
+
         if not self.anyflag:
             raise Exception, 'No flag operation. Finish without saving'
 
@@ -126,16 +153,31 @@ class sdflag_worker(sdutil.sdtask_template):
 
     def command_flag(self):
         # Actual flag operations
-        if self.clip:
+        shortmode = self.mode.lower()[0]
+        if shortmode == 'c':
+            # clip
             self.do_clip()
-        elif len(self.flagrow) == 0:
+        elif shortmode == 'm' and len(self.masklist) > 0:
+            # channel flag (manual mode)
             self.do_channel_flag()
         else:
+            # manual or rowid mode
+            if shortmode == 'r':
+                # reset selection (not necessary indeed)
+                self.scan.set_selection(None)
+            if len(self.row) == 0:
+                # select all rows
+                self.rowlist = range(self.scan.nrow())
+            else:
+                self.rowlist = self.scan.parse_idx_selection('row',self.row)
+            
             self.do_row_flag()
         self.anyflag = True
 
         # Add history entry
-        params={'mode':self.flagmode,'maskflag':self.maskflag}
+        operation = ('unflag' if self.unflag else 'flag')
+        mask = (self.masklist if len(self.masklist) > 0 else 'all channel')
+        params={'mode': operation,'maskflag': mask}
         sel = self.scan.get_selection()
         keys=['pol','if','scan']
         for key in keys:
@@ -146,7 +188,6 @@ class sdflag_worker(sdutil.sdtask_template):
 
     def do_clip(self):
         casalog.post('Number of spectra to be flagged: %d\nApplying clipping...'%(self.scan.nrow()))
-        casalog.post('flagrow and maskflag will be ignored',priority='WARN')
 
         if self.threshold[1] > self.threshold[0]:
             self.scan.clip(self.threshold[1], self.threshold[0], self.clipoutside, self.unflag)
@@ -157,10 +198,9 @@ class sdflag_worker(sdutil.sdtask_template):
         self.scan.flag(mask=self.masks, unflag=self.unflag)
 
     def do_row_flag(self):
-        casalog.post('Number of rows to be flagged: %d\nApplying row flagging...'%(len(self.flagrow)))
-        casalog.post('maskflag will be ignored',priority='WARN')
+        casalog.post('Number of rows to be flagged: %d\nApplying row flagging...'%(len(self.rowlist)))
 
-        self.scan.flag_row(self.flagrow, self.unflag)
+        self.scan.flag_row(self.rowlist, self.unflag)
 
     def interactive_flag(self):
         from matplotlib import rc as rcp
@@ -173,9 +213,10 @@ class sdflag_worker(sdutil.sdtask_template):
         guiflagger._plotter.unmap()
         ismodified = guiflagger._ismodified
         guiflagger._plotter = None
-        self.anyflag = self.anyflag or ismodified
+        self.anyflag = ismodified
 
     def save(self):
+        self.scan.set_selection(None)
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
     def prior_plot(self):
@@ -200,13 +241,13 @@ class sdflag_worker(sdutil.sdtask_template):
             else:
                 masklist[2] = array(self.scan._getmask(row))
 
-            if self.clip:
+            if self.mode.lower() == 'clip':
                 if self.threshold[0] == self.threshold[1]:
                     masklist[1] = array([True]*nchan)
                 else:
                     masklist[1] = array(self.scan._getclipmask(row, self.threshold[1], self.threshold[0], (not self.clipoutside), self.unflag))
-            elif len(self.flagrow) > 0:
-                masklist[1] = array([(row not in self.flagrow) or self.unflag]*nchan)
+            elif self.mode.lower() == 'rowid':
+                masklist[1] = array([(row not in self.rowlist) or self.unflag]*nchan)
             else:
                 masklist[1] = idefaultmask
             masklist[0] = logical_not(logical_and(masklist[1],masklist[2]))
@@ -220,13 +261,14 @@ class sdflag_worker(sdutil.sdtask_template):
         
         #Apply flag
         if self.plotlevel > 0 and sd.rcParams['plotter.gui']:
-            ans=raw_input("Apply %s (y/N)?: " % self.flagmode)
+            ans=raw_input("Apply %s (y/N)?: " % ('unflag' if self.unflag else 'flag'))
         else:
             casalog.post("Applying selected flags")
             ans = 'Y'
 
         # update self.docmdflag
         self.docmdflag = (ans.upper() == 'Y')
+    
     def posterior_plot(self):
         #Plot the result
         #print "Showing only the first spectrum..."
@@ -237,7 +279,7 @@ class sdflag_worker(sdutil.sdtask_template):
         x = self.scan._getabcissa(row)
         y = self.scan._getspectrum(row)
         allmskarr=array(self.scan._getmask(row))
-        plot_data(self.myp,x,y,logical_not(allmskarr),0,"Spectrum after %s" % self.flagmode+'ging')
+        plot_data(self.myp,x,y,logical_not(allmskarr),0,"Spectrum after %sging'" % ('unflag' if self.unflag else 'flag'))
         plot_data(self.myp,x,y,allmskarr,2,"Flagged")
         xlim=[min(x),max(x)]
         self.myp.axes.set_xlim(xlim)
@@ -255,6 +297,13 @@ class sdflag_worker(sdutil.sdtask_template):
         self.myp.hold()
         self.myp.clear()
 
+    def __map_selection_param(self):
+        selection_map = {'scans': 'scanlist',
+                         'ifs': 'iflist',
+                         'pols': 'pollist'}
+        for a, b in selection_map.items():
+            if hasattr(self, a):
+                setattr(self, b, getattr(self, a))
 
 def plot_data(myp,x,y,msk,color=0,label=None):
     if label:

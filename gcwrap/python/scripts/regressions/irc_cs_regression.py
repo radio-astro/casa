@@ -69,7 +69,8 @@ s = sd.scantable('IRC+10216_rawACSmod', False)#load the data without averaging		
 											# fileout,'IRC+10216.reduced.fits'
 s.set_fluxunit('K')         		# make 'K' default unit
 
-scal = sd.calnod(s, [229,230])		# Calibrate CS scans	                        # for i=230,231,2 do begin getps,i,ifnum=3,plnum=0,units='Ta*',
+#scal = sd.calnod(s, [229,230])		# Calibrate CS scans	                        # for i=230,231,2 do begin getps,i,ifnum=3,plnum=0,units='Ta*',
+scal = sd.calnod(s, [230, 231])		# Calibrate CS scans	                        # for i=230,231,2 do begin getps,i,ifnum=3,plnum=0,units='Ta*',
 del s                                   # remove s from memory
 # recalculate az/el (NOT needed for GBT data)
 antennaname = scal.get_antennaname()

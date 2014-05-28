@@ -7,7 +7,8 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+def sdplot(infile, antenna, fluxunit, telescopeparam, specunit, restfreq, frame,
+            doppler, field, spw, scan, pol, beam, timeaverage, tweight, scanaverage, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -30,17 +31,11 @@ class sdplot_worker(sdutil.sdtask_template):
                  or (self.specunit != '' and self.specunit != sorg.get_unit())
         doCopy = doCopy and isScantable
 
+        # check spw
+        self.assert_no_channel_selection_in_spw('warn')
+        
         # A scantable selection
-        if type(self.scanlist) == str:
-            self.scanlist = sorg.parse_idx_selection("SCAN",self.scanlist)
-        if type(self.iflist) == str:
-            self.iflist = sorg.parse_idx_selection("IF",self.iflist)
-        if type(self.pollist) == str:
-            self.pollist = sorg.parse_idx_selection("POL",self.pollist)
-        if type(self.beamlist) == str:
-            self.beamlist = sorg.parse_idx_selection("BEAM",self.beamlist)
-        #sel = self.get_selector()
-        sel = self.get_selector_by_list()
+        sel = self.get_selector(sorg)
         sorg.set_selection(sel)
         self.ssel=sel.__str__()
         del sel
@@ -57,6 +52,8 @@ class sdplot_worker(sdutil.sdtask_template):
         # set various attributes to self.scan
         self.set_to_scan()
 
+        #WORKAROUND for new tasks (in future this should be done in sdutil)
+        if not self.timeaverage: self.scanaverage = False
         # Average data if necessary
         self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight)
 
@@ -121,7 +118,7 @@ class sdplot_worker(sdutil.sdtask_template):
         self.__dogrid(nx, ny, cellx, celly, mapcenter)
 
         # Now set fluxunit, specunit, frame, and doppler
-        sdutil.set_fluxunit(self.scan, self.fluxunit, 'fix')
+        sdutil.set_fluxunit(self.scan, self.fluxunit, telescopeparam='fix')
         sdutil.set_spectral_unit(self.scan, self.specunit)
         sdutil.set_freqframe(self.scan, self.frame)
         sdutil.set_doppler(self.scan, self.doppler)

@@ -1,3 +1,5 @@
+import numpy
+
 from taskinit import casalog
 
 import asap as sd
@@ -5,7 +7,7 @@ from asap.scantable import is_scantable, is_ms
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdsave(infile, splitant, antenna, getpt, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, restfreq, outfile, outform, overwrite):
+def sdsave(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -40,32 +42,38 @@ class sdsave_worker(sdutil.sdtask_template):
             self.antenna_names = []
             for split_infile in self.split_infiles:
                 work_scan = sd.scantable(split_infile,
-                                         average=self.scanaverage)
+                                         average=False)
                 # scantable selection
-                work_scan.set_selection(self.get_selector_by_list())
+                #work_scan.set_selection(self.get_selector_by_list())
+                work_scan.set_selection(self.get_selector(work_scan))
                 self.scans.append(work_scan)
 
                 #retrieve antenna names
                 self.antenna_names.append(split_infile.split('.')[1])
             
         else:
-            self.scan = sd.scantable(self.infile,
-                                     average=self.scanaverage,
-                                     antenna=self.antenna,
-                                     getpt=self.getpt)
+            scan = sd.scantable(self.infile,
+                                average=False,
+                                antenna=self.antenna,
+                                getpt=self.getpt)
 
             # scantable selection
-            #self.scan.set_selection(self.get_selector())
-            self.scan.set_selection(self.get_selector_by_list())
+            scan.set_selection(self.get_selector(scan))
+            #self.scan.set_selection(self.get_selector_by_list())
+            self.scan = scan
 
     def execute(self):
         if self.splitant:
             for work_scan in self.scans:
                 #Apply averaging
-                self.original_scan = work_scan
-                work_scan = sdutil.doaverage(self.original_scan, self.scanaverage,
-                                             self.timeaverage, self.tweight,
-                                             self.polaverage, self.pweight)
+#                self.original_scan = work_scan
+#                work_scan = sdutil.doaverage(self.original_scan, self.scanaverage,
+                 #                            self.timeaverage, self.tweight,
+                 #                            self.polaverage, self.pweight)
+
+                # channel range selection
+                self.__dochannelrange(work_scan)
+                
                 # set rest frequency
                 casalog.post('restore=%s'%(self.restore))
                 if self.rfset:
@@ -73,17 +81,24 @@ class sdsave_worker(sdutil.sdtask_template):
         
         else:
             # Apply averaging
+ #           self.original_scan = self.scan
+ #           self.scan = sdutil.doaverage(self.original_scan, self.scanaverage,
+ #                                        self.timeaverage, self.tweight,
+ #                                        self.polaverage, self.pweight)
             self.original_scan = self.scan
-            self.scan = sdutil.doaverage(self.original_scan, self.scanaverage,
-                                         self.timeaverage, self.tweight,
-                                         self.polaverage, self.pweight)
+
+            if is_scantable(self.infile) and self.is_disk_storage:
+                self.scan = self.original_scan.copy()
 
             if self.original_scan == self.scan and self.rfset \
                    and is_scantable(self.infile) \
                    and self.is_disk_storage:
                 self.molids = self.original_scan._getmolidcol_list()
                 self.restore = True
-        
+
+            # channel range selection
+            self.__dochannelrange(self.scan)
+                    
             # set rest frequency
             casalog.post('restore=%s'%(self.restore))
             if self.rfset:
@@ -122,3 +137,39 @@ class sdsave_worker(sdutil.sdtask_template):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
+
+    def __dochannelrange(self, scantab):
+        if len(self.spw) > 0:
+            sel_org = scantab.get_selection()
+            channelrange_dic = scantab.parse_spw_selection(self.spw)
+            valid_spw_list = []
+            for (k,v) in channelrange_dic.items():
+                casalog.post('k=%s, v=%s'%(k,v), priority='DEBUG')
+                unique_list = []
+                for item in map(list, v):
+                    if not item in unique_list:
+                        unique_list.append(item)
+                casalog.post('unique_list=%s'%(unique_list), priority='DEBUG')
+                if len(unique_list) > 1:
+                    raise SyntaxError('sdsave doesn\'t support multiple channel range selection for spw.')
+                elif len(unique_list) == 0:
+                    raise SyntaxError('Invalid channel range specification')
+                elif numpy.any(numpy.array(map(len, unique_list)) == 0):
+                    # empty channel range
+                    continue
+                nchan = scantab.nchan(k)
+                full_range = [0.0, float(nchan-1)]
+                if unique_list[0] != full_range:
+                    sel = sd.selector()
+                    sel.set_ifs(k)
+                    scantab.set_selection(sel)
+                    sdutil.dochannelrange(scantab, unique_list[0])
+                    scantab.set_selection()
+                valid_spw_list.append(k)
+            sel = sd.selector(sel_org)
+            ifs_org = sel.get_ifs()
+            ifs_new = list(set(ifs_org) & set(valid_spw_list))
+            casalog.post('ifs_new = %s'%(ifs_new))
+            sel.set_ifs(ifs_new)
+            scantab.set_selection(sel)
+

@@ -5,7 +5,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdgrid(infiles, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infiles, antenna, spw, scan, pol, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
     with sdutil.sdtask_manager(sdgrid_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -24,10 +24,11 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.__compile()
         self.__summarize_compiled_inputs()
 
-        # create gridder
         self.gridder = sd.asapgrid(infile=self.infiles)
 
     def parameter_check(self):
+        self.assert_no_channel_selection_in_spw('warn')
+
         if self.gridfunction.upper() == 'PB':
             msg='Sorry. PB gridding is not implemented yet.'
             raise Exception, msg
@@ -36,7 +37,6 @@ class sdgrid_worker(sdutil.sdtask_interface):
             self.convsupport = -1
 
     def execute(self):
-        # actual gridding
         self.gridder.setPolList(self.pols)
         self.gridder.setScanList(self.scans)
         if self.ifno >= 0:
@@ -45,7 +45,7 @@ class sdgrid_worker(sdutil.sdtask_interface):
             self.gridder.enableClip()
         else:
             self.gridder.disableClip()
-        self.gridder.setWeight(self.weight) 
+        self.gridder.setWeight(self.weight)
         self.gridder.defineImage(nx=self.nx, ny=self.ny,
                                  cellx=self.cellx, celly=self.celly,
                                  center=self.mapcenter)
@@ -57,10 +57,8 @@ class sdgrid_worker(sdutil.sdtask_interface):
         self.gridder.grid()
 
     def finalize(self):
-        # save result
         self.gridder.save(outfile=self.outname)
 
-        # plot result if necessary
         if self.plot:
             self.gridder.plot()
             
@@ -69,12 +67,26 @@ class sdgrid_worker(sdutil.sdtask_interface):
         if isinstance(self.infiles, str):
             self.infiles = [self.infiles]
 
+        # scantable for temporary use
+        tmpst = sd.scantable(self.infiles[0], False)
+
         # scanlist
-        self.scans = sdutil._to_list(self.scanlist, int)
+        #self.scans = sdutil._to_list(self.scanlist, int)
+        self.scans = tmpst.parse_idx_selection("SCAN", self.scanno)
 
         # pollist
-        self.pols = sdutil._to_list(self.pollist, int)
+        #self.pols = sdutil._to_list(self.pollist, int)
+        self.pols = tmpst.parse_idx_selection("POL", self.polno)
 
+        # spw
+        if (self.spw.strip() == '-1'):
+            self.ifno = tmpst.getif(0)
+        else:
+            masklist = tmpst.parse_spw_selection(self.spw)
+            if len(masklist) == 0:
+                raise ValueError, "Invalid spectral window selection. Selection contains no data."
+            self.ifno = masklist.keys()[0]
+        
         # outfile
         self.outname = sdutil.get_default_outfile_name(self.infiles[0],
                                                        self.outfile,
@@ -92,9 +104,11 @@ class sdgrid_worker(sdutil.sdtask_interface):
         # map center
         self.mapcenter = sdutil.get_map_center(self.center)
 
+        del tmpst
+
     def __summarize_raw_inputs(self):
-        params = ['infiles', 'antenna', 'scanlist', 'ifno',
-                  'pollist', 'gridfunction', 'convsupport',
+        params = ['infiles', 'antenna', 'scanno', 'spw',
+                  'polno', 'gridfunction', 'convsupport',
                   'truncate', 'gwidth', 'jwidth', 'weight',
                   'clipminmax', 'outfile', 'overwrite',
                   'npix', 'cell', 'center', 'plot']
@@ -119,4 +133,28 @@ class sdgrid_worker(sdutil.sdtask_interface):
             summary += '   %12s = %s\n'%(p,getattr(self,p))
         return summary
 
-    
+    def assert_no_channel_selection_in_spw(self, mode='warn'):
+        """
+        Assert 'spw' does not have channel selection
+        Returns True if spw string does not have channel selecton
+        Returns False or raises an error if spw has channel selection
+
+        Available modes are
+            'result' : just returns the result (true or false)
+            'warn'   : warn user if channel selection is set
+            'error'  : raise an error if channel seledtion is set
+        """
+        if not hasattr(self, 'spw'): return True
+        # find pattern spw = 'spwID:channelRange'
+        has_chan = (self.spw.find(':') > -1)
+        ## TODO: also need to do something with "###Hz" and "###km/s"?
+        #quantap = re.compile('[a-z]', re.IGNORECASE)
+        #has_chan = has_chan or len(quantap.findall(self.spw))
+        if has_chan:
+            if mode.upper().startswith('E'):
+                raise ValueError, "spw parameter should not contain channel selection."
+            elif mode.upper().startswith('W'):
+                casalog.post("Channel selection found in spw parameter. It would be ignored", priority='WARN')
+        
+        return has_chan
+
