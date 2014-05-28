@@ -495,7 +495,12 @@ if( NOT FORTRAN_LIBRARIES )
   file( WRITE ${_try}
     "int main() { return 0; }\n"
     )
-  
+
+  execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                   COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break; }} break if $found; } break if $found;}"
+                   OUTPUT_VARIABLE _gfortran_lib_path
+                   OUTPUT_STRIP_TRAILING_WHITESPACE )
+
   if( _gfortran_lib_path )
     try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
       CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=${_gfortran_lib_path}"

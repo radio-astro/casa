@@ -1834,16 +1834,15 @@ class scantable(Scantable):
                            '3:3~45;60' = channels 3 to 45 and 60 in spw 3
                            '0~1:2~6,8' = channels 2 to 6 in spws 0,1, and
                                          all channels in spw8
-                           '1.3~1.5GHz' = all spws that fall in or have at
-                                          least some overwrap with frequency
-                                          range between 1.3GHz and 1.5GHz.
-                           '1.3~1.5GHz:1.3~1.5GHz' = channels that fall
+                           '1.3~1.5GHz' = all spws whose central frequency
+                                          falls in frequency range between
+                                          1.3GHz and 1.5GHz.
+                           '1.3~1.5GHz:1.3~1.5GHz' = channels which fall
                                                      between the specified
                                                      frequency range in spws
-                                                     that fall in or have
-                                                     overwrap with the
-                                                     specified frequency
-                                                     range.
+                                                     whose central frequency
+                                                     falls in the specified
+                                                     frequency range.
                            '1:-200~250km/s' = channels that fall between the
                                               specified velocity range in
                                               spw 1.
@@ -1990,22 +1989,36 @@ class scantable(Scantable):
                         elif is_number(expr0) and is_frequency(expr1):
                             # 'a~b*Hz'
                             (expr_f0, expr_f1) = get_freq_by_string(expr0, expr1)
+                            expr_fmin = min(expr_f0, expr_f1)
+                            expr_fmax = max(expr_f0, expr_f1)
                             no_valid_spw = True
                             
                             for coord in self._get_coordinate_list():
+                                spw = coord['if']
+                                
+                                """
                                 expr_p0 = coord['coord'].to_pixel(expr_f0)
                                 expr_p1 = coord['coord'].to_pixel(expr_f1)
                                 expr_pmin = min(expr_p0, expr_p1)
                                 expr_pmax = max(expr_p0, expr_p1)
                                 
-                                spw = coord['if']
                                 pmin = 0.0
                                 pmax = float(self.nchan(spw) - 1)
-                                
+
                                 if ((expr_pmax - pmin)*(expr_pmin - pmax) <= 0.0):
                                     spw_list.append(spw)
                                     no_valid_spw = False
+                                """
 
+                                crd = coord['coord']
+                                fhead = crd.to_frequency(0)
+                                ftail = crd.to_frequency(self.nchan(spw) - 1)
+                                fcen  = (fhead + ftail) / 2.0
+
+                                if ((expr_fmin <= fcen) and (fcen <= expr_fmax)):
+                                    spw_list.append(spw)
+                                    no_valid_spw = False
+                                
                             if no_valid_spw:
                                 raise ValueError("No valid spw in range ('" + str(expr0) + "~" + str(expr1) + "').")
                                 
@@ -2018,7 +2031,8 @@ class scantable(Scantable):
                             
                             for coord in self._get_coordinate_list():
                                 spw = coord['if']
-                                
+
+                                """
                                 pmin = 0.0
                                 pmax = float(self.nchan(spw) - 1)
                                 
@@ -2029,6 +2043,17 @@ class scantable(Scantable):
                                 vmax = max(vel0, vel1)
 
                                 if ((expr_vmax - vmin)*(expr_vmin - vmax) <= 0.0):
+                                    spw_list.append(spw)
+                                    no_valid_spw = False
+                                """
+
+                                crd = coord['coord']
+                                fhead = crd.to_frequency(0)
+                                ftail = crd.to_frequency(self.nchan(spw) - 1)
+                                fcen  = (fhead + ftail) / 2.0
+                                vcen  = crd.to_velocity(crd.to_pixel(fcen))
+
+                                if ((expr_vmin <= vcen) and (vcen <= expr_vmax)):
                                     spw_list.append(spw)
                                     no_valid_spw = False
 
@@ -2144,7 +2169,21 @@ class scantable(Scantable):
                         res[spw] = crange_list
 
         for spw in res.keys():
-            if spw not in valid_ifs:
+            if spw in valid_ifs:
+                # remove duplicated channel ranges
+                for i in reversed(xrange(len(res[spw]))):
+                    for j in xrange(i):
+                        if ((res[spw][i][0]-res[spw][j][1])*(res[spw][i][1]-res[spw][j][0]) <= 0) or \
+                            (min(abs(res[spw][i][0]-res[spw][j][1]),abs(res[spw][j][0]-res[spw][i][1])) == 1):
+                            asaplog.post()
+                            merge_warn_mesg = "Spw " + str(spw) + ": overwrapping channel ranges are merged."
+                            asaplog.push(merge_warn_mesg)
+                            asaplog.post('WARN')
+                            res[spw][j][0] = min(res[spw][i][0], res[spw][j][0])
+                            res[spw][j][1] = max(res[spw][i][1], res[spw][j][1])
+                            res[spw].pop(i)
+                            break
+            else:
                 del res[spw]
 
         if len(res) == 0:
@@ -2373,6 +2412,10 @@ class scantable(Scantable):
                                              minval=minidx,maxval=maxidx)
             for thelist in currlist:
                 idxlist += range(thelist[0],thelist[1]+1)
+        # remove duplicated elements after first ones
+        for i in reversed(xrange(len(idxlist))):
+            if idxlist.index(idxlist[i]) < i:
+                idxlist.pop(i)
         msg = "Selected %s: %s" % (mode.upper()+"NO", str(idxlist))
         asaplog.push(msg)
         return idxlist

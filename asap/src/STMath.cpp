@@ -2626,11 +2626,6 @@ STMath::merge( const std::vector< CountedPtr < Scantable > >& in,
 	// The selected subset of table should have 
 	// the equal FREQ_ID, MOLECULE_ID, and FOCUS_ID values.
 	const TableRecord& rec = row.get(0);
-	tout.addRow(thetab.nrow());
-	TableCopy::copyRows(tout, thetab, nrow, 0, thetab.nrow());
-
-	Slicer slice(IPosition(1, nrow), IPosition(1, thetab.nrow()),
-		     Slicer::endIsLength);
 
 	// Set the proper FREQ_ID
 	Double rv,rp,inc;
@@ -2683,6 +2678,13 @@ STMath::merge( const std::vector< CountedPtr < Scantable > >& in,
 	  }
 	  os << LogIO::DEBUGGING << "newifno = " << newifno << LogIO::POST;
 	}
+	// copy rows to output table
+	tout.addRow(thetab.nrow());
+	TableCopy::copyRows(tout, thetab, nrow, 0, thetab.nrow());
+
+	Slicer slice(IPosition(1, nrow), IPosition(1, thetab.nrow()),
+		     Slicer::endIsLength);
+
 	thecolvals = id;
 	freqidcol.putColumnRange(slice, thecolvals);
 

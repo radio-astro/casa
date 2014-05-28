@@ -1109,6 +1109,8 @@ void Scantable::summary( const std::string& filename )
   // the orders are identical to ID in FREQ subtable
   Block< Vector<uInt> > ifNos(nfid), polNos(nfid);
   Vector<Int> fIdchans(nfid,-1);
+  Vector<Double> fIdfreq0(nfid,-1);
+  Vector<Double> fIdfcent(nfid,-1);
   map<uInt, Int> fidMap;  // (FREQ_ID, row # in FREQ subtable) pair
   for (Int i=0; i < nfid; i++){
    // fidMap[freqId] returns row number in FREQ subtable
@@ -1188,6 +1190,14 @@ void Scantable::summary( const std::string& filename )
       RORecordFieldPtr< Array<Float> > spec(rec, "SPECTRA");
       fIdchans(ftabRow)=(*spec).shape()(0);
     }
+    if (fIdfreq0(ftabRow) < 0 ) {
+      SpectralCoordinate spc = frequencies().getSpectralCoordinate(ftabRow);
+      Double fs, fe;
+      spc.toWorld(fs, 0);
+      spc.toWorld(fe, fIdchans(ftabRow)-1);
+      fIdfreq0(ftabRow) = fs;
+      fIdfcent(ftabRow) = 0.5 * ( fs + fe );
+    }
     // Should keep ifNos and polNos form the previous SCANNO
     if ( !anyEQ(ifNos[ftabRow],ifNoCol(0)) ) {
       ifNos[ftabRow].shape(iflen);
@@ -1226,6 +1236,14 @@ void Scantable::summary( const std::string& filename )
 	const TableRecord& rec = row.get(i);
 	RORecordFieldPtr< Array<Float> > spec(rec, "SPECTRA");
 	fIdchans(ftabRow) = (*spec).shape()(0);
+      }
+      if (fIdfreq0(ftabRow) < 0 ) {
+	SpectralCoordinate spc = frequencies().getSpectralCoordinate(ftabRow);
+	Double fs, fe;
+	spc.toWorld(fs, 0);
+	spc.toWorld(fe, fIdchans(ftabRow)-1);
+	fIdfreq0(ftabRow) = fs;
+	fIdfcent(ftabRow) = 5.e-1 * ( fs + fe );
       }
       if ( !anyEQ(ifNos[ftabRow],ifNoCol(i)) ) {
 	ifNos[ftabRow].shape(iflen);
@@ -1273,24 +1291,53 @@ void Scantable::summary( const std::string& filename )
   
   // List FRECUENCIES Table (using STFrequencies.print may be slow)
   oss << "FREQUENCIES: " << nfreq << endl;
-  oss << std::right << setw(5) << "ID" << setw(2) << ""
-      << std::left  << setw(5) << "IFNO" << setw(2) << ""
+//   oss << std::right << setw(5) << "ID" << setw(2) << ""
+//       << std::left  << setw(5) << "IFNO" << setw(2) << ""
+//       << setw(8) << "Frame"
+//       << setw(16) << "RefVal"
+//       << setw(7) << "RefPix"
+//       << setw(15) << "Increment"
+//       << setw(9) << "Channels"
+//       << setw(6) << "POLNOs" << endl;
+//   Int tmplen;
+//   for (Int i=0; i < nfid; i++){
+//     // List row=i of FREQUENCIES subtable
+//     ifNos[i].shape(tmplen);
+//     if (tmplen >= 1) {
+//       oss << std::right << setw(5) << ftabIds(i) << setw(2) << ""
+// 	  << setw(3) << ifNos[i](0) << setw(1) << ""
+// 	  << std::left << setw(46) << frequencies().print(ftabIds(i)) 
+// 	  << setw(2) << ""
+// 	  << std::right << setw(8) << fIdchans[i] << setw(2) << ""
+// 	  << std::left << polNos[i];
+//       if (tmplen > 1) {
+// 	oss  << " (" << tmplen << " chains)";
+//       }
+//       oss << endl;
+//     }
+  oss << std::right << setw(4) << "ID" << setw(2) << ""
+      << std::left  << setw(9) << "IFNO(SPW)" << setw(2) << ""
+      << setw(8) << "#Chans"
       << setw(8) << "Frame"
-      << setw(16) << "RefVal"
-      << setw(7) << "RefPix"
-      << setw(15) << "Increment"
-      << setw(9) << "Channels"
+      << setw(12) << "Ch0[MHz]"
+      << setw(14) << "ChanWid[kHz]"
+      << setw(14) << "Center[MHz]"
       << setw(6) << "POLNOs" << endl;
   Int tmplen;
   for (Int i=0; i < nfid; i++){
     // List row=i of FREQUENCIES subtable
     ifNos[i].shape(tmplen);
+    Double refpix, refval, increment ;
     if (tmplen >= 1) {
-      oss << std::right << setw(5) << ftabIds(i) << setw(2) << ""
-	  << setw(3) << ifNos[i](0) << setw(1) << ""
-	  << std::left << setw(46) << frequencies().print(ftabIds(i)) 
-	  << setw(2) << ""
-	  << std::right << setw(8) << fIdchans[i] << setw(2) << ""
+      freqTable_.getEntry( refpix, refval, increment, ftabIds(i) ) ;
+      oss << std::right << setw(4) << ftabIds(i) << setw(2) << "" 
+	  << std::left << setw(9) << ifNos[i](0) << setw(2) << ""
+	  << std::right << setw(6) << fIdchans[i] << setw(2) << ""
+	  << setw(6) << frequencies().getFrameString(true)
+	  << setw(2) << "" 
+	  << setw(10) << std::setprecision(9) << (fIdfreq0[i]*1.e-6) << setw(2) << ""
+	  << setw(12) << (increment*1.e-3) << setw(2) << ""
+	  << setw(12) << (fIdfcent[i]*1.e-6) << setw(2) << ""
 	  << std::left << polNos[i];
       if (tmplen > 1) {
 	oss  << " (" << tmplen << " chains)";
@@ -2682,6 +2729,8 @@ std::vector<float> Scantable::doSubtractBaseline(std::vector<float>& spec,
     initLineFinder(lfedge, lfth, lfavg, lineFinder);
     std::vector<int> currentEdge;
     mask = getCompositeChanMask(irow, mask, lfedge, currentEdge, lineFinder);
+  } else {
+    mask = getCompositeChanMask(irow, mask);
   }
 
   std::vector<float> res;

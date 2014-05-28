@@ -250,7 +250,7 @@ Float RowAccumulator::addInterval(Double inter, Bool inverseMask)
     intervalSum_ += inter;
   }
   if (weightType_ == W_TINT || weightType_ == W_TINTSYS) {
-    w /= Float(inter);
+    w *= Float(inter);
   }
   return w;
 }
