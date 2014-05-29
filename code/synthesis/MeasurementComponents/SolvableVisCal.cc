@@ -5715,10 +5715,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
            spidx(tranidx,i) = soln(i);
            spidxerr(tranidx,i) = errs(i);
         } 
-        fitFluxD = pow(10.0,(soln(0)));
+        fitFluxD(tranidx) = pow(10.0,(soln(0)));
 //	correct for the proper propagation of error
-        fitFluxDErr = (errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
-	fitRefFreq = pow(10.0,meanLogFreq);
+        fitFluxDErr(tranidx) = (errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
+	fitRefFreq(tranidx) = pow(10.0,meanLogFreq);
         oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
         oFitMsg += " with fitorder="+String::toString<Int>(myfitorder)+": ";
