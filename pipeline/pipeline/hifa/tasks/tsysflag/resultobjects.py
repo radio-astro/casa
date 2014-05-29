@@ -10,14 +10,12 @@ import pipeline.infrastructure.basetask as basetask
 
 LOG = infrastructure.get_logger(__name__)
 
-#class TsysflagResults(basetask.Results):
 class TsysflagResults(resultobjects.TsyscalResults):
     def __init__(self):
         """
         Construct and return a new TsysflagResults.
         """
         # the results to be merged back into the context
-#        super(TsysflagResults, self).__init__(final, pool, preceding)
         super(TsysflagResults, self).__init__()
 
         # component results
@@ -34,7 +32,6 @@ class TsysflagResults(resultobjects.TsyscalResults):
     def __repr__(self):
         s = super(TsysflagResults, self).__repr__()
         s = 'TsysflagResults incorporating %s' % s
-#        s = 'TsysflagResults'
         components = self.components.keys()
         if not components:
             s += '\n Containing no component results'
