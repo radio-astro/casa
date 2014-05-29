@@ -265,18 +265,22 @@ class Applycal(basetask.StandardTaskTemplate):
         
         fields = ms.get_fields()
         flagsummary = {}
+        flagkwargs = []        
         
         for field in fields:
-            
-            flagkwargs = []
+
             for spwid in spwids:
                 flagline = "field='" + str(field.id) + "' spw='" + str(spwid) + "' mode='summary' name='AntSpw" + str(spwid).zfill(3) + "Field" + str(field.id) + "'"
                 flagkwargs.append(flagline)
-                       
-            flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
+            
+            flagsummary[field.name.strip('"')] = {}
+            
+        flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
+        flagdicts = self._executor.execute(flaggingjob)
         
-            flagdict = self._executor.execute(flaggingjob)
-            flagsummary[field.name] = flagdict
+        for key in flagdicts.keys():
+            fieldname = flagdicts[key]['field'].keys()[0]
+            flagsummary[fieldname][key] = flagdicts[key]
             
         result.flagsummary = flagsummary
 
