@@ -104,6 +104,9 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
 
+    if task_cls is hif.tasks.ExportData:
+        return 'Export data products'
+
     if task_cls is hif.tasks.Flagchans:
         return 'Flag channels in raw data'
 
@@ -6067,6 +6070,7 @@ renderer_map = {
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
+        hif.tasks.ExportData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_exportdata.html'),
         hif.tasks.Flagchans      : T2_4MDetailsFlagchansRenderer(),
         hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
