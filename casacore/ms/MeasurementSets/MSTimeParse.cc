@@ -252,10 +252,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   const TableExprNode *MSTimeParse::selectTimeRange(const MEpoch& lowboundTime,
 						    const MEpoch& upboundTime,
-						    bool edgeInclusive)
+						    bool edgeInclusive,
+						    Float edgeWidth)
   {
     Double upperBound = toTAIInSec(upboundTime);
     Double lowerBound = toTAIInSec(lowboundTime);
+    Float edgeWidth_l = (edgeWidth < 0.0) ? defaultExposure : edgeWidth;
 
     if (lowerBound > upperBound)
       throw(MSSelectionTimeError("lower bound > upper bound"));
@@ -265,8 +267,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       condition = (columnAsTEN_p >= lowerBound &&
 		   (columnAsTEN_p <= upperBound));
     else
-      condition = (((columnAsTEN_p > lowerBound) || (abs(columnAsTEN_p - lowerBound) < defaultExposure/2)) &&
-		   ((columnAsTEN_p < upperBound) || (abs(columnAsTEN_p - upperBound) < defaultExposure/2)));
+      condition = (((columnAsTEN_p > lowerBound) || (abs(columnAsTEN_p - lowerBound) < edgeWidth_l/2)) &&
+		   ((columnAsTEN_p < upperBound) || (abs(columnAsTEN_p - upperBound) < edgeWidth_l/2)));
 
     accumulateTimeList(lowerBound, upperBound);
 
