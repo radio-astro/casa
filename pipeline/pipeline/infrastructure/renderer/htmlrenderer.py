@@ -59,6 +59,7 @@ import pipeline.hif as hif
 import pipeline.hsd as hsd
 import pipeline.hifa as hifa
 import pipeline.hifv as hifv
+from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -3473,6 +3474,28 @@ class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % results.stage_number)
 
+        flag_totals = {}
+        components = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
+        for msresult in results:
+            table = os.path.basename(msresult.inputs['caltable'])
+            flag_totals[table] = {}
+
+            # summarise flag state on entry
+            flag_totals[table]['before'] = self.flags_for_result(msresult, context,
+              summary='first')
+
+            # summarise flagging by each step
+            for component in components:
+                if component not in msresult.components.keys():
+                    flag_totals[table][component] = None
+                else:
+                    flag_totals[table][component] = self.flags_for_result(
+                      msresult.components[component], context)
+
+            # summarise flag state on exit
+            flag_totals[table]['after'] = self.flags_for_result(msresult, context,
+              summary='last')
+
         htmlreports = self.get_htmlreports(context, results)
         
         summary_plots = {}
@@ -3504,7 +3527,9 @@ class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
                 # map MS to sanitised filename for link construction.
                 subpages[ms] = renderer.filename
 
-        ctx.update({'summary_plots'   : summary_plots,
+        ctx.update({'flags'           : flag_totals,
+                    'components'      : components,
+                    'summary_plots'   : summary_plots,
                     'summary_subpage' : subpages,
                     'dirname'         : weblog_dir,
                     'htmlreports'     : htmlreports})
@@ -3563,6 +3588,88 @@ class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
         
         rendererutils.printTsysFlags(result.table, filename)
         return filename
+
+    def flags_for_result(self, result, context, summary=None):
+        name = result.inputs['caltable']
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
+        ms = context.observing_run.get_ms(name=tsystable.vis) 
+
+        summaries = result.summaries
+        if summary=='first':
+            summaries = summaries[:1]
+        elif summary=='last':
+            summaries = summaries[-1:]
+
+        by_intent = self.flags_by_intent(ms, summaries)
+        by_spw = self.flags_by_science_spws(ms, summaries)
+
+        return utils.dict_merge(by_intent, by_spw)
+
+    def flags_by_intent(self, ms, summaries):
+        # create a dictionary of fields per observing intent, eg. 'PHASE':['3C273']
+        intent_fields = {}
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
+            # use _name from field as we do want the raw name here as used
+            # in the summaries dict (not sometimes enclosed in "..."). Better
+            # perhaps to fix the summaries dict.
+            intent_fields[intent] = [f._name for f in ms.fields
+                                    if intent in f.intents]
+
+        # while we're looping, get the total flagged by looking in all scans 
+        intent_fields['TOTAL'] = [f._name for f in ms.fields]
+
+        total = collections.defaultdict(dict)
+
+        previous_summary = None
+        for summary in summaries:
+
+            for intent, fields in intent_fields.items():
+                flagcount = 0
+                totalcount = 0
+    
+                for field in fields:
+                    if field in summary['field'].keys():
+                        flagcount += int(summary['field'][field]['flagged'])
+                        totalcount += int(summary['field'][field]['total'])
+        
+                    if previous_summary:
+                        if field in previous_summary['field'].keys():
+                            flagcount -= int(previous_summary['field'][field]['flagged'])
+
+                ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount,
+                                                                totalcount)
+                total[summary['name']][intent] = ft
+    
+            previous_summary = summary
+                
+        return total 
+    
+    def flags_by_science_spws(self, ms, summaries):
+        science_spws = ms.get_spectral_windows(science_windows_only=True)
+    
+        total = collections.defaultdict(dict)
+    
+        previous_summary = None
+        for summary in summaries:
+    
+            flagcount = 0
+            totalcount = 0
+    
+            for spw in science_spws:
+                spw_id = str(spw.id)
+                flagcount += int(summary['spw'][spw_id]['flagged'])
+                totalcount += int(summary['spw'][spw_id]['total'])
+        
+                if previous_summary:
+                    flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
+
+            ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount,
+                                                            totalcount)
+            total[summary['name']]['SCIENCE SPWS'] = ft
+
+            previous_summary = summary
+                
+        return total
 
 
 class T2_4MDetailsTsysflagspectraRenderer(T2_4MDetailsDefaultRenderer):
