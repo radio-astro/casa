@@ -227,11 +227,9 @@ def immath(
     # TODO add a size check to make sure all images are the
     # same size.  Is this
     tmpfilenames=''
+    filenames=imagename
     if mode=='evalexpr':
         tmpfilenames=_immath_parse( expr )
-        filenames=imagename
-    else:
-        filenames=imagename
     if ( isinstance( filenames, str ) ):
         filenames= [ filenames ]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
