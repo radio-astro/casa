@@ -245,7 +245,6 @@ def immath(
         if ( len(name0 ) > 0 ):
             varnames.append( name0 )
     nfile=max(len(filenames),len(tmpfilenames))
-    #for i in range( len(varnames), len(filenames) ):
     for i in range( len(varnames), nfile ):
         varnames.append( 'IM'+str(i) )
     casalog.post( 'Variable name list is: '+str(varnames), 'DEBUG1' )
@@ -266,10 +265,6 @@ def immath(
         if len(tmpfilenames)==count:
             ignoreimagename=True
             filenames=tmpfilenames
-        #if(tmpfilenames==['']): 
-        #    for i in range(len(varnames)):
-        #       if(expr.count(varnames[i])==0):
-        #           casalog.post('Variable name '+varnames[i]+' not found in the expression.','WARN')
     if not ignoreimagename:
         for i in range( len(filenames) ):
             if ( not os.path.exists(filenames[i]) ):
@@ -288,7 +283,6 @@ def immath(
         # calculate a spectral index distribution image
         if len(filenames) != 2:
             raise Exception, 'Requires two images at different frequencies'
-        #expr = 'spectralindex("%s","%s")' % (filenames[0],filenames[1])
 
         expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
     elif mode=='pola':
@@ -410,8 +404,6 @@ def immath(
             casalog.post( 'Unable to apply region to file: '\
                   + image\
                   +'.\nUsed region: '+str(reg), 'DEBUG2' )
-            #raise Exception, 'Unable to apply region to file: '\
-            #      +filenames[i]
             casalog.post( 'Unable to apply region to file: '\
                           + image, 'SEVERE' )
             raise
