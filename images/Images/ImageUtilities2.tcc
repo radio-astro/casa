@@ -257,7 +257,13 @@ template <typename T> void ImageUtilities::openImage(
 		"File '" + fileName + "' does not exist"
 	);
 	LatticeBase* lattPtr = ImageOpener::openImage (fileName);
-	ThrowIf(
+    T *x;
+    ThrowIf(
+        lattPtr->dataType() != whatType(x),
+        "Logic Error: " + fileName
+        + " has a different data type than the data type of the requested object"
+    );
+    ThrowIf(
 		lattPtr == 0,
 		"Image " + fileName + " cannot be opened; its type is unknown"
 	);
@@ -267,6 +273,15 @@ template <typename T> void ImageUtilities::openImage(
 		"Unrecognized image data type, "
 	    "presently only Float and Complex images are supported"
 	);
+}
+
+template <typename T>
+std::tr1::shared_ptr<ImageInterface<T> > ImageUtilities::openImage(
+	const String& fileName
+) {
+	ImageInterface<T>* p = 0;
+	ImageUtilities::openImage(p, fileName);
+	return std::tr1::shared_ptr<ImageInterface<T> >(p);
 }
 
 template <typename T> void ImageUtilities::openImage(
