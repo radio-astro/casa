@@ -108,6 +108,11 @@ public:
 		ImageInterface<T>*& image,
 		const String& fileName
 	);
+
+	template <typename T>
+	static std::tr1::shared_ptr<ImageInterface<T> > openImage(
+		const String& fileName
+	);
 //  </group>
 
 // Copy MiscInfo, ImageInfo, brightness unit and logger (history) from in to out
