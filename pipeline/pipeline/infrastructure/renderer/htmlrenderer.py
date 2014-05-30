@@ -3604,7 +3604,7 @@ class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
             summaries = summaries[-1:]
 
         by_intent = self.flags_by_intent(ms, summaries)
-        by_spw = self.flags_by_science_spws(ms, summaries)
+        by_spw = self.flags_by_spws(ms, summaries)
 
         return utils.dict_merge(by_intent, by_spw)
 
@@ -3647,28 +3647,29 @@ class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
                 
         return total 
     
-    def flags_by_science_spws(self, ms, summaries):
-        science_spws = ms.get_spectral_windows(science_windows_only=True)
-    
+    def flags_by_spws(self, ms, summaries):
         total = collections.defaultdict(dict)
     
         previous_summary = None
         for summary in summaries:
+            tsys_spws = summary['spw'].keys()
     
             flagcount = 0
             totalcount = 0
     
-            for spw in science_spws:
-                spw_id = str(spw.id)
-                flagcount += int(summary['spw'][spw_id]['flagged'])
-                totalcount += int(summary['spw'][spw_id]['total'])
-        
+            for spw in tsys_spws:
+                try:
+                    flagcount += int(summary['spw'][spw]['flagged'])
+                    totalcount += int(summary['spw'][spw]['total'])
+                except:
+                    print spw, summary['spw'].keys()
+
                 if previous_summary:
-                    flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
+                    flagcount -= int(previous_summary['spw'][spw]['flagged'])
 
             ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount,
                                                             totalcount)
-            total[summary['name']]['SCIENCE SPWS'] = ft
+            total[summary['name']]['TSYS SPWS'] = ft
 
             previous_summary = summary
                 
