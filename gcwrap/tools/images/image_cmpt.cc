@@ -24,7 +24,6 @@
 #include <casa/Utilities/Assert.h>
 #include <components/ComponentModels/SkyCompRep.h>
 
-#include <images/Images/ImageConcat.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFITSConverter.h>
@@ -65,6 +64,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/ImageConcatenator.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
@@ -365,7 +365,6 @@ image* image::imageconcat(
 	const bool overwrite
 ) {
 	try {
-		image *rstat(0);
 		Vector<String> inFiles;
 		if (infiles.type() == variant::BOOLVEC) {
 			inFiles.resize(0); // unset
@@ -377,17 +376,35 @@ image* image::imageconcat(
 			inFiles = toVectorString(infiles.toStringVec());
 		}
 		else {
-			_log << "Unrecognized infiles datatype" << LogIO::EXCEPTION;
+			ThrowCc("Unrecognized infiles datatype");
 		}
-		ImageAnalysis ia;
-		rstat = new image(
-			ia.imageconcat(
-				outfile, inFiles, axis,	relax, tempclose, overwrite
-			)
+		vector<String> imageNames = Directory::shellExpand(inFiles, False).tovector();
+		ThrowIf(
+			imageNames.size() < 2,
+			"You must provide at least two images to concatentate"
 		);
-		if(!rstat)
-			throw AipsError("Unable to create image");
-		return rstat;
+		String first = imageNames[0];
+		imageNames.erase(imageNames.begin());
+		DataType dtype = ImageOpener::pagedImageDataType(first);
+		if (dtype = TpFloat) {
+			SPIIF f = ImageUtilities::openImage<Float>(first);
+			ImageConcatenator<Float> concat(f, outfile, overwrite);
+			concat.setAxis(axis);
+			concat.setRelax(relax);
+			concat.setTempClose(tempclose);
+			return new image(concat.concatenate(imageNames));
+		}
+		else if (dtype == TpComplex) {
+			SPIIC c = ImageUtilities::openImage<Complex>(first);
+			ImageConcatenator<Complex> concat(c, outfile, overwrite);
+			concat.setAxis(axis);
+			concat.setRelax(relax);
+			concat.setTempClose(tempclose);
+			return new image(concat.concatenate(imageNames));
+		}
+		else {
+			ThrowCc("Unsupported image data type");
+		}
 	}
 	catch (AipsError x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
