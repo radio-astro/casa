@@ -263,7 +263,7 @@ class Applycal(basetask.StandardTaskTemplate):
         spws = ms.get_spectral_windows()
         spwids = [spw.id for spw in spws]
         
-        fields = ms.get_fields()
+        fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
         flagsummary = {}
         flagkwargs = []        
         
@@ -279,8 +279,11 @@ class Applycal(basetask.StandardTaskTemplate):
         flagdicts = self._executor.execute(flaggingjob)
         
         for key in flagdicts.keys():
-            fieldname = flagdicts[key]['field'].keys()[0]
-            flagsummary[fieldname][key] = flagdicts[key]
+            try:
+                fieldname = flagdicts[key]['field'].keys()[0]
+                flagsummary[fieldname][key] = flagdicts[key]
+            except:
+                LOG.debug("No flags to report for "+str(key))
             
         result.flagsummary = flagsummary
 
