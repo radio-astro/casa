@@ -95,8 +95,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     skyCoverage_p(0), machineName_p("MosaicFT"), stokes_p(stokes)
 {
   convSize=0;
-  //reproject to the phase center
-  tangentSpecified_p=True;
   lastIndex_p=0;
   doneWeightImage_p=False;
   convWeightImage_p=0;
@@ -1233,7 +1231,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
 
 
 }
-
+/*
 void MosaicFT::get(VisBuffer& vb, Int row)
 {
   
@@ -1366,9 +1364,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 {
 #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
-    /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
+    /////////////////*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 	      locstor, 
-	      offstor, phasorstor, irow, False);*/
+		///////////	      offstor, phasorstor, irow, False);
     //using the fortran version which is significantly faster ...this can account for 10% less overall degridding time
     locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
@@ -1435,6 +1433,203 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
+*/
+
+void MosaicFT::get(VisBuffer& vb, Int row)
+{
+  
+
+  
+  // If row is -1 then we pass through all rows
+  Int startRow, endRow, nRow;
+  if (row==-1) {
+    nRow=vb.nRow();
+    startRow=0;
+    endRow=nRow-1;
+    //  vb.modelVisCube()=Complex(0.0,0.0);
+  } else {
+    nRow=1;
+    startRow=row;
+    endRow=row;
+    //  vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
+  }
+  
+
+ 
+
+
+  // Get the uvws in a form that Fortran can use
+  Matrix<Double> uvw(3, vb.uvw().nelements());
+  uvw=0.0;
+  Vector<Double> dphase(vb.uvw().nelements());
+  dphase=0.0;
+  //NEGATING to correct for an image inversion problem
+  for (Int i=startRow;i<=endRow;i++) {
+    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+    uvw(2,i)=vb.uvw()(i)(2);
+  }
+  
+  doUVWRotation_p=True;
+  rotateUVW(uvw, dphase, vb);
+  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+  
+  
+  //Check if ms has changed then cache new spw and chan selection
+  if(vb.newMS())
+    matchAllSpwChans(vb);
+  
+  //Here we redo the match or use previous match
+  
+  //Channel matching for the actual spectral window of buffer
+  if(doConversion_p[vb.spectralWindow()]){
+    matchChannel(vb.spectralWindow(), vb);
+  }
+  else{
+    chanMap.resize();
+    chanMap=multiChanMap_p[vb.spectralWindow()];
+  }
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
+
+  Cube<Complex> data;
+  Cube<Int> flags;
+  getInterpolateArrays(vb, data, flags);
+  //Need to get interpolated freqs
+  findConvFunction(*image, vb);
+  // no valid pointing in this buffer
+  if(convSupport <= 0)
+    return;
+  Complex *datStorage;
+  Bool isCopy;
+  datStorage=data.getStorage(isCopy);
+
+
+  Vector<Int> rowFlags(vb.nRow());
+  rowFlags=0;
+  rowFlags(vb.flagRow())=True;
+  if(!usezero_p) {
+    for (Int rownr=startRow; rownr<=endRow; rownr++) {
+      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+    }
+  }
+  Int nPolConv=convFunc.shape()[2];
+  Int nChanConv=convFunc.shape()[3];
+  Int nConvFunc=convFunc.shape()(4);
+  if(isTiled) {
+    Double invLambdaC=vb.frequency()(0)/C::c;
+    Vector<Double> uvLambda(2);
+    Vector<Int> centerLoc2D(2);
+    centerLoc2D=0;
+    
+    // Loop over all rows
+    for (Int rownr=startRow; rownr<=endRow; rownr++) {
+      
+      // Calculate uvw for this row at the center frequency
+      uvLambda(0)=uvw(0, rownr)*invLambdaC;
+      uvLambda(1)=uvw(1, rownr)*invLambdaC;
+      centerLoc2D=gridder->location(centerLoc2D, uvLambda);
+
+      // Is this point on the grid?
+      if(gridder->onGrid(centerLoc2D)) {
+      
+      // Get the tile
+      Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
+      Int aNx=dataPtr->shape()(0);
+      Int aNy=dataPtr->shape()(1);
+      
+      // Now use FORTRAN to do the gridding. Remember to 
+      // ensure that the shape and offsets of the tile are 
+      // accounted for.
+      Bool del;
+      Vector<Double> actualOffset(2);
+      for (Int i=0;i<2;i++) {
+	actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
+      }
+      //      IPosition s(data.shape());
+      const IPosition& fs=data.shape();
+      std::vector<Int> s(fs.begin(), fs.end());
+
+      dmos2(uvw.getStorage(del),
+	     dphase.getStorage(del),
+	     datStorage,
+	     &s[0],
+	     &s[1],
+	     flags.getStorage(del),
+	     rowFlags.getStorage(del),
+	     &s[2],
+	     &rownr,
+	     uvScale.getStorage(del),
+	     actualOffset.getStorage(del),
+	     dataPtr->getStorage(del),
+	     &aNx,
+	     &aNy,
+	     &npol,
+	     &nchan,
+	     interpVisFreq_p.getStorage(del),
+	     &C::c,
+	     &convSupport,
+	     &convSize,
+	     &convSampling,
+	     convFunc.getStorage(del),
+	     chanMap.getStorage(del),
+	     polMap.getStorage(del),
+	     convRowMap_p.getStorage(del),convChanMap_p.getStorage(del),
+	     convPolMap_p.getStorage(del),
+	     &nConvFunc, &nChanConv, &nPolConv);
+      }
+    }
+  }
+  else {
+    Bool del;
+     Bool uvwcopy; 
+     const Double *uvwstor=uvw.getStorage(uvwcopy);
+     Bool gridcopy;
+     const Complex *gridstor=griddedData.getStorage(gridcopy);
+     Bool convcopy;
+     ////Degridding needs the conjugate ...doing it here
+     Array<Complex> conjConvFunc=conj(convFunc);
+     const Complex *convstor=conjConvFunc.getStorage(convcopy);
+     //     IPosition s(data.shape());
+     const IPosition& fs=data.shape();
+     std::vector<Int> s(fs.begin(), fs.end());
+     //cerr << "maps "  << convChanMap_p << "   " << chanMap  << endl;
+     //cerr << "nchan " << nchan << "  nchanconv " << nChanConv << " npolconv " << nPolConv << " nRowConv " << nConvFunc << endl;
+     dmos2(uvwstor,
+	    dphase.getStorage(del),
+	    datStorage,
+	    &s[0],
+	    &s[1],
+	    flags.getStorage(del),
+	    rowFlags.getStorage(del),
+	    &s[2],
+	    &row,
+	   uvScale.getStorage(del), //10
+	    uvOffset.getStorage(del),
+	    gridstor,
+	    &nx,
+	    &ny,
+	    &npol,
+	    &nchan,
+	    interpVisFreq_p.getStorage(del),
+	    &C::c,
+	    &convSupport,
+	   &convSize,   //20
+	    &convSampling,
+	    convstor,
+	    chanMap.getStorage(del),
+	    polMap.getStorage(del),
+	    convRowMap_p.getStorage(del), convChanMap_p.getStorage(del),
+	    convPolMap_p.getStorage(del),
+	    &nConvFunc, &nChanConv, &nPolConv);
+      data.putStorage(datStorage, isCopy);
+     uvw.freeStorage(uvwstor, uvwcopy);
+     griddedData.freeStorage(gridstor, gridcopy);
+     convFunc.freeStorage(convstor, convcopy);
+  }
+  interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
+}
+
 
 
 

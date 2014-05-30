@@ -321,7 +321,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     
    
     toPix(vb);
-    Timer tim;
+    //Timer tim;
     //tim.mark();
     addPBToFlux(vb);
     //tim.show("After addPBToFlux");
@@ -390,13 +390,13 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       if(memtot <= 2000000)
     	  memtobeused=0;
       //cerr << "mem to be used " << memtobeused << endl;
-      tim.mark();
+      //tim.mark();
       IPosition start(4, 0, 0, 0, 0);
       //IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
       //cerr << "pbshape " << pbShape << endl;
       TempImage<Complex> twoDPB(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
 
-      tim.show("after making one image");
+      //tim.show("after making one image");
       convFunc_p.resize(tempConvSize, tempConvSize);
       convFunc_p=0.0;
       
@@ -406,7 +406,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //Matrix<Complex> screen(convSize_p, convSize_p);
       //screen=1.0;
       // Either the SkyJones
-      tim.mark();
+      //tim.mark();
       //twoDPB.set(Complex(1.0,0.0));
       //for (Int k=0; k < nBeamChans; ++k){
       //blcin[3]=k;
@@ -419,8 +419,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       sj_p->apply(subim, subim, vb, 0); 
       LatticeFFT::cfft2d(subim);
 	//  }
-      tim.show("after an apply" );
-      tim.mark();
+      //tim.show("after an apply" );
+      //tim.mark();
       TempImage<Float> screen2(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
       screen2.set(1.0);
       TempImage<Complex> subout(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
@@ -451,7 +451,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	}
       }
       //End of FFT's
-      tim.show("After apply2 ");
+      //tim.show("After apply2 ");
       TempImage<Complex> twoDPB2(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
       
       IPosition blcout(4, 0, 0, 0, nBeamChans-1);
