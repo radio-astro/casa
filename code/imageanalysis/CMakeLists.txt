@@ -125,7 +125,9 @@ install (FILES
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageCollapser.tcc
 	ImageAnalysis/ImageCollapserData.h
-	ImageAnalysis/ImageConvolver.h
+	ImageAnalysis/ImageConcatenator.h
+    ImageAnalysis/ImageConcatenator.tcc
+    ImageAnalysis/ImageConvolver.h
 	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageCropper.h
 	ImageAnalysis/ImageCropper.tcc

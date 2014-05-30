@@ -311,7 +311,6 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 	return ValueHolder();
 }
 
-
 uInt ImageMetaDataBase::_ndim() const {
 	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
 	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
@@ -554,7 +553,6 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 		String unit = _CUNIT + iString;
 		i++;
 	}
-
 }
 
 String ImageMetaDataBase::_doStandardFormat(
@@ -577,7 +575,6 @@ String ImageMetaDataBase::_doStandardFormat(
 	catch (const AipsError& x) {}
 	return valunit;
 }
-
 
 uInt ImageMetaDataBase::nChannels() const {
 	const CoordinateSystem csys = _getCoords();

@@ -83,13 +83,6 @@ class ImageAnalysis
     	const Bool overwrite = False
     );
 
-    SPIIF imageconcat(const String& outfile,
-                                        const Vector<String>& infiles, 
-                                        const Int axis, 
-                                        const Bool relax = False, 
-                                        const Bool tempclose = True, 
-                                        const Bool overwrite = False);
-
     Bool imagefromascii(const String& outfile, const String& infile, 
                         const Vector<Int>& shape, const String& sep, 
                         const Record& csys, const Bool linear = False, 

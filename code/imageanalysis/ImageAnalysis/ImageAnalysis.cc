@@ -77,7 +77,6 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
-#include <images/Images/ImageConcat.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFITSConverter.h>
@@ -363,135 +362,6 @@ void ImageAnalysis::imagecalc(
 
 	// Delete the ImageRegions (by using an empty Record).
 	makeRegionBlock(tempRegs, Record(), *_log);
-}
-
-SPIIF ImageAnalysis::imageconcat(
-	const String& outfile,
-	const Vector<String>& inFiles, const Int axis, const Bool relax,
-	const Bool tempclose, const Bool overwrite
-) {
-	*_log << LogOrigin(className(), __func__);
-
-	// There could be wild cards embedded in our list so expand them out
-	Vector<String> expInNames = Directory::shellExpand(inFiles, False);
-	if (expInNames.nelements() <= 1) {
-		*_log << "You must give at least two valid input images"
-				<< LogIO::EXCEPTION;
-	}
-	*_log << LogIO::NORMAL << "Number of expanded file names = "
-			<< expInNames.nelements() << LogIO::POST;
-
-	// Verify output file
-	String outFile(outfile);
-	if (!outFile.empty() && !overwrite) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	// Find spectral axis of first image
-	PtrHolder<ImageInterface<Float> > im;
-	ImageUtilities::openImage(im, expInNames(0));
-
-	CoordinateSystem cSys = im->coordinates();
-	Int iAxis = axis;
-	if (iAxis < 0) {
-		iAxis = CoordinateUtil::findSpectralAxis(cSys);
-		if (iAxis < 0) {
-			*_log << "Could not find a spectral axis in first input image"
-					<< LogIO::EXCEPTION;
-		}
-	}
-
-	// Create concatenator.  Use holder so if exceptions, the ImageConcat
-	// object gets cleaned up
-	uInt axis2 = uInt(iAxis);
-	//Time t;
-	//cout << "start " << t. << endl;
-	Timer timer;
-	std::auto_ptr<ImageConcat<Float> > pConcat(
-		new ImageConcat<Float> (axis2, tempclose)
-	);
-
-	// Set first image
-	pConcat->setImage(*im, relax);
-
-	// Set the other images.  We may run into the open file limit.
-	for (uInt i = 1; i < expInNames.nelements(); i++) {
-		Bool doneOpen = False;
-		try {
-			PtrHolder<ImageInterface<Float> > im2;
-			ImageUtilities::openImage(im2, expInNames(i));
-			doneOpen = True;
-			pConcat->setImage(*im2, relax);
-		}
-		catch (AipsError x) {
-			if (!doneOpen) {
-				*_log << "Failed to open file " << expInNames(i) << endl;
-				*_log
-						<< "This may mean you have too many files open simultaneously"
-						<< endl;
-				*_log
-						<< "Try using tempclose=T in the imageconcat constructor"
-						<< LogIO::EXCEPTION;
-			}
-			else {
-				*_log << x.getMesg() << LogIO::EXCEPTION;
-			}
-		}
-	}
-	//
-	timer.show("time to concat ");
-	if (!outFile.empty()) {
-		// Construct output image and give it a mask if needed
-		timer.mark();
-
-		_imageFloat.reset(
-			new PagedImage<Float> (
-				pConcat->shape(),
-				pConcat->coordinates(), outFile
-			)
-		);
-		timer.show("Time to construct image ");
-
-		if (! _imageFloat.get()) {
-			*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
-		}
-		*_log << LogIO::NORMAL << "Creating image '" << outfile
-				<< "' of shape " << _imageFloat->shape() << LogIO::POST;
-		//
-		timer.mark();
-
-		if (pConcat->isMasked()) {
-			String maskName("");
-			ImageMaskAttacher::makeMask(*_imageFloat, maskName, False, True, *_log, True);
-		}
-		timer.show("Time to make mask ");
-		// Copy to output
-		timer.mark();
-		pConcat->copyDataTo(*_imageFloat);
-		timer.show("Time to copy data 1 ");
-
-		timer.mark();
-
-		LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, *pConcat);
-		timer.show("Time to copy data ");
-
-		timer.mark();
-
-		ImageUtilities::copyMiscellaneous(*_imageFloat, *pConcat);
-		timer.show("Time to copy misc ");
-	}
-	else {
-		_imageFloat.reset(pConcat->cloneII());
-	}
-
-	//cout << "start " << t.seconds() << endl;
-
-	//timer.show(cout, "time ");
-	return _imageFloat;
 }
 
 Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
@@ -2233,8 +2103,8 @@ ImageInterface<Float> * ImageAnalysis::moments(
 			}
 			//
 			Vector<Int> intkernels = VectorKernel::toKernelTypes(kernels);
-			Vector<Int> intaxes(smoothaxes);
-			if (!momentMaker.setSmoothMethod(intaxes, intkernels, kernelwidths)) {
+			//Vector<Int> intaxes(smoothaxes);
+			if (!momentMaker.setSmoothMethod(smoothaxes, intkernels, kernelwidths)) {
 				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
 			}
 		}
