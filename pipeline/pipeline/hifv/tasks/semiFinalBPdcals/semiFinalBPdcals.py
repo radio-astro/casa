@@ -127,7 +127,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         #Force calwt for the bp table to be False
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linear', calwt=True)
+        calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         calto = callibrary.CalTo(self.inputs.vis)
