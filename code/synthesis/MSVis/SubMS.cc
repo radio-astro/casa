@@ -8583,8 +8583,6 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
 
   const Bool doSpWeight = viIn.existsWeightSpectrum();
 
-  cout << "doSpWeight = " << doSpWeight << endl;
-
   Bool doFC = existsFlagCategory();
   uInt rowsdone = 0;
   ProgressMeter meter(0.0, mssel_p.nrow() * 1.0, "split", "rows averaged", "", "",
