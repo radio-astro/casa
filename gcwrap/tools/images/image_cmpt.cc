@@ -386,7 +386,7 @@ image* image::imageconcat(
 		String first = imageNames[0];
 		imageNames.erase(imageNames.begin());
 		DataType dtype = ImageOpener::pagedImageDataType(first);
-		if (dtype = TpFloat) {
+		if (dtype == TpFloat) {
 			SPIIF f = ImageUtilities::openImage<Float>(first);
 			ImageConcatenator<Float> concat(f, outfile, overwrite);
 			concat.setAxis(axis);
@@ -406,7 +406,7 @@ image* image::imageconcat(
 			ThrowCc("Unsupported image data type");
 		}
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
