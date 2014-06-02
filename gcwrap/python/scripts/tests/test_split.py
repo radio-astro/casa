@@ -467,18 +467,18 @@ class split_test_cav(SplitChecker):
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
         check_eq(self.records['']['weight'],
-                 numpy.array([0.38709676, 0.38709676]), 0.001)
+                 numpy.array([3.0, 3.0]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_rr(self):
         """WEIGHT[5], chan avg. RR"""
         check_eq(self.records['rr']['weight'],
-                 numpy.array([0.38709676]), 0.001)
+                 numpy.array([3.0]), 0.001)
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
         check_eq(self.records['ll']['weight'],
-                 numpy.array([0.38709676]), 0.001)
+                 numpy.array([3.0]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
@@ -562,26 +562,26 @@ class split_test_cav5(SplitChecker):
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
         check_eq(self.records['']['weight'],
-                 numpy.array([0.38709676, 0.38709676]),
+                 numpy.array([5.0, 5.0]),
                  0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
         check_eq(self.records['ll']['weight'],
-                 numpy.array([0.38709676]),
+                 numpy.array([5.]),
                  0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([0.5, 0.5]), 0.0001)
+                 numpy.array([0.44721359, 0.44721359]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([0.5]), 0.0001)
+                 numpy.array([0.44721359]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cdsp(SplitChecker):
@@ -1541,11 +1541,12 @@ class split_test_wttosig(SplitChecker):
     def test_wt_straightselection(self):
         """WEIGHT after straight selection of DATA."""
         check_eq(self.records[('data', '1', '0s')]['wt'],
-                 numpy.array([[1.,     4.,       9.,      16.],
-                              [0.0625, 0.111111, 0.25,     1.],
-                              [1.,     0.25,     0.111111, 0.0625],
-                              [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                 numpy.array([[ 0.0625    ,  0.11111111,  0.25      ,  1.        ],
+                              [ 0.0625    ,  0.11111111,  0.25      ,  1.        ],
+                              [ 1.        ,  0.25      ,  0.11111111,  0.0625    ],
+                              [ 0.04      ,  0.02777778,  0.02040816,  0.015625  ],
+                              [ 1.        ,  1.        ,  1.        ,  1.        ]]),
+                 0.001)
 
     def test_sig_straightselection(self):
         """SIGMA after straight selection of DATA."""
@@ -1554,7 +1555,8 @@ class split_test_wttosig(SplitChecker):
                               [4.,     3.,       2.,       1.],
                               [1.,     2.,       3.,       4.],
                               [5.,     6.,       7.,       8.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                              [1.,     1.,       1.,       1.]]),
+                 0.001)
 
     def test_wt_corrtodata(self):
         """WEIGHT after straight CORRECTED -> DATA."""
@@ -1563,7 +1565,8 @@ class split_test_wttosig(SplitChecker):
                               [0.0625, 0.111111, 0.25,     1.],
                               [1.,     0.25,     0.111111, 0.0625],
                               [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                              [1.,     1.,       1.,       1.]]),
+                 0.001)
 
     def test_sig_corrtodata(self):
         """SIGMA after straight CORRECTED -> DATA."""
@@ -1572,16 +1575,18 @@ class split_test_wttosig(SplitChecker):
                               [4.,     3.,       2.,       1.],
                               [1.,     2.,       3.,       4.],
                               [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                              [1.,     1.,       1.,       1.]]),
+                 0.001)
 
     def test_wt_cavdata(self):
         """WEIGHT after channel averaging DATA."""
         check_eq(self.records[('data', '2', '0s')]['wt'],
-                 numpy.array([[1.,     4.,       9.,      16.],
-                              [0.0625, 0.111111, 0.25,     1.],
-                              [1.,     0.25,     0.111111, 0.0625],
-                              [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                 numpy.array([[ 0.125     ,  0.22222224,  0.5       ,  2.        ],
+                        [ 0.125     ,  0.22222224,  0.5       ,  2.        ],
+                        [ 2.        ,  0.5       ,  0.22222224,  0.125     ],
+                        [ 0.08      ,  0.05555556,  0.04081633,  0.03125   ],
+                        [ 2.        ,  2.        ,  2.        ,  2.        ]]),
+                 0.001)
 
     def test_sig_cavdata(self):
         """SIGMA after channel averaging DATA."""
@@ -1596,38 +1601,41 @@ class split_test_wttosig(SplitChecker):
     def test_wt_tavdata(self):
         """WEIGHT after time averaging DATA."""
         check_eq(self.records[('data', '1', '60s')]['wt'],
-                 numpy.array([[2.,     2.,       0.,       2.],
-                              [4.,    16.,       0.,       1.],
-                              [4.,     4.,       4.,       4.],
-                              [2.,     2.,       2.,       2.],
-                              [2.,     2.,       2.,       2.]]), 0.001)
+                 numpy.array([[  7.99999908e-02,   5.55555597e-02,   1.19209290e-07,       3.12500000e-02],
+                        [  6.04081601e-02,   1.03999996e+00,   4.81859408e-02,       1.02777767e+00],
+                        [  4.00189018e+00,   2.00000000e+00,   1.00189030e+00,       5.00000000e+00],
+                        [  2.00000000e+00,   2.00000000e+00,   2.00000000e+00,       2.00000000e+00],
+                        [  2.00000000e+00,   2.00000000e+00,   2.00000000e+00,       2.00000000e+00]]),
+                 0.001)
 
     def test_sig_tavdata(self):
         """SIGMA after time averaging DATA."""
         check_eq(self.records[('data', '1', '60s')]['sigma'],
-                 numpy.array([[3.5355, 4.2426,  -1.0,      5.6569],
-                              [4.3011, 2.5495,  -1.0,      3.0414],
-                              [17.2505, 0.7906, 17.2518,   0.4507],
-                              [0.7071, 0.7071,   0.7071,   0.7071],
-                              [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
+                 numpy.array([[  3.53553414e+00,   4.24264050e+00,   2.89630933e+03,   5.65685415e+00],
+                        [  4.06866741e+00,   9.80580688e-01,   4.55553961e+00,   9.86393988e-01],
+                        [  4.99881893e-01,   7.07106769e-01,   9.99056160e-01,   4.47213590e-01],
+                        [  7.07106769e-01,   7.07106769e-01,   7.07106769e-01,   7.07106769e-01],
+                        [  7.07106769e-01,   7.07106769e-01,   7.07106769e-01,   7.07106769e-01]]), 0.001)
 
     def test_wt_cavcorr(self):
         """WEIGHT after channel averaging CORRECTED_DATA."""
         check_eq(self.records[('corrected', '2', '0s')]['wt'],
-                 numpy.array([[1.,     4.,       9.,      16.],
-                              [0.0625, 0.111111, 0.25,     1.],
-                              [1.,     0.25,     0.111111, 0.0625],
-                              [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                 numpy.array([[  2.      ,   8.      ,  18.      ,  32.      ],
+                        [  0.125   ,   0.222222,   0.5     ,   2.      ],
+                        [  2.      ,   0.5     ,   0.222222,   0.125   ],
+                        [  2.      ,   2.      ,   2.      ,   2.      ],
+                        [  2.      ,   2.      ,   2.      ,   2.      ]]),
+                 0.001)
 
     def test_sig_cavcorr(self):
         """SIGMA after channel averaging CORRECTED_DATA."""
         check_eq(self.records[('corrected', '2', '0s')]['sigma'],
-                 numpy.array([[1.,     0.5,      0.33333,  0.25],
-                              [4.,     3.0,      2.,       1.],
-                              [1.,     2.,       3.0000,   4.],
-                              [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                 numpy.array([[ 0.70710677,  0.35355338,  0.23570226,  0.17677669],
+                        [ 2.82842708,  2.12132144,  1.41421354,  0.70710677],
+                        [ 0.70710677,  1.41421354,  2.12132144,  2.82842708],
+                        [ 0.70710677,  0.70710677,  0.70710677,  0.70710677],
+                        [ 0.70710677,  0.70710677,  0.70710677,  0.70710677]]),
+                 0.001)
 
     def test_wt_tavcorr(self):
         """WEIGHT after time averaging CORRECTED_DATA."""
@@ -1641,11 +1649,11 @@ class split_test_wttosig(SplitChecker):
     def test_sig_tavcorr(self):
         """SIGMA after time averaging CORRECTED_DATA."""
         check_eq(self.records[('corrected', '1', '60s')]['sigma'],
-                 numpy.array([[0.7071, 0.7071,  -1.0,      0.7071],
-                              [0.5,    0.25,    -1.0,      1.0],
-                              [0.5,    0.5,      0.5,      0.5],
-                              [0.7071, 0.7071,   0.7071,   0.7071],
-                              [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
+                 numpy.array([[  7.07106769e-01,   7.07106769e-01,   2.89630933e+03,       7.07106769e-01],
+                        [  5.00000000e-01,   2.50000000e-01,   2.04800000e+03,       1.00000000e+00],
+                        [  5.00000000e-01,   5.00000000e-01,   5.00000000e-01,       5.00000000e-01],
+                        [  7.07106769e-01,   7.07106769e-01,   7.07106769e-01,       7.07106769e-01],
+                        [  7.07106769e-01,   7.07106769e-01,   7.07106769e-01,       7.07106769e-01]]), 0.001)
 
 class split_test_fc(SplitChecker):
     """
