@@ -312,7 +312,7 @@ def space_comma(s):
 		                       class="fancybox"
 		                       rel="phase_vs_freq-${ms}">
 		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs frequency plot for baseband ${plot.parameters['baseband']}"
+		                             title="Click to show phase vs frequency plot for baseband ${plot.parameters['baseband']}"
 		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 		                        </img>
 		                    </a>
@@ -327,7 +327,7 @@ def space_comma(s):
 				                    </a>
 								</h4>
 								
-		                        <p>Calibrated amplitude vs frequency for ${intent} calibrator 
+		                        <p>Calibrated phase vs frequency for ${intent} calibrator 
 		                        ${utils.commafy(utils.safe_split(plot.parameters['field']))}, 
 		                        baseband ${plot.parameters['baseband']}, all antennas and correlations,
 		                        colored by antenna.
@@ -376,7 +376,7 @@ def space_comma(s):
 				                    </a>
 								</h4>
 								
-		                        <p>Calibrated phase vs UV distance for amplitude calibrator ${plot.parameters['field']} spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by correlation.
+		                        <p>Calibrated amplitude vs UV distance for amplitude calibrator ${plot.parameters['field']} spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by correlation.
 		                        </p>
 		                    </div>
 		                </div>
@@ -450,7 +450,7 @@ def space_comma(s):
 		                       class="fancybox"
 		                       rel="phase_vs_time-${ms}">
 		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
+		                             title="Click to show phase vs time plot for Spectral Window ${plot.parameters['spw']}"
 		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 		                        </img>
 		                    </a>
