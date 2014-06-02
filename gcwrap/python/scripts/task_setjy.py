@@ -230,7 +230,7 @@ def setjy_core(vis=None, field=None, spw=None,
                                                  standard=instandard, scalebychan=scalebychan,
                                                  time=timerange, observation=str(observation), scan=scan, 
                                                  intent=intent, interpolation=interpolation)
-                        retval.update(curretval)
+                            retval.update(curretval)
                     else:
                         raise Exception, "No field is selected. Check fluxdict and field selection."
                 else: 
