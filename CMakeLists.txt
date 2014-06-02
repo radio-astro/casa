@@ -344,6 +344,7 @@ casa_add_library( synthesis
  ImagerObjects/SDAlgorithmHogbomClean.cc
  ImagerObjects/SDAlgorithmMSMFS.cc
  ImagerObjects/SDAlgorithmMSClean.cc
+ ImagerObjects/SDAlgorithmClarkClean.cc
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
@@ -649,6 +650,7 @@ install (FILES
 	ImagerObjects/SDAlgorithmHogbomClean.h
 	ImagerObjects/SDAlgorithmMSMFS.h
 	ImagerObjects/SDAlgorithmMSClean.h
+	ImagerObjects/SDAlgorithmClarkClean.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES

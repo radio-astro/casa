@@ -95,18 +95,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
 	  }
-	  else if(decpars.algorithm==String("mtmfs"))
-	    {
-	      itsDeconvolver = new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales ); 
-	    } 
-	  else if(decpars.algorithm==String("multiscale"))
-	    {
-	      itsDeconvolver = new SDAlgorithmMSClean( decpars.scales ); 
-	    } 
-	  else
-	    {
-	      throw( AipsError("Un-known algorithm : "+decpars.algorithm) );
-	    }
+	else if(decpars.algorithm==String("mtmfs"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales ); 
+	  } 
+	else if(decpars.algorithm==String("clark"))
+	  {
+	    itsDeconvolver = new SDAlgorithmClarkClean(); 
+	  } 
+	else if(decpars.algorithm==String("multiscale"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMSClean( decpars.scales ); 
+	  } 
+	else
+	  {
+	    throw( AipsError("Un-known algorithm : "+decpars.algorithm) );
+	  }
       }
     catch(AipsError &x)
       {

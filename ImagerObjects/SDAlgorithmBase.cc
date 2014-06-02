@@ -115,8 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	Bool converged=False;
 
 	    // Or, call this from outside... in SynthesisImager.....
-	    //itsMaskHandler.makeAutoMask( itsImages );
-	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
+	    itsMaskHandler.makeAutoMask( itsImages );
+	    //itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    
 	    initializeDeconvolver( peakresidual, modelflux );
 	    
@@ -208,7 +208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    imagestore->image();
     //    imagestore->model();
 
-    os << "Restore [" << itsImages->getName() << "] with fitted beam ";
+    //    os << "Restore [" << itsImages->getName() << "] with fitted beam ";
 
     ImageInfo ii = (imagestore->image())->imageInfo();
     ImageBeamSet beamset;
@@ -217,21 +217,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for( Int chanid=0; chanid<nSubChans;chanid++)   {
 	for( Int polid=0; polid<nSubPols; polid++) {
 
+	  /*
 	  if( nSubChans > 1 || nSubPols > 1 ) os << LogIO::POST;
 
 	  if( !(  chanid==0 || chanid==nSubChans-1 )  ) os << LogIO::NORMAL1;
 	  if( nSubChans > 1 ) os << "C" << chanid << ":";
 	  if( nSubPols > 1 ) os << "P" << polid << ":";
-	  
+	  */
+
 	  itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
 	  GaussianBeam beam = itsImages->restorePlane();
 	  beamset.setBeam( chanid, polid, beam );
 
-	  os << " " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	  //	  os << " " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
 
 	}
     }
     ii.setBeams( beamset );
+
+    os << "[" << itsImages->getName() << "] ";
+
+    if( nSubChans==1 )
+      {
+	GaussianBeam beam = beamset.getBeam();
+	os << "Restoring beam : " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      }
+    else
+      {
+	beamset.summarize( os, False, imagestore->image()->coordinates() );
+      }
 
     try
       {
