@@ -1268,7 +1268,7 @@ class test_state(test_base):
         n_subscans = scan_intent.size
         check_eq(n_subscans, 12)
         
-        # listobs checks that re-indexing is consisten
+        # listobs checks that re-indexing is consistent
         listobs(self.outputms)
         
     def test_select_by_scan_but_not_implicit_state_reindex(self):
@@ -1285,7 +1285,7 @@ class test_state(test_base):
         n_subscans = scan_intent.size
         check_eq(n_subscans, 30)        
 
-        # listobs checks that re-indexing is consisten
+        # listobs checks that re-indexing is consistent
         listobs(self.outputms)
 
         
@@ -2172,7 +2172,73 @@ class test_spw_poln(test_base):
         self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
-# Cleanup class 
+    def test_mms_XXYY_selection(self):
+        '''mstransform: correlation='RR,LL' should select and re-index properly'''
+        self.outputms = '3cRRLL.mms'
+        # spw 0 should not be processed. The selection should happen before the MMS work
+        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', correlation='RR,LL',
+                    createmms=True)
+        
+        msmdt = msmdtool()
+        msmdt.open(self.outputms)
+        out_dds = msmdt.datadescids()
+        msmdt.done()
+        
+        ref = [0,1]
+        for i in out_dds:
+            self.assertEqual(out_dds[i], ref[i])
+        
+        pol_col = th.getVarCol(self.outputms+'/POLARIZATION','NUM_CORR')
+        self.assertEqual(pol_col['r1'][0], 0,'Error in NUM_CORR of POLARIZATION table')
+        self.assertEqual(pol_col['r2'][0], 0,'Error in NUM_CORR of POLARIZATION table')
+        self.assertEqual(pol_col['r3'][0], 2,'Error in NUM_CORR of POLARIZATION table')
+        self.assertEqual(pol_col['r4'][0], 2,'Error in NUM_CORR of POLARIZATION table')
+
+        # Verify that POLARIZATION table is not re-sized.
+        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR')
+        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')
+
+class testFlags(test_base):
+    '''Test the keepflags parameter'''
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_split_keepflags_false(self):
+        '''mstransform: split them and do not keep flags in output MS'''
+        self.outputms = 'donotkeepflags.ms'
+        
+        # Unflag and flag spw=4
+        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='4'"])
+        
+        # Split scan=31 out
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='corrected', scan='31', keepflags=False)
+        
+        msmdt = msmdtool()
+        msmdt.open(self.outputms)
+        spws = msmdt.spwsforscan(31)
+        msmdt.close()
+        self.assertEqual(spws.size, 15)
+        
+    def test_select_dropped_spw(self):
+        '''mstransform: keepflags=False and select flagged spw. Expect error.'''        
+        self.outputms = 'donotkeepflags_spw15.ms'
+        
+        # Unflag and flag spw=15
+        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='15'"])
+    
+        try:
+            mstransform(self.vis, outputvis=self.outputms, datacolumn='data', spw='>14', keepflags=False)
+        except exceptions.RuntimeError, instance:
+            print 'Expected Error: %s'%instance
+        
+        print 'Expected Error!'
+        
+
+# Cleanup class
 class Cleanup(test_base):
     
     def tearDown(self):
