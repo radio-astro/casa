@@ -27,6 +27,8 @@
 
 #include <synthesis/MSVis/VisChunkAverager.h>
 
+#include <casa/Arrays/ArrayPartMath.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -180,6 +182,10 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
       
     vb.channelAve(chanAveBounds_p[vi.spectralWindow()]);
 
+    // Handle zeros
+    vb.sigmaMat()(vb.sigmaMat()<FLT_EPSILON)=FLT_MAX;
+    vb.weightMat()(vb.weightMat()<FLT_EPSILON)=FLT_EPSILON;
+
     // First iterate through the *unflagged* rows of the current VisBuffer.
     Int outrow = 0;
     Bool firstValidOutRowInIntegration = true;
@@ -229,7 +235,13 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
           avBuf_p.stateId()[outrow] = vb.stateId()[inrow];
         }
 
-        Vector<Float> wtM(vb.weightMat().column(inrow));
+        Vector<Float> wtM;
+	if (anyEQ(colEnums_p,MS::CORRECTED_DATA))
+	  // use weightMat for corrected data
+	  wtM.reference(vb.weightMat().column(inrow));
+	else
+	  // otherwise use sigmaMat (data, model)
+	  wtM=Float(1.)/square(vb.sigmaMat().column(inrow));
 
         // Accumulate the visibilities and weights, and set the flags.
         // For better or worse, calibration may adjust WEIGHT without adjusting
@@ -243,8 +255,6 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
         Double totwt = 0.0;                       // Total weight for inrow.
         for(Int cor = 0; cor < nCorr_p; ++cor){
           Double constwtperchan = wtM[cor];  // Already adjusted by flagging.
-          if(nChan_p > 0)
-            constwtperchan /= nChan_p;
 
           Double totwtsp = wtM[cor];
           Bool useWtSp = doSpWeight_p;
@@ -546,7 +556,20 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
     }
 
     if(!avBuf_p.flagRow()[outrow]){
+      
+      Matrix<Float> rowWeightSpectrum(avBuf_p.weightSpectrum().xyPlane(outrow));
+      Vector<Float> rowWeightMat(avBuf_p.weightMat().column(outrow));
+      Vector<Float> rowSigmaMat(avBuf_p.sigmaMat().column(outrow));
+
+      // extract chan-indep weight/sigma
+      rowWeightMat = partialMedians(rowWeightSpectrum,IPosition(1,1));
+
       for(Int cor = 0; cor < nCorr_p; ++cor){
+
+	if (rowWeightMat[cor]<FLT_EPSILON)
+	  rowWeightMat[cor]=FLT_EPSILON;
+	rowSigmaMat[cor]=1/sqrt(rowWeightMat[cor]);
+
         for(Int ochan = 0; ochan < avBuf_p.nChannel(); ++ochan){
           if(!avBuf_p.flagCube()(cor, ochan, outrow)){
             Double w = avBuf_p.weightSpectrum()(cor, ochan, outrow);

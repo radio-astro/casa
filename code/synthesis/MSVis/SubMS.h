@@ -53,6 +53,7 @@ namespace subms {
 // NOT a member function, so it can be easily passed to other functions
 // (i.e. arrayTransformInPlace).
 Double wtToSigma(Double wt);
+Double sigToWeight(Double sig);
 }
 
 // <summary>
@@ -427,6 +428,7 @@ class SubMS
 			   vector<MPosition>& mObsPosV,
 			   vector<MFrequency::Types>& fromFrameTypeV,
 			   vector<MFrequency::Ref>& outFrameV,
+			   vector<Double>& weightScaleV,
 			   vector< Vector<Double> >& xold, 
 			   vector< Vector<Double> >& xout, 
 			   vector< Vector<Double> >& xin, 

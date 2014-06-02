@@ -697,7 +697,7 @@ public:
     // MODEL_DATA, CORRECTED_DATA, FLOAT_DATA, FLAG, and WEIGHT_SPECTRUM are
     // present.  It will only treat the first 5 as present if they have already
     // been loaded into the buffer!
-    void channelAve(const Matrix<Int>& chanavebounds);
+    void channelAve(const Matrix<Int>& chanavebounds,Bool calmode=True);
 
     // Average channel axis by factor.
     template<class T> void chanAveVisCube(Cube<T>& data, Int nChanOut);

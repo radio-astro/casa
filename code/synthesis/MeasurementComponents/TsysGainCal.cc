@@ -295,18 +295,22 @@ void StandardTsys::calcWtScale() {
   ArrayIterator<Float> Tsys(currRPar(),it3,False);
   ArrayIterator<Bool> Tok(currParOK(),it3,False);
   ArrayIterator<Float> cWSi(cWS,it3,False);
+
   while (!Tsys.pastEnd()) {
 
     // mask out flagged channels
     MaskedArray<Float> Tsysm(Tsys.array()(Tok.array()));
-    Float meanTsys=mean(Tsysm);
-    if (meanTsys>0.0)
-      cWSi.array().set(1./meanTsys);
-    
+
+    // If any good Tsys this ant/pol, calc the wt scale (else it remains 1.0)
+    if (Tsysm.nelementsValid()>0) {
+      Float meanTsys=mean(Tsysm);
+      if (meanTsys>0.0)
+	cWSi.array().set(1./meanTsys);
+    }
+
     Tsys.next();
     Tok.next();
     cWSi.next();
-
   }
 
 }

@@ -877,16 +877,28 @@ void VisBuffer::formStokes(Cube<Float>& fcube)
     }
 }
 
-void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
+void VisBuffer::channelAve(const Matrix<Int>& chanavebounds,Bool calmode)
 {
+ 
+  // TBD:
+  //  a. nChanAve examination
+  //  b. calmode=T  DONE
+  //  c. doWtSp clauses and rowWtFac (not needed?)
+  //  d. divide-by-zero safety  DONE
+  //  e. no-averaging case   sigma<->weight
+
+
   //  Only do something if there is something to do
   if ( chanavebounds.nelements()>0 ) {
 
     // refer to the supplied chanavebounds
     chanAveBounds_p.reference(chanavebounds);
 
-    //  cout << "chanAveBounds = " << chanAveBounds_p << endl;
-    
+    // Examine chanAveBounds_p for consistency, detect nChanAve
+    //   TBD: improve actual examination...
+    Int nChanAve = abs(chanAveBounds_p(0,1)-chanAveBounds_p(0,0))+1;
+    nChanAve = max(1,nChanAve);  // ensure >0
+
     Int nChanOut(chanAveBounds_p.nrow());
     Vector<Int> chans(channel()); // Ensure channels pre-filled
     
@@ -993,13 +1005,56 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
       for(uInt icor = 0; icor < nCor; ++icor){
         Float rwfcr = rowWtFac(icor, row);
 
-        if(totn < nAllChan0)
-          weightMat()(icor, row) *= selChanFac * rwfcr;
-        if(rwfcr > 0.0)          // Unlike WEIGHT, SIGMA is for a single chan.
-          sigmaMat()(icor, row) /= sqrt(nch * rwfcr / nChanOut);
+	if (calmode) {
+
+	  // Downstream processing in calibration will use weightMat only
+
+	  // Just magnify by channal averaging factor
+	  weightMat()(icor, row) *= nChanAve;
+
+	  /*
+	  if(totn < nAllChan0)
+	    weightMat()(icor, row) *= selChanFac * rwfcr;
+	  if(rwfcr > 0.0)          // Unlike WEIGHT, SIGMA is for a single chan.
+	    sigmaMat()(icor, row) /= sqrt(nch * rwfcr / nChanOut);
+	  */
+	}
+	else {
+
+
+	  // selectively update sigma and weight info according to which
+	  //   columns were processed
+
+	  if (visCubeOK_p || floatDataCubeOK_p) {
+	    // update sigmaMat by inverse sqrt of number of channels averaged
+	    sigmaMat()(icor,row) /= sqrt(Double(nChanAve));   // nChanAve>0 already ensured
+
+	    if (!correctedVisCubeOK_p) {
+	      // calc weightMat from sigmaMat
+	      Float &s= sigmaMat()(icor,row);
+	      weightMat()(icor,row)= (s>0.0 ? 1./square(s) : FLT_EPSILON);
+	    }
+	  }
+
+	  if (correctedVisCubeOK_p || modelVisCubeOK_p) {
+	    // update weightMat
+	    weightMat()(icor,row)*=Double(nChanAve);
+	    if (!visCubeOK_p) {
+	      // calc sigmaMat from weightMat
+	      Float &w = weightMat()(icor,row);
+	      sigmaMat()(icor,row)= ( w>0.0 ? 1./sqrt(w) : FLT_MAX );
+	    }
+	  }
+
+	} // calmode
+
       }
     }
-  }
+  } // chanavebounds
+
+  // do we need to do something here that is datacolumn-specific to get sigma/weight reconciled?
+
+
 }
 
 void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
