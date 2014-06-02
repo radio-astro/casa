@@ -90,8 +90,14 @@ class MSTHelper(ParallelTaskHelper):
             if self.__args['timespan'] == 'scan':
                 casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
                               'Will reset timespan to None', 'WARN')
-                self.__args['timespan'] == ''
-                retval = 2
+                self.__args['timespan'] = ''
+                retval = 1
+            # split2 parameter
+            elif self.__args.has_key('combine') and self.__args['combine'] == 'scan':
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset combine to None', 'WARN')
+                self.__args['combine'] = ''
+                retval = 1
                 
         elif (self.__args['separationaxis'] == 'both'):
             if self.__args['combinespws'] == True:
@@ -101,8 +107,14 @@ class MSTHelper(ParallelTaskHelper):
             elif self.__args['timespan'] == 'scan':
                 casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
                               'Will reset timespan to None', 'WARN')
-                self.__args['timespan'] == ''
-                retval = 2
+                self.__args['timespan'] = ''
+                retval = 1
+            # split2 parameter
+            elif self.__args.has_key('combine') and self.__args['combine'] == 'scan':
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset combine to None', 'WARN')
+                self.__args['combine'] = ''
+                retval = 1
                 
             elif self.__args['nspw'] > 1:
                 # CANNOT process in sequential either because internally the
@@ -110,7 +122,6 @@ class MSTHelper(ParallelTaskHelper):
 #                casalog.post('Can only process the MS in sequential', 'WARN')
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
-
 
         return retval
         
@@ -120,6 +131,8 @@ class MSTHelper(ParallelTaskHelper):
         if thistask == '':
             thistask = 'mstransform'
             
+        # It needs to use the updated list of parameters!!!
+#        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__origpars)
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
             
     
