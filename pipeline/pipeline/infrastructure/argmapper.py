@@ -93,12 +93,16 @@ def convert_args(taskname, casa_args, convert_nulls=True):
 def _convert_null(val):
     # convert empty string to None
     if type(val) is types.StringType:
-        return val if val not in ['', 'context'] else None
+        return None if val in ['', 'context'] else val
 
     # convert empty lists and ['', ''] etc to None
     if type(val) is types.ListType:
-        tmp = [v for v in val if _convert_null(v) is not None]
-        return tmp if tmp else None
+        no_nulls = [_convert_null(v) for v in val]
+        nones = [t==None for t in no_nulls]
+        if all(nones):
+            return None
+        else:
+            return no_nulls
 
     return val
 
