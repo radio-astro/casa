@@ -247,7 +247,7 @@ template <typename T> void ImageUtilities::openImage(
 	ImageInterface<T>*& pImage,
 	const String& fileName
 ) {
-	ThrowIf(
+    ThrowIf(
 		fileName.empty(),
 		"The image filename is empty"
 	);
@@ -257,16 +257,16 @@ template <typename T> void ImageUtilities::openImage(
 		"File '" + fileName + "' does not exist"
 	);
 	LatticeBase* lattPtr = ImageOpener::openImage (fileName);
-    T *x;
-    ThrowIf(
-        lattPtr->dataType() != whatType(x),
-        "Logic Error: " + fileName
-        + " has a different data type than the data type of the requested object"
-    );
     ThrowIf(
 		lattPtr == 0,
 		"Image " + fileName + " cannot be opened; its type is unknown"
 	);
+    T x = 0;
+    ThrowIf(
+        lattPtr->dataType() != whatType(&x),
+        "Logic Error: " + fileName
+        + " has a different data type than the data type of the requested object"
+    );
 	pImage = dynamic_cast<ImageInterface<T> *>(lattPtr);
 	ThrowIf(
 		pImage == 0,
