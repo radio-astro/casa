@@ -221,9 +221,9 @@ class ia_imageconcat_test(unittest.TestCase):
     def test_basic(self):
         """Test basic functionality"""
         myia = self._myia
-        myia.fromshape("", [1, 1, 20])
+        myia.fromshape("", [1, 1, 5])
         names = []
-        for i in range(20):
+        for i in range(5):
             name = "chan_" + str(i)
             names.append(name) 
             subi = myia.subimage(name, region=rg.box([0, 0, i], [0, 0,i]))
@@ -238,31 +238,59 @@ class ia_imageconcat_test(unittest.TestCase):
             self.assertTrue(got == expec)
             
         self.assertRaises(
-            Exception, myia.imageconcat, infiles=[names[0], names[1], names[3]]
+            Exception, myia.imageconcat, outfile="blah.im", infiles=[names[0], names[1], names[3]]
         )
         concat = myia.imageconcat(
-            outfile="relax.im", infiles=[names[0], names[1], names[3]], relax=True
+            infiles=[names[0], names[1], names[3]], relax=True
         )
         for i in range(3):
             k = i
             if i == 2: k = 3
             got = concat.toworld([0 ,0, i])['numeric'][2]
             expec = myia.toworld([0 ,0, k])['numeric'][2]
-            print "got",got,"expec", expec
             self.assertTrue(got == expec)
             
         concat = myia.imageconcat(
-            outfile="relax.im", infiles=[names[0], names[1], names[3], names[4]],
-            relax=True, overwrite=True
+            infiles=[names[0], names[1], names[3], names[4]],
+            relax=True
         )
         for i in range(4):
             k = i
             if i >= 2: k = i+1
             got = concat.toworld([0 ,0, i])['numeric'][2]
             expec = myia.toworld([0 ,0, k])['numeric'][2]
-            print "got",got,"expec", expec
             self.assertTrue(got == expec)
         concat.done()
+        myia.done()
+        
+    def test_reorder(self):
+        """Test reorder param functionality"""
+        myia = self._myia
+        myia.fromshape("", [1, 1, 5])
+        names = []
+        for i in range(5):
+            name = "reorder_" + str(i)
+            names.append(name) 
+            subi = myia.subimage(name, region=rg.box([0, 0, i], [0, 0,i]))
+            got = subi.toworld([0 ,0, 0])['numeric'][2]
+            expec = myia.toworld([0 ,0, i])['numeric'][2]
+            self.assertTrue(got == expec)
+            bb = subi.getchunk()
+            bb[:] = i
+            subi.putchunk(bb)
+            subi.done()
+            
+        concat = myia.imageconcat(
+            infiles=[names[1], names[3], names[2]], reorder=True
+        )
+        for i in range(3):
+            myia.open(names[i + 1])
+            got = concat.toworld([0 ,0, i])['numeric'][2]
+            expec = myia.toworld([0 ,0, 0])['numeric'][2]
+            self.assertTrue(got == expec)
+            self.assertTrue(
+                concat.getchunk()[0, 0, i] == myia.getchunk()[0, 0, 0]
+            )
         myia.done()
 
 def suite():

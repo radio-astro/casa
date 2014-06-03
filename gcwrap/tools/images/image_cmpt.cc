@@ -361,8 +361,8 @@ image* image::imagecalc(
 
 image* image::imageconcat(
 	const string& outfile, const variant& infiles,
-	const int axis, const bool relax, const bool tempclose,
-	const bool overwrite
+	int axis, bool relax, bool tempclose,
+	bool overwrite, bool reorder
 ) {
 	try {
 		Vector<String> inFiles;
@@ -391,6 +391,7 @@ image* image::imageconcat(
 			ImageConcatenator<Float> concat(f, outfile, overwrite);
 			concat.setAxis(axis);
 			concat.setRelax(relax);
+			concat.setReorder(reorder);
 			concat.setTempClose(tempclose);
 			return new image(concat.concatenate(imageNames));
 		}
@@ -399,6 +400,7 @@ image* image::imageconcat(
 			ImageConcatenator<Complex> concat(c, outfile, overwrite);
 			concat.setAxis(axis);
 			concat.setRelax(relax);
+			concat.setReorder(reorder);
 			concat.setTempClose(tempclose);
 			return new image(concat.concatenate(imageNames));
 		}

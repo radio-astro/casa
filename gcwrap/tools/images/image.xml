@@ -1309,6 +1309,12 @@ wild cards accepted.  Default is empty string.</description>
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
+     
+     <param type="bool" name="reorder">
+        <description>Automatically reorder the images if necessary.</description>
+        <value>false</value>
+     </param>
+     
 </input>
 <returns type="image"/>
 
@@ -1339,14 +1345,24 @@ this \tool\ useless.  When you destroy this tool (with the <link
 anchor="images:image.done.function">done</link> function) the
 reference connections are broken.
 
-The input and output images must be of the same dimension.  Therefore,
+The input and output images must be of the same dimensionality.  Therefore,
 if you wish to concatenate 2-D images into a 3-D image, the 2-D images
 must have a third axis (of length unity) so that the output image
 coordinates are known along the concatenation axis. 
 
-The input images are concatenated in the order in which they are listed. 
-Therefore, the Coordinate System of the output image is given by that of the
-first input image.  The input images are checked to see that they are
+The input images are concatenated in the order in which they are listed unless
+the reorder parameter is set to True. If True, the images are reordered if necessary
+so that the world coordinate values along the selected axis monotonically increase 
+or decrease. The direction of the increment is determined by the first listed image.
+If reorder=True, the world coordinate ranges of the images along the selected axis
+are not permitted to overlap, and the signs of the increments for this axis in all
+images must be the same. If reorder=False, the coordinate system of the first listed
+image is used as the coordinate system for the output image. If reorder=True, the
+coordinate system of the first image in the list of the reordered images is used
+as the coordinate system of the output image. Setting reorder=True can be especially
+useful if the infiles are specified using a wildcard character(s).
+
+If relax=False, the input images are checked to see that they are
 contiguous along the concatenation axis and an error is generated if
 they are not.  In addition, the coordinate descriptors (e.g.  reference
 pixel, reference value etc) for the non-concatenation axes must be the
