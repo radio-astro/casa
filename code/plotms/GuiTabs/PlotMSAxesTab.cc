@@ -158,6 +158,31 @@ PlotMSAxesTab::~PlotMSAxesTab() {
 	}
 }
 
+bool PlotMSAxesTab::isAxesValid() const {
+	bool axesValid = true;
+	QList<PlotMSAxisWidget*> uniqueYWidgets;
+	bool found = false;
+	for ( int i = 0; i < itsYWidgets_.size(); i++ ){
+		found = false;
+		for ( int j = 0; j < uniqueYWidgets.size(); j++ ){
+			if ( uniqueYWidgets[j]->matchesData( itsYWidgets_[i])){
+				found = true;
+				break;
+			}
+		}
+		if ( found ){
+			break;
+		}
+		else {
+			uniqueYWidgets.append( itsYWidgets_[i]);
+		}
+	}
+	if ( found ){
+		axesValid = false;
+	}
+	return axesValid;
+}
+
 
 void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
     PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();

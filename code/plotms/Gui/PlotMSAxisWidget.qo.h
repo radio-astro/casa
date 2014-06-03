@@ -67,6 +67,7 @@ public:
     PMS::Axis axis() const;
     PMS::DataColumn data() const;
     PlotAxis attachAxis() const;
+    bool matchesData(const PlotMSAxisWidget* other ) const;
     bool rangeCustom() const;
     prange_t range() const;
     // </group>
