@@ -242,6 +242,7 @@ private:
     PlotMSDataTab* findOrCreateDataTab();
     PlotMSIterateTab* findIterateTab() const;
     PlotMSDisplayTab* findDisplayTab();
+    PlotMSAxesTab* findAxesTab();
 
     // PlotMSPlotSubtab objects in tab widget.
     QList<PlotMSPlotSubtab*> itsSubtabs_;

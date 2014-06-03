@@ -218,6 +218,19 @@ String PlotMSPlotTab::getAveragingSummary() const {
 
 bool PlotMSPlotTab::plot( bool forceReload ) {
 	Bool plotCompleted = true;
+
+	//Post an error rather than plotting if the user has specified duplicate
+	//y-axes.
+	PlotMSAxesTab* axesTab = findAxesTab();
+	if ( axesTab != NULL ){
+		bool axesValid = axesTab->isAxesValid();
+		if ( !axesValid ){
+			String message( "Please remove duplicate y-axes.");
+			this->itsPlotter_->showError( message, "Duplicate y-axes", true);
+			return plotCompleted;
+		}
+	}
+
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
@@ -493,6 +506,17 @@ PlotMSDisplayTab* PlotMSPlotTab::insertDisplaySubtab (int index){
      }
      insertSubtab (index, tab);
      return tab;
+}
+
+PlotMSAxesTab* PlotMSPlotTab::findAxesTab(){
+	PlotMSAxesTab* tab = NULL;
+	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+		tab = dynamic_cast < PlotMSAxesTab * >(t);
+		if (tab != NULL){
+			break;
+		}
+	}
+	return tab;
 }
 
 PlotMSDisplayTab* PlotMSPlotTab::findDisplayTab(){

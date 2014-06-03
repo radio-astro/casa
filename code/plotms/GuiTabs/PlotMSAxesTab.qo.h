@@ -66,6 +66,9 @@ public:
     // with PlotMSSinglePlotParameters.
     void update(const PlotMSPlot& plot);
     
+    //Makes sure the user has not specified duplicate axes in data/location.
+    bool isAxesValid() const;
+
 signals:
 	//Identifier for a y-axis has changed.
 	void yAxisIdentifierChanged( int index, QString id );
