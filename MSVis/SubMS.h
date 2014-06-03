@@ -414,6 +414,34 @@ class SubMS
                                                                         // used e.g. when outframe=="SOURCE"
 			    );
 
+  // Overloaded version of the above method returning the additional value weightScale
+  // which is the factor by which WEIGHT needs to be scaled when transforming from
+  // the old grid to the new grid.
+  static Bool calcChanFreqs(LogIO& os,
+			    // output
+			    Vector<Double>& newCHAN_FREQ,
+			    Vector<Double>& newCHAN_WIDTH,
+			    Double& weightScale,
+			    // input
+			    const Vector<Double>& oldCHAN_FREQ, // the original grid
+			    const Vector<Double>& oldCHAN_WIDTH, 
+			    // the gridding parameters
+			    const MDirection  phaseCenter,
+			    const MFrequency::Types theOldRefFrame,
+			    const MEpoch theObsTime,
+			    const MPosition mObsPos,
+			    const String& mode, 
+			    const int nchan, 
+			    const String& start, 
+			    const String& width,
+			    const String& restfreq, 
+			    const String& outframe,
+			    const String& veltype,
+			    const Bool verbose=False,
+			    const MRadialVelocity mRV=MRadialVelocity() // additional radial velo shift to apply, 
+                                                                        // used e.g. when outframe=="SOURCE"
+			    );
+
   // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;
   // return value is True if the parameters are OK.
