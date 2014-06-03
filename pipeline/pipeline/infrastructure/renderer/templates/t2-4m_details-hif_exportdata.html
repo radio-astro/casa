@@ -97,3 +97,57 @@ import os
    </tbody>
 </table>
 
+<h4>Calibrator Source Images</h4>
+
+<p>FITS files of all the calibrator source images</p>
+
+<table class="table table-bordered table-striped" summary="Calibrator source images">
+    <caption>Final calibrator images</caption>
+    <thead>
+	<tr>
+	    <th scope="col">Source name</th>
+	    <th scope="col">Source type</th>
+	    <th scope="col">Spw</th>
+	    <th scope="col">FITS file</th>
+	</tr>
+   </thead>
+   <tbody>
+%for r in result:
+    %for calimage, fitsfile in zip(r.calimages[0], r.calimages[1]):
+      <tr>
+          <td>${calimage['sourcename']}</td>
+          <td>${calimage['sourcetype']}</td>
+          <td>${calimage['spwlist']}</td>
+          <td>${os.path.basename(fitsfile)}</td>
+      </tr>
+    %endfor
+%endfor
+   </tbody>
+</table>
+
+<h4>Target Source Images</h4>
+
+<p>FITS files of all the target source images</p>
+
+<table class="table table-bordered table-striped" summary="Target source images">
+    <thead>
+	<tr>
+	    <th scope="col">Source name</th>
+	    <th scope="col">Source type</th>
+	    <th scope="col">Spw</th>
+	    <th scope="col">FITS file</th>
+	</tr>
+   </thead>
+   <tbody>
+%for r in result:
+    %for targetimage, fitsfile in zip(r.targetimages[0], r.targetimages[1]):
+      <tr>
+          <td>${targetimage['sourcename']}</td>
+          <td>${targetimage['sourcetype']}</td>
+          <td>${targetimage['spwlist']}</td>
+          <td>${os.path.basename(fitsfile)}</td>
+      </tr>
+    %endfor
+%endfor
+   </tbody>
+</table>
