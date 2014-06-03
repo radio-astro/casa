@@ -1062,7 +1062,7 @@ class T2_3_XMBaseRenderer(RendererBase):
 
 class T2_3_1MRenderer(T2_3_XMBaseRenderer):
     """
-    Renderer for T2-3-1M, the calibration topic.
+    Renderer for T2-3-1M, the data set topic.
     """
     # the filename to which output will be directed
     output_file = 't2-3-1m.html'
@@ -1071,12 +1071,12 @@ class T2_3_1MRenderer(T2_3_XMBaseRenderer):
 
     @classmethod
     def get_topic(cls):
-        return qaadapter.registry.get_calibration_topic()        
+        return qaadapter.registry.get_dataset_topic()        
 
 
 class T2_3_2MRenderer(T2_3_XMBaseRenderer):
     """
-    Renderer for T2-3-2M: the QA line finding section.
+    Renderer for T2-3-2M: the QA calibration section.
     """
     # the filename to which output will be directed
     output_file = 't2-3-2m.html'
@@ -1085,7 +1085,7 @@ class T2_3_2MRenderer(T2_3_XMBaseRenderer):
 
     @classmethod
     def get_topic(cls):
-        return qaadapter.registry.get_linefinding_topic()        
+        return qaadapter.registry.get_calibration_topic()        
 
 
 class T2_3_3MRenderer(T2_3_XMBaseRenderer):
@@ -1104,7 +1104,7 @@ class T2_3_3MRenderer(T2_3_XMBaseRenderer):
 
 class T2_3_4MRenderer(T2_3_XMBaseRenderer):
     """
-    Renderer for T2-3-4M: the QA imaging section.
+    Renderer for T2-3-4M: the QA line finding section.
     """
     # the filename to which output will be directed
     output_file = 't2-3-4m.html'
@@ -1113,17 +1113,31 @@ class T2_3_4MRenderer(T2_3_XMBaseRenderer):
 
     @classmethod
     def get_topic(cls):
-        return qaadapter.registry.get_imaging_topic()        
+        return qaadapter.registry.get_linefinding_topic()        
 
 
 class T2_3_5MRenderer(T2_3_XMBaseRenderer):
     """
-    Renderer for T2-3-5M: the miscellaneous topic
+    Renderer for T2-3-5M: the imaging topic
     """
     # the filename to which output will be directed
     output_file = 't2-3-5m.html'
     # the template file for this renderer
     template = 't2-3-5m.html'
+
+    @classmethod
+    def get_topic(cls):
+        return qaadapter.registry.get_imaging_topic()        
+
+
+class T2_3_6MRenderer(T2_3_XMBaseRenderer):
+    """
+    Renderer for T2-3-6M: the miscellaneous topic
+    """
+    # the filename to which output will be directed
+    output_file = 't2-3-6m.html'
+    # the template file for this renderer
+    template = 't2-3-6m.html'
 
     @classmethod
     def get_topic(cls):
@@ -5769,11 +5783,12 @@ class WebLogGenerator(object):
                  T2_2_4Renderer,       # sky setup
                  T2_2_5Renderer,       # weather
                  T2_2_6Renderer,       # scans
-                 T2_3_1MRenderer,      # calibration topic
-                 T2_3_2MRenderer,      # line finding topic
+                 T2_3_1MRenderer,      # data set topic
+                 T2_3_2MRenderer,      # calibration topic
                  T2_3_3MRenderer,      # flagging topic
-                 T2_3_4MRenderer,      # imaging topic
-                 T2_3_5MRenderer,      # miscellaneous topic
+                 T2_3_4MRenderer,      # line finding topic
+                 T2_3_5MRenderer,      # imaging topic
+                 T2_3_6MRenderer,      # miscellaneous topic
                  T2_3MDetailsRenderer, # QA details pages
                  T2_4MRenderer,        # task tree
                  T2_4MDetailsRenderer, # task details
