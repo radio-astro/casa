@@ -261,15 +261,35 @@ def plotms(vis=None, plotindex=None,
                 yDataCount = len(ydatacolumn)
             yLocationCount = 0
             if yaxislocation!=['']:
-                yLocationCount = len(yaxislocation)    
-            for i in range(0,yAxisCount):
-                yDataColumn=''
-                if i < yDataCount:
-                    yDataColumn = ydatacolumn[i]
-                yAxisLocation = 'left'
-                if i < yLocationCount:
-                    yAxisLocation = yaxislocation[i]
-                pm.setPlotAxes(xaxis, yaxis[i], xdatacolumn, yDataColumn, yAxisLocation, False, plotindex, i)
+                yLocationCount = len(yaxislocation)
+                
+            '''Make sure all the y-axis values are unique.'''
+            uniqueY = True
+            for i in range(0, yAxisCount ):
+                yDataColumnI = ''
+                if  i < yDataCount :
+                    yDataColumnI = ydatacolumn[i]
+                for j in range(0, i):
+                    if yaxis[j] == yaxis[i] :
+                        yDataColumnJ = ''
+                        if j < yDataCount:
+                            yDataColumnJ = ydatacolumn[j]
+                        if yDataColumnI == yDataColumnJ :
+                            uniqueY = False
+                            break
+                if not uniqueY :
+                    break
+            if ( uniqueY ):
+                for i in range(0,yAxisCount):
+                    yDataColumn=''
+                    if i < yDataCount:
+                        yDataColumn = ydatacolumn[i]
+                    yAxisLocation = 'left'
+                    if i < yLocationCount:
+                        yAxisLocation = yaxislocation[i] 
+                    pm.setPlotAxes(xaxis, yaxis[i], xdatacolumn, yDataColumn, yAxisLocation, False, plotindex, i)
+            else :
+                raise Exception, 'Please remove duplicate y-axes.'
         
         # Set selection
         if (selectdata and os.path.exists(vis)):
