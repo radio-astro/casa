@@ -639,7 +639,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(65000, self.plotfile2_jpg)
         print    
         
-    def test027(self):
+    def stest027(self):
         '''Plotms 27: Test that we can do a 2x2 multiplot display. Consisting of single plots and overplots'''
         self.plotFiles = [self.outputDir + "testPlot027.jpg",
                           self.outputDir + "testPlot0272.jpg",
@@ -700,8 +700,42 @@ class plotms_test1(test_base):
             self.assertTrue(os.path.exists(self.plotFiles[i]), 'Plot was not created')
             print 'Plot file size ', i, ' is ', os.path.getsize(self.plotFiles[i])
             self._checkPlotFile(55000, self.plotFiles[i]) 
-        print                                                   
-         
+        print    
+        
+    def test028(self):
+        '''Plotms 28: Test generation of a single plot with two y-axes.'''
+        self.plotfile_jpg = self.outputDir + "testPlot028.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Plot amp vs time and scan vs time. '''
+        self.res = plotms(vis=self.ms, gridrows=1, gridcols=1, clearplots=True,
+                          showgui=False, yaxis=['amp','scan'], 
+                          ydatacolumn=['corrected/model'], 
+                          yaxislocation=['left','right'],xaxis='time',
+                          plotfile=self.plotfile_jpg, expformat='jpg')
+        
+        self.assertTrue(self.res)
+        self._checkPlotFile(249000, self.plotfile_jpg)      
+        
+    def test029(self):
+        '''Plotms 29: Test that generation of a single plot with two y-axes using identical data returns false.'''
+        self.plotfile_jpg = self.outputDir + "testPlot029.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Plot amp vs time and amp vs time. '''
+        self.res = plotms(vis=self.ms, gridrows=1, gridcols=1, clearplots=True,
+                          showgui=False, yaxis=['amp','amp'], 
+                          yaxislocation=['left','right'],xaxis='time',
+                          plotfile=self.plotfile_jpg, expformat='jpg')
+        
+        self.assertFalse(self.res)         
+ 
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
     return [plotms_test1]
