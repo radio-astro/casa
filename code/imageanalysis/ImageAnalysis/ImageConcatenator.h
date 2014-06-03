@@ -33,6 +33,8 @@
 
 namespace casa {
 
+template <class T> class ImageConcat;
+
 template <class T>  class ImageConcatenator : public ImageTask<T> {
 	// <summary>
 	// Top level interface for concatenating images
@@ -75,6 +77,8 @@ public:
 
 	void setRelax(Bool b) { _relax = b; }
 
+	void setReorder(Bool b) { _reorder = b; }
+
 	String getClass() const;
 
 protected:
@@ -88,11 +92,19 @@ protected:
 
 private:
 	Int _axis;
-	Bool _tempClose, _relax;
+	Bool _tempClose, _relax, _reorder;
 	static const String _class;
 
 	// disallow default constructor
 	ImageConcatenator();
+
+	// returns True if world coordinate values increase with pixel coordinate values
+	Bool _minMaxAxisValues(
+		Double& min, Double& max,
+		SPCIIT image
+	) const;
+
+	void _addImage(std::auto_ptr<ImageConcat<T> >& pConcat, const String& name) const;
 
 };
 }

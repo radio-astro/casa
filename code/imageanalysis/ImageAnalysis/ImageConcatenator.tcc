@@ -40,7 +40,7 @@ ImageConcatenator<T>::ImageConcatenator(
 ) : ImageTask<T>(
 		image, "", 0, "", "", "",
 		"", outname, overwrite
-	), _axis(-1), _tempClose(False), _relax(False) {
+	), _axis(-1), _tempClose(False), _relax(False), _reorder(False) {
 	this->_construct();
 }
 
@@ -72,7 +72,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 	if (_axis < 0) {
 		setAxis(-1);
 	}
-	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*this->_getLog() << LogOrigin(_class, __func__, WHERE);
 
 	// There could be wild cards embedded in our list so expand them out
 	ThrowIf(
@@ -80,37 +80,165 @@ SPIIT ImageConcatenator<T>::concatenate(
 		"You must give at least two extant images to concatenate"
 	);
 	*this->_getLog() << LogIO::NORMAL << "Number of images to concatenate = "
-			<< (imageNames.size() + 1) << LogIO::POST;
-	DataType dataType = this->_getImage()->dataType();
-	std::auto_ptr<ImageConcat<T> > pConcat(new ImageConcat<T> (_axis, _tempClose));
-	SPIIT mycopy = SubImageFactory<T>::createImage(
-		*this->_getImage(), "", Record(), "", False, False, False, False
+		<< (imageNames.size() + 1) << LogIO::POST;
+	SPCIIT myImage = this->_getImage();
+	const CoordinateSystem csys = myImage->coordinates();
+	Int whichCoordinate, axisInCoordinate;
+	csys.findPixelAxis(
+		whichCoordinate, axisInCoordinate, _axis
 	);
-	pConcat->setImage(*mycopy, _relax);
-
-	// Set the other images.  We may run into the open file limit.
+	Coordinate::Type ctype = csys.coordinate(whichCoordinate).type();
+	DataType dataType = myImage->dataType();
+	Vector<Double> pix = csys.referencePixel();
+	map<String, Double> minVals, maxVals;
+	Bool isIncreasing = False;
+	String myName = myImage->name();
+	if (! _relax) {
+		isIncreasing = _minMaxAxisValues(
+			minVals[myName], maxVals[myName],
+			myImage
+		);
+	}
+	vector<String> orderedImages;
+	orderedImages.push_back(myName);
+	if (! _reorder) {
+		orderedImages.insert(
+			orderedImages.end(), imageNames.begin(), imageNames.end()
+		);
+	}
 	foreach_(String name, imageNames) {
-		Bool doneOpen = False;
-		try {
-			SPIIT im2 = ImageUtilities::openImage<T>(name);
+		SPIIT im2 = ImageUtilities::openImage<T>(name);
+		ThrowIf(
+			im2->dataType() != dataType,
+			"Concatenation of images of different data types is not supported"
+		);
+		if (! _relax) {
+			const CoordinateSystem tcsys = im2->coordinates();
+			tcsys.findPixelAxis(
+				whichCoordinate, axisInCoordinate, _axis
+			);
 			ThrowIf(
-				im2->dataType() != dataType,
-				"Concatenation of images of different data types is not supported"
+				tcsys.coordinate(whichCoordinate).type() != ctype,
+				"Cannot concatenate different coordinates in different images "
+				"if relax=False"
 			);
-			doneOpen = True;
-			pConcat->setImage(*im2, _relax);
+
 		}
-		catch (const AipsError& x) {
-			ThrowIf(doneOpen, x.getMesg());
-			ThrowCc(
-				"Failed to open file " + name
-				+ "This may mean you have too many files open simultaneously. "
-				"Try using tempclose=T in the imageconcat constructor. "
-				"Exception message " + x.getMesg()
+		if (_reorder) {
+			String myName = im2->name();
+			ThrowIf(
+				isIncreasing
+				!= _minMaxAxisValues(
+					minVals[myName], maxVals[myName], im2
+				),
+				"Coordinate axes in different images with opposing increment signs "
+				"is not permitted if relax=False"
 			);
+			Bool inserted = False;
+			vector<String>::iterator iter = orderedImages.begin();
+			vector<String>::iterator end = orderedImages.end();
+			while (iter != end) {
+				ThrowIf(
+					minVals[myName] < minVals[*iter]
+					&& maxVals[myName] >= minVals[*iter],
+					"Overlapping image axis ranges is not permitted "
+					"when relax=False"
+				);
+				Bool isLessThan = minVals[myName] < minVals[*iter];
+				if (isIncreasing && isLessThan) {
+					orderedImages.insert(iter, myName);
+					inserted = True;
+					break;
+				}
+				iter++;
+			}
+			if (! inserted) {
+				orderedImages.push_back(myName);
+			}
 		}
 	}
+	if (_reorder) {
+		vector<String>::const_iterator iter = orderedImages.begin();
+		vector<String>::const_iterator end = orderedImages.end();
+		vector<String> allImages = imageNames;
+		allImages.insert(allImages.begin(), myImage->name());
+		vector<String>::const_iterator aiter = allImages.begin();
+		while (iter != end) {
+			if (*iter != *aiter) {
+				*this->_getLog() << LogIO::WARN
+				<< "Images will be concatenated in the order "
+				<< orderedImages;
+				if (iter == orderedImages.begin()) {
+					*this->_getLog() << " and the coordinate system of "
+						<< *iter << " will be used as the reference";
+				}
+				*this->_getLog() << LogIO::POST;
+				break;
+			}
+			iter++;
+			aiter++;
+		}
+	}
+	std::auto_ptr<ImageConcat<T> > pConcat(new ImageConcat<T> (_axis, _tempClose));
+	ThrowIf(
+		! pConcat.get(), "Failed to create ImageConcat object"
+	);
+	foreach_(String name, orderedImages) {
+		_addImage(pConcat, name);
+	}
 	return this->_prepareOutputImage(*pConcat);
+}
+
+template <class T> void ImageConcatenator<T>::_addImage(
+	std::auto_ptr<ImageConcat<T> >& pConcat, const String& name
+) const {
+	if (name == this->_getImage()->name()) {
+		SPIIT mycopy = SubImageFactory<T>::createImage(
+			*this->_getImage(), "", Record(), "", False, False, False, False
+		);
+		pConcat->setImage(*mycopy, _relax);
+		return;
+	}
+	Bool doneOpen = False;
+	try {
+		SPIIT im2 = ImageUtilities::openImage<T>(name);
+		doneOpen = True;
+		pConcat->setImage(*im2, _relax);
+	}
+	catch (const AipsError& x) {
+		ThrowIf(doneOpen, x.getMesg());
+		ThrowCc(
+			"Failed to open file " + name
+			+ "This may mean you have too many files open simultaneously. "
+			"Try using tempclose=T in the imageconcat constructor. "
+			"Exception message " + x.getMesg()
+		);
+	}
+}
+
+template <class T> Bool ImageConcatenator<T>::_minMaxAxisValues(
+	Double& mymin, Double& mymax, SPCIIT image
+) const {
+	uInt ndim = image->ndim();
+	ThrowIf(
+		ndim != this->_getImage()->ndim(),
+		"All images must have the same number of dimensions"
+	);
+	Vector<Double> pix(ndim);
+	pix[_axis] = 0;
+	mymin = image->coordinates().toWorld(pix)[_axis];
+	IPosition shape = image->shape();
+	if (shape[_axis] == 1) {
+		mymax = mymin;
+		return this->_getImage()->coordinates().increment()[_axis] > 0;
+	}
+	pix[_axis] = shape[_axis] - 1;
+	mymax = image->coordinates().toWorld(pix)[_axis];
+	Bool isIncreasing = mymax > mymin;
+	if (! isIncreasing) {
+		swap(mymin, mymax);
+	}
+	return isIncreasing;
 }
 
 template <class T>
