@@ -1463,22 +1463,24 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
     def testSplitant(self):
         """Test Splitant: test for splitant"""
         self.res=sdsave(infile=self.infile,splitant=True,outfile=self.outfile,outform='ASAP')
-        outsplitfile1 = self.prefix+'_PM01.asap'
-        outsplitfile2 = self.prefix+'_PM04.asap'
-        if (os.path.exists(outsplitfile1)) and (os.path.exists(outsplitfile2)):
-            s0 = sd.scantable(self.infile, False)
-            s1 = sd.scantable(outsplitfile1, False)
-            s2 = sd.scantable(outsplitfile2, False)
-            
-            self.assertEqual(s0.nrow(), s1.nrow())
-            self.assertEqual(s0.nrow(), s2.nrow())
+        outsplitfile1 = self.prefix+'.PM01.asap'
+        outsplitfile2 = self.prefix+'.PM04.asap'
+        outputfiles_exist = (os.path.exists(outsplitfile1)) and (os.path.exists(outsplitfile2))
+        self.assertTrue(outputfiles_exist)
 
-            s0sp0 = s0.get_spectrum(0)
-            s1sp0 = s1.get_spectrum(0)
-            for i in range(len(s0sp0)):
-                self.assertEqual(s0sp0[i], s1sp0[i])
-            
-            del s0, s1, s2
+        s0 = sd.scantable(self.infile, False)
+        s1 = sd.scantable(outsplitfile1, False)
+        s2 = sd.scantable(outsplitfile2, False)
+        
+        self.assertEqual(s0.nrow(), s1.nrow())
+        self.assertEqual(s0.nrow(), s2.nrow())
+
+        s0sp0 = s0.get_spectrum(0)
+        s1sp0 = s1.get_spectrum(0)
+        for i in range(len(s0sp0)):
+            self.assertEqual(s0sp0[i], s1sp0[i])
+        
+        del s0, s1, s2
 
 ###
 # Test data selection
@@ -2412,6 +2414,6 @@ def suite():
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
             sdsave_freq_labeling,sdsave_flagging,
-            sdsave_scan_number, sdsave_test_splitant,
+            sdsave_scan_number,sdsave_test_splitant,
             sdsave_selection_syntax, sdsave_scanrate,
             sdsave_weighting]
