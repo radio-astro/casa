@@ -4276,6 +4276,51 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    const MRadialVelocity mRV // only used for outframe=="SOURCE"
 			    ){
 
+    Double weightScale;
+    return calcChanFreqs(os,
+			 newCHAN_FREQ, 
+			 newCHAN_WIDTH,
+			 weightScale,
+			 oldCHAN_FREQ, 
+			 oldCHAN_WIDTH,
+			 phaseCenter,
+			 theOldRefFrame,
+			 theObsTime,
+			 mObsPos,
+			 mode, 
+			 nchan, 
+			 start, 
+			 width,
+			 restfreq, 
+			 outframe,
+			 veltype,
+			 verbose,
+			 mRV // only used for outframe=="SOURCE"
+			 );
+  }
+
+
+  Bool SubMS::calcChanFreqs(LogIO& os,
+			    Vector<Double>& newCHAN_FREQ, 
+			    Vector<Double>& newCHAN_WIDTH,
+			    Double& weightScale,
+			    const Vector<Double>& oldCHAN_FREQ, 
+			    const Vector<Double>& oldCHAN_WIDTH,
+			    const MDirection  phaseCenter,
+			    const MFrequency::Types theOldRefFrame,
+			    const MEpoch theObsTime,
+			    const MPosition mObsPos,
+			    const String& mode, 
+			    const int nchan, 
+			    const String& start, 
+			    const String& width,
+			    const String& restfreq, 
+			    const String& outframe,
+			    const String& veltype,
+			    const Bool verbose,
+			    const MRadialVelocity mRV // only used for outframe=="SOURCE"
+			    ){
+
     Vector<Double> newChanLoBound; 
     Vector<Double> newChanHiBound;
     String t_phasec;
@@ -4468,6 +4513,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
       //cout << "new lo hi freq width " << newChanLoBound[i] << " " << newChanHiBound[i] << " " << newCHAN_FREQ[i] << " " << newCHAN_WIDTH[i] << endl;
     }
+
+    weightScale = newCHAN_WIDTH[0]/transCHAN_WIDTH[0];
     
     return True;
 
