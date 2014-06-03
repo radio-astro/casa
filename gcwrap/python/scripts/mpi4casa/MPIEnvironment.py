@@ -11,6 +11,21 @@ class MPIEnvironment:
     # Initialization
     mpi_initialized = False
     try:
+        # Set mpi4py runtime configuration
+        from mpi4py import rc as __mpi_runtime_config
+        # Automatic MPI initialization at import time
+        __mpi_runtime_config.initialize = True  
+        # Request for thread support at MPI initialization
+        __mpi_runtime_config.threaded = True  
+        # Level of thread support to request at MPI initialization
+        # "single" : use MPI_THREAD_SINGLE
+        # "funneled" : use MPI_THREAD_FUNNELED
+        # "serialized" : use MPI_THREAD_SERIALIZED
+        # "multiple" : use MPI_THREAD_MULTIPLE
+        __mpi_runtime_config.thread_level = 'multiple'
+        # Automatic MPI finalization at exit time
+        __mpi_runtime_config.finalize = False
+        
         # Import mpi4py and thus initialize MPI
         from mpi4py import MPI as __mpi_factory # NOTE: This is a private variable to avoid uncontrolled access to MPI
         
@@ -91,7 +106,7 @@ class MPIEnvironment:
             mpi_error_msg = mpi_thread_safe_info_msg       
         
     # Determine whether this processor is the 'privileged' MPI rank
-    mpi_client_rank = mpi_world_size - 1
+    mpi_client_rank = 0
     if mpi_processor_rank == mpi_client_rank:
         is_mpi_client = True
         mpi_execution_role = "MPIClient"
@@ -159,5 +174,9 @@ class MPIEnvironment:
     @staticmethod
     def mpi_server_rank_list():
         return list(MPIEnvironment.__mpi_server_rank_list) # Careful, Python list copy operator is by reference
+    
+    @staticmethod
+    def finalize_mpi_environment():
+        MPIEnvironment.__mpi_factory.Finalize()
         
 # EOF

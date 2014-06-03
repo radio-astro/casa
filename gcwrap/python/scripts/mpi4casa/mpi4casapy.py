@@ -40,13 +40,24 @@ def run():
         global casa
         casa = request['casa']
     
-        # Post MPI related info
+        # Import logger
         from taskinit import casalog
-        casalog.origin("mpi4casapy")
-        casalog.post(MPIEnvironment.mpi_info_msg,"INFO","mpi4casapy")
+        
+        # Set log origin so that the processor origin is updated
+        casalog_call_origin = "mpi4casapy"
+        casalog.origin(casalog_call_origin)
+        
+        # Post MPI welcome msg
+        casalog.post(MPIEnvironment.mpi_info_msg,"INFO",casalog_call_origin)
     
         # Initialize MPICommandServer and start serving
         from mpi4casa.MPICommandServer import MPICommandServer
         server = MPICommandServer()
                         
         server.serve()
+        
+    else:
+        
+        MPIEnvironment.finalize_mpi_environment()
+    
+        

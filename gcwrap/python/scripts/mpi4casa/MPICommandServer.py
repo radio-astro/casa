@@ -277,6 +277,7 @@ class MPICommandServer:
                 
                 # Check if force mode is actually needed
                 force_command_request_interruption = stop_service_request['force_command_request_interruption']
+                finalize_mpi_environment = stop_service_request['finalize_mpi_environment']
                 busy = self.__monitor_server.get_status('busy')
                 if force_command_request_interruption and busy:
                     casalog.post("force-stop service signal received, stopping services, " + 
@@ -292,6 +293,16 @@ class MPICommandServer:
             # Stop services
             self.stop_services(force_command_request_interruption)
             
+            # Finalize MPI environment   
+            if finalize_mpi_environment:    
+                try:
+                    casalog.post("Going to finalize MPI environment","INFO",casalog_call_origin)
+                    MPIEnvironment.finalize_mpi_environment()
+                except Exception, instance:
+                    formatted_traceback = traceback.format_exc()
+                    casalog.post("Exception finalizing MPI environment %s" 
+                                 % str(formatted_traceback),"SEVERE",casalog_call_origin)
+
             # Exit
             casalog.post("Exiting","INFO",casalog_call_origin)
 

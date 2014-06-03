@@ -72,9 +72,12 @@ def sortFile(input_file,output_file,sort_order=None):
 class test_MPICommandClient(unittest.TestCase):
     
     client = MPICommandClient()
+    server_list = MPIEnvironment.mpi_server_rank_list()
     client.start_services()
+    
             
     def test_exec_undefined_target_blocking_mode_str_params_successful(self):
+        
         
         command_response_list = self.client.push_command_request("import time; time.sleep(3)",True,None)
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
@@ -85,7 +88,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_blocking_mode_str_params_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(3)",True,[0])
+        command_response_list = self.client.push_command_request("import time; time.sleep(3)",True,self.server_list[0])
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], True, "Command execution was not successful")
         self.assertEqual(command_response_list[0]['traceback'], None, "Command execution trace-back should be None")
@@ -94,7 +97,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_blocking_mode_str_params_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(3)",True,[0,1])
+        command_response_list = self.client.push_command_request("import time; time.sleep(3)",True,[self.server_list[0],self.server_list[1]])
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], True, "Command execution was not successful")
@@ -121,7 +124,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_non_blocking_mode_str_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("import time; time.sleep(3)",False,[0])
+        command_request_id_list = self.client.push_command_request("import time; time.sleep(3)",False,[self.server_list[0]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -138,7 +141,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_non_blocking_mode_str_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("import time; time.sleep(3)",False,[0,1])
+        command_request_id_list = self.client.push_command_request("import time; time.sleep(3)",False,[self.server_list[0],self.server_list[1]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -165,7 +168,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_blocking_mode_str_params_successful(self):
         
-        command_response_list = self.client.push_command_request("1+1",True,[0])
+        command_response_list = self.client.push_command_request("1+1",True,[self.server_list[0]])
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], True, "Command execution was not successful")
         self.assertEqual(command_response_list[0]['traceback'], None, "Command execution trace-back should be None")
@@ -174,7 +177,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_blocking_mode_str_params_successful(self):
         
-        command_response_list = self.client.push_command_request("1+1",True,[0,1])
+        command_response_list = self.client.push_command_request("1+1",True,[self.server_list[0],self.server_list[1]])
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], True, "Command execution was not successful")
@@ -201,7 +204,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_non_blocking_mode_str_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("1+1",False,[0])
+        command_request_id_list = self.client.push_command_request("1+1",False,[self.server_list[0]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -218,7 +221,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_non_blocking_mode_str_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("1+1",False,[0,1])
+        command_request_id_list = self.client.push_command_request("1+1",False,[self.server_list[0],self.server_list[1]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -245,7 +248,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_blocking_mode_dict_params_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(a+b)",True,[0],{'a':1,'b':2})
+        command_response_list = self.client.push_command_request("import time; time.sleep(a+b)",True,[self.server_list[0]],{'a':1,'b':2})
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], True, "Command execution was not successful")
         self.assertEqual(command_response_list[0]['traceback'], None, "Command execution trace-back should be None")
@@ -254,7 +257,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_blocking_mode_dict_params_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(a+b)",True,[0,1],{'a':1,'b':2})
+        command_response_list = self.client.push_command_request("import time; time.sleep(a+b)",True,[self.server_list[0],self.server_list[1]],{'a':1,'b':2})
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], True, "Command execution was not successful")
@@ -281,7 +284,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_non_blocking_mode_dict_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("import time; time.sleep(a+b)",False,[0],{'a':1,'b':2})
+        command_request_id_list = self.client.push_command_request("import time; time.sleep(a+b)",False,[self.server_list[0]],{'a':1,'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -298,7 +301,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_non_blocking_mode_dict_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("import time; time.sleep(a+b)",False,[0,1],{'a':1,'b':2})
+        command_request_id_list = self.client.push_command_request("import time; time.sleep(a+b)",False,[self.server_list[0],self.server_list[1]],{'a':1,'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -325,7 +328,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_blocking_mode_dict_params_successful(self):
         
-        command_response_list = self.client.push_command_request("a+b",True,[0],{'a':1,'b':2})
+        command_response_list = self.client.push_command_request("a+b",True,[self.server_list[0]],{'a':1,'b':2})
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], True, "Command execution was not successful")
         self.assertEqual(command_response_list[0]['traceback'], None, "Command execution trace-back should be None")
@@ -334,7 +337,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_blocking_mode_dict_params_successful(self):
         
-        command_response_list = self.client.push_command_request("a+b",True,[0,1],{'a':1,'b':2})
+        command_response_list = self.client.push_command_request("a+b",True,[self.server_list[0],self.server_list[1]],{'a':1,'b':2})
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], True, "Command execution was not successful")
@@ -361,7 +364,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_non_blocking_mode_dict_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("a+b",False,[0],{'a':1,'b':2})
+        command_request_id_list = self.client.push_command_request("a+b",False,[self.server_list[0]],{'a':1,'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -378,7 +381,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_non_blocking_mode_dict_params_successful(self):
         
-        command_request_id_list = self.client.push_command_request("a+b",False,[0,1],{'a':1,'b':2})
+        command_request_id_list = self.client.push_command_request("a+b",False,[self.server_list[0],self.server_list[1]],{'a':1,'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -405,7 +408,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_blocking_mode_str_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(a)",True,[0])
+        command_response_list = self.client.push_command_request("import time; time.sleep(a)",True,[self.server_list[0]])
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], False, "Command execution was successful")
         self.assertEqual(command_response_list[0]['traceback'].find("NameError:")>=0, True, "Trace-back should contain NameError")
@@ -414,7 +417,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_blocking_mode_str_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(3/0)",True,[0,1])
+        command_response_list = self.client.push_command_request("import time; time.sleep(3/0)",True,[self.server_list[0],self.server_list[1]])
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], False, "Command execution was successful")
@@ -441,7 +444,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_non_blocking_mode_str_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("test=[];test[1]=2",False,[0])
+        command_request_id_list = self.client.push_command_request("test=[];test[1]=2",False,[self.server_list[0]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -458,7 +461,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_non_blocking_mode_str_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("test={};test['bananas']",False,[0,1])
+        command_request_id_list = self.client.push_command_request("test={};test['bananas']",False,[self.server_list[0],self.server_list[1]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -485,7 +488,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_blocking_mode_str_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("a+1",True,[0])
+        command_response_list = self.client.push_command_request("a+1",True,[self.server_list[0]])
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], False, "Command execution was successful")
         self.assertEqual(command_response_list[0]['traceback'].find("NameError:")>=0, True, "Trace-back should contain NameError")
@@ -494,7 +497,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_blocking_mode_str_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("1/0",True,[0,1])
+        command_response_list = self.client.push_command_request("1/0",True,[self.server_list[0],self.server_list[1]])
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], False, "Command execution was successful")
@@ -521,8 +524,8 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_non_blocking_mode_str_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("test=[0,1]",True,[0])
-        command_request_id_list = self.client.push_command_request("test[3]",False,[0])
+        command_request_id_list = self.client.push_command_request("test=[0,1]",True,[self.server_list[0]])
+        command_request_id_list = self.client.push_command_request("test[3]",False,[self.server_list[0]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -539,7 +542,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_non_blocking_mode_str_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("casa['something']",False,[0,1])
+        command_request_id_list = self.client.push_command_request("casa['something']",False,[self.server_list[0],self.server_list[1]])
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -566,7 +569,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_blocking_mode_dict_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(a+c)",True,[0],{'a':1,'b':2})
+        command_response_list = self.client.push_command_request("import time; time.sleep(a+c)",True,[self.server_list[0]],{'a':1,'b':2})
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], False, "Command execution was successful")
         self.assertEqual(command_response_list[0]['traceback'].find("NameError:")>=0, True, "Trace-back should contain NameError")
@@ -575,7 +578,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_blocking_mode_dict_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("import time; time.sleep(a/b)",True,[0,1],{'a':1,'b':0})
+        command_response_list = self.client.push_command_request("import time; time.sleep(a/b)",True,[self.server_list[0],self.server_list[1]],{'a':1,'b':0})
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], False, "Command execution was successful")
@@ -602,7 +605,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_defined_target_non_blocking_mode_dict_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("import time; time.sleep(a[3]+b)",False,[0],{'a':[0,1],'b':2})
+        command_request_id_list = self.client.push_command_request("import time; time.sleep(a[3]+b)",False,[self.server_list[0]],{'a':[0,1],'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -619,7 +622,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_exec_multiple_target_non_blocking_mode_dict_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("import time; time.sleep(a['sleeptime']+b)",False,[0,1],{'a':{'interval':10},'b':2})
+        command_request_id_list = self.client.push_command_request("import time; time.sleep(a['sleeptime']+b)",False,[self.server_list[0],self.server_list[1]],{'a':{'interval':10},'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -646,7 +649,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_blocking_mode_dict_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("a+c",True,[0],{'a':1,'b':2})
+        command_response_list = self.client.push_command_request("a+c",True,[self.server_list[0]],{'a':1,'b':2})
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
         self.assertEqual(command_response_list[0]['successful'], False, "Command execution was successful")
         self.assertEqual(command_response_list[0]['traceback'].find("NameError:")>=0, True, "Trace-back should contain NameError")
@@ -655,7 +658,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_blocking_mode_dict_params_not_successful(self):
         
-        command_response_list = self.client.push_command_request("a/b",True,[0,1],{'a':1,'b':0})
+        command_response_list = self.client.push_command_request("a/b",True,[self.server_list[0],self.server_list[1]],{'a':1,'b':0})
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two elements")
         for command_response in command_response_list:
             self.assertEqual(command_response['successful'], False, "Command execution was successful")
@@ -682,7 +685,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_defined_target_non_blocking_mode_dict_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("a[3]+b",False,[0],{'a':[0,1,2],'b':2})
+        command_request_id_list = self.client.push_command_request("a[3]+b",False,[self.server_list[0]],{'a':[0,1,2],'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -699,7 +702,7 @@ class test_MPICommandClient(unittest.TestCase):
         
     def test_eval_multiple_target_non_blocking_mode_dict_params_not_successful(self):
         
-        command_request_id_list = self.client.push_command_request("a['something']+b",False,[0,1],{'a':{'test':5},'b':2})
+        command_request_id_list = self.client.push_command_request("a['something']+b",False,[self.server_list[0],self.server_list[1]],{'a':{'test':5},'b':2})
         
         # Try to get responses before time in non-blocking more
         command_response_list = self.client.get_command_response(command_request_id_list,False,True)
@@ -718,10 +721,10 @@ class test_MPICommandClient(unittest.TestCase):
     def test_multiple_target_including_busy_server(self):
         
         # Send a command request to a specific server so that it is in busy state
-        command_request_id_list = self.client.push_command_request("time.sleep(5); test=1",False,[0])
+        command_request_id_list = self.client.push_command_request("time.sleep(5); test=1",False,[self.server_list[0]])
         
         # Send a command request to a list of servers including the busy one
-        command_response_list = self.client.push_command_request("test+1",True,[0,1])
+        command_response_list = self.client.push_command_request("test+1",True,[self.server_list[0],self.server_list[1]])
         
         # Analyze command response list contents
         self.assertEqual(len(command_response_list), 2, "Command response list should contain two element")
@@ -744,7 +747,7 @@ class test_MPICommandClient(unittest.TestCase):
         new_client_ref = MPICommandClient()
         
         # Execute some command
-        command_response_list = new_client_ref.push_command_request("a+b",True,[0],{'a':1,'b':1})
+        command_response_list = new_client_ref.push_command_request("a+b",True,[self.server_list[0]],{'a':1,'b':1})
         
         # Analyze command response list contents
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")

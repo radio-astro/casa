@@ -121,6 +121,9 @@ class MPIMonitorServer:
                         msg_received = False
                 
                 # jagonzal: Intensive activity in the client can cause monitoring client service to be slowed down
+                #           This is due to Python's GIL which is acquired by the CASA SWIG components
+                #           Using SWIG's thread option it is possible to disable GIL within the SWIG components
+                #           (see test_mpi4casa[test1_applycal_fluxscale_gcal_bcal])
                 # Check when we last received a ping status request
                 # elif self.__last_ping_status_request_time is not None:
                 #    elapsed_time = time.time() - self.__last_ping_status_request_time

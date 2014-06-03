@@ -58,7 +58,9 @@ class MPICommunicator:
                 # NOTE: It is not guaranteed that __del__() methods are called 
                 #       for objects that still exist when the interpreter exits.
                 self.__servers_running = True
-                atexit.register(self.control_service_request_broadcast,request={'signal':'stop'})
+                # jagonzal: This exit function must be registered only for the client
+                if MPIEnvironment.is_mpi_client:                   
+                    atexit.register(self.finalize_server_and_client_mpi_environment)
             
             except Exception, instance:
                 self.__command_channel = -1
@@ -73,6 +75,14 @@ class MPICommunicator:
                 msg = "Exception initializing MPICommunicator at processor with rank "
                 msg = msg + "%s: %s" % (str(MPIEnvironment.mpi_processor_rank),str(instance))
                 raise Exception,msg
+            
+        def finalize_server_and_client_mpi_environment(self):
+            
+            # Send stop server signal to servers
+            self.control_service_request_broadcast(request={'signal':'exit'})
+            
+            # Finalize local MPI envionment
+            MPIEnvironment.finalize_mpi_environment()
             
                     
         def command_request_send(self,request,server):
@@ -172,6 +182,7 @@ class MPICommunicator:
         
          
         # Convenience method to send control service request to all servers
+        # NOTE: We don't use broadcast because it is always blocking
         def control_service_request_broadcast(self,request,logger=None):
             
             if self.__servers_running:
@@ -181,12 +192,11 @@ class MPICommunicator:
                         logger.post("Sending %s service signal to server %s" 
                                     % (request['signal'],str(rank)),"INFO","MPICommunicator::control_service_request_send_all")
                     self.control_service_request_send(request=request,server=rank)      
-        
+                    
         
         # Set method to notify whether the servers are running or not         
         def set_servers_running(self,servers_running):
             self.__servers_running = servers_running
-
-
-
+            
+            
 # EOF
