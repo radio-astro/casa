@@ -213,8 +213,8 @@ class ExportDataInputs(basetask.StandardInputs):
 
 class ExportDataResults(basetask.Results):
     def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
-        visdict=collections.OrderedDict(), weblog='', pipescript='',
-	commandslog=''):
+        visdict=collections.OrderedDict(), calimages=(), targetimages=(),
+	weblog='', pipescript='', commandslog=''):
 	"""
 	Initialise the results object with the given list of JobRequests.
 	"""
@@ -222,6 +222,8 @@ class ExportDataResults(basetask.Results):
         self.pprequest = pprequest
 	self.sessiondict = sessiondict
 	self.visdict = visdict
+	self.calimages = calimages
+	self.targetimages = targetimages
 	self.weblog = weblog
 	self.pipescript = pipescript
 	self.commandslog = commandslog
@@ -355,12 +357,12 @@ class ExportData(basetask.StandardTaskTemplate):
 	    calintents_list = ['PHASE', 'BANDPASS', 'AMPLITUDE']
 	else:
 	    calintents_list = inputs.calintents.split(',')
-	calimages_list = self._export_images (inputs.context, True,
+	calimages_list, calimages_fitslist = self._export_images (inputs.context, True,
 	    calintents_list, inputs.calimages, inputs.products_dir)
 
 	# Export science target images to FITS
 	LOG.info ('Exporting target source images')
-	targetimages_list = self._export_images (inputs.context, False,
+	targetimages_list, targetimages_fitslist = self._export_images (inputs.context, False,
 	    ['TARGET'], inputs.targetimages, inputs.products_dir)
 
 	# Return the results object, which will be used for the weblog
@@ -368,6 +370,8 @@ class ExportData(basetask.StandardTaskTemplate):
 	return ExportDataResults(pprequest=os.path.basename(ppr_files[0]), \
 	    sessiondict=sessiondict, \
 	    visdict=visdict,
+	    calimages=(calimages_list, calimages_fitslist),
+	    targetimages=(targetimages_list, targetimages_fitslist),
 	    weblog=os.path.basename(weblog_file), \
 	    pipescript=os.path.basename(casa_pipescript), \
 	    commandslog=os.path.basename(casa_commands_file))
@@ -725,7 +729,6 @@ class ExportData(basetask.StandardTaskTemplate):
 	Export the images to FITS files.
 	"""
 
-
         # Create the image list
 	images_list = []
 	if len(images) == 0:
@@ -780,6 +783,6 @@ class ExportData(basetask.StandardTaskTemplate):
 
 
 	new_cleanlist = copy.deepcopy(cleanlist)
-	return new_cleanlist
-	#return fits_list
+
+	return new_cleanlist, fits_list
 
