@@ -92,6 +92,7 @@ using namespace casa;
 #include <ms/MeasurementSets/MSSelectionError.h>
   //  extern MSTimeParse *thisMSTParser;
   Bool MSTimeEdgeInclusiveRange=False;
+  Float edgeWidth=-1.0;
   int MSTimeGramlex (YYSTYPE*);
   inline void MSTGgarbageCollector(const MEpoch* tval){if (tval) delete tval;}
   void splitSec(const Double& fsec, Int &sec, Int &milliSec) 
@@ -145,16 +146,26 @@ singletimeexpr: yeartimeexpr
 		  }
               ;
 
-brangetimeexpr: LSQBRACKET {MSTimeEdgeInclusiveRange=True;}  rangetimeexpr RSQBRACKET {$$=$3;MSTimeEdgeInclusiveRange=False;}
-              |            rangetimeexpr            {MSTimeEdgeInclusiveRange=False;$$=$1;}
+brangetimeexpr: 
+              /* Rule for [T0~T1] range.  The width of the edge is determined from the integration time in the MS */
+              LSQBRACKET {MSTimeEdgeInclusiveRange=True;edgeWidth=-1.0;}  rangetimeexpr RSQBRACKET 
+                       {$$=$3;MSTimeEdgeInclusiveRange=False;edgeWidth=-1.0;}
+              /* Rule for FNUMBER[T0~T1] range.  The width of the edge is determined from FNUMBER */
+              | FNUMBER LSQBRACKET {MSTimeEdgeInclusiveRange=True; edgeWidth=$1;} rangetimeexpr RSQBRACKET  
+                       {$$=$4;MSTimeEdgeInclusiveRange=False;edgeWidth=-1.0;}
+              /* Rule for (T0~T1) range.  The width of the edge is determined from the integration time in the MS */
+              | rangetimeexpr
+                       {$$=$1;MSTimeEdgeInclusiveRange=False;edgeWidth=-1.0;}
+              ;
 rangetimeexpr: yeartimeexpr DASH yeartimeexpr 
-                 {
+                {
 		   MSTimeParse::thisMSTParser->setDefaults($1);
 		   MSTimeParse::thisMSTParser->copyDefaults($3,$1);
 		   const MEpoch *t0=MSTimeParse::thisMSTParser->yearTimeConvert($1);
 		   const MEpoch *t1=MSTimeParse::thisMSTParser->yearTimeConvert($3);
+		   //		   cerr << "#### " << MSTimeEdgeInclusiveRange << " " << edgeWidth << endl;
 
-		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,MSTimeEdgeInclusiveRange);
+		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,MSTimeEdgeInclusiveRange,edgeWidth);
 		   MSTGgarbageCollector(t0);
 		   MSTGgarbageCollector(t1);
 		 }
@@ -175,7 +186,7 @@ rangetimeexpr: yeartimeexpr DASH yeartimeexpr
 		   const MEpoch *t0=new MEpoch(MVEpoch(time0.modifiedJulianDay()));
 		   const MEpoch *t1=new MEpoch(MVEpoch(time1.modifiedJulianDay()));
 
-		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,MSTimeEdgeInclusiveRange);
+		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,MSTimeEdgeInclusiveRange,edgeWidth);
 		   MSTGgarbageCollector(t0);
 		   MSTGgarbageCollector(t1);
 		 }
