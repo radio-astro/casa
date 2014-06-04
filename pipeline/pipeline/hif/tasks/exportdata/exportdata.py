@@ -663,7 +663,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	# Create the tar file
 	if not self._executor._dry_run:
 	    tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
-	    tar.add (context.report_dir)
+	    tar.add (os.path.join(os.path.basename(os.path.dirname(context.report_dir)), 'html'))
 	    tar.close()
 
 	# Restore the original current working directory
