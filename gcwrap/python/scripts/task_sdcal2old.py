@@ -32,9 +32,10 @@ class sdcal2_worker(sdutil.sdtask_template):
         # override initialize method
         self.parameter_check()
         self.initialize_scan()
-        
+
     def parameter_check(self):
         self.check_infile()
+        self.set_outfile_name(self.calmode)
         sep = ','
         num_separator = self.calmode.count(sep)
         if num_separator == 0:
@@ -60,6 +61,7 @@ class sdcal2_worker(sdutil.sdtask_template):
         elif num_separator == 1:
             # generate sky table and apply it on-the-fly
             #self.check_ifmap2()
+            self.check_outfile()
             self.check_interp()
             self.check_update()
             self.dosky = True
@@ -67,6 +69,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.skymode = self.calmode.split(sep)[0]
         else:
             # generate sky and Tsys table and apply them on-the-fly
+            self.check_outfile()
             self.check_tsysiflist()
             #self.check_ifmap()
             self.check_interp()
@@ -79,19 +82,31 @@ class sdcal2_worker(sdutil.sdtask_template):
         if len(self.skymode) > 0:
             casalog.post('sky calibration mode: \'%s\''%(self.skymode), 'INFO')
 
+    def set_outfile_name(self, calmode):
+        suffix = ''
+        if calmode.find("apply") > -1:
+            # modes that include apply. Output is a scantable.
+            suffix = ''
+        elif calmode == "tsys": # generage tsys table
+            suffix = '_tsys'
+        else: # generate sky table
+            suffix = '_sky'
+
+        self.outfile = sdutil.get_default_outfile_name(self.infile,
+                                                       self.outfile,suffix)
     def check_infile(self):
         if not is_scantable(self.infile):
             raise Exception('infile must be in scantable format.')
 
     def check_outfile(self):
-        if len(self.outfile) > 0:
-            # outfile is specified
-            if os.path.exists(self.outfile):
-                if not self.overwrite:
-                    raise Exception('Output file \'%s\' exists.'%(self.outfile))
-                else:
-                    casalog.post('Overwrite %s ...'%(self.outfile), 'INFO')
-                    os.system('rm -rf %s'%(self.outfile))
+        if os.path.exists(self.outfile):
+            if not self.overwrite:
+                raise Exception('Output file \'%s\' exists.'%(self.outfile))
+            elif sdutil.get_abspath(self.outfile) != sdutil.get_abspath(self.infile):
+                # remove only when infile != outfile
+                casalog.post('Overwrite %s ...'%(self.outfile), 'INFO')
+                os.system('rm -rf %s'%(self.outfile))
+
     def check_applytable(self):
         # length should be > 0 either applytable is string or string list
         if len(self.applytable) == 0:
@@ -160,7 +175,8 @@ class sdcal2_worker(sdutil.sdtask_template):
             casalog.post('tsysiflist is set to %s'%(self.tsysiflist.tolist()), 'INFO')
 
     def check_update(self):
-        if len(self.outfile) == 0:
+        if sdutil.get_abspath(self.outfile) == sdutil.get_abspath(self.infile) or \
+               len(self.outfile) == 0:
             if not self.overwrite:
                 raise Exception('You should set overwrite to True if you want to update infile.')
             else:
@@ -222,12 +238,10 @@ class sdcal2_worker(sdutil.sdtask_template):
             if not self.insitu:
                 self.manager.split(self.outfile)
         elif self.dosky:
-            outfile = sdutil.get_default_outfile_name(self.infile, self.outfile, '_sky')
-            self.manager.save_caltable(outfile)
+            self.manager.save_caltable(self.outfile)
         elif self.dotsys:
-            outfile = sdutil.get_default_outfile_name(self.infile, self.outfile, '_tsys')
-            self.manager.save_caltable(outfile)
-            
+            self.manager.save_caltable(self.outfile)
+
     def cleanup(self):
         self.manager.reset()
 

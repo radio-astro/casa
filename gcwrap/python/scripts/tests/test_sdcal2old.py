@@ -193,7 +193,7 @@ class sdcal2old_exceptions(sdcal2old_unittest_base,unittest.TestCase):
     def test_exception01(self):
         """test_exception01: apply calibration without skytable"""
         try:
-            self.res=sdcal2old(infile=self.rawfile,calmode='apply')
+            self.res=sdcal2old(infile=self.rawfile,calmode='apply',outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -205,7 +205,7 @@ class sdcal2old_exceptions(sdcal2old_unittest_base,unittest.TestCase):
         """test_exception02: invalid interp string"""
         interp='invalid_interpolation'
         try:
-            self.res=sdcal2old(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap)
+            self.res=sdcal2old(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -266,7 +266,7 @@ class sdcal2old_exceptions(sdcal2old_unittest_base,unittest.TestCase):
         """test_exception08: Invalid interp string format (more than one comma)"""
         interp='linear,linear,linear'
         try:
-            self.res=sdcal2old(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap)
+            self.res=sdcal2old(infile=self.rawfile,calmode='apply',applytable=[self.skytable,self.tsystable],interp=interp,ifmap=self.ifmap,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -281,7 +281,7 @@ class sdcal2old_exceptions(sdcal2old_unittest_base,unittest.TestCase):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('You should set overwrite to True if you want to update infile.')
+            pos=str(e).find("Output file '%s' exists." % self.rawfile)
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
