@@ -856,6 +856,20 @@ set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
   -DPYTHONVER=\"${PYTHONV}\"
   -DPYVERSION=${PV} )
 
+# sakura-python
+casa_find( LIBSAKURAPY
+  VERSION 0.1
+  INCLUDES libsakura/sakura-python.h libsakura/config-python.h
+  LIBS sakurapy
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
+  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+  DEPENDS PYTHON
+  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+)
+message( STATUS "LIBSAKURAPY_FOUND=" ${LIBSAKURAPY_FOUND} )
+
+
+  
 # Java
 casa_find( Java
   VERSION 1.5

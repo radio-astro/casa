@@ -190,6 +190,7 @@ add_custom_target( generated_py SOURCES ${tools_py} )
 
 foreach(_tool ${tools_swig} )
    get_filename_component( _base ${_tool} NAME_WE )
+   message( STATUS ${_tool} ${_base} )
    add_dependencies( _${_base} libtools)
    add_dependencies( inst  _${_base} )
    install( TARGETS _${_base}
@@ -206,3 +207,18 @@ foreach(_tool ${tools_py} )
 	               DESTINATION python/${PYTHONV}/__casac__ )
 endforeach()
 
+# casasakura module
+message( STATUS "LIBSAKURAPY_LIBRARIES=" ${LIBSAKURAPY_LIBRARIES} )
+add_library( _casasakura SHARED
+    	     singledish/casa_sakura.cc
+	     StdCasa/conversions_python.cc )
+set_target_properties( _casasakura
+		       PROPERTIES
+		       PREFIX ""
+		       SUFFIX .so )
+target_link_libraries( _casasakura
+                       ${LIBSAKURAPY_LIBRARIES}
+                       ${CMAKE_INSTALL_PREFIX}/lib/libstdcasa.so )
+add_dependencies( inst _casasakura )
+install( TARGETS _casasakura
+	 LIBRARY DESTINATION python/${PYTHONV})
