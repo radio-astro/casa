@@ -15,6 +15,12 @@ def sdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, mode, ncha
         worker.execute()
         worker.finalize()    
 
+def is_string_type(val):
+    """
+    Returns True if the argument is string type.
+    """
+    return type(val) in [str, numpy.string_]
+
 class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):
         super(sdimaging_worker,self).__init__(**kwargs)
@@ -61,7 +67,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                      (self.mode, self.start, self.width, self.nchan))
 
         # check length of selection parameters
-        if type(self.infiles) == str:
+        if is_string_type(self.infiles):
             nfile = 1
             self.infiles = [ self.infiles ]
         else:
@@ -92,7 +98,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         Returns true if data is either a string, an array with length
         1 or nfile
         """
-        if type(data) != str and len(data) not in [1, nfile]:
+        if not is_string_type(data) and len(data) not in [1, nfile]:
             return False
         return True
 
@@ -104,7 +110,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             fileid : file idx in infiles list
             param : string (array) selection value
         """
-        if type(param) == str:
+        if is_string_type(param):
             return param
         elif len(param) == 1:
             return param[0]
@@ -150,7 +156,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def format_ac_baseline(self, in_antenna):
         """ format auto-correlation baseline string from antenna idx list """
         # exact match string
-        if type(in_antenna) == str:
+        if  is_string_type(in_antenna):
             if (len(in_antenna) != 0) and (in_antenna.find('&') == -1) \
                    and (in_antenna.find(';')==-1):
                 in_antenna =+ '&&&'
@@ -341,7 +347,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # channel map
         spwsel = str(',').join([str(spwid) for spwid in selection_ids['spw']])
-        srestf = self.imager_param['restfreq'] if type(self.imager_param['restfreq'])==str else "%fHz" % self.imager_param['restfreq']
+        srestf = self.imager_param['restfreq'] if is_string_type(self.imager_param['restfreq']) else "%fHz" % self.imager_param['restfreq']
         (imnchan, imstart, imwidth) = imhelper.setChannelizeDefault(self.mode, spwsel, self.field, self.nchan, self.start, self.width, self.imager_param['outframe'], self.veltype,self.imager_param['phasecenter'], srestf)
         del imhelper
         
@@ -554,7 +560,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         base_mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
                     else 'J2000'
 
-        if type(self.phasecenter) == str and len(self.phasecenter) > 0:
+        if is_string_type(self.phasecenter) and len(self.phasecenter) > 0:
             rf = self.phasecenter.split()[0]
             if rf != '' and rf != base_mref:
                 msg = "You are attempting to convert spatial coordinate frame. " +\
