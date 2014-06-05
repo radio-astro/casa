@@ -217,7 +217,7 @@ def importasdm(
                                  + str(ret), 'SEVERE')
                                         # raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
                     raise Exception, \
-                        'ASDM conversion error, please check if it is a valid ASDM.'
+                        'ASDM conversion error, please check if it is a valid ASDM.\nIf the ASDM is valid, the import failure may be related to problems with the libxml2 library.\nPlease consult the \"Known Issues\" page http://casa.nrao.edu/release_ki.shtml .'
             else:
                 casalog.post('You have to build ASAP to be able to create single-dish data.'
                              , 'SEVERE')
@@ -350,7 +350,7 @@ def importasdm(
                              + ' terminated with exit code '
                              + str(exitcode), 'SEVERE')
                 raise Exception, \
-                    'ASDM conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
+                    'ASDM conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.\nIf the ASDM is valid, the import failure may be related to problems with the libxml2 library.\nPlease consult the \"Known Issues\" page http://casa.nrao.edu/release_ki.shtml .'
 
         if showversion:
             return
