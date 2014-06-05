@@ -4377,7 +4377,7 @@ line is identical (in pixels) to that of the zeroth line. There is no limit to t
 (except of course that the number of parameters to be fit should be significantly less than the number of data points), but there can be only
 a single reference profile in a multiplet to which to tie constraints of parameters of the other profiles in the set.
 
-Additionally, a power logarithmic polynomial or a logarithmic tranformed polynomial can be fit. In this case, each of these functions
+Additionally, a power logarithmic polynomial (plp) or a logarithmic tranformed polynomial (ltp) can be fit. In this case, each of these functions
 cannot be fit simultaneously with any other supported function. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial has the form
 
@@ -4385,7 +4385,7 @@ y = c0*x/D**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
 
 and a logarithmic transformed polynomial is simply the result of this equation after taking the natural log of both sides so that it has the form
 
-ln(y) = c0 + c1*ln(x) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
+ln(y) = c0 + c1*ln(x/D) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
 
 The coefficients of the two forms correspond with each other except that c0 in the second equation is equal to
 ln(c0) of the first. In the case of fitting a spectral index, the spectral index, traditionally represented as alpha, is
@@ -4398,6 +4398,10 @@ improves the probability that the fit will converge. This parameter may be speci
 D = 10**int(log10(sqrt(min(x)*max(x))))
 
 where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
+
+So, for example, if S(nu) is proportional to nu**alpha and you expect alpha to be near 2 and the value of S(nu) is 1.5 at
+1e9 Hz and your image(s) have spectral units of Hz, you would specify spxest=[1.5, 2] and div=1e9 when fitting a plp function,
+or spxest=[0.405, 2] and div=1e9 if fitting an ltp function.
 
 More details of fitting all of these functions are described in following sections.
 

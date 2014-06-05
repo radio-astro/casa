@@ -211,13 +211,13 @@ outsigma        Name of output image used for standard deviation. Ignored if sig
 
 This application performs least squares fits of either a power logarithmic polynomial or a logarithmic tranformed polynomial to pixel values along a specified
 axis of an image or images. These functions are most often used for fitting the spectral index and
-higher order terms of a spectrum. A power logarithmic polynomial has the form
+higher order terms of a spectrum. A power logarithmic polynomial (plp) has the form
 
 y = c0*x/D**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
 
-and a logarithmic transformed polynomial is simply the result of this equation after taking the natural log of both sides so that it has the form
+and a logarithmic transformed polynomial (ltp) is simply the result of this equation after taking the natural log of both sides so that it has the form
 
-ln(y) = c0 + c1*ln(x) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
+ln(y) = c0 + c1*ln(x/D) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
 
 Because the logarithm of the ordinate values must be taken before fitting a logarithmic transformed polynomial,
 all non-positive pixel values are effectively masked for the purposes of fitting.
@@ -233,6 +233,11 @@ improves the probability that the fit will converge. This parameter may be speci
 D = 10**int(log10(sqrt(min(x)*max(x))))
 
 where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
+
+So, for example, if S(nu) is proportional to nu**alpha and you expect alpha to be near 2 and the value of S(nu) is 1.5 at
+1e9 Hz and your image(s) have spectral units of Hz, you would specify spxest=[1.5, 2] and div=1e9 when fitting a plp function,
+or spxest=[0.405, 2] and div=1e9 if fitting an ltp function.
+
 
 A CAUTIONARY NOTE
 Note that the likelihood of getting a reliable solution increases with the number of good data points as well as the goodness
