@@ -71,23 +71,15 @@ void SakuraArrayConverter::ConvertFloatMatrixToSakura(Int const num_pol,
 
 void SakuraArrayConverter::ConvertSakuraToComplexMatrix(Int const num_pol,
 		Int const num_data, float input_data[],
-		Matrix<Complex> &output_spectrum_matrix) {
+		Matrix<Complex> &output_complex_matrix) {
 	try {
-		Vector<Float> input_vector(2 * num_data);
-		Int j = 0;
+		Bool deleteOut;
+		Complex* pout = output_complex_matrix.getStorage(deleteOut);
 		for (Int i = 0; i < num_data; ++i) {
-			if (i % 2 == 0) {
-				input_vector[i] = input_data[j++];
-			} else
-				input_vector[i] = 0;
+			casa::real(pout[output_complex_matrix.nrow() * i + num_pol]) = input_data[i];
+			casa::imag(pout[output_complex_matrix.nrow() * i + num_pol]) = 0.0;
 		}
-		Array<Float> input_array;
-		input_array.assign(input_vector);
-		Array<Complex> complex_array(RealToComplex(input_array));
-		Matrix<Complex> complex_matrix(2, num_data);
-		complex_matrix.row(num_pol) = complex_array;
-		output_spectrum_matrix.resize(2, num_data, False);
-		output_spectrum_matrix.row(num_pol) = complex_matrix.row(num_pol);
+		output_complex_matrix.putStorage(pout, deleteOut);
 	} catch (AipsError x) {
 		LogIO logger(LogOrigin("SakuraArrayConverter", __func__, WHERE));
 		logger << _ORIGIN;
@@ -99,14 +91,14 @@ void SakuraArrayConverter::ConvertSakuraToComplexMatrix(Int const num_pol,
 
 void SakuraArrayConverter::ConvertSakuraToFloatMatrix(Int const num_pol,
 		Int const num_data, float input_data[],
-		Matrix<Float> &output_spectrum_matrix) {
+		Matrix<Float> &output_float_matrix) {
 	try {
-		Matrix<Float> float_matrix(2, num_data);
+		Bool deleteOut;
+		Float* pout = output_float_matrix.getStorage(deleteOut);
 		for (Int i = 0; i < num_data; ++i) {
-			float_matrix(num_pol, i) = input_data[i];
+			pout[output_float_matrix.nrow() * i + num_pol] = input_data[i];
 		}
-		output_spectrum_matrix.resize(2, num_data, False);
-		output_spectrum_matrix.row(num_pol) = float_matrix.row(num_pol);
+		output_float_matrix.putStorage(pout, deleteOut);
 	} catch (AipsError x) {
 		LogIO logger(LogOrigin("SakuraArrayConverter", __func__, WHERE));
 		logger << _ORIGIN;
@@ -117,4 +109,4 @@ void SakuraArrayConverter::ConvertSakuraToFloatMatrix(Int const num_pol,
 }
 
 }
-  // End of casa namespace.
+ // End of casa namespace.

@@ -47,10 +47,10 @@ public:
 			float output_data[]);
 	static void ConvertSakuraToComplexMatrix(Int const num_pol,
 			Int const num_data, float input_data[],
-			Matrix<Complex> &output_spectrum_matrix);
+			Matrix<Complex> &output_complex_matrix);
 	static void ConvertSakuraToFloatMatrix(Int const num_pol,
 			Int const num_data, float input_data[],
-			Matrix<Float> &output_spectrum_matrix);
+			Matrix<Float> &output_float_matrix);
 private:
 };
 
