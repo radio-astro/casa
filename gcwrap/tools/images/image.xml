@@ -4309,7 +4309,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value/>
         </param>
         <param type="doubleArray" name="spxest">
-            <description>Initial estimates for the spectral index function coefficients.</description>
+            <description>REQUIRED. Initial estimates as array of numerical values for the spectral index function coefficients. eg [1.5, 2.5] if fitting a plp function thought to be close to 1.5*x/div**2.5.</description>
             <value/>
         </param>
         <param type="boolArray" name="spxfix">

@@ -64,7 +64,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>plp</value>
      </param>
      <param type="doubleArray" name="spxest">
-        <description>Initial estimates for the spectral index function coefficients.</description>
+        <description>REQUIRED. Initial estimates as array of numerical values for the spectral index function coefficients. eg [1.5, 2.5] if fitting a plp function thought to be close to 1.5*x/div**2.5.</description>
         <value/>
     </param>
     <param type="boolArray" name="spxfix">
@@ -190,7 +190,9 @@ minpts          Minimum number of points necessary to attempt a fit.
 multifit        Fit models at each pixel in region (true) or average profiles and fit a single model (false).
 spxtype         Type of function to fit. "plp" => power logarithmic polynomial, "ltp" => logarithmic
                 transformed polynomial.
-spxest          Initial estimates for spx function coefficients.
+spxest          REQUIRED. Initial estimates as array of numerical values for the spectral index
+                function coefficients. eg [1.5, 2.5] if fitting a plp function thought to be close to
+                1.5*x/div**2.5.
 spxfix          Fix the corresponding spx function coefficients during the fit. True=>hold fixed
 div             Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp
                 function. 0 => calculate a useful value on the fly.
