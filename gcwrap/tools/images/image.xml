@@ -4391,7 +4391,7 @@ The coefficients of the two forms correspond with each other except that c0 in t
 ln(c0) of the first. In the case of fitting a spectral index, the spectral index, traditionally represented as alpha, is
 equal to c1.
 
-In both cases, D is a normalization constant used so that abscissa values are closer to unity when they are sent to the fitter. This generally
+In both cases, D is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
 improves the probability that the fit will converge. This parameter may be specified via the div parameter. A value of 0
 (the default) indicates that the application should determine a reasonable value for D, which is determined via
 

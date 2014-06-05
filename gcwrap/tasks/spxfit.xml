@@ -213,7 +213,7 @@ This application performs least squares fits of either a power logarithmic polyn
 axis of an image or images. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial (plp) has the form
 
-y = c0*x/D**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
+y = c0*(x/D)**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
 
 and a logarithmic transformed polynomial (ltp) is simply the result of this equation after taking the natural log of both sides so that it has the form
 
@@ -226,7 +226,7 @@ The coefficients of the two forms are equal to each other except that c0 in the 
 ln(c0) of the first. In the case of fitting a spectral index, which is traditionally represented as alpha, is
 equal to c1.
 
-In both cases, D is a normalization constant used so that abscissa values are closer to unity when they are sent to the fitter. This generally
+In both cases, D is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
 improves the probability that the fit will converge. This parameter may be specified via the div parameter. A value of 0
 (the default) indicates that the application should determine a reasonable value for D, which is determined via
 
