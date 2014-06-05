@@ -382,7 +382,9 @@ public:
   {
     bool *work_p = reinterpret_cast<bool *>(out_p);
     for (casa::uInt i = 0; i < num_elements; ++i) {
-      work_p[i] = in_p[offset + i * increment];
+      // CASA flag: valid is False, invalid is True
+      // Sakura mask: valid is True, invalid is False
+      work_p[i] = !(in_p[offset + i * increment]);
     }
   }
 
@@ -396,7 +398,9 @@ public:
     size_t start_pos = row * (increment * num_elements);
     casa::Bool *out_p = &arr_p[start_pos];
     for (size_t i = 0; i < num_elements; ++i) {
-      out_p[offset + i * increment] = work_p[i];
+      // CASA flag: valid is False, invalid is True
+      // Sakura mask: valid is True, invalid is False
+      out_p[offset + i * increment] = !(work_p[i]);
     }
     arr.putStorage(arr_p, b);
   }
