@@ -39,17 +39,17 @@ class SakuraArrayConverter {
 protected:
 
 public:
-	static void ConvertComplexMatrixToSakura(Int const num_pol,
-			Int const num_data, Matrix<Complex> &spectrum_matrix,
+	static void ConvertComplexMatrixToSakura(uInt const num_pol,
+			uInt const num_data, Matrix<Complex> &spectrum_matrix,
 			float output_data[]);
-	static void ConvertFloatMatrixToSakura(Int const num_pol,
-			Int const num_data, Matrix<Float> &spectrum_matrix,
+	static void ConvertFloatMatrixToSakura(uInt const num_pol,
+			uInt const num_data, Matrix<Float> &spectrum_matrix,
 			float output_data[]);
-	static void ConvertSakuraToComplexMatrix(Int const num_pol,
-			Int const num_data, float input_data[],
+	static void ConvertSakuraToComplexMatrix(uInt const num_pol,
+			uInt const num_data, float const input_data[],
 			Matrix<Complex> &output_complex_matrix);
-	static void ConvertSakuraToFloatMatrix(Int const num_pol,
-			Int const num_data, float input_data[],
+	static void ConvertSakuraToFloatMatrix(uInt const num_pol,
+			uInt const num_data, float const input_data[],
 			Matrix<Float> &output_float_matrix);
 private:
 };
