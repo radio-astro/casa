@@ -239,41 +239,83 @@ YYYY/MM/DD/HH:MM:SS.FF.  Fields (i.e., YYYY, MM, DD, HH, MM, SS and
 FF), starting from left to right, can be omitted.  Omitted fields will
 be replaced by context sensitive defaults as explained below.
 
-T0, T1 and dT in the following description are time specifications.
-
 \subsection{Syntax}
 
+Various forms of possible time-selection expression are listed below.
+T0, T1 and dT in the following description are time specifications.
+
 \begin{itemize}
-\item time~=~~{\tt T0$\sim$T1}
+\item {\bf time~=~~T0$\sim$T1}
 
-      Selects all time stamps starting from T0 to T1.  Fields missing
-      in T0 are replaced by the fields in the time stamp of the first
-      valid selected row in the MS.  Fields missing in T1 are replaced
-      by the corresponding fields of T0 (after its defaults are set).
-\item time~=~~{\tt T0}
+  Selects all time stamps which satisfy the following condition:
 
-      Selects all time stamps that are within an integration time of
-      T0.  Integration time is determined from the first valid
-      selected row (more rigorously, an average integration time
-      should be computed).  Default settings for the missing fields of
-      T0 are as described in bullet (1) above.
-\item time~=~~{\tt T0+dT}
+\begin{quote}
+  (TimeStamp $>$= T0) {\bf and} (TimeStamp $<$= T1)
+\end{quote}
 
-      Selects all time stamps starting from T0 and ending with time
-      value given by T0+dT. Defaults of T0 are set as usual described
-      in bullet (1) above.  Defaults for dT are set from the time
-      corresponding to MJD=0.  I.e. dT is an specification of length
-      of time from nominal "start of time" (the time stamp of the
-      first valid selected row of the MS).
+  Fields missing in T0 are replaced by the fields in the time stamp of
+  the first valid selected row in the MS.  Fields missing in T1 are
+  replaced by the corresponding fields of T0 (after its defaults are
+  set).
 
-\item time~=~~{\tt$>$T0} 
+\item {\bf time~=~~[T0$\sim$T1]}
 
-      Selects all times greater than T0. 
+  The edges of the range is computed using the Exposure Time.  All
+  rows with a time stamp which satisfy the following condition are
+  selected:
+   
+\begin{quote}
+  ((TimeStamp $>$ T0) {\bf or} (abs(TimeStamp - T0) $<$ ExposureTime/2)) {\bf and}\\
+  ((TimeStamp $<$ T1) {\bf or} (abs(TimeStamp - T1) $<$ ExposureTime/2))
+\end{quote}
 
-\item time~=~~{\tt$<$T0} 
+  Fields missing in T0 are replaced by the fields in the time stamp of
+  the first valid selected row in the MS.  Fields missing in T1 are
+  replaced by the corresponding fields of T0 (after its defaults are
+  set).
 
-      Selects all times less than T0. Default settings for T0 are as
-      above.
+\item {\bf time~=~~FLOATNUMBER [T0$\sim$T1]}
+
+  Same as the previous expression with the edges of the range
+  determined using the FLOATNUMBER (in seconds of time) instead of
+  Exposure Time.  All rows with a time stamp which satisfy the
+  following condition are selected:
+   
+\begin{quote}
+  ((TimeStamp $>$ T0) {\bf or} (abs(TimeStamp - T0) $<$ FLOATNUMBER)) {\bf and}\\
+  ((TimeStamp $<$ T1) {\bf or} (abs(TimeStamp - T1) $<$ FLOATNUMBER))
+\end{quote}
+
+  Fields missing in T0 are replaced by the fields in the time stamp of
+  the first valid selected row in the MS.  Fields missing in T1 are
+  replaced by the corresponding fields of T0 (after its defaults are
+  set).
+
+\item {\bf time~=~~T0}
+
+  All rows with time stamp that is within an integration time of T0
+  are selected.  Integration time is determined from the first valid
+  selected row (more rigorously, an average integration time should be
+  computed).  Default settings for the missing fields of T0 are as
+  described in bullet (1) above.
+
+\item {\bf time~=~~T0+dT}
+
+  All rows with time stamp starting from T0 and ending with time value
+  given by T0+dT are selected. Defaults of T0 are set as usual described in bullet
+  (1) above.  Defaults for dT are set from the time corresponding to
+  MJD=0.  I.e. dT is an specification of length of time from nominal
+  "start of time" (the time stamp of the first valid selected row of
+  the MS).
+
+\item {\bf time~=~~$>$T0} 
+
+  Selects all times greater than T0.
+
+\item {\bf time~=$<$T0} 
+
+  All rows with time stamp less than T0 are selected. Default settings
+  for T0 are as above.
 \end{itemize}
 
 \section{Antenna/Baseline Selection}
