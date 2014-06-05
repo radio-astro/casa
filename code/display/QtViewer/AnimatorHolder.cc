@@ -495,7 +495,9 @@ namespace casa {
 
 	void AnimatorHolder::emitMovieChannels( bool direction ) {
 		int frameStart = animatorChannel->getFrameStart();
-		int currentFrame = frameStart;
+		//int currentFrame = frameStart;
+		//Changed implementation per CAS-6604
+		int currentFrame = animatorChannel->getFrame();
 		int frameEnd = animatorChannel->getFrameEnd();
 		int stepSize = animatorChannel->getStepSize();
 		emit channelMovieState( currentFrame, direction, stepSize, frameStart, frameEnd );
