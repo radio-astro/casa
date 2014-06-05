@@ -889,7 +889,6 @@ class sdreduce_storage_test(sdreduce_unittest_base,unittest.TestCase):
     """
     #rawfile_raw = 'sd_analytic_type1-3.asap'
     rawfile = 'sd_analytic_type1-3.bl.asap'
-    prefix = sdreduce_unittest_base.taskname+'TestSel'
     params = {'infile': rawfile,'outfile': rawfile,
               'calmode': 'none', 'average': False,
               'blfunc': 'none',
@@ -914,18 +913,18 @@ class sdreduce_storage_test(sdreduce_unittest_base,unittest.TestCase):
             shutil.rmtree(self.params['outfile'])
 
     def testDisk(self):
-        """testDisk: test overwrite of the input scantable (outfile=infile) with disk storage"""
+        """Test overwrite of the input scantable (outfile=infile) with DISK storage"""
         self._run_sdreduce_with_storage('disk')
     
     def testMem(self):
-        """testDisk: test overwrite of the input scantable (outfile=infile) with disk storage"""
+        """Test overwrite of the input scantable (outfile=infile) with MEMORY storage"""
         self._run_sdreduce_with_storage('memory')
 
     def _run_sdreduce_with_storage(self, storage):
         storage_save = sd.rcParams['scantable.storage']
         sd.rcParams['scantable.storage'] = storage
         try:
-            print("Invoking sdflag with storage = %s" % \
+            print("Invoking sdreduce with storage = %s" % \
                   sd.rcParams['scantable.storage'])
             # Invoke task
             self.res = sdreduce(**self.params)

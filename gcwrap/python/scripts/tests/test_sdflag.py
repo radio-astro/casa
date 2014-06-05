@@ -1164,11 +1164,11 @@ class sdflag_storage_test(sdflag_unittest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)): shutil.rmtree(self.rawfile)
 
     def testDisk(self):
-        """testDisk: test in-place flag operation with disk storage"""
+        """Test in-place flag operation with DISK storage"""
         self._run_flag_with_storage('disk')
     
     def testMem(self):
-        """testDisk: test in-place flag operation with disk storage"""
+        """Test in-place flag operation with MEMORY storage"""
         self._run_flag_with_storage('memory')
 
     def _run_flag_with_storage(self, storage):
