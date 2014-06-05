@@ -50,14 +50,14 @@ public:
     const casa::Array<DataType> arr = Handler::asArray(var.ptr());
     casa::IPosition shape = arr.shape();
     casa::uInt ndim = shape.size();
-    PyObject *tuple = Py_None;
-    if (ndim == 1) {
+    PyObject *tuple = NULL;
+    if (ndim == 1 || ndim == 2) {
+      PyObject *cell = EncapsulateCell(arr);
+      if (cell == NULL) {
+	return NULL;
+      }
       tuple = PyTuple_New(1);
-      PyTuple_SetItem(tuple, 0, EncapsulateCell(arr));
-    }
-    else if (ndim == 2) {
-      tuple = PyTuple_New(1);
-      PyTuple_SetItem(tuple, 0, EncapsulateCell(arr));
+      PyTuple_SetItem(tuple, 0, cell);
     }
     else if (ndim == 3) {
       casa::uInt npol = shape[0];
@@ -67,15 +67,15 @@ public:
       for (casa::uInt irow = 0; irow < nrow; ++irow) {
 	casa::IPosition start(3, 0, 0, irow);
 	casa::IPosition end(3, npol-1, nchan-1, irow);
-	casa::Array<DataType> slice = arr(start, end);
-	slice.removeDegenerate();
-	PyTuple_SetItem(tuple, (Py_ssize_t)irow,
-			EncapsulateCell(slice));
+	casa::Array<DataType> arr_slice = arr(start, end);
+	arr_slice.removeDegenerate();
+	PyObject *slice = EncapsulateCell(arr_slice);
+	if (slice == NULL) {
+	  Py_DECREF(tuple);
+	  return NULL;
+	}
+	PyTuple_SetItem(tuple, (Py_ssize_t)irow, slice);
       }
-    }
-    else {
-      // increment reference count for Py_None object
-      Py_INCREF(tuple);
     }
     return tuple;
   }
@@ -83,7 +83,11 @@ public:
   static PyObject *CreateChunkForCasa(PyObject *obj)
   {
     casa::Array<DataType> arr;
-    int is_tuple = PyTuple_Check(obj);
+
+    if (PyTuple_Check(obj) == 0) {
+      return NULL;
+    }
+    
     Py_ssize_t nrow = PyTuple_Size(obj);
     casa::uInt npol = 0;
     casa::uInt nchan = 0;
@@ -96,26 +100,28 @@ public:
       for (Py_ssize_t ipol = 0; ipol < _npol; ++ipol) {
 	PyObject *capsule = PyTuple_GetItem(tuple, ipol);
 	sakura_PyAlignedBuffer *buffer;
-	sakura_Status status = sakura_PyAlignedBufferDecapsulate(capsule,
-								 &buffer);
-	if (status == sakura_Status_kOK) {
-	  void *aligned;
-	  sakura_PyAlignedBufferAlignedAddr(buffer, &aligned);
-	  size_t dimensions;
-	  sakura_PyAlignedBufferDimensions(buffer, &dimensions);
-	  size_t elements[1];
-	  sakura_PyAlignedBufferElements(buffer, 1, elements);
-	  if (arr.empty()) {
-	    npol = _npol;
-	    nchan = elements[0];
-	    arr.resize(casa::IPosition(3, npol, nchan, nrow));
-	    arr_p = arr.getStorage(b);		
+	if (sakura_PyAlignedBufferDecapsulate(capsule, &buffer) != sakura_Status_kOK) {
+	  if (!arr.empty()) {
+	    arr.putStorage(arr_p, b);
 	  }
-	  const float *p = reinterpret_cast<const float *>(aligned);
-	  size_t start_pos = irow * (_npol * elements[0]);
-	  DataType *out_p = &arr_p[start_pos];
-	  Handler::ToCasa(ipol, npol, irow, elements[0], aligned, out_p);
+	  return NULL;
 	}
+
+	void *aligned;
+	sakura_PyAlignedBufferAlignedAddr(buffer, &aligned);
+	size_t dimensions;
+	sakura_PyAlignedBufferDimensions(buffer, &dimensions);
+	size_t elements[1];
+	sakura_PyAlignedBufferElements(buffer, 1, elements);
+	if (arr.empty()) {
+	  npol = _npol;
+	  nchan = elements[0];
+	  arr.resize(casa::IPosition(3, npol, nchan, nrow));
+	  arr_p = arr.getStorage(b);		
+	}
+	size_t start_pos = irow * (_npol * elements[0]);
+	DataType *out_p = &arr_p[start_pos];
+	Handler::ToCasa(ipol, npol, elements[0], aligned, out_p);
       }
     }
     arr.putStorage(arr_p, b);
@@ -153,15 +159,25 @@ private:
     const DataType *arr_p = arr.getStorage(b);
     for (casa::uInt ipol = 0; ipol < npol; ++ipol) {
       void *storage = _malloc(allocation_size);
+      if (storage == NULL) {
+	Py_DECREF(tuple);
+	return NULL;
+      }
       void *aligned = sakura_AlignAny(allocation_size, storage, required_size);
       sakura_PyAlignedBuffer *buffer;
-      sakura_PyAlignedBufferCreate((sakura_PyTypeId)Handler::SakuraPyTypeId,
-				   storage, aligned,
-				   1, elements, &_free,
-				   &buffer);
+      if (sakura_PyAlignedBufferCreate((sakura_PyTypeId)Handler::SakuraPyTypeId,
+				       storage, aligned,
+				       1, elements, &_free,
+				       &buffer) != sakura_Status_kOK) {
+	Py_DECREF(tuple);
+	return NULL;
+      }
       PyObject *capsule;
-      sakura_PyAlignedBufferEncapsulate(buffer,
-					&capsule);
+      if (sakura_PyAlignedBufferEncapsulate(buffer,
+					    &capsule) != sakura_Status_kOK) {
+	Py_DECREF(tuple);
+	return NULL;
+      }
       Handler::ToSakura(arr_p, npol, ipol, nchan, aligned);
       PyTuple_SetItem(tuple, (Py_ssize_t)ipol, capsule);
     }
@@ -169,16 +185,6 @@ private:
     return tuple;
   }
 };
-
-static inline PyObject *ArgAsPyObject(PyObject *args)
-{
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args, "O", &obj)) {
-    std::cout << "Failed to parse args" << std::endl;
-    return NULL;
-  }
-  return obj;
-}
 
 class FloatDataHandler : public HandlerBase<casa::Float, FloatDataHandler>
 {
@@ -203,7 +209,7 @@ public:
   }
 
   static void ToCasa(const size_t offset, const size_t increment,
-		     const size_t row, const size_t num_elements,
+		     const size_t num_elements,
 		     const void *in_p, DataType *out_p)
   {
     const CDataType *work_p = reinterpret_cast<const CDataType *>(in_p);
@@ -236,7 +242,7 @@ public:
   }
 
   static void ToCasa(const size_t offset, const size_t increment,
-		     const size_t row, const size_t num_elements,
+		     const size_t num_elements,
 		     const void *in_p, DataType *out_p)
   {
     const CDataType *work_p = reinterpret_cast<const CDataType *>(in_p);
@@ -270,7 +276,7 @@ public:
   }
 
   static void ToCasa(const size_t offset, const size_t increment,
-		     const size_t row, const size_t num_elements,
+		     const size_t num_elements,
 		     const void *in_p, DataType *out_p)
   {
     const CDataType *work_p = reinterpret_cast<const CDataType *>(in_p);
@@ -305,7 +311,7 @@ public:
   }
 
   static void ToCasa(const size_t offset, const size_t increment,
-		     const size_t row, const size_t num_elements,
+		     const size_t num_elements,
 		     const void *in_p, DataType *out_p)
   {
     const CDataType *work_p = reinterpret_cast<const CDataType *>(in_p);
@@ -317,12 +323,33 @@ public:
   }
 };
 
+static inline PyObject *ArgAsPyObject(PyObject *args)
+{
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args, "O", &obj)) {
+    std::cout << "Failed to parse args" << std::endl;
+    return NULL;
+  }
+  return obj;
+}
+
+#define RETURN_NONE_IF_NULL(obj) \
+  if ((obj) == NULL) { \
+    Py_INCREF(Py_None); \
+    return Py_None; \
+  }
+
 template<class Handler>
 static PyObject *tosakura(PyObject *self, PyObject *args)
 {
   PyObject *obj = ArgAsPyObject(args);
 
+  RETURN_NONE_IF_NULL(obj)
+  
   PyObject *tuple = Handler::CreateChunkForSakura(obj);
+
+  RETURN_NONE_IF_NULL(tuple)
+  
   return tuple;
 }
 
@@ -331,7 +358,12 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
 {
   PyObject *obj = ArgAsPyObject(args);
 
+  RETURN_NONE_IF_NULL(obj)
+  
   PyObject *ret = Handler::CreateChunkForCasa(obj);
+
+  RETURN_NONE_IF_NULL(ret)
+  
   return ret;  
 }
 
