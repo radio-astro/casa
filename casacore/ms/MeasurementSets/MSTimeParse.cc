@@ -257,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Double upperBound = toTAIInSec(upboundTime);
     Double lowerBound = toTAIInSec(lowboundTime);
-    Float edgeWidth_l = (edgeWidth < 0.0) ? defaultExposure : edgeWidth;
+    Float edgeWidth_l = (edgeWidth < 0.0) ? defaultExposure/2.0 : edgeWidth;
 
     if (lowerBound > upperBound)
       throw(MSSelectionTimeError("lower bound > upper bound"));
@@ -267,8 +267,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       condition = (columnAsTEN_p >= lowerBound &&
 		   (columnAsTEN_p <= upperBound));
     else
-      condition = (((columnAsTEN_p > lowerBound) || (abs(columnAsTEN_p - lowerBound) < edgeWidth_l/2)) &&
-		   ((columnAsTEN_p < upperBound) || (abs(columnAsTEN_p - upperBound) < edgeWidth_l/2)));
+      condition = (((columnAsTEN_p > lowerBound) || (abs(columnAsTEN_p - lowerBound) < edgeWidth_l)) &&
+		   ((columnAsTEN_p < upperBound) || (abs(columnAsTEN_p - upperBound) < edgeWidth_l)));
 
     accumulateTimeList(lowerBound, upperBound);
 
