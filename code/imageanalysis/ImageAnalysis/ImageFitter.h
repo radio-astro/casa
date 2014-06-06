@@ -275,7 +275,7 @@ private:
 	) const;
 
 	void _encodeSkyComponentError(
-		SkyComponent& sky, Double facToJy, const ImageInterface<Float>& subIm,
+		SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong
 	) const;

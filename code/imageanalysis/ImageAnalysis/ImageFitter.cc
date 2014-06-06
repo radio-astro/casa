@@ -1501,10 +1501,9 @@ void ImageFitter::_fitsky(
 			String error;
 			Record r;
 			result[j].flux().toRecord(error, r);
-
             try {
                 _encodeSkyComponentError(
-				    result[j], facToJy, allAxesSubImage,
+				    result[j], facToJy, allAxesSubImage.coordinates(),
 				    solution, errors, stokes, xIsLong
 			    );
             }
@@ -1671,7 +1670,7 @@ void ImageFitter::_fitskyExtractBeam(
 }
 
 void ImageFitter::_encodeSkyComponentError(
-		SkyComponent& sky, Double facToJy, const ImageInterface<Float>& subIm,
+		SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong) const
 // Input
@@ -1724,7 +1723,6 @@ void ImageFitter::_encodeSkyComponentError(
 	TwoSidedShape* pS = dynamic_cast<TwoSidedShape*> (&shape);
 	Vector<Double> dParameters(5);
 	GaussianBeam wParameters;
-	const CoordinateSystem& cSys = subIm.coordinates();
 	static const Quantity qzero(0, "deg");
 	if (pS) {
 		if (errors(3) > 0.0 || errors(4) > 0.0 || errors(5) > 0.0) {
@@ -1736,18 +1734,23 @@ void ImageFitter::_encodeSkyComponentError(
 			// The error in p.a. is just the input error value as its
 			// already angular.
 			// Major
-			dParameters(2) = errors(3) == 0 ? 5e-14 : errors(3);
+
+			// widths cannot be zero or exceptions will be thrown, so if either axis
+			// is fixed so that its error is 0, make it a very small number instead for
+			// the call to pixelWidthsToWorld
+			static const Double epsilon = 1e-9;
+			dParameters(2) = errors(3) == 0 ? epsilon : errors(3);
 			// Minor
-			dParameters(3) = errors(4) == 0 ? 5e-14 : errors(4);
+			dParameters(3) = errors(4) == 0 ? epsilon : errors(4);
 			// PA
 			dParameters(4) = parameters(5);
 			// If flipped, it means pixel major axis morphed into world minor
 			// Put back any zero errors as well.
 			Bool flipped = ImageUtilities::pixelWidthsToWorld(
 				wParameters,
-				dParameters, cSys, pixelAxes, False
+				dParameters, csys, pixelAxes, False
 			);
-			Quantum<Double> paErr(errors(5), Unit(String("rad")));
+			Quantity paErr(errors(5), "rad");
 			if (flipped) {
 				pS->setErrors(
 					errors(4) == 0 ? qzero : wParameters.getMinor(),
@@ -1773,9 +1776,10 @@ void ImageFitter::_encodeSkyComponentError(
 	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
 	Bool flipped = ImageUtilities::pixelWidthsToWorld(
 			wParameters, dParameters,
-			cSys, pixelAxes, False
+			csys, pixelAxes, False
 		);
 	// TSS::setRefDirErr interface has lat first
+
 	if (flipped) {
 		pS->setRefDirectionError(
 				errors(2) == 0 ? qzero : wParameters.getMinor(),
