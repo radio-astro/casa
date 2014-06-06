@@ -464,9 +464,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             if not self._executor._dry_run:
                 LOG.info('WEBLOG: Copying final weblog of SD in %s' % os.path.join(products_dir,product_tarfilename))
                 tar = tarfile.open (os.path.join(products_dir, product_tarfilename), "w:gz")
-                os.chdir(context.report_dir)
-                os.chdir('../')
-                tar.add ("html")
+                tar.add (os.path.join(os.path.basename(os.path.dirname(context.report_dir)), 'html'))
                 tar.close()
                 product_tar_list = [product_tarfilename]
             elif self._executor._dry_run:
