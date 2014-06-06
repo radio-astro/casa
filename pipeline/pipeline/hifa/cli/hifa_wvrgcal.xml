@@ -127,6 +127,11 @@ a QA score based on its effect on the interferometric data.
         <value></value>
     </param>
 
+    <param type="string" name="qa_spw">
+        <description>Data SpW to use in estimating the effectiveness of the wvr correction</description>
+        <value></value>
+    </param>
+
     <param type="double" name="accept_threshold">
         <description>Improvement ratio (phase-rms without wvr / phase-rms with wvr) above which wvrg calibration file will be accepted</description>
         <value>1.0</value>
@@ -219,8 +224,8 @@ a QA score based on its effect on the interferometric data.
 <example>
 
 Generate a gain table based on the Water Vapour Radiometer data in each vis
-file. By applying the wvr calibration to the data specified by 'qa_intent',
-calculate a QA score to indicate its effect on interferometric data;
+file. By applying the wvr calibration to the data specified by 'qa_intent' and
+'qa_spw', calculate a QA score to indicate its effect on interferometric data;
 a score &gt; 1 implies that the phase noise is improved, a score &lt; 1 implies
 that it is made worse. If the score is less than 'accept_threshold' then the 
 wvr gain table is not accepted into the context for subsequent use.
@@ -336,6 +341,12 @@ qa_bandpass_intent -- The data intent to use for the bandpass calibration
     in the qa calculation. The default is blank to allow the 
     underlying bandpass task to select a sensible intent if the dataset
     lacks BANDPASS data.
+
+    default: ''
+
+qa_spw -- The data SpW to use for the bandpass calibration
+    in the qa calculation. The default is blank, in which case the
+    task will use the SpW that has the highest median sky opacity.
 
     default: ''
 
