@@ -381,8 +381,8 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     		exportFormat.location = baseFileName + pageStr + suffix;
     	}
 
+    	this->holdDrawing();
     	exportSuccess = itsParent_->exportToFormat( exportFormat );
-
     	if ( i < pageCount - 1 ){
     		nextIter();
     	}
