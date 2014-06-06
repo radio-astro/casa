@@ -11,7 +11,7 @@ def hifa_wvrgcal(vis=None, caltable=None, hm_toffset=None, toffset=None,
 		 disperse=None, wvrflag=None, hm_smooth=None, 
                  smooth=None, scale=None, maxdistm=None, minnumants=None,
 		 mingoodfrac=None, qa_intent=None, qa_bandpass_intent=None,
-                 accept_threshold=None,pipelinemode=None,  
+                 qa_spw=None, accept_threshold=None,pipelinemode=None,  
                  dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
