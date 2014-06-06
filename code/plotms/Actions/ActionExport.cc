@@ -235,6 +235,8 @@ bool ActionExport::doActionSpecific(PlotMSApp* plotms){
 		exportThread->setPlots( plots );
 		setUpClientCommunication( exportThread, -1 );
 
+		setUseThreading( false );
+
 		ok = initiateWork( exportThread );
 		if ( threadController == NULL ){
 			delete exportThread;
