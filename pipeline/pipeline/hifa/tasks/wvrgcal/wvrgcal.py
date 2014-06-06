@@ -13,6 +13,7 @@ from pipeline.infrastructure import casa_tasks
 from pipeline.hif.heuristics import caltable as caltable_heuristic
 
 from pipeline.hifa.heuristics import wvrgcal as wvrgcal_heuristic
+from pipeline.hifa.heuristics import atm as atm_heuristic
 
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import gaincal
@@ -32,7 +33,7 @@ class WvrgcalInputs(basetask.StandardInputs):
                  tie=None, sourceflag=None, nsol=None, disperse=None, 
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
                  maxdistm=None, minnumants=None, mingoodfrac=None,
-		 qa_intent=None, qa_bandpass_intent=None,
+		 qa_intent=None, qa_bandpass_intent=None, qa_spw=None,
 		 accept_threshold=None, bandpass_result=None,
 		 nowvr_result=None):
         self._init_properties(vars())
@@ -153,6 +154,16 @@ class WvrgcalInputs(basetask.StandardInputs):
         if value is None:
             value = ''
         self._qa_intent = value
+    @property
+
+    def qa_spw(self):
+        return self._qa_spw
+
+    @qa_spw.setter
+    def qa_spw(self, value):
+        if value is None:
+            value = ''
+        self._qa_spw = value
 
     @property
     def scale(self):
@@ -306,6 +317,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             if inputs.hm_smooth == 'automatic':
                 #smooth = wvrheuristics.smooth(spw)
 		# Force the smooth heuristics to a single value
+                # (If integration times vary between spws this may not be
+                # the right thing to do). Integration times varying between
+                # intents within an spw then it is right to smooth according
+                # to the longest.
                 smooth = wvrheuristics.smoothall(science_spwids)
             else:
                 smooth = inputs.smooth
@@ -326,7 +341,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           wvrflag=wvrflag, smooth=smooth,
                                           scale=scale, maxdistm=maxdistm,
                                           minnumants=minnumants,
-					                      mingoodfrac=mingoodfrac)
+                                          mingoodfrac=mingoodfrac)
                 jobs.append(task)
 
                 smooths_done.add(smooth)
@@ -390,6 +405,13 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # calculate the qa results if required
         if not result.final:
             return result
+
+        # get the spw for which qa results are needed
+        atmheuristics = atm_heuristic.AtmHeuristics(context=inputs.context,
+          vis=inputs.vis) 
+        if inputs.qa_spw == '':
+#            inputs.qa_spw = atmheuristics.highest_freq_spwid()
+            inputs.qa_spw = atmheuristics.highest_opacity_spwid()
 
         # do a bandpass calibration
         result.bandpass_result = self._do_qa_bandpass(inputs)
@@ -468,11 +490,15 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # passing an empty string as intent tells bandpass to use all intents,
         # which resolves to all fields. Convert '' to None, which will tell
         # bandpass to use the default bandpass intents, as expected. 
-        intent = None if inputs.qa_bandpass_intent is '' else inputs.qa_bandpass_intent
+        if inputs.qa_bandpass_intent is '':
+            intent = None
+        else:
+            intent = inputs.qa_bandpass_intent
         
         args = {'vis'         : inputs.vis,
                 'mode'        : 'channel',
                 'intent'      : intent,
+                'spw'         : inputs.qa_spw,
                 'solint'      : 'inf,7.8125MHz',
                 'maxchannels' : 0,
                 'qa_intent'  : '',
@@ -518,10 +544,11 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         preapply. Coding the gaincal as a separate function with minimal
         outside interaction helps enforce that requirement.  
         """
-        args = {'vis' : inputs.vis,
+        args = {'vis'    : inputs.vis,
                 'intent' : inputs.qa_intent,
+                'spw'    : inputs.qa_spw,
                 'solint' : 'int',
-                'calmode' : 'p',
+                'calmode': 'p',
                 'minsnr' : 0.0}
 
         inputs = gaincal.GTypeGaincal.Inputs(inputs.context, **args)
