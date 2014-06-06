@@ -328,7 +328,7 @@ private:
 // On output pa is positive N->E
 // Returns True if major/minor exchanged themselves on conversion to world.
     static Bool _skyPixelWidthsToWorld(
-    	GaussianBeam& wParameters,
+    	Angular2DGaussian& gauss2d,
     	const CoordinateSystem& cSys,
     	const Vector<Double>& pParameters,
     	const IPosition& pixelAxes, Bool doRef

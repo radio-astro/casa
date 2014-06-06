@@ -582,7 +582,7 @@ Bool ImageUtilities::pixelWidthsToWorld(
 }
 
 Bool ImageUtilities::_skyPixelWidthsToWorld (
-	GaussianBeam& wParameters,
+	Angular2DGaussian& gauss2d,
 	const CoordinateSystem& cSys,
 	const Vector<Double>& pParameters,
 	const IPosition& pixelAxes, Bool doRef
@@ -592,13 +592,11 @@ Bool ImageUtilities::_skyPixelWidthsToWorld (
 // world parameters: major, minor, pa
 //
 {
-
 	// What coordinates are these axes ?
 
 	Int c0, c1, axisInCoordinate0, axisInCoordinate1;
 	cSys.findPixelAxis(c0, axisInCoordinate0, pixelAxes(0));
 	cSys.findPixelAxis(c1, axisInCoordinate1, pixelAxes(1));
-
 	// See what sort of coordinates we have. Make sure it is called
 	// only for the Sky.  More development needed otherwise.
 
@@ -613,7 +611,6 @@ Bool ImageUtilities::_skyPixelWidthsToWorld (
 		"The given axes do not come from the same Direction coordinate. "
 		"This situation requires further code development"
 	);
-
 	// Is the 'x' (first axis) the Longitude or Latitude ?
 
 	Vector<Int> dirPixelAxes = cSys.pixelAxes(c0);
@@ -624,14 +621,12 @@ Bool ImageUtilities::_skyPixelWidthsToWorld (
 		whereIsX = 1;
 		whereIsY = 0;
 	}
-
 	// Encode a pretend GaussianShape from these values as a means
 	// of converting to world.
 
 	const DirectionCoordinate& dCoord = cSys.directionCoordinate(c0);
 	GaussianShape gaussShape;
 	Vector<Double> cParameters(pParameters.copy());
-	//
 	if (doRef) {
 		cParameters(0) = dCoord.referencePixel()(whereIsX);     // x centre
 		cParameters(1) = dCoord.referencePixel()(whereIsY);     // y centre
@@ -646,7 +641,7 @@ Bool ImageUtilities::_skyPixelWidthsToWorld (
 		}
 	}
 	Bool flipped = gaussShape.fromPixel (cParameters, dCoord);
-	wParameters = GaussianBeam(
+	gauss2d = Angular2DGaussian(
 			gaussShape.majorAxis(), gaussShape.minorAxis(),
 			gaussShape.positionAngle()
 	);
