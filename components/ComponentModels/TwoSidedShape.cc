@@ -65,9 +65,9 @@ TwoSidedShape& TwoSidedShape::operator=(const TwoSidedShape& other) {
   return *this;
 }
 
-void TwoSidedShape::setWidth(const Quantum<Double>& majorAxis,
-			     const Quantum<Double>& minorAxis, 
-			     const Quantum<Double>& positionAngle) {
+void TwoSidedShape::setWidth(const Quantity& majorAxis,
+			     const Quantity& minorAxis,
+			     const Quantity& positionAngle) {
   itsMajUnit = majorAxis.getFullUnit();
   itsMinUnit = minorAxis.getFullUnit();
   itsPaUnit = positionAngle.getFullUnit();
@@ -541,7 +541,6 @@ Vector<Double> TwoSidedShape::toPixel (const DirectionCoordinate& dirCoord)  con
    return parameters;
 }
  
-
 Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
                                const DirectionCoordinate& dirCoord)
 //
@@ -552,15 +551,12 @@ Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
 // pars(4) = pa radians; pos +x (long) -> +y (lat)
 //
 {
-   LogIO os(LogOrigin("TwoSidedShape", "fromPixel"));
-
 // Direction first
 
    Vector<Double> pixelCen(2);
    pixelCen(0) = parameters(0);
    pixelCen(1) = parameters(1);
    ComponentShape::fromPixel (pixelCen, dirCoord);
-
 // Shape.  First put x/y p.a. into +y -> -x system
 
    Double pa0 = parameters(4) - C::pi_2; 
@@ -570,7 +566,6 @@ Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
    MDirection tipMinor = directionFromCartesian (parameters(3), pa0, dirCoord, pixelCen);
 
 // Find tip directions
-
    const MDirection& directionRef = refDirection();       
    MVDirection mvdRef = directionRef.getValue();
    MVDirection mvdMajor = tipMajor.getValue();
@@ -580,22 +575,17 @@ Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
 
    Double tmp1 = 2 * mvdRef.separation(mvdMajor) * 3600 * 180.0 / C::pi;
    Double tmp2 = 2 * mvdRef.separation(mvdMinor) * 3600 * 180.0 / C::pi;
-//
-   Quantum<Double> majorAxis(max(tmp1,tmp2), Unit("arcsec"));
-   Quantum<Double> minorAxis(min(tmp1,tmp2), Unit("arcsec"));
+
+   Quantity majorAxis(max(tmp1,tmp2), Unit("arcsec"));
+   Quantity minorAxis(min(tmp1,tmp2), Unit("arcsec"));
    Bool flipped = tmp2 > tmp1;
-//
-   Quantum<Double> pa;
+   Quantity pa;
    if (!flipped) {
       pa = mvdRef.positionAngle(mvdMajor, Unit("deg"));
    } else {
       pa = mvdRef.positionAngle(mvdMinor, Unit("deg"));
    }
-
-// Set them      
-      
    setWidth (majorAxis, minorAxis, pa);
-//
    return flipped;
 }
 
