@@ -21,8 +21,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
     #If using new FT-Machines, do not use the on-the-fly model_data columns.
-    if (gridmode == 'advancedaprojection'):
-        raise Exception, 'This mode is not yet ready for use'
+    # if (gridmode == 'advancedaprojection'):
+    #     raise Exception, 'This mode is not yet ready for use'
 
         
     if gridmode == 'advancedaprojection' and usescratch==False:
