@@ -605,19 +605,7 @@ bool PlotMSOverPlot::updateCache() {
 		return false;
 	}
 
-	/*vector<PMS::Axis> caxes(cache->numXAxes() + cache->numYAxes());
-	vector<PMS::DataColumn> cdata(cache->numXAxes() + cache->numYAxes());
-	for(uInt i = 0; i < cache->numXAxes(); ++i) {
-		caxes[i] = cache->xAxis(i);
-		cdata[i] = cache->xDataColumn(i);
-		qDebug() <<"x i="<<i<<" caxes[i]="<<caxes[i];
-	}
 
-	for(uInt i = cache->numYAxes(); i < caxes.size(); ++i) {
-		caxes[i] = cache->yAxis(i - cache->numXAxes());
-		cdata[i] = cache->yDataColumn(i - cache->numXAxes());
-		qDebug() << "i="<<i<<" caxes[i]="<<caxes[i]<<" cdata[i]="<<cdata[i];
-	}*/
 
 	itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
 			PMS::LOG_ORIGIN_LOAD_CACHE,
@@ -641,6 +629,7 @@ bool PlotMSOverPlot::updateCache() {
 		cacheUpdating = true;
 		result = itsParent_->updateCachePlot( this,
 			PlotMSOverPlot::cacheLoaded, true );
+
 	}
 	catch( AipsError& error ){
 		cacheUpdating = false;
@@ -926,7 +915,6 @@ bool PlotMSOverPlot::updateDisplay() {
 
 				PlotSymbolPtr flaggedSym = display->flaggedSymbol(row);
 				PlotSymbolPtr symbolMasked = itsParent_->createSymbol ( flaggedSym  );
-
 				dataSize = itsCache_->indexer(row,col).sizeMasked();
 				customizeAutoSymbol( symbolMasked, dataSize );
 
@@ -936,6 +924,7 @@ bool PlotMSOverPlot::updateDisplay() {
 				plot->setSymbol(symbolUnmasked);
 				plot->setMaskedSymbol(symbolMasked);
 				// Colorize and set data changed, if redraw is needed
+
 				bool colorizeChanged = itsCache_->indexer(row,col).colorize(display->colorizeFlag(), display->colorizeAxis());
 
 				if(nIter > 0 && colorizeChanged ) {
@@ -1107,6 +1096,12 @@ bool PlotMSOverPlot::resetIter() {
 }
 
 void PlotMSOverPlot::recalculateIteration( ) {
+	this->holdDrawing();
+	int nIter = itsCache_->nIter(0);
+		if ( nIter <= 0 ){
+			nIter = 1;
+		}
+
 
 	detachFromCanvases();
 	if(itsTCLParams_.updateIteration ) {
@@ -1114,10 +1109,7 @@ void PlotMSOverPlot::recalculateIteration( ) {
 		assignCanvases(pages);
 	}
 
-	int nIter = itsCache_->nIter(0);
-	if ( nIter <= 0 ){
-		nIter = 1;
-	}
+
 
 	//Put the data into the plot
 	uInt rows = itsPlots_.size();
@@ -1144,9 +1136,10 @@ void PlotMSOverPlot::recalculateIteration( ) {
 
 	attachToCanvases();
 	updatePlots();
-
 	releaseDrawing();
+
 	logPoints();
+
 }
 
 void PlotMSOverPlot::updatePlots() {
@@ -1163,15 +1156,28 @@ void PlotMSOverPlot::updatePlots() {
 bool PlotMSOverPlot::updateIndexing() {
 	PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
 	PMS_PP_Axes* axes = itsParams_.typedGroup<PMS_PP_Axes>();
-	int dataCount = axes->numYAxes();
-	itsCache_->clearRanges();
-
 	bool globalX = iter->isGlobalScaleX();
 	bool globalY = iter->isGlobalScaleY();
+	PMS::Axis iterAxis = iter->iterationAxis();
+	int dataCount = axes->numYAxes();
+	//Only update if we need to.
+	bool requiredUpdate = false;
 
-	//Set up the indexer.
 	for ( int i = 0; i < dataCount; i++ ){
-		itsCache_->setUpIndexer(iter->iterationAxis(), globalX, globalY, i);
+		bool iterationInitialized = itsCache_->isIndexerInitialized( iterAxis, globalX, globalY, i);
+		if ( !iterationInitialized ){
+			requiredUpdate = true;
+			break;
+		}
+	}
+
+	if ( requiredUpdate ){
+		itsCache_->clearRanges();
+
+		//Set up the indexer.
+		for ( int i = 0; i < dataCount; i++ ){
+			itsCache_->setUpIndexer(iterAxis, globalX, globalY, i);
+		}
 	}
 	return true;
 }
@@ -1251,7 +1257,7 @@ void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	// Reset the iterator (if data are new)
 	resetIter();
 
-// Let the plot know that the data has been changed as needed, unless the
+	// Let the plot know that the data has been changed as needed, unless the
 	// thread was canceled.
 	updatePlots();
 
@@ -1271,8 +1277,9 @@ void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	}
 
 	// Release drawing if needed.
-	if(itsTCLParams_.releaseWhenDone)
+	if(itsTCLParams_.releaseWhenDone){
 		releaseDrawing();
+	}
 
 	// Log number of points as needed.
 	if(itsTCLParams_.endCacheLog)

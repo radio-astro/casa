@@ -646,6 +646,14 @@ void PlotMSIndexer::setUpIndexing() {
 
 }
 
+bool PlotMSIndexer::isGlobalXRange() const {
+	return globalXMinMax_;
+}
+
+bool PlotMSIndexer::isGlobalYRange() const {
+	return globalYMinMax_;
+}
+
 void PlotMSIndexer::setGlobalMinMax(Bool globalX, Bool globalY ) {
     globalXMinMax_=globalX;
     globalYMinMax_=globalY;

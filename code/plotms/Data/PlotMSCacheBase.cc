@@ -655,6 +655,32 @@ String PlotMSCacheBase::getTimeBounds( int iterValue ){
 	return formattedTime;
 }
 
+bool PlotMSCacheBase::isIndexerInitialized( PMS::Axis iteraxis, Bool globalXRange,
+		Bool globalYRange, int dataIndex ) const {
+	bool initialized = true;
+	if ( this->iterAxis != iteraxis ){
+		initialized = false;
+	}
+	else {
+		if ( static_cast<int>(indexer_.size())<= dataIndex ){
+			initialized = false;
+		}
+		else {
+			if ( indexer_[dataIndex].empty()){
+				initialized = false;
+			}
+			else {
+				if ( indexer_[dataIndex][0] == NULL ||
+						indexer_[dataIndex][0]->isGlobalXRange() != globalXRange ||
+					indexer_[dataIndex][0]->isGlobalYRange() != globalYRange ){
+					initialized = false;
+				}
+			}
+		}
+	}
+	return initialized;
+}
+
 void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		Bool globalYRange, int dataIndex ) {
 
