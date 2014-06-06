@@ -6030,7 +6030,7 @@ int main(int argc, char *argv[]) {
 	  
 	  // For each slice of the BDF with a size approx equal to the required size
 	  for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
-	    numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
+	    numberOfIntegrations = min(actualSizeInMemory[j] / (bdfSize / N), N); // The min to prevent a possible excess when there are very few bytes in the BDF. 
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
