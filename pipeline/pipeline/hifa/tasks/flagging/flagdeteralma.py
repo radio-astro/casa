@@ -1,62 +1,4 @@
 
-# ------------------------------------------------------------------------------
-
-# flagdeteralma.py
-
-# NB: THESE FlagDeterALMA*() CLASSES INHERIT FlagDeterBase*() CLASSES.  AT
-# PRESENT THE FlagDeterALMA*() CLASSES HAVE NO ADDITIONAL INPUT PARAMETERS, SO
-# THEY ACT IN EXACTLY THE SAME MANNER AS THE FlagDeterBase*() CLASSES.
-
-# Description:
-# ------------
-# This file contains the classes to perform ALMA deterministic flagging.
-
-# In a nutshell:
-# --------------
-# * This class performs all of the deterministic flagging types in the
-#   FlagDeterBase*() classes.
-
-# To test these classes by themselves without the rest of the pipeline, enter
-# these commands:
-#
-# import pipeline
-#
-# vis = [ '<MS name>' ]
-# context = pipeline.Pipeline( vis ).context
-#
-# inputs = pipeline.tasks.flagging.FlagDeterALMA.Inputs( context, vis=vis,
-#   output_dir='.', autocorr=True, shadow=True, scan=True, scannumber='4,5,8',
-#   intents='*AMPLI*', edgespw=True, fracspw=0.1, fracspwfps=0.1 )
-#
-# task = pipeline.tasks.flagging.FlagDeterALMA( inputs )
-# jobs = task.analyse()
-#
-# status = task.execute(dry_run=False)
-#
-# In other words, create a context, create the inputs (which sets the public
-# variables to the correct values and creates the temporary flag command file),
-# convert the class arguments to arguments to the CASA task tflagdata), create
-# the FlatDeterALMA() instance, perform FlatDeterALMA.analyse(), and execute the
-# class.
-
-# Classes:
-# --------
-# FlagDeterALMA        - This class represents the pipeline interface to the
-#                        CASA task tflagdata.
-# FlagDeterALMAInputs  - This class manages the inputs for the FlagDeterALMA()
-#                        class.
-# FlagDeterALMAResults - This class manages the results from the FlagDeterALMA()
-#                        class.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version, identical behavior to FlagDeterBase.py.
-# 2012 May 16 - Lindsey Davis, NRAO
-#               Changed file name from FlagDeterALMA.py to flagdeteralma.py.
-
-# ------------------------------------------------------------------------------
-
 # Imports
 # -------
 
@@ -78,132 +20,10 @@ from pipeline.hif.tasks.flagging import flagdeterbase
 LOG = infrastructure.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
-# class FlagDeterALMAInputs
-# ------------------------------------------------------------------------------
-
-# FlagDeterALMAInputs
-
-# Description:
-# ------------
-# This class manages the inputs for the FlagDeterALMA() class.
-
-# Inherited classes:
-# ------------------
-# FlagDeterBaseInputs - This is the base class that handles the inputs for
-# deterministic flagging.
-
-# Public member variables:
-# ------------------------
-# None.
-
-# Public member functions:
-# ------------------------
-# __init__     - This public member function constructs an instance of the
-#                FlagDeterALMAInputs() class.  It is overloaded.
-# clone        - This public member function creates a cloned instance of an
-#                existing instance.  It is overloaded.
-# to_casa_args - This public member function translates the input parameters of
-#                this class to task parameters and file-based flag commands
-#                required by CASA task tflagdata.  It is overloaded.
-
-# Static public member functions:
-# -------------------------------
-# create_from_context - This static public member function creates an instance
-#                       of this class from a context.  It is overloaded.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version created with public member functions __init__(),
-#               clone(), and to_casa_args(); and static public member function
-#               create_from_context().  All functions are overloaded.
-
-# ------------------------------------------------------------------------------
 
 class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
-# ------------------------------------------------------------------------------
 
-# FlagDeterALMAInputs::__init__
-
-# Description:
-# ------------
-# This public member function constructs an instance of the
-# FlagDeterALMAInputs() class.
-
-# The primary purpose of this class is to initialize the public member
-# variables.  The defaults for all parameters (except context) are None.
-
-# NB: This public member function is overloaded.
-
-# Inherited classes:
-# ------------------
-# FlagDeterBaseInputs - This class manages the inputs for the
-#                       FlagDeterBaseInputs() parent class.
-
-# Inputs to initialize the FlagDeterBaseInputs() class:
-# -----------------------------------------------------
-# context      - This python dictionary contains the pipeline context (state).
-#                It has no default.
-#
-# vis          - This python string contains the MS name.
-#
-# output_dir   - This python string contains the output directory name.
-#
-# flagbackup   - This python boolean determines whether the existing flags are
-#                backed up before the new flagging begins.
-#
-# autocorr     - This python boolean determines whether autocorrelations are
-#                flagged or not.
-#
-# shadow       - This python boolean determines whether shadowed antennas are
-#                flagged or not.
-#
-# scan         - This python boolean determines whether scan flagging is
-#                performed.
-# scannumber   - This python string contains the comma-delimited scan numbers.
-#                In the task interface, it is a subparameter of the scan
-#                parameter.  Standard data selection syntax is valid.
-# intents      - This python string contains the comma-delimited intents.  In
-#                the task interface, it is a subparameter of the scan parameter.
-#                Wildcards (* character) are allowed.
-#
-# edgespw      - This python boolean determines whether edge channels are
-#                flagged.
-# fracspw      - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge for the ALMA baseline correlator.
-#                In the task interface, it is a subparameter of the edgespw parameter.
-#
-# fracspwfps    - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge for the ACS correlator.  In the
-#                task interface, it it is a subparameter of the edgespw parameter.
-#
-# online       - This python boolean determines whether the online flags are
-#                applied.
-# fileonline   - This python string contains the name of the ASCII file that
-#                has the flagging commands.  It is a subparameter of the
-#                online parameter.
-#
-# template     - This python boolean determines whether flagging templates are
-#                applied.
-# filetemplate - This python string contains the name of the ASCII file that
-#                has the flagging template (for RFI, birdies, telluric lines,
-#                etc.).  It is a subparameter of the template parameter.
-
-# Inputs:
-# -------
-# None.
-
-# Outputs:
-# --------
-# None, returned via the function value.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version.
-
-# ------------------------------------------------------------------------------
         edgespw  = basetask.property_with_default('edgespw', True)
         fracspw  = basetask.property_with_default('fracspw', 0.0625)
         template  = basetask.property_with_default('template', True)
@@ -219,7 +39,7 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 		super( FlagDeterALMAInputs, self ).__init__( context, vis=vis,
 		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
 		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
-		    edgespw=edgespw, fracspw=fracspw, online=online,
+		    edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
 
                 self.fracspwfps  = fracspwfps
@@ -235,34 +55,6 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
                 self._fracspwfps = value
 
 
-# -----------------------------------------------------------------------------
-
-# ::to_casa_args
-
-# Description:
-# ------------
-# This public member function translates the input parameters of this class to
-# task parameters and file-based flag commands required by CASA task tflagdata.
-
-# NB: This public member function is overloaded.
-
-# Inputs:
-# -------
-# None.
-
-# Outputs:
-# --------
-# The python dictionary containing the arguments (and their values) for CASA
-# task tflagdata, returned via the function value.  The temporary file that
-# contains the flagging commands for the tflagdata task, located in the output
-# directory.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version.
-
-# ------------------------------------------------------------------------------
 
 	def to_casa_args( self ):
 
@@ -276,56 +68,12 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
 		return task_args
 
-# ------------------------------------------------------------------------------
-# class FlagDeterALMAResults
-# ------------------------------------------------------------------------------
 
-# FlagDeterALMAResults
-
-# Description:
-# ------------
-# This class manages the results from the FlagDeterALMA() class.
-
-# Inherited classes:
-# ------------------
-# FlagDeterBaseResults - This class manages the results from the FlagDeterBase()
-#                        class.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version created with no new member functions.
-
-# ------------------------------------------------------------------------------
 
 class FlagDeterALMAResults( flagdeterbase.FlagDeterBaseResults ):
 	pass
 
-# ------------------------------------------------------------------------------
-# class FlagDeterALMA
-# ------------------------------------------------------------------------------
 
-# FlagDeterALMA
-
-# Description:
-# ------------
-# This class represents the pipeline interface to the CASA task tflagdata.
-
-# Inherited classes:
-# ------------------
-# FlagDeterBase - This class represents the pipeline interface to the CASA task
-#                 tflagdata.
-
-# Public member functions:
-# ------------------------
-# All public member functions from the FlagDeterALMAInputs() class.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version.
-
-# ------------------------------------------------------------------------------
 
 class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 
@@ -335,7 +83,29 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 	# functions of this class
 
 	Inputs = FlagDeterALMAInputs
-
+	
+	def get_fracspw(self, spw):    
+	        # override the default fracspw getter with our ACA-aware code
+                if spw.num_channels in (62, 124, 248):
+                    return self.inputs.fracspwfps
+                else:
+                    return self.inputs.fracspw
+	
+	def verify_spw(self, spw):
+	        # override the default verifier, adding an extra test that bypasses
+                # flagging of TDM windows
+                super(FlagDeterALMA, self).verify_spw(spw)
+	
+	        # Skip if TDM mode where TDM modes are defined to be modes with 
+                # <= 256 channels per correlation
+                dd = self.inputs.ms.get_data_description(spw=spw)
+                ncorr = len(dd.corr_axis)
+                if ncorr*spw.num_channels > 256:
+                    raise ValueError('Skipping edge flagging for FDM spw %s' % spw.id)
+	
+	
+	
+        '''
         def _get_autocorr_cmd (self):
                 inputs = self.inputs
 	        spwlist = inputs.ms.get_spectral_windows(science_windows_only=False)
@@ -431,5 +201,5 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 		else:
                     return 'mode=manual spw={0}'.format(','.join(to_flag))
 
-
+        '''
 
