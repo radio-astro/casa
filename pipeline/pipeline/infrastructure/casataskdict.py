@@ -37,7 +37,7 @@ CasaTaskDict = {
                    'hsd_plotflagbaseline': 'SDPlotFlagBaseline',
                    'hsd_reduce'       : 'SDReduction',
                    'hifa_importdata' : 'ALMAImportData',
-                   'hifa_flagdata'    : 'ALMAAgentFlagger',
+                   'hifa_flagdata'    : 'FlagDeterALMA',
                    'hifa_fluxcalflag'  : 'FluxcalFlag',
                    'hifa_gfluxscale'   : 'GcorFluxscale',
                    'hifa_linpolcal'    : 'Linpolcal',

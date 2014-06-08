@@ -6081,6 +6081,7 @@ renderer_map = {
         hif.tasks.Applycal       : T2_4MDetailsApplycalRenderer(),                        
         hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
         hifa.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
+        hifa.tasks.FlagDeterALMA : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
