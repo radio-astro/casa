@@ -174,55 +174,66 @@ def flagcolortable(flagpct):
 % endif
 
 
-% if flagtable:
+% if flagtables:
 
-<h3>Flagging Summaries</h3>
-<div class="span6">
-% for fieldkey in flagtable.keys():
-    <div style="width: 1024px; height: 250px; overflow: auto;">
-        <table class="table table-header-rotated">
-        <caption>Flagging percentages for <b>Source Name:</b> ${fieldkey} </caption>
-
-        <thead>
-        </thead>
+    <h3>Flagging Summaries</h3>
+    <div class="span6">
     
-        <tbody>
-        <tr>
-        <td class="rotate-45"><b>spw</b></td>
+    % for ms_name in flagtables.keys():
+        
         <%
-           name = flagtable[fieldkey].keys()[0]
-           spw = flagtable[fieldkey][name].keys()[0]
-           antennalist = flagtable[fieldkey][name][spw].keys()
+            flagtable = flagtables[ms_name]
         %>
-        % for antenna in sorted(antennalist):
-            <td class="rotate-45"><b>${antenna}</b></td>
-        % endfor
-        </tr>
-        
-        
-        % for name in sorted(flagtable[fieldkey].keys()):
-            <tr>
-            <th class="row-header">${flagtable[fieldkey][name].keys()[0]}</th>
-            
-            % for spw in flagtable[fieldkey][name].keys():
-                % for antenna in sorted(flagtable[fieldkey][name][spw].keys()):
-                    <%
-                        flagpct = 100.0*flagtable[fieldkey][name][spw][antenna]['flagged']/flagtable[fieldkey][name][spw][antenna]['total']
-                    %>
-                   <td bgcolor="${flagcolortable(flagpct)}">
-                        ${"{:5.2f}".format(flagpct)}
-                   </td>
-                % endfor
-        
-        
-            % endfor
-            <tr>
-        % endfor
     
-        </tbody>
-        </table>
+         <h4>${ms_name}</h4>
+    
+	% for fieldkey in flagtable.keys():
+	    <div style="width: 1024px; height: 250px; overflow: auto;">
+		<table class="table table-header-rotated">
+		<caption>Flagging percentages for <b>Source Name:</b> ${fieldkey} </caption>
 
-    </div>
-% endfor
+		<thead>
+		</thead>
+	    
+		<tbody>
+		<tr>
+		<td class="rotate-45"><b>spw</b></td>
+		<%
+		name = flagtable[fieldkey].keys()[0]
+		spw = flagtable[fieldkey][name].keys()[0]
+		antennalist = flagtable[fieldkey][name][spw].keys()
+		%>
+		% for antenna in sorted(antennalist):
+		    <td class="rotate-45"><b>${antenna}</b></td>
+		% endfor
+		</tr>
+		
+		
+		% for name in sorted(flagtable[fieldkey].keys()):
+		    <tr>
+		    <th class="row-header">${flagtable[fieldkey][name].keys()[0]}</th>
+		    
+		    % for spw in flagtable[fieldkey][name].keys():
+			% for antenna in sorted(flagtable[fieldkey][name][spw].keys()):
+			    <%
+				flagpct = 100.0*flagtable[fieldkey][name][spw][antenna]['flagged']/flagtable[fieldkey][name][spw][antenna]['total']
+			    %>
+			<td bgcolor="${flagcolortable(flagpct)}">
+				${"{:5.2f}".format(flagpct)}
+			</td>
+			% endfor
+		
+		
+		    % endfor
+		    <tr>
+		% endfor
+	    
+		</tbody>
+		</table>
+
+	    </div>
+	% endfor
+    
+    % endfor
 
 % endif

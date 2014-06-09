@@ -588,7 +588,7 @@ class T1_3MRenderer(RendererBase):
         scores = {}
         tablerows = []
         results_list = []
-        flagtable = {}
+        flagtables = {}
         for result in context.results:
             scores[result.stage_number] = result.qa.representative
             results_list = result
@@ -615,21 +615,27 @@ class T1_3MRenderer(RendererBase):
             
             if 'applycal' in get_task_description(result):
                 try:
-                    for field in result[0].flagsummary.keys():
-                        #each field
-                        flagsummary = result[0].flagsummary[field]
-                    
-                        fieldtable = {}
-                        for k,v in flagsummary.iteritems():
-                            myname = v['name']
-                            myspw = v['spw']
-                            myant = v['antenna']
-                            antkeys = myant.keys()
-                            spwkey = myspw.keys()[0]
-                        
-                            fieldtable.update({myname:{spwkey:myant}})
-                            
-                        flagtable[field] = fieldtable
+                    for resultitem in result:
+                        ms_name = os.path.basename(resultitem.inputs['vis'])
+                        flagtable = {}
+			for field in resultitem.flagsummary.keys():
+			    #each field
+			    flagsummary = resultitem.flagsummary[field]
+			
+			    fieldtable = {}
+			    for k,v in flagsummary.iteritems():
+				myname = v['name']
+				myspw = v['spw']
+				myant = v['antenna']
+				antkeys = myant.keys()
+				spwkey = myspw.keys()[0]
+			    
+				fieldtable.update({myname:{spwkey:myant}})
+				
+			    flagtable[field] = fieldtable
+			
+			flagtables[ms_name] = flagtable
+			
                 except:
                     LOG.debug("No flag summary table available yet from applycal")
                  
@@ -638,7 +644,7 @@ class T1_3MRenderer(RendererBase):
                 'registry' : registry,
                 'scores'   : scores,
                 'tablerows': tablerows,
-                'flagtable': flagtable}
+                'flagtables': flagtables}
 
 
     @classmethod
