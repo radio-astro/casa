@@ -103,25 +103,28 @@ ImageProfileFitter::ImageProfileFitter(
 				_nLorentzSinglets++;
 				break;
 			case SpectralElement::POWERLOGPOLY:
-				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
-					*_getLog() << "Only a single power logarithmic polynomial may be fit and it cannot be fit simultaneously with other functions"
-						<< LogIO::EXCEPTION;
-				}
+				ThrowIf(
+					_nonPolyEstimates.nelements() > 1 || _polyOrder > 0,
+					"Only a single power logarithmic polynomial may be fit "
+					"and it cannot be fit simultaneously with other functions"
+				);
 				_nPLPCoeffs = _nonPolyEstimates[i]->get().size();
 				break;
 			case SpectralElement::LOGTRANSPOLY:
-				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
-					*_getLog() << "Only a single transformed logarithmic polynomial may be fit and it cannot be fit simultaneously with other functions"
-						<< LogIO::EXCEPTION;
-				}
+				ThrowIf(
+					_nonPolyEstimates.nelements() > 1 || _polyOrder > 0,
+					"Only a single transformed logarithmic polynomial may "
+					"be fit and it cannot be fit simultaneously with other functions"
+				);
 				_nLTPCoeffs = _nonPolyEstimates[i]->get().size();
 				break;
 			default:
-				*_getLog() << "Logic error: Only gaussian singlets, "
-					<< "gaussian multiplets, and lorentzian singlets, or a single power "
-					<< "logarithmic polynomial,  or a single log transformed polynomial are "
-				    << "permitted in the spectralList input parameter"
-				    << LogIO::EXCEPTION;
+				ThrowCc(
+					"Logic error: Only gaussian singlets, "
+					"gaussian multiplets, and lorentzian singlets, or a single power "
+					"logarithmic polynomial,  or a single log transformed polynomial are "
+				    "permitted in the spectralList input parameter"
+				);
 				break;
 			}
 
@@ -297,17 +300,20 @@ Record ImageProfileFitter::fit() {
 
 void ImageProfileFitter::setPolyOrder(Int p) {
 	*_getLog() << LogOrigin(_class, __func__);
-	if (p < 0) {
-		*_getLog() << "A polynomial cannot have a negative order" << LogIO::EXCEPTION;
-	}
-	if (_nPLPCoeffs > 0) {
-		*_getLog() << "Cannot simultaneously fit a polynomial and a power logarithmic polynomial."
-			<< LogIO::EXCEPTION;
-	}
-	if (_nLTPCoeffs > 0) {
-		*_getLog() << "Cannot simultaneously fit a polynomial and a logarithmic transformed polynomial."
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		p < 0,
+		"A polynomial cannot have a negative order"
+	);
+	ThrowIf(
+		_nPLPCoeffs > 0,
+		"Cannot simultaneously fit a polynomial and "
+		"a power logarithmic polynomial."
+	);
+	ThrowIf(
+		_nLTPCoeffs > 0,
+		"Cannot simultaneously fit a polynomial and "
+		"a logarithmic transformed polynomial"
+	);
     _polyOrder = p;
 }
 
