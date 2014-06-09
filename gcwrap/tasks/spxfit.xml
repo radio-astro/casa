@@ -317,7 +317,9 @@ should not be written.
 The parameters spxsol and spxerr are the names of the solution and error images to write, respectively.
 These images simply contain the arrays for the associated parameter solutions or errors described in previous sections.
 Pixels for which fits were not attempted or did not converge will be
-masked as bad. The last axis of these images is a linear axis and repesents coefficient number (and is named accordingly).
+masked as bad. The last axis of these images is a linear axis and repesents coefficient number (and is named accordingly). So, for example,
+if one fits a function for two coefficients, c0 and c1, the solution and error images will each have length 2 along the component number
+axis. The first plane corresponds to the solution/error for c0, the second corresponds to the solution/error for c1.
 
 EXAMPLES
 
