@@ -1273,13 +1273,8 @@ def _log_task(task, dry_run):
 
     comment += '\n# %s\n#\n' % getattr(task.inputs, '_pipeline_casa_task', 'unknown pipeline task')
 
-    for task_classes, task_comment in casataskdict.TASK_COMMENTS.items():
-        if task.__class__ in task_classes:
-            wrapped = textwrap.wrap('# ' + task_comment,
-                                    subsequent_indent='# ',
-                                    width=78,
-                                    break_long_words=False)
-            comment += '%s\n#\n' % '\n'.join(wrapped)
+    # get the description of how this task functions and add it to the comment
+    comment += casataskdict.get_task_comment(task)
                         
     with open(filename, 'a') as cmdfile:
         cmdfile.write(comment)

@@ -1,3 +1,5 @@
+import textwrap
+
 import pipeline.hif.tasks as hif_tasks
 import pipeline.hsd.tasks as hsd_tasks
 import pipeline.hifa.tasks as hifa_tasks
@@ -220,3 +222,19 @@ TASK_COMMENTS = {
         'sources.'
     ),
 }
+
+
+def get_task_comment(task):
+    """
+    Get the casalog comment for the given task.
+    """
+    comment = ''
+    for task_classes, task_comment in TASK_COMMENTS.items():
+        if task.__class__ in task_classes:
+            wrapped = textwrap.wrap('# ' + task_comment,
+                                    subsequent_indent='# ',
+                                    width=78,
+                                    break_long_words=False)
+            comment += '%s\n#\n' % '\n'.join(wrapped)
+    
+    return comment
