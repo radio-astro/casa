@@ -468,10 +468,29 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         job = casa_tasks.flagdata(**task_args)
         summary_dict = self._executor.execute(job)
 
-        summary_reps = []
+        sumreps = {}
         
+
         for key in summary_dict.keys():
-            summary_reps.append(summary_dict[key])
+            sumreps[summary_dict[key]['name']] = summary_dict[key]
+
+ 
+        summary_reps = []
+        pseudoagents = ['before','online', 'template', 'autocorr', 'shadow', 'intents', 'edgespw',
+                        'clip', 'quack', 'baseband']
+
+        for agent in pseudoagents:
+            try:
+                summary_reps.append(sumreps[agent])
+            except:
+               LOG.debug('Agent not present')
+
+        '''
+        summary_reps = [x for x in sumreps if x['name'] == 'before']
+        other_reps = [x for x in sumreps if x['name'] != 'before']
+        for rep in other_reps:
+            summary_reps.append(rep)
+        '''
 
         # return the results object, which will be used for the weblog
         return FlagDeterBaseResults(summary_reps, flag_cmds)
