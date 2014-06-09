@@ -485,12 +485,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             except:
                LOG.debug('Agent ' + agent + ' not present')
 
-        '''
-        summary_reps = [x for x in sumreps if x['name'] == 'before']
-        other_reps = [x for x in sumreps if x['name'] != 'before']
-        for rep in other_reps:
-            summary_reps.append(rep)
-        '''
+
 
         # return the results object, which will be used for the weblog
         return FlagDeterBaseResults(summary_reps, flag_cmds)
