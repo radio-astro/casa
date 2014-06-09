@@ -214,11 +214,11 @@ This application performs least squares fits of either a power logarithmic polyn
 axis of an image or images. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial (plp) has the form
 
-y = c0*(x/D)**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
+y = c0*(x/div)**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + cn*ln(x/div)**(n - 1))
 
 and a logarithmic transformed polynomial (ltp) is simply the result of this equation after taking the natural log of both sides so that it has the form
 
-ln(y) = c0 + c1*ln(x/D) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
+ln(y) = c0 + c1*ln(x/div) + c2*ln(x/div)**2 +  ... + cn*ln(x/div)**n
 
 Because the logarithm of the ordinate values must be taken before fitting a logarithmic transformed polynomial,
 all non-positive pixel values are effectively masked for the purposes of fitting.
@@ -227,17 +227,17 @@ The coefficients of the two forms are equal to each other except that c0 in the 
 ln(c0) of the first. In the case of fitting a spectral index, which is traditionally represented as alpha, is
 equal to c1.
 
-In both cases, D is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
+In both cases, div is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
 improves the probability that the fit will converge. This parameter may be specified via the div parameter. A value of 0
-(the default) indicates that the application should determine a reasonable value for D, which is determined via
+(the default) indicates that the application should determine a reasonable value for div, which is determined via
 
-D = 10**int(log10(sqrt(min(x)*max(x))))
+div = 10**int(log10(sqrt(min(x)*max(x))))
 
 where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
 
 So, for example, if S(nu) is proportional to nu**alpha and you expect alpha to be near -0.8 and the value of S(nu) is 1.5 at
 1e9 Hz and your image(s) have spectral units of Hz, you would specify spxest=[1.5, -0.8] and div=1e9 when fitting a plp function,
-or spxest=[0.405, -0.8] and div=1e9 if fitting an ltp function close to ln(1.5) - 0.8*ln(x/D).
+or spxest=[0.405, -0.8] and div=1e9 if fitting an ltp function close to ln(1.5) - 0.8*ln(x/div).
 
 
 A CAUTIONARY NOTE

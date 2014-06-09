@@ -4381,21 +4381,21 @@ Additionally, a power logarithmic polynomial (plp) or a logarithmic tranformed p
 cannot be fit simultaneously with any other supported function. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial has the form
 
-y = c0*x/D**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
+y = c0*x/div**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + cn*ln(x/div)**(n - 1))
 
 and a logarithmic transformed polynomial is simply the result of this equation after taking the natural log of both sides so that it has the form
 
-ln(y) = c0 + c1*ln(x/D) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
+ln(y) = c0 + c1*ln(x/div) + c2*ln(x/div)**2 +  ... + cn*ln(x/div)**n
 
 The coefficients of the two forms correspond with each other except that c0 in the second equation is equal to
 ln(c0) of the first. In the case of fitting a spectral index, the spectral index, traditionally represented as alpha, is
 equal to c1.
 
-In both cases, D is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
+In both cases, div is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
 improves the probability that the fit will converge. This parameter may be specified via the div parameter. A value of 0
-(the default) indicates that the application should determine a reasonable value for D, which is determined via
+(the default) indicates that the application should determine a reasonable value for div, which is determined via
 
-D = 10**int(log10(sqrt(min(x)*max(x))))
+div = 10**int(log10(sqrt(min(x)*max(x))))
 
 where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
 
