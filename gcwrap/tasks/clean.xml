@@ -1045,14 +1045,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		   on-source); this parameter will give more weight to 
  		   higher sensitivity fields in the overlap regions.
                ftmachine -- Gridding method for the mosaic;
-                   Options: 'ft' (standard interferometric gridding), 'sd'
-                   (standard single dish), 
-                   and 'mosaic' (grid using PB as convolution function).
+                   Options: 'ft' or 'mosaic'
                    default: 'mosaic'; 
+		   'ft' implies standard interferometric gridding. The residual visibilities are 
+                   imaged for each pointing and combined in the image plane with the appropriate PB 
+                   to make the mosaic.
+                    
+                   'mosaic' (grid using PB as convolution function and mosaic combination is done in 
+                   visibilities). 
                    ONLY if imagermode='mosaic' is chosen and
-                   ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA)
+                   ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA) or 
+                   wideband beam accounting 
                    possible using the right convolution of primary beams for
-                   each baseline.
+                   each baseline and for diferent frequencies
+                   CAVEAT: ftmachine='mosaic' uses Fourier transforms of the primary beams/pointing
+                   for mosaicing. Making an image which is too small for the pointing coverages will cause
+                   aliasing due to standard Fourier transform wrap around. 
+
                scaletype -- Controls scaling of pixels in the image plane.
                    (controls what is seen if interactive=True)
                    It does *not* affect the scaling of the *final* image -
