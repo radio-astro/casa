@@ -189,12 +189,7 @@ except:
     Antenna selection used for flux transfer to the secondary calibrators.
 
 	% for ms in ampuv_allant_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4> ${ms} </h4>
 		% for intent in ampuv_allant_plots[ms]:
 		    <ul class="thumbnails">
 		        % for i, plot in enumerate(ampuv_allant_plots[ms][intent]):

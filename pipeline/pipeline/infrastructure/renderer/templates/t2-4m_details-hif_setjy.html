@@ -153,12 +153,7 @@ $(document).ready(function(){
 	<h3>Model amplitude vs UV distance</h3>
 
 	% for ms in amp_vs_uv_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4> ${ms} </h4>
 		% for intent in amp_vs_uv_plots[ms]:
 		    <ul class="thumbnails">
 		        % for plot in amp_vs_uv_plots[ms][intent]:

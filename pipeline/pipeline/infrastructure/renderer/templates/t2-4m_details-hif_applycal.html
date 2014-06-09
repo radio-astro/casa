@@ -246,12 +246,7 @@ def space_comma(s):
 	<h3>Calibrated amplitude vs frequency</h3>
 
 	% for ms in amp_vs_freq_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4> ${ms} </h4>
 		% for intent in amp_vs_freq_plots[ms]:
 		    <ul class="thumbnails">
 		        % for plot in amp_vs_freq_plots[ms][intent]:
@@ -269,12 +264,7 @@ def space_comma(s):
 		
 		                    <div class="caption">
 								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}"
-				                       class="replace"
-				                       data-field="${cgi.escape(plot.parameters['field'], True)}"
-				                       data-spw="${plot.parameters['spw']}">
 					                   Baseband ${plot.parameters['baseband']}
-				                    </a>
 								</h4>
 								
 		                        <p>Calibrated amplitude vs frequency for ${intent} calibrator 
@@ -296,12 +286,7 @@ def space_comma(s):
 	<h3>Calibrated phase vs frequency</h3>
 
 	% for ms in phase_vs_freq_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4> ${ms} </h4>
 		% for intent in phase_vs_freq_plots[ms]:
 		    <ul class="thumbnails">
 		        % for plot in phase_vs_freq_plots[ms][intent]:
@@ -318,14 +303,7 @@ def space_comma(s):
 		                    </a>
 		
 		                    <div class="caption">
-								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_freq_%s.html' % sanitise(ms)), pcontext.report_dir)}"
-				                       class="replace"
-				                       data-field="${cgi.escape(plot.parameters['field'], True)}"
-				                       data-spw="${plot.parameters['spw']}">
-					                   Baseband ${plot.parameters['baseband']}
-				                    </a>
-								</h4>
+								<h4>Baseband ${plot.parameters['baseband']}</h4>
 								
 		                        <p>Calibrated phase vs frequency for ${intent} calibrator 
 		                        ${utils.commafy(utils.safe_split(plot.parameters['field']))}, 
@@ -347,12 +325,7 @@ def space_comma(s):
 	<h3>Calibrated amplitude vs UV distance</h3>
 
 	% for ms in amp_vs_uv_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4>${ms}</h4>
 		    <ul class="thumbnails">
 		        % for plot in amp_vs_uv_plots[ms]:
 		            % if os.path.exists(plot.thumbnail):
@@ -368,13 +341,7 @@ def space_comma(s):
 		                    </a>
 		
 		                    <div class="caption">
-								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_uv_%s.html' % sanitise(ms)), pcontext.report_dir)}"
-				                       class="replace"
-				                       data-spw="${plot.parameters['spw']}">
-					                   Spectral Window ${plot.parameters['spw']}
-				                    </a>
-								</h4>
+								<h4>Spectral Window ${plot.parameters['spw']}</h4>
 								
 		                        <p>Calibrated amplitude vs UV distance for amplitude calibrator ${plot.parameters['field']} spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by correlation.
 		                        </p>
@@ -391,12 +358,7 @@ def space_comma(s):
 	<h3>Calibrated amplitude vs time</h3>
 
 	% for ms in amp_vs_time_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4> ${ms}</h4>
 		    <ul class="thumbnails">
 		        % for plot in amp_vs_time_plots[ms]:
 		            % if os.path.exists(plot.thumbnail):
@@ -412,13 +374,7 @@ def space_comma(s):
 		                    </a>
 		
 		                    <div class="caption">
-								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}"
-				                       class="replace"
-				                       data-spw="${plot.parameters['spw']}">
-					                   Spectral Window ${plot.parameters['spw']}
-				                    </a>
-								</h4>
+								<h4>Spectral Window ${plot.parameters['spw']}</h4>
 								
 		                        <p>Calibrated amplitude vs time for all fields, spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by field.
 		                        </p>
@@ -435,12 +391,7 @@ def space_comma(s):
 	<h3>Calibrated phase vs time</h3>
 
 	% for ms in phase_vs_time_plots:
-	    <h4>
-			<a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}">
-	            ${ms}
-	        </a>
-		</h4>
+	    <h4>${ms}</h4>
 		    <ul class="thumbnails">
 		        % for plot in phase_vs_time_plots[ms]:
 		            % if os.path.exists(plot.thumbnail):
@@ -456,13 +407,7 @@ def space_comma(s):
 		                    </a>
 		
 		                    <div class="caption">
-								<h4>
-				                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % sanitise(ms)), pcontext.report_dir)}"
-				                       class="replace"
-				                       data-spw="${plot.parameters['spw']}">
-					                   Spectral Window ${plot.parameters['spw']}
-				                    </a>
-								</h4>
+								<h4>Spectral Window ${plot.parameters['spw']}</h4>
 								
 		                        <p>Calibrated phase vs time for all fields, spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by field.
 		                        </p>
