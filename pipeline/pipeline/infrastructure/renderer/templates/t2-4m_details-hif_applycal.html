@@ -43,6 +43,80 @@ def sanitise(url):
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
+<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, plot_accessor=lambda d: [('No Intent', d)])">
+% if plot_dict:
+	<h3>${caller.title()}</h3>
+
+	% for ms, ms_plots in plot_dict.items():
+		<%
+			relurl = url_fn(ms)
+			subpage_abspath = os.path.join(pcontext.report_dir, dirname, relurl)
+			subpage_path = os.path.relpath(os.path.join(dirname, relurl), pcontext.report_dir)
+			subpage_exists = os.path.exists(subpage_abspath)
+		%>
+		<h4>
+			% if subpage_exists:
+			<a class="replace"
+			   href="${subpage_path}">
+			% endif
+				${ms}
+			% if subpage_exists:
+			</a>
+			% endif
+		</h4>	
+
+		    <ul class="thumbnails">
+		        % for intent, intent_plots in plot_accessor(ms_plots):					
+					% for plot in intent_plots:
+			            % if os.path.exists(plot.thumbnail):
+			            <%
+			            	fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
+			            	thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+			            %>
+			            
+			            <li class="span3">
+			                <div class="thumbnail">
+								<a href="${fullsize_relpath}"
+								   class="fancybox"
+								   rel="${relurl}">
+									<img src="${thumbnail_relpath}"
+								   		 title="${caller.mouseover(plot)}"
+								   		 data-thumbnail="${thumbnail_relpath}}">
+								   	</img>
+								</a>
+	
+			                    <div class="caption">
+									<h4>
+									% if subpage_exists:
+										<a href="${subpage_path}"
+			   							   class="replace"
+										% if data_field:
+										   data-field="${cgi.escape(plot.parameters['field'], True)}"
+										% endif
+										% if data_spw:
+										   data-spw="${plot.parameters['spw']}">
+										% endif
+									% endif
+									${caller.caption_title(plot)}
+									% if subpage_exists:
+										</a>
+									% endif
+									</h4>
+											
+			                        <p>${caller.caption_text(plot, intent)}</p>
+			                    </div>
+			                </div>
+			            </li>
+			            % endif
+			        % endfor
+		        % endfor
+		    </ul>
+
+	% endfor
+		
+% endif
+</%def>
+
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
@@ -242,182 +316,121 @@ def space_comma(s):
 % if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
 <h2>Plots</h2>
 
-%if amp_vs_freq_plots:
-	<h3>Calibrated amplitude vs frequency</h3>
+<%self:plot_group plot_dict="${amp_vs_freq_plots}"
+				  url_fn="${lambda x: 'amp_vs_freq_%s.html' % sanitise(x)}"
+				  data_field="${True}"
+				  data_spw="${True}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
-	% for ms in amp_vs_freq_plots:
-	    <h4> ${ms} </h4>
-		% for intent in amp_vs_freq_plots[ms]:
-		    <ul class="thumbnails">
-		        % for plot in amp_vs_freq_plots[ms][intent]:
-		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       rel="amp_vs_freq-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs frequency plot for baseband ${plot.parameters['baseband']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
-		                    </a>
-		
-		                    <div class="caption">
-								<h4>
-					                   Baseband ${plot.parameters['baseband']}
-								</h4>
-								
-		                        <p>Calibrated amplitude vs frequency for ${intent} calibrator 
-		                        ${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
-		                        baseband ${plot.parameters['baseband']}, all antennas and correlations, 
-		                        colored by antenna.
-		                        </p>
-		                    </div>
-		                </div>
-		            </li>
-		            % endif
-		        % endfor
-		    </ul>
-		% endfor
-	%endfor
-%endif
+	<%def name="title()">
+		Calibrated amplitude vs time
+	</%def>
 
-%if phase_vs_freq_plots:
-	<h3>Calibrated phase vs frequency</h3>
+	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
-	% for ms in phase_vs_freq_plots:
-	    <h4> ${ms} </h4>
-		% for intent in phase_vs_freq_plots[ms]:
-		    <ul class="thumbnails">
-		        % for plot in phase_vs_freq_plots[ms][intent]:
-		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       rel="phase_vs_freq-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show phase vs frequency plot for baseband ${plot.parameters['baseband']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
-		                    </a>
-		
-		                    <div class="caption">
-								<h4>Baseband ${plot.parameters['baseband']}</h4>
-								
-		                        <p>Calibrated phase vs frequency for ${intent} calibrator 
-		                        ${utils.commafy(utils.safe_split(plot.parameters['field']))}, 
-		                        baseband ${plot.parameters['baseband']}, all antennas and correlations,
-		                        colored by antenna.
-		                        </p>
-		                    </div>
-		                </div>
-		            </li>
-		            % endif
-		        % endfor
-		    </ul>
-		% endfor
-	%endfor
-%endif
+	<%def name="caption_title(plot)">
+		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)"> 
+		Calibrated amplitude vs frequency for ${intent} calibrator 
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
+		baseband ${plot.parameters['baseband']}, all antennas and correlations, 
+		coloured by antenna.
+	</%def>
+
+</%self:plot_group>
 
 
-%if amp_vs_uv_plots:
-	<h3>Calibrated amplitude vs UV distance</h3>
+<%self:plot_group plot_dict="${phase_vs_freq_plots}"
+				  url_fn="${lambda x: 'phase_vs_freq_%s.html' % sanitise(x)}"
+				  data_field="${True}"
+				  data_spw="${True}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
-	% for ms in amp_vs_uv_plots:
-	    <h4>${ms}</h4>
-		    <ul class="thumbnails">
-		        % for plot in amp_vs_uv_plots[ms]:
-		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       rel="amp_vs_uv-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
-		                    </a>
-		
-		                    <div class="caption">
-								<h4>Spectral Window ${plot.parameters['spw']}</h4>
-								
-		                        <p>Calibrated amplitude vs UV distance for amplitude calibrator ${plot.parameters['field']} spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by correlation.
-		                        </p>
-		                    </div>
-		                </div>
-		            </li>
-		            % endif
-		        % endfor
-		    </ul>
-	%endfor
-%endif
+	<%def name="title()">
+		Calibrated phase vs frequency
+	</%def>
 
-%if amp_vs_time_plots:
-	<h3>Calibrated amplitude vs time</h3>
+	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
-	% for ms in amp_vs_time_plots:
-	    <h4> ${ms}</h4>
-		    <ul class="thumbnails">
-		        % for plot in amp_vs_time_plots[ms]:
-		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       rel="amp_vs_time-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
-		                    </a>
-		
-		                    <div class="caption">
-								<h4>Spectral Window ${plot.parameters['spw']}</h4>
-								
-		                        <p>Calibrated amplitude vs time for all fields, spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by field.
-		                        </p>
-		                    </div>
-		                </div>
-		            </li>
-		            % endif
-		        % endfor
-		    </ul>
-	%endfor
-%endif
+	<%def name="caption_title(plot)">
+		Baseband ${plot.parameters['baseband']}
+	</%def>
 
-%if phase_vs_time_plots:
-	<h3>Calibrated phase vs time</h3>
+	<%def name="caption_text(plot, intent)"> 
+		Calibrated phase vs frequency for ${intent} calibrator 
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
+		baseband ${plot.parameters['baseband']}, all antennas and correlations, 
+		coloured by antenna.
+	</%def>
 
-	% for ms in phase_vs_time_plots:
-	    <h4>${ms}</h4>
-		    <ul class="thumbnails">
-		        % for plot in phase_vs_time_plots[ms]:
-		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       rel="phase_vs_time-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show phase vs time plot for Spectral Window ${plot.parameters['spw']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
-		                    </a>
-		
-		                    <div class="caption">
-								<h4>Spectral Window ${plot.parameters['spw']}</h4>
-								
-		                        <p>Calibrated phase vs time for all fields, spw ${plot.parameters['spw']}, all antennas and correlations. Data are colored by field.
-		                        </p>
-		                    </div>
-		                </div>
-		            </li>
-		            % endif
-		        % endfor
-		    </ul>
-	%endfor
-%endif
+</%self:plot_group>
+
+
+<%self:plot_group plot_dict="${amp_vs_uv_plots}"
+				  url_fn="${lambda x: 'amp_vs_uv_%s.html' % sanitise(x)}"
+				  data_spw="${True}">
+
+	<%def name="title()">
+		Calibrated amplitude vs UV distance
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for spectral window ${plot.parameters['spw']}</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)"> 
+		Calibrated amplitude vs UV distance for amplitude calibrator ${plot.parameters['field']}
+		spw ${plot.parameters['spw']}, all antennas and correlations. Data are coloured by correlation.
+	</%def>
+
+</%self:plot_group>
+
+
+<%self:plot_group plot_dict="${amp_vs_time_plots}"
+				  url_fn="${lambda x: 'amp_vs_time_%s.html' % sanitise(x)}"
+				  data_spw="${True}">
+
+	<%def name="title()">
+		Calibrated amplitude vs time
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs time for spectral window ${plot.parameters['spw']}</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)"> 
+		Calibrated amplitude vs time for all fields, spw ${plot.parameters['spw']}, 
+		all antennas and correlations. Data are coloured by field.
+	</%def>
+
+</%self:plot_group>
+
+
+<%self:plot_group plot_dict="${phase_vs_time_plots}"
+				  url_fn="${lambda x: 'phase_vs_time_%s.html' % sanitise(x)}"
+				  data_spw="${True}">
+
+	<%def name="title()">
+		Calibrated phase vs time
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show phase vs time for spectral window ${plot.parameters['spw']}</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)"> 
+		Calibrated phase vs time for all fields, spw ${plot.parameters['spw']},
+		all antennas and correlations. Data are coloured by field.
+	</%def>
+
+</%self:plot_group>
 
 %endif

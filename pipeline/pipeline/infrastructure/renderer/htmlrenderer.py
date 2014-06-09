@@ -2950,8 +2950,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                                                       applycal.PhaseVsUVSummaryChart, 
                                                       ['AMPLITUDE'])
 
-        create_detail_plots = False
-        if create_detail_plots:
+        if pipeline.infrastructure.generate_detail_plots():
             # detail plots. Don't need the return dictionary, but make sure a
             # renderer is passed so the detail page is written to disk
             self.create_plots(context, 

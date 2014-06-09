@@ -46,6 +46,15 @@ imports data.
 	</allowed>
     </param>
 
+    <param type="string" name="plotlevel" subparam="true">
+		<description>Level for pipeline plots</description>
+		<value>all</value>
+		<allowed kind="enum">
+		    <value>all</value>
+		    <value>summary</value>
+		</allowed>
+    </param>
+
     <param type="string" name="output_dir" subparam="true">
 	<description>The output working directory</description>
 	<value>./</value>
@@ -72,6 +81,7 @@ imports data.
 	    </equals>
 	    <equals type="string" value="interactive">
 		<default param="loglevel"><value type="string">info</value></default>
+		<default param="plotlevel"><value type="string">all</value></default>
 		<default param="output_dir"><value type="string">./</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
@@ -79,6 +89,7 @@ imports data.
 	    </equals>
 	    <equals type="string" value="getinputs">
 		<default param="loglevel"><value type="string">info</value></default>
+		<default param="plotlevel"><value type="string">all</value></default>
 		<default param="output_dir"><value type="string">./</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 	    </equals>
@@ -118,6 +129,12 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 loglevel -- Pipeline log level threshold: (debug|info|warning|error|critical).
        Log messages below this threshold will not be displayed.  
        default: 'info'
+
+plotlevel -- Pipeline plot level threshold: (all|summary).
+       Switch between generation of all plots ('all') or just summary plots
+       ('summary'), omitting the per antenna/spw/field plots and detail pages
+       from the web log.   
+       default: 'all'
 
 output_dir -- Working directory for pipeline processing. Some pipeline
        processing products such as HTML logs and images will be directed to

@@ -203,7 +203,7 @@ class Pipeline(object):
     """
 
     def __init__(self, context=None, output_dir='./', loglevel='info',
-                 casa_version_check=True, name=None):
+                 casa_version_check=True, name=None, plotlevel='all'):
         """
         Initialise the pipeline, creating a new ~Context or loading a saved
         ~Context from disk.
@@ -261,6 +261,12 @@ class Pipeline(object):
                 self.context = last_context
 
         self._link_casa_log(self.context)
+
+        # define the plot level as a global setting rather than on the 
+        # context, as we want it to be a session-wide setting and adjustable
+        # mid-session for interactive use. 
+        import pipeline.infrastructure as infrastructure 
+        infrastructure.set_plot_level(plotlevel)
 
     def _link_casa_log(self, context):
         report_dir = context.report_dir
