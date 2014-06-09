@@ -4309,7 +4309,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value/>
         </param>
         <param type="doubleArray" name="spxest">
-            <description>REQUIRED. Initial estimates as array of numerical values for the spectral index function coefficients. eg [1.5, 2.5] if fitting a plp function thought to be close to 1.5*x/div**2.5.</description>
+            <description>REQUIRED. Initial estimates as array of numerical values for the spectral index function coefficients. eg [1.5, -0.8] if fitting a plp function thought to be close to 1.5*(x/div)**(-0.8) or [0.4055, -0.8] if fitting an lpt function thought to be close to ln(1.5) - 0.8*ln(x/div).</description>
             <value/>
         </param>
         <param type="boolArray" name="spxfix">
@@ -4399,9 +4399,9 @@ D = 10**int(log10(sqrt(min(x)*max(x))))
 
 where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
 
-So, for example, if S(nu) is proportional to nu**alpha and you expect alpha to be near 2 and the value of S(nu) is 1.5 at
-1e9 Hz and your image(s) have spectral units of Hz, you would specify spxest=[1.5, 2] and div=1e9 when fitting a plp function,
-or spxest=[0.405, 2] and div=1e9 if fitting an ltp function.
+So, for example, if S(nu) is proportional to nu**alpha and you expect alpha to be near -0.8 and the value of S(nu) is 1.5 at
+1e9 Hz and your image(s) have spectral units of Hz, you would specify spxest=[1.5, -0.8] and div=1e9 when fitting a plp function,
+or spxest=[0.405, -0.8] and div=1e9 if fitting an ltp function.
 
 More details of fitting all of these functions are described in following sections.
 

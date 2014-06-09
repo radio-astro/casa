@@ -1826,7 +1826,7 @@ record* image::fitprofile(const string& box, const variant& region,
 				ltpfix = spxfix;
 			}
 			else {
-				throw AipsError("Unsupported value for spxtype");
+				ThrowCc("Unsupported value for spxtype");
 			}
 		}
 		SpectralList spectralList = SpectralListFactory::create(
@@ -1835,14 +1835,14 @@ record* image::fitprofile(const string& box, const variant& region,
 			gmcenterest, gmfwhmest, gmfix, pfunc, plpest, plpfix,
 			ltpest, ltpfix
 		);
-		if (! estimates.empty() && spectralList.nelements() > 0) {
-			_log << "You cannot specify both an "
-				<< "estimates file and set estimates "
-				<< "directly. You may only do one or "
-				<< "the either (or neither in which "
-				<< "case you must specify ngauss and/or poly)"
-				<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! estimates.empty() && spectralList.nelements() > 0,
+			"You cannot specify both an "
+			"estimates file and set estimates "
+			"directly. You may only do one or "
+			"the either (or neither in which "
+			"case you must specify ngauss and/or poly)"
+		);
 		ImageProfileFitter fitter(
 			_image->getImage(), regionName, regionPtr.get(),
 			box, chans, stokes, mask, axis,
