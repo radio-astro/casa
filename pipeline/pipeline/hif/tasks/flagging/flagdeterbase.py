@@ -483,7 +483,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             try:
                 summary_reps.append(sumreps[agent])
             except:
-               LOG.debug('Agent not present')
+               LOG.debug('Agent ' + agent + ' not present')
 
         '''
         summary_reps = [x for x in sumreps if x['name'] == 'before']
