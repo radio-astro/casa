@@ -27,7 +27,7 @@ class SDFlagDataWorker(object):
     '''
 
 
-    def __init__(self, context, datatable, iteration, spwid_list, nchan, pollist, file_index, flagRule, userFlag=[], edge=(0,0)):
+    def __init__(self, context, datatable, iteration, spwid_list, nchan, pols_list, file_index, flagRule, userFlag=[], edge=(0,0)):
         '''
         Constructor of worker class
         '''
@@ -36,7 +36,7 @@ class SDFlagDataWorker(object):
         self.iteration = iteration
         self.spwid_list = spwid_list
         self.nchan = nchan
-        self.pollist = pollist
+        self.pols_list = pols_list
         self.file_index = file_index
         self.flagRule = flagRule
         self.userFlag = userFlag
@@ -53,7 +53,7 @@ class SDFlagDataWorker(object):
         iteration = self.iteration
         spwid_list = self.spwid_list
         nchan = self.nchan
-        pollist = self.pollist
+        pols_list = self.pols_list
         file_index = self.file_index
         flagRule = self.flagRule
         userFlag = self.userFlag
@@ -61,8 +61,8 @@ class SDFlagDataWorker(object):
         
         assert len(file_index) == len(spwid_list)
         LOG.debug('Members to be processed:')
-        for (a,s) in zip(file_index, spwid_list):
-            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,pollist))
+        for (a,s,p) in zip(file_index, spwid_list, pols_list):
+            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,p))
 
 
         # TODO: make sure baseline subtraction is already done
@@ -83,7 +83,7 @@ class SDFlagDataWorker(object):
 
         flagSummary = []
         # loop over file
-        for (idx,spwid) in zip(file_index, spwid_list):
+        for (idx,spwid,pollist) in zip(file_index, spwid_list, pols_list):
             LOG.debug('Performing flagdata for Antenna %s Spw %s'%(idx,spwid))
             st = self.context.observing_run[idx]
             filename_in = st.name

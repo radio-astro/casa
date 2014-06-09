@@ -16,8 +16,10 @@ class SDImaging2WorkerInputs(common.SingleDishInputs):
     """
     Inputs for imaging worker
     """
-    def __init__(self, context, infiles, outfile, spwids, onsourceid, 
+    def __init__(self, context, infiles, outfile, spwids, scans, pols, onsourceid, 
                  edge=None, vislist=None):
+        # NOTE: spwids and pols are list of numeric id list while scans
+        #       is string (mssel) list
         self._init_properties(vars())
 
 class SDImaging2WorkerResults(common.SingleDishResults):
@@ -40,8 +42,10 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         outfile = self.inputs.outfile
         edge = self.inputs.edge
         spwid_list = self.inputs.spwids
+        scan_list = self.inputs.scans
+        pols_list = self.inputs.pols
  
-        self._do_imaging(infiles, spwid_list, outfile, edge)
+        self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, edge)
  
         result = SDImaging2WorkerResults(task=self.__class__,
                                  success=True,
@@ -58,7 +62,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_imaging(self, infiles, spwid_list, imagename, edge):
+    def _do_imaging(self, infiles, spwid_list, scan_list, pols_list, imagename, edge):
         context = self.context
         datatable = self.datatable
         antenna_list = [context.observing_run.st_names.index(f) 
@@ -95,7 +99,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         print 'cell=%s' % (cellx)
     
         # nx and ny
-        index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, srctype))
+        index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, pols_list, srctype))
         index_list.sort()
     
         ra = datatable.tb1.getcol('RA').take(index_list)
@@ -151,7 +155,11 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
     
         # stokes
         # stokes = 'I'
-        stokes = 'XXYY'
+        #stokes = 'XXYY'
+        a = set()
+        for p in map(set, pols_list):
+            a = a | p
+        stokes = common.polstring(list(a))
     
         # start, nchan, step
         total_nchan = reference_data.spectral_window[spwid].nchan
@@ -187,9 +195,10 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         temporary_name = imagename.rstrip('/')+'.tmp'
         with temporary_filename(temporary_name) as name:
             # imaging
-            for (vis, spw) in zip(vislist, spwid_list):
+            for (vis, spw, scan) in zip(vislist, spwid_list, scan_list):
                 LOG.debug('Registering data to imager: im.selectvis(vis=\'%s\', spw=%s, field=%s'%(vis, spw, field))
-                im.selectvis(vis=vis, spw=spw, field=field)
+                scansel = common.list_to_selection(scan)
+                im.selectvis(vis=vis, spw=spw, field=field, scan=scansel)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, stokes=stokes,
                            phasecenter=phasecenter, mode=mode, start=start,
                            nchan=nchan, step=step, restfreq=restfreq,

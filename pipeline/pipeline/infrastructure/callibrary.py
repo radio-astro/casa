@@ -951,38 +951,52 @@ class SDCalApplication(object):
         
         return SDCalApplication(calto, calfroms)
 
-    @staticmethod
-    def iflist_to_spw(iflist):
-        if isinstance(iflist, int):
-            spw = str(iflist)
-        else:
-            # assume list or numpy.array 
-            spw = str(list(iflist))[1:-1].replace(' ','')
-        return spw
+    #@staticmethod
+    #def iflist_to_spw(iflist):
+    #    return SDCalApplication.list_to_selection(iflist)
+    #    #if isinstance(iflist, int):
+    #    #    spw = str(iflist)
+    #    #else:
+    #    #    # assume list or numpy.array 
+    #    #    spw = str(list(iflist))[1:-1].replace(' ','')
+    #    #return spw
 
-    @staticmethod
-    def spw_to_iflist(spw):
-        # currently only supports simple spw specification
-        # using , and ~
-        elements = spw.split(',')
-        iflist = []
-        for elem in elements:
-            if elem.isdigit():
-                iflist.append(int(elem))
-            elif re.match('^[0-9]+~[0-9]+$', elem):
-                s = [int(e) for e in elem.split('~')]
-                iflist.extend(range(s[0],s[1]+1))
-        return iflist
+##     @staticmethod
+##     def list_to_selection(listvalue):
+##         if isinstance(listvalue, int):
+##             sel = str(listvalue)
+##         else:
+##             # assume list or numpy.array 
+##             sel = str(list(listvalue))[1:-1].replace(' ','')
+##         return sel
+
+##     @staticmethod
+##     def spw_to_iflist(spw):
+##         # currently only supports simple spw specification
+##         # using , and ~
+##         elements = spw.split(',')
+##         iflist = []
+##         for elem in elements:
+##             if elem.isdigit():
+##                 iflist.append(int(elem))
+##             elif re.match('^[0-9]+~[0-9]+$', elem):
+##                 s = [int(e) for e in elem.split('~')]
+##                 iflist.extend(range(s[0],s[1]+1))
+##         return iflist
     
     def as_applycal(self):
         args = {'infile'    : self.infile,
                 'calmode'   : 'apply',
                 'field'     : self.field.strip('"'),
-                'scanlist'  : self.scanlist,
-                'iflist'    : self.iflist,
-                'pollist'   : self.pollist,
+                #'scanlist'  : self.scanlist,
+                'scan': self.scan,
+                #'iflist'    : self.iflist,
+                'spw': self.spw,
+                #'pollist'   : self.pollist,
+                'pol': self.pol,
                 'applytable': self.applytable,
-                'ifmap'     : self.ifmap,
+                #'ifmap'     : self.ifmap,
+                'spwmap': self.spwmap,
                 'interp'    : self.interp,
                 'overwrite' : True            }
         
@@ -991,8 +1005,8 @@ class SDCalApplication(object):
                 args[key] = '\'%s\'' % args[key]
         
         return ('sdcal2(infile=\'{infile}\', calmode=\'{calmode}\', applytable={applytable},  '
-                'ifmap={ifmap}, interp={interp}, '
-                'scanlist={scanlist}, field=\'{field}\', iflist={iflist}, pollist={pollist}, overwrite=True) '
+                'spwmap={spwmap}, interp={interp}, '
+                'scan=\'{scan}\', field=\'{field}\', spw=\'{spw}\', pol=\'{pol}\', overwrite=True) '
                 ''.format(**args))
 
     @property
@@ -1023,12 +1037,24 @@ class SDCalApplication(object):
         return []
 
     @property
+    def scan(self):
+        return ''
+
+    @property
     def iflist(self):
         return SDCalApplication.spw_to_iflist(self.calto.spw)
 
     @property
+    def spw(self):
+        return self.calto.spw
+    
+    @property
     def pollist(self):
         return []
+
+    @property
+    def pol(self):
+        return ''
 
     @property
     def applytable(self):
@@ -1046,6 +1072,10 @@ class SDCalApplication(object):
                     else:
                         ifmap_[k] = v
         return ifmap_
+
+    @property
+    def spwmap(self):
+        return self.ifmap
     
     @property
     def interp(self):

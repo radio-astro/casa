@@ -29,19 +29,22 @@
         <value></value>
     </param>
 
-    <param type="intArray" name="scanlist" subparam="true">
-        <description>List of scans to be calibrated (defalt all)</description>
-        <value></value>
+    <param type="any" name="spw" subparam="true">
+            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
     </param>
 
-    <param type="intArray" name="iflist" subparam="true">
-        <description>List of spws to be calibrated (defalt all except wvr)</description>
-        <value></value>
+    <param type="any" name="scan" subparam="true">
+            <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
     </param>
 
-    <param type="intArray" name="pollist" subparam="true">
-        <description>List of polarizations to be calibrated (defalt all)</description>
-        <value></value>
+    <param type="any" name="pol" subparam="true">
+            <description>select data by polarizations, e.g. \'0~1\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
@@ -61,18 +64,18 @@
 	    <equals type="string" value="interactive">
                 <default param="infiles"><value type="stringArray"></value></default>
                 <default param="field"><value type="string"></value></default>
-                <default param="scanlist"><value type="intArray"></value></default>
-                <default param="iflist"><value type="intArray"></value></default>
-                <default param="pollist"><value type="intArray"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="scan"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="infiles"><value type="stringArray"></value></default>
                 <default param="field"><value type="string"></value></default>
-                <default param="scanlist"><value type="intArray"></value></default>
-                <default param="iflist"><value type="intArray"></value></default>
-                <default param="pollist"><value type="intArray"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="scan"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -115,15 +118,21 @@ infiles -- List of data files. These must be a name of Scantables that
 
 field -- Data selection by field name.
    default: '' (all fields)
-scanlist -- Data selection by scan number.
-   default: [] (all scans)
-   example: [22,23] (use scan 22 and 23 for calibration)
-iflist -- Data selection by spw.
-   default: [] (all spws)
-   example: [3,4] (generate caltable for spw 3 and 4)
-pollist -- Data selection by pol.
-   default: [] (all polarizations)
-   example: [0] (generate caltable for pol 0)
+
+spw -- Data selection by spw.
+   default: '' (all spws)
+   example: '3,4' (generate caltable for spw 3 and 4)
+            ['0','2'] (spw 0 for first data, 2 for second)
+
+scan -- Data selection by scan number.
+   default: '' (all scans)
+   example: '22,23' (use scan 22 and 23 for calibration)
+            ['22','24'] (scan 22 for first data, 24 for second)
+
+pol -- Data selection by pol.
+   default: '' (all polarizations)
+   example: '0' (generate caltable for pol 0)
+            ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)
 
 --- pipeline task execution modes
 

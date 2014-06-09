@@ -22,11 +22,16 @@ class SDBaselineInputs(common.SingleDishInputs):
     Inputs for baseline subtraction
     """
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, infiles=None, iflist=None, pollist=None,
+    def __init__(self, context, infiles=None, spw=None, pol=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None):
         self._init_properties(vars())
-        self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
+        for key in ['spw', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
+        #self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
+        self._to_list(['infiles', 'edge', 'linewindow'])
         self._to_bool('broadline')
         self._to_numeric('fitorder')
         if isinstance(self.fitorder, float):
@@ -40,6 +45,19 @@ class SDBaselineInputs(common.SingleDishInputs):
             return list(set(antennas))
         else:
             return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
+
+##     def get_iflist(self, index):
+##         spw = '' if self.spw is None else self.spw
+##         return self._get_arg(spw, index)
+
+##     def get_pollist(self, index):
+##         pol = '' if self.pol is None else self.pol
+##         return self._get_arg(pol, index)
+
+##     def _get_arg(self, arg_list, index):
+##         sel = self._to_casa_arg(arg_list, index)
+##         return common.selection_to_list(sel)
+            
 
 class SDBaselineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -62,9 +80,9 @@ class SDBaselineResults(common.SingleDishResults):
             lines = b['lines']
             channelmap_range = b['channelmap_range']
             group_desc = reduction_group[group_id]
-            for (ant,spw) in zip(antenna,spw):
-                group_desc.iter_countup(ant, spw, pols)
-                group_desc.add_linelist(lines, ant, spw, pols,
+            for (ant,spw,pol) in zip(antenna,spw,pols):
+                group_desc.iter_countup(ant, spw, pol)
+                group_desc.add_linelist(lines, ant, spw, pol,
                                         channelmap_range=channelmap_range)
                 st = context.observing_run[ant]
                 st.work_data = st.baselined_name
@@ -83,8 +101,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         datatable = context.observing_run.datatable_instance
         reduction_group = context.observing_run.reduction_group
         infiles = inputs.infiles
-        iflist = inputs.iflist
-        pollist = inputs.pollist
+        args = inputs.to_casa_args()
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
 
@@ -118,10 +135,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
             # assume all members have same spw and pollist
             first_member = group_desc[0]
-            pols = first_member.pols
+            pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
+            LOG.debug('pols_list=%s'%(pols_list))
             iteration = first_member.iteration[0]
-            if pollist is not None:
-                pols = list(set(pollist) & set(pols))
 
             # reference data is first scantable 
             st = context.observing_run[first_member.antenna]
@@ -129,13 +145,15 @@ class SDBaseline(common.SingleDishTaskTemplate):
             # skip channel averaged spw
             nchan = group_desc.nchan
             if nchan == 1:
-                LOG.info('Skip channel averaged spw %s.'%(spwid_list))
+                LOG.info('Skip channel averaged spw %s.'%(first_member.spw))
                 continue
 
                 
             srctype = st.calibration_strategy['srctype']
 
-            member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+            LOG.debug('spw=\'%s\''%(args['spw']))
+            LOG.debug('antenna_list=%s'%(file_index))
+            member_list = list(common.get_valid_members(group_desc, file_index, args['spw']))
             # skip this group if valid member list is empty
             if len(member_list) == 0:
                 LOG.info('Skip reduction group %d'%(group_id))
@@ -144,20 +162,24 @@ class SDBaseline(common.SingleDishTaskTemplate):
             member_list.sort()
             antenna_list = [group_desc[i].antenna for i in member_list]
             spwid_list = [group_desc[i].spw for i in member_list]
+            pols_tmp = [None if pols_list[i] == group_desc[i].pols else pols_list[i] \
+                        for i in member_list]
+            LOG.debug('pols_tmp=%s'%(pols_tmp))
+            pols_list = [pols_list[i] for i in member_list]
+            LOG.debug('pols_list=%s'%(pols_list))
             
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
-                LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols))
-                
-            # skip polarizations not included in pollist
-            if pollist is not None and len(pols)==0:
-                LOG.info('Skip pols %s (not in pollist)'%(str(first_member.pols)))
-                continue
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
 
-            index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, srctype))
+            index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, pols_tmp, srctype))
             index_list.sort()
+
+            LOG.debug('index_list=%s'%(index_list))
+            if len(index_list) == 0:
+                LOG.info('Skip reduction group %s'%(group_id))
+                continue
             
-            #maskline_inputs = maskline.MaskLine.Inputs(context, list(_file_index), spwid, iteration,
             maskline_inputs = maskline.MaskLine.Inputs(context, antenna_list, spwid_list, iteration, 
                                                        index_list, window, edge, broadline)
             maskline_task = maskline.MaskLine(maskline_inputs)
@@ -170,10 +192,16 @@ class SDBaseline(common.SingleDishTaskTemplate):
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
-            for (ant,spwid) in zip(antenna_list, spwid_list):
-                LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s'%(ant, spwid))
+            for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
+                if len(pols) == 0:
+                    LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
+                    continue
+                
+                LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s Pols %s'%(ant, spwid, pols))
+                
                 _iteration = group_desc.get_iteration(ant, spwid)
                 outfile = self._get_dummy_name(context, ant)
+                LOG.debug('pols=%s'%(pols))
                 fitter_inputs = fitter_cls.Inputs(context, ant, spwid, pols, _iteration, 
                                                   fitorder, edge, outfile)
                 fitter = fitter_cls(fitter_inputs)
@@ -186,7 +214,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                          for f in antenna_list]
             baselined.append({'group_id': group_id, 'iteration': iteration,
                               'name': name_list, 'index': antenna_list,
-                              'spw': spwid_list, 'pols': pols,
+                              'spw': spwid_list, 'pols': pols_list,
                               'lines': detected_lines,
                               'channelmap_range': channelmap_range,
                               'clusters': cluster_info})

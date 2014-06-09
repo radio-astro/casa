@@ -30,7 +30,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
                  flag_user=None, user_thresh=None,
                  plotflag=None,
                  infiles=None, #field=None,
-                 iflist=None, pollist=None):#, scanlist=None):
+                 spw=None, pol=None):#, scanlist=None):
         self._init_properties(vars())
         self._to_numeric(['iteration', 'tsys_thresh', 'weath_thresh',
                           'prfre_thresh', 'pofre_thresh', 'prfr_thresh',
@@ -40,7 +40,12 @@ class SDFlagDataInputs(common.SingleDishInputs):
             value = getattr(self, attr)
             if value is not None:
                 setattr(self, attr, int(value))
-        self._to_list(['edge', 'infiles', 'iflist', 'pollist'])
+        for key in ['spw', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
+        self._to_list(['infiles', 'edge'])
+        #self._to_list(['edge', 'infiles', 'iflist', 'pollist'])
         self._to_bool(['flag_tsys', 'flag_weath', 'flag_prfre',
                        'flag_pofre', 'flag_prfr', 'flag_pofr',
                        'flag_prfrm', 'flag_pofrm', 'flag_user',
@@ -145,8 +150,9 @@ class SDFlagData(common.SingleDishTaskTemplate):
         infiles = inputs.infiles
         #antennalist = self.antennalist
         #field = inputs.field        
-        iflist = inputs.iflist
-        pollist = inputs.pollist
+        #iflist = inputs.iflist
+        #pollist = inputs.pollist
+        args = inputs.to_casa_args()
         #scanlist = inputs.scanlist
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
@@ -161,7 +167,26 @@ class SDFlagData(common.SingleDishTaskTemplate):
             LOG.debug('Group Summary:')
             for m in group_desc:
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
-            member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+
+            # assume all members have same spw and pollist
+            first_member = group_desc[0]
+            #spwid = first_member.spw
+            #LOG.debug('spwid = %s'%(spwid))
+            #pols = first_member.pols
+            ###iteration = first_member.iteration[0]
+            #if pollist is not None:
+            #    pols = list(set(pollist) & set(pols))
+
+            nchan = group_desc.nchan
+            if nchan ==1:
+                LOG.info('Skip channel averaged spw %s' % (spwid))
+                continue
+
+            pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
+            LOG.debug('pols_list=%s'%(pols_list))
+
+
+            member_list = list(common.get_valid_members(group_desc, file_index, args['spw']))
             # skip this group if valid member list is empty
             if len(member_list) == 0:
                 LOG.info('Skip reduction group %d'%(group_id))
@@ -170,6 +195,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
             member_list.sort()
             _file_index = [group_desc[i].antenna for i in member_list]
             spwid_list = [group_desc[i].spw for i in member_list]
+            pols_list = [pols_list[i] for i in member_list]
             
             # selection by infiles
             if len(_file_index) < 1:
@@ -180,49 +206,36 @@ class SDFlagData(common.SingleDishTaskTemplate):
             files = files | set(_file_index)
             
 
-            # assume all members have same spw and pollist
-            first_member = group_desc[0]
-            spwid = first_member.spw
-            #LOG.debug('spwid = %s'%(spwid))
-            pols = first_member.pols
-            ###iteration = first_member.iteration[0]
-            if pollist is not None:
-                pols = list(set(pollist) & set(pols))
 
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
-                LOG.debug('\tAntenna %s Spw %s Pol %s'%(_file_index[i], spwid_list[i], pols))
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(_file_index[i], spwid_list[i], pols_list[i]))
 
             # skip spw not included in iflist
-            if len(spwid_list) == 0:
-                LOG.info('Skip spw %d (not in iflist)'%(spwid_list))
-                continue
+            #if len(spwid_list) == 0:
+            #    LOG.info('Skip spw %d (not in iflist)'%(spwid_list))
+            #    continue
 
             # skip polarizations not included in pollist
-            if pollist is not None and len(pols)==0:
-                LOG.info('Skip pols %s (not in pollist)'%(str(first_member.pols)))
-                continue
-
-            nchan = group_desc.nchan
-            if nchan ==1:
-                LOG.info('flagData was skipped because spw=%d is a TP data' % (spwid))
-                continue
+            #if pollist is not None and len(pols)==0:
+            #    LOG.info('Skip pols %s (not in pollist)'%(str(first_member.pols)))
+            #    continue
 
             LOG.info("*"*60)
             LOG.info("Start processing reduction group %d" % (group_id))
             LOG.debug("- file indices = %s" % str(_file_index))
             LOG.info("- scantable names: %s" % (", ".join([st_names[id] for id in _file_index])))
             LOG.info("- spw: %s" % spwid_list)
-            LOG.info("- pols: %s" % str(pols))
+            LOG.info("- pols: %s" % str(pols_list))
             #LOG.debug("- additional selections:")
             #LOG.debug("       scanlist: %s" % str(scanlist))
             #LOG.debug("       field: %s" % field)
             LOG.info("*"*60)
 
-            worker = SDFlagDataWorker(context, datatable, iteration, spwid_list, nchan, pols, _file_index, flag_rule)
+            worker = SDFlagDataWorker(context, datatable, iteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
             thresholds = self._executor.execute(worker, merge=False)
             # Summary
-            renderer = SDFlagSummary(context, datatable, spwid_list, pols, _file_index, thresholds, flag_rule)
+            renderer = SDFlagSummary(context, datatable, spwid_list, pols_list, _file_index, thresholds, flag_rule)
             result = self._executor.execute(renderer, merge=False)
             flagResult += result
             

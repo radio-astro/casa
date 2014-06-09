@@ -3,7 +3,7 @@ import sys
 import pipeline.h.cli.utils as utils
 
 def hsd_plotflagbaseline(pipelinemode=None,
-                         infiles=None, iflist=None, pollist=None,
+                         infiles=None, spw=None, pol=None,
                          dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

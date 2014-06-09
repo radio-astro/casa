@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -75,8 +76,7 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
                 if not os.path.exists(filename):
                     filename = data.name
                 srctype = data.calibration_strategy['srctype']
-                #self._apply_baseline_flags(filename, bltable_name)
-                self._apply_baseline_flags2(filename, index, spwid, srctype)
+                self._apply_baseline_flags(filename, index, spwid, srctype)
 
             
         result = SDApplyFlagResults(task=self.__class__,
@@ -105,11 +105,11 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         
         args = {'infile': filename,
                 'mode': 'rowid',
-                'rows': list(rows)}
-        job = casa_tasks.sdflag2(**args)
+                'row': common.list_to_selection(rows)}
+        job = casa_tasks.sdflag(**args)
         self._executor.execute(job, merge=False)
 
-    def _apply_baseline_flags2(self, filename, antenna, spwid, on_source):
+    def _apply_baseline_flags(self, filename, antenna, spwid, on_source):
         context = self.inputs.context
         datatable = context.observing_run.datatable_instance
         datatable_name = datatable.plaintable
@@ -125,25 +125,6 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         
         args = {'infile': filename,
                 'mode': 'rowid',
-                'rows': list(rows)}
-        job = casa_tasks.sdflag2(**args)
+                'row': common.list_to_selection(rows)}
+        job = casa_tasks.sdflag(**args)
         self._executor.execute(job, merge=False)
-
-    def _apply_baseline_flags(self, filename, bltable_name):
-        if not os.path.exists(bltable_name):
-            return
-            
-        with casatools.TableReader(bltable_name) as tb:
-            tsel = tb.query('SummaryFlag == False')
-            rows = tsel.getcol('Row')
-            tsel.close()
-    
-        if len(rows) == 0:
-            return
-            
-        args = {'infile': filename,
-                'mode': 'rowid',
-                'rows': list(rows)}
-        job = casa_tasks.sdflag2(**args)
-        self._executor.execute(job, merge=False)
-        

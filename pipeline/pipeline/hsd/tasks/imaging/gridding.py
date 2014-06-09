@@ -62,7 +62,13 @@ class GriddingBase(common.SingleDishTaskTemplate):
         else:
             self.spw = inputs.spwid
         self.spwmap = dict([(a,s) for (a,s) in zip(self.antenna,self.spw)])
-        self.pol = inputs.polid
+        if type(inputs.polid) == int:
+            self.pol = [inputs.polid]
+        else:
+            self.pol = inputs.polid
+        LOG.debug('self.antenna=%s'%(self.antenna))
+        LOG.debug('self.spw=%s'%(self.spw))
+        LOG.debug('self.pol=%s'%(self.pol))
             
         LOG.debug('Members to be processed:')
         for (a,s) in zip(self.antenna, self.spw):
@@ -126,11 +132,11 @@ class GriddingBase(common.SingleDishTaskTemplate):
         start = time.time()
 
         table = self.datatable.tb1
-        index_list = list(common.get_index_list(self.datatable, self.antenna, self.spw, self.srctype))
+        index_list = list(common.get_index_list(self.datatable, self.antenna, self.spw, self.pol, self.srctype))
         index_list.sort()
-        pols = table.getcol('POL').take(index_list)
-        index_list = numpy.take(index_list, numpy.where(pols == self.pol)[0])
-        del pols
+        #pols = table.getcol('POL').take(index_list)
+        #index_list = numpy.take(index_list, numpy.where(pols == self.pol)[0])
+        #del pols
         
         rows = table.getcol('ROW').take(index_list)
         ants = table.getcol('ANTENNA').take(index_list)
@@ -150,8 +156,9 @@ class GriddingBase(common.SingleDishTaskTemplate):
                 _spw = ifnos[_i]
                 _pol = polnos[_i]
                 _index = numpy.where(self.antenna == _ant)[0]
-                assert _pol == self.pol, 'row %s is bad selection: POLNO doesn\'t match (actual %s expected %s)'%(index_list[_i], _pol, self.pol)
-                assert _spw in self.spw, 'row %s is bad selection: IFNO not in process list (actual %s expected %s)'%(index_list[_i], _spw, self.spw)
+                _j = list(self.antenna).index(_ant)
+                assert _pol in self.pol[_j], 'row %s is bad selection: POLNO doesn\'t match (actual %s expected %s)'%(index_list[_i], _pol, self.pol[_j])
+                assert _spw == self.spw[_j], 'row %s is bad selection: IFNO not in process list (actual %s expected %s)'%(index_list[_i], _spw, self.spw[_j])
         ###
 
         # Re-Gridding

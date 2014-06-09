@@ -3,7 +3,7 @@ import sys
 import pipeline.h.cli.utils as utils
 
 def hsd_applycal(pipelinemode=None, infiles=None, field=None,
-                 scanlist=None, iflist=None, pollist=None,
+                 spw=None, scan=None, pol=None,
                  dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

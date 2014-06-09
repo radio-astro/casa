@@ -26,14 +26,14 @@ class SDFlagSummary(object):
     This class defines per spwid flagging operation.
     '''
 
-    def __init__(self, context, datatable, spwid_list, pollist, file_index, thresholds, flagRule, userFlag=[]):
+    def __init__(self, context, datatable, spwid_list, pols_list, file_index, thresholds, flagRule, userFlag=[]):
         '''
         Constructor of worker class
         '''
         self.context = context
         self.datatable = datatable
         self.spwid_list = spwid_list
-        self.pollist = pollist
+        self.pols_list = pols_list
         self.file_index = file_index
         self.thres_value = thresholds
         self.flagRule = flagRule
@@ -48,7 +48,7 @@ class SDFlagSummary(object):
 
         datatable = self.datatable
         spwid_list = self.spwid_list
-        pollist = self.pollist
+        pols_list = self.pols_list
         file_index = self.file_index
         thresholds = self.thres_value
         flagRule = self.flagRule
@@ -56,8 +56,8 @@ class SDFlagSummary(object):
 
         assert len(file_index) == len(spwid_list)
         LOG.debug('Members to be processed:')
-        for (a,s) in zip(file_index, spwid_list):
-            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,pollist))
+        for (a,s,p) in zip(file_index, spwid_list, pols_list):
+            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,p))
         
         # output directory
 #         if self.context.subtask_counter is 0: 
@@ -72,7 +72,7 @@ class SDFlagSummary(object):
         FigFileDir += "/"
 
         flagSummary = []
-        for (idx,spwid) in zip(file_index, spwid_list):
+        for (idx,spwid,pollist) in zip(file_index, spwid_list, pols_list):
             LOG.debug('Performing flagdata for Antenna %s Spw %s'%(idx,spwid))
             st = self.context.observing_run[idx]
             filename_in = st.name

@@ -15,7 +15,7 @@ def hsd_flagbaseline(iteration=None, fitfunc=None, fitorder=None,
                      flag_pofrm=None, pofrm_thresh=None, pofrm_nmean=None,
                      flag_user=None, user_thresh=None,
                      plotflag=None,
-                     pipelinemode=None, infiles=None, iflist=None, pollist=None,
+                     pipelinemode=None, infiles=None, spw=None, pol=None,
                      dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

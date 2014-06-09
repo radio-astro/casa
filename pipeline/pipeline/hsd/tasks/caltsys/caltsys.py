@@ -17,29 +17,44 @@ class SDCalTsysInputs(common.SingleDishInputs):
     """
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
-                 infiles=None, outfile=None, calmode=None, iflist=None,
-                 scanlist=None, pollist=None):
+                 infiles=None, outfile=None, calmode=None, field=None,
+                 spw=None, scan=None, pol=None):
         self._init_properties(vars())
-        self._to_list(['infiles', 'iflist', 'pollist', 'scanlist'])
+        self._to_list(['infiles'])
+        for key in ['spw', 'scan', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
 
     def to_casa_args(self):
         args = super(SDCalTsysInputs,self).to_casa_args()
 
+        index = self.context.observing_run.st_names.index(os.path.basename(args['infile']))
+        LOG.debug('index=%s'%(index))
+
         # iflist for tsys calibration
-        # inputs.iflist is mapped to tsysiflist
-        # iflist is taken from observing_run
-        if len(args['iflist']) == 0:
+        # inputs.spw is mapped to tsysspw
+        # spw is taken from observing_run
+        tsysspw = self._to_casa_arg(args['spw'], index)
+        if len(tsysspw) == 0:
             ifset = set()
-            st = self.context.observing_run.get_scantable(os.path.basename(self.infiles))
+            st = self.context.observing_run.get_scantable(os.path.basename(args['infile']))
             if st.tsys_transfer is not False:
                 for from_to in st.tsys_transfer_list:
                     ifset.add(from_to[0])
-            args['tsysiflist'] = list(ifset)
+            args['tsysspw'] = common.list_to_selection(list(ifset))
         else:
-            args['tsysiflist'] = args['iflist'][:]
+            args['tsysspw'] = tsysspw
 
         # filter out WVR
-        args['iflist'] = self.context.observing_run.get_spw_for_caltsys(args['infile'])
+        spw = self.context.observing_run.get_spw_for_caltsys(args['infile'])
+        args['spw'] = ','.join(map(str,spw))
+
+        # scan
+        args['scan'] = self._to_casa_arg(args['scan'], index)
+            
+        # pol
+        args['pol'] = self._to_casa_arg(args['pol'], index)
 
         # take calmode
         if args['calmode'] is None or args['calmode'].lower() == 'auto':
@@ -105,7 +120,8 @@ class SDCalTsys(common.SingleDishTaskTemplate):
         # not a list of string
         args = inputs.to_casa_args()
 
-        if len(args['tsysiflist']) == 0:
+        #if len(args['tsysiflist']) == 0:
+        if len(args['tsysspw']) == 0:
             # Return empty Results object if calmode='none'
             LOG.info('Tsys transfer is not needed for scantable %s'%(args['infile'])) 
             result = SDCalTsysResults(task=self.__class__,
@@ -130,15 +146,18 @@ class SDCalTsys(common.SingleDishTaskTemplate):
             basename = os.path.basename(args['infile'].rstrip('/'))
             scantable = inputs.context.observing_run.get_scantable(basename)
             spwmap = {}
+            tsysspw_list = common.selection_to_list(args['tsysspw'])
+            spw_list = common.selection_to_list(args['spw'])
             for from_to in scantable.tsys_transfer_list:
-                if spwmap.has_key(from_to[0]):
-                    spwmap[from_to[0]].append(from_to[1])
-                else:
-                    spwmap[from_to[0]] = [from_to[1]]
+                if from_to[0] in tsysspw_list and from_to[1] in spw_list:
+                    if spwmap.has_key(from_to[0]):
+                        spwmap[from_to[0]].append(from_to[1])
+                    else:
+                        spwmap[from_to[0]] = [from_to[1]]
 
             # create CalTo object
             # CalTo object is created using associating MS name
-            spw = callibrary.SDCalApplication.iflist_to_spw(args['iflist'])
+            spw = args['spw']
             calto = callibrary.CalTo(vis=scantable.ms_name,
                                      spw=spw,
                                      antenna=scantable.antenna.name,

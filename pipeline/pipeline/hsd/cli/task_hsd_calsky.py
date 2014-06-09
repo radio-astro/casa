@@ -5,7 +5,7 @@ import pipeline.h.cli.utils as utils
 def hsd_calsky(calmode=None, fraction=None, noff=None,
                width=None, elongated=None,
                pipelinemode=None, infiles=None, field=None,
-               scanlist=None, iflist=None, pollist=None,
+               spw=None, scan=None, pol=None,
                dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

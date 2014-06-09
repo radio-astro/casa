@@ -5329,9 +5329,10 @@ class T2_4MDetailsSingleDishApplycalRenderer(T2_4MDetailsDefaultRenderer):
         calapps = collections.defaultdict(list)
         #for calapp in result.applied:
         #for calapp in result.outcome:
-        calapp = result.outcome
-        infile = os.path.basename(calapp.infile)
-        calapps[infile].append(calapp)
+        calapplist = result.outcome
+        for calapp in calapplist:
+            infile = os.path.basename(calapp.infile)
+            calapps[infile].append(calapp)
         return calapps
 
     def caltypes_for_result(self, result):
@@ -5344,13 +5345,14 @@ class T2_4MDetailsSingleDishApplycalRenderer(T2_4MDetailsDefaultRenderer):
         
         d = {}
         #for calapp in result.applied:
-        calapp = result.outcome
-        for calfrom in calapp.calfrom:
-            caltype = type_map.get(calfrom.caltype, calfrom.caltype)
-
-            caltype += self.get_gain_solution_type(calfrom)
-                    
-            d[calfrom.gaintable] = caltype
+        calapplist = result.outcome
+        for calapp in calapplist:
+            for calfrom in calapp.calfrom:
+                caltype = type_map.get(calfrom.caltype, calfrom.caltype)
+                
+                caltype += self.get_gain_solution_type(calfrom)
+                
+                d[calfrom.gaintable] = caltype
 
         return d
                 

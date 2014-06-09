@@ -4,6 +4,7 @@ import sys
 import os
 import numpy
 import contextlib
+import re
 
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 
@@ -22,6 +23,10 @@ LogLevelMap2 = {'critical': CRITICAL, # 50
                 'debug': DEBUG,       # 10
                 'todo': NOTSET,       # 0
                 'trace': NOTSET }     # 0
+
+import pipeline.infrastructure as infrastructure
+
+LOG = infrastructure.get_logger(__name__)
 
 def asdm_name(scantable_object):
     """
@@ -170,23 +175,30 @@ def temporary_filename(name='_heuristics.temporary.table'):
     yield name
     os.system('rm -rf %s'%(name))
 
-def get_index_list(datatable, antenna, spw, srctype):
+def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     assert len(antenna) == len(spw)
     table = datatable.tb1
     antenna_column = table.getcol('ANTENNA')
     spw_column = table.getcol('IF')
-    if srctype is None:
-        srctype_column = None
-        f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] 
+    pol_column = table.getcol('POL')
+    srctype_column = table.getcol('SRCTYPE')
+    f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j]
+    if pols is None or len(pols) == 0:
+        g = f
     else:
-        srctype_column = table.getcol('SRCTYPE')
-        f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and srctype_column[i] == srctype
+        g = lambda i, j: f(i,j) and (pols[j] is None or pol_column[i] in pols[j])
+    if srctype is None:
+        #f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j]
+        sel = g
+    else:
+        #f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and srctype_column[i] == srctype
+        sel = lambda i, j: g(i,j) and srctype_column[i] == srctype
 
     nrow = table.nrows()
     nval = len(antenna)
     for irow in xrange(nrow):
         for ival in xrange(nval):
-            if f(irow, ival):
+            if sel(irow, ival):
                 yield irow
 
 def get_valid_members(group_desc, antenna_filter, spwid_filter):
@@ -194,9 +206,29 @@ def get_valid_members(group_desc, antenna_filter, spwid_filter):
         member = group_desc[i]
         antenna = member.antenna
         spwid = member.spw
+        _spwid_filter = _get_spwid_filter(spwid_filter, antenna)
+        LOG.debug('_spwid_filter=%s'%(_spwid_filter))
         if antenna in antenna_filter:
-            if spwid_filter is None or spwid in spwid_filter:
+            if _spwid_filter is None or len(_spwid_filter) == 0 or spwid in _spwid_filter:
                 yield i
+
+def _get_spwid_filter(spwid_filter, file_id):
+    if spwid_filter is None:
+        return None
+    elif isinstance(spwid_filter, str):
+        return selection_to_list(spwid_filter)
+    elif file_id < len(spwid_filter):
+        _spwid_filter = spwid_filter[file_id]
+        if _spwid_filter is None:
+            return None
+        else:
+            return selection_to_list(spwid_filter[file_id])
+    else:
+        _spwid_filter = spwid_filter[0]
+        if _spwid_filter is None:
+            return None
+        else:
+            return selection_to_list(spwid_filter[0])
 
 def _collect_logrecords(logger):
     capture_handlers = [h for h in logger.handlers if h.__class__.__name__ == 'CapturingHandler']
@@ -204,3 +236,83 @@ def _collect_logrecords(logger):
     for handler in capture_handlers:
         logrecords.extend(handler.buffer[:])
     return logrecords
+
+def selection_to_list(sel):
+    def _selection_to_list(sel):
+        elements = sel.split(',')
+        for elem in elements:
+            if elem.isdigit():
+                yield int(elem)
+            elif re.match('^[0-9]+~[0-9]+$', elem):
+                s = [int(e) for e in elem.split('~')]
+                for i in xrange(s[0], s[1]+1):
+                    yield i
+    l = set(_selection_to_list(sel))
+    return list(l)
+
+def list_to_selection(rows):
+    unique_list = numpy.unique(rows)
+    sorted_list = numpy.sort(unique_list)
+    if len(sorted_list) == 0:
+        sel = ''
+    elif len(sorted_list) == 1:
+        sel = str(sorted_list[0])
+    else:
+        index = 0
+        sel = ''
+        #print 'test: %s'%(sorted_list)
+        increments = sorted_list[1:] - sorted_list[:-1]
+        #print increments
+        while index < len(sorted_list):
+            start = index
+            while index < len(increments) and increments[index] == 1:
+                index += 1
+            #print start, index
+            
+            if index - start < 2:
+                _sel = ','.join(map(str,sorted_list[start:index+1]))
+            else:
+                _sel = '%s~%s'%(sorted_list[start],sorted_list[index])
+
+            if len(sel) == 0:
+                sel = _sel
+            else:
+                sel = ','.join([sel,_sel])
+
+            #print '\'%s\''%(sel)
+            index += 1
+
+    return sel
+
+def intersection(sel1, sel2):
+    if sel1 is None or len(sel1) == 0:
+        return '' if sel2 is None else sel2
+    elif sel2 is None or len(sel2) == 0:
+        return sel1
+    else:
+        set1 = set(selection_to_list(sel1))
+        set2 = set(selection_to_list(sel2))
+        l = list(set1 & set2)
+        if len(l) == 0:
+            return None
+        else:
+            return list_to_selection(l)
+    
+def pol_filter(group_desc, filter_func):
+    for m in group_desc:
+        filter = filter_func(m.antenna)
+        if len(filter) == 0:
+            yield m.pols
+        else:
+            yield list(set(filter) & set(m.pols))
+
+def polstring(pols):
+    if pols == [0, 1]:
+        polstr = 'XXYY'
+    elif pols == [0] or pols == 0:
+        polstr = 'XX'
+    elif pols == [1] or pols == 1:
+        polstr = 'YY'
+    else:
+        polstr = 'I'
+    return polstr

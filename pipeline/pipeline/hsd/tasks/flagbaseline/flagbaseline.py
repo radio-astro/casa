@@ -14,10 +14,9 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
     Inputs for imaging
     """
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, infiles=None, iflist=None, pollist=None,
-                 linewindow=None, edge=None, broadline=None, fitorder=None,
-                 fitfunc=None, output_dir=None,
-                 iteration=None, flag_iteration=None, flag_tsys=None, tsys_thresh=None,
+    def __init__(self, context, iteration=None, fitfunc=None, fitorder=None,
+                 linewindow=None, edge=None, broadline=None,
+                 flag_iteration=None, flag_tsys=None, tsys_thresh=None,
                  flag_weath=None, weath_thresh=None,
                  flag_prfre=None, prfre_thresh=None,
                  flag_pofre=None, pofre_thresh=None,
@@ -26,9 +25,16 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
                  flag_prfrm=None, prfrm_thresh=None, prfrm_nmean=None,
                  flag_pofrm=None, pofrm_thresh=None, pofrm_nmean=None,
                  flag_user=None, user_thresh=None,
-                 plotflag=None):
+                 plotflag=None,
+                 infiles=None, spw=None, pol=None,
+                 output_dir=None):
         self._init_properties(vars())
-        self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
+        for key in ['spw', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
+        #self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
+        self._to_list(['infiles', 'edge', 'linewindow'])
         self._to_bool('broadline')
         self._to_numeric('fitorder')
         if isinstance(self.fitorder, float):
@@ -53,7 +59,7 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
     @property
     def baseline_inputs(self):
         return baseline.SDBaseline.Inputs(self.context, infiles=self.infiles, 
-                                          iflist=self.iflist, pollist=self.pollist,
+                                          spw=self.spw, pol=self.pol,
                                           linewindow=self.linewindow, edge=self.edge, 
                                           broadline=self.broadline, fitorder=self.fitorder,
                                           fitfunc=self.fitfunc)
@@ -74,7 +80,7 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
                                           pofrm_nmean=self.pofrm_nmean,
                                           flag_user=self.flag_user, user_thresh=self.user_thresh,
                                           plotflag=self.plotflag,
-                                          infiles=self.infiles, iflist=self.iflist, pollist=self.pollist)
+                                          infiles=self.infiles, spw=self.spw, pol=self.pol)
 
 class SDFlagBaselineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):

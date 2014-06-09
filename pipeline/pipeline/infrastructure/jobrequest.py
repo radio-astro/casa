@@ -33,15 +33,9 @@ import statwt_cli
 import wvrgcal_cli
 import visstat_cli
 
-try:
-    import sdcal2_cli
-except:
-    import sdcal_cli as sdcal2_cli
-try:
-    import sdflag2_cli as sdflag2_cli
-except:
-    import sdflag_cli as sdflag2_cli
-import sdsave_cli as sdsave_cli
+import sdcal2_cli
+import sdflag_cli 
+import sdsave_cli 
 
 from . import casatools
 from . import logging
@@ -365,8 +359,8 @@ class CASATaskJobGenerator(object):
     def sdcal2(self, *v, **k):
         return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)
     
-    def sdflag2(self, *v, **k):
-        return self._get_job(sdflag2_cli.sdflag2_cli, *v, **k)
+    def sdflag(self, *v, **k):
+        return self._get_job(sdflag_cli.sdflag_cli, *v, **k)
     
     def sdsave(self, *v, **k):
         return self._get_job(sdsave_cli.sdsave_cli, *v, **k) 

@@ -17,10 +17,14 @@ class SDApplyCalInputs(common.SingleDishInputs):
     """
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
-                 infiles=None, outfile=None, field=None, iflist=None,
-                 scanlist=None, pollist=None):
+                 infiles=None, outfile=None, field=None,
+                 spw=None, scan=None, pol=None):
         self._init_properties(vars())
-        self._to_list(['infiles', 'iflist', 'pollist'])
+        self._to_list(['infiles'])
+        for key in ['spw', 'scan', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
 
     @property
     def calto(self):
@@ -48,10 +52,20 @@ class SDApplyCalInputs(common.SingleDishInputs):
     def to_casa_args(self):
         args = super(SDApplyCalInputs,self).to_casa_args()
 
+        index = self.context.observing_run.st_names.index(os.path.basename(args['infile']))
+
         # take iflist from observing_run (shouldbe ScantableList object)
-        if len(args['iflist']) == 0:
+        args['spw'] = self._to_casa_arg(args['spw'], index)
+        if len(args['spw']) == 0:
             # only science spws
-            args['iflist'] = self.context.observing_run.get_spw_for_science(args['infile'])
+            science_spw = self.context.observing_run.get_spw_for_science(args['infile'])
+            args['spw'] = ','.join(map(str,science_spw))
+
+        # scan
+        args['scan'] = self._to_casa_arg(args['scan'], index)
+            
+        # pol
+        args['pol'] = self._to_casa_arg(args['pol'], index)
 
         # calmode is always 'apply'
         args['calmode'] = 'apply'
@@ -64,21 +78,6 @@ class SDApplyCalInputs(common.SingleDishInputs):
             suffix = '_applied'
             args['outfile'] = args['infile'].rstrip('/') + suffix
 
-##         # iflist for tsys calibration
-##         if args['ifmap'] is None or len(args['ifmap']) == 0:
-##             if isinstance(args['infile'], list): 
-##                 ifmap_list = []
-##                 for infile in args['infile']:
-##                     basename = os.path.basename(infile.rstrip('/'))
-##                     st = self.context.observing_run.get_scantable(basename)
-##                     tsys_transfer_list = st.tsys_transfer_list
-##                     ifmap_list.append(self._generate_ifmap(tsys_transfer_list))
-##                 args['ifmap'] = ifmap_list
-##             else:
-##                 basename = os.path.basename(args['infile'])
-##                 st = self.context.observing_run.get_scantable(basename)
-##                 tsys_transfer_list = st.tsys_transfer_list
-##                 args['ifmap'] = self._generate_ifmap(tsys_transfer_list)
             
         return args
 
@@ -98,25 +97,26 @@ class SDApplyCalResults(common.SingleDishResults):
 
     def merge_with_context(self, context):
         super(SDApplyCalResults,self).merge_with_context(context)
-        calapp = self.outcome
+        calapplist = self.outcome
 
         # merge with datatable, and export it
-        filename = os.path.join(context.output_dir, calapp.infile)
-        for _calfrom in calapp.calfrom:
-            if _calfrom.caltype == 'tsys':
-                tsystable = _calfrom.gaintable
-                spwmap = _calfrom.spwmap
-                datatable = context.observing_run.datatable_instance
-                datatable._update_tsys(context, filename, tsystable, spwmap)
-
-                # here, full export is necessary
-                datatable.exportdata(minimal=False)
-                break
+        for calapp in calapplist:
+            filename = os.path.join(context.output_dir, calapp.infile)
+            for _calfrom in calapp.calfrom:
+                if _calfrom.caltype == 'tsys':
+                    tsystable = _calfrom.gaintable
+                    spwmap = _calfrom.spwmap
+                    datatable = context.observing_run.datatable_instance
+                    datatable._update_tsys(context, filename, tsystable, spwmap)
+                    
+                    # here, full export is necessary
+                    datatable.exportdata(minimal=False)
+                    break
                 
-        # applied caltables are marked as applied
-        if calapp is not None:
-            LOG.trace('Marking %s as applied' % calapp.as_applycal())
-            context.callibrary.mark_as_applied(calapp.calto, calapp.calfrom)
+                # applied caltables are marked as applied
+                if calapp is not None:
+                    LOG.trace('Marking %s as applied' % calapp.as_applycal())
+                    context.callibrary.mark_as_applied(calapp.calto, calapp.calfrom)
 
         
     def _outcome_name(self):
@@ -164,45 +164,70 @@ class SDApplyCal(common.SingleDishTaskTemplate):
                                        success=True,
                                        outcome=None)
         else:
-            (calto, calfroms) = to_froms.items()[0]
+            calapplist = []
+            for (calto, calfroms) in to_froms.items():
+                LOG.debug(calto)
+                LOG.debug(calfroms)
+                
+                #(calto, calfroms) = to_froms.items()[0]
+                
 
-            # antenna_name
-            basename = os.path.basename(args['infile'].rstrip('/'))
-            scantable = inputs.context.observing_run.get_scantable(basename)
-            antenna_name = scantable.antenna.name
 
-            # input file
-            args['infile'] = os.path.join(inputs.output_dir, args['infile'])
+                # antenna_name
+                basename = os.path.basename(args['infile'].rstrip('/'))
+                scantable = inputs.context.observing_run.get_scantable(basename)
+                antenna_name = scantable.antenna.name
 
-            # output file
-            #args['outfile'] = os.path.join(inputs.output_dir, args['outfile'])
-            args['outfile'] = ''
+                # input file
+                args['infile'] = os.path.join(inputs.output_dir, args['infile'])
 
-            # print calmode
-            LOG.info('calibration type is \'%s\' (type=%s)'%(args['calmode'],type(args['calmode'])))
+                # output file
+                #args['outfile'] = os.path.join(inputs.output_dir, args['outfile'])
+                args['outfile'] = ''
 
-            # take arguments from SDCalApplication object
-            calapp = callibrary.SDCalApplication(calto, calfroms)
-            args['ifmap'] = calapp.ifmap
-            args['iflist'] = calapp.iflist
-            args['scanlist'] = calapp.scanlist
-            args['pollist'] = calapp.pollist
-            #args['field'] = calapp.field.strip('"')
-            args['applytable'] = [calfrom.gaintable for calfrom in calfroms]
+                # print calmode
+                LOG.info('calibration type is \'%s\' (type=%s)'%(args['calmode'],type(args['calmode'])))
 
-            # create job
-            job = casa_tasks.sdcal2(**args)
+                # take arguments from SDCalApplication object
+                calapp = callibrary.SDCalApplication(calto, calfroms)
 
-            # execute job
-            self._executor.execute(job)
+                args['spw'] = common.intersection(calapp.spw, args['spw'])
+                args['scan'] = common.intersection(calapp.scan, args['scan'])
+                args['pol'] = common.intersection(calapp.pol, args['pol'])
 
-            basename = os.path.basename(args['infile'].rstrip('/'))
-            scantable = inputs.context.observing_run.get_scantable(basename)
+                if args['spw'] is None or args['scan'] is None or args['pol'] is None:
+                    # no data in this selection, skip
+                    continue
+                
+                #args['field'] = calapp.field.strip('"')
+                spwmap = {}
+                iflist = common.selection_to_list(args['spw'])
+                for (k,v) in calapp.spwmap.items():
+                    filtered_list = list(set(v) & set(iflist))
+                    if len(filtered_list) > 0:
+                        spwmap[k] = filtered_list
+                args['spwmap'] = spwmap
+                LOG.debug('calapp.spw=\'%s\', args[\'spw\']=\'%s\''%(calapp.spw, args['spw']))
+                #args['spw'] = common.intersection(calapp.spw, args['spw'])
+                #args['scan'] = common.intersection(calapp.scan, args['scan'])
+                #args['pol'] = common.intersection(calapp.pol, args['pol'])
+                args['applytable'] = [calfrom.gaintable for calfrom in calfroms]
+
+                # create job
+                job = casa_tasks.sdcal2(**args)
+
+                # execute job
+                self._executor.execute(job)
+
+                basename = os.path.basename(args['infile'].rstrip('/'))
+                scantable = inputs.context.observing_run.get_scantable(basename)
+
+                calapplist.append(calapp)
 
             # create result object
             result = SDApplyCalResults(task=self.__class__,
                                        success=True,
-                                       outcome=calapp)
+                                       outcome=calapplist)
         result.task = self.__class__
         
         if inputs.context.subtask_counter is 0: 

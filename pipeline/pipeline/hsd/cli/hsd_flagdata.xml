@@ -156,14 +156,16 @@
     </param>
 -->
 
-    <param type="intArray" name="iflist" subparam="true">
-        <description>List of spws to be calibrated (defalt all except wvr)</description>
-        <value></value>
+    <param type="any" name="spw" subparam="true">
+            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
     </param>
 
-    <param type="intArray" name="pollist" subparam="true">
-        <description>List of polarizations to be calibrated (defalt all)</description>
-        <value></value>
+    <param type="any" name="pol" subparam="true">
+            <description>select data by polarizations, e.g. \'0~1\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
     </param>
 
 <!--
@@ -256,8 +258,8 @@
                 <default param="infiles"><value type="stringArray"></value></default>
 <!--                <default param="antennalist"><value type="int">-1</value></default> -->
 <!--                <default param="field"><value type="string"></value></default> -->
-                <default param="iflist"><value type="intArray"></value></default>
-                <default param="pollist"><value type="intArray"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
 <!--                <default param="scanlist"><value type="intArray"></value></default> -->
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
@@ -266,8 +268,8 @@
                 <default param="infiles"><value type="stringArray"></value></default>
 <!--                <default param="antennalist"><value type="int">-1</value></default> -->
 <!--                <default param="field"><value type="string"></value></default> -->
-                <default param="iflist"><value type="intArray"></value></default>
-                <default param="pollist"><value type="intArray"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
 <!--                <default param="scanlist"><value type="intArray"></value></default> -->
             </equals>
         </when>
@@ -394,13 +396,15 @@ infiles -- ASDM or MS files to be processed. This parameter behaves as
        registered to context before you run hsd_reduce.
        default: [] (process all data in context)
 
-iflist -- Data selection by spectral windows.
-       default: [] (all spws)
-       example: [0,2]
+spw -- Data selection by spw.
+   default: '' (all spws)
+   example: '3,4' (generate caltable for spw 3 and 4)
+            ['0','2'] (spw 0 for first data, 2 for second)
 
-pollist -- Data selection by polarizations.
-       default: [] (all polarization)
-       example: [0]
+pol -- Data selection by pol.
+   default: '' (all polarizations)
+   example: '0' (generate caltable for pol 0)
+            ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

@@ -34,6 +34,7 @@ class FittingInputs(common.SingleDishInputs):
                  fit_order=None, edge=None, outfile=None):
         self._init_properties(vars())
         self._bltable = None
+        LOG.debug('pollist=%s'%(pollist))
     
     @property
     def edge(self):
@@ -140,6 +141,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         antennaid = self.inputs.antennaid
         spwid = self.inputs.spwid
         pollist = self.inputs.pollist
+        LOG.debug('pollist=%s'%(pollist))
         nchan = self.inputs.nchan
         srctype = self.inputs.srctype
         edge = common.parseEdge(self.inputs.edge)

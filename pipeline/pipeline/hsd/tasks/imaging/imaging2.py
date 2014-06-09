@@ -7,6 +7,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
 from . import gridding
 from . import exportms
@@ -24,9 +25,16 @@ class SDImaging2Inputs(common.SingleDishInputs):
     Inputs for imaging
     """
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, reffile=None, infiles=None, iflist=None, pollist=None):
+    def __init__(self, context, infiles=None,
+                 field=None, spw=None, scan=None, pol=None,
+                 reffile=None):
         self._init_properties(vars())
-        self._to_list(['infiles', 'iflist', 'pollist'])
+        self._to_list(['infiles'])
+        for key in ['spw', 'scan', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
+        #self._to_list(['infiles', 'iflist', 'pollist'])
 
     @property
     def antennalist(self):
@@ -41,6 +49,21 @@ class SDImaging2Inputs(common.SingleDishInputs):
     def antennaid_list(self):
         st_names = self.context.observing_run.st_names
         return map(st_names.index, self.infiles)
+
+    #@property
+    #def spw(self):
+    #    if len(self.iflist) == 0:
+    #        return ''
+    #    else:
+    #        return callibrary.SDCalApplication.list_to_selection(self.iflist)
+
+    #@property
+    #def pol(self):
+    #    if len(self.pollist) == 0:
+    #        return ''
+    #    else:
+    #        return callibrary.SDCalApplication.list_to_selection(self.pollist)
+            
 
 class SDImaging2Results(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -65,12 +88,17 @@ class SDImaging2(common.SingleDishTaskTemplate):
         reduction_group = context.observing_run.reduction_group
         infiles = self.inputs.infiles
         file_index = self.inputs.antennaid_list
-        iflist = self.inputs.iflist
+        #iflist = self.inputs.iflist
+        args = self.inputs.to_casa_args()
+        scan = self.inputs.scan
+        scansel_list = map(lambda x: self.inputs._to_casa_arg(scan, x), file_index)
         antennalist = self.inputs.antennalist
-        pollist = self.inputs.pollist
+        #pollist = self.inputs.pollist
         st_names = context.observing_run.st_names
         reffile = self.inputs.reffile
         logrecords = []
+
+        LOG.debug('scansel_list=%s'%(scansel_list))
         
         # task returns ResultsList
         results = basetask.ResultsList()
@@ -129,7 +157,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
             for m in group_desc:
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
 
-            member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+            #member_list = list(common.get_valid_members(group_desc, file_index, iflist))
+            pols_list = list(common.pol_filter(group_desc, self.inputs.get_pollist))
+            member_list = list(common.get_valid_members(group_desc, file_index, args['spw']))
             LOG.debug('group %s: member_list=%s'%(group_id, member_list))
             
             # skip this group if valid member list is empty
@@ -140,46 +170,46 @@ class SDImaging2(common.SingleDishTaskTemplate):
             member_list.sort()
             antenna_list = [group_desc[i].antenna for i in member_list]
             spwid_list = [group_desc[i].spw for i in member_list]
+            pols_list = [pols_list[i] for i in member_list]
                 
             # assume all members have same spw and pollist
             first_member = group_desc[0]
-            pols = first_member.pols
-            if pollist is not None:
-                pols = list(set(pollist).intersection(pols))
+            #pols = first_member.pols
+            #if pollist is not None:
+            #    pols = list(set(pollist).intersection(pols))
 
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
-                LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols))
+                LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
+
+            #continue
 
             # image is created per antenna
             antenna_group = {}
-            for (ant, spwid) in zip(antenna_list, spwid_list):
+            for (ant, spwid, pols) in zip(antenna_list, spwid_list, pols_list):
                 antenna = context.observing_run[ant].antenna.name
                 if antenna in antenna_group.keys():
-                    antenna_group[antenna].append([ant, spwid])
+                    antenna_group[antenna].append([ant, spwid, pols])
                 else:
-                    antenna_group[antenna] = [[ant, spwid]]
+                    antenna_group[antenna] = [[ant, spwid, pols]]
             LOG.info('antenna_group=%s' % (antenna_group))
-
-            # polarization string
-            if pols == [0, 1]:
-                polstr = 'XXYY'
-            elif pols == [0] or pols == 0:
-                polstr = 'XX'
-            elif pols == [1] or pols == 1:
-                polstr = 'YY'
-            else:
-                polstr = 'I'
 
             # loop over antennas
             combined_indices = []
             source_name = None
             combined_infiles = []
             combined_spws = []
+            combined_scans = []
+            combined_pols = []
             srctype = None
-            for (name, ant_spw_pairs) in antenna_group.items():
-                indices = map(lambda x: x[0], ant_spw_pairs)
-                spwids = map(lambda x: x[1], ant_spw_pairs)
+            for (name, _members) in antenna_group.items():
+                indices = map(lambda x: x[0], _members)
+                spwids = map(lambda x: x[1], _members)
+                pols = map(lambda x: x[2], _members)
+                net_pols = set()
+                for p in map(set, pols):
+                    net_pols = net_pols | p
+                net_pols = list(net_pols)
                 
                 # reference data is first scantable 
                 st = context.observing_run[indices[0]]
@@ -198,11 +228,6 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 filenames = [data_name(context.observing_run[i]) for i in indices]
                 infiles = [context.observing_run[i].basename for i in indices]
 
-                # register data for combining
-                combined_indices.extend(indices)
-                combined_infiles.extend(infiles)
-                combined_spws.extend(spwids)
-
                 LOG.debug('filenames=%s' % (filenames))
                 
                 # image name
@@ -211,7 +236,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 namer.source(source_name)
                 namer.antenna_name(name)
                 namer.spectral_window(spwids[0])
-                namer.polarization(polstr)
+                namer.polarization(common.polstring(net_pols))
                 imagename = namer.get_filename()
                 
                 # Step 4.
@@ -235,8 +260,19 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 # Step 5.
                 # Imaging
                 LOG.info('Step 5. Imaging')
+                scansels = [scansel_list[i] for i in indices]
+                scans = map(common.selection_to_list, scansels)
+
+                # register data for combining
+                combined_indices.extend(indices)
+                combined_infiles.extend(infiles)
+                combined_spws.extend(spwids)
+                combined_pols.extend(pols)
+                combined_scans.extend(scans)
+
                 imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=infiles, 
-                                                               outfile=imagename, spwids=spwids, 
+                                                               outfile=imagename, spwids=spwids,
+                                                               scans=scans, pols=pols,
                                                                onsourceid=srctype, edge=edge,
                                                                vislist=exported_mses)
                 imager_task = worker.SDImaging2Worker(imager_inputs)
@@ -258,15 +294,27 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 observing_pattern = st.pattern[spwids[0]].values()[0]
                 grid_task_class = gridding.gridding_factory(observing_pattern)
                 grid_tables = []
-                for pol in pols:
-                    gridding_inputs = grid_task_class.Inputs(context, antennaid=indices, 
-                                                             spwid=spwids, polid=pol,
+                grid_input_dict = {}
+                for (ant, spw, pol) in _members:
+                    for p in pol:
+                        if not grid_input_dict.has_key(p):
+                            grid_input_dict[p] = [[ant], [spw]]
+                        else:
+                            grid_input_dict[p][0].append(ant)
+                            grid_input_dict[p][1].append(spw)
+
+                for (pol,ant_spw) in grid_input_dict.items():
+                    _indices = ant_spw[0]
+                    _spwids = ant_spw[1]
+                    _pols = [[pol] for i in _indices]
+                    gridding_inputs = grid_task_class.Inputs(context, antennaid=_indices, 
+                                                             spwid=_spwids, polid=_pols,
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task, merge=True)
                     grid_tables.append(gridding_result.outcome)
                     logrecords.extend(gridding_result.logrecords)
-                for i in xrange(len(pols)):
+                for i in xrange(len(grid_input_dict)):
                     validsps.append([r[6] for r in grid_tables[i]])
                     rmss.append([r[8] for r in grid_tables[i]])
                 
@@ -284,6 +332,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     outcome['reduction_group_id'] = group_id
                     outcome['file_index'] = indices
                     outcome['assoc_spws'] = spwids
+                    outcome['assoc_pols'] = pols
                     result = SDImaging2Results(task=self.__class__,
                                               success=True,
                                               outcome=outcome)
@@ -295,24 +344,30 @@ class SDImaging2(common.SingleDishTaskTemplate):
                         result.stage_number = self.inputs.context.task_counter 
                                                 
                     results.append(result)
-                    
+
+
             # Make combined image
             # reference scantable
             st = context.observing_run[context.observing_run.st_names.index(combined_infiles[0])]
             
             # image name
+            net_pols = set()
+            for p in map(set, combined_pols):
+                net_pols = net_pols | p
+            net_pols = list(net_pols)
             namer = filenamer.Image()
             namer.casa_image()
             namer.source(source_name)
             namer.spectral_window(combined_spws[0])
-            namer.polarization(polstr)
+            namer.polarization(common.polstring(net_pols))
             imagename = namer.get_filename()
 
             # Step 4.
             # Imaging
             LOG.info('Step 4. Imaging')
             imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=combined_infiles, 
-                                                           outfile=imagename, spwids=combined_spws, 
+                                                           outfile=imagename, spwids=combined_spws,
+                                                           scans=combined_scans, pols=combined_pols,
                                                            onsourceid=srctype, edge=edge,
                                                            vislist=exported_mses)
             imager_task = worker.SDImaging2Worker(imager_inputs)
@@ -334,15 +389,27 @@ class SDImaging2(common.SingleDishTaskTemplate):
             observing_pattern = st.pattern[combined_spws[0]].values()[0]
             grid_task_class = gridding.gridding_factory(observing_pattern)
             grid_tables = []
-            for pol in pols:
-                gridding_inputs = grid_task_class.Inputs(context, antennaid=combined_indices, 
-                                                         spwid=combined_spws, polid=pol,
+            grid_input_dict = {}
+            for (ant, spw, pol) in zip(combined_indices, combined_spws, combined_pols):
+                for p in pol:
+                    if not grid_input_dict.has_key(p):
+                        grid_input_dict[p] = [[ant], [spw]]
+                    else:
+                        grid_input_dict[p][0].append(ant)
+                        grid_input_dict[p][1].append(spw)
+
+            for (pol,ant_spw) in grid_input_dict.items():
+                _indices = ant_spw[0]
+                _spwids = ant_spw[1]
+                _pols = [[pol] for i in _indices]
+                gridding_inputs = grid_task_class.Inputs(context, antennaid=_indices,
+                                                         spwid=_spwids, polid=_pols,
                                                          nx=nx, ny=ny)
                 gridding_task = grid_task_class(gridding_inputs)
                 gridding_result = self._executor.execute(gridding_task, merge=True)
                 logrecords.extend(gridding_result.logrecords)
                 grid_tables.append(gridding_result.outcome)
-            for i in xrange(len(pols)):
+            for i in xrange(len(grid_input_dict)):
                 validsps.append([r[6] for r in grid_tables[i]])
                 rmss.append([r[8] for r in grid_tables[i]])
             

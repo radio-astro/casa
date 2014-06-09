@@ -18,10 +18,14 @@ class SDCalSkyInputs(common.SingleDishInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, calmode=None, fraction=None, noff=None,
                  width=None, elongated=None, output_dir=None,
-                 infiles=None, outfile=None, iflist=None,
-                 scanlist=None, pollist=None):
+                 infiles=None, outfile=None, field=None,
+                 spw=None, scan=None, pol=None):
         self._init_properties(vars())
-        self._to_list(['infiles', 'iflist', 'scanlist', 'pollist'])
+        self._to_list(['infiles'])
+        for key in ['spw', 'scan', 'pol']:
+            val = getattr(self, key)
+            if val is None or (val[0] == '[' and val[-1] == ']'):
+                self._to_list([key])
         self._to_bool(['elongated'])
         if isinstance(self.fraction, str) and self.fraction.endswith('%'):
             self._to_numeric(['noff', 'width'])
@@ -33,14 +37,20 @@ class SDCalSkyInputs(common.SingleDishInputs):
     def to_casa_args(self):
         args = super(SDCalSkyInputs,self).to_casa_args()
 
-        # take iflist from observing_run (shouldbe ScantableList object)
-        if len(args['iflist']) == 0:
+        index = self.context.observing_run.st_names.index(os.path.basename(args['infile']))
+
+        # take spw from observing_run (shouldbe ScantableList object)
+        args['spw'] = self._to_casa_arg(args['spw'], index)
+        if len(args['spw']) == 0:
             # only science spws
-            args['iflist'] = self.context.observing_run.get_spw_for_science(args['infile'])
-        else:
-            spw_list = set(self.context.observing_run.get_spw_for_science(args['infile']))
-            args['iflist'] = list(spw_list.intersection(args['iflist']))
+            science_spw = self.context.observing_run.get_spw_for_science(args['infile'])
+            args['spw'] = ','.join(map(str,science_spw))
+        
+        # scan
+        args['scan'] = self._to_casa_arg(args['scan'], index)
             
+        # pol
+        args['pol'] = self._to_casa_arg(args['pol'], index)
 
         # take calmode
         if args['calmode'] is None or args['calmode'].lower() == 'auto':
@@ -131,7 +141,8 @@ class SDCalSky(common.SingleDishTaskTemplate):
             # CalTo object is created using associating MS name
             basename = os.path.basename(args['infile'].rstrip('/'))
             scantable = inputs.context.observing_run.get_scantable(basename)
-            spw = callibrary.SDCalApplication.iflist_to_spw(args['iflist'])
+            #spw = callibrary.SDCalApplication.iflist_to_spw(args['iflist'])
+            spw = args['spw']
             calto = callibrary.CalTo(vis=scantable.ms_name,
                                      spw=spw,
                                      antenna=scantable.antenna.name,

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import re
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -26,6 +27,10 @@ class SingleDishInputs(basetask.StandardInputs):
         for (k,v) in args.items():
             if k in keys and v is None:
                 args[k] = []
+        keys = ('spw','scan','pol')
+        for (k,v) in args.items():
+            if k in keys and v is None:
+                args[k] = ''
             
         return args
 
@@ -96,6 +101,30 @@ class SingleDishInputs(basetask.StandardInputs):
             for attr in attributes:
                 new_value = utils.to_numeric(getattr(self, attr))
                 setattr(self, attr, new_value)
+
+    def _to_casa_arg(self, arg_list, file_id):
+        if isinstance(arg_list, list):
+            if file_id < len(arg_list):
+                casa_arg = arg_list[file_id]
+            else:
+                casa_arg = arg_list[0]
+        else:
+            casa_arg = arg_list
+        if casa_arg is None:
+            casa_arg = ''
+        return casa_arg
+
+    def get_iflist(self, index):
+        spw = '' if self.spw is None else self.spw
+        return self._get_arg(spw, index)
+
+    def get_pollist(self, index):
+        pol = '' if self.pol is None else self.pol
+        return self._get_arg(pol, index)
+
+    def _get_arg(self, arg_list, index):
+        sel = self._to_casa_arg(arg_list, index)
+        return utils.selection_to_list(sel)
         
 
 class SingleDishResults(basetask.Results):
@@ -192,3 +221,4 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             self.casa_revision = -1
         self.casa_version_string = casadict['build']['version']
         self.casa_version = int( self.casa_version_string.replace('.','') )
+
