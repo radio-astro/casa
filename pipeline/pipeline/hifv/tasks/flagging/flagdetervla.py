@@ -506,7 +506,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             else:
                 SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
                 
-        edgespw_cmd = "mode='manual' spw='" + SPWtoflag + "'"
+        edgespw_cmd = "mode=manual spw='" + SPWtoflag + "'"
                 
         return edgespw_cmd
         

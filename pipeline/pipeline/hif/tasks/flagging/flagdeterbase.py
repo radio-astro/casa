@@ -487,7 +487,13 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if inputs._hm_tbuff == 'halfint':
             # compute half of the maximum integration time, see ms.get_median_integration times method (this
             # has an intent parameter so it can be restricted to science intents)
-            tbuff = 0.5 * inputs.ms.get_median_integration_time()
+            tbuff = 0.0
+            for intent in ['AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK']:
+                try:
+                    time = 0.5 * inputs.ms.get_median_integration_time(intent=intent)
+                    tbuff = max (tbuff, time) 
+                except:
+                    LOG.debug('Intent ' + intent + ' not present.')
         elif inputs._hm_tbuff == '1.5int':
             tbuff = 1.5 * inputs.ms.get_median_integration_time()
         else:
