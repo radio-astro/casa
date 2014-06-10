@@ -1048,16 +1048,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    Options: 'ft' or 'mosaic'
                    default: 'mosaic'; 
 		   'ft' implies standard interferometric gridding. The residual visibilities are 
-                   imaged for each pointing and combined in the image plane with the appropriate PB 
-                   to make the mosaic.
+                   imaged for each pointing and combined in the image plane with the 
+		   appropriate PB to make the mosaic.
                     
-                   'mosaic' (grid using PB as convolution function and mosaic combination is done in 
-                   visibilities). 
+                   'mosaic' (grid using the Fourier transform of PB as convolution function 
+		   and mosaic combination is done in visibilities). 
                    ONLY if imagermode='mosaic' is chosen and
                    ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA) or 
                    wideband beam accounting 
-                   possible using the right convolution of primary beams for
-                   each baseline and for diferent frequencies
+                   possible using the right convolution derived from primary beams for
+                   each baseline and for different frequencies
                    CAVEAT: ftmachine='mosaic' uses Fourier transforms of the primary beams/pointing
                    for mosaicing. Making an image which is too small for the pointing coverages will cause
                    aliasing due to standard Fourier transform wrap around. 
@@ -1246,7 +1246,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  				FWHM=5 kilo-lambda
                             outertaper=['5klambda','3klambda','45.0deg']
                             outertaper=['10arcsec'] on-sky FWHM 10 arcseconds
-                            outertaper=['300.0'] default units are meters 
+                            outertaper=['300.0'] default units are lambda 
  			        in aperture plane
                innertaper -- uv-taper in center of uv-plane
                    [bmaj,bmin,bpa] Gaussian scale at which taper falls to 
