@@ -76,7 +76,7 @@ CasaTaskDict = {
 classToCASATask = {
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAImportData : 'hifa_importdata',
-    hifa_tasks.ALMAAgentFlagger : 'hifa_flagdata',
+    hifa_tasks.FlagDeterALMA : 'hifa_flagdata',
     hifa_tasks.FluxcalFlag : 'hifa_fluxcalflag',
     hifa_tasks.GcorFluxscale : 'hifa_gfluxscale',
     hifa_tasks.Linpolcal : 'hifa_linpolcal',
