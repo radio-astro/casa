@@ -489,9 +489,10 @@ class partition_test2(test_base):
     def test_scan_spw(self):
         '''Partition: separationaxis=scan with spw selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
-                  spw='1~4,10,11', flagbackup=False)
+                  spw='1~4,10,11', flagbackup=False, parallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        self.assertTrue(os.path.exists(self.msfile),'Make sure the input MS is not deleted inside the task')
         
         # Take the dictionary and compare with original MS
         thisdict = listpartition(vis=self.mmsfile, createdict=True)
@@ -515,8 +516,8 @@ class partition_test2(test_base):
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
             self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+            
  
-        
     def test_numsubms(self):
         '''Partition: small numsubms value'''
         # There are 16 spws; we want only 6 sub-MSs.
