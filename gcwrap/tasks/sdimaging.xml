@@ -230,7 +230,7 @@ available.
     </param>
 
     <param type="string" name="stokes">
-            <description>stokes parameters or polarization types to image, e.g. \'I\', \'XX\'</description>
+            <description>stokes parameters or polarization types to image, e.g. \'I\', \'XX\' (\'\'=Stokes I)</description>
             <value></value>
     </param>
 
@@ -463,7 +463,7 @@ restfreq -- specify rest frequency to use for output image
         default: '' (refer input data)
         example: 1.0e11, '100GHz'
 stokes -- stokes parameters or polarization types to image
-        default: '' (use all polarizations)
+        default: '' (= Stokes I)
         example: 'XX'
 minweight -- Minimum weight ratio to the median of weight used in 
              weight correction and weight based masking
