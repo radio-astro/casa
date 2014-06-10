@@ -221,6 +221,53 @@ TASK_COMMENTS = {
         'The absolute flux calibration is transferred to secondary calibrator '
         'sources.'
     ),
+    # Single Dish Tasks
+    (hsd_tasks.SDImportData,) : (
+        'If required, ASDMs are converted to measurement sets. '
+        'Furthermore, measurement sets are converted to scantable '
+        'and split by antenna for single dish data reduction. '
+    ),
+    (hsd_tasks.SDInspectData,) : (
+        'Registered data are inspected to configure calibration strategy '
+        'and to group data for the following processing. \n'
+        '' + SILENT_TASK_COMMENT
+    ),
+    (hsd_tasks.SDCalSky,) : (
+        'Generates sky calibration table according to calibration '
+        'strategy. '
+    ),
+    (hsd_tasks.SDCalTsys,) : (
+        'Generates Tsys calibration table according to calibration '
+        'strategy. '
+    ),
+    (hsd_tasks.SDApplyCal,) : (
+        'Apply calibration tables. '
+    ),
+    (hsd_tasks.SDBaseline,) : (
+        'Subtracts spectral baseline by least-square fitting with '
+        'N-sigma clipping. Spectral lines are automatically detected '
+        'and examined to determine the region that is masked to protect '
+        'these features from the fit. \n'
+        '' + SILENT_TASK_COMMENT
+    ),
+    (hsd_tasks.SDFlagData,) : (
+        'Perform row-based flagging based on noise level and quality of '
+        'spectral baseline subtraction. \n'
+        '' + SILENT_TASK_COMMENT
+    ),
+    (hsd_tasks.SDImaging,) : (
+        'Executes preparation for imaging: Exports scantables to '
+        'measurement sets, apply row flags, and apply weights. '
+        'Then, perform imaging.'
+    ),
+    (hsd_tasks.SDFlagBaseline,) : (
+        'Execute baseline subtraction and flagging iteratively. '
+        '' + SILENT_TASK_COMMENT
+    ),
+    (hsd_tasks.SDPlotFlagBaseline,) : (
+        'Plot whole spectra before and after baseline subtraction. '
+        '' + SILENT_TASK_COMMENT
+    ),
 }
 
 
