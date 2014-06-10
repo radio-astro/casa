@@ -488,7 +488,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             # compute half of the maximum integration time, see ms.get_median_integration times method (this
             # has an intent parameter so it can be restricted to science intents)
             tbuff = 0.5 * inputs.ms.get_median_integration_time()
-        elif input._hm_tbuff == '1.5int':
+        elif inputs._hm_tbuff == '1.5int':
             tbuff = 1.5 * inputs.ms.get_median_integration_time()
         else:
             tbuff = inputs._tbuff
