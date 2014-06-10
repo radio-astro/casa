@@ -219,8 +219,8 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
     def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
         autocorr=None, shadow=None, scan=None, scannumber=None, quack=None, clip=None, baseband=None,
-        intents=None, edgespw=None, fracspw=None, online=None,
-        fileonline=None, template=None, filetemplate=None ):
+        intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
+        fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None ):
 
         # Initialize the public member variables of the inherited class
         # FlagDeterBaseInputs()
@@ -228,13 +228,38 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 	super( FlagDeterVLAInputs, self ).__init__( context, vis=vis,
 		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
 		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
-		    edgespw=edgespw, fracspw=fracspw, online=online,
-		    fileonline=fileonline, template=template, filetemplate=filetemplate )
+		    edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps, online=online,
+		    fileonline=fileonline, template=template, filetemplate=filetemplate,
+		    hm_tbuff=hm_tbuff, tbuff=tbuff)
+
 
         self._init_properties(vars())
         
-
+    @property
+    def hm_tbuff(self):
+        return self._hm_tbuff
         
+    @hm_tbuff.setter
+    def hm_tbuff(self, value):
+        if value is None:
+            value = 'manual'
+        if value in 'halfint | 1.5int | manual':
+            self._hm_tbuff = value
+        else:
+            self._hm_tbuff = 'manual'
+        
+    @property
+    def tbuff(self):
+        return self._tbuff
+        
+    @tbuff.setter
+    def tbuff(self, value):
+        if value is None:
+            value = 0.0
+        self._tbuff = value
+
+    
+    
 
 # ------------------------------------------------------------------------------
 
@@ -347,27 +372,23 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
         # Flag mode clip
         if inputs.clip:
-            flag_cmds = flag_cmds +'\n'
-            flag_cmds = flag_cmds + 'mode=clip correlation=ABS_ALL clipzeros=True'
+            flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True')
         
         # Flag quack
         if inputs.quack: 
-            flag_cmds = flag_cmds + '\n'
-            flag_cmds = flag_cmds + self._get_quack_cmds()
+            flag_cmds.append(self._get_quack_cmds())
             
         # Flag end 5 percent of each spw or minimum of 3 channels
         if inputs.edgespw:
-            flag_cmds = flag_cmds + '\n'
-            flag_cmds = flag_cmds + self._get_edgespw_cmds()
+            flag_cmds.append(self._get_edgespw_cmds())
             
         # Flag 10 end channels at edges of basebands
         if inputs.baseband:
-            flag_cmds = flag_cmds + '\n'
-            flag_cmds = flag_cmds + self._get_baseband_cmds()
+            flag_cmds.append(self._get_baseband_cmds())
         
         
             
-        print flag_cmds
+        #print flag_cmds
         
         return flag_cmds
             

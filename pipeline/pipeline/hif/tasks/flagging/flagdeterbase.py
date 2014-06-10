@@ -118,7 +118,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  autocorr=None, shadow=None, scan=None, scannumber=None,
                  intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
-                 fileonline=None, template=None, filetemplate=None):
+                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None):
         """
         Initialise the Inputs, initialising any property values to those given
         here.
@@ -274,6 +274,32 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         if value is None:
             value = True
         self._online = value
+        
+        
+    @property
+    def hm_tbuff(self):
+        return self._hm_tbuff
+        
+    @hm_tbuff.setter
+    def hm_tbuff(self, value):
+        if value is None:
+            value = 'halfint'
+        if value in 'halfint | 1.5int | manual':
+            self._hm_tbuff = value
+        else:
+            self._hm_tbuff = 'halfint'
+        
+        
+    @property
+    def tbuff(self):
+        return self._tbuff
+        
+    @tbuff.setter
+    def tbuff(self, value):
+        if value is None:
+            value = 0.0
+        self._tbuff = value
+        
 
     @property
     def scan(self):
@@ -457,10 +483,21 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         # to save inspecting the file, also log the flag commands
         LOG.debug('Flag commands for %s:\n%s' % (inputs.vis, flag_cmds))
 
+        #Set the tbuf parameter
+        if inputs._hm_tbuff == 'halfint':
+            # compute half of the maximum integration time, see ms.get_median_integration times method (this
+            # has an intent parameter so it can be restricted to science intents)
+            tbuff = 0.5 * inputs.ms.get_median_integration_time()
+        elif input._hm_tbuff == '1.5int':
+            tbuff = 1.5 * inputs.ms.get_median_integration_time()
+        else:
+            tbuff = inputs._tbuff
+
         # Map the pipeline inputs to a dictionary of CASA task arguments 
         ####task_args = inputs.to_casa_args()
         task_args = {'vis' :inputs.vis,
                      'mode' : 'list',
+                     'tbuff' : tbuff,
                      'inpfile' : flag_cmds}
 
         # create and execute a flagdata job using these task arguments

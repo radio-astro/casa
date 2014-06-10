@@ -31,7 +31,7 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
 	    intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
-	    fileonline=None, template=None, filetemplate=None ):
+	    fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None ):
 
 		# Initialize the public member variables of the inherited class
 		# FlagDeterBaseInputs()
@@ -40,7 +40,8 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
 		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
 		    edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps, online=online,
-		    fileonline=fileonline, template=template, filetemplate=filetemplate )
+		    fileonline=fileonline, template=template, filetemplate=filetemplate,
+		    hm_tbuff=hm_tbuff, tbuff=tbuff)
 
                 self.fracspwfps  = fracspwfps
 

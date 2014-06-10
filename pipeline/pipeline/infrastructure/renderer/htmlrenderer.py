@@ -6130,6 +6130,7 @@ renderer_map = {
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=True),
+        hifv.tasks.flagging.flagdetervla.FlagDeterVLA : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
         hifv.tasks.setmodel.VLASetjy : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailspriorcalsRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
