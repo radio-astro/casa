@@ -5,6 +5,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
 from . import agentflagger
+from . import flagdeterbase
 
 LOG = logging.get_logger(__name__)
 
@@ -33,3 +34,28 @@ class AgentFlaggerListQAHandler(pqa.QAResultHandler):
         # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated
+
+class FlagDeterBaseQAHandler(pqa.QAResultHandler):    
+    result_cls = flagdeterbase.FlagDeterBaseResults
+    child_cls = None
+
+    def handle(self, context, result):
+        vis = result.inputs['vis']
+        ms = context.observing_run.get_ms(vis)
+    
+        # calculate QA scores from agentflagger summary dictionary, adopting
+        # the minimum score as the representative score for this task
+        scores = [qacalc.score_online_shadow_agents(ms, result.summaries),
+                  qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+        result.qa.pool[:] = scores
+
+class FlagDeterBaseListQAHandler(pqa.QAResultHandler):
+    result_cls = list
+    child_cls = flagdeterbase.FlagDeterBaseResults
+
+    def handle(self, context, result):
+        # collate the QAScores from each child result, pulling them into our
+        # own QAscore list
+        collated = utils.flatten([r.qa.pool for r in result]) 
+        result.qa.pool[:] = collated
+

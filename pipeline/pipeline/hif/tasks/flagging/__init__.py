@@ -12,3 +12,7 @@ from .agentflagger import AgentFlagger
 pipelineqa.registry.add_handler(qa.AgentFlaggerQAHandler())
 pipelineqa.registry.add_handler(qa.AgentFlaggerListQAHandler())
 qaadapter.registry.register_to_flagging_topic(agentflagger.AgentFlaggerResults)
+
+pipelineqa.registry.add_handler(qa.FlagDeterBaseQAHandler())
+pipelineqa.registry.add_handler(qa.FlagDeterBaseListQAHandler())
+qaadapter.registry.register_to_flagging_topic(flagdeterbase.FlagDeterBaseResults)
