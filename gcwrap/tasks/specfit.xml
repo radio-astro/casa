@@ -384,8 +384,10 @@ goodfwhmrange   Acceptable FWHM solution range in pixels. [0.0] => all FWHM solu
 sigma           Standard deviation array or image name.
 outsigma        Name of output image used for standard deviation. Ignored if sigma is empty.
 
-This task simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
-and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
+This task simultaneously performs a non-linear, least squares fit using the Levenberg-Marquardt algorithm of one or more gaussian singlets,
+one or more lorentzian singlets, one or more gaussian multiplets, and/or a polynomial to one dimensional profiles. A description of the
+fitting algorithm may be found in AIPS++ Note 224 (http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html) and in Numerical Recipes
+by W.H. Press et al., Cambridge University Press. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
 center position, and width) are all independent from any other feature that may be simultaneously fit. A gaussian multiplet is a set of two or
 more gaussian lines in which at least one (and possibly two or three) parameter of each line is dependent on the parameter of another,
 single (reference) profile in the multiplet. For example, one can specify a doublet in which the amplitude of the first line is 0.6 times the

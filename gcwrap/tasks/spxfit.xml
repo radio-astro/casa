@@ -210,9 +210,11 @@ sigma           Standard deviation numerical array, image name (string), or stri
                 concatenated to create the sigma image that is used by the fitter.
 outsigma        Name of output image used for standard deviation. Ignored if sigma is empty.
 
-This application performs least squares fits of either a power logarithmic polynomial or a logarithmic tranformed polynomial to pixel values along a specified
-axis of an image or images. These functions are most often used for fitting the spectral index and
-higher order terms of a spectrum. A power logarithmic polynomial (plp) has the form
+This application performs a non-linear, least squares fits using the Levenberg-Marquardt algorithm of either a power logarithmic polynomial or a
+logarithmic tranformed polynomial to pixel values along a specified axis of an image or images. A description of the fitting algorithm may be found
+in AIPS++ Note 224 (http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html) and in Numerical Recipes by W.H. Press et al., Cambridge
+University Press. These functions are most often used for fitting the spectral index and higher order terms of a spectrum. A power logarithmic
+polynomial (plp) has the form
 
 y = c0*(x/div)**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + cn*ln(x/div)**(n - 1))
 
