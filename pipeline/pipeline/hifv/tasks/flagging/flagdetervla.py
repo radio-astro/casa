@@ -372,20 +372,29 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
         # Flag mode clip
         if inputs.clip:
-            flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True')
+            flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True reason=clip')
+            flag_cmds.append('mode=summary name=clip')
         
         # Flag quack
         if inputs.quack: 
             flag_cmds.append(self._get_quack_cmds())
+            flag_cmds.append('mode=summary name=quack')
             
         # Flag end 5 percent of each spw or minimum of 3 channels
         if inputs.edgespw:
-            flag_cmds.append(self._get_edgespw_cmds())
+            to_flag = self._get_edgespw_cmds()
+            if to_flag:
+                spw_arg = ','.join(to_flag)
+                flag_cmds.append(spw_arg)
             
         # Flag 10 end channels at edges of basebands
         if inputs.baseband:
-            flag_cmds.append(self._get_baseband_cmds())
+            to_flag = self._get_baseband_cmds()
+            if to_flag:
+                flag_cmds.append(to_flag)
+                flag_cmds.append('mode=summary name=baseband')
         
+        if (flag_cmds[-1]== '') : flag_cmds=flag_cmds[0:-1]
         
             
         #print flag_cmds
@@ -479,6 +488,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
     
     def _get_edgespw_cmds(self):
         
+        
         inputs = self.inputs
         
         context = inputs.context
@@ -506,8 +516,8 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             else:
                 SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
                 
-        edgespw_cmd = "mode=manual spw='" + SPWtoflag + "'"
-                
+        edgespw_cmd = ["mode=manual spw=" + SPWtoflag + " reason=edgespw name=edgespw"]
+        
         return edgespw_cmd
         
     
@@ -530,7 +540,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             int_time = context.evla['msinfo'][m.name].int_time
             
             quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + \
-                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False'
+                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False reason=quack name=quack'
             
             return quack_mode_cmd
 
@@ -576,10 +586,19 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW
-            baseband_cmd = 'mode=manual spw=' + SPWtoflag
+            baseband_cmd = 'mode=manual spw=' + SPWtoflag + ' reason=baseband name=baseband'
 
         return baseband_cmd
         
-         
-         
+    def verify_spw(self, spw):
+        # override the default verifier, adding an extra test that bypasses
+        # flagging of TDM windows
+        super(FlagDeterVLA, self).verify_spw(spw)
+
+        # Skip if TDM mode where TDM modes are defined to be modes with 
+        # <= 256 channels per correlation
+        dd = self.inputs.ms.get_data_description(spw=spw)
+        ncorr = len(dd.corr_axis)
+        if ncorr*spw.num_channels > 256:
+            raise ValueError('Skipping edge flagging for FDM spw %s' % spw.id)            
 

@@ -490,10 +490,12 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             tbuff = 0.0
             for intent in ['AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK']:
                 try:
-                    time = 0.5 * inputs.ms.get_median_integration_time(intent=intent)
-                    tbuff = max (tbuff, time) 
+                    time = 0.5 * inputs.ms.get_median_science_integration_time(intent=intent)
+                    tbuff = max (tbuff, time)
+                    LOG.info("Using tbuff = "+str(tbuff))
                 except:
                     LOG.debug('Intent ' + intent + ' not present.')
+                    LOG.info('Intent ' + intent + ' not present.')
         elif inputs._hm_tbuff == '1.5int':
             tbuff = 1.5 * inputs.ms.get_median_integration_time()
         else:

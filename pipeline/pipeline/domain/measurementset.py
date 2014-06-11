@@ -312,7 +312,66 @@ class MeasurementSet(object):
             with contextlib.closing(table.query(taql)) as subtable:
                 integration = subtable.getcol('INTERVAL')          
             return numpy.median(integration)
+    
+    
+    def get_median_science_integration_time(self, intent=None, spw=None):
+        """Get the median integration time for science targets used to get data for the given
+        intent.
+    
+        Keyword arguments:
+        intent  -- The intent of the data of interest.
+        spw     -- spw string list - '1,7,11,18'
+      
+        Returns -- The median integration time used.
+        """
+        LOG.debug('inefficiency - MSFlagger reading file to get median integration '
+                  'time for science targets')
         
+        if (spw == None):
+            spws = self.spectral_windows
+        else: 
+            
+            try:
+                #Put csv string of spws into a list
+                spw_string_list = spw.split(',')
+                
+                #Get all spw objects
+                all_spws = self.spectral_windows
+        
+                #Filter out the science spw objects
+                spws = [ispw for ispw in all_spws if str(ispw.id) in spw_string_list]
+            except:
+                LOG.error("Incorrect spw string format.")
+        
+            
+        
+        # now get the science spws, those used for scientific intent
+        science_spws = [ispw for ispw in spws if 
+          ispw.num_channels not in [1,4] and not ispw.intents.isdisjoint(
+          ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
+        LOG.info('science spws are: %s' % [ispw.id for ispw in science_spws])
+    
+        # and the science fields/states
+        science_field_ids = [field.id for field in self.fields
+          if not set(field.intents).isdisjoint(
+            ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
+        science_state_ids = [state.id for state in self.states
+          if not set(state.intents).isdisjoint(
+            ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
+            
+        
+        with utils.open_table(self.name) as table:
+            taql = '(STATE_ID IN %s AND FIELD_ID IN %s)' % (science_state_ids, science_field_ids)
+            with contextlib.closing(table.query(taql)) as subtable:
+                integration = subtable.getcol('INTERVAL')          
+            return numpy.median(integration)
+    
+    
+    
+    
+    
+    
+    
     @property
     def session(self):
         return self._session
