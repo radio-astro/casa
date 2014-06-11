@@ -1277,6 +1277,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		       'superuniform','briggsabs','radial'
 
   &gt;&gt;&gt; Weighting expandable parameters
+               For details on weighting please see Chapter3
+               of late Dr. Brigg's thesis (http://www.aoc.nrao.edu/dissertations/dbriggs)
                For weighting='briggs' and 'briggsabs'
                    robust -- Brigg's robustness parameter
                    default=0.0; example: robust=0.5;
@@ -1285,16 +1287,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    noise   -- noise parameter to use for Briggs "abs" 
  		   weighting
                    example noise='1.0mJy'
-               npixels -- uv-cell area used for weight calculation
-                   example npixels=1
+               npixels -- uv-box used for weight calculation
+                              a box going from -npixel/2 to +npixel/2 on each side
+                              around a point is used to calculate weight density.
+                              0 means only single pixel is considered
+                   example npixels=2
                    Default = 0
-                   superuniform:  0 Means 3x3 cells for weighting
-                     the cell weight is proportional to the weight of
-                     the 3x3 cells centered on it.
-                   superuniform = F means 1x1 cell for averaging weights.
-                   briggs/briggsabs: 0 is similar to 1x1 cell weight.
-                     1 may? be similar to 3X3 cells.
-                   Only npixels 0 or 1 recommended
+	       Exception: when choosing superuniform it does not make sense to 
+	       use npixels=0 as it is  uniform thus if npixels is 0  it will be forced to 6 or 
+	       a box of -3pixels  to 3pixels
                    
        restoringbeam -- Output Gaussian restoring beam for CLEAN image
                [bmaj, bmin, bpa] elliptical Gaussian restoring beam
