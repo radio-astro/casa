@@ -38,11 +38,10 @@
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
 
-/* Future Decl */
-class casa::Record;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
   
+  class Record;
+
   class SIMinorCycleController : boost::noncopyable 
  {
   public:
