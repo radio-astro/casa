@@ -57,12 +57,13 @@ SPECIALIZE_VALUEHOLDER_TO_ARRAY(Double)
 SPECIALIZE_VALUEHOLDER_TO_ARRAY(Complex)
 SPECIALIZE_VALUEHOLDER_TO_ARRAY(Bool)
 
-template<class HandlerImpl, class CasaDataType, class SakuraDataType>
+template<class HandlerImpl, class CasaDataType, class SakuraDataType, int TypeId>
 class HandlerInterface
 {
 public:
   typedef CasaDataType CDataType;
   typedef SakuraDataType SDataType;
+  enum { SakuraPyTypeId = TypeId };  
   
   static casa::Array<CDataType> AsArray(casa::ValueHolder *v)
   {
@@ -93,12 +94,12 @@ public:
 };
 
 template<class CasaDataType, class SakuraDataType, int TypeId>
-class DataHandler : public HandlerInterface<DataHandler<CasaDataType, SakuraDataType, TypeId>, CasaDataType, SakuraDataType>
+class DataHandler : public HandlerInterface<DataHandler<CasaDataType, SakuraDataType, TypeId>, CasaDataType, SakuraDataType, TypeId>
 {
 public:
+  typedef HandlerInterface<DataHandler<CasaDataType, SakuraDataType, TypeId>, CasaDataType, SakuraDataType, TypeId> Base;
   typedef CasaDataType CDataType;
   typedef SakuraDataType SDataType;
-  enum { SakuraPyTypeId = TypeId };  
   
   static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
   {
@@ -119,12 +120,12 @@ public:
 };
 
 template<>
-class DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> : public HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float>
+class DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> : public HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float, sakura_PyTypeId_kFloat>
 {
 public:
+  typedef HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float, sakura_PyTypeId_kFloat> Base; 
   typedef casa::Complex CDataType;
   typedef float SDataType;
-  enum { SakuraPyTypeId = sakura_PyTypeId_kFloat };  
   
   static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
   {
@@ -150,12 +151,13 @@ public:
 //       CASA flag: valid is False, invalid is True
 //       Sakura mask: valid is True, invalid is False
 template<>
-class DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> : public HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool>
+class DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> : public HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool>
 {
 public:
   typedef casa::Bool CDataType;
   typedef bool SDataType;
-  enum { SakuraPyTypeId = sakura_PyTypeId_kBool };  
+
+  typedef HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool> Base;
   
   static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
   {
@@ -181,7 +183,6 @@ class DataConverter
 public:
   typedef typename Handler::CDataType CDataType;
   typedef typename Handler::SDataType SDataType;
-  enum { SakuraPyTypeId = Handler::SakuraPyTypeId };
   
   static PyObject *CreateChunkForSakura(PyObject *obj)
   {
@@ -346,11 +347,19 @@ static PyObject *tosakura(PyObject *self, PyObject *args)
   PyObject *obj = ArgAsPyObject(args);
 
   RETURN_NONE_IF_NULL(obj)
-  
-  PyObject *tuple = Handler::CreateChunkForSakura(obj);
 
+  PyObject *tuple = NULL;
+
+  try {
+    tuple = Handler::CreateChunkForSakura(obj);
+  }
+  catch (...) {
+    // any exception occurred
+    Py_RETURN_NONE;
+  }
+    
   RETURN_NONE_IF_NULL(tuple)
-  
+
   return tuple;
 }
 
@@ -360,11 +369,18 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
   PyObject *obj = ArgAsPyObject(args);
 
   RETURN_NONE_IF_NULL(obj)
-  
-  PyObject *ret = Handler::CreateChunkForCasa(obj);
 
-  RETURN_NONE_IF_NULL(ret)
+  PyObject *ret = NULL;
+  try {
+    ret = Handler::CreateChunkForCasa(obj);
+  }
+  catch (...) {
+    // any exception occurred
+    Py_RETURN_NONE;
+  }
   
+  RETURN_NONE_IF_NULL(ret)
+
   return ret;  
 }
 
