@@ -360,8 +360,10 @@ class MeasurementSet(object):
             ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
             
         
+        science_spw_dd_ids = [self.get_data_description(spw).id for spw in science_spws]
+        
         with utils.open_table(self.name) as table:
-            taql = '(STATE_ID IN %s AND FIELD_ID IN %s)' % (science_state_ids, science_field_ids)
+            taql = '(STATE_ID IN %s AND FIELD_ID IN %s AND DATA_DESC_ID in %s)' % (science_state_ids, science_field_ids, science_spw_dd_ids)
             with contextlib.closing(table.query(taql)) as subtable:
                 integration = subtable.getcol('INTERVAL')          
             return numpy.median(integration)
