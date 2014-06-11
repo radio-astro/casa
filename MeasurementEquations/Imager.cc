@@ -2494,7 +2494,7 @@ Bool Imager::linearmosaic(const String& mosaic,
 }
 
 // Weight the MeasurementSet
-Bool Imager::weight(const String& type, const String& rmode,
+Bool Imager::weight(const String& type, const String& crmode,
                  const Quantity& noise, const Double robust,
                  const Quantity& fieldofview,
 		    const Int npixels, const Bool multiField)
@@ -2506,6 +2506,9 @@ Bool Imager::weight(const String& type, const String& rmode,
   this->lock();
   try {
     
+    String rmode=crmode; // can change it 
+
+
     os << LogIO::NORMAL // Loglevel INFO
        << "Weighting MS: Imaging weights will be changed" << LogIO::POST;
     
@@ -2516,7 +2519,11 @@ Bool Imager::weight(const String& type, const String& rmode,
     }
     else if(type=="superuniform"){
       if(!assertDefinedImageParameters()) return False;
-      Int actualNpix=npixels;
+      ///making usage of npixels consistent with uniform, briggs
+      /// don't know why this was done seperately which is kind of redundant in the code
+      /// one achieves superuniform with  just uniform with npixels or fieldofview 
+      /// set to non-defaults in the section below
+      Int actualNpix=npixels/2;
       if(actualNpix <=0)
 	actualNpix=3;
       os << LogIO::NORMAL // Loglevel INFO
@@ -2533,6 +2540,10 @@ Bool Imager::weight(const String& type, const String& rmode,
       Int actualNPixels(npixels);
       String wtype;
       if(type=="briggs") {
+	//The user really meant to use Brigg's weighting and forgot to set norm or abs
+	// guessing it should be norm
+	if(rmode=="none")
+	  rmode="norm";
         wtype = "Briggs";
       }
       else {
@@ -2548,7 +2559,7 @@ Bool Imager::weight(const String& type, const String& rmode,
            << LogIO::POST;
       }
       else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
-        actualNPixels=nx_p;
+        actualNPixels=Int(actualFieldOfView.get("rad").getValue()/mcellx_p.get("rad").getValue());
         os << LogIO::NORMAL // Loglevel INFO
            << wtype
            << " weighting: sidelobes will be suppressed over specified field of view: "
