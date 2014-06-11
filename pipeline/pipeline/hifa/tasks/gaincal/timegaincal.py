@@ -1,6 +1,6 @@
 from __future__ import absolute_import
-
 import types
+
 from pipeline.hif.tasks.gaincal import common
 from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gaincalmode
@@ -11,6 +11,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 
 LOG = infrastructure.get_logger(__name__)
+
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
     @basetask.log_equivalent_CASA_call
@@ -32,13 +33,13 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
 
-	if self._calamptable is not None:
+        if self._calamptable is not None:
             return self._calamptable
 
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('calamptable')
 
-	return gcaltable.GaincalCaltable()
+        return gcaltable.GaincalCaltable()
 
     @calamptable.setter
     def calamptable(self, value):
@@ -49,13 +50,13 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
 
-	if self._calphasetable is not None:
+        if self._calphasetable is not None:
             return self._calphasetable
 
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('calphasetable')
 
-	return gcaltable.GaincalCaltable()
+        return gcaltable.GaincalCaltable()
 
     @calphasetable.setter
     def calphasetable(self, value):
@@ -66,7 +67,7 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
 
-	if self._targetphasetable is not None:
+        if self._targetphasetable is not None:
             return self._targetphasetable
 
         if type(self.vis) is types.ListType:
@@ -83,7 +84,7 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
 
-	if self._amptable is not None:
+        if self._amptable is not None:
             return self._amptable
 
         if type(self.vis) is types.ListType:
@@ -143,9 +144,10 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Create a results object.
         result = common.GaincalResults() 
 
-	# Produce the diagnostic table for displaying
-	# amplitude vs time plots. 
+        # Produce the diagnostic table for displaying
+        # amplitude vs time plots. 
         calampresult = self._do_caltarget_ampcal()
+        result.calampresult = calampresult
 
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal()
@@ -223,7 +225,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
-            **task_args)
+                                                      **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
@@ -253,7 +255,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
-            **task_args)
+                                                      **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task)
@@ -282,7 +284,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
-            ** task_args)
+                                                      **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result =  self._executor.execute(gaincal_task)
@@ -311,7 +313,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
-            ** task_args)
+                                                      **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result =  self._executor.execute(gaincal_task)

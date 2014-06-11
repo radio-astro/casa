@@ -1,6 +1,5 @@
 <%!
 rsc_path = ""
-import cgi
 import os
 import string
 import types
@@ -43,80 +42,6 @@ def sanitise(url):
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
-<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, plot_accessor=lambda d: [('No Intent', d)])">
-% if plot_dict:
-	<h3>${caller.title()}</h3>
-
-	% for ms, ms_plots in plot_dict.items():
-		<%
-			relurl = url_fn(ms)
-			subpage_abspath = os.path.join(pcontext.report_dir, dirname, relurl)
-			subpage_path = os.path.relpath(os.path.join(dirname, relurl), pcontext.report_dir)
-			subpage_exists = os.path.exists(subpage_abspath)
-		%>
-		<h4>
-			% if subpage_exists:
-			<a class="replace"
-			   href="${subpage_path}">
-			% endif
-				${ms}
-			% if subpage_exists:
-			</a>
-			% endif
-		</h4>	
-
-		    <ul class="thumbnails">
-		        % for intent, intent_plots in plot_accessor(ms_plots):					
-					% for plot in intent_plots:
-			            % if os.path.exists(plot.thumbnail):
-			            <%
-			            	fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
-			            	thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
-			            %>
-			            
-			            <li class="span3">
-			                <div class="thumbnail">
-								<a href="${fullsize_relpath}"
-								   class="fancybox"
-								   rel="${relurl}">
-									<img src="${thumbnail_relpath}"
-								   		 title="${caller.mouseover(plot)}"
-								   		 data-thumbnail="${thumbnail_relpath}}">
-								   	</img>
-								</a>
-	
-			                    <div class="caption">
-									<h4>
-									% if subpage_exists:
-										<a href="${subpage_path}"
-			   							   class="replace"
-										% if data_field:
-										   data-field="${cgi.escape(plot.parameters['field'], True)}"
-										% endif
-										% if data_spw:
-										   data-spw="${plot.parameters['spw']}">
-										% endif
-									% endif
-									${caller.caption_title(plot)}
-									% if subpage_exists:
-										</a>
-									% endif
-									</h4>
-											
-			                        <p>${caller.caption_text(plot, intent)}</p>
-			                    </div>
-			                </div>
-			            </li>
-			            % endif
-			        % endfor
-		        % endfor
-		    </ul>
-
-	% endfor
-		
-% endif
-</%def>
-
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
@@ -156,8 +81,11 @@ $(document).ready(function(){
                 width: 50,
                 height: 50,
             }
-        }
-    });
+        },
+    	beforeShow : function() {
+        	this.title = $(this.element).attr('caption');
+       	}    
+    }); 
 	
 	$('.caltable_popover').popover({
 		  template: '<div class="popover gaintable_popover"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
@@ -328,6 +256,12 @@ def space_comma(s):
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
+	<%def name="fancybox_caption(plot)">
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
 	</%def>
@@ -354,6 +288,12 @@ def space_comma(s):
 
 	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
+	<%def name="fancybox_caption(plot)">
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
 	</%def>
@@ -378,6 +318,12 @@ def space_comma(s):
 
 	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for spectral window ${plot.parameters['spw']}</%def>
 
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
 	<%def name="caption_title(plot)">
 		Spectral Window ${plot.parameters['spw']}
 	</%def>
@@ -400,6 +346,12 @@ def space_comma(s):
 
 	<%def name="mouseover(plot)">Click to show amplitude vs time for spectral window ${plot.parameters['spw']}</%def>
 
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
 	<%def name="caption_title(plot)">
 		Spectral Window ${plot.parameters['spw']}
 	</%def>
@@ -421,6 +373,12 @@ def space_comma(s):
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show phase vs time for spectral window ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
 
 	<%def name="caption_title(plot)">
 		Spectral Window ${plot.parameters['spw']}

@@ -1997,6 +1997,11 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
         phase_vs_time_summaries = {}
         amp_vs_time_details = {}
         phase_vs_time_details = {}
+        diagnostic_amp_vs_time_summaries = {}
+        diagnostic_phase_vs_time_summaries = {}
+        diagnostic_amp_vs_time_details = {}
+        diagnostic_phase_vs_time_details = {}
+        
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
@@ -2007,25 +2012,72 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
             plotter = gaincal.RMSOffsetVsRefAntDistanceChart(context, result)
             structure_plots[vis] = plotter.plot()
 
+            # result.final calapps contains p solution for solint=int,inf and a
+            # solution for solint=inf.
+            calapps = result.final
+
             # generate amp vs time plots
-            plotter = gaincal.GaincalAmpVsTimeSummaryChart(context, result)
+            plotter = gaincal.GaincalAmpVsTimeSummaryChart(context, result, 
+                                                           calapps, 'TARGET')
             amp_vs_time_summaries[vis] = plotter.plot()
-            plotter = gaincal.GaincalAmpVsTimeDetailChart(context, result)
-            amp_vs_time_details[vis] = plotter.plot()
-            renderer = GaincalAmpVsTimePlotRenderer(context, result, 
-                                                    amp_vs_time_details[vis])
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
-            
+
             # generate phase vs time plots
-            plotter = gaincal.GaincalPhaseVsTimeSummaryChart(context, result)
+            plotter = gaincal.GaincalPhaseVsTimeSummaryChart(context, result,
+                                                             calapps, 'TARGET')
             phase_vs_time_summaries[vis] = plotter.plot()
-            plotter = gaincal.GaincalPhaseVsTimeDetailChart(context, result)
-            phase_vs_time_details[vis] = plotter.plot()
-            renderer = GaincalPhaseVsTimePlotRenderer(context, result, 
-                                                      phase_vs_time_details[vis])
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
+
+            # generate diagnostic phase vs time plots for bandpass solution, i.e. 
+            # with solint=int
+            plotter = gaincal.GaincalPhaseVsTimeSummaryChart(context, result,
+                                                             calapps, 'BANDPASS')
+            diagnostic_phase_vs_time_summaries[vis] = plotter.plot()
+
+            # generate diagnostic amp vs time plots for bandpass solution, 
+            # pointing to the diagnostic calapps outside result.final
+            calapps = result.calampresult.final
+            plotter = gaincal.GaincalAmpVsTimeSummaryChart(context, result, 
+                                                           calapps, '')
+            diagnostic_amp_vs_time_summaries[vis] = plotter.plot()
+
+            if infrastructure.generate_detail_plots():
+                calapps = result.final
+
+                # phase vs time plots
+                plotter = gaincal.GaincalPhaseVsTimeDetailChart(context, result,
+                                                                calapps, 'TARGET')
+                phase_vs_time_details[vis] = plotter.plot()
+                renderer = GaincalPhaseVsTimePlotRenderer(context, result, 
+                                                          phase_vs_time_details[vis])
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
+
+                # amp vs time plots
+                plotter = gaincal.GaincalAmpVsTimeDetailChart(context, result,
+                                                               calapps, 'TARGET')
+                amp_vs_time_details[vis] = plotter.plot()
+                renderer = GaincalAmpVsTimePlotRenderer(context, result, 
+                                                        amp_vs_time_details[vis])
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
+
+                # phase vs time for solint=int
+                plotter = gaincal.GaincalPhaseVsTimeDetailChart(context, result,
+                                                                calapps, 'BANDPASS')
+                diagnostic_phase_vs_time_details[vis] = plotter.plot()
+                renderer = GaincalPhaseVsTimeDiagnosticPlotRenderer(context,
+                        result, diagnostic_phase_vs_time_details[vis])
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
+
+                # amp vs time plots for solint=int
+                calapps = result.calampresult.final
+                plotter = gaincal.GaincalAmpVsTimeDetailChart(context, result,
+                                                              calapps, '')
+                diagnostic_amp_vs_time_details[vis] = plotter.plot()
+                renderer = GaincalAmpVsTimeDiagnosticPlotRenderer(context, 
+                        result, diagnostic_amp_vs_time_details[vis])
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
 
             # get the first scan for the PHASE intent(s)
 #             first_phase_scan = ms.get_scans(scan_intent='PHASE')[0]
@@ -2042,6 +2094,8 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
                     'structure_plots'     : structure_plots,
                     'amp_vs_time_plots'   : amp_vs_time_summaries,
                     'phase_vs_time_plots' : phase_vs_time_summaries,
+                    'diagnostic_amp_vs_time_plots'   : diagnostic_amp_vs_time_summaries,
+                    'diagnostic_phase_vs_time_plots' : diagnostic_phase_vs_time_summaries,
                     'dirname'             : stage_dir})
 
         return ctx
@@ -2184,6 +2238,13 @@ class GaincalPhaseVsTimePlotRenderer(GenericPlotsRenderer):
         d = super(GaincalPhaseVsTimePlotRenderer, self)._get_display_context()
         d['plot_title'] = 'Phase vs time for %s' % self.ms
         return d
+
+
+class GaincalPhaseVsTimeDiagnosticPlotRenderer(GaincalPhaseVsTimePlotRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('diagnostic_phase_vs_time-%s.html' % self.ms)
+        return filename
     
 
 class GaincalAmpVsTimePlotRenderer(GenericPlotsRenderer):
@@ -2200,6 +2261,13 @@ class GaincalAmpVsTimePlotRenderer(GenericPlotsRenderer):
         d = super(GaincalAmpVsTimePlotRenderer, self)._get_display_context()
         d['plot_title'] = 'Amplitude vs time for %s' % self.ms
         return d
+
+
+class GaincalAmpVsTimeDiagnosticPlotRenderer(GaincalAmpVsTimePlotRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('diagnostic_amp_vs_time-%s.html' % self.ms)
+        return filename
 
 
 class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
@@ -3019,6 +3087,8 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
         
         plotter = plotter_cls(context, result, intents)
         plots = plotter.plot()
+        for plot in plots:
+            plot.parameters['intent'] = intents
 
         d = collections.defaultdict(dict)
         d[vis] = plots
