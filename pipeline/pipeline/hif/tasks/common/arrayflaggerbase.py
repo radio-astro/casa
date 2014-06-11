@@ -238,7 +238,7 @@ class FlagCmd(object):
         """Return True if the FlagCmd operates on this SpectrumResult.
         """
         match = True
-        match = match and (self.filename == spectrum.filename)
+#        match = match and (self.filename == spectrum.filename)
 
         # does spw match?
         match = match and (
@@ -254,12 +254,9 @@ class FlagCmd(object):
             match = False
 
         # does time match?
-        if spectrum.time is not None:
-            try:
-                match = match and (spectrum.time > self.start_time and
-                  spectrum.time < self.end_time)
-            except:
-                match = False        
+        if spectrum.time is not None and self.start_time is not None:
+            match = match and (spectrum.time > self.start_time and
+              spectrum.time < self.end_time)
 
         # does correlation/pol match?
         match = match and (
