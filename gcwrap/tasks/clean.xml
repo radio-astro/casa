@@ -1290,7 +1290,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                npixels -- uv-box used for weight calculation
                               a box going from -npixel/2 to +npixel/2 on each side
                               around a point is used to calculate weight density.
-                              0 means only single pixel is considered
+                              0 means box is pixel size
                    example npixels=2
                    Default = 0
 	       Exception: when choosing superuniform it does not make sense to 
