@@ -98,8 +98,8 @@ class DataHandler : public HandlerInterface<DataHandler<CasaDataType, SakuraData
 {
 public:
   typedef HandlerInterface<DataHandler<CasaDataType, SakuraDataType, TypeId>, CasaDataType, SakuraDataType, TypeId> Base;
-  typedef CasaDataType CDataType;
-  typedef SakuraDataType SDataType;
+  typedef typename Base::CDataType CDataType;
+  typedef typename Base::SDataType SDataType;
   
   static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
   {
@@ -124,8 +124,6 @@ class DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> : public Handler
 {
 public:
   typedef HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float, sakura_PyTypeId_kFloat> Base; 
-  typedef casa::Complex CDataType;
-  typedef float SDataType;
   
   static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
   {
@@ -154,9 +152,6 @@ template<>
 class DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> : public HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool>
 {
 public:
-  typedef casa::Bool CDataType;
-  typedef bool SDataType;
-
   typedef HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool> Base;
   
   static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
