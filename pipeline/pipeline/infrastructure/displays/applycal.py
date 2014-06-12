@@ -144,6 +144,7 @@ class PlotmsLeaf(object):
                      'scan'            : str(self._scan),
                      'antenna'         : self._ant,
                      'plotfile'        : self._plotfile,
+                     'clearplots'      : True,
                      'showgui'         : False}
 
         task_args.update(**self._plot_args)
