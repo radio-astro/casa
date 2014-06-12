@@ -365,8 +365,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             input_wvrflag = set(wvrflag)
             generated_wvrflag = job_wvrflag.difference(input_wvrflag)
             if generated_wvrflag:
-                LOG.warn('wvrgcal has flagged antennas: %s' % 
-                  list(generated_wvrflag))
+                LOG.warn('%s wvrgcal has flagged antennas: %s' % ( 
+                  os.path.basename(inputs.vis), list(generated_wvrflag)))
          
             wvrflag_set = set(result.wvrflag)
             wvrflag_set.update(job_wvrflag)
