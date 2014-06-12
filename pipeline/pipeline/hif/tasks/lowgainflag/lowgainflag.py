@@ -283,8 +283,12 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
               commonresultobjects.ResultAxis(name='Time', units='',
               data=times)]
 
+            # associate the result with a generic filename - using
+            # specific names gives confusing duplicates on the weblog
+            # display
             viewresult = commonresultobjects.ImageResult(filename=
-              os.path.basename(table), intent=self.inputs.intent,
+              '%s(gtable)' % os.path.basename(gtable.vis),
+              intent=self.inputs.intent,
               data=data, flag=flag,
               axes=axes, datatype='gain amplitude', spw=spwid)
           
