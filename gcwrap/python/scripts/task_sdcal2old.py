@@ -11,6 +11,10 @@ import sdutil
 @sdutil.sdtask_decorator
 def sdcal2old(infile, calmode, fraction, noff, width, elongated, tsysiflist, applytable, interp, ifmap, scanlist, field, iflist, pollist, outfile, overwrite):
     with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 
+        import inspect
+        taskname = inspect.currentframe().f_code.co_name
+        if True:
+            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

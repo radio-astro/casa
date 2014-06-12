@@ -9,6 +9,10 @@ import sdutil
 @sdutil.sdtask_decorator
 def sdmathold(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdmath_worker, locals()) as worker:
+        import inspect
+        taskname = inspect.currentframe().f_code.co_name
+        if True:
+            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

@@ -10,6 +10,10 @@ import sdutil
 @sdutil.sdtask_decorator
 def sdimagingold(infiles, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, minweight, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
+        import inspect
+        taskname = inspect.currentframe().f_code.co_name
+        if True:
+            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()    

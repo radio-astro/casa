@@ -7,6 +7,10 @@ import sdutil
 @sdutil.sdtask_decorator
 def sdgridold(infiles, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
     with sdutil.sdtask_manager(sdgrid_worker, locals()) as worker:
+        import inspect
+        taskname = inspect.currentframe().f_code.co_name
+        if True:
+            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

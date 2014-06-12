@@ -9,6 +9,10 @@ import sdutil
 @sdutil.sdtask_decorator
 def sdplotold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
+        import inspect
+        taskname = inspect.currentframe().f_code.co_name
+        if True:
+            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

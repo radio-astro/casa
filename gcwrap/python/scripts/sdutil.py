@@ -1252,3 +1252,12 @@ def select_by_timerange(data, timerange):
     casalog.post('taql for timerange: \'%s\''%(taql), priority='DEBUG')
 
     return taql
+
+def issue_deprecation_warning(taskname, newtask=None):
+    if type(taskname) != str or \
+           not taskname.endswith('old'):
+        raise ValueError, "Invalid task name."
+    if not newtask or len(newtask)==0:
+        newtask = taskname[:-3]
+    warning = "DEPRECATION WARNING! You are executing an OLD single dish task, %s. This task will be removed in a future release. As soon as it is practical, use the replacement task %s, instead." % (taskname, newtask)
+    casalog.post(warning, priority="WARN")
