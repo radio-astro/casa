@@ -28,6 +28,8 @@
 
 #include <images/Images/ImageConcat.h>
 
+#include <casa/Containers/ContainerIO.h>
+
 namespace casa {
 
 template <class T>
@@ -236,7 +238,7 @@ template <class T> Bool ImageConcatenator<T>::_minMaxAxisValues(
 	mymax = image->coordinates().toWorld(pix)[_axis];
 	Bool isIncreasing = mymax > mymin;
 	if (! isIncreasing) {
-		swap(mymin, mymax);
+        std::swap(mymin, mymax);
 	}
 	return isIncreasing;
 }
