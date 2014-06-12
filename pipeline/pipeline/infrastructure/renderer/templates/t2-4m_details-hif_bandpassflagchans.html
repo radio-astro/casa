@@ -34,10 +34,8 @@ try:
             # display the view first
             # plot() returns the list of Plots it has generated
             LOG.info('Plotting')
-            plots.append(displays.SliceDisplay().plot(context=pcontext,
-              results=r, reportdir=stage_dir, plotbad=False,
-              plot_only_flagged=False))
-#              plot_only_flagged=True))
+            plots.append(displays.ImageDisplay().plot(context=pcontext,
+              results=r, reportdir=stage_dir))
 
     # Group the Plots by axes and plot types; each logical grouping will
     # be contained in a PlotGroup
