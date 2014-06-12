@@ -1,8 +1,13 @@
 from __future__ import absolute_import
 
 import os
+import re
+import numpy
+
+from asap._asap import srctype 
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
@@ -46,6 +51,18 @@ class SDCalTsysInputs(common.SingleDishInputs):
         else:
             args['tsysspw'] = tsysspw
 
+        # check if any channels are flagged or not
+        # flagged_channels {spwid: 'ch0~1,...'}
+        tsysspw_list = common.selection_to_list(args['tsysspw'])
+        flagged_channels = _flagged_channels(args['infile'], tsysspw_list)
+        LOG.debug('flagged_channels=%s'%(flagged_channels))
+
+        args['tsysavg'] = len(flagged_channels) > 0
+
+        if args['tsysavg'] == True:
+            args['tsysspw'] = _spw_with_channelrange(tsysspw_list, flagged_channels)
+            LOG.debug('Performing spectral averaging of Tsys with channel range %s'%(args['tsysspw']))
+
         # filter out WVR
         spw = self.context.observing_run.get_spw_for_caltsys(args['infile'])
         args['spw'] = ','.join(map(str,spw))
@@ -74,6 +91,35 @@ class SDCalTsysInputs(common.SingleDishInputs):
             
         return args
 
+def _flagged_channels(infile, spwid_list):
+    flagged_channels = {}
+    atmcal_intents = map(int,[getattr(srctype, s) for s in dir(srctype) if re.search('cal$', s)])
+    with casatools.TableReader(infile) as tb:
+        for spwid in spwid_list:
+            tsel = tb.query('IFNO==%s && SRCTYPE IN %s'%(spwid,atmcal_intents))
+            flags = tsel.getcol('FLAGTRA')
+            tsel.close()
+            if len(flags) == 0:
+                continue
+
+            net_flag = flags.sum(axis=1)
+            nchan = len(net_flag)
+            valid_channels = numpy.where(net_flag == 0)[0]
+            if len(valid_channels) == 0:
+                LOG.critical('All data are flagged for Tsys spw: %s'%(spwid))
+            elif len(valid_channels) < nchan:
+                flagged_channels[spwid] = (common.list_to_selection(valid_channels)).replace(',',';')
+
+    return flagged_channels
+
+def _spw_with_channelrange(spwid_list, flagged_channels):
+    def g(spwid_list, flagged_channels):
+        for spwid in spwid_list:
+            if flagged_channels.has_key(spwid):
+                yield '%s:%s'%(spwid,flagged_channels[spwid])
+            else:
+                yield '%s'%(spwid)
+    return ','.join(g(spwid_list, flagged_channels))
 
 class SDCalTsysResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
