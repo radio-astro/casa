@@ -222,6 +222,7 @@ scripts/vishead_util.py
 scripts/simple_cluster.py
 scripts/task_ssdreduce.py
 scripts/reductionhelper.py
+scripts/reductionhelper_util.py
 )
 
 add_subdirectory( scripts/tests )
