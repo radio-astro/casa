@@ -31,7 +31,7 @@ myf['__rethrow_casa_exceptions'] = True
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
-    interactive=True):
+    plotlevel='all', interactive=True):
 
     # Useful mode parameters
     echo_to_screen = interactive
@@ -48,7 +48,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
             relativePath, "rawdata")
 
         # Get the pipeline context 
-        context = pipeline.Pipeline(loglevel=loglevel,
+        context = pipeline.Pipeline(loglevel=loglevel, plotlevel=plotlevel,
 	    output_dir=workingDir).context
 
     except Exception, e:
