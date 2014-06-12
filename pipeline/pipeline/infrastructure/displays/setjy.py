@@ -142,6 +142,7 @@ class PlotmsLeaf(object):
                      'spw'             : str(self._spw),
                      'scan'            : str(self._scan),
                      'antenna'         : self._ant,
+		     'clearplots'      : True,
                      'plotfile'        : self._plotfile,
                      'showgui'         : False}
 
