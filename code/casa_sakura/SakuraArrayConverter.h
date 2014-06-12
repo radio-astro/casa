@@ -21,52 +21,21 @@ class SakuraArrayConverter {
 protected:
 
 public:
-	template<class T> static void ConvertComplexMatrixToSakura(
-			uInt const num_pol, uInt const num_data,
-			Matrix<Complex> &input_complex_matrix, T output_data[]) {
-		Bool deleteIn;
-		const uInt max_pol = input_complex_matrix.nrow();
-		const Complex* pin = input_complex_matrix.getStorage(deleteIn);
-		for (uInt i = 0; i < num_data; ++i) {
-			output_data[i] = casa::real(pin[max_pol * i + num_pol]);
-		}
-		input_complex_matrix.freeStorage(pin, deleteIn);
+	template <class T, class S> static void ConvertCASAToSakura(uInt const index_in,
+			uInt const index_out, const T* pin,S *output_data){
+	        output_data[index_out] = pin[index_in];
 	}
-	template<class T> static void ConvertMatrixToSakura(uInt const num_pol,
-			uInt const num_data, Matrix<T> &input_matrix, T output_data[]) {
-		Bool deleteIn;
-		const uInt max_pol = input_matrix.nrow();
-		const T* pin = input_matrix.getStorage(deleteIn);
-		for (uInt i = 0; i < num_data; ++i) {
-			output_data[i] = pin[max_pol * i + num_pol];
-		}
-		input_matrix.freeStorage(pin, deleteIn);
-	}
-	template<class T> static void ConvertSakuraToComplexMatrix(
-			uInt const num_pol, uInt const num_data, T const input_data[],
-			Matrix<Complex> &output_complex_matrix) {
-		Bool deleteOut;
-		const uInt max_pol = output_complex_matrix.nrow();
-		Complex* pout = output_complex_matrix.getStorage(deleteOut);
-		for (uInt i = 0; i < num_data; ++i) {
-			casa::real(pout[max_pol * i + num_pol]) = input_data[i];
-			casa::imag(pout[max_pol * i + num_pol]) = 0.0;
-		}
-		output_complex_matrix.putStorage(pout, deleteOut);
-	}
-	template<class T> static void ConvertSakuraToMatrix(uInt const num_pol,
-			uInt const num_data, T const input_data[],
-			Matrix<T> &output_matrix) {
-		Bool deleteOut;
-		const uInt max_pol = output_matrix.nrow();
-		T* pout = output_matrix.getStorage(deleteOut);
-		for (uInt i = 0; i < num_data; ++i) {
-			pout[max_pol * i + num_pol] = input_data[i];
-		}
-		output_matrix.putStorage(pout, deleteOut);
+	template <class S, class T> static void ConvertSakuraToCASA(uInt const index_in,
+			uInt const index_out, S const *input_data,T* pout){
+		    pout[index_out] = input_data[index_in];
 	}
 private:
 };
+
+template<> void SakuraArrayConverter::ConvertCASAToSakura<Complex, float>(uInt const index_in,
+		uInt const index_out, const Complex* pin,float *output_data);
+template<> void SakuraArrayConverter::ConvertSakuraToCASA<float,Complex>(uInt const index_in,
+		uInt const index_out, float const *input_data,Complex* pout);
 
 } //# NAMESPACE CASA - END
 
