@@ -998,7 +998,7 @@ String ImageFitter::_resultsToString(uInt nPixels) const {
 		for (uInt i = 0; i < n; i++) {
 			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
 			summary << _curConvolvedList.component(i).positionToString(
-				&(_getImage()->coordinates()), True
+				&(_getImage()->coordinates().directionCoordinate()), True
 			) << endl;
 			summary << _sizeToString(i) << endl;
 			summary << _results.fluxToString(i, ! _noBeam) << endl;
