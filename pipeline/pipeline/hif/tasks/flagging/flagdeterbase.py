@@ -492,15 +492,16 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                 try:
                     time = inputs.ms.get_median_science_integration_time(intent=intent)
                     tbuff = max (tbuff, time)
-                    LOG.info("Using tbuff = "+str(tbuff))
+                    LOG.debug("Using tbuff = "+str(tbuff))
                 except:
+                    #LOG.debug('Intent ' + intent + ' not present.')
                     LOG.debug('Intent ' + intent + ' not present.')
-                    LOG.info('Intent ' + intent + ' not present.')
             tbuff = 0.5 * tbuff
         elif inputs._hm_tbuff == '1.5int':
             tbuff = 1.5 * inputs.ms.get_median_integration_time()
         else:
             tbuff = inputs._tbuff
+        LOG.info("Using tbuff = "+str(tbuff))
 
         # Map the pipeline inputs to a dictionary of CASA task arguments 
         ####task_args = inputs.to_casa_args()
