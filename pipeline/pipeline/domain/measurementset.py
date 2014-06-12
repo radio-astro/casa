@@ -349,7 +349,7 @@ class MeasurementSet(object):
         science_spws = [ispw for ispw in spws if 
           ispw.num_channels not in [1,4] and not ispw.intents.isdisjoint(
           ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
-        LOG.info('science spws are: %s' % [ispw.id for ispw in science_spws])
+        LOG.debug('science spws are: %s' % [ispw.id for ispw in science_spws])
     
         # and the science fields/states
         science_field_ids = [field.id for field in self.fields
