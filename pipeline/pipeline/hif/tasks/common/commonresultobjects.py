@@ -14,7 +14,7 @@ class ResultAxis(object):
     def __init__(self, name, units, data, channel_width=None):
         self.name = name
         self.units = units
-        self.data = data
+        self.data = data.copy()
         if channel_width is None:
             if len(data) > 1:
                 self.channel_width = data[1] - data[0]
@@ -67,18 +67,18 @@ class ImageResult(ResultBase):
                  intent=None, field_id=None, field_name=None, spw=None,
                  pol=None, ant=None, units=None, time=None):
         self.filename = filename
-        self.data = data
+        self.data = data.copy()
         self.axes = axes
 
         if flag is None:
             self.flag = np.zeros(np.shape(self.data), np.bool)
         else:
-            self.flag = flag
+            self.flag = flag.copy()
 
         if nodata is None:
             self.nodata = np.zeros(np.shape(self.data), np.bool)
         else:
-            self.nodata = nodata
+            self.nodata = nodata.copy()
 
         self.datatype = datatype
         self.field_id = field_id
@@ -112,7 +112,7 @@ class SpectrumResult(ResultBase):
         if flag is None:
             self.flag = np.zeros(np.shape(data), np.bool)
         else:
-            self.flag = flag
+            self.flag = flag.copy()
 
         valid_data = data[self.flag==False]
         if len(valid_data) > 0:
@@ -123,7 +123,7 @@ class SpectrumResult(ResultBase):
         if normalise and self.median > 0:
             self.data = data / self.median
         else:
-            self.data = data
+            self.data = data.copy()
 
         if data_mad is None:
             self.data_mad = np.zeros(np.shape(self.data))
@@ -131,7 +131,7 @@ class SpectrumResult(ResultBase):
             if normalise and self.median > 0:
                 self.data_mad = data_mad / self.median
             else:
-                self.data_mad = data_mad
+                self.data_mad = data_mad.copy()
 
         if axis is None:
             self.axis = ResultAxis('channel', None,
@@ -142,7 +142,7 @@ class SpectrumResult(ResultBase):
         if nodata is None:
             self.nodata = np.zeros(np.shape(self.data), np.bool)
         else:
-            self.nodata = nodata
+            self.nodata = nodata.copy()
 
         if noisychannels is None:
             self.noisychannels = np.zeros(np.shape(self.data), np.bool)
