@@ -10822,12 +10822,12 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="any" name="length">
-            <description>The length of the segmaent in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
+            <description>The length of the segment in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
             <any type="variant"/>
             <value/>
         </param>
         <param type="any" name="pa">
-            <description>The position angle of the segmaent in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
+            <description>The position angle of the segment in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
             <any type="variant"/>
             <value/>
         </param>
