@@ -268,7 +268,6 @@ class Applycal(basetask.StandardTaskTemplate):
         flagkwargs = []        
         
         for field in fields:
-
             for spwid in spwids:
                 flagline = "field='" + str(field.id) + "' spw='" + str(spwid) + "' mode='summary' name='AntSpw" + str(spwid).zfill(3) + "Field" + str(field.id) + "'"
                 flagkwargs.append(flagline)

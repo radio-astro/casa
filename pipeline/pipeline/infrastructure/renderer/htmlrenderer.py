@@ -617,9 +617,12 @@ class T1_3MRenderer(RendererBase):
                 try:
                     for resultitem in result:
                         ms_name = os.path.basename(resultitem.inputs['vis'])
+                        ms = [i for i in context.observing_run.get_measurement_sets() if ms_name in i.name][0]
                         flagtable = {}
 			for field in resultitem.flagsummary.keys():
 			    #each field
+			    intents = ','.join([f.intents for f in ms.get_fields() if field in f.name][0])
+			    
 			    flagsummary = resultitem.flagsummary[field]
 			
 			    fieldtable = {}
@@ -632,7 +635,7 @@ class T1_3MRenderer(RendererBase):
 			    
 				fieldtable.update({myname:{spwkey:myant}})
 				
-			    flagtable[field] = fieldtable
+			    flagtable['Source name: '+ field + ', Intents: ' + intents] = fieldtable
 			
 			flagtables[ms_name] = flagtable
 			
