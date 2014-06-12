@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import collections
+import os
 import numpy as np 
 import re
 
@@ -12,153 +13,102 @@ from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import BandpassflagResults
 from ..common import commonresultobjects
 from ..common import calibrationtableaccess as caltableaccess
+from ..common import commonhelpermethods
 from ..common import viewflaggers
+
+from .. import bandpass
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class BandpassflagchansInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
+
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-      flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
-      flag_diffmad=None, diffmad_limit=None, diffmad_nchan_limit=None,
-      flag_tmf=None, tmf_frac_limit=None, tmf_nchan_limit=None, niter=None):
+      flag_hilo=None, fhl_limit=None, fhl_minsample=None,
+      flag_tmf=None, tmf_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
     @property
     def caltable(self):
-        if self._caltable is None:
+        return self._caltable
+
+    @caltable.setter
+    def caltable(self, value):
+        if value is None:
             caltables = self.context.callibrary.active.get_caltable(
               caltypes='bandpass')
 
             # return just the bandpass table that matches the vis being handled
-            result = None
             for name in caltables:
                 # Get the bandpass table name
                 bptable = caltableaccess.CalibrationTableDataFiller.getcal(
                   name)
                 if bptable.vis in self.vis:
-                    result = name
+                    value = name
                     break
 
-            return result
-
-        return self._caltable
-
-    @caltable.setter
-    def caltable(self, value):
         self._caltable = value
 
     @property
-    def flag_edges(self):
-        if self._flag_edges is None:
-            return False
-        return self._flag_edges
+    def flag_hilo(self):
+        return self._flag_hilo
 
-    @flag_edges.setter
-    def flag_edges(self, value):
-        self._flag_edges = value
-
-    @property
-    def edge_limit(self):
-        if self._edge_limit is None:
-            return 3.0
-        return self._edge_limit
-
-    @edge_limit.setter
-    def edge_limit(self, value):
-        self._edge_limit = value
+    @flag_hilo.setter
+    def flag_hilo(self, value):
+        if value is None:
+            value = True
+        self._flag_hilo = value
 
     @property
-    def flag_sharps(self):
-        if self._flag_sharps is None:
-            return False
-        return self._flag_sharps
+    def fhl_limit(self):
+        return self._fhl_limit
 
-    @flag_sharps.setter
-    def flag_sharps(self, value):
-        self._flag_sharps = value
-
-    @property
-    def sharps_limit(self):
-        if self._sharps_limit is None:
-            return 0.05
-        return self._sharps_limit
-
-    @sharps_limit.setter
-    def sharps_limit(self, value):
-        self._sharps_limit = value
+    @fhl_limit.setter
+    def fhl_limit(self, value):
+        if value is None:
+            value = 7
+        self._fhl_limit = value
 
     @property
-    def flag_diffmad(self):
-        if self._flag_diffmad is None:
-            return True
-        return self._flag_diffmad
+    def fhl_minsample(self):
+        return self._fhl_minsample
 
-    @flag_diffmad.setter
-    def flag_diffmad(self, value):
-        self._flag_diffmad = value
-
-    @property
-    def diffmad_limit(self):
-        if self._diffmad_limit is None:
-            return 14
-        return self._diffmad_limit
-
-    @diffmad_limit.setter
-    def diffmad_limit(self, value):
-        self._diffmad_limit = value
-
-    @property
-    def diffmad_nchan_limit(self):
-        if self._diffmad_nchan_limit is None:
-            return 10000
-        return self._diffmad_nchan_limit
-
-    @diffmad_nchan_limit.setter
-    def diffmad_nchan_limit(self, value):
-        self._diffmad_nchan_limit = value
+    @fhl_minsample.setter
+    def fhl_minsample(self, value):
+        if value is None:
+            value = 5
+        self._fhl_minsample = value
 
     @property
     def flag_tmf(self):
-        if self._flag_tmf is None:
-            return False
         return self._flag_tmf
 
     @flag_tmf.setter
     def flag_tmf(self, value):
+        if value is None:
+            value = True
         self._flag_tmf = value
 
     @property
-    def tmf_frac_limit(self):
-        if self._tmf_frac_limit is None:
-            return 0.05
-        return self._tmf_frac_limit
+    def tmf_limit(self):
+        return self._tmf_limit
 
-    @tmf_frac_limit.setter
-    def tmf_frac_limit(self, value):
-        self._tmf_frac_limit = value
-
-    @property
-    def tmf_nchan_limit(self):
-        if self._tmf_nchan_limit is None:
-            return 4
-        return self._tmf_nchan_limit
-
-    @tmf_nchan_limit.setter
-    def tmf_nchan_limit(self, value):
-        self._tmf_nchan_limit = value
+    @tmf_limit.setter
+    def tmf_limit(self, value):
+        if value is None:
+            value = 0.3
+        self._tmf_limit = value
 
     @property
     def niter(self):
-        if self._niter is None:
-            return 1
         return self._niter
 
     @niter.setter
     def niter(self, value):
+        if value is None:
+            value = 1
         self._niter = value
 
 
@@ -178,19 +128,18 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.caltable, inpfile=[])
+          vis=inputs.vis, table=inputs.vis, inpfile=[])
+#          vis=inputs.vis, table=inputs.caltable, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.VectorFlagger.make_flag_rules (
-          flag_edges=inputs.flag_edges, edge_limit=inputs.edge_limit,
-          flag_sharps=inputs.flag_sharps, sharps_limit=inputs.sharps_limit,
-          flag_diffmad=inputs.flag_diffmad, diffmad_limit=inputs.diffmad_limit,
-          diffmad_nchan_limit=inputs.diffmad_nchan_limit,
-          flag_tmf=inputs.flag_tmf, tmf_frac_limit=inputs.tmf_frac_limit,
-          tmf_nchan_limit=inputs.tmf_nchan_limit)
-        flagger = viewflaggers.VectorFlagger
+        rules = viewflaggers.MatrixFlagger.make_flag_rules(
+          flag_hilo=inputs.flag_hilo, fhl_limit=inputs.fhl_limit,
+          fhl_minsample=inputs.fhl_minsample,
+          flag_tmf1=inputs.flag_tmf, tmf1_axis='Channels', 
+          tmf1_limit=inputs.tmf_limit)
+        flagger = viewflaggers.MatrixFlagger
  
         # Construct the flagger task around the data view task  and the
         # flagger task. When executed this will:
@@ -227,12 +176,25 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
 
     def prepare(self):
         inputs = self.inputs
-
-        # Get bandpass results
         final = []
 
+        # Calculate new bandpass from PHASE intent
+        view_inputs = bandpass.PhcorBandpass.Inputs(inputs.context,
+          vis=inputs.vis,
+          mode='channel',
+          intent='PHASE',
+          solint='inf,7.8125MHz',
+          minsnr=0.0,
+          maxchannels=0,
+          qa2_intent='',
+          run_qa2=False)
+        name = view_inputs.caltable
+
+        task = bandpass.PhcorBandpass(view_inputs)
+        view_result = self._executor.execute(task, merge=False)
+
 	# Loop over caltables.
-        name = inputs.caltable
+        name = view_result.final[0].gaintable
 
         # Get the bandpass table name
         bptable = caltableaccess.CalibrationTableDataFiller.getcal(name)
@@ -264,32 +226,64 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
         """
 
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        antenna_ids = [antenna.id for antenna in ms.antennas]
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
-              if antenna.id==antenna_id][0]
 
+        # get antenna names
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+
+        # get names of corr products - not quite what we want but better names
+        # for pol than nothing
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        npols = len(corr_type)
+        pols = np.arange(npols)
+
+        # get number of channels for target spw - need to get these from 
+        # bpcal table itself as channels may have been averaged
+        nchan = None
         for row in bptable.rows:
-            # The bandpass array has 2 values for each result,
-            # presumably 1 number for each polarization.
-            # Assume this for now and check later. Pol IDs are
-            # unknown so store as '0' and '1'.
+            rowspw=row.get('SPECTRAL_WINDOW_ID')
+            if rowspw == spwid:
+                data = row.get('CPARAM')
+                nchan = np.shape(data)[1]
+                break
+
+        # no data for target spwid - EARLY RETURN
+        if nchan is None:
+            return
+
+        # arrays to hold view for this spw
+        viewdata = np.zeros([npols, nchan, antenna_ids[-1]+1])
+        viewflag = np.ones([npols, nchan, antenna_ids[-1]+1], np.bool)
+
+        # fill in view arrays
+        for row in bptable.rows:
+            rowspw=row.get('SPECTRAL_WINDOW_ID')
+            if rowspw != spwid:
+                continue
+
             data = row.get('CPARAM')
             flag = row.get('FLAG')
-            pols = range(np.shape(data)[0])
-            for pol in pols:
-                viewresult = commonresultobjects.SpectrumResult(
-                  data=np.abs(data[pol,:,0]),
-                  flag=flag[pol,:,0],
-                  datatype='Bandpass amp', filename=bptable.name,
-                  field_id=row.get('FIELD_ID'),
-                  spw=row.get('SPECTRAL_WINDOW_ID'),
-                  ant=(row.get('ANTENNA1'),
-                  antenna_name[row.get('ANTENNA1')]), pol=pol,
-                  time=row.get('TIME'), normalise=False)
 
-                # add the view results and their children results to the
-                # class result structure
-                self.result.addview(viewresult.description, viewresult)
+            for pol in pols:
+                antid = row.get('ANTENNA1')
+                viewdata[pol,:,antid] = np.abs(data[pol,:,0])
+                viewflag[pol,:,antid] = np.abs(flag[pol,:,0])
+ 
+        # lastly, construct the view objects
+        axes = [commonresultobjects.ResultAxis(name='Channels',
+          units='', data=np.arange(nchan)),
+          commonresultobjects.ResultAxis(name='Antenna1',
+          units='id', data=np.arange(antenna_ids[-1]+1))]
+
+        for pol in pols:
+            viewresult = commonresultobjects.ImageResult(
+              data=viewdata[pol],
+              flag=viewflag[pol],
+              datatype='Bandpass amp',
+              filename='%s(bpcal)' % os.path.basename(bptable.vis),
+              field_id=row.get('FIELD_ID'),
+              spw=spwid,
+              pol=corr_type[pol][0],
+              axes=axes)
+
+            # add the view results to the class result structure
+            self.result.addview(viewresult.description, viewresult)
