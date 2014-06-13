@@ -972,9 +972,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else{
 	Record imrec;
-	image->resize(TiledShape(griddedData.shape()));
-	image->put(griddedData);
-	if(image->toRecord(error, imrec))
+	TempImage<Complex> imCopy(griddedData.shape(), image->coordinates());
+	imCopy.put(griddedData) ;
+	ImageUtilities::copyMiscellaneous(imCopy, *image);
+	if(imCopy.toRecord(error, imrec))
 	  outRecord.defineRecord("image", imrec);
       }
     }

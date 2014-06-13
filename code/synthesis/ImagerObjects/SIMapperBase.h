@@ -78,7 +78,7 @@ class SIMapperBase
   virtual void degrid(VisBuffer& )=0;
 
   ////////////////////////////////////Return value is false if no valid ftm or CompList is available
-  virtual Bool getFTMRecord(Record & rec)=0;
+  virtual Bool getFTMRecord(Record & rec, const String diskimage=String(""))=0;
   virtual Bool getCLRecord(Record & rec)=0;
 
   virtual String getImageName()=0;//{return itsImages->getName();};

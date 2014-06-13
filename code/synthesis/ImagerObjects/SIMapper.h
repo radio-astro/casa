@@ -79,7 +79,7 @@ template<class T> class ImageInterface;
 
   //////////////the return value is False if no valid record is being returned
   Bool getCLRecord(Record& rec);
-  Bool getFTMRecord(Record& rec);
+  Bool getFTMRecord(Record& rec, const String diskimage="");
 
   virtual String getImageName(){return itsImages->getName();};
   virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
