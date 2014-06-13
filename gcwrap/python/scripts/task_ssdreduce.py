@@ -48,13 +48,13 @@ def ssdreduce(vis,
     # query_list is a list of TaQL query per DATA_DESC_ID and ANTENNA
     # row_list instead of query_list?
     if selectdata:
-        query_list = rh.generate_query(vis, field, spw)
-        #row_list = rh.generate_rowlist(vis, field, spw)
-    else:
         query_list = rh.generate_query(vis, field, spw, timerange, antenna,
                                        scan, pol, observation, msselect)
         #row_list = rh.generate_rowlist(vis, field, spw, timerange, antenna,
         #                               scan, pol, observation, msselect)
+    else:
+        query_list = rh.generate_query(vis, field, spw)
+        #row_list = rh.generate_rowlist(vis, field, spw)
 
     # get optimized number of threads
     num_record, num_threads = rh.optimize_thread_parameters()
