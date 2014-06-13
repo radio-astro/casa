@@ -30,6 +30,8 @@
 
 #include <casa/Containers/ContainerIO.h>
 
+#include <boost/scoped_array.hpp>
+
 namespace casa {
 
 template <class T>
@@ -92,28 +94,42 @@ SPIIT ImageConcatenator<T>::concatenate(
 	Coordinate::Type ctype = csys.coordinate(whichCoordinate).type();
 	DataType dataType = myImage->dataType();
 	Vector<Double> pix = csys.referencePixel();
-	map<String, Double> minVals, maxVals;
-	Bool isIncreasing = False;
+	vector<String> imageList;
+	imageList.push_back(myImage->name());
+	//if (! _reorder) {
+		imageList.insert(
+			imageList.end(), imageNames.begin(), imageNames.end()
+		);
+	//}
 	String myName = myImage->name();
-	if (! _relax) {
+	Bool isIncreasing = False;
+	//boost::scoped_array<Double> minVals, maxVals;
+	vector<Double> minVals, maxVals;
+	uInt n = 0;
+	if (! _relax || _reorder) {
+		n = imageList.size();
+		minVals.resize(n);
+		maxVals.resize(n);
 		isIncreasing = _minMaxAxisValues(
-			minVals[myName], maxVals[myName],
-			myImage
+			minVals[0], maxVals[0], myImage
 		);
 	}
-	vector<String> orderedImages;
-	orderedImages.push_back(myName);
-	if (! _reorder) {
-		orderedImages.insert(
-			orderedImages.end(), imageNames.begin(), imageNames.end()
-		);
-	}
+	uInt i = 1;
 	foreach_(String name, imageNames) {
 		SPIIT im2 = ImageUtilities::openImage<T>(name);
 		ThrowIf(
 			im2->dataType() != dataType,
 			"Concatenation of images of different data types is not supported"
 		);
+		if (! _relax || _reorder) {
+			ThrowIf(
+				_minMaxAxisValues(
+					minVals[i], maxVals[i], im2
+				) != isIncreasing,
+				"Coordinate axes in different images with opposing increment signs "
+				"is not permitted if relax=False or reorder=True"
+			);
+		}
 		if (! _relax) {
 			const CoordinateSystem tcsys = im2->coordinates();
 			tcsys.findPixelAxis(
@@ -124,68 +140,37 @@ SPIIT ImageConcatenator<T>::concatenate(
 				"Cannot concatenate different coordinates in different images "
 				"if relax=False"
 			);
-
 		}
-		if (_reorder) {
-			String myName = im2->name();
-			ThrowIf(
-				isIncreasing
-				!= _minMaxAxisValues(
-					minVals[myName], maxVals[myName], im2
-				),
-				"Coordinate axes in different images with opposing increment signs "
-				"is not permitted if relax=False"
-			);
-			Bool inserted = False;
-			vector<String>::iterator iter = orderedImages.begin();
-			vector<String>::iterator end = orderedImages.end();
-			while (iter != end) {
-				ThrowIf(
-					minVals[myName] < minVals[*iter]
-					&& maxVals[myName] >= minVals[*iter],
-					"Overlapping image axis ranges is not permitted "
-					"when relax=False"
-				);
-				Bool isLessThan = minVals[myName] < minVals[*iter];
-				if (isIncreasing && isLessThan) {
-					orderedImages.insert(iter, myName);
-					inserted = True;
-					break;
-				}
-				iter++;
-			}
-			if (! inserted) {
-				orderedImages.push_back(myName);
-			}
-		}
+		i++;
 	}
 	if (_reorder) {
-		vector<String>::const_iterator iter = orderedImages.begin();
-		vector<String>::const_iterator end = orderedImages.end();
-		vector<String> allImages = imageNames;
-		allImages.insert(allImages.begin(), myImage->name());
-		vector<String>::const_iterator aiter = allImages.begin();
+		Sort sorter;
+		sorter.sortKey(
+			minVals.data(), TpDouble, 0,
+			isIncreasing ? Sort::Ascending : Sort::Descending
+		);
+		Vector<uInt> indices;
+		sorter.sort(indices, n);
+		vector<String> tmp = imageList;
+		vector<String>::iterator iter = tmp.begin();
+		vector<String>::iterator end = tmp.end();
+		Vector<uInt>::const_iterator index = indices.begin();
 		while (iter != end) {
-			if (*iter != *aiter) {
-				*this->_getLog() << LogIO::WARN
-				<< "Images will be concatenated in the order "
-				<< orderedImages;
-				if (iter == orderedImages.begin()) {
-					*this->_getLog() << " and the coordinate system of "
-						<< *iter << " will be used as the reference";
-				}
-				*this->_getLog() << LogIO::POST;
-				break;
-			}
-			iter++;
-			aiter++;
+			*iter++ = imageList[*index++];
 		}
+		imageList = tmp;
+		*this->_getLog() << LogIO::NORMAL
+			<< "Images will be concatenated in the order "
+			<< imageList << " and the coordinate system of "
+			<< imageList[0] << " will be used as the reference"
+			<< LogIO::POST;
 	}
+
 	std::auto_ptr<ImageConcat<T> > pConcat(new ImageConcat<T> (_axis, _tempClose));
 	ThrowIf(
 		! pConcat.get(), "Failed to create ImageConcat object"
 	);
-	foreach_(String name, orderedImages) {
+	foreach_(String name, imageList) {
 		_addImage(pConcat, name);
 	}
 	return this->_prepareOutputImage(*pConcat);
