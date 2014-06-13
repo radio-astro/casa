@@ -111,10 +111,31 @@ TABLEDESC_RW = __tabledescrw()
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
+
 class DataTableImpl( object ):
+    """
+    DataTable is an object to hold meta data of scantable on memory. 
+    
+    row layout: [Row, Scan, IF, Pol, Beam, Date, Time, ElapsedTime,
+                   0,    1,  2,   3,    4,    5,    6,            7,
+                 Exptime, RA, DEC, Az, El, nchan, Tsys, TargetName, 
+                       8,  9,  10, 11, 12,    13,   14,         15,
+                 Statistics, Flags, PermanentFlags, SummaryFlag, Nmask, MaskList, NoChange, Ant]
+                         16,    17,             18,          19,    20,       21,       22,  23
+    Statistics: DataTable[ID][16] =
+                [LowFreqRMS, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, ExpectedRMS, ExpectedRMS]
+                          0,      1,      2,          3,          4,           5,           6
+    Flags: DataTable[ID][17] =
+                [LowFrRMSFlag, PostFitRMSFlag, PreFitRMSFlag, PostFitRMSdiff, PreFitRMSdiff, PostFitExpRMSFlag, PreFitExpRMSFlag]
+                            0,              1,             2,              3,             4,                 5,                6
+    PermanentFlags: DataTable[ID][18] =
+                [WeatherFlag, TsysFlag, UserFlag]
+                           0,        1,        2
+    Note for Flags: 1 is valid, 0 is invalid
+    """ 
     def __init__(self, name=None):
         """
-        nrow -- number of rows
+        name (optional) -- name of DataTable
         """
         # unique memory table name
         timestamp = ('%f'%(time.time())).replace('.','')

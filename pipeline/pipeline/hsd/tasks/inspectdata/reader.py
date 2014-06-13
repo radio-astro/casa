@@ -69,6 +69,7 @@ class DataTableReader(object):
             Tpol = tb.getcol('POLNO')
             Tbeam = tb.getcol('BEAMNO')
             Tsrctype = tb.getcol('SRCTYPE')
+            Tflagrow = tb.getcol('FLAGROW')
             # 2009/10/19 nchan for scantable is not correctly set
             NchanArray = numpy.zeros(nrow, numpy.int)
             for row in range(nrow):
@@ -160,6 +161,8 @@ class DataTableReader(object):
         pflags = [1, 1, 1]
         masklist = ColMaskList.NoMask
         for x in xrange(nrow):
+            # FLAGROW is mapped into UserFlag (PermanentFlag[2])
+            pflags[2] = Tflagrow[x]
             sDate = mjd_to_datestring(Tmjd[x],unit='day')
             self.datatable.putcell('DATE',ID,sDate)
             self.datatable.putcell('STATISTICS',ID,stats)
