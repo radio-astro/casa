@@ -205,13 +205,6 @@ void SpectralFitter::getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit,
 	convertArray(yFit, tmp);
 }
 
-/*
-void SpectralFitter::report() const{
-	String msg;
-	report(*_log);
-}
-*/
-
 String SpectralFitter::report(LogIO &os, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{
 	String resultMsg("");
 	SpectralList list = _fit.getList(True);
@@ -284,30 +277,6 @@ Bool SpectralFitter::_prepareData(const Vector<Float> &xVals, const Vector<Float
 	}
 	return True;
 }
-
-/*
-Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Vector<Double> gPars, const Bool fitPoly,
-		const uInt nPoly, const Vector<Double> pPars, SpectralList& list){
-
-	// add a Gaussian
-	if (fitGauss){
-		if (gPars.size()>0)
-			list.add(GaussianSpectralElement(gPars));
-		else
-			list.add(GaussianSpectralElement());
-	}
-
-	// add a polynomial
-	if (fitPoly) {
-		if (pPars.size()>0)
-			list.add(PolynomialSpectralElement(pPars));
-		else
-			list.add(PolynomialSpectralElement(nPoly));
-	}
-
-	return True;
-}
-*/
 
 Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Bool fitPoly, const uInt nPoly, Vector<Double> &xVals,
 		Vector<Double> &yVals, SpectralList& list){
@@ -389,64 +358,6 @@ Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Bool fitPoly, cons
 	return True;
 }
 
-/*
-void SpectralFitter::_report(const ProfileFit1D<Double> &fit, const Bool print, String &report) const{
-	const SpectralList list = fit.getList(True);
-	String spTypeStr;
-	Vector<Double> params, errors;
-	Double gaussArea(0.0), gaussCent(0.0), centVal(0.0);
-
-
-	switch (_fitStatus){
-	case SpectralFitter::SUCCESS:
-		report += "The fit was successful!\n";
-		report += "No. of iterations:  " + String::toString(fit.getNumberIterations()) + "\n";
-		report += "Chi-squared:        " + String::toString(fit.getChiSquared())  + "\n";
-		//report += "Wavelength shift: " + String::toString(_spcShift)  + "\n";
-
-		for (uInt index=0; index < list.nelements(); index++){
-
-			SpectralElement::Types spType = list[index]->getType();
-			spTypeStr = list[index]->fromType(spType);
-			list[index]->get(params);
-			list[index]->getError(errors);
-
-			switch (spType){
-			case SpectralElement::GAUSSIAN:
-				gaussArea = params(0)*params(2)*1.7724538509055;
-				gaussCent = params(1);
-				report += "Element No. " + String::toString(index) + ": " + spTypeStr+ "\n";
-				//report += "Amplitude: " + String::toString(params(0)) + " centre: " + String::toString(params(1)+_spcShift) + " sigma: " + String::toString(params(2)) + " FWHM: " + String::toString(params(2)*GaussianSpectralElement::SigmaToFWHM) + "\n";
-				report += "Amplitude: " + String::toString(params(0)) + " centre: " + String::toString(params(1)) + " sigma: " + String::toString(params(2)) + " FWHM: " + String::toString(params(2)*GaussianSpectralElement::SigmaToFWHM) + "\n";
-				report += "Area: " + String::toString(gaussArea) + "\n";
-				//report += "  parameters: " + String::toString(params) + "\n";
-				report += "  errors:     " + String::toString(errors) + "\n";
-				break;
-			case SpectralElement::POLYNOMIAL:
-				centVal = (*list[index])(gaussCent);
-				report += "Element No. " + String::toString(index) + ": " + spTypeStr+ "\n";
-				report += "  parameters: " + String::toString(params) + "\n";
-				report += "  errors:     " + String::toString(errors) + "\n";
-				report += "  gausscent value: " + String::toString(centVal) + "\n";
-				break;
-			default:
-				report += "Element No. " + String::toString(index) + ": " + spTypeStr+ "\n";
-				report += "  parameters: " + String::toString(params) + "\n";
-				report += "  errors:     " + String::toString(errors) + "\n";
-				break;
-			}
-			}
-		break;
-	case SpectralFitter::FAILED:
-		report += "Fit die not converge in " + String::toString(fit.getNumberIterations()) + " iterations!\n";
-		break;
-	default:
-		report += "The fit is not in a defined state!\n";
-	}
-	if (print)
-		cout << report;
-}
-*/
 String SpectralFitter::_report(LogIO &os, const SpectralList &list, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{
 	ostringstream sstream;
 

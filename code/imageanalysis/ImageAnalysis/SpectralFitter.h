@@ -109,10 +109,6 @@ public:
 	// get all residuals for the last fit
 	Vector<Double> getResidual() const {return _fit.getResidual();};
 
-	// report on on the last fit to the
-	// internal LogIO
-	//void report() const;
-
 	// report on the last fit to a stream
 	String report(LogIO &os, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;
 
@@ -138,18 +134,10 @@ private:
    Bool _prepareData(const Vector<Float> &xVals, const Vector<Float> &eVals,
    		const Int &startIndex, const Int &endIndex, Vector<Bool> &maskVals, Vector<Double> &weightVals) const;
 
-   //Bool _prepareElems(const Bool fitGauss, const Vector<Double> gPars, const Bool fitPoly,
-   //		const uInt nPoly, const Vector<Double> pPars, SpectralList& list);
-
    // prepare the components that shall be fitted; this includes the setting
    // of reasonable initial parameters
    Bool _prepareElems(const Bool fitGauss, const Bool fitPoly, const uInt nPoly, Vector<Double> &xVals,
    		Vector<Double> &yVals, SpectralList& list);
-
-   //void _report(const ProfileFit1D<Double> &fit, const Bool print, String &report) const;
-
-   // report on the last fit to a stream
-   //String _report(LogIO &os) const;
 
    // report on a list of spectral elements to a stream
    String _report(LogIO &os, const SpectralList &list, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;
