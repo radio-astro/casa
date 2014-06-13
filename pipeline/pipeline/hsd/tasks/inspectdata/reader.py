@@ -162,7 +162,9 @@ class DataTableReader(object):
         masklist = ColMaskList.NoMask
         for x in xrange(nrow):
             # FLAGROW is mapped into UserFlag (PermanentFlag[2])
-            pflags[2] = Tflagrow[x]
+            # NOTE: data is valid if Tflagrow is 0
+            #       data is valid if pflags[2] is 1
+            pflags[2] = 1 if Tflagrow[x] == 0 else 0
             sDate = mjd_to_datestring(Tmjd[x],unit='day')
             self.datatable.putcell('DATE',ID,sDate)
             self.datatable.putcell('STATISTICS',ID,stats)
