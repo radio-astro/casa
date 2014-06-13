@@ -5732,6 +5732,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     // Scale factor calculation, per trans fld, per spw
     Matrix<Double> fd( nSpw(), nFld, -1.0 );
     Matrix<Double> fderr( nSpw(), nFld, -1.0 );
+    Matrix<Double> fdrms(nSpw(),nFld,-1.0);
     Matrix<Int> numSol( nSpw(), nFld, -1 );
 //    fd.resize(nSpw(),nFld);
 //    fd.set(-1.0);
@@ -5744,8 +5745,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> mgratio(nSpw(),nFld,-1.0);
     Matrix<Double> mgrms(nSpw(),nFld,-1.0);
     Matrix<Double> mgerr(nSpw(),nFld,-1.0);
-    Matrix<Double> fdrms(nSpw(),nFld,-1.0);
-//    Matrix<Double> fderr(nSpw(),nFld,-1.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
       
@@ -5810,13 +5809,23 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	  scaleOK(ispw,tranidx)=True;
 	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
 	  mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
-	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
-	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
-
+          if (nPA==1) { // flux scaling based on a single gain ratio... 
+	    mgrms(ispw,tranidx)=0.0;
+	    mgerr(ispw,tranidx)=0.0;
+          }
+          else {
+	    mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
+	    mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
+          }
 	  // ...and flux density estimate
 	  fd(ispw,tranidx)=mgratio(ispw,tranidx)*mgratio(ispw,tranidx);
 	  fdrms(ispw,tranidx)=2.0*mgrms(ispw,tranidx);
-	  fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
+          if (nPA==1) {
+	    fderr(ispw,tranidx)=0.0;
+          }
+          else {
+	    fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
+          }
 	  numSol(ispw,tranidx) = nPA;
 	}
 
@@ -5895,7 +5904,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
 	logSink() << LogIO::POST;
 */
-
       } // ispw
       }		  
     } // iTran
