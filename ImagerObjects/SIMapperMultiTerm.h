@@ -79,7 +79,7 @@ template<class T> class ImageInterface;
   void finalizeDegrid();
 
   //////////////the return value is False if no valid record is being returned
-  Bool getCLRecord(Record & /*rec*/){return False;};
+  Bool getCLRecord(Record & /*rec*/, const String diskimage=""){diskimage==""; return False;};
   Bool getFTMRecord(Record& rec);
 
   Bool releaseImageLocks(){return itsImages->releaseLocks();}

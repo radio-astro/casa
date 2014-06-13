@@ -283,10 +283,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(!useScratch){
 		  if(vb.msId() != oldMsId_p){
 			  oldMsId_p=vb.msId();
+			  const vi::VisibilityIterator2 * viloc=vb.getVi();
+			  String modImage=viloc->ms().getPartNames()[0];
+			  if(!((viloc->ms()).source().isNull()))
+			    modImage=(viloc->ms()).source().tableName();
+			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  for (uInt k=0; k < itsMappers.nelements(); ++k){
 				  Record rec;
+				  String modImage=viloc->ms().getPartNames()[0];
+				  if(!((viloc->ms()).source().isNull()))
+				    modImage=(viloc->ms()).source().tableName();
+				  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 				  Bool iscomp=itsMappers[k]->getCLRecord(rec);
-				  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
+				  if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
 					 if((vb.getVi())->isWritable()){
 
 						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
@@ -301,8 +310,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperCollection::saveVirtualModel(vi::VisBuffer2& vb){
 	  if(vb.msId() != oldMsId_p){
 		  oldMsId_p=vb.msId();
+		  const vi::VisibilityIterator2 * viloc=vb.getVi();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
+			  String modImage=viloc->ms().getPartNames()[0];
+			  if(!((viloc->ms()).source().isNull()))
+			    modImage=(viloc->ms()).source().tableName();
+			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 				  if((vb.getVi())->isWritable()){
@@ -351,8 +365,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				fields.resize(nfields, True);
 		   */
 		  //Int msid = vb.msId();
+		  ROVisibilityIterator *viloc=vb.getVisibilityIterator();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
+			  String modImage=viloc->ms().getPartNames()[0];
+			  if(!((viloc->ms()).source().isNull()))
+			    modImage=(viloc->ms()).source().tableName();
+			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 

@@ -244,13 +244,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapperSingle","finalizeDegrid",WHERE) );
   }
 
-  Bool SIMapperSingle::getFTMRecord(Record& rec)
+  Bool SIMapperSingle::getFTMRecord(Record& rec, const String diskimage)
   {
     LogIO os( LogOrigin("SIMapperSingle","getFTMRecord",WHERE) );
     if(ft_p.null())
     	return False;
     String err;
-    return ft_p->toRecord(err, rec, True);
+    return ft_p->toRecord(err, rec, True, diskimage);
     // rec = itsFTM->toRecord();
 
   }

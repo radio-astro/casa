@@ -80,7 +80,7 @@ template<class T> class ImageInterface;
 
   //////////////the return value is False if no valid record is being returned
   Bool getCLRecord(Record& rec);
-  Bool getFTMRecord(Record& rec);
+  Bool getFTMRecord(Record& rec, const String diskimage="");
 
   Bool releaseImageLocks(){return itsImages->releaseLocks();}
   String getImageName(){return itsImages->getName();};
