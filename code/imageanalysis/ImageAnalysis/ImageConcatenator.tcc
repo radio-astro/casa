@@ -30,8 +30,6 @@
 
 #include <casa/Containers/ContainerIO.h>
 
-#include <boost/scoped_array.hpp>
-
 namespace casa {
 
 template <class T>
