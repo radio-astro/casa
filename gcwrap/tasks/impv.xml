@@ -23,7 +23,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
         </param>
         <param type="string" name="mode">
-            <description>If "coords", use start and end values. If "length", use center, width, and pa values.</description>
+            <description>If "coords", use start and end values. If "length", use center, length, and pa values.</description>
             <value>coords</value>
             <example>mode="coords"</example>
         </param>
