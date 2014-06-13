@@ -118,34 +118,6 @@ def flagcolortable(flagpct):
 
 
 <div class="page-header">
-<h1>Tasks by Topic</h1>
-</div>
-
-<div class="row-fluid">
-	<table class="table">
-		<thead>
-			<tr>
-				<th class="span1">Topic</th>
-				<th class="span8">Lowest Scoring Task</th>
-				<th class="span2">Min Score</th>
-				<th class="span1"></th>
-			</tr>
-		</thead>
-		<tbody>
-			% for _, topic in registry.get_topics().items():
-			<% (task_description, pqascore) = get_lowest_scoring_results(topic) %> 
-			<tr>
-				<td><a href="${topic.url}">${topic.description}</a></td>
-				<td>${task_description}</a><span class="pull-right">${pqascore.shortmsg}</span></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${rendererutils.get_bar_class(pqascore)}" style="width:${rendererutils.get_bar_width(pqascore)}%;"><span class="text-center"></span></div></div></td>
-				<td><span class="badge${rendererutils.get_badge_class(pqascore)}">${rendererutils.format_score(pqascore)}</span></td>
-			</tr>
-			% endfor
-		</tbody>
-	</table>
-</div>
-
-
 <h3>Warnings and Errors</h3>
 % if tablerows:
 <table class="table table-bordered table-striped table-condensed"
@@ -172,6 +144,34 @@ def flagcolortable(flagpct):
 % else:
 <p>No warnings or errors.</p>
 % endif
+
+
+<h3>Tasks by Topic</h3>
+</div>
+
+<div class="row-fluid">
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="span1">Topic</th>
+				<th class="span8">Lowest Scoring Task</th>
+				<th class="span2">Min Score</th>
+				<th class="span1"></th>
+			</tr>
+		</thead>
+		<tbody>
+			% for _, topic in registry.get_topics().items():
+			<% (task_description, pqascore) = get_lowest_scoring_results(topic) %> 
+			<tr>
+				<td><a href="${topic.url}">${topic.description}</a></td>
+				<td>${task_description}</a><span class="pull-right">${pqascore.shortmsg}</span></td>
+				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${rendererutils.get_bar_class(pqascore)}" style="width:${rendererutils.get_bar_width(pqascore)}%;"><span class="text-center"></span></div></div></td>
+				<td><span class="badge${rendererutils.get_badge_class(pqascore)}">${rendererutils.format_score(pqascore)}</span></td>
+			</tr>
+			% endfor
+		</tbody>
+	</table>
+</div>
 
 
 % if flagtables:
