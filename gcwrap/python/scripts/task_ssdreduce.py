@@ -32,14 +32,17 @@ def ssdreduce(vis,
     # I think context is implemented as a set of sub-contexts that 
     # correspond to each reduction step (calibration context, baseline
     # context, etc).
-    rh.initcontext(gaintable, interp, spwmap,
-                   maskmode, thresh, avg_limit, edge, blmask,
-                   blfunc, order, npiece, applyfft, fftmethod, fftthresh,
-                   addwn, rejwn, clipthresh, clipniter,
-                   bloutput, blformat,
-                   clipminmax, 
-                   kernel, kwidth, usefft, interpflag,
-                   statmask, stoutput, stformat)
+    # context: {spwid: (calibration_context,
+    #                   baseline_context,
+    #                   convolve1d_context,), ...}
+    context = rh.initcontext(vis, spw, gaintable, interp, spwmap,
+                             maskmode, thresh, avg_limit, edge, blmask,
+                             blfunc, order, npiece, applyfft, fftmethod, fftthresh,
+                             addwn, rejwn, clipthresh, clipniter,
+                             bloutput, blformat,
+                             clipminmax, 
+                             kernel, kwidth, usefft, interpflag,
+                             statmask, stoutput, stformat)
     
     # generate query string for reduction
     # query_list is a list of TaQL query per DATA_DESC_ID and ANTENNA

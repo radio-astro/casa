@@ -4,8 +4,11 @@ import os
 import Queue
 from threading import *
 import time
+import re
 
-from taskinit import gentools, ms
+import libsakurapy
+
+from taskinit import gentools, ms, ssd
 #import mtpy
 import reductionhelper_util as rhutil
 
@@ -240,6 +243,13 @@ def opentable(vis):
     print 'closing table %s'%(vis)
     tb.close()
 
+@contextlib.contextmanager
+def openms(vis):
+    ms = gentools(['ms'])[0]
+    ms.open(vis)
+    yield ms
+    ms.close()
+    
 def optimize_thread_parameters(vis, data_desc_id, antenna_id):
     try:
         tb = gentools(['tb'])[0]
@@ -297,7 +307,7 @@ def _readrow(table, row):
     get = lambda col: table.getcell(col, row)
     return (row, get('FLOAT_DATA'), get('FLAG'), get('TIME_CENTROID'))
             
-def reducechunk(chunk):
+def reducechunk(chunk, context):
     return tuple((reducerecord(record) for record in chunk))
 
 def reducerecord(record):
@@ -335,3 +345,100 @@ def reducedata(row, data, flag, timestamp):
     print 'done reducing row %s...'%(row)
     return data, flag, {'statistics': data.real.mean()}
 
+BASELINE_TYPEMAP = {'poly': libsakurapy.BASELINE_TYPE_POLYNOMIAL,
+                    'chebyshev': libsakurapy.BASELINE_TYPE_CHEBYSHEV,
+                    'cspline': libsakurapy.BASELINE_TYPE_CUBIC_SPLINE,
+                    'sinusoid': libsakurapy.BASELINE_TYPE_SINUSOID}
+CONVOLVE1D_TYPEMAP = {'hanning': libsakurapy.CONVOLVE1D_KERNEL_TYPE_HANNING,
+                      'gaussian': libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN,
+                      'boxcar': libsakurapy.CONVOLVE1D_KERNEL_TYPE_BOXCAR}
+
+def sakura_typemap(typemap, key):
+    try:
+        return typemap[key.lower()]
+    except KeyError:
+        raise RuntimeError('Invalid type: %s'%(key))
+
+def initcontext(vis, spw, gaintable, interp, spwmap,
+                maskmode, thresh, avg_limit, edge, blmask,
+                blfunc, order, npiece, applyfft, fftmethod,
+                fftthresh, addwn, rejwn, clipthresh, clipniter,
+                bloutput, blformat, clipminmax,
+                kernel, kwidth, usefft, interpflag,
+                statmask, stoutput, stformat):
+    ssd.initialize_sakura()
+
+    context_dict = {}
+    
+    # get nchan for each spw
+    with opentable(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
+        ddidmap = dict(((tb.getcell('SPECTRAL_WINDOW_ID',i),i) for i in xrange(tb.nrows())))
+
+    # spw selection to index
+    selection = ms.msseltoindex(vis=vis, spw=spw)
+    spwid_list = selection['spw']
+    
+    # nchan
+    with opentable(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
+        nchanmap = dict(((i,tb.getcell('NUM_CHAN',i)) for i in xrange(tb.nrows())))
+    
+    # create calibration context (base data for interpolation)
+    sky_tables = _select_sky_tables(gaintable)
+    tsys_tables = _select_tsys_tables(gaintable)
+
+    for spwid in spwid_list:
+        nchan = nchanmap[spwid]
+
+        # create calibration context
+        tsysspw = spwmap[spwid]
+        calibration_context = create_calibration_context(sky_tables,
+                                                                tsys_tables,
+                                                                spwid,
+                                                                tsysspw,
+                                                                interp)
+        
+        # create baseline context
+        baseline_type = sakura_typemap(BASELINE_TYPEMAP, blfunc)
+        baseline_context = libsakurapy.create_baseline_context(baseline_type,
+                                                                      order,
+                                                                      nchan)
+        
+        # create convolve1D context
+        convolve1d_type = sakura_typemap(CONVOLVE1D_TYPEMAP, kernel)
+        convolve1d_context = libsakurapy.create_convolve1D_context(nchan,
+                                                                          convolve1d_type,
+                                                                          kwidth,
+                                                                          usefft)
+        context_dict[spwid] = (calibration_context, baseline_context, convolve1d_context,)
+
+    return context_dict
+
+    
+def create_calibration_context(sky_tables, tsys_tables, spwid, tsysspw, interp):
+    print sky_tables
+    print tsys_tables
+    print spwid
+    print tsysspw
+    print interp
+
+def _select_sky_tables(gaintable):
+    return list(_select_match(gaintable, 'sky'))
+
+def _select_tsys_tables(gaintable):
+    return list(_select_match(gaintable, 'tsys'))
+
+def _select_match(gaintable, tabletype):
+    pattern = '_%s(.ms)?$'%(tabletype.lower())
+    print pattern
+    for caltable in gaintable:
+        print caltable
+        if re.search(pattern, caltable):
+            yield caltable
+                
+
+def colname(tb):
+    colnames = tb.colnames()
+    if 'FLOAT_DATA' in colnames:
+        return 'FLOAT_DATA'
+    else:
+        return 'DATA'
