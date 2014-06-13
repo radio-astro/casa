@@ -5,12 +5,9 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdfitold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdfit_worker, locals()) as worker:
-        import inspect
-        taskname = inspect.currentframe().f_code.co_name
-        if True:
-            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

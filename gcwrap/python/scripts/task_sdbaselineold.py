@@ -5,12 +5,9 @@ import asap as sd
 from asap.scantable import is_scantable
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdbaselineold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdbaseline_worker, locals()) as worker:
-        import inspect
-        taskname = inspect.currentframe().f_code.co_name
-        if True:
-            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

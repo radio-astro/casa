@@ -6,12 +6,9 @@ from asap.scantable import is_scantable, is_ms
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdsaveold(infile, splitant, antenna, getpt, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, restfreq, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
-        import inspect
-        taskname = inspect.currentframe().f_code.co_name
-        if True:
-            sdutil.issue_deprecation_warning(taskname)
         worker.initialize()
         worker.execute()
         worker.finalize()

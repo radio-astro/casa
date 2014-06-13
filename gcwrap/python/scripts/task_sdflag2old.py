@@ -9,12 +9,9 @@ from asap.flagplotter import flagplotter
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator("sdflag")
 def sdflag2old(infile, antenna, specunit, restfreq, frame, doppler, mode, unflag, scans, field, timerange, ifs, pols, maskflag, clipminmax, clipoutside, showflagged, rows, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
-        import inspect
-        taskname = inspect.currentframe().f_code.co_name
-        if True:
-            sdutil.issue_deprecation_warning(taskname, "sdflag")
         worker.initialize()
         worker.execute()
         worker.finalize()
