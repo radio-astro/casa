@@ -1,4 +1,5 @@
 import contextlib
+import itertools
 import multiprocessing
 import os
 import Queue
@@ -115,132 +116,108 @@ def paraMap(numThreads, func, dataSource):
 		assert context.pendingItems < context.qLen
 		putEODIntoInQ(context)
 
+class GenerateQueryHelper(object):
+    def __init__(self, ms, data_desc_id_by_spw, data_desc_id, antenna_id):
+        ms.selectinit(datadescid=data_desc_id)
+	ms.selecttaql('ANTENNA1==' + str(antenna_id)+' && ANTENNA2==' + str(antenna_id))
+
+        self.ms_name = ms.name()
+        self.data_desc_id__by_spw = data_desc_id_by_spw
+        self.data_desc_id = data_desc_id
+        self.antenna_id = antenna_id
+        self.valid_selection = True
+        self.selected_idx = None
+
+    def do_msselect(self, ms, field, spw, timerange, antenna, scan, observation, msselect):
+        self.timerange = timerange
+        self.msselect = msselect
+        self._do_msselect(ms, 'field', field)
+        self._do_msselect(ms, 'spw', spw)
+        self._do_msselect(ms, 'time', timerange)
+        self._do_msselect(ms, 'taql', antenna, 'ANTENNA1==')
+        self._do_msselect(ms, 'scan', scan)
+        self._do_msselect(ms, 'observation', observation)
+        self._do_msselect(ms, 'taql', msselect)
+
+    def _do_msselect(self, ms, name, value, value_prefix=None):
+        if self.valid_selection:
+            try:
+                if value is not None:
+                    if value_prefix is not None:
+                        value = value_prefix + str(value)
+                    ms.msselect({name:value})
+            except:
+                self.valid_selection = False
+
+    def is_effective(self):
+        return self.is_effective_id('spw', self.data_desc_id) and \
+	    self.is_effective_id('antenna1', self.antenna_id) and \
+	    self.is_effective_id('antenna2', self.antenna_id)
+
+    def is_effective_id(self, key, value):
+        res = True
+        if len(self.selected_idx[key]) > 0:
+            try:
+                self.selected_idx[key].index(value)
+            except:
+                res = False
+        return res
+
+    def get_taql(self):
+        elem = []
+        self._append_taql(elem, 'DATA_DESC_ID', '==', self.data_desc_id)
+        self._append_taql(elem, 'ANTENNA1', '==', self.antenna_id)
+        self._append_taql(elem, 'ANTENNA2', '==', self.antenna_id)
+        self._append_taql(elem, 'FIELD_ID', 'IN', 'field', True)
+        taql_timerange = rhutil.select_by_timerange(self.ms_name, self.timerange) if self.timerange is not None else ''
+        self._append_taql(elem, '', '', taql_timerange, True)
+        self._append_taql(elem, 'SCAN_NUMBER', 'IN', 'scan', True)
+        self._append_taql(elem, 'OBSERVATION_ID', 'IN', 'observationid', True)
+        self._append_taql(elem, '', '', self.msselect, True)
+        return ' && '.join(elem)
+
+    def _append_taql(self, elem, keyword, operand, value, check=False):
+        ope = operand.strip()
+	if isinstance(value, str): value = value.strip()
+        can_append = True
+        if check:
+            if ope == 'IN':
+                can_append = len(self.selected_idx[value]) > 0
+            else:
+                can_append = (value is not None) and (str(value) != '')
+        if can_append:
+            mgn = ' ' if ope != '' else ''
+            val = str(self.selected_idx[value]) if ope == 'IN' else str(value)
+            res = '(' + keyword.strip().upper() + mgn + ope + mgn + val + ')'
+	    elem.append(res)
+
 def generate_query(vis, field=None, spw=None, timerange=None, antenna=None, scan=None, pol=None, observation=None, msselect=None):
-    tb = gentools(['tb'])[0]
-    try:
-        tb.open(os.path.join(vis, 'DATA_DESCRIPTION'))
+    with opentable(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
         num_data_desc_id = tb.nrows()
-        data_desc_id_by_spw = {}
-        for i in xrange(num_data_desc_id):
-            data_desc_id_by_spw[tb.getcell('SPECTRAL_WINDOW_ID', i)] = i
-    finally:
-        tb.close()
+        data_desc_id_by_spw = dict(((tb.getcell('SPECTRAL_WINDOW_ID', i), i) for i in xrange(num_data_desc_id)))
 
-    try:
-        tb.open(os.path.join(vis, 'ANTENNA'))
+    with opentable(os.path.join(vis, 'ANTENNA')) as tb:
         num_antenna_id = tb.nrows()
-    finally:
-        tb.close()
 
-    try:
-        ms.open(vis)
-        for data_desc_id in xrange(num_data_desc_id):
-            for antenna_id in xrange(num_antenna_id):
-                valid_selection = True
-                ms.selectinit(datadescid=data_desc_id)
-                ms.selecttaql('ANTENNA1==' + str(antenna_id)+' && ANTENNA2==' + str(antenna_id))
-
-                try:
-                    if field is not None: ms.msselect({'field':field})
-                except:
-                    valid_selection = False
-
-                try:
-                    if spw is not None: ms.msselect({'spw':spw})
-                except:
-                    valid_selection = False
-
-                try:
-                    if timerange is not None: ms.msselect({'time':timerange})
-                except:
-                    valid_selection = False
-
-                try:
-                    if antenna is not None: ms.msselect({'taql':'ANTENNA1==' + str(antenna)})
-                except:
-                    valid_selection = False
-
-                try:
-                    if scan is not None: ms.msselect({'scan':scan})
-                except:
-                    valid_selection = False
-
-                """
-                try:
-                    if pol is not None: ms.msselect({'polarization':pol})
-                except:
-                    valid_selection = False
-                """
-
-                try:
-                    if observation is not None: ms.msselect({'observation':observation})
-                except:
-                    valid_selection = False
-
-                try:
-                    if msselect is not None: ms.msselect({'taql':msselect})
-                except:
-                    valid_selection = False
-
-                if valid_selection:
-                    res = 'DATA_DESC_ID==' + str(data_desc_id)
-                    res += ' && ANTENNA1==' + str(antenna_id)
-                    res += ' && ANTENNA2==' + str(antenna_id)
-
-                    selected_idx = ms.msselectedindices()
-
-                    dd_matches = True
-                    if len(selected_idx['spw']) > 0:
-                        data_desc_id_list = []
-                        for i in xrange(len(selected_idx['spw'])):
-                            data_desc_id_list.append(data_desc_id_by_spw[selected_idx['spw'][i]])
-                        try:
-                            idx = data_desc_id_list.index(data_desc_id)
-                        except:
-                            dd_matches = False
-                            
-                    if dd_matches:
-                        ant_matches = True
-                        if len(selected_idx['antenna1']) > 0:
-                            try:
-                                selected_idx['antenna1'].index(antenna_id)
-                            except:
-                                ant_matches = False
-                        if len(selected_idx['antenna2']) > 0:
-                            try:
-                                selected_idx['antenna2'].index(antenna_id)
-                            except:
-                                ant_matches = False
-
-                        if ant_matches:
-                            if len(selected_idx['field']) > 0:
-                                res += ' && FIELD_ID IN ' + str(selected_idx['field'])
-                            if timerange is not None:
-                                res += ' && ' + rhutil.select_by_timerange(vis, timerange)
-                            if len(selected_idx['scan']) > 0:
-                                res += ' && SCAN_NUMBER IN ' + str(selected_idx['scan'])
-                            if len(selected_idx['observationid']) > 0:
-                                res += ' && OBSERVATION_ID IN ' + str(selected_idx['observationid'])
-                            if msselect is not None:
-                                res += ' && ' + str(msselect)
-
-                            idx_channel = selected_idx['channel']
-                            res_channel = str(idx_channel) if len(idx_channel) > 0 else ''
-                            res_pol = pol if pol is not None else ''
-
-                            yield res, res_channel, res_pol
-
-                ms.reset()
-    finally:
-        ms.close()
+    with openms(vis) as ms:
+        for data_desc_id, antenna_id in itertools.product(xrange(num_data_desc_id), xrange(num_antenna_id)):
+            gqh = GenerateQueryHelper(ms, data_desc_id_by_spw, data_desc_id, antenna_id)
+	    gqh.do_msselect(ms, field, spw, timerange, antenna, scan, observation, msselect)
+	    if gqh.valid_selection:
+                gqh.selected_idx = ms.msselectedindices()
+		if gqh.is_effective():
+                    res = gqh.get_taql()
+		    idx_channel = gqh.selected_idx['channel']
+		    res_channel = str(idx_channel) if len(idx_channel) > 0 else ''
+		    res_pol = pol if pol is not None else ''
+		    yield res, res_channel, res_pol
+	    ms.reset()
 
 @contextlib.contextmanager
 def opentable(vis):
-    print 'open table %s'%(vis)
     tb = gentools(['tb'])[0]
     tb.open(vis, nomodify=False)
     yield tb
-    print 'closing table %s'%(vis)
     tb.close()
 
 @contextlib.contextmanager
