@@ -47,6 +47,9 @@ def setjy_core(vis=None, field=None, spw=None,
 
     #retval = True
     clnamelist=[]
+    # remove componentlist generated
+    deletecomp = True
+    #deletecomp = False 
 
     try:
         # Here we only list the models available, but don't perform any operation
@@ -264,7 +267,7 @@ def setjy_core(vis=None, field=None, spw=None,
     finally:
         if standard=='Butler-JPL-Horizons 2012':
             for cln in clnamelist:
-                if os.path.exists(cln) and os.path.isdir(cln):
+                if deletecomp and os.path.exists(cln) and os.path.isdir(cln):
                     shutil.rmtree(cln,True) 
 
     return retval

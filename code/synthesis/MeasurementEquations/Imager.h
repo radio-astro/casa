@@ -798,12 +798,17 @@ protected:
   // Helper functions to hide some setjy code.
   Unit sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
                       Vector<Vector<Flux<Double> > >& returnFluxErrs,
+                      Vector<Vector<Double> >& fluxUsed, // mainly for logging purpose
                       Vector<String>& tempCLs,
                       Vector<Vector<MFrequency> >& mfreqs,
                       const ROMSSpWindowColumns& spwcols, const uInt nspws,
                       const Vector<Int>& selToRawSpwIds, const Bool chanDep);
   // Returns whether it might have made any visibilities.
   Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
+  //Bool sjy_make_visibilities(Block<CountedPtr<TempImage<Float> > >& tmodimages, LogIO& os,
+                             //const Int rawspwid, const Int fldid,
+  // for new one                           
+  //                           const Vector<Int>& rawspwids, const Int fldid,
                              const Int rawspwid, const Int fldid,
                              const String& clname, const String& timerange="",
                              const String& scanstr="", 
@@ -811,25 +816,47 @@ protected:
                              const String& intentstr="", 
 			    const Vector<Double>& freqofscale=Vector<Double>(0),
 			     const Vector<Double>& scale=Vector<Double>(0) );
+			    //const Vector<Vector<Double> >& freqofscale=Vector<Vector<Double> >(0),
+			    // const Vector<Vector<Double> >& scale=Vector<Vector<Double> >(0) );
+  // Concatenate multiple CLs 
+  Bool sjy_concatComponentLists(LogIO& os, const Vector<String>& tempCLs, const String& outTempCL);
   // Returns whether it found a source.
   Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                        Vector<Vector<Flux<Double> > >& returnFluxes,
                        Vector<Vector<Flux<Double> > >& returnFluxErrs,
-                       Vector<String>& tempCLs, Vector<Double>& fluxUsed,
+                       Vector<String>& tempCLs, 
+                       //Vector<Double>& fluxUsed,
+                       Vector<Vector<Double> >& fluxUsed,
                        String& fluxScaleName, MEpoch& aveEpoch,
                        const Vector<Vector<MFrequency> >& mfreqs,
                        const String& model, const String& fieldName, 
                        const ROMSColumns& msc, const Int fldid,
-                       const MDirection& fieldDir, const String& standard);
+                       const MDirection& fieldDir, const Vector<Int>& selToRawSpwIds,
+                       const String& standard);
+
+  void sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
+                             Vector<Vector<Flux<Double> > >& returnFluxes,
+                             const Vector<Double>& fluxUsed,
+                             const Vector<Int>& selToRawSpwIds,
+                             const Vector<Vector<MFrequency> >& mfreqs,
+                             const String& fieldName,
+                             const MDirection& fieldDir,
+                             const Double spix,
+                             const MFrequency& reffreq,
+                             const MEpoch& aveEpoch,
+                             const Int fldId);
+  //
   // Returns NULL if no image is prepared.
   TempImage<Float>* sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
                                   Vector<Double>& fluxUsed, 
 				  Vector<Double>& freq, 
 				  Vector<Double>& scale, const String& model,
                                   const ROMSSpWindowColumns& spwcols,
-                                  const Int rawspwid, const Bool chanDep,
+                                  //const Int rawspwid, const Bool chanDep,
+                                  const Vector<Int> rawspwids, const Bool chanDep,
                                   const Vector<Vector<MFrequency> >& mfreqs,
-                                  const uInt selspw, const String& fieldName,
+                                  //const uInt selspw, const String& fieldName,
+                                  const String& fieldName,
                                   const MDirection& fieldDir, const Unit& freqUnit,
                                   const Vector<Double>& fluxdens,
                                   const Bool precompute, const Double spix,
