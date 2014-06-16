@@ -139,7 +139,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
 
     def prepare(self):
         """
-        Iterates over reduction group and invoke flagdata worker function in each iteration.
+        Iterates over reduction group and invoke flagdata worker function in each clip_niteration.
         """
         # self
         inputs = self.inputs
@@ -157,7 +157,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
         flag_rule = inputs.FlagRuleDictionary
-        iteration = inputs.iteration
+        clip_niteration = inputs.iteration
 
         # loop over reduction group
         files = set()
@@ -232,7 +232,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
             #LOG.debug("       field: %s" % field)
             LOG.info("*"*60)
 
-            worker = SDFlagDataWorker(context, datatable, iteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
+            worker = SDFlagDataWorker(context, datatable, clip_niteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
             thresholds = self._executor.execute(worker, merge=False)
             # Summary
             renderer = SDFlagSummary(context, datatable, spwid_list, pols_list, _file_index, thresholds, flag_rule)

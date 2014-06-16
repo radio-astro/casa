@@ -27,13 +27,13 @@ class SDFlagDataWorker(object):
     '''
 
 
-    def __init__(self, context, datatable, iteration, spwid_list, nchan, pols_list, file_index, flagRule, userFlag=[], edge=(0,0)):
+    def __init__(self, context, datatable, clip_niteration, spwid_list, nchan, pols_list, file_index, flagRule, userFlag=[], edge=(0,0)):
         '''
         Constructor of worker class
         '''
         self.context = context
         self.datatable = datatable
-        self.iteration = iteration
+        self.clip_niteration = clip_niteration
         self.spwid_list = spwid_list
         self.nchan = nchan
         self.pols_list = pols_list
@@ -50,7 +50,7 @@ class SDFlagDataWorker(object):
         start_time = time.time()
 
         datatable = self.datatable
-        iteration = self.iteration
+        clip_niteration = self.clip_niteration
         spwid_list = self.spwid_list
         nchan = self.nchan
         pols_list = self.pols_list
@@ -120,8 +120,8 @@ class SDFlagDataWorker(object):
                 t0 = time.time()
                 tmpdata = numpy.transpose(data)
                 dt_idx = numpy.array(tmpdata[0], numpy.int)
-                LOG.info('Calculating the thresholds by Standard Deviation and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (iteration))
-                stat_flag, final_thres = self._get_flag_from_stats(tmpdata[1:6], Threshold, iteration)
+                LOG.info('Calculating the thresholds by Standard Deviation and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (clip_niteration))
+                stat_flag, final_thres = self._get_flag_from_stats(tmpdata[1:6], Threshold, clip_niteration)
                 LOG.debug('final threshold shape = %d' % len(final_thres))
                 LOG.info('Final thresholds: StdDev (pre-/post-fit) = %.2f / %.2f , Diff StdDev (pre-/post-fit) = %.2f / %.2f , Tsys=%.2f' % tuple([final_thres[i][1] for i in (1,0,3,2,4)]))
                 
@@ -368,11 +368,11 @@ class SDFlagDataWorker(object):
         mask[len(flagtra)-edge[1]:] = 0
         return mask
 
-    def _get_flag_from_stats(self, stat, Threshold, iteration):
+    def _get_flag_from_stats(self, stat, Threshold, clip_niteration):
         Ndata = len(stat[0])
         Nflag = len(stat)
         mask = numpy.ones((Nflag, Ndata), numpy.int)
-        for cycle in range(iteration + 1):
+        for cycle in range(clip_niteration + 1):
             threshold = []
             for x in range(Nflag):
                 Unflag = int(numpy.sum(mask[x] * 1.0))
