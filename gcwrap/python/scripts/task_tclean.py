@@ -152,9 +152,10 @@ def tclean(
         return
 
     ### Scratch column...
-    usescratch=False
+    usescratch=True
     readonly=True
     if savemodel=="virtual":
+        usescratch=False
         readonly=False
     elif savemodel=="modelcolumn":
         usescratch=True

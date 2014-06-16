@@ -90,8 +90,8 @@ protected:
 
   // Non virtual. Implemented only in the base class.
   Int checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
-  Bool findMaxAbsMask(const Matrix<Float>& lattice,const Matrix<Float>& mask,
+  Bool findMaxAbs(const Array<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
+  Bool findMaxAbsMask(const Array<Float>& lattice,const Array<Float>& mask,
 		      Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name

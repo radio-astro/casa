@@ -135,6 +135,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	bool SIIterBot_state::cleanComplete(){
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+
+		//		printOut("FromcleanComplete ", False);
+
+		if ( itsMajorDone==0 && itsIterDone==0 ) return false;
+
 		if ( itsIterDone >= itsNiter || 
 			 itsPeakResidual <= itsThreshold ||
 			 itsStopFlag )

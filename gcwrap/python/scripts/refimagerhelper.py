@@ -190,7 +190,11 @@ class PySynthesisImager:
             self.PStools[immod].dividemodelbyweight()
             self.PStools[immod].scattermodel() 
 
-        self.runMajorCycleCore()
+        if self.IBtool != None:
+            lastcycle = self.IBtool.cleanComplete()
+        else:
+            lastcycle = True
+        self.runMajorCycleCore(lastcycle)
 
         if self.IBtool != None:
             self.IBtool.endmajorcycle()
@@ -211,9 +215,9 @@ class PySynthesisImager:
 
 #############################################
 ## Overloaded for parallel runs
-    def runMajorCycleCore(self):
+    def runMajorCycleCore(self, lastcycle):
         ### Run major cycle
-        self.SItool.executemajorcycle(controls={})
+        self.SItool.executemajorcycle(controls={'lastcycle':lastcycle})
 #############################################
 
     def runMinorCycle(self):
@@ -377,11 +381,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
 #############################################
 
-    def runMajorCycleCore(self):
+    def runMajorCycleCore(self, lastcycle):
         ### Run major cycle
         joblist=[]
         for node in range(0,self.PH.NN):
-             joblist.append( self.PH.runcmd("toolsi.executemajorcycle(controls={})",node) )
+             joblist.append( self.PH.runcmd("toolsi.executemajorcycle(controls={'lastcycle':"+str(lastcycle)+"})",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################

@@ -327,6 +327,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	      <value>clarkstokes</value>
 	      <value>multiscale</value>
 	      <value>mtmfs</value>
+	      <value>mem</value>
 	    </allowed>
     </param>
 

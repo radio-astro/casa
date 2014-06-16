@@ -1772,6 +1772,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::stokesToCorrelation(ImageInterface<Float>& modelImage,
 				      ImageInterface<Complex>& compImage)
   {
+    /*
+    StokesCoordinate stcomp=compImage.coordinates().stokesCoordinate(compImage.coordinates().findCoordinate(Coordinate::STOKES));
+    StokesCoordinate stfloat = modelImage.coordinates().stokesCoordinate(modelImage.coordinates().findCoordinate(Coordinate::STOKES));
+
+    cout << "Stokes types : complex : " << stcomp.stokes() << "    float : " << stfloat.stokes() << endl;
+    cout << "Shapes : complex : " << compImage.shape() << "   float : " << modelImage.shape() << endl;
+    */
+
     //Pol axis need not be same
     AlwaysAssert(modelImage.shape()[0]==compImage.shape()[0], AipsError);
     AlwaysAssert(modelImage.shape()[1]==compImage.shape()[1], AipsError);

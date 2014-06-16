@@ -897,17 +897,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   CountedPtr<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
-	  if(!itsForwardGrid.null() && (itsForwardGrid->shape() == itsImageShape))
-		  return itsForwardGrid;
-	  itsForwardGrid=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
-	  return itsForwardGrid;
+    if(!itsForwardGrid.null()) // && (itsForwardGrid->shape() == itsImageShape))
+      {
+	//	cout << "Forward grid has shape : " << itsForwardGrid->shape() << endl;
+	return itsForwardGrid;
+      }
+    Vector<Int> whichStokes(0);
+    IPosition cimageShape;
+    cimageShape=itsImageShape;
+    CoordinateSystem cimageCoord = StokesImageUtil::CStokesCoord( itsCoordSys,
+								  whichStokes, itsDataPolRep);
+    cimageShape(2)=whichStokes.nelements();
+    //cout << "Making forward grid of shape : " << cimageShape << " for imshape : " << itsImageShape << endl;
+    itsForwardGrid=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
+
+    //    itsForwardGrid=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
+    return itsForwardGrid;
   }
   CountedPtr<ImageInterface<Complex> > SIImageStore::backwardGrid(uInt /*nterm*/){
-  	  if(!itsBackwardGrid.null() && (itsBackwardGrid->shape() == itsImageShape))
-  		  return itsBackwardGrid;
-	  //cout << "Making backward grid of shape : " << itsImageShape << endl;
-  	  itsBackwardGrid=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
-  	  return itsBackwardGrid;
+    if(!itsBackwardGrid.null() ) //&& (itsBackwardGrid->shape() == itsImageShape))
+      {
+	//	cout << "Backward grid has shape : " << itsBackwardGrid->shape() << endl;
+	return itsBackwardGrid;
+      }
+    Vector<Int> whichStokes(0);
+    IPosition cimageShape;
+    cimageShape=itsImageShape;
+    CoordinateSystem cimageCoord = StokesImageUtil::CStokesCoord( itsCoordSys,
+								  whichStokes, itsDataPolRep);
+    cimageShape(2)=whichStokes.nelements();
+    //cout << "Making backward grid of shape : " << cimageShape << " for imshape : " << itsImageShape << endl;
+    itsBackwardGrid=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
+    return itsBackwardGrid;
     }
   Double SIImageStore::memoryBeforeLattice(){
 	  //Calculate how much memory to use per temporary images before disking

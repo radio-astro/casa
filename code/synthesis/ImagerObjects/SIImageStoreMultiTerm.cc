@@ -597,6 +597,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages[term]->setUnits("Jy/beam");
     return itsImages[term];
   }
+
+  CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::forwardGrid(uInt term){
+    if(!itsForwardGrids[term].null())// && (itsForwardGrids[term]->shape() == itsImageShape))
+      return itsForwardGrids[term];
+    Vector<Int> whichStokes(0);
+    IPosition cimageShape;
+    cimageShape=itsImageShape;
+    CoordinateSystem cimageCoord = StokesImageUtil::CStokesCoord( itsCoordSys,
+								  whichStokes, itsDataPolRep);
+    cimageShape(2)=whichStokes.nelements();
+    itsForwardGrids[term]=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
+    return itsForwardGrids[term];
+  }
+  CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::backwardGrid(uInt term){
+  	  if(!itsBackwardGrids[term].null() && (itsBackwardGrids[term]->shape() == itsImageShape))
+  		  return itsBackwardGrids[term];
+	  //	  cout << "MT : Making backward grid of shape : " << itsImageShape << endl;
+    Vector<Int> whichStokes(0);
+    IPosition cimageShape;
+    cimageShape=itsImageShape;
+    CoordinateSystem cimageCoord = StokesImageUtil::CStokesCoord( itsCoordSys,
+								  whichStokes, itsDataPolRep);
+    cimageShape(2)=whichStokes.nelements();
+    itsBackwardGrids[term]=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
+    return itsBackwardGrids[term];
+    }
+  /*
   CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::forwardGrid(uInt term){
 	  if(!itsForwardGrids[term].null() && (itsForwardGrids[term]->shape() == itsImageShape))
 		  return itsForwardGrids[term];
@@ -610,7 +637,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   	  itsBackwardGrids[term]=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
   	  return itsBackwardGrids[term];
     }
-
+  */
 
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::alpha()
   {

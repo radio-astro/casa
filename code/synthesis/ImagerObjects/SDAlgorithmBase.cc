@@ -115,8 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	Bool converged=False;
 
 	    // Or, call this from outside... in SynthesisImager.....
-	    itsMaskHandler.makeAutoMask( itsImages );
-	    //itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
+	    //itsMaskHandler.makeAutoMask( itsImages );
+	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    
 	    initializeDeconvolver( peakresidual, modelflux );
 	    
@@ -239,7 +239,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( nSubChans==1 )
       {
-	GaussianBeam beam = beamset.getBeam();
+
+	GaussianBeam beam;
+
+	if( nSubPols==1 ) {  beam = beamset.getBeam(); }
+	else { beam = beamset(0,0); }
 	os << "Restoring beam : " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
       }
     else
@@ -399,10 +403,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////// Helper Functions for all deconvolvers to use if they need it.
 
-  Bool SDAlgorithmBase::findMaxAbs(const Matrix<Float>& lattice,
+  Bool SDAlgorithmBase::findMaxAbs(const Array<Float>& lattice,
 					  Float& maxAbs,
 					  IPosition& posMaxAbs)
   {
+    //    cout << "findmax : lat shape : " << lattice.shape() << " posmax : " << posMaxAbs << endl;
     posMaxAbs = IPosition(lattice.shape().nelements(), 0);
     maxAbs=0.0;
     Float minVal;
@@ -416,8 +421,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
 
-  Bool SDAlgorithmBase::findMaxAbsMask(const Matrix<Float>& lattice,
-				       const Matrix<Float>& mask,
+  Bool SDAlgorithmBase::findMaxAbsMask(const Array<Float>& lattice,
+				       const Array<Float>& mask,
 					  Float& maxAbs,
 					  IPosition& posMaxAbs)
   {

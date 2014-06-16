@@ -16,6 +16,72 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      # Interaction ON or OFF
      interactive=False
 
+     if(testnum==22):  ## 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.
+          casalog.post("==================================");
+          casalog.post("Test 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.");
+          casalog.post("==================================");
+
+          msname = 'DataTest/point_twospws.ms'
+          clearcal(msname)  ## Set model column to unity
+          delmod(msname)  ## Get rid of OTF model
+          delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
+
+          testList = {
+               ## readonly
+               0:{'readonly':True,  'usescratch':True, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'},
+               ## readonly
+               1:{'readonly':True,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
+               ## save model column in last major cycle
+               2:{'readonly':False,  'usescratch':True, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
+               ## save virtual model in last major cycle
+               3:{'readonly':False,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
+               ## Multi-term test : save model column in last major cycle
+               4:{'readonly':False,  'usescratch':True, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'}, 
+               ## Multi-term test : save virtual model in last major cycle
+               5:{'readonly':False,  'usescratch':False, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'} 
+               }
+
+          ###  5 has a bug. When trying to read the virtual model (in plotms), there is an error
+          ###   ' RecordInterface: field is unknown '
+
+          if testid > 5:
+               print 'No such test.'
+               return
+
+          paramList = ImagerParameters(msname=msname,field='0',spw='0',\
+                                       usescratch=testList[testid]['usescratch'],readonly=testList[testid]['readonly'],\
+                                       mode='mfs',\
+                                       ntaylorterms=testList[testid]['ntaylorterms'],mtype=testList[testid]['mtype'],
+                                       imagename='mytest0', nchan=1,\
+                                       imsize=[110,110],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],stokes='I',\
+                                       phasecenter=0,
+                                       ftmachine='gridft', startmodel='', weighting='briggs',\
+                                       deconvolver=testList[testid]['deconvolver'],\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+     if(testnum==21):  ## 21 image-field, mfs --- Multiple Stokes planes -- Clark
+          casalog.post("==================================");
+          casalog.post("Test 21 image-field, mfs --- Multiple Stokes planes -- Clark.");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/point_stokes.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       mode='mfs',\
+                                       imagename='mytest0', nchan=1,\
+                                       imsize=[110,110],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],stokes='IV',\
+                                       phasecenter=0,
+                                       ftmachine='gridft', startmodel='', weighting='briggs',\
+                                       deconvolver='clarkstokes',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
      if(testnum==20):  ## 1 image-field, mfs, multiscale
           casalog.post("==================================");
           casalog.post("Test 20 MFS 1 term + multiscale");
@@ -520,7 +586,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        mode='mfs',\
                                        imagename='mytest0', nchan=1,\
                                        imsize=[110,110],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],stokes='I',\
                                        ### center
                                        #phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ### offset
@@ -888,3 +954,11 @@ def testImageCoordinates( testnum=1, testid=0):
 #     #synu.makeimage( impars , 'DataTest/twopoints_twochan.ms')
 #     synu.makeimage( impars , 'DataTest/point_twospws.ms')
 #     synu.done()
+
+
+def delmodkeywords(msname=""):
+     tb.open( msname+'/SOURCE', nomodify=False )
+     keys = tb.getkeywords()
+     for key in keys:
+          tb.removekeyword( key )
+     tb.close()

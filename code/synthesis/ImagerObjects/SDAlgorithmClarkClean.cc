@@ -64,10 +64,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  SDAlgorithmClarkClean::SDAlgorithmClarkClean():
+  SDAlgorithmClarkClean::SDAlgorithmClarkClean(String clarktype):
     SDAlgorithmBase()
  {
-   itsAlgorithmName=String("Clark");
+   itsAlgorithmName=String(clarktype);
    itsMatDeltaModel.resize();
  }
 
@@ -84,10 +84,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->model()->get( itsMatModel, True );
     itsImages->psf()->get( itsMatPsf, True );
 
-    //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
-    //	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 
-    //	 << itsImages->psf()->shape() << " : " << itsMatPsf.shape() 
-    //	 << endl;
+    /*
+    cout << "Clark : initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
+    	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 
+  	 << itsImages->psf()->shape() << " : " << itsMatPsf.shape() 
+  	 << endl;
+    */
+    /*
+    IPosition shp = itsMatResidual.shape();
+    IPosition startp( shp.nelements(),0);
+    IPosition stopp( shp.nelements(),0);
+    stopp[0]=shp[0]-1; stopp[1]=shp[1]-1;
+    Matrix<Float> oneplane;
+    oneplane.doNotDegenerate( itsMatResidual(startp,stopp), IPosition(  ) );
+    findMaxAbs( oneplane, itsPeakResidual, itsMaxPos );
+    */
 
     findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
     itsModelFlux = sum( itsMatModel );
@@ -149,45 +160,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					    Int &iterdone)
   {
 
-
-    //---------------------------------
-    /*
-    ConvolutionEquation eqn(itsMatPsf,  itsMatResidual);
-    //		  deltaimageli.rwCursor().set(Float(0.0));
-    itsMatDeltaModel = 0.0;
-    ClarkCleanModel cleaner(itsMatDeltaModel);
-    cleaner.setMask(itsMatMask);
-    cleaner.setGain(loopgain);
-    cleaner.setNumberIterations(cycleNiter);
-    cleaner.setInitialNumberIterations(0);
-    cleaner.setThreshold(cycleThreshold);
-    cleaner.setPsfPatchSize(IPosition(2,psfpatch_p)); 
-    cleaner.setMaxNumberMajorCycles(10);
-    cleaner.setHistLength(1024);
-    cleaner.setMaxNumPix(32*1024);
-    cleaner.setChoose(False);
-    cleaner.setCycleSpeedup(-1.0);   // Can make this an input parameter too
-    cleaner.setSpeedup(0.0);
-    //		  if ( displayProgress_p ) {
-    //		    cleaner.setProgress( *progress_p );    // A PGPlotter dependency...
-    //		  }
-    cleaner.singleSolve(eqn, itsMatResidual);
-    
-    iterdone=cleaner.numberIterations();
-    
-    cleaner.getModel(itsMatDeltaModel);
-    */
-    //---------------------------------
-
-    // Store current model in this matrix.
+    //// Store current model in this matrix.
     Bool ret = itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel.assign( itsMatDeltaModel ); // This should make an explicit copy
 
-    // Set model to zero
+    //// Set model to zero
     itsImages->model()->set( 0.0 );
 
+    //// Prepare a single plane mask. For multi-stokes, it still needs a single mask.
+    IPosition shp = itsImages->mask()->shape();
+    IPosition startp( shp.nelements(),0);
+    IPosition stopp( shp.nelements(),1);
+    stopp[0]=shp[0]; stopp[1]=shp[1];
+    Slicer oneslice(startp, stopp);
+    //cout << "Making mask slice of : " << oneslice.start() << " : " << oneslice.end() << endl;
+    SubImage<Float> oneplane( *(itsImages->mask()), oneslice )  ;
+
+    //// Set up the cleaner
     ClarkCleanLatModel cleaner(*(itsImages->model()));
-    cleaner.setMask(*(itsImages->mask()));
+    cleaner.setMask( oneplane );
     cleaner.setNumberIterations(cycleNiter);
     cleaner.setMaxNumberMajorCycles(10);
     cleaner.setMaxNumberMinorIterations(cycleNiter);
@@ -199,7 +190,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cleaner.setSpeedup(-1.0);
     cleaner.setMaxNumPix(32*1024);
 
-    LatConvEquation eqn(*(itsImages->psf()), *(itsImages->residual()) );
+    //// Prepare a single plane PSF
+    IPosition shp2 = itsImages->psf()->shape();
+    IPosition startp2( shp2.nelements(),0);
+    IPosition stopp2( shp2.nelements(),1);
+    stopp2[0]=shp2[0]; stopp2[1]=shp2[1];
+    Slicer oneslice2(startp2, stopp2);
+    //    cout << "Making psf slice of : " << oneslice2.start() << " : " << oneslice2.end() << endl;
+    SubImage<Float> oneplane2( *(itsImages->psf()), oneslice2 )  ;
+
+    //// Make the convolution equation with a single plane PSF and possibly multiplane residual
+    LatConvEquation eqn( oneplane2 , *(itsImages->residual()) );
    
     //Bool result = 
     cleaner.solve( eqn );
@@ -211,7 +212,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->residual()->copyData( cleaner.getResidual() );
 
     // Add delta model to old model
-    Bool ret2 = itsImages->model()->get( itsMatDeltaModel, True );
+    //Bool ret2 = 
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel += itsMatDeltaModel;
 
     //---------------------------------
@@ -219,7 +221,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  Find Peak Residual
     itsImages->residual()->get( itsMatResidual, True );
     itsImages->mask()->get( itsMatMask, True );
+
+    /*
+    IPosition shp = itsMatResidual.shape();
+    IPosition startp( shp.nelements(),0);
+    IPosition stopp( shp.nelements(),0);
+    stopp[0]=shp[0]-1; stopp[1]=shp[1]-1;
+    Matrix<Float> oneplane( itsMatResidual(startp,stopp) );
+    Matrix<Float> oneplanemask( itsMatMask(startp,stopp) );
+    findMaxAbsMask( oneplane, oneplanemask, itsPeakResidual, itsMaxPos );
+    */
+
     findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
+
     peakresidual = itsPeakResidual;
 
     // Find Total Model flux
@@ -231,6 +245,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     (itsImages->residual())->put( itsMatResidual );
     (itsImages->model())->put( itsMatModel );
+  }
+
+
+  void SDAlgorithmClarkClean::queryDesiredShape(Int &nchanchunks, 
+						Int &npolchunks, 
+						IPosition imshape) // , nImageFacets.
+  {  
+    AlwaysAssert( imshape.nelements()==4, AipsError );
+    nchanchunks=imshape(3);  // Each channel should appear separately.
+
+    itsAlgorithmName.downcase();
+
+    if( itsAlgorithmName.matches("clarkstokes") )
+      {
+	npolchunks=imshape(2); // Each pol should appear separately.
+      }
+    else // "Clark"
+      {
+	npolchunks=1; // Send in all pols together.
+      }
+
   }
 
 
