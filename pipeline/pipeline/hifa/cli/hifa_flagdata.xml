@@ -50,7 +50,7 @@
 	</param>
 
 	<param type="double" name="fracspwfps" subparam="true">
-	    <description>Fraction of ACS correlator edge channels to be flagged</description>
+	    <description>Fraction of ACA correlator edge channels to be flagged</description>
 	    <value>0.048387</value>
 	</param>
 
@@ -246,6 +246,15 @@ filetemplate -- The name of an text file that contains the flagging template
     is undefined a name of the form 'msname_flagtemplate.txt' is assumed.
     default: ''
 
+hm_tbuff -- The heuristic for computing the default time interval padding parameter.
+    The options are 'halfint' and 'manual'. In 'halfint' mode tbuff is set to
+    half the maximum of the median integration time of the science and calibrator target
+    observations.
+    default: 'halfint'
+
+tbuff -- The time in seconds used to pad flagging command time intervals if
+    hm_tbuff='manual'.
+    default: 0.0
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
@@ -277,12 +286,12 @@ Description
 
 The hifa_flagdata data performs basic flagging operations on a list of measurements including:
 
-o autocorrelation data flagging
-o shadowed antenna data flagging
-o scan based flagging
-o edge channel flagging
 o applying online flags
 o apply a flagging template
+o autocorrelation data flagging
+o shadowed antenna data flagging
+o scan based flagging by intent or scan number
+o edge channel flagging
 
 Issues
 
@@ -293,10 +302,10 @@ Examples
     
     hifa_flagdata()
 
-2. Do basic flagging on a measurement set as well as flag pointing and
-   atmosphere data
+2. Do basic flagging on a measurement set flaggin additional scans selected
+   by number as well.
 
-    hifa_flagdata(scan=True intent='BANDPASS')
+    hifa_flagdata(scannumber='13,18')
 
 </example>
 
