@@ -244,7 +244,7 @@ protected:
 			  const Int tile);
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
-  void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);
+  void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False, const Bool savemodel=False);
 
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
@@ -300,7 +300,7 @@ protected:
   Int facetsStore_p;
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
-  Bool useScratch_p;
+  Bool useScratch_p,readOnly_p;
   //
   //  Bool freqFrameValid_p;
 

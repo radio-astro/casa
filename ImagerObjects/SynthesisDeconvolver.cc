@@ -101,11 +101,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  } 
 	else if(decpars.algorithm==String("clark"))
 	  {
-	    itsDeconvolver = new SDAlgorithmClarkClean(); 
+	    itsDeconvolver = new SDAlgorithmClarkClean("clark"); 
+	  } 
+	else if(decpars.algorithm==String("clarkstokes"))
+	  {
+	    itsDeconvolver = new SDAlgorithmClarkClean("clarkstokes"); 
 	  } 
 	else if(decpars.algorithm==String("multiscale"))
 	  {
 	    itsDeconvolver = new SDAlgorithmMSClean( decpars.scales ); 
+	  } 
+	else if(decpars.algorithm==String("mem"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMEM( "entropy" ); 
 	  } 
 	else
 	  {

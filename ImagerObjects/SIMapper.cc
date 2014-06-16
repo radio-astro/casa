@@ -207,6 +207,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapper::finalizeDegrid()
   {
     LogIO os( LogOrigin("SIMapper","finalizeDegrid",WHERE) );
+    ft_p->finalizeToVis();
   }
 
   Bool SIMapper::getFTMRecord(Record& rec, const String diskimage)

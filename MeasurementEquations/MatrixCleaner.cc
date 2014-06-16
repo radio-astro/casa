@@ -466,6 +466,8 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
   }
   LCBox centerBox(blcDirty, trcDirty, model.shape());
 
+  cout << "Dirty blc : " << blcDirty << "  trc : " << trcDirty << endl;
+
   Block<Matrix<Float> > scaleMaskSubs;
   if (!itsMask.null())  {
     scaleMaskSubs.resize(itsNscales);

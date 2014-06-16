@@ -75,8 +75,6 @@
 #include <synthesis/TransformMachines/MultiTermFTNew.h>
 //#include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/AWProjectWBFTNew.h>
-#include <synthesis/TransformMachines/MultiTermFT.h>
-#include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
 #include <synthesis/TransformMachines/NoOpATerm.h>
@@ -102,6 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
      useScratch_p=False;
+     readOnly_p=True;
      wvi_p=0;
      rvi_p=0;
 
@@ -185,6 +184,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				selpars.readonly ? Table::Old : Table::Update);
     thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
     useScratch_p=selpars.usescratch;
+    readOnly_p = selpars.readonly;
+    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
     //if you want to use scratch col...make sure they are there
     if(selpars.usescratch && !selpars.readonly){
       VisSetUtil::addScrCols(thisms, True, False, True, False);
@@ -241,7 +242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	thisSelection.setTaQLExpr(selpars.taql);
 	os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
     }
-    os << LogIO::POST;
+    os << "[Opened " << (readOnly_p?"in readonly mode":(useScratch_p?"with scratch model column":"with virtual model column"))  << "]" << LogIO::POST;
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull())){
       mss_p.resize(mss_p.nelements()+1, False, True);
@@ -611,15 +612,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/, const Bool useViVb2)
+  void SynthesisImager::executeMajorCycle(Record& controlRecord, const Bool useViVb2)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
     os << "----------------------------------------------------------- Run Major Cycle -------------------------------------" << LogIO::POST;
 
+    Bool lastcycle=False;
+    if( controlRecord.isDefined("lastcycle") )
+      {
+	controlRecord.get( "lastcycle" , lastcycle );
+	//cout << "lastcycle : " << lastcycle << endl;
+      }
+    //else {cout << "No lastcycle" << endl;}
     try
       {    
-	runMajorCycle(False, useViVb2);
+	runMajorCycle(False, useViVb2, lastcycle);
 
 	itsMappers.releaseImageLocks();
 
@@ -629,7 +637,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
       }    
 
-  }// end of runMajorCycle
+  }// end of executeMajorCycle
   //////////////////////////////////////////////
   /////////////////////////////////////////////
 
@@ -641,7 +649,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
       try
       {
-    	  runMajorCycle(True, useViVb2);
+	runMajorCycle(True, useViVb2,False);
 
     	  if(facetsStore_p >1)
 	    {
@@ -679,7 +687,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      		{
 
 	      			vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-	      			itsMappers.degrid(*vb, useScratch_p);
+	      			itsMappers.degrid(*vb, !useScratch_p);
 	      			if(vi_p->isWritable() && useScratch_p)
 	      				vi_p->writeVisModel(vb->visCubeModel());
 	      		}
@@ -709,7 +717,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      	itsMappers.finalizeDegrid(*vb);
 	      }
 
-  }
+  }// end of predictModel
 
    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -883,7 +891,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	info.define("distance", distance.get("m").getValue());
 	////////////// Send misc info into ImageStore. 
 	imstor->setImageInfo( info );
+
+	// Get polRep from 'msc' here, and send to imstore. 
+	StokesImageUtil::PolRep polRep(StokesImageUtil::CIRCULAR);
+	Vector<String> polType=msc.feed().polarizationType()(0);
+	if (polType(0)!="X" && polType(0)!="Y" &&  polType(0)!="R" && polType(0)!="L") {
+	  os << LogIO::WARN << "Unknown stokes types in feed table: ["
+	     << polType(0) << ", " << polType(1) << "]" << endl
+	     << "Results open to question!" << LogIO::POST;
+	}
 	
+	if (polType(0)=="X" || polType(0)=="Y") {
+	  polRep=StokesImageUtil::LINEAR;
+	  os << LogIO::DEBUG1 << "Preferred polarization representation is linear" << LogIO::POST;
+	}
+	else {
+	  polRep=StokesImageUtil::CIRCULAR;
+	  os << LogIO::DEBUG1 << "Preferred polarization representation is circular" << LogIO::POST;
+	}
+	/// end of reading polRep info
+	
+	///////// Send this info into ImageStore.
+	imstor->setDataPolFrame(polRep);
+
       }
     catch(AipsError &x)
       {
@@ -1382,9 +1412,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  void SynthesisImager::runMajorCycle(const Bool dopsf, const Bool useViVb2)
+  void SynthesisImager::runMajorCycle(const Bool dopsf, 
+				      const Bool useViVb2,
+				      const Bool savemodel)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+
+    //    cout << "Savemodel : " << savemodel << "   readonly : " << readOnly_p << "   usescratch : " << useScratch_p << endl;
+
+    Bool savemodelcolumn = savemodel && !readOnly_p && useScratch_p;
+    Bool savevirtualmodel = savemodel && !readOnly_p && !useScratch_p;
+
+    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
+    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
 
     itsMappers.checkOverlappingModels("blank");
 
@@ -1400,8 +1440,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		{
     			if(!dopsf){
     				vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-    				itsMappers.degrid(*vb, useScratch_p);
-    				if(vi_p->isWritable() && useScratch_p)
+    				itsMappers.degrid(*vb, savevirtualmodel );
+    				if( savemodelcolumn && vi_p->isWritable())
     					vi_p->writeVisModel(vb->visCubeModel());
     			}
     			itsMappers.grid(*vb, dopsf, datacol_p);
@@ -1431,8 +1471,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
     			if(!dopsf) {
     				vb->setModelVisCube(Complex(0.0, 0.0));
-    				itsMappers.degrid(*vb, useScratch_p);
-    				if(writeAccess_p && useScratch_p)
+    				itsMappers.degrid(*vb, savevirtualmodel );
+    				if(savemodelcolumn && writeAccess_p )
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
     			}
     			itsMappers.grid(*vb, dopsf, datacol_p);

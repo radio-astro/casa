@@ -1,4 +1,4 @@
-//# SDAlgorithmClarkClean.h: Definition for SDAlgorithmClarkClean
+//# SDAlgorithmMEM.h: Definition for SDAlgorithmMEM
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SDALGORITHMCLARKCLEAN_H
-#define SYNTHESIS_SDALGORITHMCLARKCLEAN_H
+#ifndef SYNTHESIS_SDALGORITHMMEM_H
+#define SYNTHESIS_SDALGORITHMMEM_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 //#include <synthesis/MeasurementComponents/SkyModel.h>
@@ -37,9 +37,10 @@
 #include <images/Images/TempImage.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
-#include <casa/System/PGPlotter.h>
 
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
+
+#include <synthesis/MeasurementEquations/Entropy.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -47,13 +48,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SIMinorCycleController;
 
 
-  class SDAlgorithmClarkClean : public SDAlgorithmBase 
+  class SDAlgorithmMEM : public SDAlgorithmBase 
   {
   public:
     
     // Empty constructor
-    SDAlgorithmClarkClean(String clarktype);
-    virtual  ~SDAlgorithmClarkClean();
+    SDAlgorithmMEM(String entropy);
+    virtual  ~SDAlgorithmMEM();
     
   protected:
     
@@ -61,12 +62,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
     virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void finalizeDeconvolver();
-    virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
 
     Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
     Array<Float> itsMatDeltaModel;
 
-    Int psfpatch_p;
+    CountedPtr<Entropy> itsEnt;
+
 
   };
 

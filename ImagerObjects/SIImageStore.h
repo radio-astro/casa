@@ -40,6 +40,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/BasicSL/Constants.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
@@ -146,6 +147,9 @@ class SIImageStore
 
   void validate();
 
+
+  void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {itsDataPolRep = datapolrep;};
+
 protected:
   CountedPtr<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
 						  const Int chan, const Int nchanchunks,
@@ -189,6 +193,7 @@ protected:
   Int itsNChanChunks, itsChanId;
   Int itsNPolChunks, itsPolId;
 
+  StokesImageUtil::PolRep itsDataPolRep;
 
   //
   //------------------------------------------

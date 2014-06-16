@@ -218,7 +218,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  else{
 			  vb.correctedVisCube()-=vb.modelVisCube();
 		  }
-	  }
+	  } 
+	  else if (col==FTMachine::OBSERVED) {
+			  vb.visCube()-=vb.modelVisCube();
+	    }
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
 		  (itsMappers[k])->grid(vb, dopsf, col);
@@ -273,14 +276,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool useScratch)
+  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool saveVirtualMod)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
 		  (itsMappers[k])->degrid(vb);
 
   	  }
-	  if(!useScratch){
+	  if(saveVirtualMod){
 		  if(vb.msId() != oldMsId_p){
 			  oldMsId_p=vb.msId();
 			  const vi::VisibilityIterator2 * viloc=vb.getVi();
@@ -329,13 +332,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(VisBuffer& vb, Bool useScratch)
+  void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod)
     {
 	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	    				(itsMappers[k])->degrid(vb);
 
-  		  if(!useScratch){
-  			  saveVirtualModel(vb);
+  		  if(saveVirtualMod){
+		    saveVirtualModel(vb);
   		  }
 
     }

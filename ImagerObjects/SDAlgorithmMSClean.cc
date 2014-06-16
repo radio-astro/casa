@@ -103,6 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsCleaner.setSmallScaleBias( itsSmallScaleBias );
 	//itsCleaner.stopAtLargeScaleNegative( itsStopLargeNegatives );// In MFMSCleanImageSkyModel.cc, this is only for the first two major cycles...
 	itsCleaner.stopPointMode( itsStopPointMode );
+	itsCleaner.ignoreCenterBox( True ); // Clean full image
 
 	Matrix<Float> tempMat;
 	tempMat.reference( itsMatPsf );
@@ -153,6 +154,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Matrix<Float> tempModel;
     tempModel.reference( itsMatModel );
+
+    cout << "SDALMS,  matrix shape : " << tempModel.shape() << " array shape : " << itsMatModel.shape() << endl;
 
     // retval
     //  1 = converged
