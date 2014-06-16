@@ -1265,12 +1265,15 @@ class DeprecationDecoratorBase:
         self.func = func
         return lambda *args, **kwargs: self.doCall(*args, **kwargs)
 
+    def get_info(self):
+        return self.info
+
     def doCall(self, *args, **kwargs):
         # set origin
         casalog.origin(self.func.func_name)
 
         if self.needToIssueWarning:
-            casalog.post("### DEPRECATION WARNING: Task {0} is deprecated. {1}".format(self.func.func_name, self.info), priority="WARN")
+            casalog.post("### DEPRECATION WARNING: Task {0} is deprecated. {1}".format(self.func.func_name, self.get_info()), priority="WARN")
             self.needToIssueWarning = False
 
         return self.func(*args, **kwargs)
@@ -1278,6 +1281,7 @@ class DeprecationDecoratorBase:
 class SDDeprecationDecorator(DeprecationDecoratorBase):
     def __init__(self, newtask=None):
         self.newtask = newtask
+        # initialize info with empty string
         DeprecationDecoratorBase.__init__(self, "")
 
     def get_newname(self, taskname):
@@ -1291,8 +1295,8 @@ class SDDeprecationDecorator(DeprecationDecoratorBase):
             return taskname[:-3]
         raise Exception, "Failed to generate new task name form currnt one."
 
-    def __call__(self, func):
-        if self.needToIssueWarning:
-            self.info = "You are executing an OLD single dish task, %s. This task will be removed in a future release. As soon as it is practical, use the replacement task %s, instead." % (func.func_name, self.get_newname(func.func_name))
-
-        return DeprecationDecoratorBase.__call__(self,func)
+    def get_info(self):
+        new_task_name = self.get_newname(self.func.func_name)
+        warning = "You are executing an OLD single dish task, %s. This task will be removed in a future release. As soon as it is practical, use the replacement task %s, instead." % (self.func.func_name, new_task_name)
+        self.info = warning
+        return warning
