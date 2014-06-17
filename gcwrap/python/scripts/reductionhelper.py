@@ -329,7 +329,7 @@ def sakura_typemap(typemap, key):
 
 def calibration_typemap(key):
     try:
-        return CALIBRATION_TYPEMAP[key.lower()], -1
+        return CALIBRATION_TYPEMAP[key.lower()], 0
     except KeyError, e:
         if key.isdigit():
             return libsakurapy.INTERPOLATION_METHOD_POLYNOMIAL, int(key)
@@ -372,17 +372,10 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
     sky_tables = _select_sky_tables(gaintable)
     tsys_tables = _select_tsys_tables(gaintable)
 
-    ## def _tsysspw(spwmap, spwid):
-    ##     for (k,v) in spwmap.items():
-    ##         if spwid in v:
-    ##             return k
-    ##     return None
-
     for spwid in spwid_list:
         nchan = nchanmap[spwid]
 
         # create calibration context
-        #tsysspw = _tsysspw(spwmap, spwid)
         tsysspw = spwmap[spwid] # interferometry style spwmap
         calibration_context = create_calibration_context(vis,
                                                          sky_tables,
@@ -496,24 +489,25 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
 
         # create aligned buffer for interpolation
         def gen_interpolation():
-            interpolated_freq = _casasakura.tosakura_double(freq)
-            base_freq = _casasakura.tosakura_double(freq_tsys)
-            nchan = len(interpolated_freq)
+            interpolated_freq = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, freq)
+            base_freq = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, freq_tsys)
+            base_freq = _casasakura.tosakura_double(freq_tsys)[0][0]
+            nchan = len(freq)
             npol, nchan_base, nrow = sorted_data.shape
             for ipol in xrange(npol):
                 base_data = _casasakura.tosakura_float(sorted_data[ipol].flatten(order='F'))[0][0]
-                interpolated_data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (nchan * nrow,))
+                interpolated_data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (nchan * nrow,))
     
                 # perform interpolation
-                ## libsakurapy.interpolate_float_xaxis(interpolation_method,
-                ##                                     poly_order,
-                ##                                     nchan_base,
-                ##                                     base_freq,
-                ##                                     nrow,
-                ##                                     base_data,
-                ##                                     nchan,
-                ##                                     interpolated_freq,
-                ##                                     interpolated_data)
+                libsakurapy.interpolate_float_xaxis(interpolation_method,
+                                                    poly_order,
+                                                    nchan_base,
+                                                    base_freq,
+                                                    nrow,
+                                                    base_data,
+                                                    nchan,
+                                                    interpolated_freq,
+                                                    interpolated_data)
                 yield interpolated_data
 
         # data for context
