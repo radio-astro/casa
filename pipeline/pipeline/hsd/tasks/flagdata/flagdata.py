@@ -208,8 +208,16 @@ class SDFlagData(common.SingleDishTaskTemplate):
 
 
             LOG.debug('Members to be processed:')
+            is_all_baselined = True
             for i in xrange(len(member_list)):
-                LOG.debug('\tAntenna %s Spw %s Pol %s'%(_file_index[i], spwid_list[i], pols_list[i]))
+                bl_loc = True
+                for pol in pols_list[i]:
+                    bl_loc = bl_loc and (group_desc.get_iteration(_file_index[i], spwid_list[i], pol) > 0)
+                LOG.debug('\tAntenna %s Spw %s Pol %s%s'%(_file_index[i], spwid_list[i], pols_list[i], ("" if bl_loc else " [Not baselined]")))
+                is_all_baselined = (is_all_baselined and bl_loc)
+
+            if not is_all_baselined:
+                LOG.warn("Reduction Group contains data not yet baselined. MASKLIST will be cleared up for the data. You can go on flagging but the statistics will contain line emission.")
 
             # skip spw not included in iflist
             #if len(spwid_list) == 0:
