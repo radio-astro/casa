@@ -367,6 +367,7 @@ protected:
 
   friend class VisModelData;
   friend class MultiTermFT;
+  friend class MultiTermFTNew;
   LogIO logIO_p;
 
   LogIO& logIO();

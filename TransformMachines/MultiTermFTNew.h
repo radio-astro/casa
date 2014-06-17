@@ -171,7 +171,8 @@ public:
   FTMachine* cloneFTM();
 
 protected:
-
+  // have to call the initmaps of subftm
+  virtual void initMaps(const VisBuffer& vb);
   // Instantiate a new sub FTM
   CountedPtr<FTMachine> getNewFTM(const CountedPtr<FTMachine>& ftm);
 
