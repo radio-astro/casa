@@ -202,64 +202,33 @@ public:
 
   static PyObject *CreateChunkForCasa(PyObject *obj)
   {
-    casa::Array<CDataType> arr;
-
-    if (PyTuple_Check(obj) == 0) {
+    // decapsulate
+    std::vector<sakura_PyAlignedBuffer *> buffer_list;
+    casa::uInt nrow, npol, nchan;
+    bool status = DecapsulateChunk(obj, buffer_list, npol, nchan, nrow);
+    if (!status) {
+      // TODO: throw exception
       return NULL;
     }
+
+    // convert sakura_PyAlignedBuffer to casa::Array
+    casa::Array<CDataType> array;
+    Py_BEGIN_ALLOW_THREADS
+    status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, array);
+    Py_END_ALLOW_THREADS
+
+    if (!status) {
+      // TODO: throw exception
+      return NULL;
+    }
+
+    // convert casa::Array to casac::variant
+    casac::variant *v = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    v = ToVariant(array, npol, nchan, nrow);
+    Py_END_ALLOW_THREADS
     
-    Py_ssize_t nrow = PyTuple_Size(obj);
-    casa::uInt npol = 0;
-    casa::uInt nchan = 0;
-
-    casa::Bool b;
-    CDataType *arr_p = NULL;
-    for (Py_ssize_t irow = 0; irow < nrow; ++irow) {
-      PyObject *tuple = PyTuple_GetItem(obj, irow);
-      Py_ssize_t _npol = PyTuple_Size(tuple);
-      for (Py_ssize_t ipol = 0; ipol < _npol; ++ipol) {
-	PyObject *capsule = PyTuple_GetItem(tuple, ipol);
-	sakura_PyAlignedBuffer *buffer;
-	if (sakura_PyAlignedBufferDecapsulate(capsule, &buffer) != sakura_Status_kOK) {
-	  if (!arr.empty()) {
-	    arr.putStorage(arr_p, b);
-	  }
-	  return NULL;
-	}
-
-	void *aligned;
-	sakura_PyAlignedBufferAlignedAddr(buffer, &aligned);
-	size_t dimensions;
-	sakura_PyAlignedBufferDimensions(buffer, &dimensions);
-	size_t elements[1];
-	sakura_PyAlignedBufferElements(buffer, 1, elements);
-	if (arr.empty()) {
-	  npol = _npol;
-	  nchan = elements[0];
-	  arr.resize(casa::IPosition(3, npol, nchan, nrow));
-	  arr_p = arr.getStorage(b);		
-	}
-	size_t start_pos = irow * (_npol * elements[0]);
-	CDataType *out_p = &arr_p[start_pos];
-	Handler::ToCasa(ipol, npol, elements[0], aligned, out_p);
-      }
-    }
-    arr.putStorage(arr_p, b);
-
-    // reform
-    // Shape of returned array will be same as input
-    casa::Array<CDataType> new_arr;
-    if (npol == 1 && nrow == 1) {
-      new_arr = arr.reform(casa::IPosition(1, nchan));
-    }
-    else if (nrow == 1) {
-      new_arr = arr.reform(casa::IPosition(2, npol, nchan));
-    }
-    else {
-      new_arr = arr;
-    }
-    casa::ValueHolder val(new_arr);
-    return ToPyObject(val);
+    return casac::variant2pyobj(*v);
   }
   
 private:
@@ -303,6 +272,138 @@ private:
     }
     arr.freeStorage(arr_p, b);
     return tuple;
+  }
+
+  static bool DecapsulateChunk(PyObject *obj,
+			       std::vector<sakura_PyAlignedBuffer *> &buffer_list,
+			       casa::uInt &npol,
+			       casa::uInt &nchan,
+			       casa::uInt &nrow)
+  {
+    if (PyTuple_Check(obj) == 0 || PyTuple_Size(obj) == 0) {
+      return false;
+    }
+    
+    Py_ssize_t num_tuples = PyTuple_Size(obj);
+
+    // Access first element to obtain num_elements (=npol)
+    PyObject *first_element = PyTuple_GetItem(obj, 0);
+    if (first_element == NULL) {
+      // TODO: throw exception
+      return false;
+    }
+
+    if (PyTuple_Check(first_element) == 0 || PyTuple_Size(first_element) == 0) {
+      return false;
+    }
+    
+    Py_ssize_t num_elements = PyTuple_Size(first_element);
+
+    buffer_list.resize((size_t)(num_tuples * num_elements));
+
+    std::vector<sakura_PyAlignedBuffer *>::iterator iter = buffer_list.begin();
+    for (Py_ssize_t irow = 0; irow < num_tuples; ++irow) {
+      PyObject *tuple = PyTuple_GetItem(obj, irow);
+      for (Py_ssize_t ipol = 0; ipol < num_elements; ++ipol) {
+	PyObject *capsule = PyTuple_GetItem(tuple, ipol);
+	sakura_PyAlignedBuffer *buffer;
+	if (sakura_PyAlignedBufferDecapsulate(capsule, &buffer) != sakura_Status_kOK) {
+	  return false;
+	}
+
+	assert(iter != buffer_list.end());
+	
+	*iter = buffer;
+	iter++;
+      }
+    }
+
+    // now buffer_list contains sakura_PyAlignedBuffer in order of
+    // [(pol0,row0), (pol1,row0), (pol0,row1), (pol1,row1), ...]
+
+    // get elements[0] which is nchan
+    size_t elements[1];
+    sakura_PyAlignedBufferElements(buffer_list[0], 1, elements);
+
+    // finally, set npol, nchan, and nrow
+    npol = (casa::uInt)num_elements;
+    nchan = (casa::uInt)elements[0];
+    nrow = (casa::uInt)num_tuples;
+
+    return true;
+  }
+
+  static bool ReadAlignedBuffer(const casa::uInt npol,
+				const casa::uInt nchan,
+				const casa::uInt nrow,
+				const std::vector<sakura_PyAlignedBuffer *> &buffer_list,
+				casa::Array<CDataType> &array)
+  {
+    // resize array
+    array.resize(casa::IPosition(3, npol, nchan, nrow));
+
+    // get raw pointer from array
+    casa::Bool b;
+    CDataType *array_p = array.getStorage(b);
+
+    try {
+      std::vector<sakura_PyAlignedBuffer *>::const_iterator iter = buffer_list.begin();
+      for (casa::uInt irow = 0; irow < nrow; ++irow) {
+	for (casa::uInt ipol = 0; ipol < npol; ++ipol) {
+	  assert(iter != buffer_list.end());
+
+	  void *aligned;
+	  sakura_PyAlignedBufferAlignedAddr(*iter, &aligned);
+	  size_t elements[1];
+	  sakura_PyAlignedBufferElements(*iter, 1, elements);
+
+	  assert(elements[0] == (size_t)nchan);
+
+	  size_t start_pos = (size_t)(irow * npol * nchan);
+	  CDataType *out_p = &array_p[start_pos];
+	  Handler::ToCasa((size_t)ipol, (size_t)npol, (size_t)nchan,
+			  aligned, out_p);
+
+	  iter++;
+	}
+      }
+    }
+    catch (...) {
+      // finalization
+      array.putStorage(array_p, b);
+      
+      return false;
+    }
+
+    // finalization
+    array.putStorage(array_p, b);
+    
+    return true;
+  }
+  
+  static casac::variant *ToVariant(const casa::Array<CDataType> &array,
+				   const casa::uInt npol,
+				   const casa::uInt nchan,
+				   const casa::uInt nrow)
+  {
+    // reform
+    // Shape of returned array will be same as input
+    casa::Array<CDataType> reshaped_array;
+    if (npol == 1 && nrow == 1) {
+      reshaped_array = array.reform(casa::IPosition(1, nchan));
+    }
+    else if (nrow == 1) {
+      reshaped_array = array.reform(casa::IPosition(2, npol, nchan));
+    }
+    else {
+      reshaped_array = array;
+    }
+
+    // Array to ValueHolder
+    casa::ValueHolder val(reshaped_array);
+
+    // ValueHolder to variant, then return
+    return casa::fromValueHolder(val);
   }
 };
 
