@@ -8,27 +8,11 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
-
-def get_logrecords(result, loglevel):
-    """
-    Get the logrecords for the result, removing any duplicates
-
-    :param result: a result containing logrecords
-    :param loglevel: the loglevel to match
-    :return:
-    """
-    lst = [l for l in result.logrecords if l.levelno is loglevel]
-
-    dset = set()
-    # relies on the fact that dset.add() always returns None.
-    return [l for l in lst if
-            l.msg not in dset and not dset.add(l.msg)]
-
+import pipeline.infrastructure.utils as utils
 
 def get_qascores(pool, lo, hi):
 	with_score = [s for s in pool if s.score not in ('', 'N/A', None)]
 	return [s for s in with_score if s.score > lo and s.score <= hi]
-
 %>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, plot_accessor=lambda d: [('No Intent', d)])">
@@ -135,12 +119,12 @@ def get_qascores(pool, lo, hi):
 	% endfor
 %endif
 % for r in result:
-	% for logrecord in get_logrecords(r, logging.ERROR):
+	% for logrecord in utils.get_logrecords(r, logging.ERROR):
 	<li class="alert alert-error">
 		<strong>Error!</strong> ${logrecord.msg}
 	</li>
 	% endfor
-	% for logrecord in get_logrecords(r, logging.WARNING):
+	% for logrecord in utils.get_logrecords(r, logging.WARNING):
 	<li class="alert">
 		<strong>Warning!</strong> ${logrecord.msg}
 	</li>
