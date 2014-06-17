@@ -67,7 +67,7 @@ public:
   
   static casa::Array<CDataType> AsArray(casa::ValueHolder *v)
   {
-    return HandlerImpl::AsArrayImpl(v);
+    return ValueHolderToArray<CDataType>(v);
   }
 
   static void ToSakura(const size_t offset, const size_t increment,
@@ -101,11 +101,6 @@ public:
   typedef typename Base::CDataType CDataType;
   typedef typename Base::SDataType SDataType;
   
-  static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
-  {
-    return ValueHolderToArray<CDataType>(v);
-  }
-
   static void ConvertToSakura(const size_t in_index, const size_t out_index,
 			      const CDataType *in_p, SDataType *out_p)
   {
@@ -125,11 +120,6 @@ class DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> : public Handler
 public:
   typedef HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float, sakura_PyTypeId_kFloat> Base; 
   
-  static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
-  {
-    return ValueHolderToArray<CDataType>(v);
-  }
-
   static void ConvertToSakura(const size_t in_index, const size_t out_index,
 			      const CDataType *in_p, SDataType *out_p)
   {
@@ -154,11 +144,6 @@ class DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> : public HandlerInter
 public:
   typedef HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool> Base;
   
-  static casa::Array<CDataType> AsArrayImpl(casa::ValueHolder *v)
-  {
-    return ValueHolderToArray<CDataType>(v);
-  }
-
   static void ConvertToSakura(const size_t in_index, const size_t out_index,
 			      const CDataType *in_p, SDataType *out_p)
   {
