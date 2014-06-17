@@ -119,42 +119,30 @@ def paraMap(numThreads, func, dataSource):
 		putEODIntoInQ(context)
 
 class GenerateQueryHelper(object):
-    def __init__(self, ms, data_desc_id_by_spw, data_desc_id, antenna_id):
-        ms.selectinit(datadescid=data_desc_id)
-	ms.selecttaql('ANTENNA1==' + str(antenna_id)+' && ANTENNA2==' + str(antenna_id))
+    def __init__(self, vis, data_desc_id, antenna_id, \
+		 field, spw, timerange, antenna, scan, observation, msselect):
+        self.vis = vis
+        if field is None: field = ''
+        if spw is None: spw = ''
+        if timerange is None: timerange = ''
+        if antenna is None: antenna = ''
+        if scan is None: scan = ''
+        if observation is None: observation = ''
+        if msselect is None: msselect = ''
 
-        self.ms_name = ms.name()
-        self.data_desc_id__by_spw = data_desc_id_by_spw
-        self.data_desc_id = data_desc_id
-        self.antenna_id = antenna_id
-        self.valid_selection = True
-        self.selected_idx = None
+        try:
+            self.selected_idx = ms.msseltoindex(vis=vis, field=field, spw=spw, \
+                                                time=timerange, baseline=antenna, \
+                                                scan=scan, observation=observation, \
+                                                taql=msselect)
+            self.valid_selection = self.is_effective(data_desc_id, antenna_id)
+        except:
+            self.valid_selection = False
 
-    def do_msselect(self, ms, field, spw, timerange, antenna, scan, observation, msselect):
-        self.timerange = timerange
-        self.msselect = msselect
-        self._do_msselect(ms, 'field', field)
-        self._do_msselect(ms, 'spw', spw)
-        self._do_msselect(ms, 'time', timerange)
-        self._do_msselect(ms, 'taql', antenna, 'ANTENNA1==')
-        self._do_msselect(ms, 'scan', scan)
-        self._do_msselect(ms, 'observation', observation)
-        self._do_msselect(ms, 'taql', msselect)
-
-    def _do_msselect(self, ms, name, value, value_prefix=None):
-        if self.valid_selection:
-            try:
-                if value is not None:
-                    if value_prefix is not None:
-                        value = value_prefix + str(value)
-                    ms.msselect({name:value})
-            except:
-                self.valid_selection = False
-
-    def is_effective(self):
-        return self.is_effective_id('spw', self.data_desc_id) and \
-	    self.is_effective_id('antenna1', self.antenna_id) and \
-	    self.is_effective_id('antenna2', self.antenna_id)
+    def is_effective(self, data_desc_id, antenna_id):
+        return self.is_effective_id('spwdd', data_desc_id) and \
+	    self.is_effective_id('antenna1', antenna_id) and \
+	    self.is_effective_id('antenna2', antenna_id)
 
     def is_effective_id(self, key, value):
         res = True
@@ -165,17 +153,17 @@ class GenerateQueryHelper(object):
                 res = False
         return res
 
-    def get_taql(self):
+    def get_taql(self, data_desc_id, antenna_id, timerange, msselect):
         elem = []
-        self._append_taql(elem, 'DATA_DESC_ID', '==', self.data_desc_id)
-        self._append_taql(elem, 'ANTENNA1', '==', self.antenna_id)
-        self._append_taql(elem, 'ANTENNA2', '==', self.antenna_id)
+        self._append_taql(elem, 'DATA_DESC_ID', '==', data_desc_id)
+        self._append_taql(elem, 'ANTENNA1', '==', antenna_id)
+        self._append_taql(elem, 'ANTENNA2', '==', antenna_id)
         self._append_taql(elem, 'FIELD_ID', 'IN', 'field', True)
-        taql_timerange = rhutil.select_by_timerange(self.ms_name, self.timerange) if self.timerange is not None else ''
+        taql_timerange = rhutil.select_by_timerange(self.vis, timerange) if timerange is not None else ''
         self._append_taql(elem, '', '', taql_timerange, True)
         self._append_taql(elem, 'SCAN_NUMBER', 'IN', 'scan', True)
-        self._append_taql(elem, 'OBSERVATION_ID', 'IN', 'observationid', True)
-        self._append_taql(elem, '', '', self.msselect, True)
+        self._append_taql(elem, 'OBSERVATION_ID', 'IN', 'obsids', True)
+        self._append_taql(elem, '', '', msselect, True)
         return ' && '.join(elem)
 
     def _append_taql(self, elem, keyword, operand, value, check=False):
@@ -193,27 +181,25 @@ class GenerateQueryHelper(object):
             res = '(' + keyword.strip().upper() + mgn + ope + mgn + val + ')'
 	    elem.append(res)
 
+    def get_channel_selection(self):
+        idx_channel = self.selected_idx['channel']
+        return str(idx_channel) if len(idx_channel) > 0 else ''
+
+    def get_pol_selection(self, pol):
+        return pol if pol is not None else ''
+
 def generate_query(vis, field=None, spw=None, timerange=None, antenna=None, scan=None, pol=None, observation=None, msselect=None):
     with opentable(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
         num_data_desc_id = tb.nrows()
-        data_desc_id_by_spw = dict(((tb.getcell('SPECTRAL_WINDOW_ID', i), i) for i in xrange(num_data_desc_id)))
 
     with opentable(os.path.join(vis, 'ANTENNA')) as tb:
         num_antenna_id = tb.nrows()
 
-    with openms(vis) as ms:
-        for data_desc_id, antenna_id in itertools.product(xrange(num_data_desc_id), xrange(num_antenna_id)):
-            gqh = GenerateQueryHelper(ms, data_desc_id_by_spw, data_desc_id, antenna_id)
-	    gqh.do_msselect(ms, field, spw, timerange, antenna, scan, observation, msselect)
-	    if gqh.valid_selection:
-                gqh.selected_idx = ms.msselectedindices()
-		if gqh.is_effective():
-                    res = gqh.get_taql()
-		    idx_channel = gqh.selected_idx['channel']
-		    res_channel = str(idx_channel) if len(idx_channel) > 0 else ''
-		    res_pol = pol if pol is not None else ''
-		    yield res, res_channel, res_pol
-	    ms.reset()
+    for data_desc_id, antenna_id in itertools.product(xrange(num_data_desc_id), xrange(num_antenna_id)):
+        gqh = GenerateQueryHelper(vis, data_desc_id, antenna_id, field, spw, timerange, antenna, scan, observation, msselect)
+        if gqh.valid_selection:
+            res = gqh.get_taql(data_desc_id, antenna_id, timerange, msselect)
+            yield res, gqh.get_channel_selection(), gqh.get_pol_selection(pol)
 
 @contextlib.contextmanager
 def opentable(vis):
