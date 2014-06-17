@@ -50,6 +50,7 @@
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/MultiTermFTNew.h>
 #include <synthesis/TransformMachines/SetJyGridFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -843,6 +844,15 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       return new MosaicFT(ftrec);
     if(name=="SetJyGridFT")
       return new SetJyGridFT(ftrec);
+    if(name=="MultiTermFTNew")
+      return new MultiTermFTNew(ftrec);
+    //When the following have constructors from Record they should be uncommented
+    //   if(name=="AWProjectFT")
+    //  return new AWProjectFT(ftrec);
+    //if(name=="AWProjectWBFT")
+    //  return new  AWProjectWBFT(ftrec);
+    //if(name=="MultiTermAWProjectWBFT")
+    //  return new MultiTermAWProjectWBFT(ftrec);
     return NULL;
   }
 

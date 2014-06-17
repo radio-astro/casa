@@ -45,6 +45,7 @@
 #include <casa/sstream.h>
 
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
@@ -222,6 +223,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
   
+  void MultiTermFTNew::initMaps(const VisBuffer& vb){
+    for (uInt k=0;  k < subftms_p.nelements(); ++k)
+      (subftms_p[k])->initMaps(vb);
+  }
   // Reset the imaging weights back to their original values
   // to be called just after "put"
   void MultiTermFTNew::restoreImagingWeights(VisBuffer &vb)
@@ -449,7 +454,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
   {
     //    cout << "MTFTNew :: toRecord for " << subftms_p.nelements() << " subftms" << endl;
     Bool retval = True;
-
+    outRec.define("name", this->name());
     outRec.define("nterms",nterms_p);
     outRec.define("reffreq",reffreq_p);
     outRec.define("machinename",machineName_p);
@@ -491,6 +496,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
     for(Int tix=0;tix<nftms;tix++)
       {
 	Record subFTMRec=inRec.asRecord("subftm_"+String::toString(tix));
+	subftms_p[tix]=VisModelData::NEW_FT(subFTMRec);
 	retval = (retval || subftms_p[tix]->fromRecord(error, subFTMRec));    
       }
     
