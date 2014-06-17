@@ -166,6 +166,7 @@ class QaResult(object):
         self.view_score = {}
         self.view = collections.defaultdict(list)
         self.flagging = []
+        self.spw = ''
 
     def addview(self, description, viewresult):
         self.view[description].append(viewresult)
