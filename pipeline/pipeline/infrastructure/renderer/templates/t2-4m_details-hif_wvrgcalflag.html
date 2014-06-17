@@ -117,45 +117,12 @@ and comparing the resulting phase corrections evaluated both with and without
 application of WVR correction. Plots based on these data in these evaluation 
 caltables are presented below.</p>
 
-% if metric_plots:
-<h3>Flagging metric view</h3>
-
-<p>The following plots show the flagging metric used by the pipeline to
-determine which data to flag. Click on a plot to show all flagging metric
-views for that measurement set.</p>
-
-<ul class="thumbnails">
-% for vis, plot in metric_plots.items():
-         <li class="span3">
-             <div class="thumbnail">
-                 <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                    class="fancybox"
-                    rel="metric_plots">
-                     <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                          title="Click to view all metrics for ${vis}"
-                          data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                     </img>
-                 </a>
-
-                 <div class="caption">
-                    <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric_%s.html' % ms), pcontext.report_dir)}"
-   	                   class="replace">
-                     	<h4>${vis}</h4>
-                    </a>
-
-                     <p>Flagging metric for ${vis} spw 
-                     ${plot.parameters['spw']}.
-                     </p>
-                 </div>
-             </div>
-         </li>
-% endfor        
-</ul>
-
-% endif
-
 % if flag_plots:
 	<h3>Flagging plots</h3>
+
+        <p>The following plots show the flagging metric used by the pipeline to
+        determine which antennas to flag.</p>
+
 	% for ms in flag_plots:
 	    <h4>${ms}</h4>
 	    <ul class="thumbnails">
@@ -186,6 +153,24 @@ views for that measurement set.</p>
 	    </ul>
 	%endfor
 %endif
+
+% if metric_plots:
+<h3>Flagging metric views</h3>
+
+<p>Flagging metric views were calculated for various data 
+intents. Click on a link below to show all flagging metric views for that 
+measurement set.</p>
+
+<ul>
+% for ms, plot in metric_plots.items():
+    <li>
+        <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric_%s.html' % ms), pcontext.report_dir)}"
+          class="replace">${ms}</a>
+    </li>
+% endfor        
+</ul>
+
+% endif
 
 % if phase_offset_summary_plots:
 	<h3>Phase correction with/without WVR</h3>
