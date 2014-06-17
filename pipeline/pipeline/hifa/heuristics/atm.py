@@ -111,7 +111,7 @@ class AtmHeuristics(object):
 
         self.calculated = True
 
-    def highest_opacity_spwid(self):
+    def spwid_rank_by_opacity(self):
         if not self.calculated:
             self._calculate()
 
@@ -121,15 +121,16 @@ class AtmHeuristics(object):
         for ispw, spw_id in enumerate(spw_ids):
             median_opacity[ispw] = np.median(self.opacities[spw_id].data)
 
-        result = str(spw_ids[np.argmax(median_opacity)])
+        result = spw_ids[np.argsort(median_opacity)[::-1]]
+        result = map(str, result)
 
         for ispw, spw_id in enumerate(spw_ids):
             LOG.info('spw: %s median opacity: %s' % (spw_id, median_opacity[ispw]))
-        LOG.info('selected spw: %s' % result)
+        LOG.info('spw rank: %s' % result)
 
         return result
 
-    def highest_freq_spwid(self):
+    def spwid_rank_by_frequency(self):
         """Return the spw id of the science spw with highest centre
            frequency.
         """
@@ -139,10 +140,11 @@ class AtmHeuristics(object):
           self.science_spws]
         spw_ids = [spw.id for spw in self.science_spws]
             
-        result = str(spw_ids[np.argmax(spw_freqs)])
+        result = spw_ids[np.argsort(spw_freqs)[::-1]]
+        result = map(str, result)
 
         for ispw, spw_id in enumerate(spw_ids):
             LOG.info('spw: %s median opacity: %s' % (spw_id, spw_freqs[ispw]))
-        LOG.info('selected spw: %s' % result)
+        LOG.info('spw rank: %s' % result)
 
         return result
