@@ -6,8 +6,10 @@ import Queue
 from threading import *
 import time
 import re
+import numpy
 
 import libsakurapy
+import _casasakura
 
 from taskinit import gentools, ms, ssd
 #import mtpy
@@ -329,14 +331,33 @@ BASELINE_TYPEMAP = {'poly': libsakurapy.BASELINE_TYPE_POLYNOMIAL,
 CONVOLVE1D_TYPEMAP = {'hanning': libsakurapy.CONVOLVE1D_KERNEL_TYPE_HANNING,
                       'gaussian': libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN,
                       'boxcar': libsakurapy.CONVOLVE1D_KERNEL_TYPE_BOXCAR}
+CALIBRATION_TYPEMAP = {'nearest': libsakurapy.INTERPOLATION_METHOD_NEAREST,
+                       'linear': libsakurapy.INTERPOLATION_METHOD_LINEAR,
+                       'cspline': libsakurapy.INTERPOLATION_METHOD_SPLINE}
 
 def sakura_typemap(typemap, key):
     try:
         return typemap[key.lower()]
-    except KeyError:
+    except KeyError, e:
         raise RuntimeError('Invalid type: %s'%(key))
 
-def initcontext(vis, spw, gaintable, interp, spwmap,
+def calibration_typemap(key):
+    try:
+        return CALIBRATION_TYPEMAP[key.lower()], -1
+    except KeyError, e:
+        if key.isdigit():
+            return libsakurapy.INTERPOLATION_METHOD_POLYNOMIAL, int(key)
+        else:
+            raise RuntimeError('Invalid type: %s'%(key))
+        
+
+def data_desc_id_map(vis):
+    with opentable(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
+        ddidmap = dict(((tb.getcell('SPECTRAL_WINDOW_ID',i),i) for i in xrange(tb.nrows())))
+    return ddidmap
+    
+    
+def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
                 maskmode, thresh, avg_limit, edge, blmask,
                 blfunc, order, npiece, applyfft, fftmethod,
                 fftthresh, addwn, rejwn, clipthresh, clipniter,
@@ -348,12 +369,14 @@ def initcontext(vis, spw, gaintable, interp, spwmap,
     context_dict = {}
     
     # get nchan for each spw
-    with opentable(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
-        ddidmap = dict(((tb.getcell('SPECTRAL_WINDOW_ID',i),i) for i in xrange(tb.nrows())))
+    #with opentable(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
+    #    ddidmap = dict(((tb.getcell('SPECTRAL_WINDOW_ID',i),i) for i in xrange(tb.nrows())))
+    ddidmap = data_desc_id_map(vis)
 
     # spw selection to index
-    selection = ms.msseltoindex(vis=vis, spw=spw)
+    selection = ms.msseltoindex(vis=vis, spw=spw, baseline='%s&&&'%(antenna))
     spwid_list = selection['spw']
+    antennaid_list = selection['baselines'][:,0]
     
     # nchan
     with opentable(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
@@ -363,40 +386,164 @@ def initcontext(vis, spw, gaintable, interp, spwmap,
     sky_tables = _select_sky_tables(gaintable)
     tsys_tables = _select_tsys_tables(gaintable)
 
+    ## def _tsysspw(spwmap, spwid):
+    ##     for (k,v) in spwmap.items():
+    ##         if spwid in v:
+    ##             return k
+    ##     return None
+
     for spwid in spwid_list:
         nchan = nchanmap[spwid]
 
         # create calibration context
-        tsysspw = spwmap[spwid]
-        calibration_context = create_calibration_context(sky_tables,
-                                                                tsys_tables,
-                                                                spwid,
-                                                                tsysspw,
-                                                                interp)
+        #tsysspw = _tsysspw(spwmap, spwid)
+        tsysspw = spwmap[spwid] # interferometry style spwmap
+        calibration_context = create_calibration_context(vis,
+                                                         sky_tables,
+                                                         tsys_tables,
+                                                         spwid,
+                                                         tsysspw,
+                                                         antennaid_list,
+                                                         interp)
         
         # create baseline context
         baseline_type = sakura_typemap(BASELINE_TYPEMAP, blfunc)
         baseline_context = libsakurapy.create_baseline_context(baseline_type,
-                                                                      order,
-                                                                      nchan)
+                                                               order,
+                                                               nchan)
         
         # create convolve1D context
         convolve1d_type = sakura_typemap(CONVOLVE1D_TYPEMAP, kernel)
         convolve1d_context = libsakurapy.create_convolve1D_context(nchan,
-                                                                          convolve1d_type,
-                                                                          kwidth,
-                                                                          usefft)
+                                                                   convolve1d_type,
+                                                                   kwidth,
+                                                                   usefft)
         context_dict[spwid] = (calibration_context, baseline_context, convolve1d_context,)
 
     return context_dict
 
+def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, antennaid_list, interp):
+    context = {}
+    # context must be prepared for each antenna
+    for antennaid in antennaid_list:
+
+        # collect sky data for given antenna id and spw id
+        timestamp = None
+        data = None
+        for sky_table in sky_tables:
+            ddidmap = data_desc_id_map(sky_table)
+            if ddidmap.has_key(spwid):
+                ddid = ddidmap[spwid]
+                with opentable(sky_table) as tb:
+                    datacol = colname(tb)
+                    tsel = tb.query('DATA_DESC_ID==%s && ANTENNA1 == ANTENNA2 && ANTENNA1 == %s'%(ddid,antennaid))
+                    if tsel.nrows() > 0:
+                        if timestamp is None:
+                            timestamp = tsel.getcol('TIME')
+                        else:
+                            timestamp = numpy.concatenate([timestamp, tsel.getcol('TIME')], axis=0)
+                        if data is None:
+                            data = tsel.getcol(datacol)
+                        else:
+                            data = numpy.concatenate([data, tsel.getcol(datacol)], axis=1)
+                    tsel.close()
+                    
+        if timestamp is None or data is None:
+            raise RuntimeError('Empty sky data for antenna %s spw %s. Cannot proceed.'%(antennaid, spwid))
+
+        # sort by time
+        sorted_time, sort_index = numpy.unique(timestamp, return_index=True)
+        print 'sort_index', sort_index
+        print 'data.shape', data.shape
+        sorted_data = data.take(sort_index, axis=2)
+        
+        # create aligned buffer for sky
+        # these are base data for interpolation so that it has to
+        # encapsulate flattened array for each polarization
+        time_sky = _casasakura.tosakura_double(sorted_time)[0][0]
+        npol, nchan, nrow_sky = sorted_data.shape
+        if datacol == 'DATA':
+            func = _casasakura.tosakura_complex
+        else:
+            func = _casasakura.tosakura_float
+        sky = tuple((func(sorted_data[i].flatten(order='F'))[0][0] for i in xrange(npol)))
+
+        # collect Tsys data for given antenna id and spw id
+        timestamp = None
+        data = None
+        for tsys_table in tsys_tables:
+            with opentable(os.path.join(tsys_table, 'SYSCAL')) as tb:
+                datacol = 'TSYS_SPECTRUM'
+                if not datacol in tb.colnames():
+                    datacol = 'TSYS'
+                tsel = tb.query('ANTENNA_ID==%s && SPECTRAL_WINDOW_ID==%s'%(antennaid,tsysspw))
+                if tsel.nrows() > 0:
+                    if timestamp is None:
+                        timestamp = tsel.getcol('TIME')
+                    else:
+                        timestamp = numpy.concatenate([timestamp, tsel.getcol('TIME')], axis=0)
+                    if data is None:
+                        data = tsel.getcol(datacol)
+                    else:
+                        data = numpy.concatenate([data, tsel.getcol(datacol)], axis=1)
+                tsel.close()
+        
+        if timestamp is None or data is None:
+            raise RuntimeError('Empty Tsys data for antenna %s spw %s. Cannot proceed.'%(antennaid, spwid))
+                    
+        # sort by time
+        sorted_time, sort_index = numpy.unique(timestamp, return_index=True)
+        sorted_data = data.take(sort_index, axis=2)
+
+        # interpolate along spectral axis
+        # frequency labels are taken from vis
+        with opentable(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
+            freq = tb.getcell('CHAN_FREQ', spwid)
+            freq_tsys = tb.getcell('CHAN_FREQ', tsysspw)
+
+        # interpolation method
+        if len(interp) > 0:
+            interpolation_method, poly_order = calibration_typemap(interp.split(',')[-1])
+        else:
+            interpolation_method, poly_order = libsakurapy.INTERPOLATION_METHOD_LINEAR
+
+
+        # create aligned buffer for interpolation
+        def gen_interpolation():
+            interpolated_freq = _casasakura.tosakura_double(freq)
+            base_freq = _casasakura.tosakura_double(freq_tsys)
+            nchan = len(interpolated_freq)
+            npol, nchan_base, nrow = sorted_data.shape
+            for ipol in xrange(npol):
+                base_data = _casasakura.tosakura_float(sorted_data[ipol].flatten(order='F'))[0][0]
+                interpolated_data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (nchan * nrow,))
     
-def create_calibration_context(sky_tables, tsys_tables, spwid, tsysspw, interp):
-    print sky_tables
-    print tsys_tables
-    print spwid
-    print tsysspw
-    print interp
+                # perform interpolation
+                ## libsakurapy.interpolate_float_xaxis(interpolation_method,
+                ##                                     poly_order,
+                ##                                     nchan_base,
+                ##                                     base_freq,
+                ##                                     nrow,
+                ##                                     base_data,
+                ##                                     nchan,
+                ##                                     interpolated_freq,
+                ##                                     interpolated_data)
+                yield interpolated_data
+
+        # data for context
+        time_tsys = _casasakura.tosakura_double(sorted_time)[0][0]
+        tsys = tuple(gen_interpolation())
+        nrow_tsys = sorted_data.shape[2]
+
+        context[antennaid] = {'nchan': nchan,
+                              'nrow_sky': nrow_sky,
+                              'nrow_tsys': nrow_tsys,
+                              'time_sky': time_sky,
+                              'time_tsys': time_tsys,
+                              'sky': sky,
+                              'tsys': tsys}
+    return context
+            
 
 def _select_sky_tables(gaintable):
     return list(_select_match(gaintable, 'sky'))

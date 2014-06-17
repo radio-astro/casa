@@ -35,7 +35,7 @@ def ssdreduce(vis,
     # context: {spwid: (calibration_context,
     #                   baseline_context,
     #                   convolve1d_context,), ...}
-    context = rh.initcontext(vis, spw, gaintable, interp, spwmap,
+    context = rh.initcontext(vis, spw, antenna, gaintable, interp, spwmap,
                              maskmode, thresh, avg_limit, edge, blmask,
                              blfunc, order, npiece, applyfft, fftmethod, fftthresh,
                              addwn, rejwn, clipthresh, clipniter,
