@@ -185,12 +185,10 @@ TASK_COMMENTS = {
         '' + SILENT_TASK_COMMENT
     ),
     (hifa_tasks.Tsyscal,) : (
-        'The Tsys calibration and spectral window map is computed.\n'
-        '' + SILENT_TASK_COMMENT
+        'The Tsys calibration and spectral window map is computed.'
     ),
     (hifa_tasks.Tsysflag,) : (
-        'The Tsys calibration is analyzed and deviant points are flagged.\n'
-        '' + SILENT_TASK_COMMENT
+        'The Tsys calibration table is analyzed and deviant points are flagged.'
     ),
     (hifa_tasks.Wvrgcalflag,): (
         'Water vapour radiometer corrections are calculated for each antenna. '
