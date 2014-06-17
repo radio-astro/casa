@@ -2502,10 +2502,7 @@ class sdsave_weighting2(sdsave_unittest_base, unittest.TestCase):
                 #print 'weight(%s) = %s (ref %s), diff_weight(%s) = %s'%(irow,weight,weight_ref,irow,diff_weight)
                 #print 'sigma(%s) = %s (ref %s), diff_sigma(%s) = %s'%(irow,sigma,sigma_ref,irow,diff_sigma)
 
-                ### waiting for a gencal fix (setting the midpoint of integration to
-                ### TIME as definition, rather than the start time as currently 
-                ### implemented) to uncomment the following line... (2014/6/12 WK)
-                #self.assertTrue(all(diff_weight < self.tol))
+                self.assertTrue(all(diff_weight < self.tol))
                 self.assertTrue(all(diff_sigma < self.tol))        
                 
 def suite():
