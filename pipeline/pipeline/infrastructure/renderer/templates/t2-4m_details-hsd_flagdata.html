@@ -15,7 +15,7 @@ import pipeline.infrastructure.displays as displays
 
 <%
 def get_fraction(flagged, total):
-   if total is 0:
+   if total == 0 or flagged < 0.0:
        return 'N/A'
    else:
        return '%0.1f%%' % (100.0 * float(flagged) / float(total))
