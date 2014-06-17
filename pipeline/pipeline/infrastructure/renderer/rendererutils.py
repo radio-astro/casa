@@ -4,6 +4,8 @@ import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -115,3 +117,41 @@ def format_score(pqascore):
     if pqascore.score in (None, '', 'N/A'):
         return 'N/A'
     return '%0.2f' % pqascore.score
+
+def get_symbol_badge(result):
+    if get_errors_badge(result):
+        symbol = '<i class="fa fa-minus-circle text-error"></i>' 
+    elif get_warnings_badge(result):
+        symbol = '<i class="fa fa-exclamation-triangle text-warning"></i>' 
+    elif get_suboptimal_badge(result):
+        symbol = '<i class="fa fa-info-circle text-info"></i>' 
+    else:
+        return ''
+        
+    return symbol
+
+def get_warnings_badge(result):
+    warning_logrecords = utils.get_logrecords(result, logging.WARNING) 
+    warning_qascores = utils.get_qascores(result, SCORE_THRESHOLD_ERROR, SCORE_THRESHOLD_WARNING)
+    l = len(warning_logrecords) + len(warning_qascores)
+    if l > 0:
+        return '<span class="badge badge-warning pull-right">%s</span>' % l
+    else:
+        return ''
+    
+def get_errors_badge(result):
+    error_logrecords = utils.get_logrecords(result, logging.ERROR) 
+    error_qascores = utils.get_qascores(result, -0.1, SCORE_THRESHOLD_ERROR)
+    l = len(error_logrecords) + len(error_qascores)
+    if l > 0:
+        return '<span class="badge badge-important pull-right">%s</span>' % l
+    else:
+        return ''
+
+def get_suboptimal_badge(result):
+    suboptimal_qascores = utils.get_qascores(result, SCORE_THRESHOLD_WARNING, SCORE_THRESHOLD_SUBOPTIMAL)
+    l = len(suboptimal_qascores)
+    if l > 0:
+        return '<span class="badge badge-info pull-right">%s</span>' % l
+    else:
+        return ''
