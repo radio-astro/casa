@@ -128,7 +128,7 @@ a QA score based on its effect on the interferometric data.
     </param>
 
     <param type="string" name="qa_spw">
-        <description>Data SpW to use in estimating the effectiveness of the wvr correction</description>
+        <description>Data SpW(s) to use in estimating the effectiveness of the wvr correction</description>
         <value></value>
     </param>
 
@@ -344,9 +344,10 @@ qa_bandpass_intent -- The data intent to use for the bandpass calibration
 
     default: ''
 
-qa_spw -- The data SpW to use for the bandpass calibration
-    in the qa calculation. The default is blank, in which case the
-    task will use the SpW that has the highest median sky opacity.
+qa_spw -- The SpW(s) to use for the qa calculation, in the order
+    that they should be tried. Input as a comma-separated list.
+    The default is blank, in which case the task will try SpWs
+    in order of decreasing median sky opacity.
 
     default: ''
 
