@@ -142,6 +142,7 @@ ImageRegion* ImageRegion::fromLatticeExpression(const String& latticeExpression)
 	if (latticeExpression.empty()) {
 		return 0;
 	}
+	/*
 	// Get LatticeExprNode (tree) from parser.  Substitute possible
 	// object-id's by a sequence number, while creating a
 	// LatticeExprNode for it.  Convert the Record containing
@@ -159,6 +160,8 @@ ImageRegion* ImageRegion::fromLatticeExpression(const String& latticeExpression)
 	LatticeExprNode node = ImageExprParse::command(
 		imageName, tempLattices, tempRegs, directory
 	);
+	*/
+	LatticeExprNode node = ImageExprParse::command(latticeExpression);
 	const WCLELMask region(node);
 	return new ImageRegion(region);
 }
@@ -168,7 +171,7 @@ ImageRegion* ImageRegion::fromRecord(
 	const IPosition& imShape, const Record& regionRecord
 ) {
 	if (logger != 0) {
-		*logger << LogOrigin("ImageRegion", __FUNCTION__);
+		*logger << LogOrigin("ImageRegion", __func__);
 	}
 	ImageRegion* pRegion = 0;
 	if (regionRecord.nfields() == 0) {
