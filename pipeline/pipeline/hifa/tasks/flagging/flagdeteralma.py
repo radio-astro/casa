@@ -28,6 +28,7 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
         fracspw  = basetask.property_with_default('fracspw', 0.0625)
         template  = basetask.property_with_default('template', True)
 
+        @basetask.log_equivalent_CASA_call
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
 	    intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
