@@ -202,6 +202,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           vis=inputs.vis)
         self.result.bandpass_result = None
         self.result.nowvr_result = None
+        self.result.qa_spw = ''
     
     def prepare(self):
         inputs = self.inputs
@@ -220,13 +221,15 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           qa_bandpass_intent=inputs.qa_bandpass_intent,
           accept_threshold=0.0,
           bandpass_result=self.result.bandpass_result,
-          nowvr_result=self.result.nowvr_result)
+          nowvr_result=self.result.nowvr_result,
+          qa_spw=self.result.qa_spw)
         wvrgcaltask = wvrgcal.Wvrgcal(wvrgcalinputs)
         result = self._executor.execute(wvrgcaltask, merge=True)
 
         # cache bandpass and nowvr results for next call to wvrgcal
         self.result.bandpass_result = result.bandpass_result
         self.result.nowvr_result = result.nowvr_result
+        self.result.qa_spw = result.qa_spw
 
         return result
 
