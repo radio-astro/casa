@@ -1,11 +1,11 @@
 from __future__ import absolute_import
+import collections
 import os
 
 import matplotlib
 import matplotlib.pyplot as pyplot
 import numpy
 
-import pipeline.extern.ordereddict as ordereddict
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
@@ -441,7 +441,7 @@ class WVRPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
         LOG.debug('Gaintables for WVR plots:\n'
                   'No WVR: %s\tWith WVR: %s' % (nowvr_gaintable, wvr_gaintable))    
 
-        caltable_map = ordereddict.OrderedDict()
+        caltable_map = collections.OrderedDict()
         caltable_map['BEFORE'] = nowvr_gaintable
         caltable_map['AFTER'] = wvr_gaintable
 

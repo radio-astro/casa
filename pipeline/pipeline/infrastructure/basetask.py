@@ -32,7 +32,6 @@ from . import logging
 from . import pipelineqa
 from . import utils
 import pipeline.extern.decorator as decorator
-import pipeline.extern.ordereddict as ordereddict
 
 LOG = logging.get_logger(__name__)
 
@@ -997,7 +996,7 @@ class StandardTaskTemplate(api.Task):
         # job hash
         union = frozenset(itertools.chain.from_iterable((merge, ignore)))
 
-        hashes = ordereddict.OrderedDict()
+        hashes = collections.OrderedDict()
         for job in jobs:
             job_hash = job.hash_code(ignore=union)
             if job_hash not in hashes:
@@ -1178,7 +1177,7 @@ class StandardTaskTemplate(api.Task):
         return results
 
     def _get_handled_headtails(self, names=[]):
-        handled = ordereddict.OrderedDict()
+        handled = collections.OrderedDict()
 
         for name in names:
             if hasattr(self.inputs, name):

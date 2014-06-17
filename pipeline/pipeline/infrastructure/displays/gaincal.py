@@ -1,9 +1,9 @@
 from __future__ import absolute_import
+import collections
 import os
 
 import matplotlib
 import matplotlib.pyplot as pyplot
-import pipeline.extern.ordereddict as ordereddict
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -405,7 +405,7 @@ class GaincalPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
         rootdir = os.path.join(context.report_dir, 
                                'stage%s' % result.stage_number)
         prefix = '%s.phase_offset' % os.path.basename(calapp.vis)
-        caltable_map = ordereddict.OrderedDict()
+        caltable_map = collections.OrderedDict()
         caltable_map['AFTER'] = calapp.gaintable
 
         super(GaincalPhaseOffsetPlotHelper, self).__init__(rootdir, prefix, caltable_map)

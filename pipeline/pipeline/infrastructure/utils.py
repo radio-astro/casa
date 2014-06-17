@@ -603,3 +603,44 @@ def _convert_arg_to_id(arg_name, ms_path, arg_val):
     with open_ms(ms_path) as ms:
         ms.msselect(taql, onlyparse=True)
         return ms.msselectedindices()
+
+
+def get_qascores(result, lo=None, hi=None):
+    if isinstance(result, list):
+        scores = flatten([get_qascores(r, lo, hi) for r in result])
+    else:
+        scores = [s for s in result.qa.pool
+                  if s.score not in ('', 'N/A', None)]
+    
+    if lo is None and hi is None:
+        matches = lambda score: True
+    elif lo is not None and hi is None:
+        matches = lambda score: s.score > lo
+    elif lo is None and hi is not None:
+        matches = lambda score: s.score <= hi
+    else:
+        matches = lambda score: s.score > lo and s.score <= hi
+      
+    return [s for s in scores if matches(s)]
+
+
+class OrderedDefaultdict(collections.OrderedDict):
+    def __init__(self, *args, **kwargs):
+        if not args:
+            self.default_factory = None
+        else:
+            if not (args[0] is None or callable(args[0])):
+                raise TypeError('first argument must be callable or None')
+            self.default_factory = args[0]
+            args = args[1:]
+        super(OrderedDefaultdict, self).__init__(*args, **kwargs)
+
+    def __missing__ (self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = default = self.default_factory()
+        return default
+
+    def __reduce__(self):  # optional, for pickle support
+        args = (self.default_factory,) if self.default_factory else ()
+        return self.__class__, args, None, None, self.iteritems()
