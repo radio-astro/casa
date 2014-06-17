@@ -410,17 +410,32 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         atmheuristics = atm_heuristic.AtmHeuristics(context=inputs.context,
           vis=inputs.vis) 
         if inputs.qa_spw == '':
-#            inputs.qa_spw = atmheuristics.highest_freq_spwid()
-            inputs.qa_spw = atmheuristics.highest_opacity_spwid()
-
-        # do a bandpass calibration
-        result.bandpass_result = self._do_qa_bandpass(inputs)
+#            inputs.qa_spw = atmheuristics.spwid_rank_by_frequency()
+            qa_spw_list = atmheuristics.spwid_rank_by_opacity()
+        else:
+            qa_spw_list = inputs.qa_spw.split(',')
+      
+        for qa_spw in qa_spw_list:
+            LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %
+              (os.path.basename(inputs.vis), qa_spw))
+            inputs.qa_spw = qa_spw
+            # use a try block and use the first spw where the calibration
+            # is successful - added to handle case where tsysspwmap is
+            # missing for some spws
+            try:
+                # do a bandpass calibration
+                result.bandpass_result = self._do_qa_bandpass(inputs)
         
-        # do a phase calibration on the bandpass and phase
-        # calibrators with B preapplied
-        LOG.info('qa: calculating phase calibration with B applied')
-        nowvr_result = self._do_nowvr_gaincal(inputs)
-        result.nowvr_result = nowvr_result
+                # do a phase calibration on the bandpass and phase
+                # calibrators with B preapplied
+                LOG.info('qa: calculating phase calibration with B applied')
+                nowvr_result = self._do_nowvr_gaincal(inputs)
+                result.nowvr_result = nowvr_result
+                result.qa_spw = qa_spw
+                LOG.info('qa: wvrgcal QA calculation was successful')
+                break
+            except:
+                LOG.warning('qa: wvrgcal QA calculation failed')
 
         # accept this result object, thus adding the WVR table to the 
         # callibrary
