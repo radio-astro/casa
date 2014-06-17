@@ -143,6 +143,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 refspwmap = [-1]
                    
         # This needs improvement if users start specifying the input antennas.
+	#    Force minblperant to be 2 instead of None to avoid ACA and Tsys
+	#    flagging issues for now.  
         hm_resolvedcals = inputs.hm_resolvedcals
         allantenna = inputs.antenna
         if hm_resolvedcals == 'automatic':
@@ -155,18 +157,21 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
               peak_frac=inputs.peak_fraction)
             # Store the resolved antenna list for use in web page
             if resantenna == '':
-                minblperant = None
+                #minblperant = None
+                minblperant = 2
             else:
                 nresant = len(resantenna.split(',')) 
                 if nresant < nant:
                     minblperant = 2
                     result.resantenna = resantenna
                 else:
-                    minblperant = None
+                    #minblperant = None
+                    minblperant = 2
         else:
             resantenna = allantenna
             result.resantenna = resantenna
-            minblperant = None
+            #minblperant = None
+            minblperant = 2
 
         # do a phase-only gaincal on the flux calibrator using a restricted
         # set of antennas
