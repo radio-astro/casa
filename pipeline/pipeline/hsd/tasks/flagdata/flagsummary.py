@@ -103,6 +103,8 @@ class SDFlagSummary(object):
                         skip_post = thres['skip_post'] if thres.has_key('skip_post') else False
                         thresholds.pop(i)
                         break
+                if skip_post and not iteration==0:
+                    raise Exception, "Internal error: skip_post flag is set for baselined data."
                 t0 = time.time()
                 htmlName, nflags = self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot, skip_post)
                 t1 = time.time()
@@ -149,11 +151,8 @@ class SDFlagSummary(object):
         FlagRule_local = copy.deepcopy(FlagRule)
         if skip_post:
             FlagRule_local['RmsPostFitFlag']['isActive'] = False
-            FlagRule_local['RmsPostFitFlag']['Threshold'] = "skipped"
             FlagRule_local['RunMeanPostFitFlag']['isActive'] = False
-            FlagRule_local['RunMeanPostFitFlag']['Threshold'] = "skipped"
             FlagRule_local['RmsExpectedPostFitFlag']['isActive'] = False
-            FlagRule_local['RmsExpectedPostFitFlag']['Threshold'] = "skipped"
 
         # Plot statistics
         NROW = len(ids)
@@ -184,21 +183,15 @@ class SDFlagSummary(object):
             NPpdata[0][N] = tTSYS
             NPpflag[0][N] = tPFLAG[1]
             NPprows[0][N] = row
-            Valid = True
             if tPFLAG[1] == 0:
                 FlaggedRowsCategory[0].append(row)
-                Valid = False
             # Weather flag
             if tPFLAG[0] == 0:
                 FlaggedRowsCategory[1].append(row)
-                Valid = False
             # User flag
             if tPFLAG[2] == 0:
                 FlaggedRowsCategory[2].append(row)
-                Valid = False
 
-            # commented out not to remove permanent flagged data to show
-            #if Valid:
             NPprows[1][N] = row
             # RMS flag before baseline fit
             NPpdata[1][N] = tSTAT[2]
@@ -260,14 +253,14 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_1.png')
 
         # RMS flag after baseline fit
-        if not skip_post:
-            PlotData['data'] = NPpdata[2]
-            PlotData['flag'] = NPpflag[2]
-            PlotData['thre'] = [threshold[0][1]]
-            PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPostFitFlag']['Threshold']
-            PlotData['isActive'] = FlagRule_local['RmsPostFitFlag']['isActive']
+        PlotData['data'] = NPpdata[2]
+        PlotData['flag'] = NPpflag[2]
+        PlotData['thre'] = [threshold[0][1]]
+        PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPostFitFlag']['Threshold']
+        PlotData['isActive'] = FlagRule_local['RmsPostFitFlag']['isActive']
+        if True: #not skip_post:
             SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_2')
-            plots.append(FigFileRoot+'_2.png')
+        plots.append(FigFileRoot+'_2.png')
 
         # Running mean flag before baseline fit
         PlotData['data'] = NPpdata[3]
@@ -279,14 +272,14 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_3.png')
 
         # Running mean flag after baseline fit
-        if not skip_post:
-            PlotData['data'] = NPpdata[4]
-            PlotData['flag'] = NPpflag[4]
-            PlotData['thre'] = [threshold[2][1]]
-            PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPostFitFlag']['Nmean'], FlagRule_local['RunMeanPostFitFlag']['Threshold'])
-            PlotData['isActive'] = FlagRule_local['RunMeanPostFitFlag']['isActive']
+        PlotData['data'] = NPpdata[4]
+        PlotData['flag'] = NPpflag[4]
+        PlotData['thre'] = [threshold[2][1]]
+        PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPostFitFlag']['Nmean'], FlagRule_local['RunMeanPostFitFlag']['Threshold'])
+        PlotData['isActive'] = FlagRule_local['RunMeanPostFitFlag']['isActive']
+        if True: #not skip_post:
             SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_4')
-            plots.append(FigFileRoot+'_4.png')
+        plots.append(FigFileRoot+'_4.png')
 
         # Expected RMS flag before baseline fit
         PlotData['data'] = NPpdata[1]
@@ -299,15 +292,24 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_5.png')
 
         # Expected RMS flag after baseline fit
-        if not skip_post:
-            PlotData['data'] = NPpdata[2]
-            PlotData['flag'] = NPpflag[6]
-            PlotData['thre'] = [NPpdata[6]]
-            PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
-            PlotData['isActive'] = FlagRule_local['RmsExpectedPostFitFlag']['isActive']
-            PlotData['threType'] = "plot"
+        PlotData['data'] = NPpdata[2]
+        PlotData['flag'] = NPpflag[6]
+        PlotData['thre'] = [NPpdata[6]]
+        PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
+        PlotData['isActive'] = FlagRule_local['RmsExpectedPostFitFlag']['isActive']
+        PlotData['threType'] = "plot"
+        if True: #not skip_post:
             SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_6')
-            plots.append(FigFileRoot+'_6.png')
+        plots.append(FigFileRoot+'_6.png')
+
+        # ugly restore for summary table
+        if skip_post:
+            FlagRule_local['RmsPostFitFlag']['isActive'] = FlagRule['RmsPostFitFlag']['isActive']
+            FlagRule_local['RmsPostFitFlag']['Threshold'] = "SKIPPED"
+            FlagRule_local['RunMeanPostFitFlag']['isActive'] = FlagRule['RunMeanPostFitFlag']['isActive']
+            FlagRule_local['RunMeanPostFitFlag']['Threshold'] = "SKIPPED"
+            FlagRule_local['RmsExpectedPostFitFlag']['isActive'] = FlagRule['RmsExpectedPostFitFlag']['isActive']
+            FlagRule_local['RmsExpectedPostFitFlag']['Threshold'] = "SKIPPED"
 
         # Create Flagging Summary Page
         if FigFileDir != False:
@@ -370,6 +372,8 @@ class SDFlagSummary(object):
             print >> Out, '<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles.") 
             #print >> Out, '</table>\n</body>\n</html>'
             print >> Out, '</table>\n'
+            # NOTE for skip_post
+            if skip_post: print >> Out, 'Note flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n'
             # Plot figures
             print >> Out, '<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>'
             for name in plots:

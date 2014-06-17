@@ -104,9 +104,6 @@ class SDFlagDataWorker(object):
             LOG.info("*** Processing table: %s ***" % (os.path.basename(filename_in)))
             for pol in pollist:
                 LOG.info("[ POL=%d ]" % (pol))
-                skip_post = (_get_iteration(self.context.observing_run.reduction_group,idx,spwid,pol) < 1)
-                if skip_post:
-                    LOG.debug("No baseline subtraction operated to data. Skipping flagging by post fit spectra.")
                 # time_table should only list on scans
                 time_table = datatable.get_timetable(idx, spwid, pol)               
                 # Select time gap list: 'subscan': large gap; 'raster': small gap
@@ -116,6 +113,10 @@ class SDFlagDataWorker(object):
                     TimeTable = time_table[0]
                 LOG.info('Applied time bin for the running mean calculation: %s' % flagRule['Flagging']['ApplicableDuration'])
                 
+                # Set skip_post flag when processing not yet baselined data.
+                skip_post = (_get_iteration(self.context.observing_run.reduction_group,idx,spwid,pol) < 1)
+                if skip_post:
+                    LOG.debug("No baseline subtraction operated to data. Skipping flag by post fit spectra.")
                 # Reset MASKLIST for the non-baselined DataTable
                 if skip_post: self.ResetDataTableMaskList(TimeTable)
                 flagRule_local = copy.deepcopy(flagRule)
@@ -123,7 +124,7 @@ class SDFlagDataWorker(object):
                     flagRule_local['RmsPostFitFlag']['isActive'] = False
                     flagRule_local['RunMeanPostFitFlag']['isActive'] = False
                     flagRule_local['RmsExpectedPostFitFlag']['isActive'] = False
-                print("FLAGRULE = %s" % str(flagRule_local))
+                LOG.debug("FLAGRULE = %s" % str(flagRule_local))
                 
                 # Calculate Standard Deviation and Diff from running mean
                 t0 = time.time()
@@ -162,7 +163,6 @@ class SDFlagDataWorker(object):
 
 
     def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge, skip_post):
-
         # Calculate Standard Deviation and Diff from running mean
         NROW = len([ series for series in utils.flatten(TimeTable) ])/2
         # parse edge
@@ -325,6 +325,7 @@ class SDFlagDataWorker(object):
                         NewRMSdiff, Nmask = self._calculate_rms_masked(diffNew0, mask0)
                     stats[3] = NewRMSdiff
 
+                # Fiss STATISTICS and NMASK columns in DataTable (post-Fit statistics will be -1 when skip_post=T)
                 DataTable.putcell('STATISTICS',idx,stats)
                 DataTable.putcell('NMASK',idx,Nmask)
                 LOG.debug('Row=%d, pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, OldRMS, OldRMSdiff))
@@ -333,14 +334,14 @@ class SDFlagDataWorker(object):
             del SpIn, SpOut
         return data
 
-    def _calculate_rms_masked(self, spectrum, mask):
-        NCHAN = len(spectrum)
-        Nmask = int(NCHAN - numpy.sum(mask))
-        MaskedData = spectrum * mask
+    def _calculate_rms_masked(self, data, mask):
+        Ndata = len(data)
+        Nmask = int(Ndata - numpy.sum(mask))
+        MaskedData = data * mask
         StddevMasked = MaskedData.std()
         MeanMasked = MaskedData.mean()
-        RMS = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
-                            NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
+        RMS = math.sqrt(abs(Ndata * StddevMasked ** 2 / (Ndata - Nmask) - \
+                            Ndata * Nmask * MeanMasked ** 2 / ((Ndata - Nmask) ** 2)))
         return RMS, Nmask
 
         
@@ -370,7 +371,7 @@ class SDFlagDataWorker(object):
         return mask
 
     def _get_flag_from_stats(self, stat, Threshold, clip_niteration, skip_post):
-        skip_flag = [1, 3] if skip_post else []
+        skip_flag = [0, 2] if skip_post else []
         Ndata = len(stat[0])
         Nflag = len(stat)
         mask = numpy.ones((Nflag, Ndata), numpy.int)
@@ -379,8 +380,7 @@ class SDFlagDataWorker(object):
             for x in range(Nflag):
                 if x in skip_flag: # for skip_post
                     threshold.append([-1, -1])
-                    for y in range(Ndata):
-                        mask[x][y] = 1
+                    # Leave mask all 1 (no need to modify)
                     continue
                 Unflag = int(numpy.sum(mask[x] * 1.0))
                 FlaggedData = stat[x] * mask[x]
@@ -390,7 +390,7 @@ class SDFlagDataWorker(object):
                 AVE = MeanFlagged / float(Unflag) * float(Ndata)
                 RMS = math.sqrt(abs( Ndata * StddevFlagged ** 2 / Unflag - \
                                 Ndata * (Ndata - Unflag) * MeanFlagged ** 2 / (Unflag ** 2) ))
-                print('x=%d, AVE=%f, RMS=%f, Thres=%s' % (x, AVE, RMS, str(Threshold[x])))
+                #print('x=%d, AVE=%f, RMS=%f, Thres=%s' % (x, AVE, RMS, str(Threshold[x])))
                 ThreP = AVE + RMS * Threshold[x]
                 if x == 4:
                     # Tsys case
@@ -486,7 +486,7 @@ class SDFlagDataWorker(object):
                 PostFitRMS = stats[1]
                 PreFitRMS = stats[2]
                 LOG.debug('DEBUG_DM: Row: %d Expected RMS: %f PostFit RMS: %f PreFit RMS: %f' % (row, expectedRMS, PostFitRMS, PreFitRMS))
-                stats[5] = expectedRMS * ThreExpectedRMSPostFit
+                stats[5] = expectedRMS * ThreExpectedRMSPostFit if not skip_post else -1
                 stats[6] = expectedRMS * ThreExpectedRMSPreFit
                 DataTable.putcell('STATISTICS',ID,stats)
                 flags = DataTable.getcell('FLAG',ID)
@@ -494,7 +494,7 @@ class SDFlagDataWorker(object):
                     flags[5] = 0
                 else:
                     flags[5] = 1
-                if not skip_post and (PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                if (not skip_post) and (PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
                     flags[6] = 0
                 else:
                     flags[6] = 1

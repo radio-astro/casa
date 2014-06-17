@@ -217,7 +217,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
                 is_all_baselined = (is_all_baselined and bl_loc)
 
             if not is_all_baselined:
-                LOG.warn("Reduction Group contains data not yet baselined. MASKLIST will be cleared up for the data. You can go on flagging but the statistics will contain line emission.")
+                LOG.warn("Reduction Group contains data not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission.")
 
             # skip spw not included in iflist
             #if len(spwid_list) == 0:
