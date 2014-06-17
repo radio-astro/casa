@@ -253,7 +253,7 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_1.png')
 
         # RMS flag after baseline fit
-        PlotData['data'] = NPpdata[2]
+        PlotData['data'] = NPpdata[2] if not skip_post else None
         PlotData['flag'] = NPpflag[2]
         PlotData['thre'] = [threshold[0][1]]
         PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPostFitFlag']['Threshold']
@@ -272,7 +272,7 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_3.png')
 
         # Running mean flag after baseline fit
-        PlotData['data'] = NPpdata[4]
+        PlotData['data'] = NPpdata[4] if not skip_post else None
         PlotData['flag'] = NPpflag[4]
         PlotData['thre'] = [threshold[2][1]]
         PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPostFitFlag']['Nmean'], FlagRule_local['RunMeanPostFitFlag']['Threshold'])
@@ -292,7 +292,7 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_5.png')
 
         # Expected RMS flag after baseline fit
-        PlotData['data'] = NPpdata[2]
+        PlotData['data'] = NPpdata[2] if not skip_post else None
         PlotData['flag'] = NPpflag[6]
         PlotData['thre'] = [NPpdata[6]]
         PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
@@ -373,7 +373,7 @@ class SDFlagSummary(object):
             #print >> Out, '</table>\n</body>\n</html>'
             print >> Out, '</table>\n'
             # NOTE for skip_post
-            if skip_post: print >> Out, 'Note flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n'
+            if skip_post: print >> Out, 'ATTENTION: flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n'
             # Plot figures
             print >> Out, '<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>'
             for name in plots:

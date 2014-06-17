@@ -65,6 +65,26 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     else:
         PL.figtext(0.01, 0.98, "INACTIVE", horizontalalignment='left', verticalalignment='top', color='red', size=18, style='italic', weight='bold')
 
+    # X-scale
+    xmin = min(PlotData['row'])
+    xmax = max(PlotData['row'])
+    # For NO DATA
+    if PlotData['data'] is None:
+        if PlotData['isActive']:
+            raise Exception, "Got no valid data for active flag type." 
+        PL.axis([xmin, xmax, 0.0, 1.0])
+        PL.figtext(0.5, 0.5, "NO DATA", horizontalalignment='center', verticalalignment='center', color='Gray', size=24, style='normal', weight='bold')
+        PL.ion()
+        PL.draw()
+        if FigFileDir != False:
+            OldPlot = FigFileDir+FigFileRoot+'.png'
+            NewPlot = FigFileDir+FigFileRoot+'_trim.png'
+            PL.savefig(OldPlot, format='png', dpi=DPIDetail)
+            #os.system('convert %s -trim %s' % (OldPlot, NewPlot))
+        PL.gcf().set_size_inches(figsize_org)
+        return
+        
+
     if len(PlotData['thre']) > 1: LowRange = True
     else:
         LowRange = False
@@ -87,9 +107,6 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     yy = ymax - ymin
     ScaleOut = [[ymax - yy * 0.1, ymax - yy * 0.04], \
                 [ymin + yy * 0.1, ymin + yy * 0.04]]
-    xmin = min(PlotData['row'])
-    xmax = max(PlotData['row'])
-
     # Make Plot Data
     x = 0
     data = [[],[],[],[],[],[]]
