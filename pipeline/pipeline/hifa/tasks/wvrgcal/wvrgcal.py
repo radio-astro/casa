@@ -424,14 +424,14 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             # missing for some spws
             try:
                 # do a bandpass calibration
-                result.bandpass_result = self._do_qa_bandpass(inputs)
+                result.qa_wvr.bandpass_result = self._do_qa_bandpass(inputs)
         
                 # do a phase calibration on the bandpass and phase
                 # calibrators with B preapplied
                 LOG.info('qa: calculating phase calibration with B applied')
                 nowvr_result = self._do_nowvr_gaincal(inputs)
-                result.nowvr_result = nowvr_result
-                result.qa_spw = qa_spw
+                result.qa_wvr.nowvr_result = nowvr_result
+                result.qa_wvr.qa_spw = qa_spw
                 LOG.info('qa: wvrgcal QA calculation was successful')
                 break
             except:
