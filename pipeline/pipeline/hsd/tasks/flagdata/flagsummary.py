@@ -100,17 +100,17 @@ class SDFlagSummary(object):
                     thres = thresholds[i]
                     if thres['index'] == idx and thres['spw'] == spwid and thres['pol'] == pol:
                         final_thres = thres['result_threshold']
-                        skip_post = thres['skip_post'] if thres.has_key('skip_post') else False
+                        is_baselined = thres['baselined'] if thres.has_key('baselined') else False
                         thresholds.pop(i)
                         break
-                if skip_post and not iteration==0:
-                    raise Exception, "Internal error: skip_post flag is set for baselined data."
+                if (not is_baselined) and not iteration==0:
+                    raise Exception, "Internal error: is_baselined flag is set to False for baselined data."
                 t0 = time.time()
-                htmlName, nflags = self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot, skip_post)
+                htmlName, nflags = self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot, is_baselined)
                 t1 = time.time()
                 LOG.info('Plot flags End: Elapsed time = %.1f sec' % (t1 - t0) )
                 flagSummary.append({'html': htmlName, 'name': asdm, 'antenna': ant_name, 'spw': spwid, 'pol': pol,
-                                    'nrow': len(dt_idx), 'nflags': nflags, 'skip_post': skip_post})
+                                    'nrow': len(dt_idx), 'nflags': nflags, 'baselined': is_baselined})
 
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
@@ -147,9 +147,9 @@ class SDFlagSummary(object):
                 break
         return mask
 
-    def plot_flag(self, DataTable, ids, PosGap, TimeGap, threshold, FlagRule, FigFileDir, FigFileRoot, skip_post):
+    def plot_flag(self, DataTable, ids, PosGap, TimeGap, threshold, FlagRule, FigFileDir, FigFileRoot, is_baselined):
         FlagRule_local = copy.deepcopy(FlagRule)
-        if skip_post:
+        if not is_baselined:
             FlagRule_local['RmsPostFitFlag']['isActive'] = False
             FlagRule_local['RunMeanPostFitFlag']['isActive'] = False
             FlagRule_local['RmsExpectedPostFitFlag']['isActive'] = False
@@ -253,13 +253,12 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_1.png')
 
         # RMS flag after baseline fit
-        PlotData['data'] = NPpdata[2] if not skip_post else None
+        PlotData['data'] = NPpdata[2] if is_baselined else None
         PlotData['flag'] = NPpflag[2]
         PlotData['thre'] = [threshold[0][1]]
         PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPostFitFlag']['Threshold']
         PlotData['isActive'] = FlagRule_local['RmsPostFitFlag']['isActive']
-        if True: #not skip_post:
-            SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_2')
+        SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_2')
         plots.append(FigFileRoot+'_2.png')
 
         # Running mean flag before baseline fit
@@ -272,13 +271,12 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_3.png')
 
         # Running mean flag after baseline fit
-        PlotData['data'] = NPpdata[4] if not skip_post else None
+        PlotData['data'] = NPpdata[4] if is_baselined else None
         PlotData['flag'] = NPpflag[4]
         PlotData['thre'] = [threshold[2][1]]
         PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPostFitFlag']['Nmean'], FlagRule_local['RunMeanPostFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule_local['RunMeanPostFitFlag']['isActive']
-        if True: #not skip_post:
-            SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_4')
+        SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_4')
         plots.append(FigFileRoot+'_4.png')
 
         # Expected RMS flag before baseline fit
@@ -292,18 +290,17 @@ class SDFlagSummary(object):
         plots.append(FigFileRoot+'_5.png')
 
         # Expected RMS flag after baseline fit
-        PlotData['data'] = NPpdata[2] if not skip_post else None
+        PlotData['data'] = NPpdata[2] if is_baselined else None
         PlotData['flag'] = NPpflag[6]
         PlotData['thre'] = [NPpdata[6]]
         PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
         PlotData['isActive'] = FlagRule_local['RmsExpectedPostFitFlag']['isActive']
         PlotData['threType'] = "plot"
-        if True: #not skip_post:
-            SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_6')
+        SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_6')
         plots.append(FigFileRoot+'_6.png')
 
         # ugly restore for summary table
-        if skip_post:
+        if not is_baselined:
             FlagRule_local['RmsPostFitFlag']['isActive'] = FlagRule['RmsPostFitFlag']['isActive']
             FlagRule_local['RmsPostFitFlag']['Threshold'] = "SKIPPED"
             FlagRule_local['RunMeanPostFitFlag']['isActive'] = FlagRule['RunMeanPostFitFlag']['isActive']
@@ -358,22 +355,11 @@ class SDFlagSummary(object):
             print >> Out, _format_table_row_html('Expected RMS (pre-fit)', FlagRule_local['RmsExpectedPreFitFlag']['isActive'], FlagRule_local['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[8]), NROW)
             print >> Out, _format_table_row_html('Expected RMS (post-fit)', FlagRule_local['RmsExpectedPostFitFlag']['isActive'], FlagRule_local['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[7]), NROW)
             print >> Out, '<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows), len(FlaggedRows)*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stt"><th>&nbsp</th><th>isActive?</th><th>SigmaThreshold<th>Flagged spectra</th><th>Flagged ratio(%)</th></tr>'
-#             print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('User', FlagRule_local['UserFlag']['isActive'], FlagRule_local['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]), len(FlaggedRowsCategory[2])*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Weather', FlagRule_local['WeatherFlag']['isActive'], FlagRule_local['WeatherFlag']['Threshold'], len(FlaggedRowsCategory[1]), len(FlaggedRowsCategory[1])*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Tsys', FlagRule_local['TsysFlag']['isActive'], FlagRule_local['TsysFlag']['Threshold'], len(FlaggedRowsCategory[0]), len(FlaggedRowsCategory[0])*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('RMS baseline (pre-fit)', FlagRule_local['RmsPreFitFlag']['isActive'], FlagRule_local['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[4]), len(FlaggedRowsCategory[4])*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('RMS baseline (post-fit)', FlagRule_local['RmsPostFitFlag']['isActive'], FlagRule_local['RmsPostFitFlag']['Threshold'], ('N/A' if skip_post else len(FlaggedRowsCategory[3])), ('N/A' if skip_post else len(FlaggedRowsCategory[3])*100.0/NROW))
-#             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Running Mean (pre-fit)', FlagRule_local['RunMeanPreFitFlag']['isActive'], FlagRule_local['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[6]), len(FlaggedRowsCategory[6])*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Running Mean (post-fit)', FlagRule_local['RunMeanPostFitFlag']['isActive'], FlagRule_local['RunMeanPostFitFlag']['Threshold'], ('N/A' if skip_post else len(FlaggedRowsCategory[5])), ('N/A' if skip_post else len(FlaggedRowsCategory[5])*100.0/NROW))
-#             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Expected RMS (pre-fit)', FlagRule_local['RmsExpectedPreFitFlag']['isActive'], FlagRule_local['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[8]), len(FlaggedRowsCategory[8])*100.0/NROW)
-#             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Expected RMS (post-fit)', FlagRule_local['RmsExpectedPostFitFlag']['isActive'], FlagRule_local['RmsExpectedPostFitFlag']['Threshold'], ('N/A' if skip_post else len(FlaggedRowsCategory[7])), ('N/A' if skip_post else len(FlaggedRowsCategory[7])*100.0/NROW))
-#             print >> Out, '<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows), len(FlaggedRows)*100.0/NROW)
             print >> Out, '<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles.") 
             #print >> Out, '</table>\n</body>\n</html>'
             print >> Out, '</table>\n'
-            # NOTE for skip_post
-            if skip_post: print >> Out, 'ATTENTION: flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n'
+            # NOTE for not is_baselined
+            if not is_baselined: print >> Out, 'ATTENTION: flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n'
             # Plot figures
             print >> Out, '<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>'
             for name in plots:
@@ -399,7 +385,7 @@ class SDFlagSummary(object):
         if len(FlaggedRowsCategory[4]) > 0:
             LOG.debug('Flagged rows by the baseline fluctuation (pre-fit) =%s ' % FlaggedRowsCategory[4])
         # Post-fit RMS
-        if not skip_post: LOG.info('Number of rows flagged by the baseline fluctuation (post-fit) = %d /%d' % (len(FlaggedRowsCategory[3]), NROW))
+        if is_baselined: LOG.info('Number of rows flagged by the baseline fluctuation (post-fit) = %d /%d' % (len(FlaggedRowsCategory[3]), NROW))
         if len(FlaggedRowsCategory[3]) > 0:
             LOG.debug('Flagged rows by the baseline fluctuation (post-fit) =%s ' % FlaggedRowsCategory[3])
         # Pre-fit running mean
@@ -407,7 +393,7 @@ class SDFlagSummary(object):
         if len(FlaggedRowsCategory[6]) > 0:
             LOG.debug('Flagged rows by the difference from running mean (pre-fit) =%s ' % FlaggedRowsCategory[6])
         # Post-fit running mean
-        if not skip_post: LOG.info('Number of rows flagged by the difference from running mean (post-fit) = %d /%d' % (len(FlaggedRowsCategory[5]), NROW))
+        if is_baselined: LOG.info('Number of rows flagged by the difference from running mean (post-fit) = %d /%d' % (len(FlaggedRowsCategory[5]), NROW))
         if len(FlaggedRowsCategory[5]) > 0:
             LOG.debug('Flagged rows by the difference from running mean (post-fit) =%s ' % FlaggedRowsCategory[5])
         # Pre-fit expected RMS
@@ -415,7 +401,7 @@ class SDFlagSummary(object):
         if len(FlaggedRowsCategory[8]) > 0:
             LOG.debug('Flagged rows by the expected RMS (pre-fit) =%s ' % FlaggedRowsCategory[8])
         # Post-fit expected RMS
-        if not skip_post: LOG.info('Number of rows flagged by the expected RMS (post-fit) = %d /%d' % (len(FlaggedRowsCategory[7]), NROW))
+        if is_baselined: LOG.info('Number of rows flagged by the expected RMS (post-fit) = %d /%d' % (len(FlaggedRowsCategory[7]), NROW))
         if len(FlaggedRowsCategory[7]) > 0:
             LOG.debug('Flagged rows by the expected RMS (post-fit) =%s ' % FlaggedRowsCategory[7])
         # All categories
@@ -429,10 +415,11 @@ class SDFlagSummary(object):
         return os.path.basename(Filename), flag_nums
 
 def _format_table_row_html(label, isactive, threshold, nflag, ntotal):
+    valid_flag = isactive and (threshold != 'SKIPPED')
     typestr = "%.1f"
-    if not isactive: typestr="%s"
+    if not valid_flag: typestr="%s"
     html_str = '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>'+typestr+'</th></tr>'
-    return html_str % (label, isactive, threshold, (nflag if isactive else "N/A"), (nflag*100.0/ntotal if isactive else "N/A"))
+    return html_str % (label, isactive, threshold, (nflag if valid_flag else "N/A"), (nflag*100.0/ntotal if valid_flag else "N/A"))
 
 def _get_iteration(reduction_group, antenna, spw, pol):
     for (group_id, group_desc) in reduction_group.items():
