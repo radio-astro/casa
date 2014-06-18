@@ -1495,9 +1495,15 @@ void Importmiriad::fillSpectralWindowTable(String vel)
     }
 
     msSpW.chanFreq().put(i,f);
-    if (i<win.nspect)
-      msSpW.refFrequency().put(i,win.restfreq[i]*1e9);
-    else
+    if (i<win.nspect) {
+      // I think restfreq should just be in source table,
+      // but leave for now if it makes sense
+      if (win.restfreq[i]>0 && freqsys_p!=MFrequency::TOPO) {
+        msSpW.refFrequency().put(i,win.restfreq[i]*1e9);
+      } else {
+        msSpW.refFrequency().put(i,win.sfreq[i]*1e9);
+      } 
+    } else
       msSpW.refFrequency().put(i,freq_p);            // no reference for wide band???
     
     msSpW.resolution().put(i,w);
