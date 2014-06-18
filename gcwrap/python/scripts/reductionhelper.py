@@ -131,9 +131,11 @@ class GenerateQueryHelper(object):
         if msselect is None: msselect = ''
 
         try:
-            self.selected_idx = ms.msseltoindex(vis=vis, field=field, spw=spw, \
-                                                time=timerange, baseline=antenna, \
-                                                scan=scan, observation=observation, \
+            self.selected_idx = ms.msseltoindex(vis=vis, field=field, \
+                                                spw=spw, time=timerange, \
+                                                baseline='%s&&&'%(antenna), \
+                                                scan=scan, \
+                                                observation=observation, \
                                                 taql=msselect)
             self.valid_selection = self.is_effective(data_desc_id, antenna_id)
         except:
