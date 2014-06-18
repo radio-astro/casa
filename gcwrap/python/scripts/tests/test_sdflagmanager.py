@@ -1,6 +1,9 @@
 import os
 import sys
 import shutil
+import contextlib
+import numpy
+
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -12,7 +15,18 @@ from numpy import array
 import asap as sd
 from sdflagmanager import sdflagmanager
 from sdstatold import sdstatold
+from sdutil import tbmanager
 
+@contextlib.contextmanager
+def temporary_file():
+    get_filename = lambda: ('temp%5s'%(numpy.random.random_integers(0,99999))).replace(' ','0')
+    filename = get_filename()
+    while os.path.exists(filename):
+        filename = get_filename()
+    yield filename
+    if os.path.exists(filename):
+        os.system('rm -rf %s'%(filename))
+    
 class sdflagmanager_test(unittest.TestCase):
     """
     Basic unit tests for task sdflagmanager.
@@ -27,7 +41,14 @@ class sdflagmanager_test(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdflagmanager/'
     # Input and output names
-    infile = 'OrionS_rawACSmod_cal2123.asap'
+
+    # sdflagmanager.asap flag status
+    # ROW  1 (SCANNO 21 CYCLENO 0 IFNO 0 POLNO 1): FLAGROW 128
+    # ROW  2 (SCANNO 21 CYCLENO 0 IFNO 1 POLNO 0): FLAGTRA all 128
+    # ROW 32 (SCANNO 23 CYCLENO 0 IFNO 0 POLNO 0): FLAGROW 128
+    # ROW 33 (SCANNO 23 CYCLENO 0 IFNO 0 POLNO 1): FLAGROW 128
+    # ROW 59 (SCANNO 23 CYCLENO 3 IFNO 1 POLNO 1): FLAGTRA ch20~24 128
+    infile = 'sdflagmanager.asap'
     vdir = infile+'.flagversions'
     vdatafileprefix = vdir+'/flags.'
     vlistfile = vdir+'/FLAG_VERSION_LIST'
@@ -54,9 +75,7 @@ class sdflagmanager_test(unittest.TestCase):
         result = sdflagmanager(infile=infile,mode=mode)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        items = []
-        for line in open(self.vlistfile, 'r'):
-            items.append(line.split(' : '))
+        items = self._get_version_list()
         self.assertEqual(len(items), 0, msg="The FLAG_VERSION_LIST must be empty.")
 
     def test01(self):
@@ -68,15 +87,10 @@ class sdflagmanager_test(unittest.TestCase):
 
         vdatafile = self.vdatafileprefix+versionname
         self.assertTrue(os.path.exists(vdatafile))
-        
-        items = []
-        for line in open(self.vlistfile, 'r'):
-            items.append(line.strip().split(' : '))
-        self.assertEqual(len(items), 1, msg="The FLAG_VERSION_LIST must contain just 1 version.")
 
-        res = (items[0][0] == versionname) and (items[0][1] == comment)
-        self.assertEqual(res, True, msg="The version name is not saved correctly.")
+        self._verify_version(1, [versionname], [comment])
 
+        self._verify_saved_flag(self.infile, vdatafile)
 
     def test02(self):
         """Test 2: restore"""
@@ -85,33 +99,22 @@ class sdflagmanager_test(unittest.TestCase):
         result = sdflagmanager(infile=self.infile,mode="save",versionname=versionname,comment=comment,merge="replace")
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=self.infile, average=False)
-        scan.flag(row=2)
-        scan.flag_row(rows=[3])
-        scan.save(self.infile, overwrite=True)
-        del scan
+        expected_flagrow, expected_flag = self._get_flag_from_scantable(self.infile)
 
         result = sdflagmanager(infile=self.infile,mode="restore",versionname=versionname,merge="replace")
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=self.infile, average=False)
-        mask = scan.get_mask(2)
-        res = True
-        for i in range(len(mask)):
-            if not mask[i]:
-                res = False
-                break
-        self.assertTrue(res)
-        self.assertFalse(scan._getflagrow(3))
-        del scan
+        self._verify_version(1, [versionname], [comment])
+
+        self._verify_restored_flag(self.infile, expected_flagrow, expected_flag)
 
 
     def test03(self):
         """Test 3: delete"""
         versionnames = ["v1", "v2"]
         comments = ["first_version", "second_version"]
-        for i in range(len(versionnames)):
-            result = sdflagmanager(infile=self.infile,mode="save",versionname=versionnames[i],comment=comments[i],merge="replace")
+        for versionname, comment in zip(versionnames, comments):
+            result = sdflagmanager(infile=self.infile,mode="save",versionname=versionname,comment=comment,merge="replace")
 
         delvername = "v1"
         result = sdflagmanager(infile=self.infile,mode="delete",versionname=delvername)
@@ -119,15 +122,8 @@ class sdflagmanager_test(unittest.TestCase):
 
         delvdatafile = self.vdatafileprefix+delvername
         self.assertFalse(os.path.exists(delvdatafile))
-        
-        items = []
-        for line in open(self.vlistfile, 'r'):
-            items.append(line.strip().split(' : '))
-        self.assertEqual(len(items), 1, msg="The FLAG_VERSION_LIST must contain just 1 version.")
 
-        res = (items[0][0] == versionnames[1]) and (items[0][1] == comments[1])
-        self.assertEqual(res, True, msg="The version name is not deleted correctly.")
-        
+        self._verify_version(1, versionnames[1:], comments[1:])
 
     def test04(self):
         """Test 4: rename"""
@@ -143,31 +139,80 @@ class sdflagmanager_test(unittest.TestCase):
         
         vdatafile = self.vdatafileprefix+newname
         self.assertTrue(os.path.exists(vdatafile))
+
+        self._verify_version(1, [newname], [newcomment])
+
+    def _get_version_list(self):
+        def gen_version():
+            with open(self.vlistfile, 'r') as f:
+                for line in f:
+                    yield map(lambda x: x.strip(), line.split(':'))
+        return list(gen_version())
+
+    def _verify_version(self, expected_nversion, expected_versions, expected_comments):
+        self.assertEqual(len(expected_versions), expected_nversion, msg='Invalid arguments for _verify_version (expected_versions)')
+        self.assertEqual(len(expected_comments), expected_nversion, msg='Invalid arguments for _verify_version (expected_comments)')
         
-        items = []
-        for line in open(self.vlistfile, 'r'):
-            items.append(line.strip().split(' : '))
-        self.assertEqual(len(items), 1, msg="The FLAG_VERSION_LIST must contain just 1 version.")
+        items = self._get_version_list()
+        if expected_nversion == 1:
+            self.assertEqual(len(items), 1, msg="The FLAG_VERSION_LIST must contain just 1 version.")
+        else:
+            self.assertEqual(len(items), expected_nversion, msg="The FLAG_VERSION_LIST must contain %s versions."%(expected_nversion))
+        for item, version, comment in zip(items, expected_versions, expected_comments):
+            self.assertEqual(item[0], version, msg="Version name must be '%s'."%(version))
+            self.assertEqual(item[1], comment, msg="Comment must be '%s'."%(comment))
+        
 
-        res = (items[0][0] == newname) and (items[0][1] == newcomment)
-        self.assertEqual(res, True, msg="The version name is not renamed correctly.")
+    def _verify_saved_flag(self, infile, flagdatafile):
+        # export infile to MS to obtain expected FLAG and FLAG_ROW
+        with temporary_file() as name:
+            s = sd.scantable(infile, average=False)
+            s.save(name, format='MS2')
+            with tbmanager(name) as tb:
+                expected_flag_row = tb.getcol('FLAG_ROW')
+                expected_flag = tb.getcol('FLAG')
 
+        # actual FLAG and FLAG_ROW
+        with tbmanager(flagdatafile) as tb:
+            flag_row = tb.getcol('FLAG_ROW')
+            flag = tb.getcol('FLAG')
 
+        # compare
+        self.assertEqual(len(flag_row), len(expected_flag_row), msg='length of FLAG_ROW differ')
+        self.assertEqual(flag.shape, expected_flag.shape, msg='shape of FLAG differ')
 
-    def _compareBLparam(self,out,reference):
-        # test if baseline parameters are equal to the reference values
-        # currently comparing every lines in the files
-        # TO DO: compare only "Fitter range" and "Baseline parameters"
-        self.assertTrue(os.path.exists(out))
-        self.assertTrue(os.path.exists(reference),
-                        msg="Reference file doesn't exist: "+reference)
-        self.assertTrue(listing.compare(out,reference),
-                        'New and reference files are different. %s != %s. '
-                        %(out,reference))
+        nrow = len(flag_row)
+        for irow in xrange(nrow):
+            self.assertEqual(flag_row[irow], expected_flag_row[irow], msg='Row %s: FLAG_ROW differ'%(irow))
+            self.assertTrue(all(flag[:,:,irow].flatten() == expected_flag[:,:,irow].flatten()), msg='Row %s: FLAG differ'%(irow))
 
+    def _verify_restored_flag(self, infile, expected_flagrow, expected_flag):
+        flagrow, flag = self._get_flag_from_scantable(infile)
+        self.assertEqual(len(flagrow), len(expected_flagrow), msg='length of FLAGROW differ')
+        self.assertEqual(flag.shape, expected_flag.shape, msg='shape of FLAGTRA differ')
 
-
-
+        nrow = len(flagrow)
+        for irow in xrange(nrow):
+            # effect of CAS-5545: FLAGROW is always 0
+            #self.assertEqual(flagrow[irow] == 0, expected_flagrow[irow] == 0, msg='Row %s: FLAGROW differ (result %s, expected %s)'%(irow, flagrow[irow], expected_flagrow[irow]))
+            self.assertEqual(flagrow[irow], 0, msg='Row %s: FLAGROW must be 0 (result %s)'%(irow, flagrow[irow]))
+            # effect of CAS-5545: flag all channels if FLAG_ROW is True
+            if expected_flagrow[irow] > 0:
+                self.assertTrue(all(flag[:,irow].flatten() != 0), msg='Row %s: all channels must be flagged'%(irow))
+            else:
+                nonzero = flag[:,irow].nonzero()[0]
+                expected_nonzero = expected_flag[:,irow].nonzero()[0]
+                self.assertEqual(len(nonzero), len(expected_nonzero), msg='Row %s: FLAGTRA differ'%(irow))
+                if len(nonzero) > 0:
+                    self.assertTrue(all(nonzero == expected_nonzero), msg='Row %s: FLAGTRA differ'%(irow))
+        
+    def _get_flag_from_scantable(self, infile):
+        with tbmanager(infile) as tb:
+            tsort = tb.query('', sortlist='SCANNO,CYCLENO,IFNO,POLNO')
+            flagrow = tsort.getcol('FLAGROW')
+            flagtra = tsort.getcol('FLAGTRA')
+            tsort.close()
+        return flagrow, flagtra
 
 def suite():
     return [sdflagmanager_test]
