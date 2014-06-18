@@ -27,17 +27,6 @@ inline void free_(void *p)
   free(p);
 }
 
-inline casa::ValueHolder *ToValueHolder(PyObject *obj)
-{
-  return casa::toValueHolder(casac::pyobj2variant(obj, true));
-}
-
-inline PyObject *ToPyObject(casa::ValueHolder val)
-{
-  casac::variant *v = casa::fromValueHolder(val);
-  return casac::variant2pyobj(*v);
-}
-
 template<class DataType>
 inline casa::Array<DataType> ValueHolderToArray(casa::ValueHolder *v)
 {
@@ -166,37 +155,37 @@ public:
   
   static PyObject *CreateChunkForSakura(PyObject *obj)
   {
-    casa::PtrHolder<casa::ValueHolder> var(ToValueHolder(obj));
-    const casa::Array<CDataType> arr = Handler::AsArray(var.ptr());
-    casa::IPosition shape = arr.shape();
-    casa::uInt ndim = shape.size();
-    PyObject *tuple = NULL;
-    if (ndim == 1 || ndim == 2) {
-      PyObject *cell = EncapsulateCell(arr);
-      if (cell == NULL) {
-	return NULL;
-      }
-      tuple = PyTuple_New(1);
-      PyTuple_SetItem(tuple, 0, cell);
+    // Convert PyObject to casac::variant
+    casac::variant v = casac::pyobj2variant(obj, true);
+
+    // Convert casac::variant to casa::Array
+    casa::Array<CDataType> arr;
+    casa::uInt npol, nchan, nrow;
+    Py_BEGIN_ALLOW_THREADS
+    arr = ToCasaArray(v, npol, nchan, nrow); 
+    Py_END_ALLOW_THREADS
+
+    // Convert casa::Array to sakura_PyAlignedBuffer
+    bool status;
+    std::vector<sakura_PyAlignedBuffer *> buffer_list;
+    Py_BEGIN_ALLOW_THREADS
+    status = ReadCasaArray((size_t)npol, (size_t)nchan, (size_t)nrow,
+			   arr, buffer_list);
+    Py_END_ALLOW_THREADS
+
+    if (!status) {
+      // TODO: throw exception
+      return NULL;
     }
-    else if (ndim == 3) {
-      casa::uInt npol = shape[0];
-      casa::uInt nchan = shape[1];
-      casa::uInt nrow = shape[2];
-      tuple = PyTuple_New((Py_ssize_t)nrow);
-      for (casa::uInt irow = 0; irow < nrow; ++irow) {
-	casa::IPosition start(3, 0, 0, irow);
-	casa::IPosition end(3, npol-1, nchan-1, irow);
-	casa::Array<CDataType> arr_slice = arr(start, end);
-	arr_slice.removeDegenerate();
-	PyObject *slice = EncapsulateCell(arr_slice);
-	if (slice == NULL) {
-	  Py_DECREF(tuple);
-	  return NULL;
-	}
-	PyTuple_SetItem(tuple, (Py_ssize_t)irow, slice);
-      }
+
+    // encapsulate
+    PyObject *tuple = EncapsulateChunk((Py_ssize_t)nrow, (Py_ssize_t)npol,
+				       buffer_list);
+
+    if (tuple == NULL) {
+      // TODO: throw exception
     }
+    
     return tuple;
   }
 
@@ -232,48 +221,6 @@ public:
   }
   
 private:
-  static PyObject *EncapsulateCell(const casa::Array<CDataType> &arr)
-  {
-    // arr should be two-dimensional (npol,nchan) or one-dimensional (nchan)
-    Py_ssize_t ndim = arr.ndim();
-    casa::IPosition shape = arr.shape();
-    casa::uInt npol = (ndim == 2) ? shape[0] : 1;
-    casa::uInt nchan = (ndim == 2) ? shape[1] : shape[0];
-    PyObject *tuple = PyTuple_New((Py_ssize_t)npol);
-    casa::Bool b;
-    size_t element_size = sizeof(typename Handler::SDataType);
-    size_t required_size = element_size * nchan;
-    size_t allocation_size = required_size + sakura_GetAlignment() - 1;
-    size_t elements[] = {nchan};
-    const CDataType *arr_p = arr.getStorage(b);
-    for (casa::uInt ipol = 0; ipol < npol; ++ipol) {
-      void *storage = malloc_(allocation_size);
-      if (storage == NULL) {
-	Py_DECREF(tuple);
-	return NULL;
-      }
-      void *aligned = sakura_AlignAny(allocation_size, storage, required_size);
-      sakura_PyAlignedBuffer *buffer;
-      if (sakura_PyAlignedBufferCreate((sakura_PyTypeId)Handler::SakuraPyTypeId,
-				       storage, aligned,
-				       1, elements, &free_,
-				       &buffer) != sakura_Status_kOK) {
-	Py_DECREF(tuple);
-	return NULL;
-      }
-      PyObject *capsule;
-      if (sakura_PyAlignedBufferEncapsulate(buffer,
-					    &capsule) != sakura_Status_kOK) {
-	Py_DECREF(tuple);
-	return NULL;
-      }
-      Handler::ToSakura(ipol, npol, nchan, arr_p, aligned);
-      PyTuple_SetItem(tuple, (Py_ssize_t)ipol, capsule);
-    }
-    arr.freeStorage(arr_p, b);
-    return tuple;
-  }
-
   static bool DecapsulateChunk(PyObject *obj,
 			       std::vector<sakura_PyAlignedBuffer *> &buffer_list,
 			       casa::uInt &npol,
@@ -404,6 +351,110 @@ private:
 
     // ValueHolder to variant, then return
     return casa::fromValueHolder(val);
+  }
+
+  static casa::Array<CDataType> ToCasaArray(const casac::variant &v,
+					    casa::uInt &npol,
+					    casa::uInt &nchan,
+					    casa::uInt &nrow)
+  {
+    casa::PtrHolder<casa::ValueHolder> var(casa::toValueHolder(v));
+    casa::Array<CDataType> arr = Handler::AsArray(var.ptr());
+    casa::IPosition shape = arr.shape();
+    casa::uInt ndim = shape.size();
+    if (ndim == 1) {
+      npol = 1;
+      nchan = shape[0];
+      nrow = 1;
+    }
+    else if (ndim == 2) {
+      npol = shape[0];
+      nchan = shape[1];
+      nrow = 1;
+    }
+    else if (ndim == 3) {
+      npol = shape[0];
+      nchan = shape[1];
+      nrow = shape[2];
+    }
+    else {
+      assert(false);
+      // TODO: throw exception
+    }
+
+    return arr;
+  }
+  
+  static bool ReadCasaArray(const size_t npol,
+			    const size_t nchan,
+			    const size_t nrow,
+			    const casa::Array<CDataType> &array,
+			    std::vector<sakura_PyAlignedBuffer *> &buffer_list)
+  {
+    // resize buffer_list
+    buffer_list.resize(npol * nrow);
+
+    casa::Bool b;
+    size_t element_size = sizeof(typename Handler::SDataType);
+    size_t required_size = element_size * nchan;
+    size_t allocation_size = required_size + sakura_GetAlignment() - 1;
+    size_t elements[] = {nchan};
+    const CDataType *arr_p = array.getStorage(b);
+    try {
+      for (size_t irow = 0; irow < nrow; ++irow) {
+	for (size_t ipol = 0; ipol < npol; ++ipol) {
+	  void *storage = malloc_(allocation_size);
+	  if (storage == NULL) {
+	    //Py_DECREF(tuple);
+	    //return NULL;
+	    return false;
+	  }
+	  void *aligned = sakura_AlignAny(allocation_size, storage, required_size);
+	  sakura_PyAlignedBuffer *buffer;
+	  if (sakura_PyAlignedBufferCreate((sakura_PyTypeId)Handler::SakuraPyTypeId,
+					   storage, aligned,
+					   1, elements, &free_,
+					   &buffer) != sakura_Status_kOK) {
+	    //Py_DECREF(tuple);
+	    free_(storage);
+	    return false;
+	  }
+	  buffer_list[npol * irow + ipol] = buffer;
+	  Handler::ToSakura(irow * npol * nchan + ipol,
+			    npol, nchan, arr_p, aligned);
+	}
+      }
+    }
+    catch(...) {
+      array.freeStorage(arr_p, b);
+      return false;
+    }
+    array.freeStorage(arr_p, b);
+    return true;
+  }
+
+  static PyObject *EncapsulateChunk(const Py_ssize_t num_tuples,
+				    const Py_ssize_t num_elements,
+				    std::vector<sakura_PyAlignedBuffer *> &buffer_list)
+  {
+    PyObject *tuple = PyTuple_New(num_tuples);
+    for (Py_ssize_t i = 0; i < num_tuples; ++i) {
+      PyObject *cell = PyTuple_New(num_elements);
+      for (Py_ssize_t j = 0; j < num_elements; ++j) {
+	PyObject *capsule = NULL;
+	Py_ssize_t index = num_elements * i + j;
+	if (sakura_PyAlignedBufferEncapsulate(buffer_list[index],
+					      &capsule) != sakura_Status_kOK) {
+	  Py_DECREF(tuple);
+	  Py_DECREF(cell);
+	  // TODO: throw exception
+	  return NULL;
+	}
+	PyTuple_SetItem(cell, j, capsule);
+      }
+      PyTuple_SetItem(tuple, i, cell);
+    }
+    return tuple;
   }
 };
 
