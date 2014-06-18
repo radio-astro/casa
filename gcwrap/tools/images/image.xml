@@ -4383,7 +4383,7 @@ Additionally, a power logarithmic polynomial (plp) or a logarithmic tranformed p
 cannot be fit simultaneously with any other supported function. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial has the form
 
-y = c0*x/div**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + cn*ln(x/div)**(n - 1))
+y = c0*x/div**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + ... + cn*ln(x/div)**(n - 1))
 
 and a logarithmic transformed polynomial is simply the result of this equation after taking the natural log of both sides so that it has the form
 

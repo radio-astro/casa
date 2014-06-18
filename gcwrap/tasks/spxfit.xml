@@ -216,7 +216,7 @@ in AIPS++ Note 224 (http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.h
 University Press. These functions are most often used for fitting the spectral index and higher order terms of a spectrum. A power logarithmic
 polynomial (plp) has the form
 
-y = c0*(x/div)**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + cn*ln(x/div)**(n - 1))
+y = c0*(x/div)**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + ... + cn*ln(x/div)**(n - 1))
 
 and a logarithmic transformed polynomial (ltp) is simply the result of this equation after taking the natural log of both sides so that it has the form
 
