@@ -16,29 +16,9 @@ Flag deviant channels in bandpass calibration.
         <value></value>
     </param>
 
-    <param type="bool" name="flag_edges">
-        <description>True to flag edge channels of Tsys spectra</description>
-        <value>False</value>
-    </param>
-
-    <param type="double" name="edge_limit" subparam="true">
-        <description>Candidate edge channels have channel to channel difference > edge_limit * median across spectrum</description>
-        <value>3</value>
-    </param>
-
-    <param type="bool" name="flag_sharps">
-        <description>True to flag channels covering sharp spectral features plus additional channels on their flanks</description>
-        <value>False</value>
-    </param>
-
-    <param type="double" name="sharps_limit" subparam="true">
-        <description>Flag channels bracketing a channel to channel difference > sharps_limit</description>
-        <value>0.05</value>
-    </param>
-
     <param type="bool" name="flag_hilo">
         <description>True to flag outlier channels</description>
-        <value>False</value>
+        <value>True</value>
     </param>
 
     <param type="double" name="fhl_limit" subparam="true">
@@ -51,34 +31,14 @@ Flag deviant channels in bandpass calibration.
         <value>5</value>
     </param>
 
-    <param type="bool" name="flag_diffmad">
-        <description>True to flag channels bracketing high channel to channel differences</description>
+    <param type="bool" name="flag_tmf">
+        <description>True to flag all channels if proportion of channels flagged > tmf_limit</description>
         <value>True</value>
     </param>
 
-    <param type="double" name="diffmad_limit" subparam="true">
-        <description>Flag channels that bracket differences > diffmad_limit * MAD of difference spectrum</description>
-        <value>14</value>
-    </param>
-
-    <param type="double" name="diffmad_nchan_limit" subparam="true">
-        <description>Flag all channels if number flagged by diffmad_limit exceeds diffmad_nchan_limit</description>
-        <value>10000</value>
-    </param>
-
-    <param type="bool" name="flag_tmf">
-        <description>True to flag all channels if proportion of channels flagged > tmf_limit</description>
-        <value>False</value>
-    </param>
-
-    <param type="double" name="tmf_frac_limit" subparam="true">
+    <param type="double" name="tmf_limit" subparam="true">
         <description>Fraction of channels flagged that triggers flagging of all channels</description>
-        <value>0.05</value>
-    </param>
-
-    <param type="double" name="tmf_nchan_limit" subparam="true">
-        <description>Number of channels flagged that triggers flagging of all channels</description>
-        <value>4</value>
+        <value>0.3</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -114,46 +74,20 @@ Flag deviant channels in bandpass calibration.
             </equals>
         </when>
 
-        <when param="flag_edges">
-            <equals type="bool" value="False">
-            </equals>
-            <equals type="bool" value="True">
-                <default param="edge_limit"><value>3.0</value></default>
-            </equals>
-        </when>
-
-        <when param="flag_sharps">
-            <equals type="bool" value="False">
-            </equals>
-            <equals type="bool" value="True">
-                <default param="sharps_limit"><value>0.05</value></default>
-            </equals>
-        </when>
-
-        <when param="flag_diffmad">
-            <equals type="bool" value="True">
-                <default param="diffmad_limit"><value>14</value></default>
-                <default param="diffmad_nchan_limit"><value>10000</value></default>
-            </equals>
-            <equals type="bool" value="False">
-            </equals>
-        </when>
-
         <when param="flag_hilo">
-            <equals type="bool" value="False">
-            </equals>
             <equals type="bool" value="True">
                 <default param="fhl_limit"><value>7</value></default>
                 <default param="fhl_minsample"><value>5</value></default>
             </equals>
+            <equals type="bool" value="False">
+            </equals>
         </when>
 
         <when param="flag_tmf">
-            <equals type="bool" value="False">
-            </equals>
             <equals type="bool" value="True">
-                <default param="tmf_frac_limit"><value>0.05</value></default>
-                <default param="tmf_nchan_limit"><value>4</value></default>
+                <default param="tmf_limit"><value>0.3</value></default>
+            </equals>
+            <equals type="bool" value="False">
             </equals>
         </when>
 
