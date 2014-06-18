@@ -30,8 +30,9 @@ class WvrgcalResult(basetask.Results):
         self.qa_wvr = commonresultobjects.QaResult()
 
         # results used to calculate the qa results
-        self.bandpass_result = None
-        self.nowvr_result = None
+        self.qa_wvr.bandpass_result = None
+        self.qa_wvr.nowvr_result = None
+        self.qa_wvr.qa_spw = None
 
         # views and flag operations
         self.flagging = []
