@@ -227,9 +227,9 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         result = self._executor.execute(wvrgcaltask, merge=True)
 
         # cache bandpass and nowvr results for next call to wvrgcal
-        self.result.bandpass_result = result.bandpass_result
-        self.result.nowvr_result = result.nowvr_result
-        self.result.qa_spw = result.qa_spw
+        self.result.bandpass_result = result.qa_wvr.bandpass_result
+        self.result.nowvr_result = result.qa_wvr.nowvr_result
+        self.result.qa_spw = result.qa_wvr.qa_spw
 
         return result
 
