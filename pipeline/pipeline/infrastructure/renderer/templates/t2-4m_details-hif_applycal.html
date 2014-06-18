@@ -298,11 +298,11 @@ def space_comma(s):
 		Baseband ${plot.parameters['baseband']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)"> 
+	<%def name="caption_text(plot, intent)">
 		Calibrated phase vs frequency for ${intent} calibrator 
 		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
 		baseband ${plot.parameters['baseband']}, all antennas and correlations, 
-		coloured by antenna.
+		coloured by antenna.		
 	</%def>
 
 </%self:plot_group>
@@ -387,6 +387,127 @@ def space_comma(s):
 	<%def name="caption_text(plot, intent)"> 
 		Calibrated phase vs time for all fields, spw ${plot.parameters['spw']},
 		all antennas and correlations. Data are coloured by field.
+	</%def>
+
+</%self:plot_group>
+
+<%self:plot_group plot_dict="${science_amp_vs_freq_plots}"
+				  url_fn="${lambda x: 'science_amp_vs_freq_%s.html' % sanitise(x)}"
+				  data_spw="${True}">
+
+	<%def name="title()">
+		Science target: calibrated amplitude vs frequency
+	</%def>
+
+	<%def name="preamble()">
+		<p>Calibrated amplitude vs frequency plots for a representative
+		science field in each measurement set. The chosen science field is the
+		one with the brightest average amplitude over all spectral windows.
+		</p>
+		
+		<p>Data are plotted for all antennas and correlations, with different
+		spectral windows shown in different colours.</p>
+	</%def>
+
+	<%def name="ms_preamble(ms)">
+		<p>Plots for ${ms} were created with UV range set to capture the inner
+		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)">
+		Calibrated amplitude vs frequency for
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
+		baseband ${plot.parameters['baseband']}.
+	</%def>
+
+</%self:plot_group>
+
+<%self:plot_group plot_dict="${science_phase_vs_freq_plots}"
+				  url_fn="${lambda x: 'science_phase_vs_freq_%s.html' % sanitise(x)}">
+
+	<%def name="title()">
+		Science target: calibrated phase vs frequency
+	</%def>
+
+	<%def name="preamble()">
+		<p>Calibrated phase vs frequency plots for a representative science
+		field in each measurement set. The chosen science field is the one
+		with the brightest average amplitude over all spectral windows.</p>
+		
+		<p>Data are plotted for all antennas and correlations, with different
+		spectral windows shown in different colours.</p>
+	</%def>
+
+	<%def name="ms_preamble(ms)">
+		<p>Plots for ${ms} were created with UV range set to capture the inner
+		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)">
+		Calibrated phase vs frequency for 
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
+		baseband ${plot.parameters['baseband']}.
+	</%def>
+
+</%self:plot_group>
+
+<%self:plot_group plot_dict="${science_amp_vs_uv_plots}"
+				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % sanitise(x)}">
+
+	<%def name="title()">
+		Science target: calibrated amplitude vs UV distance
+	</%def>
+
+	<%def name="preamble()">
+		<p>Calibrated amplitude vs UV distance plots for a representative
+		science field in each measurement set. The chosen science field is the
+		one with the brightest average amplitude over all spectral windows.
+		</p>
+		
+		<p>Data are plotted for all antennas and correlations, with different
+		spectral windows shown in different colours.</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for baseband ${plot.parameters['baseband']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Fields: ${plot.parameters['field']}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)">
+		Calibrated amplitude vs UV distance for
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
+		baseband ${plot.parameters['baseband']}.
 	</%def>
 
 </%self:plot_group>

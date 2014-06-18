@@ -604,7 +604,6 @@ def _convert_arg_to_id(arg_name, ms_path, arg_val):
         ms.msselect(taql, onlyparse=True)
         return ms.msselectedindices()
 
-
 def get_qascores(result, lo=None, hi=None):
     if isinstance(result, list):
         scores = flatten([get_qascores(r, lo, hi) for r in result])
@@ -622,6 +621,11 @@ def get_qascores(result, lo=None, hi=None):
         matches = lambda score: s.score > lo and s.score <= hi
       
     return [s for s in scores if matches(s)]
+
+def natural_sort(l): 
+    convert = lambda text: int(text) if text.isdigit() else text.lower() 
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
+    return sorted(l, key = alphanum_key)
 
 
 class OrderedDefaultdict(collections.OrderedDict):
@@ -644,3 +648,4 @@ class OrderedDefaultdict(collections.OrderedDict):
     def __reduce__(self):  # optional, for pickle support
         args = (self.default_factory,) if self.default_factory else ()
         return self.__class__, args, None, None, self.iteritems()
+

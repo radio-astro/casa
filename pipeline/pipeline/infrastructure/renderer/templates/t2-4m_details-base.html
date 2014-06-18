@@ -19,6 +19,10 @@ def get_qascores(pool, lo, hi):
 % if plot_dict:
 	<h3>${caller.title()}</h3>
 
+	% if hasattr(caller, 'preamble'):
+		 ${caller.preamble()}
+	% endif
+
 	% for ms, ms_plots in plot_dict.items():
 		<%
 			relurl = url_fn(ms)
@@ -37,8 +41,8 @@ def get_qascores(pool, lo, hi):
 			% endif
 		</h4>	
 
-		% if hasattr(caller, 'preamble'):
-		 	${caller.preamble()}
+		% if hasattr(caller, 'ms_preamble'):
+		 	${caller.ms_preamble(ms)}
 		% endif
 
 	    <ul class="thumbnails">

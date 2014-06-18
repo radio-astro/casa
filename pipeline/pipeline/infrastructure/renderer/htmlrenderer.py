@@ -3,6 +3,7 @@ import atexit
 import collections
 import contextlib
 import datetime
+import itertools
 import json
 import math
 import operator
@@ -2909,9 +2910,6 @@ class T2_4MDetailsGFluxscaleRenderer(T2_4MDetailsDefaultRenderer):
 
         return d
 
-
-
-
     
 class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
     FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
@@ -2987,7 +2985,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
 #         self.sort_plots_by_baseband(amp_vs_freq_bandpass_summary_plots)
 #         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
 
-        amp_vs_freq_summary_plots = collections.defaultdict(dict)
+        amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         for intents in [['PHASE'],['BANDPASS']]:
             plots = self.create_plots(context, 
                                       result, 
@@ -2999,7 +2997,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
             for vis, vis_plots in plots.items():
                 amp_vs_freq_summary_plots[vis][key] = vis_plots
 
-        phase_vs_freq_summary_plots = collections.defaultdict(dict)
+        phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         for intents in [['PHASE'],['BANDPASS']]:
             plots = self.create_plots(context, 
                                       result, 
@@ -3020,6 +3018,14 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                                                       result, 
                                                       applycal.PhaseVsUVSummaryChart, 
                                                       ['AMPLITUDE'])
+
+        # CAS-5970: add science target plots to the applycal page
+        (science_amp_vs_freq_summary_plots, 
+         science_phase_vs_freq_summary_plots,
+         science_amp_vs_uv_summary_plots,
+         uv_max) = self.create_science_plots(context, result) 
+        self.sort_plots_by_baseband(science_amp_vs_freq_summary_plots)
+        self.sort_plots_by_baseband(science_phase_vs_freq_summary_plots)
 
         if pipeline.infrastructure.generate_detail_plots():
             # detail plots. Don't need the return dictionary, but make sure a
@@ -3065,9 +3071,138 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                     'amp_vs_time_plots'   : amp_vs_time_summary_plots,
                     'amp_vs_uv_plots'     : amp_vs_uv_summary_plots,
                     'phase_vs_uv_plots'   : phase_vs_uv_summary_plots,
-                    'phase_vs_time_plots' : phase_vs_time_summary_plots})
+                    'phase_vs_time_plots' : phase_vs_time_summary_plots,
+                    'science_amp_vs_freq_plots'   : science_amp_vs_freq_summary_plots,
+                    'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
+                    'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
+                    'uv_max' : uv_max})
         
         return ctx
+
+    def create_science_plots(self, context, results):
+        """
+        Create plots for the science targets, returning two dictionaries of 
+        vis:[Plots].
+        """
+        amp_vs_freq_summary_plots = {}
+        phase_vs_freq_summary_plots = {}
+        amp_vs_uv_summary_plots = {}
+        max_uvs = {}
+        
+        for result in results:
+            # Plot for 1 science field (either 1 science target or for a mosaic 1 
+            # pointing). The science field that should be chosen is the one with
+            # the brightest average amplitude over all spws
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+            brightest_field = T2_4MDetailsApplycalRenderer.get_brightest_field(ms)        
+
+            baselines = sorted(ms.antenna_array.baselines,
+                               key=operator.attrgetter('length'))
+            # take index as midpoint + 1 so we include the midpoint in the
+            # constraint
+            half_baselines = baselines[0:(len(baselines)//2)+1]
+            uv_max = half_baselines[-1].length.to_units(measures.DistanceUnits.METRE)
+            uv_range = '<%s' % uv_max
+            LOG.debug('Setting UV range to %s for %s', uv_range, vis)
+            max_uvs[vis] = half_baselines[-1].length
+
+            plots = self.science_plots_for_result(context, 
+                                                  result, 
+                                                  applycal.AmpVsFrequencySummaryChart,
+                                                  brightest_field,
+                                                  uv_range)
+            amp_vs_freq_summary_plots[vis] = plots
+
+            plots = self.science_plots_for_result(context, 
+                                                  result, 
+                                                  applycal.PhaseVsFrequencySummaryChart,
+                                                  brightest_field,
+                                                  uv_range)
+            phase_vs_freq_summary_plots[vis] = plots
+
+            plots = self.science_plots_for_result(context, 
+                                                  result, 
+                                                  applycal.AmpVsUVBasebandSummaryChart,
+                                                  brightest_field)
+            amp_vs_uv_summary_plots[vis] = plots
+            
+        return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots, 
+                amp_vs_uv_summary_plots, max_uvs)
+
+    def science_plots_for_result(self, context, result, plotter_cls, field, uvrange=None):
+        # override field when plotting amp/phase vs frequency, as otherwise
+        # the field is resolved to a list of all field IDs  
+        overrides = {'field'     : field,
+                     'coloraxis' : 'spw'}
+        if uvrange is not None:
+            overrides['uvrange'] = uvrange
+        
+        plotter = plotter_cls(context, result, ['TARGET'], **overrides)
+        plots = plotter.plot()
+        for plot in plots:
+            plot.parameters['intent'] = ['TARGET']
+
+        return plots
+
+    @staticmethod
+    def get_brightest_field(ms, intent='TARGET'):
+        # get IDs for all science spectral windows
+        science_spws = ms.get_spectral_windows()
+        spw_ids = [spw.id for spw in science_spws]
+    
+        # define a function that returns the fields observed in a scan
+        f = lambda scan: ''.join(sorted([field.name for field in scan.fields]))
+        
+        # find science scans
+        target_scans = ms.get_scans(scan_intent=intent)    
+        # sort the list of scans by the field names. The list must be sorted
+        # using the same function subsequently passed to groupby
+        sorted_scans = sorted(target_scans, key=f)
+    
+        # holds the mapping of field name to mean flux 
+        average_flux = {}
+    
+        # defines the parameters for the visstat job
+        job_params = {
+            'vis'        : ms.name,
+            'axis'       : 'amp',
+            'datacolumn' : 'corrected',
+            'spw'        : ','.join(map(str, spw_ids)),
+        }
+    
+        # give the sole science target name if there's only one science target
+        # in this ms.
+        # collapse groupby iterator immediately so we can perform len comparison 
+        field_scan_groups = list(itertools.groupby(sorted_scans, f))
+        if len(field_scan_groups) is 1:
+            LOG.info('Only one science target. '
+                     'Bypassing brightest target selection')
+            return ''.join([f.name for f in sorted_scans[0].fields])
+    
+        LOG.info('Calculating which science target has the brightest mean flux')
+        # run visstat for each scan selection for the target
+        for field_name, scangroup in itertools.groupby(sorted_scans, f):
+            scan_ids = [scan.id for scan in scangroup]
+            job_params['scan'] = ','.join(map(str, scan_ids))
+            job = casa_tasks.visstat(**job_params)
+            LOG.debug('Calculating mean flux for field %r', field_name)
+            result = job.execute(dry_run=False)
+            
+            average_flux[field_name] = float(result['CORRECTED']['mean'])
+            
+        LOG.debug('Mean flux for science targets:')
+        for k, v in average_flux.items():
+            LOG.debug('\t%s: %s', k, v)
+    
+        # find the name of the field with the highest average flux
+        sorted_by_flux = sorted(average_flux.iteritems(), 
+                                key=operator.itemgetter(1),
+                                reverse=True)
+        brightest_target, highest_flux = sorted_by_flux[0]
+        
+        LOG.info('Science target %s has highest average flux (%s)', brightest_target, highest_flux)
+        return brightest_target
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -3087,7 +3222,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
 
     def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None):
         vis = os.path.basename(result.inputs['vis'])
-        
+
         plotter = plotter_cls(context, result, intents)
         plots = plotter.plot()
         for plot in plots:
@@ -6229,3 +6364,5 @@ renderer_map = {
 # cache or 'existing file' checks. This is useful for developing and debugging
 # as you can just call WebLogGenerator.render(context) 
 DEBUG_CLASSES = ()
+
+    
