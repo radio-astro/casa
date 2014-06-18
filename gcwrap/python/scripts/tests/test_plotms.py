@@ -461,7 +461,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(222500, self.plotfile_jpg) 
         
-    def test020(self):
+    def stest020(self):
         '''Plotms 20: Export an iteration plot with one plot per page (pipeline).'''
         self.plotFiles = [self.outputDir + "testPlot020.jpg",
                           self.outputDir + "testPlot0202.jpg",
@@ -497,7 +497,7 @@ class plotms_test1(test_base):
             self._checkPlotFile(60000, self.plotFiles[i]) 
         print  
         
-    def test021(self):
+    def stest021(self):
         '''Plotms 21: Test that model/data works.'''
         self.plotfile_jpg = self.outputDir + "testPlot021.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -512,7 +512,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(230000, self.plotfile_jpg)   
    
-    def test022(self):
+    def stest022(self):
         '''Plotms 22: Test that wt*amp works for x-and y-axis choices.'''
         self.plotfile_jpg = self.outputDir + "testPlot022.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -531,7 +531,7 @@ class plotms_test1(test_base):
         self.assertTrue( self.res )
         self._checkPlotFile(220000, self.plotfile_jpg) 
         
-    def test023(self):
+    def stest023(self):
         '''Plotms 23: Test that corrected/model works for x-and y-amp/data choices.'''
         self.plotfile_jpg = self.outputDir + "testPlot023.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -550,7 +550,7 @@ class plotms_test1(test_base):
         self.assertTrue( self.res )
         self._checkPlotFile(249000, self.plotfile_jpg)    
         
-    def test024(self):
+    def stest024(self):
         '''Plotms 24: Test an invalid antenna selection does not crash plotms.'''
         self.plotfile_jpg = self.outputDir + "testPlot024.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -576,7 +576,7 @@ class plotms_test1(test_base):
        
         
         
-    def test025(self):
+    def stest025(self):
         '''Plotms 25: Test that we can overplot plots with two data sets.'''
         self.plotfile_jpg = self.outputDir + "testPlot025.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -604,7 +604,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(58000, self.plotfile_jpg)    
         
         
-    def test026(self):
+    def stest026(self):
         '''Plotms 26: Export an iteration plot consisting of two pages. Duplicate of test 6 except we use a right axis and a non-square grid.'''
         self.plotfile_jpg = self.outputDir + "testPlot026.jpg"
         self.plotfile2_jpg = self.outputDir + "testPlot0262.jpg"
@@ -639,7 +639,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(65000, self.plotfile2_jpg)
         print    
         
-    def test027(self):
+    def stest027(self):
         '''Plotms 27: Test that we can do a 2x2 multiplot display. Consisting of single plots and overplots'''
         self.plotFiles = [self.outputDir + "testPlot027.jpg",
                           self.outputDir + "testPlot0272.jpg",
@@ -702,7 +702,7 @@ class plotms_test1(test_base):
             self._checkPlotFile(55000, self.plotFiles[i]) 
         print    
         
-    def test028(self):
+    def stest028(self):
         '''Plotms 28: Test generation of a single plot with two y-axes.'''
         self.plotfile_jpg = self.outputDir + "testPlot028.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -720,7 +720,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(249000, self.plotfile_jpg)      
         
-    def test029(self):
+    def stest029(self):
         '''Plotms 29: Test that generation of a single plot with two y-axes using identical data returns false.'''
         self.plotfile_jpg = self.outputDir + "testPlot029.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -738,8 +738,8 @@ class plotms_test1(test_base):
         
     def stest030(self):
         '''Plotms 30: The data set here was producing an 'artifact' when the plot was exported.  Test was developed in response to CAS-6662.'''      
-        self.plotFiles = [self.outputDir + "testPlot030.jpg"]
-        '''               self.outputDir + "testPlot0302.jpg",
+        self.plotFiles = [self.outputDir + "testPlot030.jpg",
+                       self.outputDir + "testPlot0302.jpg",
                           self.outputDir + "testPlot0303.jpg",
                           self.outputDir + "testPlot0304.jpg",
                           self.outputDir + "testPlot0305.jpg",
@@ -747,7 +747,27 @@ class plotms_test1(test_base):
                           self.outputDir + "testPlot0307.jpg",
                           self.outputDir + "testPlot0308.jpg",
                           self.outputDir + "testPlot0309.jpg",
-                          self.outputDir + "testPlot0310.jpg"]'''
+                          self.outputDir + "testPlot0310.jpg",
+                          self.outputDir + "testPlot0311.jpg",
+                       self.outputDir + "testPlot0312.jpg",
+                          self.outputDir + "testPlot0313.jpg",
+                          self.outputDir + "testPlot0314.jpg",
+                          self.outputDir + "testPlot0315.jpg",
+                          self.outputDir + "testPlot0316.jpg",
+                          self.outputDir + "testPlot0317.jpg",
+                          self.outputDir + "testPlot0318.jpg",
+                          self.outputDir + "testPlot0319.jpg",
+                          self.outputDir + "testPlot0320.jpg",
+                          self.outputDir + "testPlot0321.jpg",
+                       self.outputDir + "testPlot0322.jpg",
+                          self.outputDir + "testPlot0323.jpg",
+                          self.outputDir + "testPlot0324.jpg",
+                          self.outputDir + "testPlot0325.jpg",
+                          self.outputDir + "testPlot0326.jpg",
+                          self.outputDir + "testPlot0327.jpg",
+                          self.outputDir + "testPlot0328.jpg",
+                          self.outputDir + "testPlot0329.jpg",
+                          self.outputDir + "testPlot0330.jpg"]
         
         printMsg = 'Writing to '
         for  i in range(0, len(self.plotFiles)):
@@ -793,7 +813,55 @@ class plotms_test1(test_base):
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         self._checkPlotFile(60000, self.plotfile_jpg)
-        print        
+        print 
+        
+    def test032(self):
+        '''Plotms 32: Pipeline no plot scenario.  Test was developed in response to CAS-6662.'''      
+        self.plotFiles = [self.outputDir + "testPlot032.jpg", 
+                          self.outputDir + "testPlot0322.jpg",
+                          self.outputDir + "testPlot0323.jpg"]
+        
+        printMsg = 'Writing to '
+        for  i in range(0, len(self.plotFiles)):
+            printMsg = printMsg + self.plotFiles[i]
+            printMsg = printMsg + ', '
+        print printMsg
+        
+        for  i in range(0, len(self.plotFiles)):
+            if os.path.exists( self.plotFiles[i]):
+                os.remove( self.plotFiles[i])    
+        
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+    
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms', 
+                          xaxis='uvdist', yaxis='amp',ydatacolumn='model',
+                          spw='9', scan='7',
+                          plotrange=[0,0,0,0], avgscan=False, avgbaseline=False, coloraxis='spw',
+                          showgui=False, clearplots=True,            
+                          plotfile=self.plotFiles[0])
+        self.assertTrue(self.res)
+        self._checkPlotFile(56000, self.plotFiles[0])   
+        
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms', 
+                          xaxis='uvdist', yaxis='amp',ydatacolumn='model',
+                          spw='17', scan='7',
+                          plotrange=[0,0,0,0], avgscan=False, avgbaseline=False, coloraxis='spw',
+                          showgui=False, clearplots=True,            
+                          plotfile=self.plotFiles[1])
+        self.assertFalse(self.res)
+        '''self._checkPlotFile(56000, self.plotFiles[1])'''    
+        
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms', 
+                          xaxis='uvdist', yaxis='amp',ydatacolumn='model',
+                          spw='9', scan='7',
+                          plotrange=[0,0,0,0], avgscan=False, avgbaseline=False, coloraxis='spw',
+                          showgui=False, clearplots=True,            
+                          plotfile=self.plotFiles[2])
+        self.assertTrue(self.res)
+        self._checkPlotFile(56000, self.plotFiles[2])      
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
