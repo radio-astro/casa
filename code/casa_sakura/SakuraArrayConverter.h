@@ -78,7 +78,12 @@ template<> void SakuraArrayConverter::CASAToSakura<Complex, float>(
 template<> void SakuraArrayConverter::SakuraToCASA<float, Complex>(
 		uInt const index_in, uInt const index_out, float const *input_data,
 		Complex* pout);
-
+template<> void SakuraArrayConverter::CASAToSakura<Bool, bool>(
+		uInt const index_in, uInt const index_out, const Bool* pin,
+		bool *output_data);
+template<> void SakuraArrayConverter::SakuraToCASA<bool, Bool>(
+		uInt const index_in, uInt const index_out, bool const *input_data,
+		Bool* pout);
 } //# NAMESPACE CASA - END
 
 #endif /* _CASA_SINGLEDISH_DUMMY_H_ */
