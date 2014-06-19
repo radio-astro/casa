@@ -2473,10 +2473,138 @@ class sdaverage_test_weighting_tint(unittest.TestCase):
         res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
         self.verify(outfile, weight_tsys=True)
         
-    
+###
+# Test flag information handling
+###
+class sdaverage_test_average_flag(unittest.TestCase):
+    """
+    Test flag information handling.
+
+    Data is sdaverage_testflag.asap
+
+    Test list
+        test_average_flag: test if average handles flag information properly
+        test_average_novaliddata: test if the task throws exception if
+                                  no valid data exists
+    """
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdaverage/'
+    rawfile = 'sdaverage_testflag.asap'
+    prefix = 'sdaverage_test_average_flag'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+
+        default(sdaverage)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _verify(self, outfile):
+        # get data before averaging
+        with tbmanager(self.rawfile) as tb:
+            flagrow_org = tb.getcol('FLAGROW')
+            flagtra_org = tb.getcol('FLAGTRA')
+            spectra_org = tb.getcol('SPECTRA')
+            interval_org = tb.getcol('INTERVAL')
+
+        # get data after averaging
+        with tbmanager(outfile) as tb:
+            flagrow = tb.getcol('FLAGROW')
+            flagtra = tb.getcol('FLAGTRA')
+            spectra = tb.getcol('SPECTRA')
+
+        # basic check
+        # all data should be averaged into one row
+        nrow = 1
+        nchan = spectra_org.shape[0]
+        self.assertEqual(len(flagrow), nrow, msg='number of rows for outfile must be %s (was %s)'%(nrow, len(flagrow)))
+        self.assertEqual(flagtra.shape, (nchan,1,), msg='shape of FLAGTRA differ (expected %s result %s)'%([nchan,1], list(flagtra.shape)))
+        self.assertEqual(spectra.shape, (nchan,1,), msg='shape of SPECTRA differ (expected %s result %s)'%([nchan,1], list(spectra.shape)))
+        
+        # verify
+        flagrow = flagrow[0]
+        flagtra = flagtra[:,0]
+        spectra = spectra[:,0]
+
+        # verify FLAGROW
+        flagrow_expected = 0 if any(flagrow_org == 0) else 1
+        self.assertEqual(flagrow, flagrow_expected, msg='FLAGROW differ (expected %s result %s)'%(flagrow_expected, flagrow))
+
+        # verify FLAGTRA
+        def gen_averaged_channelflag(rflag, chflag):
+            nchan, nrow = chflag.shape
+            for ichan in xrange(nchan):
+                yield 0 if any(rflag + chflag[ichan] == 0) else 128
+        flagtra_expected = numpy.array(list(gen_averaged_channelflag(flagrow_org, flagtra_org)))
+        self.assertTrue(all(flagtra == flagtra_expected), msg='FLAGTRA differ (expected %s result %s)'%(flagtra_expected, flagtra))
+        
+        # verify SPECTRA
+        def gen_averaged_spectra(rflag, chflag, data, weight):
+            nchan, nrow = data.shape
+            for ichan in xrange(nchan):
+                dsum = 0.0
+                wsum = 0.0
+                for irow in xrange(nrow):
+                    if rflag[irow] == 0 and chflag[ichan,irow] == 0:
+                        dsum += weight[irow] * data[ichan,irow]
+                        wsum += weight[irow]
+                if wsum == 0:
+                    yield None
+                else:
+                    yield dsum / wsum
+        spectra_expected = numpy.array(list(gen_averaged_spectra(flagrow_org,
+                                                                 flagtra_org,
+                                                                 spectra_org,
+                                                                 interval_org)))
+        tol = 1.0e-7
+        for ichan in xrange(nchan):
+            if flagtra[ichan] == 0:
+                sp = spectra[ichan]
+                ex = spectra_expected[ichan]
+                diff = abs((sp - ex) / ex)
+                #print ichan, diff
+                self.assertLess(diff, tol, msg='channel %s: spectral data differ (expected %s result %s relative difference %s)'%(ichan,ex,sp,diff))
+            else:
+                print 'Skip channel %s since it is flagged'%(ichan)
+        
+    def test_average_flag(self):
+        """test_average_flag: test if average handles flag information properly"""
+        outfile = self.prefix + '.asap'
+        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+
+        self._verify(outfile)
+
+    def test_average_novaliddata(self):
+        """test_average_novaliddata: test if the task throws exception if no valid data exists"""
+        # flag all rows
+        with tbmanager(self.rawfile, nomodify=False) as tb:
+            flagrow = tb.getcol('FLAGROW')
+            flagrow[:] = 1
+            tb.putcol('FLAGROW', flagrow)
+
+        # double check
+        with tbmanager(self.rawfile, nomodify=False) as tb:
+            flagrow = tb.getcol('FLAGROW')
+        self.assertTrue(all(flagrow == 1), msg='Failed to preparing data')
+
+        outfile = self.prefix + '.asap'
+        # the task must raise RuntimeError with correct message
+        with self.assertRaises(RuntimeError) as cm:
+            sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        the_exception = cm.exception
+        message = the_exception.message
+        expected_message = 'Can\'t average fully flagged data.'
+        self.assertEqual(message, expected_message, msg='Exception contains unexpected message: "%s" (expected "%s")'%(message,expected_message))
+        
 
 def suite():
     return [sdaverage_badinputs, sdaverage_smoothTest, sdaverage_storageTest,
             sdaverage_test6, sdaverage_test7, sdaverage_test8, sdaverage_test9,
             sdaverage_test_flag, sdaverage_avetest_selection, sdaverage_smoothtest_selection,
-            sdaverage_test_weighting_tint]
+            sdaverage_test_weighting_tint, sdaverage_test_average_flag]
