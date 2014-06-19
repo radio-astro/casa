@@ -6,6 +6,8 @@ from tasks import *
 from taskinit import *
 import unittest
 import numpy
+import re
+import math
 
 try:
     import selection_syntax
@@ -14,6 +16,20 @@ except:
 
 import asap as sd
 from sdflag import sdflag
+from sdutil import tbmanager
+
+def selection_to_list(row):
+    def _selection_to_list(sel):
+        elements = sel.split(',')
+        for elem in elements:
+            if elem.isdigit():
+                yield int(elem)
+            elif re.match('^[0-9]+~[0-9]+$', elem):
+                s = [int(e) for e in elem.split('~')]
+                for i in xrange(s[0], s[1]+1):
+                    yield i
+    l = set(_selection_to_list(row))
+    return list(l)    
 
 class sdflag_unittest_base:
     """
@@ -204,6 +220,229 @@ class sdflag_test(unittest.TestCase):
         except Exception, e:
             pos = str(e).find('No valid spw.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
+
+class sdflag_test_flagged_data(unittest.TestCase):
+    """
+    Test for proper handling of channel/row flags.
+
+    The list of tests:
+    test_channel_flag   --- test channel flagging
+    test_channel_unflag --- test channel unflagging
+    test_row_flag       --- test row flagging
+    test_row_unflag     --- test row unflagging
+    test_clip_flag      --- test clipping flagging
+    test_clip_unflag    --- test clipping unflagging
+
+    NOTE:
+        'Artificial_Flat_Flagged.asap' has 6 flat spectra with rms of 1.0.
+        Channels 8000~8010 are flagged in all rows. Row 3 is row flagged.
+        Put spurious data (+/-10.0) in channels 1024 and 8001 for clipping.
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdflag/'
+    # Input and output names
+    infile = 'Artificial_Flat_Flagged.asap'
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdflag)
+
+        self._preserve_flagstate()
+
+    def tearDown(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+
+    def _preserve_flagstate(self):
+        with tbmanager(self.infile) as tb:
+            self.flagrow_org = tb.getcol('FLAGROW')
+            self.flagtra_org = tb.getcol('FLAGTRA')
+
+    def _get_maskdict(self, spw):
+        s = sd.scantable(self.infile, average=False)
+        return s.parse_spw_selection(spw)
+
+    def _prepare_for_verify(self):
+        # get resulting flags
+        with tbmanager(self.infile) as tb:
+            flagrow = tb.getcol('FLAGROW')
+            flagtra = tb.getcol('FLAGTRA')
+
+        # basic check
+        self.assertEqual(len(flagrow), len(self.flagrow_org), msg='FLAGROW length mismatch: result %s expected %s'%(len(flagrow),len(self.flagrow_org)))
+        self.assertEqual(flagtra.shape, self.flagtra_org.shape, msg='FLAGTRA shape mismatch: result %s expected %s'%(list(flagtra.shape),list(self.flagtra_org.shape)))
+
+        # check flagged area
+        nrow = len(flagrow)
+
+        return nrow, flagrow, flagtra
+    
+    def _verify_channelflag(self, spw, unflag=False):
+        nrow, flagrow, flagtra = self._prepare_for_verify()
+        
+        maskdict = self._get_maskdict(spw)
+        # data only contain IFNO 0
+        masklist = maskdict[0]
+
+        # check flagged area
+        flag_value = 0 if unflag else 128
+        for irow in xrange(nrow):
+            # row flags should not be affected
+            self.assertEqual(flagrow[irow], self.flagrow_org[irow], msg='Row %s: FLAGROW differ (result %s expected %s)'%(irow,flagrow[irow],self.flagrow_org[irow]))
+
+            # verify channel flags
+            expected = self.flagtra_org[:,irow].copy()
+            # flagged rows should be skipped
+            if self.flagrow_org[irow] == 0:
+                # flag should be updated
+                for m in masklist:
+                    print 'row %s: setting value 128 to range %s'%(irow,m)
+                    expected[m[0]:m[1]+1] = flag_value
+            self.assertTrue(all(flagtra[:,irow] == expected), msg='Row %s: FLAGTRA differ'%(irow))
+
+    def _verify_rowflag(self, row, unflag):
+        rowlist = selection_to_list(row)
+        
+        nrow, flagrow, flagtra = self._prepare_for_verify()
+
+        # check flagged data
+        flag_value = 0 if unflag else 1
+        for irow in xrange(nrow):
+            # channel flags should not be affected
+            self.assertTrue(all(flagtra[:,irow] == self.flagtra_org[:,irow]), msg='Row %s: FLAGTRA differ'%(irow))
+
+            # verify row flags
+            if irow in rowlist:
+                expected = flag_value
+            else:
+                expected = self.flagrow_org[irow]
+            self.assertEqual(flagrow[irow], expected, msg='Row %s: FLAGROW differ (result %s expected %s)'%(irow,flagrow[irow],expected))
+            
+
+    def _verify_clip(self, threshold, unflag):
+        nrow, flagrow, flagtra = self._prepare_for_verify()
+
+        # need spectral data for verifying clip
+        with tbmanager(self.infile) as tb:
+            spectra = tb.getcol('SPECTRA')
+
+        # detect clipped data
+        def gen_clipped(spectra, threshold):
+            rms = lambda x: math.sqrt(x.std()**2 + x.mean()**2)
+            nrow = spectra.shape[1]
+            for irow in xrange(nrow):
+                sp = spectra[:,irow]
+                _threshold = abs(threshold) * rms(sp)
+                yield numpy.where(abs(sp) > _threshold)[0]
+        clipped_channels = list(gen_clipped(spectra, threshold))
+
+        # check flagged data
+        flag_value = 0 if unflag else 128
+        for irow in xrange(nrow):
+            # row flag should not be affected
+            self.assertEqual(flagrow[irow], self.flagrow_org[irow], msg='Row %s: FLAGROW differ (result %s expected %s)'%(irow,flagrow[irow],self.flagrow_org[irow]))
+
+            # verify channel flags
+            expected = self.flagtra_org[:,irow].copy()
+            # flagged rows should be skipped
+            if self.flagrow_org[irow] == 0:
+                print 'row %s: setting value 128 to channels %s'%(irow,clipped_channels[irow])
+                expected[clipped_channels[irow]] = flag_value
+            self.assertTrue(all(flagtra[:,irow] == expected), msg='Row %s: FLAGTRA differ'%(irow))
+
+    def test_channel_flag(self):
+        """test_channel_flag: channel flagging (unflag=False)"""
+        infile = self.infile
+        mode = 'manual'
+        spw = "*:1~3;10~15"
+        #maskflag = [[1,3],[10,15]]
+        unflag=False
+
+        #flag
+        result = sdflag(infile=infile, mode=mode, spw=spw, unflag=unflag)
+
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+        self._verify_channelflag(spw, unflag)
+
+    def test_channel_unflag(self):
+        """test_channel_unflag: channel flagging (unflag=True)"""
+        infile = self.infile
+        mode = 'manual'
+        spw = "*:1~3;7995~8005"
+        #maskflag = [[1,3],[7995,8005]]
+        unflag=True
+
+        #flag
+        result = sdflag(infile=infile, mode=mode, spw=spw, unflag=unflag)
+
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+        self._verify_channelflag(spw, unflag)
+
+ 
+    def test_row_flag(self):
+        """test_row_flag:: row flagging (unflag=False)"""
+        infile = self.infile
+        mode = 'rowid'
+        flagrow = '2,4'
+        unflag=False
+
+        #flag
+        result = sdflag(infile=infile, mode=mode, row=flagrow, unflag=unflag)
+
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+        self._verify_rowflag(flagrow, unflag)
+
+    def test_row_unflag(self):
+        """test_row_unflag:: row flagging (unflag=True)"""
+        infile = self.infile
+        mode = 'rowid'
+        flagrow = '2~4'
+        unflag=True
+
+        #flag
+        result = sdflag(infile=infile, mode=mode, row=flagrow, unflag=unflag)
+
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+        self._verify_rowflag(flagrow, unflag)
+
+    def test_clip_flag(self):
+        """test_clip_flag: clipping (unflag=False)"""
+        infile = self.infile
+        mode = 'clip'
+        #clip = True
+        threshold = 5.0
+        clipminmax = [-threshold, threshold] #clip at 5-sigma level, i.e., flag channels at which abs(value) exceeds 5.0.
+        unflag = False
+
+        #flag
+        result = sdflag(infile=infile, mode=mode, clipminmax=clipminmax, unflag=unflag)
+
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+        self._verify_clip(threshold, unflag)
+
+    def test_clip_unflag(self):
+        """test_clip_unflag: clipping (unflag=True)"""
+        infile = self.infile
+        mode = 'clip'
+        #clip = True
+        threshold = 5.0
+        clipminmax = [-threshold, threshold] #clip at 5-sigma level, i.e., flag channels at which abs(value) exceeds 5.0.
+        unflag = True
+
+        #flag
+        result = sdflag(infile=infile, mode=mode, clipminmax=clipminmax, unflag=unflag)
+
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+        self._verify_clip(threshold, unflag)
 
 class sdflag_test_timerange(unittest.TestCase):
     """
@@ -1214,4 +1453,5 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
             
         
 def suite():
-    return [sdflag_test, sdflag_test_timerange, sdflag_selection]
+    return [sdflag_test, sdflag_test_flagged_data,
+            sdflag_test_timerange, sdflag_selection]
