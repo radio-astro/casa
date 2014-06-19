@@ -279,14 +279,10 @@ class sdflag_test_flagged_data(unittest.TestCase):
         nrow = len(flagrow)
 
         return nrow, flagrow, flagtra
-    
-    def _verify_channelflag(self, spw, unflag=False):
+
+    def __verify_channelflag(self, masklist, unflag):
         nrow, flagrow, flagtra = self._prepare_for_verify()
         
-        maskdict = self._get_maskdict(spw)
-        # data only contain IFNO 0
-        masklist = maskdict[0]
-
         # check flagged area
         flag_value = 0 if unflag else 128
         for irow in xrange(nrow):
@@ -297,11 +293,45 @@ class sdflag_test_flagged_data(unittest.TestCase):
             expected = self.flagtra_org[:,irow].copy()
             # flagged rows should be skipped
             if self.flagrow_org[irow] == 0:
+                if len(masklist) == 1:
+                    _masklist = masklist[0]
+                else:
+                    _masklist = masklist[irow]
                 # flag should be updated
-                for m in masklist:
+                for m in _masklist:
                     print 'row %s: setting value 128 to range %s'%(irow,m)
-                    expected[m[0]:m[1]+1] = flag_value
+                    expected[m[0]:m[1]+1] = flag_value                        
             self.assertTrue(all(flagtra[:,irow] == expected), msg='Row %s: FLAGTRA differ'%(irow))
+        
+    
+    def _verify_channelflag(self, spw, unflag=False):
+        maskdict = self._get_maskdict(spw)
+        # data only contain IFNO 0
+        masklist = [maskdict[0]]
+
+        self.__verify_channelflag(masklist, unflag)
+
+
+    def _verify_clip(self, threshold, unflag):
+        # need spectral data for verifying clip
+        with tbmanager(self.infile) as tb:
+            spectra = tb.getcol('SPECTRA')
+
+        # detect clipped data
+        def gen_clipped(spectra, threshold):
+            rms = lambda x: math.sqrt(x.std()**2 + x.mean()**2)
+            nrow = spectra.shape[1]
+            for irow in xrange(nrow):
+                sp = spectra[:,irow]
+                _threshold = abs(threshold) * rms(sp)
+                yield numpy.where(abs(sp) > _threshold)[0]
+        clipped_channels = list(gen_clipped(spectra, threshold))
+
+        # map to masklist
+        masklist = map(lambda x: [[y,y] for y in x], clipped_channels)
+
+        self.__verify_channelflag(masklist, unflag)
+
 
     def _verify_rowflag(self, row, unflag):
         rowlist = selection_to_list(row)
@@ -321,37 +351,6 @@ class sdflag_test_flagged_data(unittest.TestCase):
                 expected = self.flagrow_org[irow]
             self.assertEqual(flagrow[irow], expected, msg='Row %s: FLAGROW differ (result %s expected %s)'%(irow,flagrow[irow],expected))
             
-
-    def _verify_clip(self, threshold, unflag):
-        nrow, flagrow, flagtra = self._prepare_for_verify()
-
-        # need spectral data for verifying clip
-        with tbmanager(self.infile) as tb:
-            spectra = tb.getcol('SPECTRA')
-
-        # detect clipped data
-        def gen_clipped(spectra, threshold):
-            rms = lambda x: math.sqrt(x.std()**2 + x.mean()**2)
-            nrow = spectra.shape[1]
-            for irow in xrange(nrow):
-                sp = spectra[:,irow]
-                _threshold = abs(threshold) * rms(sp)
-                yield numpy.where(abs(sp) > _threshold)[0]
-        clipped_channels = list(gen_clipped(spectra, threshold))
-
-        # check flagged data
-        flag_value = 0 if unflag else 128
-        for irow in xrange(nrow):
-            # row flag should not be affected
-            self.assertEqual(flagrow[irow], self.flagrow_org[irow], msg='Row %s: FLAGROW differ (result %s expected %s)'%(irow,flagrow[irow],self.flagrow_org[irow]))
-
-            # verify channel flags
-            expected = self.flagtra_org[:,irow].copy()
-            # flagged rows should be skipped
-            if self.flagrow_org[irow] == 0:
-                print 'row %s: setting value 128 to channels %s'%(irow,clipped_channels[irow])
-                expected[clipped_channels[irow]] = flag_value
-            self.assertTrue(all(flagtra[:,irow] == expected), msg='Row %s: FLAGTRA differ'%(irow))
 
     def test_channel_flag(self):
         """test_channel_flag: channel flagging (unflag=False)"""
