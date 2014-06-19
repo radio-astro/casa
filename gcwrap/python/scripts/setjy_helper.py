@@ -121,30 +121,39 @@ class ss_setjy_helper:
  
           validfids.append(fid)
 	  trange=myms.range('time')
-	  if not inparams.has_key(srcnames[fid]):
-            inparams[srcnames[fid]]={}
+	  #if not inparams.has_key(srcnames[fid]):
+          #  inparams[srcnames[fid]]={}
+	  if not inparams.has_key(fid):
+            inparams[fid]={}
+            inparams[fid]['fieldname']=srcnames[fid]
 
 	  #tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
           # use first timestamp to be consistent with the ALMA Control
           # old setjy (Butler-JPL-Horizons 2010) seems to be using
           # time in FIELD... but here is first selected time in main table
           tc = trange['time'][0] #in sec.
-          self._casalog.post("field=%s trange0=%s" % (fid,tc), 'DEBUG1')
-	  if inparams[srcnames[fid]].has_key('mjd'):
-            inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
+	  #if inparams[srcnames[fid]].has_key('mjd'):
+          #  inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
+          #else:
+          #  inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
+	  if inparams[fid].has_key('mjd'):
+            inparams[fid]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
-            inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
+            inparams[fid]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
           # make sure it is int rather than numpy.int32, etc.
           selspws = [int(ispw) for ispw in selspws]
-	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
+	  #inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
+	  inparams[fid]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
+
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
 	  freqlist=[]
           freqlistraw=[]
 	  framelist=[]
-	  for idx in inparams[srcnames[fid]]['spwids']:
+	  #for idx in inparams[srcnames[fid]]['spwids']:
+	  for idx in inparams[fid]['spwids']:
 	    freqs=freqcol['r'+str(idx+1)]
 	    freqws=freqwcol['r'+str(idx+1)]
 	    fmeasref=fmeasrefcol[idx]
@@ -169,10 +178,15 @@ class ss_setjy_helper:
 	 
 	    framelist.append(measframes[fmeasref])
             freqlistraw.append(freqs.transpose()[0].tolist()) # data chanfreq list
-	  inparams[srcnames[fid]]['freqlist']=freqlist
-	  inparams[srcnames[fid]]['freqlistraw']=freqlistraw
-	  inparams[srcnames[fid]]['framelist']=framelist
-	  inparams[srcnames[fid]]['reffreqs']=reffreqs
+	  #inparams[srcnames[fid]]['freqlist']=freqlist
+	  #inparams[srcnames[fid]]['freqlistraw']=freqlistraw
+	  #inparams[srcnames[fid]]['framelist']=framelist
+	  #inparams[srcnames[fid]]['reffreqs']=reffreqs
+
+	  inparams[fid]['freqlist']=freqlist
+	  inparams[fid]['freqlistraw']=freqlistraw
+	  inparams[fid]['framelist']=framelist
+	  inparams[fid]['reffreqs']=reffreqs
           myms.close()
 
              
@@ -190,10 +204,13 @@ class ss_setjy_helper:
 	#for src in srcnames:
 	for vfid in validfids:
           src=srcnames[vfid]
-	  mjds=inparams[src]['mjds']
+	  #mjds=inparams[src]['mjds']
+	  mjds=inparams[vfid]['mjds']
 	  fluxes=[]
           # call solar_system_fd() per spw (for scalebychan freqlist has an extra dimention)
-          nspwused=len(inparams[src]['freqlist'])
+          #nspwused=len(inparams[src]['freqlist'])
+          nspwused=len(inparams[vfid]['freqlist'])
+
           # warning for many channels but it is really depends on the source
           if scalebychan:
             maxnf=0
@@ -206,10 +223,12 @@ class ss_setjy_helper:
               
 	  for i in range(nspwused): # corresponds to n spw
 	    if type(freqlist[0][0])==list:
-	      infreqs=inparams[src]['freqlist'][i]
+	      #infreqs=inparams[src]['freqlist'][i]
+	      infreqs=inparams[vfid]['freqlist'][i]
 	    else:
-	      infreqs=[inparams[src]['freqlist'][i]]
-            self._casalog.post("Calling solar_system_fd: %s for spw%s freqs=%s" % (src, i,freqlist[i]),'DEBUG1')
+	      #infreqs=[inparams[src]['freqlist'][i]]
+	      infreqs=[inparams[vfid]['freqlist'][i]]
+            self._casalog.post("Calling solar_system_fd: %s(%s) for spw%s freqs=%s" % (src, vfid,i,freqlist[i]),'DEBUG1')
 	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
                ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, observatory=observatory, casalog=self._casalog)
             # for old code
@@ -235,11 +254,17 @@ class ss_setjy_helper:
 	  #dirs=[{'m0': {'unit': 'rad', 'value': 0.0}, 'm1': {'unit': 'rad', 'value': 0.0}, 'refer': 'J2000', 'type': 'direction'}]
 	  # ------------------------------------------------------------------------
           # local params for selected src
-	  framelist=inparams[src]['framelist']
-	  freqlist=inparams[src]['freqlist']
-	  freqlistraw=inparams[src]['freqlistraw']
-	  reffreqs=inparams[src]['reffreqs']
-	  spwids=inparams[src]['spwids']
+	  #framelist=inparams[src]['framelist']
+	  #freqlist=inparams[src]['freqlist']
+	  #freqlistraw=inparams[src]['freqlistraw']
+	  #reffreqs=inparams[src]['reffreqs']
+	  #spwids=inparams[src]['spwids']
+
+	  framelist=inparams[vfid]['framelist']
+	  freqlist=inparams[vfid]['freqlist']
+	  freqlistraw=inparams[vfid]['freqlistraw']
+	  reffreqs=inparams[vfid]['reffreqs']
+	  spwids=inparams[vfid]['spwids']
 
 	  clrecs=odict.odict()
 	  labels = []
@@ -256,7 +281,8 @@ class ss_setjy_helper:
             else:
                 #dirstring = [fieldref, str(fielddirs[fieldids[0]][0][0])+'rad', str(fielddirs[fieldids[0]][1][0])+'rad']
                 # extract field direction of first id of the selected field ids
-                dirstring = [fieldref, "%.18frad" % (fielddirs[fieldids[0]][0][0]), "%.18frad" % (fielddirs[fieldids[0]][1][0])]
+                #dirstring = [fieldref, "%.18frad" % (fielddirs[fieldids[0]][0][0]), "%.18frad" % (fielddirs[fieldids[0]][1][0])]
+                dirstring = [fieldref, "%.18frad" % (fielddirs[vfid][0][0]), "%.18frad" % (fielddirs[vfid][1][0])]
             #print "dirstring=",dirstring
 
 	    # setup componentlists
@@ -272,10 +298,14 @@ class ss_setjy_helper:
             minfreq = min(selreffreqs)
             maxfreq = max(selreffreqs)
 	    freqlabel = '%.3f-%.3fGHz' % (minfreq/1.e9, maxfreq/1.e9)
-	    tmlabel = '%.1fd' % (tc/86400.)
+	    #tmlabel = '%.1fd' % (tc/86400.)
+	    mjd=inparams[vfid]['mjds'][0]
+	    tmlabel = '%.1fd' % (mjd)
 	    #clabel = src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
 	    clabel0 = src+'_'+freqlabel+'_'+tmlabel
 	    clname = clpath+clabel0+'.cl'
+            #debug
+            self._casalog.post("Create componentlist: %s for vfid=%s" % (clname,vfid),'DEBUG1')
 	      
 	    if (os.path.exists(clname)):
               shutil.rmtree(clname)
@@ -287,7 +317,7 @@ class ss_setjy_helper:
 	    for j in range(len(freqlist)): # loop over nspw
 	      freqlabel = '%.3fGHz' % (reffreqs[int(spwids[j])]/1.e9)
               clabel=src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
-	      #print "addcomponent...for j=",j," i=",i," flux=",fluxes[j][i]
+	      #print "addcomponent...for spw=",spwids[j]," i=",i," flux=",fluxes[j][i]
 	      if scalebychan:
 		index= 2.0
 		sptype = 'spectral index'
@@ -419,7 +449,8 @@ class ss_setjy_helper:
             if ncomp != len(spwids):
                raise Exception, "Inconsistency in generated componentlist...Please submit a bug report."
             for icomp in range(ncomp): 
-	      self.im.selectvis(spw=spwids[icomp],field=field,observation=observation,time=timerange,intent=intent)
+	      #self.im.selectvis(spw=spwids[icomp],field=field,observation=observation,time=timerange,intent=intent)
+	      self.im.selectvis(spw=spwids[icomp],field=vfid,observation=observation,time=timerange,intent=intent)
               newclinrec = {}
               newclinrec['nelements']=1
               newclinrec['component0']=clinrec['component'+str(icomp)]

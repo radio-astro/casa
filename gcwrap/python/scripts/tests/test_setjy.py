@@ -160,6 +160,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['med4'] = tblocal.getcell('MODEL_DATA', 4)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
+                #record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint='Uranus')
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint='Uranus')
                 self.result = record
         except AssertionError, e:
@@ -221,6 +222,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
+            #    record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint="V=0] Jy")
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 self.result = record
         except AssertionError, e:
@@ -369,6 +371,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
+                #record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint="V=0] Jy")
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 self.result = record
         except AssertionError, e:
