@@ -1,5 +1,6 @@
 <%!
 rsc_path = ""
+import cgi
 import os
 import string
 import types
@@ -45,7 +46,7 @@ def sanitise(url):
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
-    // return a function that sets the SPW text field to the given spw
+    // return a function that sets the select text field to the given value
     var createSelectSetter = function(val, element_id) {
     	return function() {
     		var vals = val.toString().split(',');
@@ -60,12 +61,18 @@ $(document).ready(function(){
         var o = $(v);
         var spw = o.data("spw");
         var field = o.data("field");
-		if (typeof field === 'undefined') {
-	        o.data("callback", createSelectSetter(spw, "#select-spw"));
-		} else {
-	        o.data("callback", [createSelectSetter(spw, "#select-spw"),
-	                            createSelectSetter(field, "#select-field")]);
-		}
+        var baseband = o.data("baseband");
+        var callbacks = [];
+        if (typeof field !== 'undefined') {
+        	callbacks.push(createSelectSetter(field, "#select-field"));
+        }
+        if (typeof spw !== 'undefined') {
+        	callbacks.push(createSelectSetter(spw, "#select-spw"));
+        }
+        if (typeof baseband !== 'undefined') {
+        	callbacks.push(createSelectSetter(baseband, "#select-baseband"));
+        }
+	    o.data("callback", callbacks);
     });
 
     $(".fancybox").fancybox({
@@ -259,7 +266,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -291,7 +298,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -321,7 +328,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Spectral window: ${plot.parameters['spw']}<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -349,7 +356,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Spectral window: ${plot.parameters['spw']}<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -377,7 +384,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Spectral window: ${plot.parameters['spw']}<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -401,9 +408,9 @@ def space_comma(s):
 
 	<%def name="preamble()">
 		<p>Calibrated amplitude vs frequency plots for a representative
-		science field in each measurement set. The chosen science field is the
-		one with the brightest average amplitude over all spectral windows.
-		</p>
+		science field in each measurement set. The science field displayed
+		here is the one with the brightest average amplitude over all spectral
+		windows.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -419,7 +426,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -435,7 +442,8 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_phase_vs_freq_plots}"
-				  url_fn="${lambda x: 'science_phase_vs_freq_%s.html' % sanitise(x)}">
+				  url_fn="${lambda x: 'science_phase_vs_freq_%s.html' % sanitise(x)}"
+				  data_baseband="${True}">
 
 	<%def name="title()">
 		Science target: calibrated phase vs frequency
@@ -443,8 +451,8 @@ def space_comma(s):
 
 	<%def name="preamble()">
 		<p>Calibrated phase vs frequency plots for a representative science
-		field in each measurement set. The chosen science field is the one
-		with the brightest average amplitude over all spectral windows.</p>
+		field in each measurement set. The science field displayed here is the
+		one with the brightest average amplitude over all spectral windows.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -460,7 +468,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
@@ -476,7 +484,8 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_amp_vs_uv_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % sanitise(x)}">
+				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % sanitise(x)}"
+				  data_baseband="${True}">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs UV distance
@@ -484,9 +493,9 @@ def space_comma(s):
 
 	<%def name="preamble()">
 		<p>Calibrated amplitude vs UV distance plots for a representative
-		science field in each measurement set. The chosen science field is the
-		one with the brightest average amplitude over all spectral windows.
-		</p>
+		science field in each measurement set. The science field displayed 
+		here is the one with the brightest average amplitude over all spectral 
+		windows.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -497,7 +506,7 @@ def space_comma(s):
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
-		Fields: ${plot.parameters['field']}
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">

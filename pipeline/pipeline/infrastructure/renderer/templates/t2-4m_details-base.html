@@ -15,7 +15,7 @@ def get_qascores(pool, lo, hi):
 	return [s for s in with_score if s.score > lo and s.score <= hi]
 %>
 
-<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, plot_accessor=lambda d: [('No Intent', d)])">
+<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, plot_accessor=lambda d: [('No Intent', d)])">
 % if plot_dict:
 	<h3>${caller.title()}</h3>
 
@@ -75,13 +75,16 @@ def get_qascores(pool, lo, hi):
 								<h4>
 								% if subpage_exists:
 									<a href="${subpage_path}"
-		   							   class="replace"
 									% if data_field:
 									   data-field="${cgi.escape(plot.parameters['field'], True)}"
 									% endif
 									% if data_spw:
-									   data-spw="${plot.parameters['spw']}">
+									   data-spw="${plot.parameters['spw']}"
 									% endif
+									% if data_baseband:
+									   data-baseband="${plot.parameters['baseband']}"
+									% endif
+		   							   class="replace">
 								% endif
 								${caller.caption_title(plot)}
 								% if subpage_exists:
