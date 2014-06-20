@@ -215,8 +215,9 @@ def plotms(vis=None, plotindex=None,
         if (xdatacolumn=='cor' or xdatacolumn=='corr'):  xdatacolumn='corrected'
         if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
 
-         
-        vis = os.path.abspath(vis.strip())
+        vis = vis.strip()
+        if len(vis) > 0:
+            vis = os.path.abspath(vis) 
         if not plotindex:
             plotindex = 0
       
