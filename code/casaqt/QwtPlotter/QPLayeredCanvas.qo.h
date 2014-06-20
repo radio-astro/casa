@@ -253,7 +253,7 @@ public:
             const QwtPlotPrintFilter& filter = QwtPlotPrintFilter()) const;
     
     // Is drawing in progress?
-    virtual Bool isDrawing() const;
+    virtual Bool isDrawing( bool scripting );
     
     // Event Methods //
     

@@ -374,15 +374,16 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     }
 
     //Loop over all the iterations, exporting them
+	waitOnCanvases();
     for ( int i = 0; i < pageCount; i++ ){
     	if ( i > 0 ){
     		//Remove the last '.' from the storage location.
     		String pageStr = String::toString( i+1 );
     		exportFormat.location = baseFileName + pageStr + suffix;
     	}
-
-    	this->holdDrawing();
+    	
     	exportSuccess = itsParent_->exportToFormat( exportFormat );
+    	waitOnCanvases();
     	if ( i < pageCount - 1 ){
     		nextIter();
     	}
@@ -390,7 +391,6 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 
     //Restore the current page
     setIter( currentIter );
-
     return exportSuccess;
 }
 
@@ -447,7 +447,8 @@ void PlotMSPlot::holdDrawing() {
    vector<PlotCanvasPtr> canv = canvases();
     for(unsigned int i = 0; i < canv.size(); i++){
     	if ( !canv[i].null() ){
-    		bool canvasDrawing = canv[i]->isDrawing();
+    		bool scriptClient = !itsParent_->guiShown();
+    		bool canvasDrawing = canv[i]->isDrawing( scriptClient );
     		if ( canvasDrawing ){
     			waitOnCanvas( canv[i]);
     		}
@@ -470,17 +471,26 @@ void PlotMSPlot::releaseDrawing() {
 void PlotMSPlot::waitOnCanvas( const PlotCanvasPtr& canvas ){
 	if ( !canvas.null()){
 		int callIndex = 0;
-		int maxCalls =  5;
+		int maxCalls =  60;
 
-		bool canvasDrawing = canvas->isDrawing();
-
-	    while(  canvasDrawing && callIndex < maxCalls ){
-
+		bool scriptClient = !itsParent_->guiShown();
+		bool canvasDrawing = canvas->isDrawing( scriptClient );
+	   while(  canvasDrawing && callIndex < maxCalls ){
 	        usleep(1000000);
 	        callIndex++;
-	        canvasDrawing = canvas->isDrawing();
+	        canvasDrawing = canvas->isDrawing( scriptClient );
 	    }
 	}
+}
+
+void PlotMSPlot::waitOnCanvases(){
+	vector<PlotCanvasPtr> canv = canvases();
+		for (unsigned int i = 0; i < canv.size(); i++ ){
+			if ( !canv[i].null()){
+				waitOnCanvas( canv[i]);
+			}
+		}
+
 }
 
 void PlotMSPlot::waitForDrawing( bool holdDrawing ){

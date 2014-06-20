@@ -1547,8 +1547,8 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
     else       event->ignore();
 }
 
-bool QPCanvas::isDrawing() const {
-	bool drawing = m_canvas.isDrawing();
+bool QPCanvas::isDrawing( bool scripting) {
+	bool drawing = m_canvas.isDrawing( scripting);
 	return drawing;
 }
 

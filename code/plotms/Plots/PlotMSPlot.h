@@ -239,6 +239,8 @@ protected:
     
     virtual int getPageIterationCount( const PlotMSPage& page )=0;
 
+    void waitOnCanvases();
+
     // MEMBERS //
     
     // PlotMS parent.
