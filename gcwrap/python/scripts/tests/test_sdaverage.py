@@ -2482,10 +2482,22 @@ class sdaverage_test_average_flag(unittest.TestCase):
 
     Data is sdaverage_testflag.asap
 
+    Summary of the data:
+    ROW | FLAGROW    | FLAGTRA          | SPECTRA 
+     0  | 0          | ch 10~11 flagged | spurious at ch 10~11
+     1  | 1 (flagged)| all 0            | spurious at ch 10
+     2  | 0          | ch 10,40 flagged | spurious at ch 10,40
+
     Test list
         test_average_flag: test if average handles flag information properly
         test_average_novaliddata: test if the task throws exception if
                                   no valid data exists
+        test_smooth_hanning: test if hanning smoothing (direct convolution)
+                             handles flag information correctly
+        test_smooth_gaussian: test if gaussian smoothing (FFT convolution)
+                              handles flag information correctly
+        test_smooth_regrid: test if regridding (binning) handles flag
+                            information correctly
     """
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdaverage/'
@@ -2694,14 +2706,14 @@ class sdaverage_test_average_flag(unittest.TestCase):
         self.assertEqual(message, expected_message, msg='Exception contains unexpected message: "%s" (expected "%s")'%(message,expected_message))
 
     def test_smooth_hanning(self):
-        """"""
+        """test_smooth_hanning: test if hanning smoothing (direct convolution) handles flag information correctly"""
         outfile = self.prefix + '.asap'
         res = sdaverage(infile=self.rawfile, outfile=outfile, kernel='hanning')
 
         self._verify_smooth(outfile)
 
     def test_smooth_gaussian(self):
-        """"""
+        """test_smooth_gaussian: test if gaussian smoothing (FFT convolution) handles flag information correctly"""
         outfile = self.prefix + '.asap'
         res = sdaverage(infile=self.rawfile, outfile=outfile, kernel='gaussian')
 
@@ -2709,7 +2721,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
 
 
     def test_smooth_regrid(self):
-        """"""
+        """test_smooth_regrid: test if regridding (binning) handles flag information correctly"""
         outfile = self.prefix + '.asap'
         chanwidth = 2
         res = sdaverage(infile=self.rawfile, outfile=outfile, kernel='regrid', chanwidth=str(chanwidth))
