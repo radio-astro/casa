@@ -55,7 +55,25 @@ using namespace casa;
 using namespace casac;
 //end modification
 
+#define MYOUTS cout<<"start"<<endl;
+#define MYOUTE cout<<"end"<<endl;
+#define MYSTART {
+#define MYEND }
+
 namespace casac {
+
+class GILReleaser {
+public:
+  //expansion of macro Py_BEGIN_ALLOW_THREADS
+  GILReleaser(){_save = PyEval_SaveThread();};
+  //MYOUTS};//MYSTART};//Py_BEGIN_ALLOW_THREADS};
+
+  //expansion of macro Py_END_ALLOW_THREADS
+  ~GILReleaser(){PyEval_RestoreThread(_save);};
+  //MYOUTE};//MYEND};//Py_END_ALLOW_THREADS};
+private:
+  PyThreadState *_save;
+};
 
 table::table()
 {
@@ -86,14 +104,16 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
         //TableLock *itsLock = getLockOptions(tlock);
         if(nomodify){
             if(itsTable)close();
-            Py_BEGIN_ALLOW_THREADS
-            itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
-            Py_END_ALLOW_THREADS
+            {//the scope to release GIL
+	      GILReleaser a;
+	      itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
+	    }
         } else {
             if(itsTable)close();
-            Py_BEGIN_ALLOW_THREADS
-            itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
-            Py_END_ALLOW_THREADS
+            {//the scope to release GIL
+	      GILReleaser a;
+	      itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
+            }
         }
         delete tlock;
         rstat = True;
@@ -188,9 +208,10 @@ table::close()
 
  Bool rstat(False);
  try {
-    delete itsTable;
-    itsTable = 0;
-    rstat = True;
+   GILReleaser a;
+   delete itsTable;
+   itsTable = 0;
+   rstat = True;
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -585,9 +606,9 @@ table::name()
    *itsLog << LogOrigin(__func__, "");
    std::string myName("");
    if(itsTable){
-      Py_BEGIN_ALLOW_THREADS
-      myName = itsTable->table().tableName();
-      Py_END_ALLOW_THREADS
+     // GIL is released in this scope
+       GILReleaser a;
+       myName = itsTable->table().tableName();
    } else {
       *itsLog << LogIO::NORMAL << "No table opened." << LogIO::POST;
    }
@@ -674,10 +695,11 @@ table::query(const std::string& query, const std::string& name,
        taqlString << " orderby " << sortlist;
      if(!name.empty())
        taqlString << " giving \"" << name << "\"";
-     Py_BEGIN_ALLOW_THREADS
-     casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
-     rstat = new ::casac::table(theQTab);
-     Py_END_ALLOW_THREADS
+     {//the scope to release GIL
+       GILReleaser a;
+       casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
+       rstat = new ::casac::table(theQTab);
+     }
    } else {
      *itsLog << LogIO::WARN
              << "No table specified, please open first" << LogIO::POST;
@@ -888,10 +910,10 @@ table::colnames()
  std::vector<std::string> rstat(0);
  try {
 	 if(itsTable){
-            Py_BEGIN_ALLOW_THREADS
-            Vector<String> colNames = itsTable->columnNames();
-	    rstat = fromVectorString(colNames);
-            Py_END_ALLOW_THREADS
+	   //the scope to release GIL
+	   GILReleaser a;
+	   Vector<String> colNames = itsTable->columnNames();
+	   rstat = fromVectorString(colNames);
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -909,11 +931,11 @@ table::rownumbers(const ::casac::record& tab, const int nbytes)
  std::vector<int> rstat(0);
  try {
 	 if(itsTable){
-		 Py_BEGIN_ALLOW_THREADS
-		 TableProxy dummy;
-		 itsTable->rowNumbers(dummy).tovector(rstat);
-		 Py_END_ALLOW_THREADS
-		 // *itsLog << LogIO::WARN << "rownumbers not implemented" << LogIO::POST;
+	   //the scope to release GIL
+	   GILReleaser a;
+	   TableProxy dummy;
+	   itsTable->rowNumbers(dummy).tovector(rstat);
+	   // *itsLog << LogIO::WARN << "rownumbers not implemented" << LogIO::POST;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1041,10 +1063,10 @@ table::nrows()
  Int rstat(0);
  try {
 	 if(itsTable){
-	    Py_BEGIN_ALLOW_THREADS
+	   //the scope to release GIL
+	    GILReleaser a;
 	    Vector<Int> myshape = itsTable->shape();
 	    rstat = myshape[1];
-	    Py_END_ALLOW_THREADS
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1181,10 +1203,10 @@ table::getcell(const std::string& columnname, const int rownr)
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
-		 Py_BEGIN_ALLOW_THREADS
-		 ValueHolder theVal = itsTable->getCell(columnname, rownr);
-		 rstat = fromValueHolder(theVal);
-		 Py_END_ALLOW_THREADS
+	   //the scope to release GIL
+	   GILReleaser a;
+	   ValueHolder theVal = itsTable->getCell(columnname, rownr);
+	   rstat = fromValueHolder(theVal);
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1289,11 +1311,12 @@ table::putcell(const std::string& columnname, const std::vector<int>& rownr,
                 << LogIO::POST;
         return False;
       }
-      Py_BEGIN_ALLOW_THREADS
-      ValueHolder *aval = toValueHolder(thevalue);
-      itsTable->putCell(columnname, rownr, *aval);
-      delete aval;
-      Py_END_ALLOW_THREADS
+      {//the scope to release GIL
+	GILReleaser a;
+	ValueHolder *aval = toValueHolder(thevalue);
+	itsTable->putCell(columnname, rownr, *aval);
+	delete aval;
+      }
       return True;
     } else {
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
