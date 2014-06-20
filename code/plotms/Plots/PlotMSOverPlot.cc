@@ -1032,6 +1032,7 @@ bool PlotMSOverPlot::setIter( int index ){
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.setCurrentPageNum( index );
 		iter_ = index;
+
 		recalculateIteration();
 		successful = true;
 	}
@@ -1261,9 +1262,6 @@ void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 	// thread was canceled.
 	updatePlots();
 
-	// End cache log as needed.
-	if(itsTCLParams_.endCacheLog)
-		itsParent_->getLogger()->releaseMeasurement();
 
 	// Update display as needed.  Put this before update canvas so
 	// that the legend item keys will have the correct color.
@@ -1281,9 +1279,17 @@ void PlotMSOverPlot::cacheLoaded_(bool wasCanceled) {
 		releaseDrawing();
 	}
 
+
 	// Log number of points as needed.
-	if(itsTCLParams_.endCacheLog)
+	if(itsTCLParams_.endCacheLog){
 		logPoints();
+	}
+
+
+	// Report we are done
+	if(itsTCLParams_.endCacheLog){
+		itsParent_->getLogger()->releaseMeasurement();
+	}
 }
 
 } //namespace casa

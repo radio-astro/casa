@@ -144,7 +144,7 @@ public:
     	QFrame::setMinimumSize( width, height );
     }
 
-    bool isDrawing() const;
+    bool isDrawing( bool scripting );
 
     virtual void show(){
     	QFrame::show();

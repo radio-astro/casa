@@ -528,12 +528,27 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
     m_parent->logMethod(CLASS_NAME, "drawItems", false);
 }
 
-Bool QPLayeredCanvas::isDrawing() const {
-    return m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
+Bool QPLayeredCanvas::isDrawing( bool scripting ){
+	bool canvasDrawing = false;
+	if ( scripting ){
+		//Terminate the draw thread sooner rather than later if it is done.
+		if ( m_drawThread != NULL ){
+			if ( m_drawThread->isFinished() && !m_drawThread->isRunning()){
+				itemDrawingFinished();
+			}
+		}
+		bool threadRunning = (m_drawThread != NULL );
+		bool redrawing = (m_drawThread == NULL) && m_redrawWaiting;
+		canvasDrawing = ( threadRunning || redrawing );
+	}
+	else {
+		canvasDrawing = m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
+	}
+	return canvasDrawing;
 }
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
-        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
+        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& /*pf*/) const {
     m_parent->logMethod(CLASS_NAME, "printItems", true);
     
     // Determine total draw segments.
@@ -726,7 +741,9 @@ void QPLayeredCanvas::itemDrawingFinished() {
     // Finish logging.
     PlotLoggerPtr log;
     if(m_parent != NULL) log = m_parent->logger();
-    if(!log.null()) log->releaseMeasurement();
+    if(!log.null()) {
+    	log->releaseMeasurement();
+    }
 
     // Finish operation.
     PlotOperationPtr op;
