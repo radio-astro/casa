@@ -178,36 +178,53 @@ AveragingParameters::validate()
 void
 AveragingParameters::validateOptions ()
 {
-    if (averagingOptions_p.contains(AveragingOptions::AverageCorrected)){
 
-        Int bits  = AveragingOptions::CorrectedUseCorrectedWeights |
-                AveragingOptions::CorrectedUseNoWeights |
-                AveragingOptions::CorrectedUseWeights;
+    if (averagingOptions_p.contains(AveragingOptions::AverageObserved))
+    {
+
+        Int bits  = AveragingOptions::ObservedPlainAvg |
+                	AveragingOptions::ObservedFlagAvg |
+                	AveragingOptions::ObservedWeightAvgFromSIGMA |
+                	AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 
         Int nSet = averagingOptions_p.nSet (bits);
 
-        if (nSet == 0){
-            // jagonzal (CAS-5587): Sometimes WEIGHT_SPECTRUM exists but it is not defined
-            // averagingOptions_p |= AveragingOptions::CorrectedUseCorrectedWeights;
-            averagingOptions_p |= AveragingOptions::CorrectedUseNoWeights;
-        }
-        else{
-            averagingOptions_p |= AveragingOptions::CorrectedUseNoWeights;
-        }
+        ThrowIf (nSet > 1, "Inconsistent DATA weights options provided");
 
-        if (averagingOptions_p.contains(AveragingOptions::AverageModel)){
+        ThrowIf (nSet == 0, "Need to specify DATA weighting option");
+    }
 
-            Int bits  = AveragingOptions::ModelUseCorrectedWeights |
-                    AveragingOptions::ModelUseNoWeights |
-                    AveragingOptions::ModelUseWeights;
 
-            Int nSet = averagingOptions_p.nSet (bits);
+    if (averagingOptions_p.contains(AveragingOptions::AverageCorrected))
+    {
 
-            ThrowIf (nSet > 1,
-                     "Inconsistent model weights options provided");
+        Int bits  = AveragingOptions::CorrectedPlainAvg |
+                	AveragingOptions::CorrectedFlagAvg |
+                	AveragingOptions::CorrectedWeightAvgFromWEIGHT |
+                	AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
 
-            ThrowIf (nSet == 0, "Need to specify model data weighting option");
-        }
+        Int nSet = averagingOptions_p.nSet (bits);
+
+        ThrowIf (nSet > 1, "Inconsistent CORRECTED_DATA weights options provided");
+
+        ThrowIf (nSet == 0, "Need to specify CORRECTED_DATA weighting option");
+    }
+
+    if (averagingOptions_p.contains(AveragingOptions::AverageModel))
+    {
+
+        Int bits  = AveragingOptions::ModelPlainAvg |
+                	AveragingOptions::ModelFlagAvg |
+                	AveragingOptions::ModelWeightAvgFromWEIGHT |
+                	AveragingOptions::ModelWeightAvgFromSIGMA |
+                	AveragingOptions::ModelFlagWeightAvgFromWEIGHT |
+                	AveragingOptions::ModelFlagWeightAvgFromSIGMA;
+
+        Int nSet = averagingOptions_p.nSet (bits);
+
+        ThrowIf (nSet > 1, "Inconsistent MODEL_DATA weights options provided");
+
+        ThrowIf (nSet == 0, "Need to specify MODEL_DATA weighting option");
     }
 }
 

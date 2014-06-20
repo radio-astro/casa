@@ -1284,10 +1284,9 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
         result = ! columns_p.weightSpectrum_p.isNull() && columns_p.weightSpectrum_p.isDefined(0);
         break;
 
-    case WeightSpectrumCorrected:
+    case SigmaSpectrum:
 
-    	// jagonzal (CAS-5265): Sometimes WEIGHT_SPECTRUM exists but it is not defined
-        result = ! columns_p.weightSpectrumCorrected_p.isNull() && columns_p.weightSpectrumCorrected_p.isDefined(0);
+    	result = ! columns_p.sigmaSpectrum_p.isNull() && columns_p.sigmaSpectrum_p.isDefined(0);
         break;
 
     default:
@@ -2123,7 +2122,7 @@ VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
              (columnName == MS::columnName (MS::WEIGHT_SPECTRUM) && ! weightSpectrumExists ());
 
     noData = noData ||
-             (columnName == "CORRECTED_WEIGHT_SPECTRUM" && ! weightSpectrumCorrectedExists ());
+             (columnName == MS::columnName (MS::SIGMA_SPECTRUM) && ! sigmaSpectrumExists ());
 
     // Check to see if the column exist and have valid data
 
@@ -2586,15 +2585,15 @@ VisibilityIteratorImpl2::weightSpectrumExists () const
 }
 
 Bool
-VisibilityIteratorImpl2::weightSpectrumCorrectedExists () const
+VisibilityIteratorImpl2::sigmaSpectrumExists () const
 {
     if (msIter_p->newMS ()) { // Cache to avoid testing unnecessarily.
 
-        cache_p.msHasWeightSpectrumCorrected_p = columns_p.weightSpectrumCorrected_p.hasContent ();
+        cache_p.msHasSigmaSpectrum_p = columns_p.sigmaSpectrum_p.hasContent ();
 
     }
 
-    return cache_p.msHasWeightSpectrumCorrected_p;
+    return cache_p.msHasSigmaSpectrum_p;
 }
 
 void
@@ -2611,11 +2610,11 @@ VisibilityIteratorImpl2::weightSpectrum (Cube<Float> & spectrum) const
 }
 
 void
-VisibilityIteratorImpl2::weightSpectrumCorrected (Cube<Float> & spectrum) const
+VisibilityIteratorImpl2::sigmaSpectrum (Cube<Float> & spectrum) const
 {
-    if (weightSpectrumCorrectedExists ()) {
+    if (sigmaSpectrumExists ()) {
 
-        getColumnRows (columns_p.weightSpectrumCorrected_p, spectrum);
+        getColumnRows (columns_p.sigmaSpectrum_p, spectrum);
 
     }
     else {
@@ -2942,12 +2941,12 @@ VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum
 }
 
 void
-VisibilityIteratorImpl2::writeWeightSpectrumCorrected (const Cube<Float> & weightSpectrumCorrected)
+VisibilityIteratorImpl2::writeSigmaSpectrum (const Cube<Float> & sigmaSpectrum)
 {
     ThrowIf (! isWritable (), "This visibility iterator is not writable");
 
-    if (! columns_p.weightSpectrumCorrected_p.isNull ()) {
-        putColumnRows (columns_p.weightSpectrumCorrected_p, weightSpectrumCorrected);
+    if (! columns_p.sigmaSpectrum_p.isNull ()) {
+        putColumnRows (columns_p.sigmaSpectrum_p, sigmaSpectrum);
     }
 }
 

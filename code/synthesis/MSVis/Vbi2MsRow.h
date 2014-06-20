@@ -119,10 +119,10 @@ public:
     void setWeightSpectrum (Int correlation, Int channel, Float value);
     void setWeightSpectrum (const Matrix<Float> & value);
     const Matrix<Float> weightSpectrum () const;
-    Float weightSpectrumCorrected (Int correlation, Int channel) const;
-    const Matrix<Float> weightSpectrumCorrected () const;
-    void setWeightSpectrumCorrected (Int correlation, Int channel, Float value);
-    void setWeightSpectrumCorrected (const Matrix<Float> & value);
+    Float sigmaSpectrum (Int correlation, Int channel) const;
+    const Matrix<Float> sigmaSpectrum () const;
+    void setSigmaSpectrum (Int correlation, Int channel, Float value);
+    void setSigmaSpectrum (const Matrix<Float> & value);
 
     Bool isRowFlagged () const;
     const Matrix<Bool> flags () const;

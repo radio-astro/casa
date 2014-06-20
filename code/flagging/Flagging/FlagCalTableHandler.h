@@ -142,10 +142,8 @@ public:
     virtual void setWeightMat (const Matrix<Float>& value) {}
     virtual const Cube<Float> & weightSpectrum () const {Cube<Float> dummy; return dummy;}
     virtual void setWeightSpectrum (const Cube<Float>& value) {}
-    virtual const Cube<float>& weightSpectrumCorrected() const {Cube<Float> dummy; return dummy;}
-    virtual void setWeightSpectrumCorrected(const Cube<float>&) {}
-    virtual Float getWeightCorrectedScaled(Int, Int, Int) const { return 0.0f;};
-
+    virtual const Cube<float>& sigmaSpectrum() const {Cube<Float> dummy; return dummy;}
+    virtual void setSigmaSpectrum(const Cube<float>&) {}
     virtual const Cube<Complex> & visCube () const {Cube<Complex> dummy; return dummy;}
     virtual void setVisCube(const Complex & c) {}
     virtual void setVisCube (const Cube<Complex> &){}
@@ -196,6 +194,9 @@ public:
     virtual Float getWeightScaled (Int row) const { return 0;}
     virtual Float getWeightScaled (Int correlation, Int row) const { return 0;}
     virtual Float getWeightScaled (Int correlation, Int channel, Int row) const { return 0;}
+    virtual Float getSigmaScaled (Int row) const { return 0;}
+    virtual Float getSigmaScaled (Int correlation, Int row) const { return 0;}
+    virtual Float getSigmaScaled (Int correlation, Int channel, Int row) const { return 0;}
     virtual CountedPtr<vi::WeightScaling> getWeightScaling () const { return 0; }
 
 

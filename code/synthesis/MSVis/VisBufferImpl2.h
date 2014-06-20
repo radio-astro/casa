@@ -337,8 +337,8 @@ public:
     virtual void setWeight (const Matrix<Float>&);
     virtual const Cube<Float> & weightSpectrum () const;
     virtual void setWeightSpectrum (const Cube<Float>&);
-    virtual const Cube<Float> & weightSpectrumCorrected () const;
-    virtual void setWeightSpectrumCorrected (const Cube<Float>& value);
+    virtual const Cube<Float> & sigmaSpectrum () const;
+    virtual void setSigmaSpectrum (const Cube<Float>& value);
 
 protected:
 
@@ -420,18 +420,21 @@ protected:
     virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
     virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
-    virtual Cube<Float> & weightSpectrumCorrectedRef (); // [nC,nF,nR]
+    virtual Cube<Float> & sigmaSpectrumRef (); // [nC,nF,nR]
 
     Float getWeightScaled (Int row) const;
     Float getWeightScaled (Int correlation, Int row) const;
     Float getWeightScaled (Int correlation, Int channel, Int row) const;
-    virtual Float getWeightCorrectedScaled (Int correlation, Int channel, Int row) const;
+    Float getSigmaScaled (Int row) const;
+    Float getSigmaScaled (Int correlation, Int row) const;
+    Float getSigmaScaled (Int correlation, Int channel, Int row) const;
     virtual CountedPtr<WeightScaling> getWeightScaling () const;
     void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
                            Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,
                            const Subchunk & subchunk, const Vector<Int> & correlations,
                            CountedPtr <WeightScaling> weightScaling);
     Bool weightSpectrumPresent () const;
+    Bool sigmaSpectrumPresent () const;
 
 private:
 
@@ -511,7 +514,7 @@ private:
     virtual void fillWeight (Matrix<Float>& value) const;
     //virtual void fillWeightMat (Matrix<Float>& value) const;
     virtual void fillWeightSpectrum (Cube<Float>& value) const;
-    virtual void fillWeightSpectrumCorrected (Cube<Float>& value) const;
+    virtual void fillSigmaSpectrum (Cube<Float>& value) const;
 
     VisBufferCache * cache_p;
     VisBufferState * state_p;

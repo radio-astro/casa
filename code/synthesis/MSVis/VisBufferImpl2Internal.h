@@ -678,7 +678,7 @@ public:
     VbCacheItemArray <Matrix<Float> > weight_p;
     //VbCacheItemArray <Matrix<Float> > weightMat_p;
     VbCacheItemArray <Cube<Float> > weightSpectrum_p;
-    VbCacheItemArray <Cube<Float> > weightSpectrumCorrected_p;
+    VbCacheItemArray <Cube<Float> > sigmaSpectrum_p;
 
     CacheRegistry registry_p;
 

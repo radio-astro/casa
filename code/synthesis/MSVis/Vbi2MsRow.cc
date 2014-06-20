@@ -113,8 +113,8 @@ Vbi2MsRow::copy (Vbi2MsRow * other,
             & Vbi2MsRow::setObserved, & Vbi2MsRow::observed );
     copyIf (componentsToCopy.contains (vi::WeightSpectrum), other,
             & Vbi2MsRow::setWeightSpectrum, & Vbi2MsRow::weightSpectrum );
-    copyIf (componentsToCopy.contains (vi::WeightSpectrumCorrected), other,
-            & Vbi2MsRow::setWeightSpectrumCorrected, & Vbi2MsRow::weightSpectrumCorrected );
+    copyIf (componentsToCopy.contains (vi::SigmaSpectrum), other,
+            & Vbi2MsRow::setSigmaSpectrum, & Vbi2MsRow::sigmaSpectrum );
 }
 
 
@@ -449,9 +449,9 @@ Vbi2MsRow::weightSpectrum (Int correlation, Int channel) const
 
 
 Float
-Vbi2MsRow::weightSpectrumCorrected (Int correlation, Int channel) const
+Vbi2MsRow::sigmaSpectrum (Int correlation, Int channel) const
 {
-    return vbi2_p->weightSpectrumCorrected () (correlation, channel, row ());
+    return vbi2_p->sigmaSpectrum() (correlation, channel, row ());
 }
 
 
@@ -571,15 +571,15 @@ Vbi2MsRow::weightSpectrum () const
 }
 
 const Matrix<Float>
-Vbi2MsRow::weightSpectrumCorrected () const
+Vbi2MsRow::sigmaSpectrum () const
 {
-    return vbi2_p->weightSpectrumCorrected ().xyPlane (row());
+    return vbi2_p->sigmaSpectrum ().xyPlane (row());
 }
 
 void
-Vbi2MsRow::setWeightSpectrumCorrected (const Matrix<Float> & value)
+Vbi2MsRow::setSigmaSpectrum (const Matrix<Float> & value)
 {
-    vbi2_p->cache_p->weightSpectrumCorrected_p.getRef(False).xyPlane (row()) = value;
+    vbi2_p->cache_p->sigmaSpectrum_p.getRef(False).xyPlane (row()) = value;
 }
 
 ////////////////////////////////////////////////////////////
@@ -605,11 +605,11 @@ Vbi2MsRow::setWeightSpectrum (Int correlation, Int channel, Float value)
 
 
 void
-Vbi2MsRow::setWeightSpectrumCorrected (Int correlation, Int channel, Float value)
+Vbi2MsRow::setSigmaSpectrum (Int correlation, Int channel, Float value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->weightSpectrumCorrected_p.getRef (False)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->sigmaSpectrum_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 

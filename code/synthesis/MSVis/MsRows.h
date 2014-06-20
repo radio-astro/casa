@@ -213,8 +213,8 @@ public:
     virtual const Vector<Float> weight () const = 0;
     virtual Float weightSpectrum (Int correlation, Int channel) const = 0;
     virtual const Matrix<Float> weightSpectrum () const = 0;
-    virtual Float weightSpectrumCorrected (Int correlation, Int channel) const = 0;
-    virtual const Matrix<Float> weightSpectrumCorrected () const = 0;
+    virtual Float sigmaSpectrum (Int correlation, Int channel) const = 0;
+    virtual const Matrix<Float> sigmaSpectrum () const = 0;
 
     virtual Bool isRowFlagged () const = 0;
     virtual const Matrix<Bool> flags () const = 0;

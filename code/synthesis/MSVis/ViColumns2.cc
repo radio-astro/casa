@@ -31,7 +31,7 @@ ViColumns2::ViColumns2 ()
   uvw_p (),
   vis_p (),
   weightSpectrum_p (),
-  weightSpectrumCorrected_p (),
+  sigmaSpectrum_p (),
   weight_p (),
   floatDataFound_p (False)
 {}
@@ -83,12 +83,12 @@ ViColumns2::attachColumns (const Table & t, bool attachSpecialColumns)
 
     weight_p.attach (t, MS::columnName (MS::WEIGHT));
 
-    if (cds.isDefined ("WEIGHT_SPECTRUM")) {
-        weightSpectrum_p.attach (t, "WEIGHT_SPECTRUM");
+    if (cds.isDefined (MS::columnName (MS::WEIGHT_SPECTRUM))) {
+        weightSpectrum_p.attach (t, MS::columnName (MS::WEIGHT_SPECTRUM));
     }
 
-    if (cds.isDefined ("CORRECTED_WEIGHT_SPECTRUM")) {
-        weightSpectrumCorrected_p.attach (t, "CORRECTED_WEIGHT_SPECTRUM");
+    if (cds.isDefined (MS::columnName (MS::SIGMA_SPECTRUM))) {
+    	sigmaSpectrum_p.attach (t, MS::columnName (MS::SIGMA_SPECTRUM));
     }
 
     if (attachSpecialColumns){

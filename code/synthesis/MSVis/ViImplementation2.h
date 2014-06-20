@@ -357,12 +357,18 @@ public:
     // Determine whether WEIGHT_SPECTRUM exists.
 
     virtual Bool weightSpectrumExists () const = 0;
-    virtual Bool weightSpectrumCorrectedExists () const = 0;
+
+    // Determine whether SIGMA_SPECTRUM exists.
+
+    virtual Bool sigmaSpectrumExists () const = 0;
 
     // Return weightspectrum (a weight for each channel)
 
     virtual void weightSpectrum (Cube<Float> & wtsp) const = 0;
-    virtual void weightSpectrumCorrected (Cube<Float> & wtsp) const = 0;
+
+    // Return sgimaspectrum (a sigma for each channel)
+
+    virtual void sigmaSpectrum (Cube<Float> & wtsp) const = 0;
 
 
     virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling) = 0;
@@ -558,8 +564,8 @@ public:
     // Write/modify the weightSpectrum
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp) = 0;
 
-    // Write/modify the weightSpectrum
-    virtual void writeWeightSpectrumCorrected (const Cube<Float> & wtsp) = 0;
+    // Write/modify the sigmaSpectrum
+    virtual void writeSigmaSpectrum (const Cube<Float> & sigsp) = 0;
 
     // Write/modify the Sigma
     virtual void writeSigma (const Matrix<Float> & sig) = 0;

@@ -651,7 +651,7 @@ public:
 
   // Determine whether WEIGHT_SPECTRUM exists.
 
-  Bool weightSpectrumCorrectedExists() const;
+  Bool sigmaSpectrumExists() const;
 
   //reference to actual ms in interator
 
@@ -1029,9 +1029,9 @@ protected:
 
   virtual void weightSpectrum(Cube<Float>& wtsp) const;
 
-  // Return weightspectrumCorrected (a weight for each channel)
+  // Return sigmaspectrum (a sigma for each channel)
 
-  virtual void weightSpectrumCorrected(Cube<Float>& wtsp) const;
+  virtual void sigmaSpectrum(Cube<Float>& sigsp) const;
 
   // Returns a vector of the correlation types that were selected
   // into the current subchunk's data.  If Vector<Int> c = vi.getCorrelations();
