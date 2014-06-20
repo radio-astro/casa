@@ -334,6 +334,7 @@ protected:
 											Vector<Double> &intermediateChanFreq,
 											Vector<Double> &intermediateChanWidth);
 	void calculateWeightAndSigmaFactors();
+	void calculateNewWeightAndSigmaFactors();
 
 	// From selected MS
 	void checkFillFlagCategory();
@@ -923,6 +924,8 @@ protected:
 	map<Int,Int> numOfCombInterChanMap_p;
 	map<Int,Float> weightFactorMap_p;
 	map<Int,Float> sigmaFactorMap_p;
+	map<Int,Float> newWeightFactorMap_p;
+	map<Int,Float> newSigmaFactorMap_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;
