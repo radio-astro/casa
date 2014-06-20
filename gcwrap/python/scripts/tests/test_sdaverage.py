@@ -2524,6 +2524,36 @@ class sdaverage_test_average_flag(unittest.TestCase):
             vals = [tb.getcol(col) for col in cols]
         return vals
 
+    def _message_for_assert(self, val, ref, col, isshape, row, channel, refistol=False):
+        word = 'tolerance' if refistol else 'expected'
+        msg = '%s differ (%s %s result %s)'%(col,word,ref,val)
+        if isshape:
+            msg = 'shape of ' + msg
+        head = ''
+        if row is not None:
+            head = 'Row %s'%(row)
+        if channel is not None:
+            head = head + ' Channel %s'%(channel)
+        if len(head) > 0:
+            msg = head + ': ' + msg
+        #print msg
+        return msg
+    
+    def _assert_equal(self, val, ref, col, isshape=False, row=None, channel=None):
+        msg = self._message_for_assert(val, ref, col, isshape, row, channel)
+        self.assertEqual(val, ref, msg=msg)
+
+    def _assert_less(self, val, tol, col, isshape=False, row=None, channel=None):
+        msg = self._message_for_assert(val, tol, col, isshape, row, channel, refistol=True)
+        self.assertLess(val, tol, msg=msg)
+        
+    
+    def _verify_shape(self, expected_nrow, expected_nchan, flagrow, flagtra, spectra):
+        expected_shape = (expected_nchan,expected_nrow,)
+        self._assert_equal(len(flagrow), expected_nrow, 'FLAGROW', isshape=True)
+        self._assert_equal(list(flagtra.shape), list(expected_shape), 'FLAGTRA', isshape=True)
+        self._assert_equal(list(spectra.shape), list(expected_shape), 'SPECTRA', isshape=True)
+       
     def _verify_average(self, outfile):
         # get data before averaging
         flagrow_org, flagtra_org, spectra_org, interval_org = self._get_data(self.rawfile, ['INTERVAL'])
@@ -2535,10 +2565,8 @@ class sdaverage_test_average_flag(unittest.TestCase):
         # all data should be averaged into one row
         nrow = 1
         nchan = spectra_org.shape[0]
-        self.assertEqual(len(flagrow), nrow, msg='number of rows for outfile must be %s (was %s)'%(nrow, len(flagrow)))
-        self.assertEqual(flagtra.shape, (nchan,1,), msg='shape of FLAGTRA differ (expected %s result %s)'%([nchan,1], list(flagtra.shape)))
-        self.assertEqual(spectra.shape, (nchan,1,), msg='shape of SPECTRA differ (expected %s result %s)'%([nchan,1], list(spectra.shape)))
-        
+        self._verify_shape(1, nchan, flagrow, flagtra, spectra)
+
         # verify
         flagrow = flagrow[0]
         flagtra = flagtra[:,0]
@@ -2546,7 +2574,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
 
         # verify FLAGROW
         flagrow_expected = 0 if any(flagrow_org == 0) else 1
-        self.assertEqual(flagrow, flagrow_expected, msg='FLAGROW differ (expected %s result %s)'%(flagrow_expected, flagrow))
+        self._assert_equal(flagrow, flagrow_expected, 'FLAGROW')
 
         # verify FLAGTRA
         def gen_averaged_channelflag(rflag, chflag):
@@ -2554,7 +2582,8 @@ class sdaverage_test_average_flag(unittest.TestCase):
             for ichan in xrange(nchan):
                 yield 0 if any(rflag + chflag[ichan] == 0) else 128
         flagtra_expected = numpy.array(list(gen_averaged_channelflag(flagrow_org, flagtra_org)))
-        self.assertTrue(all(flagtra == flagtra_expected), msg='FLAGTRA differ (expected %s result %s)'%(flagtra_expected, flagtra))
+        for ichan in xrange(nchan):
+            self._assert_equal(flagtra_expected[ichan], flagtra[ichan], 'FLAGTRA', row=0, channel=ichan)
         
         # verify SPECTRA
         def gen_averaged_spectra(rflag, chflag, data, weight):
@@ -2581,7 +2610,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
                 ex = spectra_expected[ichan]
                 diff = abs((sp - ex) / ex)
                 #print ichan, diff
-                self.assertLess(diff, tol, msg='channel %s: spectral data differ (expected %s result %s relative difference %s)'%(ichan,ex,sp,diff))
+                self._assert_less(diff, tol, 'SPECTRA', row=0, channel=ichan)
             else:
                 print 'Skip channel %s since it is flagged'%(ichan)
 
@@ -2590,9 +2619,8 @@ class sdaverage_test_average_flag(unittest.TestCase):
         flagrow, flagtra, spectra = self._get_data(outfile)
 
         # basic check
-        self.assertEqual(flagrow_org.shape, flagrow.shape, msg='Shape of FLAGROW differ')
-        self.assertEqual(flagtra_org.shape, flagtra.shape, msg='Shape of FLAGTRA differ')
-        self.assertEqual(spectra_org.shape, spectra.shape, msg='Shape of SPECTRA differ')
+        nchan_expected,nrow_expected = flagtra_org.shape
+        self._verify_shape(nrow_expected, nchan_expected, flagrow, flagtra, spectra)
 
         nchan, nrow = spectra.shape
 
@@ -2600,22 +2628,24 @@ class sdaverage_test_average_flag(unittest.TestCase):
             # FLAGROW should not be modified
             rflag_ref = flagrow_org[irow]
             rflag = flagrow[irow]
-            self.assertEqual(rflag, rflag_ref, msg='Row %s: FLAGROW differ (expected %s result %s)'%(irow, rflag_ref, rflag))
+            self._assert_equal(rflag_ref, rflag, 'FLAGROW', row=irow)
 
             # FLAGTRA should not be modified
             flag_ref = flagtra[:,irow]
             flag = flagtra[:,irow]
-            self.assertTrue(all(flag == flag_ref), msg='Row %s: FLAGTRA differ (expected %s result %s)'%(irow, flag_ref, flag))
+            for ichan in xrange(nchan):
+                self._assert_equal(flag_ref[ichan], flag[ichan], 'FLAGTRA', row=irow, channel=ichan)
 
             # verify SPECTRA
             sp_ref = spectra_org[:,irow]
             sp = spectra[:,irow]
             if rflag != 0:
                 # flagged row should not be processed
-                self.assertTrue(all(sp == sp_ref), msg='Row %s: SPECTRA differ (expected %s result %s)'%(irow, sp_ref, sp))
+                for ichan in xrange(nchan):
+                    self._assert_equal(sp_ref[ichan], sp[ichan], 'SPECTRA', row=irow, channel=ichan)
             else:
                 # Here, what should be tested is spurious data (at flagged
-                # channels are replaced with the value interpolated from
+                # channels) are replaced with the value interpolated from
                 # neighbors. Tolerance is set to loose value to avoid false
                 # failue due to unexpected behavior of FFT based smoothing.
                 tol = 1.0e1
@@ -2623,7 +2653,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
                 sp_expected = sp_ref.copy()
                 sp_expected[:] = sp_ref[0]
                 diff = abs((sp - sp_expected) / sp_expected)
-                self.assertLess(max(diff), tol, msg='Row %s: SPECTRA differ (expected %s result %s)'%(irow, sp_expected, sp))
+                self._assert_less(max(diff), tol, 'SPECTRA', row=irow)
         
     def _verify_regrid(self, outfile, chanwidth):
         flagrow_org, flagtra_org, spectra_org = self._get_data(self.rawfile)
@@ -2632,49 +2662,61 @@ class sdaverage_test_average_flag(unittest.TestCase):
         # basic check
         nchan_org, nrow = spectra_org.shape
         nchan_expected = int(numpy.ceil(float(nchan_org) / float(chanwidth)))
-        shape_expected = (nchan_expected,nrow)
-        self.assertEqual(flagrow_org.shape, flagrow.shape, msg='Shape of FLAGROW differ (expected %s result %s)'%(len(flagrow_org),len(flagrow)))
-        self.assertEqual(shape_expected, flagtra.shape, msg='Shape of FLAGTRA differ (expected %s result %s)'%(list(shape_expected),list(flagtra.shape)))
-        self.assertEqual(shape_expected, spectra.shape, msg='Shape of SPECTRA differ (expected %s result %s)'%(list(shape_expected),list(spectra.shape)))
+        self._verify_shape(nrow, nchan_expected, flagrow, flagtra, spectra)
 
         nchan, nrow = spectra.shape
 
-        # generator for FLAGTRA
+        # generator for FLAGTRA and SPECTRA
         def gen_flagtra(flag, w):
             nchan = len(flag)
             width = int(w)
             for i in xrange(0, nchan, width):
                 yield 0 if any(flag[i:i+w] == 0) else 128
+                
+        def gen_spectra(sp, flag, w):
+            nchan = len(sp)
+            width = int(w)
+            for i in xrange(0, nchan, width):
+                s = sp[i:i+w]
+                f = [1.0 if _f == 0 else 0.0 for _f in flag[i:i+w]]
+                sumf = sum(f)
+                if sumf == 0.0:
+                    yield 0.0
+                else:
+                    yield sum(s * f) / sum(f) 
 
         # verify
         for irow in xrange(nrow):
             # FLAGROW should not be modified
             rflag_ref = flagrow_org[irow]
             rflag = flagrow[irow]
-            self.assertEqual(rflag, rflag_ref, msg='Row %s: FLAGROW differ (expected %s result %s)'%(irow, rflag_ref, rflag))
+            self._assert_equal(rflag_ref, rflag, 'FLAGROW', row=irow)
 
             # FLAGTRA is combined with OR operation
             flag_ref = numpy.array(list(gen_flagtra(flagtra_org[:,irow], chanwidth)))
             flag = flagtra[:,irow]
-            self.assertTrue(all(flag == flag_ref), msg='Row %s: FLAGTRA differ (expected %s result %s)'%(irow, flag_ref, flag))
+            #print irow, flag_ref, flag
+            for ichan in xrange(nchan):
+                self._assert_equal(flag_ref[ichan], flag[ichan], 'FLAGTRA', row=irow, channel=ichan)
 
-        ##     # verify SPECTRA
-        ##     sp_ref = spectra_org[:,irow]
-        ##     sp = spectra[:,irow]
-        ##     if rflag != 0:
-        ##         # flagged row should not be processed
-        ##         self.assertTrue(all(sp == sp_ref), msg='Row %s: SPECTRA differ (expected %s result %s)'%(irow, sp_ref, sp))
-        ##     else:
-        ##         # Here, what should be tested is spurious data (at flagged
-        ##         # channels are replaced with the value interpolated from
-        ##         # neighbors. Tolerance is set to loose value to avoid false
-        ##         # failue due to unexpected behavior of FFT based smoothing.
-        ##         tol = 1.0e1
-                
-        ##         sp_expected = sp_ref.copy()
-        ##         sp_expected[:] = sp_ref[0]
-        ##         diff = abs((sp - sp_expected) / sp_expected)
-        ##         self.assertLess(max(diff), tol, msg='Row %s: SPECTRA differ (expected %s result %s)'%(irow, sp_expected, sp))
+            # verify SPECTRA
+            sp_ref = numpy.array(list(gen_spectra(spectra_org[:,irow],
+                                                  flagtra_org[:,irow],
+                                                  chanwidth)))
+            sp = spectra[:,irow]
+            
+            # ignore FLAG_ROW, all rows are processed
+            tol = 1.0e-6
+
+            for ichan in xrange(nchan):
+                val = sp[ichan]
+                ref = sp_ref[ichan]
+                if ref == 0.0:
+                    self._assert_equal(ref, val, 'SPECTRA', row=irow, channel=ichan)
+                else:
+                    diff = abs((val - ref) / ref)
+                    #print irow, ichan,  diff
+                    self._assert_less(diff, tol, 'SPECTRA', row=irow, channel=ichan)
 
     def test_average_flag(self):
         """test_average_flag: test if average handles flag information properly"""
