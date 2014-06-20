@@ -10,6 +10,7 @@
  * @version 
  Note to self what happens when we open another table if one is already opened?
  ***/
+#include <Python.h>
 
 #include <iostream>
 #include <table_cmpt.h>
@@ -85,10 +86,14 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
         //TableLock *itsLock = getLockOptions(tlock);
         if(nomodify){
             if(itsTable)close();
+            Py_BEGIN_ALLOW_THREADS
             itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
+            Py_END_ALLOW_THREADS
         } else {
             if(itsTable)close();
+            Py_BEGIN_ALLOW_THREADS
             itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
+            Py_END_ALLOW_THREADS
         }
         delete tlock;
         rstat = True;
@@ -580,7 +585,9 @@ table::name()
    *itsLog << LogOrigin(__func__, "");
    std::string myName("");
    if(itsTable){
+      Py_BEGIN_ALLOW_THREADS
       myName = itsTable->table().tableName();
+      Py_END_ALLOW_THREADS
    } else {
       *itsLog << LogIO::NORMAL << "No table opened." << LogIO::POST;
    }
@@ -667,8 +674,10 @@ table::query(const std::string& query, const std::string& name,
        taqlString << " orderby " << sortlist;
      if(!name.empty())
        taqlString << " giving \"" << name << "\"";
+     Py_BEGIN_ALLOW_THREADS
      casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
      rstat = new ::casac::table(theQTab);
+     Py_END_ALLOW_THREADS
    } else {
      *itsLog << LogIO::WARN
              << "No table specified, please open first" << LogIO::POST;
@@ -879,8 +888,10 @@ table::colnames()
  std::vector<std::string> rstat(0);
  try {
 	 if(itsTable){
+            Py_BEGIN_ALLOW_THREADS
             Vector<String> colNames = itsTable->columnNames();
 	    rstat = fromVectorString(colNames);
+            Py_END_ALLOW_THREADS
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -898,8 +909,10 @@ table::rownumbers(const ::casac::record& tab, const int nbytes)
  std::vector<int> rstat(0);
  try {
 	 if(itsTable){
+		 Py_BEGIN_ALLOW_THREADS
 		 TableProxy dummy;
 		 itsTable->rowNumbers(dummy).tovector(rstat);
+		 Py_END_ALLOW_THREADS
 		 // *itsLog << LogIO::WARN << "rownumbers not implemented" << LogIO::POST;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
@@ -1028,8 +1041,10 @@ table::nrows()
  Int rstat(0);
  try {
 	 if(itsTable){
+	    Py_BEGIN_ALLOW_THREADS
 	    Vector<Int> myshape = itsTable->shape();
 	    rstat = myshape[1];
+	    Py_END_ALLOW_THREADS
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1166,8 +1181,10 @@ table::getcell(const std::string& columnname, const int rownr)
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
+		 Py_BEGIN_ALLOW_THREADS
 		 ValueHolder theVal = itsTable->getCell(columnname, rownr);
 		 rstat = fromValueHolder(theVal);
+		 Py_END_ALLOW_THREADS
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1272,10 +1289,11 @@ table::putcell(const std::string& columnname, const std::vector<int>& rownr,
                 << LogIO::POST;
         return False;
       }
-
+      Py_BEGIN_ALLOW_THREADS
       ValueHolder *aval = toValueHolder(thevalue);
       itsTable->putCell(columnname, rownr, *aval);
       delete aval;
+      Py_END_ALLOW_THREADS
       return True;
     } else {
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
