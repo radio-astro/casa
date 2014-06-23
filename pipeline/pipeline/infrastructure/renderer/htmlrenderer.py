@@ -2623,8 +2623,9 @@ class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
 
         htmlreports = {}
         for result in results:
-#            if not hasattr(result, 'flagcmdfile'):
-#                continue
+            if not hasattr(result, 'table'):
+                # empty result
+                continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
