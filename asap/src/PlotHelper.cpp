@@ -23,9 +23,11 @@
 
 #include "PlotHelper.h"
 
-//#ifndef KS_DEBUG
-//#define KS_DEBUG
-//#endif
+#define SMALL_ANGLE 1.0e-7
+
+// #ifndef KS_DEBUG
+// #define KS_DEBUG
+// #endif
 
 using namespace std ;
 using namespace casa ;
@@ -100,6 +102,9 @@ DirectionCoordinate PlotHelper::getSTCoord(const int nx, const int ny,
   centy = 0.5 * (ymin + ymax);
   incx = abs(xmax - xmin) / (double) nx * cos(centy);
   incy = abs(ymax - ymin) / (double) ny;
+  // Direction coordinate seems not work well with inc=0. set very small value.
+  if (incx == 0.) incx = SMALL_ANGLE;
+  if (incy == 0.) incy = SMALL_ANGLE;
   // Generate a temporal direction coordinte
   coord = DirectionCoordinate(mdt, ptype,
 				centx, centy, incx, incy, xform,
@@ -265,9 +270,10 @@ void PlotHelper::setGridParam(const int nx, const int ny,
 #ifdef KS_DEBUG
     cout << "- got centpix [" << centpix[0] << ", " << centpix[1] << "]" <<endl;
 #endif
-    Double wx = max( abs(stxmax-centpix[0]), abs(stxmin-centpix[0]) )
+    // Direction coordinate seems not work well with inc=0. set very small value. 
+    Double wx = max( max( abs(stxmax-centpix[0]), abs(stxmin-centpix[0]) ), 0.5 )
       * 2 * stincx.getValue("rad");
-    Double wy = max( abs(stymax-centpix[1]), abs(stymin-centpix[1]) )
+    Double wy = max( max( abs(stymax-centpix[1]), abs(stymin-centpix[1]) ), 0.5 )
       * 2 * stincy.getValue("rad");
     incx = wx / max(nx - 1., 1.);
     incy = wy / max(ny - 1., 1.);
