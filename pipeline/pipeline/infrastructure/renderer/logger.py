@@ -357,6 +357,8 @@ class Plot(object):
         # Set the command to perform. The module defines whether to use sips
         # or ImageMagick; all that remains is to append, in order, the output
         # and input files
+        LOG.trace('Creating thumbnail with %s(%s, %s)',
+                  THUMBNAIL_CMD, self.abspath, thumb_file)
         cmd = THUMBNAIL_CMD(self.abspath, thumb_file)
 
         try:

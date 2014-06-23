@@ -3197,18 +3197,26 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
     @staticmethod
     def get_brightest_field(ms, intent='TARGET'):
         # get IDs for all science spectral windows
-        science_spws = ms.get_spectral_windows()
-        spw_ids = [spw.id for spw in science_spws]
-    
-        # define a function that returns the field IDs observed in a scan
-        f = lambda scan: ','.join(map(str, sorted([int(field.id) for field in scan.fields])))
-        
-        # find science scans
-        target_scans = ms.get_scans(scan_intent=intent)    
-        # sort the list of scans by the field names. The list must be sorted
-        # using the same function subsequently passed to groupby
-        sorted_scans = sorted(target_scans, key=f)
-    
+        spw_ids = set()
+        for scan in ms.get_scans(scan_intent=intent):
+            scan_spw_ids = set([dd.spw.id for dd in scan.data_descriptions])
+            spw_ids.update(scan_spw_ids)
+
+        if intent == 'TARGET':
+            science_ids = set([spw.id for spw in ms.get_spectral_windows()])
+            spw_ids = spw_ids.intersection(science_ids)
+
+        fields = ms.get_fields(intent=intent)
+
+        # give the sole science target name if there's only one science target
+        # in this ms.
+        if len(fields) is 1:
+            LOG.info('Only one %s target. Bypassing brightest target '
+                     'selection.', intent)
+            return fields[0].name
+
+        field_ids = set([(f.id, f.name) for f in fields])
+
         # holds the mapping of field name to mean flux 
         average_flux = {}
     
@@ -3220,39 +3228,30 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
             'spw'        : ','.join(map(str, spw_ids)),
         }
     
-        # give the sole science target name if there's only one science target
-        # in this ms.
-        # collapse groupby iterator immediately so we can perform len comparison 
-        field_scan_groups = list(itertools.groupby(sorted_scans, f))
-        if len(field_scan_groups) is 1:
-            LOG.info('Only one science target. '
-                     'Bypassing brightest target selection')
-            return ''.join([f.name for f in sorted_scans[0].fields])
-    
-        LOG.info('Calculating which science target has the brightest mean flux')
+        LOG.info('Calculating which %s field has the highest mean flux',
+                 intent)
         # run visstat for each scan selection for the target
-        for field_id, scangroup in itertools.groupby(sorted_scans, f):
-            scan_ids = [scan.id for scan in scangroup]
-            job_params['scan'] = ','.join(map(str, scan_ids))
+        for field_id, field_name in field_ids:
+            job_params['field'] = str(field_id)
             job = casa_tasks.visstat(**job_params)
-            LOG.debug('Calculating mean flux for field %r', field_id)
+            LOG.debug('Calculating statistics for %r (%s)', field_name, field_id)
             result = job.execute(dry_run=False)
             
-            average_flux[field_id] = float(result['CORRECTED']['mean'])
+            average_flux[(field_id, field_name)] = float(result['CORRECTED']['mean'])
             
-        LOG.debug('Mean flux for science targets:')
-        for k, v in average_flux.items():
-            LOG.debug('\t%s: %s', k, v)
+        LOG.debug('Mean flux for %s targets:', intent)
+        for (field_id, field_name), v in average_flux.items():
+            LOG.debug('\t%r (%s): %s', field_name, field_id, v)
     
         # find the ID of the field with the highest average flux
         sorted_by_flux = sorted(average_flux.iteritems(), 
                                 key=operator.itemgetter(1),
                                 reverse=True)
-        brightest_field, highest_flux = sorted_by_flux[0]
+        (brightest_id, brightest_name), highest_flux = sorted_by_flux[0]
         
-        LOG.info('%s field %s has highest average flux (%s)', intent,
-                 brightest_field, highest_flux)
-        return brightest_field
+        LOG.info('%s field %r (%s) has highest mean flux (%s)', intent,
+                 brightest_name, brightest_id, highest_flux)
+        return brightest_id
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():

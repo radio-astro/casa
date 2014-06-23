@@ -45,13 +45,40 @@ class PlotmsLeaf(object):
             scan = ','.join([str(s.id) for s in scans])
         self._scan = scan
 
-        # use field name rather than ID if possible
+        # use field name rather than ID where possible
+        field_label = None
         if field != '':
-            domain_fields = self._ms.get_fields(field)
-            idents = [f.name if f.name else f.id for f in domain_fields]
-            field = ','.join(idents)
-        self._field = field
+            matching = self._ms.get_fields(field)
 
+            if len(matching) is 1:
+                field_name = matching[0].name
+                field_id = matching[0].id
+                # in case the arg is an ID, check that returned field doesn't
+                # contain a duplicate name
+                matching_by_name = self._ms.get_fields(field_name)
+                if len(matching_by_name) is 1:
+                    # if the argument was the field ID but the field name is 
+                    # unique. Therefore, we can use the field name.
+                    field = field_name
+                    field_label = field_name
+                    LOG.trace('One field found for search term %r and name '
+                              'appears unique. Using %r as field identifier',
+                              field, field_label)
+                else:
+                    # if the argument was the field ID but the field name is 
+                    # not unique, prepend the ID with the field name
+                    field_label = '%s (field #%s)' % (field_name, field_id)
+                    LOG.trace('One field found for search term %r but name '
+                              'also refers to other fields. Using %r as field '
+                              'identifier', field, field_label)
+            else:
+                LOG.trace('More than one field found for search term %r. '
+                          'Using %r as field identifier', field, field)
+                field_label = field
+
+        self._field = str(field)
+        self._field_label = str(field_label)
+        
         # use antenna name rather than ID if possible
         if ant != '':
             domain_antennas = self._ms.get_antenna(ant)
@@ -78,7 +105,7 @@ class PlotmsLeaf(object):
             'x'        : self._xaxis,
             'y'        : self._yaxis,
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
-            'field'    : '' if self._field == '' else '-%s' % filenamer.sanitize(self._field.replace(',','_')),
+            'field'    : '' if self._field_label == '' else '-%s' % filenamer.sanitize(self._field_label.replace(',','_')),
             'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
         }
 
@@ -89,17 +116,20 @@ class PlotmsLeaf(object):
             spws = ['%0.2d' % int(spw) for spw in string.split(str(self._spw), ',')]
             fileparts['spw'] = 'spw%s-' % '_'.join(spws)
 
-        # some filesystems have limits on the length of the filenames. Mosaics
-        # can exceed this limit due to including the names of all the field.
-        # Truncate over-long field components while keeping them unique by
-        # replacing them with the hash of the component  
-        if len(fileparts['field']) > 19:
-            fileparts['field'] = '-%s' % str(hash(fileparts['field']))
-        
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
 
         png = '{vis}{field}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
+
+        # Maximum filename size for Lustre filesystems is 255 bytes. Mosaics
+        # can exceed this limit due to including the names of all the field.
+        # Truncate over-long field components while keeping them unique by
+        # replacing them with the hash of the component          
+        if len(png) > 251: # 255 - '.png'
+            png_hash = str(hash(png)) 
+            LOG.info('Truncating plot filename to avoid filesystem limit.\n'
+                     'Old: %s\nNew: %s', png, png_hash)
+            png = '%s.png' % png_hash
 
         return os.path.join(self._context.report_dir, 
                             'stage%s' % self._result.stage_number,
@@ -118,7 +148,7 @@ class PlotmsLeaf(object):
         parameters={'vis' : self._vis}
 
         if self._field != '':
-            parameters['field'] = self._field
+            parameters['field'] = self._field_label
 
         if self._baseband != '':
             parameters['baseband'] = self._baseband
