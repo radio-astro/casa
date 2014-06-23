@@ -60,8 +60,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 newflags += self.generate_flags(image, rules)
 
             # set any flags raised
-            LOG.info('Iteration %s raised %s flagging commands' % \
-	        (iter, len(newflags)))
+            if newflags:
+                LOG.warning('Iteration %s raised %s flagging commands' % \
+                  (iter, len(newflags)))
+            else:
+                LOG.info('Iteration %s raised %s flagging commands' % \
+                  (iter, len(newflags)))
             flagsettertask.flags_to_set(newflags)
             ignore = self._executor.execute(flagsettertask)
 
@@ -508,8 +512,12 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 newflags += self.generate_flags(image, rules, intent)
 
             # set any flags raised
-            LOG.info('Iteration %s raised %s flagging commands' % \
-	        (iter, len(newflags)))
+            if newflags:
+                LOG.warning('Iteration %s raised %s flagging commands' % \
+                  (iter, len(newflags)))
+            else:
+                LOG.info('Iteration %s raised %s flagging commands' % \
+                  (iter, len(newflags)))
             flagsettertask.flags_to_set(newflags)
             ignore = self._executor.execute(flagsettertask)
 
