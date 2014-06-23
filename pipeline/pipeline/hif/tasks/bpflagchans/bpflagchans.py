@@ -8,6 +8,7 @@ import re
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.casatools as casatools
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
 from .resultobjects import BandpassflagResults
@@ -119,6 +120,21 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        # check that BANDPASS and PHASE intent data are not the same scans
+        ms = inputs.context.observing_run.get_ms(name=inputs.vis)
+        bandpass_scans = [scan.id for scan in ms.scans if 'BANDPASS' in scan.intents]
+        phase_scans = [scan.id for scan in ms.scans if 'PHASE' in scan.intents]
+        bandpass_scans.sort()
+        phase_scans.sort()
+
+        if bandpass_scans==phase_scans:
+            LOG.error('%s BANDPASS and PHASE data identical - bpflagchans aborting' %
+              os.path.basename(inputs.vis))
+            return BandpassflagResults()
+        else:
+            LOG.info('%s BANDPASS scans %s differ from PHASE scans %s - safe to proceed' %
+             (os.path.basename(inputs.vis), bandpass_scans, phase_scans))
+
         # Construct the task that will read the data and create the
         # view of the data that is the basis for flagging.
         datainputs = BandpassflagchansWorkerInputs(context=inputs.context,
@@ -129,8 +145,8 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.vis, inpfile=[])
-#          vis=inputs.vis, table=inputs.caltable, inpfile=[])
+#          vis=inputs.vis, table=inputs.vis, inpfile=[])
+          vis=inputs.vis, table=inputs.caltable, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
@@ -184,9 +200,7 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
           vis=inputs.vis,
           mode='channel',
           intent='PHASE',
-          solint='inf,7.8125MHz',
           minsnr=0.0,
-          maxchannels=0,
           qa2_intent='',
           run_qa2=False)
         name = view_inputs.caltable
@@ -237,19 +251,26 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
         npols = len(corr_type)
         pols = np.arange(npols)
 
-        # get number of channels for target spw - need to get these from 
-        # bpcal table itself as channels may have been averaged
+        # get the frequency axis for this spectral window
+        # need to get this info from bpcal table itself as channels may
+        # have been averaged
         nchan = None
-        for row in bptable.rows:
-            rowspw=row.get('SPECTRAL_WINDOW_ID')
-            if rowspw == spwid:
-                data = row.get('CPARAM')
-                nchan = np.shape(data)[1]
-                break
-
-        # no data for target spwid - EARLY RETURN
-        if nchan is None:
-            return
+        spwtablename = '%s/SPECTRAL_WINDOW' % bptable.name
+        with casatools.TableReader(spwtablename) as table:
+            freqs = table.getcell('CHAN_FREQ', spwid)
+            nchan = len(freqs)
+            frequnits = table.getcolkeyword('CHAN_FREQ', 'QuantumUnits')[0]
+            # make numbers sensible
+            if frequnits=='Hz':
+                if np.median(freqs) > 1.0e9:
+                     freqs /= 1.0e9
+                     frequnits = 'GHz'
+                elif np.median(freqs) > 1.0e6:
+                     freqs /= 1.0e6
+                     frequnits = 'MHz'
+                elif np.median(freqs) > 1.0e3:
+                     freqs /= 1.0e3
+                     frequnits = 'kHz'
 
         # arrays to hold view for this spw
         viewdata = np.zeros([npols, nchan, antenna_ids[-1]+1])
@@ -268,12 +289,17 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
                 antid = row.get('ANTENNA1')
                 viewdata[pol,:,antid] = np.abs(data[pol,:,0])
                 viewflag[pol,:,antid] = np.abs(flag[pol,:,0])
- 
+
         # lastly, construct the view objects
         axes = [commonresultobjects.ResultAxis(name='Channels',
           units='', data=np.arange(nchan)),
           commonresultobjects.ResultAxis(name='Antenna1',
           units='id', data=np.arange(antenna_ids[-1]+1))]
+# following has freq axis instead of channels
+#        axes = [commonresultobjects.ResultAxis(name='Frequency',
+#          units=frequnits, data=freqs),
+#          commonresultobjects.ResultAxis(name='Antenna1',
+#          units='id', data=np.arange(antenna_ids[-1]+1))]
 
         for pol in pols:
             viewresult = commonresultobjects.ImageResult(
