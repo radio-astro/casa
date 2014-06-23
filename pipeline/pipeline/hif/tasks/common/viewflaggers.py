@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import numpy as np
 
 from . import arrayflaggerbase
@@ -61,11 +62,11 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
             # set any flags raised
             if newflags:
-                LOG.warning('Iteration %s raised %s flagging commands' % \
-                  (iter, len(newflags)))
+                LOG.warning('%s iteration %s raised %s flagging commands' % \
+                  (os.path.basename(inputs.vis), iter, len(newflags)))
             else:
-                LOG.info('Iteration %s raised %s flagging commands' % \
-                  (iter, len(newflags)))
+                LOG.info('%s iteration %s raised %s flagging commands' % \
+                  (os.path.basename(inputs.vis), iter, len(newflags)))
             flagsettertask.flags_to_set(newflags)
             ignore = self._executor.execute(flagsettertask)
 
@@ -513,11 +514,11 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
             # set any flags raised
             if newflags:
-                LOG.warning('Iteration %s raised %s flagging commands' % \
-                  (iter, len(newflags)))
+                LOG.warning('%s iteration %s raised %s flagging commands' % \
+                  (os.path.basename(inputs.vis), iter, len(newflags)))
             else:
-                LOG.info('Iteration %s raised %s flagging commands' % \
-                  (iter, len(newflags)))
+                LOG.info('%s iteration %s raised %s flagging commands' % \
+                  (os.path.basename(inputs.vis), iter, len(newflags)))
             flagsettertask.flags_to_set(newflags)
             ignore = self._executor.execute(flagsettertask)
 
