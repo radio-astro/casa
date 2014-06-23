@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="plotxy" category="visualization, editing, information, manipulation" async="never">
+        <shortdescription>An X-Y plotter/interactive flagger for visibility data.</shortdescription>
+	
+	<description>
+             Selected data can be flexibly plotted with a wide variety
+	     of axes and averaging options, including iteration over
+	     antennas and fields.  Data may be listed, flagged or
+	     unflagged interactively.  The plots can be zoomed and
+	     also saved to a file.  
+
+             It is advisable to run flagmanager before using plotxy to
+	     flag data in order to save the current flag state before
+	     altering:
+	     flagmanager(vis='vis_name',mode='save',versionname='before_plotxy',
+	     comment=versionname)
+	
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true" kind="ms">
+			<description>Name of input visibility dataset</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="xaxis">
+			<description>X-axis: def = \'time\': see help for options</description>
+                       <value>time</value>
+                       <allowed kind="enum">
+                       <value>azimuth</value>
+                       <value>elevation</value>
+                       <value>hourangle</value>
+                       <value>parallacticangle</value>
+                       <value>baseline</value>
+                       <value>chan</value>
+                       <value>channel</value>
+                       <value>corr</value>
+                       <value>correlation</value>
+                       <value>freq</value>
+                       <value>frequency</value>
+                       <value>time</value>
+                       <value>velocity</value>
+                       <value>vel</value>
+                       <value>velo</value>
+                       <value>u</value>
+                       <value>v</value>
+                       <value>w</value>
+                       <value>uvdist</value>
+                       <value>x</value>
+                       <value>amp</value>
+                       <value>phase</value>
+                       <value>real</value>
+                       <value>imag</value>
+                       <value>weight</value>
+                       </allowed>
+
+		</param>
+
+		<param type="string" name="yaxis">
+			<description>Y-axis: def = \'amp\': see help for options</description>
+                       <value>amp</value>
+                       <allowed kind="enum">
+                       <value>azimuth</value>
+                       <value>elevation</value>
+                       <value>hourangle</value>
+                       <value>parallacticangle</value>
+                       <value>baseline</value>
+                       <value>corr</value>
+                       <value>correlation</value>
+                       <value>u</value>
+                       <value>v</value>
+                       <value>w</value>
+                       <value>uvdist</value>
+                       <value>amp</value>
+                       <value>phase</value>
+                       <value>real</value>
+                       <value>imag</value>
+                       <value>weight</value>
+                       <value>time</value>
+                       </allowed>
+		</param>
+
+		<param type="string" name="datacolumn" subparam="true">
+			<description>data (raw), corrected, model, residual (corrected - model)</description>
+			<value>data</value>
+			<allowed kind="enum">
+			<value>data</value>
+			<value>corrected</value>
+			<value>model</value>
+			<value>residual</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="iteration">
+			<description>Plot separate panels by field, antenna, baseline, scan, feed</description>
+			<value></value>
+		</param>
+
+		<param type="bool" name="selectdata">
+			<description>More data selection parameters (antenna, timerange etc)</description>
+			<value>True</value>
+		</param>
+
+		<param type="string" name="antenna" subparam="true">
+			<description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="spw">
+			<description>Spectral windows:channels: \'\'==>all, spw=\'2:5~57\'</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="field">
+			<description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="uvrange" subparam="true">
+			<description>uv range: \'\'==>all; uvrange = \'0~100klambda\'</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="timerange" subparam="true">
+			<description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="correlation" subparam="true">
+			<description>correlations: \'\'==>all, correlations=\'RR LL\'</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="scan" subparam="true">
+			<description>scan numbers: \'\'==>all</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="feed" subparam="true">
+			<description>multi-feed numbers: Not yet implemented</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="array" subparam="true">
+			<description>(sub)array numbers: \'\'==>all</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="averagemode">
+			<description>Select averaging type: \'vector\', \'scalar\'</description>
+			<value></value>
+			<allowed kind="enum">
+			   <value></value>
+			   <value>vector</value>
+			   <value>scalar</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="width" subparam="true">
+			<description>number of channels to average, default: \'1\', Also: \'all\', \'allspw\'</description>
+			<value>1</value>
+		</param>
+
+		<param type="string" name="timebin" subparam="true">
+			<description>Averaging time in seconds, default=\'0\', also: \'all\'</description>
+			<value>0</value>
+		</param>
+
+		<param type="bool" name="crossscans" subparam="true">
+			<description>have time averaging cross over scans?</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="crossbls" subparam="true">
+			<description>have averaging cross over baselines?</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="crossarrays" subparam="true">
+			<description>have averaging cross over arrays?</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="stackspw" subparam="true">
+			<description>stack multiple spw on top of each other?</description>
+			<value>False</value>
+		</param>
+
+		<param type="string" name="restfreq">
+			<description>a frequency quanta or transition name. see help for options</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="frame" subparam="true">
+			<description>frequency frame for spectral axis. see help for options</description>
+			<value></value>
+			<allowed kind="enum">
+			   <value></value>
+			   <value>LSRK</value>
+			   <value>REST</value>
+			   <value>TOPO</value>
+			   <value>LSRD</value>
+			   <value>BARY</value>
+			   <value>GEO</value>
+			   <value>GALACTO</value>
+			   <value>LGROUP</value>
+			   <value>CMB</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="doppler" subparam="true">
+			<description>doppler mode. see help for options</description>
+			<value></value>
+			<allowed kind="enum">
+			   <value></value>
+			   <value>RADIO</value>
+			   <value>Z</value>
+			   <value>RATIO</value>
+			   <value>BETA</value>
+			   <value>GAMMA</value>
+			   <value>OPTICAL</value>
+			   <value>TRUE</value>
+			   <value>RELATIVISTIC</value>
+			</allowed>
+		</param>
+
+		<param type="bool" name="extendflag">
+			<description>have flagging extend to other data points?</description>
+			<value>False</value>
+		</param>
+
+		<param type="string" name="extendcorr" subparam="true">
+			<description>extend flags based on correlation: \'\'==> selectdata,\'half\', or \'all\' </description>
+			<value></value>
+			<allowed kind="enum">
+			<value></value>
+			<value>all</value>
+			<value>half</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="extendchan"  subparam="true">
+			<description>extend flags based on channel: \'\'==> selectdata or \'all\'</description>
+			<value></value>
+			<allowed kind="enum">
+			<value></value>
+			<value>all</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="extendspw"  subparam="true">
+			<description>extend flags based on spw: \'\'==> selectdata or \'all\'</description>
+			<value></value>
+			<allowed kind="enum">
+			<value></value>
+			<value>all</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="extendant"  subparam="true">
+			<description>extend flags based on antenna: \'\'==> selectdata or \'all\'</description>
+			<value></value>
+			<allowed kind="enum">
+			<value></value>
+			<value>all</value>
+			</allowed>
+		</param>
+
+		<param type="string" name="extendtime"  subparam="true">
+			<description>extend flags based on time: \'\'==> selectdata or \'all\'</description>
+			<value></value>
+			<allowed kind="enum">
+			<value></value>
+			<value>all</value>
+			<value>scan</value>
+			<value>field</value>
+			</allowed>
+		</param>
+
+		<param type="int" name="subplot">
+			<description>Multipanel display scheme (yxn)</description>
+			<value>111</value>
+		</param>
+
+		<param type="string" name="plotsymbol">
+			<description>Options include . : , o ^ v &gt; &lt; s + x D d 2 3 4 h H | _</description>
+			<value>.</value>
+		</param>
+
+		<param type="string" name="plotcolor">
+			<description>Plot color</description>
+			<value>darkcyn</value>
+		</param>
+
+		<!--param type="string" name="connect">
+			<description>Connect points with lines: Options: none, time, chan</description>
+			<value>none</value>
+			<allowed kind="enum">
+			   <value>chan</value>
+			   <value>channel</value>
+			   <value>none</value>
+			   <value>time</value>
+			</allowed>
+		</param-->
+
+		<param type="double" name="markersize" subparam="true">
+			<description>Size of plotted marks</description>
+			<value>5.0</value>
+		</param>
+
+		<param type="double" name="linewidth" subparam="true">
+			<description>Width of plotted lines</description>
+			<value>1.0</value>
+		</param>
+
+                <param type="any" name="plotrange">
+                    <description>The range of data to be plotted (see help)</description>
+                    <any type="variant" limittype='intArray doubleArray stringArray'/>
+                    <value type="doubleArray"><value>-1</value><value>-1</value><value>-1</value><value>-1</value></value>
+
+                </param>
+
+		<param type="string" name="multicolor">
+			<description>Plot in different colors: Options: none, both, chan, corr</description>
+			<value>corr</value>
+			<allowed kind="enum">
+			   <value>corr</value>
+			   <value>correlation</value>
+			   <value>none</value>
+			   <value>both</value>
+			   <value>chan</value>
+			   <value>channel</value>
+			</allowed>
+		</param>
+
+		<param type="bool" name="selectplot">
+			<description>Select additional plotting options (e.g, fontsize, title,etc)</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="overplot">
+			<description>Overplot on current plot (if possible)</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="newplot" subparam="true">
+			<description>Replace the last plot or not when overplotting</description>
+			<value>False</value>
+		</param>
+
+		<param type="string" name="clearpanel" subparam="true">
+			<description>Specify if old plots are cleared or not</description>
+			<value>Auto</value>
+			<allowed kind="enum">
+				<value>Current</value>
+				<value>None</value>
+				<value>Auto</value>
+				<value>All</value>
+			</allowed>
+		</param>
+
+		<param type="int" name="skipnrows" subparam="true">
+			<description>Plot every nth point</description>
+			<value>0</value>
+		</param>
+
+		<param type="string" name="title" subparam="true">
+			<description>Plot title (above plot)</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="xlabels" subparam="true">
+			<description>Label for x-axis</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="ylabels" subparam="true">
+			<description>Label for y-axis</description>
+			<value></value>
+		</param>
+
+		<param type="double" name="fontsize" subparam="true">
+			<description>Font size for labels</description>
+			<value>10.0</value>
+		</param>
+
+		<param type="double" name="windowsize" subparam="true">
+			<description>Window size: not yet implemented</description>
+			<value>1.0</value>
+		</param>
+
+		<param type="bool" name="showflags">
+			<description>Show flagged data?</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="interactive">
+			<description>Show plot on gui?</description>
+			<value>True</value>
+		</param>
+
+		<param type="string" name="figfile">
+			<description>\'\'= no plot hardcopy, otherwise supply name</description>
+			<value></value>
+		</param>
+
+		<param type="bool" name="end">
+			<description>Quit plotting?</description>
+			<value>False</value>
+		</param>
+
+                <constraints>
+			<when param="yaxis">
+				<equals value="amp">
+					<default param="datacolumn"><value type="string">data</value></default>
+				</equals>
+				<equals value="phase">
+					<default param="datacolumn"><value type="string">data</value></default>
+				</equals>
+				<equals value="imag">
+					<default param="datacolumn"><value type="string">data</value></default>
+				</equals>
+				<equals value="real">
+					<default param="datacolumn"><value type="string">data</value></default>
+				</equals>
+				<equals value="time"/>
+				<equals value="uvdist"/>
+				<equals value="chan"/>
+				<equals value="corr"/>
+				<equals value="freq"/>
+				<equals value="velo"/>
+				<equals value="u"/>
+				<equals value="v"/>
+				<equals value="w"/>
+				<equals value="azimuth"/>
+				<equals value="elevation"/>
+				<equals value="baseline"/>
+				<equals value="hourangle"/>
+				<equals value="parallacticangle"/>
+				<equals value="weight"/>
+			</when>
+			<when param="selectdata">
+				<equals type="bool" value="True">
+					<default param="antenna"><value type="string"></value></default>
+					<default param="timerange"><value type="string"></value></default>
+					<default param="correlation"><value type="string"></value></default>
+					<default param="scan"><value type="string"></value></default>
+					<default param="feed"><value type="string"></value></default>
+					<default param="array"><value type="string"></value></default>
+					<default param="uvrange"><value type="string"></value></default>
+				</equals>
+				<equals type="bool" value="False"/>
+			</when>
+			<when param="averagemode">
+			        <equals value=""/>
+				<equals value="vector">
+					<default param="timebin"><value type="string">0</value></default>
+					<default param="crossscans"><value type="bool">False</value></default>
+					<default param="crossbls"><value type="bool">False</value></default>
+					<default param="crossarrays"><value type="bool">False</value></default>
+					<default param="stackspw"><value type="bool">False</value></default>
+					<default param="width"><value type="string">1</value></default>
+				</equals>
+				<equals value="scalar">
+					<default param="timebin"><value type="string">0</value></default>
+					<default param="crossscans"><value type="bool">False</value></default>
+					<default param="crossbls"><value type="bool">False</value></default>
+					<default param="crossarrays"><value type="bool">False</value></default>
+					<default param="stackspw"><value type="bool">False</value></default>
+					<default param="width"><value type="string">1</value></default>
+				</equals>
+			</when>
+			<when param="restfreq">
+				<notequals type="string" value="">
+					<default param="frame"><value type="string">LSRK</value></default>
+					<default param="doppler"><value type="string">RADIO</value></default>
+				</notequals>
+			</when>
+			<when param="extendflag">
+				<equals type="bool" value="False"/>
+				<equals type="bool" value="True">
+					<default param="extendcorr"><value type="string"></value></default>
+					<default param="extendchan"><value type="string"></value></default>
+					<default param="extendspw"><value type="string"></value></default>
+					<default param="extendant"><value type="string"></value></default>
+					<default param="extendtime"><value type="string"></value></default>
+				</equals>
+			</when>
+			<when param="selectplot">
+				<equals type="bool" value="False"/>
+				<equals type="bool" value="True">
+					<default param="markersize"><value type="double">5.0</value></default>
+					<default param="linewidth"><value type="double">1.0</value></default>
+					<default param="skipnrows"><value type="int">1</value></default>
+					<default param="newplot"><value type="bool">False</value></default>
+					<default param="clearpanel"><value type="string">Auto</value></default>
+					<default param="title"><value type="string"></value></default>
+					<default param="xlabels"><value type="string"></value></default>
+					<default param="ylabels"><value type="string"></value></default>
+					<default param="fontsize"><value type="double">10.0</value></default>
+					<default param="windowsize"><value type="double">5.0</value></default>
+				</equals>
+			</when>
+                </constraints>
+	</input>
+<returns type="void"/>
+
+<example>
+
+	An X-Y plotter/interactive flagger for visibility data. 
+
+             Selected data can be flexibly plotted with a wide variety
+	     of axes and averaging options, including iteration over
+	     antennas and fields.  Data may be listed, flagged or
+	     unflagged interactively.  The plots can be zoomed and
+	     also saved to a file.  
+
+             It is advisable to run flagmanager before using plotxy to
+	     flag data in order to save the current flag state before
+	     altering:
+	     flagmanager(vis='vis_name',mode='save',versionname='before_plotxy',
+	     comment=versionname)
+
+             See hints on using plotxy at the end.
+
+	     
+     Keyword arguments:
+     vis -- Name of input visibility file
+             default: none.  example: vis='ngc5921.ms'
+     xaxis -- Visibility data to plot along the x-axis
+             default: 'time'
+
+             Options for BOTH x-axis and y-axis
+	        'time','uvdist','chan', 'corr','freq','velo', 'u','v','w',
+	        'azimuth','elevation','baseline','hourangle','parallacticangle'
+                'amp','phase','real','imag','weight'.  'x' gives antenna array
+	     
+     yaxis -- Visibility data to plot along the y-axis
+             default: 'amp'
+             Options: same as on xaxis:
+
+       &gt;&gt;&gt; yaxis expandable parameter
+         datacolumn -- Visibility file data column
+             Note: this parameter is automatically shown whenever the
+             chosen yaxis is a data quantity (i.e. amp)
+             default: 'data'; example: datacolumn='model'
+             Options: 'data' (raw),'corrected','model','residual'(corrected-model)
+
+      --- Data Selection (see help par.selectdata for more detailed information)
+
+     field -- Select field using field id(s) or field name(s).
+              ['go listobs' to obtain the list id's or names]
+            default: ''=all fields
+            If field string is a non-negative integer, it is assumed to
+               be a field index otherwise, it is assumed to be a field name
+            field='0~2'; field ids 0,1,2
+            field='0,4,5~7'; field ids 0,4,5,6,7
+            field='3C286,3C295'; field named 3C286 and 3C295
+            field = '3,4C*'; field id 3, all names starting with 4C
+     spw -- Select spectral window/channels 
+             spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+             spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+             spw='0:5~61'; spw 0, channels 5 to 61, INCLUSIVE
+             spw='*:5~61'; all spw with channels 5 to 61
+             spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+             spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+             spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+                       NOTE ';' to separate channel selections
+             spw='0:0~10^2,1:20~30^5'; spw 0, channels 0,2,4,6,8,10,
+                   spw 1, channels 20,25,30
+     selectdata -- Other data selection parameters
+            default: True
+       &gt;&gt;&gt; selectdata expandable parameters
+         timerange  -- Select data based on time range:
+            default = '' (all); examples,
+            timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+            Note: if YYYY/MM/DD is missing date defaults to first day in data set
+            timerange='09:14:0~09:54:0' picks 40 min on first day
+            timerange= '25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
+            timerange='09:44:00' data within one integration of time
+            timerange='&gt;10:24:00' data after this time
+         antenna -- Select data based on antenna/baseline
+            default: ''=all
+            If antenna string is a non-negative integer, it is assumed
+              to be an antenna index, otherwise it is assumed to be an
+              antenna name
+            antenna='5&amp;6'; baseline between antenna index 5 and index 6.
+            antenna='VA05&amp;VA06'; baseline between VLA antenna 5 and 6.
+            antenna='5&amp;6;7&amp;8'; baseline 5-6 and 7-8
+            antenna='5'; all baselines with antenna index 5
+	    antenna= '05'; all baselines with antenna named 05
+            antenna='5,6,9'; all baselines with antennas indices 5,6 and 9
+         correlation -- Select correlations:
+            default: '' = all correlations. Other options are any combination
+	                  of values from one of the valid lists:
+			  'RR','LL','RL','LR','RR LL','RL LR',
+			  'XX','YY','XY','YX','XX YY','XY YX'
+         uvrange -- Select data within uvrange (default units meters)
+            default: ''=all; example:
+            uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+            uvrange='&gt;4klambda';uvranges greater than 4 kilo-lambda
+            uvrange='0~1000km'; uvrange in kilometers
+         scan -- Scan number range
+         array -- (Sub)-array number range - under development
+         feed -- Multi-feed number range - under development
+	 
+     averagemode -- Select average mode
+            default: 'vector' 
+            Options: 'vector' = average over real and image part separately.
+                     'scalar' = scalar average of amplitude, vector
+                                    average of the phase.
+                     ''       = no averaging
+       &gt;&gt;&gt; averagemode expandable parameters
+         timebin -- length of time intervals to average
+                  default: '0'= no time averaging
+                  example: timebin='60' (average over 60 second interval).
+                  example: timebin='all' (all times obeying other selection
+                         parameters, i.e. timerange and crossscans)
+         crossscans -- Have time averaging cross scan boundaries? 
+              default: False=time averaging does not cross scan boundaries 
+         crossbls -- Have averaging cross baseline boundaries? 
+              default: False= averaging does not cross baseline boundaries 
+         crossarrays -- Have averaging cross array boundaries? 
+              default: False=averaging does not cross array boundaries 
+         stackspw -- Stack multiple spw on top of each other?
+              default: False= layout spws side-by-side for xaxis='channel'
+         width -- number of channels to average
+              default: '1'= no channel averaging
+              example: width='32' (average 32 channels together).
+              example: width='all' (all channels within each selected spw)
+              example: width='allspw' (all channels and all spw averaged.)
+     restfreq -- Set rest frequency or transition name
+              options: (str) '' a frequency quanta or transition name
+              default: currently set rest frequency and frame in MS
+                     see measures for known lines, e.g.
+                     me.linelist() to list lines
+                     me.me.spectralline to get frequency
+              example: restfreq='1420405751.786Hz' 21cm HI frequency
+                     restfreq='HI'               21cm HI transition name
+                     restfreq='115.2712GHz'      CO line
+       &gt;&gt;&gt; restfreq expandable parameters
+         frame -- frequency frame for spectral axis
+              options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                       'GEO','GALACTO','LGROUP','CMB'
+              default: currently set frequency frame in MS
+                       see measures (me.frequency) for description
+         doppler -- doppler mode
+              options: (str) 'RADIO','Z','RATIO','BETA','GAMMA',
+                       'OPTICAL','TRUE','RELATIVISTIC'
+              default: currently set doppler system in MS
+                       see measures (me.doppler) for description
+     extendflag -- flagging extension parameters
+         default: False= no extension, only flag selected data; 
+         example: extendflag=True 
+       &gt;&gt;&gt; extendflag expandable parameters
+         extendcorr  -- Extend flagging based on correlation:
+            default: ''= no correlation based extension
+            examples:
+            extendcorr = 'all'
+            extendcorr = 'half' flags RR and LL
+         extendchan -- Extend flagging based on channel:
+            default: ''= no channel based extension
+            example:
+            extendchan = 'all'
+         extendspw -- Extend flagging based on spectral window:
+            default: '' = no spectral window based extension
+            example:
+            extendspw = 'all'
+         extendant -- Extend flagging based on antenna (baseline):
+            default: ''= no antenna based extension
+            example:
+            extendant = 'all'
+         extendtime -- Extend flagging based on time:
+            default: ''= no time based extension
+            example:
+            extendant = 'all'
+     subplot -- Panel number on the display screen
+            default: 111 (full screen display); example:
+            if iteration is non-blank, then
+               subplot=yx1 window will produce y by x plots in the window.
+            if iteration = '', then
+               subplot=yxn; means the window will have y rows, and x columns
+               with the present execution placing the plot in location n
+               n = 1,..., xy, in order upper left to right, then down.  An
+               example is the plotting of four fields on one frame
+               field='0'; subplot=221; plotxy()
+               field='1'; subplot=222; plotxy()
+               field='2'; subplot=223; plotxy()
+               field='3'; subplot=224; plotxy()
+     overplot -- Overplot on current plot (if possible)
+            default: False; example: overplot= True
+     showflags -- Show the flagged and unflagged data.
+            default: False; example: showflags=True
+     iteration -- Iterate plots:
+            default: ''; no iteration
+            Options: 'field', 'antenna', 'baseline'.
+            Use the 'NEXT' button on gui to iterate through values.
+            To abort an iteration, close the gui window.
+     plotsymbol -- plot symbol. (Options include .:,o^v&gt;&lt;s+xDd234hH|_ or
+                   optionally preceded by one of color code k, r, g, b, c, y) 
+            default: '.': points, medium-sized dots
+            example: plotsymbol='bo' (blue points, large-sized dots
+              r=red, b=blue, g=green, y=yellow
+              ',' = small points
+              '.' = medium points
+              'o' = large points
+     plotcolor -- color.  Overrides plotsymbol color settings.
+            default: 'darkcyan'
+            example: plotcolor='g' (green)
+                     plotcolor='slateblue'
+                     plotcolor='#7FFF34' (RGB tuple)
+     multicolor -- Multi-color plotting of channels and correlations
+             options: 'none','both','chan','corr'
+             default: 'corr'; example: multicolor='chan'
+     plotrange -- Specifies the size of the plot [xmin, xmax, ymin, ymax]
+            default: [0,0,0,0];  Range is self-selected
+	    example: [0,0,0.00,0.20]  only y axis is specified 
+            To use a time range (NOTE: somewhat different sytax from timerange
+	       ['22:23:24, 23:42:20', 0.02, 0.20]
+	       The day must be included if the visibility data span more than one day
+	       ['1997/05/09/22:02:00, 1997/05/09/23:00:00', 0.02, 0.20]
+     selectplot -- Additional plot control parameters
+            default: False; example: selectplot=true
+       &gt;&gt;&gt; selectplot expandable parameters
+         markersize -- Size of the plotted marks
+            default: 5.0; example: markersize=10.0
+         linewidth -- Width of plotted lines.
+            default: 1; example: linewidth=2.0
+         skipnrows -- # of points to skip
+            default: 0
+            example: skipnrows=100 (plots every 100th point)
+         newplot -- When overplotting, replace the last plot only
+            default: False; can be useful when doing subplots
+	 clearpanel -- Clear nothing on the plot window, automatically
+	          clear plotting area, clear the current plot area, or
+	          clear the whole plot panel.
+	       options: None, Auto, Current, All
+	       default: Auto
+	       example: clearpanel='Current'
+	 title -- Plot title (above plot)
+            default: ''; example: title='This is my title'
+         xlabels -- Label for x axis
+            default: ''; example: xlabels='X Axis'
+         ylabels -- Label for y axis
+            default: ''; example: ylabels='Y Axis'
+         fontsize -- Font size for labels
+            default: 10; example: fontsize=2
+         windowsize -- Window size
+            default: 1.0; not yet implemented
+         interactive -- turn on/off on screen display
+            options: True = interactively flag data
+                     False = direct output to a file without on screen display
+            default: True;
+	 figfile -- File name to save the plotted figure to.
+	    default: '' = do not save figure; 
+            example: figfile='myPlot.png' save figure to png file
+                     figfile='myPlot.txt' append plotted xy to an ascii file
+	 end -- File name to save the plotted figure to.
+	    default: False = do not quit, keep plotting; 
+            example: end=True no more plotting to do
+
+         Hints on using plotxy (see section 3.4 in cookbook)
+
+         Useful Buttons at bottom left:
+              5th--magnifying glass.  Click on this,
+                       left mouse button rectangle drag will zoom
+                       right mose button rectangle drag will unzoom a certain amount
+              1st--restore original magnification
+
+         Useful regions just above:
+              Quit will terminate plotter
+              Next will go to next plot as specified by iteration
+              To flag, unflag, locate, you must click 'Mark Region' first
+                 then make appropriate region(s)
+                 then click flag, unflag, locate for the desired operation
+                 plot will then refrest
+            
+ </example>
+ </task>
+ </casaxml>

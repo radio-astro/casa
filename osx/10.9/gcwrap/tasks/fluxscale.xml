@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="fluxscale" category="calibration">
+	<shortdescription>Bootstrap the flux density scale from standard calibrators</shortdescription>
+	<description>
+
+       Bootstrap the flux density scale from standard calibrators:
+
+       After running gaincal on standard flux density calibrators (with or
+       without an image model), and other calibrators with unknown flux
+       densities (assumed 1 Jy), fluxscale applies the constraint that
+       net system gain was, in fact, independent of field, on average,
+       and that field-dependent gains in the input caltable are solely
+       a result of the unknown flux densities for the calibrators.
+       Using time-averaged gain amplitudes, the ratio between 
+       each ordinary calibrator and the flux density calibrator(s) is 
+       formed for each antenna and polarization (that they have in
+       common).  The average of this ratio over antennas and polarizations
+       yields a correction factor that is applied to the ordinary 
+       calibrators' gains. (See also more detailed discussion in Example section below.)
+
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file (MS)</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="caltable">
+			<description>Name of input calibration table</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="fluxtable">
+			<description>Name of output, flux-scaled calibration table</description>
+			<value></value>
+		</param>
+
+		<param type="stringArray" name="reference">
+			<description>Reference field name(s) (transfer flux scale FROM)</description>
+			<value></value>
+		</param>
+
+		<param type="stringArray" name="transfer">
+			<description>Transfer field name(s) (transfer flux scale TO), \'\' -&gt; all</description>
+			<value></value>
+		</param>
+
+     		<param type="string" direction="in" name="listfile">
+  		   <description>Name of listfile that contains the fit information.  Default is '' (no file).</description>
+   		   <value></value>
+    		</param>
+
+		<param type="bool" name="append">
+			<description>Append solutions?</description>
+			<value>False</value>
+		</param>
+
+		<param type="intArray" name="refspwmap">
+			<description>Scale across spectral window boundaries.  See help fluxscale</description>
+			<value>-1</value>
+		</param>
+
+		<param type="double" name="gainthreshold">
+			<description>Threshold (% deviation from the median) on gain amplitudes to be used in the flux scale calculation</description>
+			<value>-1.0</value>
+		</param>
+		<param type="string" name="antenna">
+			<description>antennas to include/exclude</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="timerange" subparam="true">
+			<description>sub selection by timerange</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="scan" subparam="true">
+			<description>sub selection by scan</description>
+			<value></value>
+		</param>
+                
+		<param type="bool" name="incremental">
+			<description>incremental caltable</description>
+			<value>False</value>
+		</param>
+              
+                <param type="int" name="fitorder">
+                        <description>order of spectral fitting</description>
+                        <value>1</value> 
+                </param>
+    
+                <param type="bool" name="display">
+                        <description>display some statistics of flux scaling</description>
+                        <value>False</value>
+                </param>
+        <constraints>
+            <when  param="antenna"> 
+              <notequals value="">
+                  <default param="timerange"><value type="string"></value></default>
+                  <default param="scan"><value type="string"></value></default>
+              </notequals> 
+            </when>
+        </constraints>
+	</input>
+        <output>
+            <param type="any" name="fluxd">
+    	    <description>Dictionary containing the transfer fluxes and their errors.</description>
+	    <any type="variant"/>
+	    <value>{}</value>
+        </param>
+        </output>
+<returns type="void"/>
+
+<example>
+
+       After running gaincal on standard flux density calibrators (with or
+       without an image model), and other calibrators with unknown flux
+       densities (assumed 1 Jy), fluxscale applies the constraint that
+       net system gain was, in fact, independent of field, on average,
+       and that field-dependent gains in the input caltable are solely
+       a result of the unknown flux densities for the calibrators.
+       Using time-averaged gain amplitudes, the ratio between 
+       each ordinary calibrator and the flux density calibrator(s) is 
+       formed for each antenna and polarization (that they have in
+       common).  For incremental=False(default), the median of 
+       this ratio over antennas and polarizations yields a correction 
+       factor that is applied to the ordinary calibrators' gains. For 
+       incremental=True, only the correction factors are written out 
+       to the output fluxtable.
+
+       The square of the gain correction factor for each calibrator
+       and spw is the presumed flux density of that calibrator, and is
+       reported in the logger.  The errors reported with this value
+       reflect the scatter in gain ratio over antennas and
+       polarizations, divided by the square root of the number of 
+       antennas and polarizations available.  If the flux densities 
+       for multiple spws exist, fitted spectral index and (for nspw>2)
+       curvature are also reported. The fit is done for 
+       log(flux density) = a_o + a_1*(log(frequency)) + a_2*(log(frequency))**2 
+       where log(frequency) is with respect to the mean of log(frequency). 
+       This reference frequency is reported in the logger along with the 
+       flux density at that frequency.  The fit results are also reported 
+       in the returned Python dictionary (the solutions are in 'spidx' 
+       in the following order: a_o [log(S) at the zero point], a_1 [spectral index], 
+       and a_2 [curvature]. And their errors are in 'spidxerr').  
+       The MODEL_DATA column is currently _not_ revised to reflect the flux 
+       densities derived by fluxscale.  Use setjy to set the MODEL_DATA 
+       column, if necessary.
+
+       The constant gain constraint is usually a reasonable assumption
+       for the electronic systems on typical antennas.  It is
+       important that external time- and/or elevation-dependent
+       effects are separately accounted for when solving for the gain
+       solution supplied to fluxscale, e.g., gain curves, 
+       opacity, etc.  The fluxscale results can also be degraded
+       by poor pointing during the observation. The parameters, gainthreshold
+       and antenna (and timerange/scan) can be used to control the data to be used
+       in the flux derivation in such cases. The gainthreshold parameter sets the range of 
+       the input gain to be used in terms of the percentage deviation from 
+       their median values (per field, per spectral window). When the antenna
+       parameter is specified, the sub-parameters timerange and scan are also
+       available to fine tune the data selection for the flux derivation. 
+       These parameters uses the general CASA data selection (msselection) syntax.
+       And these are 'AND' operations except when the antenna selection is specified
+       with a negation (e.g. antenna="!6"). In that case, timerange and scan applied
+       to only those antennas appear in the antenna parameter. So, for example,
+       timerange='>02:35:00' with antenna='!6,24', will include the data with time greater than
+       02:35:00 for antenna ID 6 and 24 but for other antennas the timerange selection is not
+       applied.
+       
+
+       Keyword arguments:
+       vis -- Name of input visibility file
+               default: none; example: vis='ngc5921.ms'
+       caltable -- Name of input calibration table
+               default: none; example: caltable='ngc5921.gcal'
+               This cal table was obtained from task gaincal.
+       fluxtable -- Name of output, flux-scaled calibration table
+               default: none; example: fluxtable='ngc5921.gcal2'
+               The gains in this table have been adjusted by the
+               derived flux density each calibrator.  The MODEL_DATA
+               column has NOT been updated for the flux density of the
+               calibrator.  Use setjy to do this if it is a point source.
+       reference -- Reference field name(s)
+               The names of the fields with a known flux densities or
+                  visibilities that have been placed in the MODEL column
+                  by setjy or ft for a model not in the CASA system.
+               The syntax is similar to field.  Hence field index or
+                  names can be used.
+               default: none; example: reference='1328+307'
+       transfer -- Transfer field name(s)
+               The names of the fields with unknown flux densities.
+                  These should be point-like calibrator sources
+               The syntax is similar to field.  Hence source index or
+                 names can be used.
+               default: '' = all sources in caltable that are not specified
+                  as reference sources.  Do not include unknown target sources
+               example: transfer='1445+099, 3C84'; transfer = '0,4'
+
+               NOTE: All fields in reference and transfer must have solutions
+               in the caltable.
+
+       listfile -- Fit listfile name
+               The list file contains the flux density, flux density error,
+                 S/N, and number of solutions (all antennas and feeds) for each
+                 spectral window.  NOTE: The nominal spectral window frequencies
+                 will be included in the future.
+               default: '' = no fit listfile will be created.
+
+       append -- Append fluxscaled solutions to the fluxtable.
+               default: False; (will overwrite if already existing)
+               example: append=True
+       refspwmap -- Vector of spectral windows enabling scaling across
+               spectral windows
+               default: [-1]==> none.
+               Example with 4 spectral windows:
+               if the reference fields were observed only in spw=1 &amp; 3,
+               and the transfer fields were observed in all 4 spws (0,1,2,3),
+               specify refspwmap=[1,1,3,3].
+               This will ensure that transfer fields observed in spws 0,1,2,3
+               will be referenced to reference field solutions only in
+               spw 1 or 3.
+       gainthreshold -- Threshold in the input gain solutions to be used in % deviation 
+               from median values.
+               default: -1 (no threshold)
+               example: gainthreshold=0.15 (only used the gain solutions within 15% 
+               (inclusive) of the median gain value (per field and per spw). 
+       antenna --- Antenna selection to be included in the fluxscale determination.
+               General ms selection syntax is accepted such as antenna id (given as a string)
+               and antenna name.
+               default: '' (=All antennas will be used)
+               example: antenna='!23' (exclude antenna id, 23) 
+      
+         * Following sub-parameters are available when the antenna parameter is specified
+         timerange --- Select time range using the msselection syntax.
+               If the negation (e.g. '!23') is used in the antenna selection, it will apply
+               the time range selection only to the negated antenna(s). Otherwise, the selection
+               is global (i.e. applied to all antenna and to both reference and transfer fields.)
+               default: '' (all timerange)
+               example: timerange=">0:58:00"
+         scan --- Select scan(s) using the msselection syntax. As in the case of the timerange parameter
+               the selection will be applied to only the negated antenna(s) if the antenna parameter
+               is used with the negation ("!").  
+               default: '' (all scans)
+               example: '2~5' 
+
+       incremental -- Create an incremental caltable containing only gain correction 
+               factors ( flux density= 1/(gain correction factor)**2)
+               default: False; (older behavior = create flux-scaled gain table)
+               example: incremental=True (output a caltable containing flux scale factors.)
+              
+               NOTE: If you use the incremental option, note that BOTH this incremental 
+               fluxscale table AND an amplitude vs. time table should be supplied in applycal.
+
+       fitorder -- Polynomial order of the spectral fitting for valid flux densities 
+               with multiple spws.  Currently only support 1 (spectral index only) or 
+               2 (spectral index and curvature).  It falls back to a lower fitorder if 
+               there are not enough solutions to fit with the requested fitorder.
+               default: 1
+       display -- Display statistics and/or spectral fitting results. Currently only a histogram
+               of the correction factors to derive the final flux density for each spectral window
+               will be plotted.
+               default: False
+               example: display=True
+
+       Returned dictionary: 
+                when it is run as fluxres = fluxscale(vis='my.ms',...), the determined flux
+                densities and spectral index information  are returned as a Python dictionary with
+                a format, {fieldIdstr: {spwIdstr: {'fluxd':array([I,Q,U,V]), 
+                                                  'fluxdErr': corresponding errors,
+                                                   'numSol': corresponding no. of solutions,
+                                        'fieldName': field name,
+                                        'fitFluxd': fitted flux density at the reference frequency,
+                                        'fitFluxdErr': fitted flux density error,
+                                        'fitRefFreq': reference frequency,
+                                        'spidx': a_0, a_1, a_2
+                                        'spidxerr': errors in a_0,a_1, a_2} 
+                           'freq': (center) spw frequencies 
+                           'spwID': list of spw IDs,
+                           'spwName': list of spw names}, where fieldIdstr and spwIdstr
+                are field Id and spw Id in string type, respectively.
+
+       
+ </example>
+ </task>
+ </casaxml>

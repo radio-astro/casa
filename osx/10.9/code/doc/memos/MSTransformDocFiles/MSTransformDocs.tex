@@ -1,0 +1,54 @@
+\documentclass[11pt]{article}
+\usepackage[dvips]{graphicx, color}
+\usepackage{epsfig}
+\usepackage{amsmath}
+\usepackage{mathptmx}
+
+\setlength{\evensidemargin}{-0.7cm}
+\setlength{\oddsidemargin}{-0.0cm}
+\setlength{\textwidth}{15.5cm}
+\setlength{\topmargin}{-2cm}
+\setlength{\textheight}{23.5cm}
+\parskip 1ex    % White space between paragraphs amount
+\parindent 0pt
+
+\usepackage{html}
+\usepackage[ruled]{algorithm2e}
+%\usepackage{varioref}
+%\usepackage[breaklinks=true,pagebackref=true]{hyperref}
+%\hypersetup{colorlinks=true,urlcolor=black,citecolor=blue}
+
+\newcommand{\red}{\color{red}}
+\newcommand{\green}{\color{green}}
+\newcommand{\blue}{\color{blue}}
+
+\graphicspath{{Figures/}}
+
+\begin{document}
+
+\title{MSTransform Framework in CASA}
+\author{Sandra Castro, Justo Gonzalez, Jim Jacobs}
+\date{07 February 2013, (last modified : 27 March 2014)}
+\maketitle
+
+This memo describes the MSTransform module in CASA as available from version
+4.1.0 onwards.
+%Section \ref{Sec:CodeDocs} gives an outline of the software implementation. 
+Section \ref{Sec:Running} 
+describes what 
+various transformations do, with some examples and suggestions on how to use them in
+Section \ref{Sec:Examples}. 
+Section \ref{Sec:FAQ} contains a list of frequently-asked questions and their answers.
+
+This is a living document. Details will continue to be added (with examples). Feedback is welcome.
+
+\tableofcontents
+
+%\include{CodeDocumentation}
+
+\include{UsingMSTransform}
+
+
+\end{document}
+
+

@@ -1,0 +1,615 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="tclean" category="imaging" visibility="experimental">
+
+  <shortdescription>Construct and deconvolve images</shortdescription>
+
+  <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
+
+  <input>
+
+<!--============================================== -->
+<!--                            Data Selection Parameters                                            -->
+<!--============================================== -->
+
+    <param type="any" name="vis" kind="ms" mustexist="true">
+    <description>Name of input visibility file(s)</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+<!--
+    <param type="bool" name="selectdata" subparam="true" visibility="hidden">
+      <description>To select or not</description>
+      <value type="bool">True</value>
+    </param>
+-->
+
+    <param type="any" name="field" subparam="true">
+      <description>field(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw" subparam="true">
+      <description>spw(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="timerange" subparam="true">
+      <description>Range of time to select from data</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="uvrange" subparam="true">
+      <description>Select data within uvrange </description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="antenna" subparam="true">
+      <description>Select data based on antenna/baseline</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="scan" subparam="true">
+      <description>Scan number range</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+    
+    <param type="any" name="observation" subparam="true">
+      <description>Observation ID range</description>
+      <any type="variant" limittypes="string int"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="intent" subparam="true">
+      <description>Scan Intent(s)</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="datacolumn" subparam="true">
+      <description>data or observed, corrected</description>
+      <value type="string">corrected</value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Image Definition Parameters                                         -->
+<!--============================================== -->
+
+    <param type="any" name="imagename" required="true">
+      <description>Pre-name of output images</description>
+      <any type="variant" limittypes="int string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="imsize" subparam="true">
+      <description>Number of pixels</description>
+      <any type="variant" limittypes="int intArray"/>
+      <value type="intArray">1,1</value>
+    </param>
+
+    <param type="any" name="cellsize" subparam="true">
+      <description>Cell size</description>
+      <any type="variant" limittypes="int double intArray doubleArray string stringArray"/>
+      <value type="stringArray">"1arcsec"</value>
+    </param>
+
+    <param type="any" name="phasecenter" subparam="true">
+      <description>Phase center of the image</description>
+      <any type="variant" limittypes="int string"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="stokes" subparam="true">
+      <description>Stokes Planes to make</description>
+      <value type="string">I</value>
+    </param>
+
+    <param type="string" name="projection" subparam="true">
+      <description>Coordinate projection (SIN, HPX) </description>
+      <value type="string">SIN</value>
+    </param>
+
+<!--============================================== -->
+
+    <param type="string" name="outlierfile">
+      <description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+      <description>True : Re-use existing images. False : Increment imagename</description>
+      <value type="bool">True</value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Spectral Parameters                                                     -->
+<!--============================================== -->
+
+    <param type="any" name="specmode" required="true">
+      <description>Spectral definition mode (mfs,cube,cubesrc,cubedata)</description>
+      <value type="string">mfs</value>
+    </param>
+
+    <param type="any" name="reffreq" subparam="true">
+      <description>Reference frequency</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="int" name="nchan" subparam="true">
+      <description>Number of channels in the output image</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="any" name="start" subparam="true">
+      <description>First channel (e.g. chan=3,chan=\'1.1GHz\',chan=\'15343km/s\')</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="step" subparam="true">
+      <description>Channel width (e.g. step=2,step=\'0.1MHz\',step=\'10km/s\')</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="frame" subparam="true">
+      <description>Spectral reference frame in which to interpret \'start\' and \'step\'</description>
+      <value type="string">LSRK</value>
+    </param>
+
+    <param type="string" name="veltype" subparam="true">
+      <description>Velocity type (radio, z, ratio, beta, gamma, optical)</description>
+      <value type="string">radio</value>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+      <description>List of rest frequencies</description>
+      <value type="stringArray"></value>
+    </param>
+
+    <param type="any" name="sysvel" subparam="true">
+      <description>Systemic velocity (for mode=cubesrc) </description>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="sysvelframe" subparam="true">
+      <description>Spectral frame in which sysvel is specified (for mode=cubesrc only)</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="interpolation" subparam="true">
+      <description>Spectral interpolation (nearest,linear,cubic)</description>
+      <value type="string">linear</value>
+	    <allowed kind="enum">
+	      <value>nearest</value>
+              <value>linear</value>
+	      <value>cubic</value>
+	    </allowed>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Imaging/Gridding Parameters                                                      -->
+<!--============================================== -->
+
+    <param type="string" name="gridmode">
+            <description>Gridding options (standard, widefield, mosaic, imagemosaic, awproject)</description>
+	    <value type="string">standard</value>
+	    <allowed kind="enum">
+	      <value>standard</value>
+              <value>widefield</value>
+	      <value>mosaic</value>
+	      <value>imagemosaic</value>
+	      <value>awproject</value>
+	    </allowed>
+    </param>
+
+    <param type="int" name="facets" subparam="true">
+      <description>Number of facets on a side</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="int" name="wprojplanes" subparam="true">
+      <description>Number of w-planes for convolution function calculation</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="bool" name="aterm" subparam="true">
+            <description>Use aperture illumination function during gridding</description>
+	    <value type="bool">True</value>
+    </param>
+
+    <param type="bool" name="psterm" subparam="true">
+            <description>Use prolate spheroidal during gridding</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="wbawp" subparam="true">
+            <description>Use wideband A-terms</description>
+	    <value type="bool">True</value>
+    </param>
+
+    <param type="bool" name="conjbeams" subparam="true">
+            <description>Use conjugate frequency for wideband A-terms </description>
+	    <value type="bool">True</value>
+    </param>
+
+    <param type="string" name="cfcache" subparam="true">
+            <description>Convolution function cache directory name</description>
+	    <value type="string"></value>
+    </param>
+
+    <param type="double" name="computepastep" subparam="true">
+      <description>At what parallactic angle interval to recompute AIFs (deg) </description>
+      <value type="double">360.0</value>
+    </param>
+
+    <param type="double" name="rotatepastep" subparam="true">
+      <description>At what parallactic angle interval to rotate nearest AIF (deg) </description>
+      <value type="double">5.0</value>
+    </param>
+
+    <param type="double" name="pblimit" subparam="true">
+      <description>PB gain level at which to cut off image calculations  </description>
+      <value type="double">0.01</value>
+    </param>
+
+    <param type="string" name="normtype" subparam="true">
+      <description>Normalization type (flatnoise, flatsky) </description>
+      <value type="string">flatnoise</value>
+    </param>
+
+
+
+<!--============================================== -->
+<!--                            Weighting Parameters                                            -->
+<!--============================================== -->
+
+    <param type="string" name="weighting">
+            <description>Weighting scheme (natural,uniform,briggs)</description>
+	    <value type="string">natural</value>
+    </param>
+
+    <param type="double" name="robust" subparam="true">
+            <description>Robustness parameter</description>
+	    <value type="double">0.5</value>
+    </param>
+
+    <param type="int" name="npixels" subparam="true">
+            <description>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</description>
+	    <value type="int">0</value>
+    </param>
+
+<!--
+    <param type="bool" name="uvtaper">
+            <description>Apply additional uv tapering of visibilities</description>
+	    <value type="bool">False</value>
+    </param>
+-->
+
+    <param type="stringArray" name="uvtaper" subparam="true">
+	    <description>uv-taper on outer baselines in uv-plane</description>
+	    <value type="vector">
+	      <value></value>
+	    </value>
+    </param>
+
+<!--
+    <param type="stringArray" name="innertaper" subparam="true">
+	    <description>uv-taper in center of uv-plane (not implemented)</description>
+	    <value>1.0</value>
+    </param>
+-->
+<!--============================================== -->
+<!--                            Deconvolution Parameters                                            -->
+<!--============================================== -->
+
+
+    <param type="string" name="deconvolver">
+            <description>Name of minor cycle algorithm</description>
+	    <value type="string">hogbom</value>
+	    <allowed kind="enum">
+	      <value>hogbom</value>
+              <value>clark</value>
+	      <value>clarkstokes</value>
+	      <value>multiscale</value>
+	      <value>mtmfs</value>
+	    </allowed>
+    </param>
+
+    <param type="any" name="scales" subparam="true">
+            <description>List of scale sizes (in pixels) for multi-scale cleaning</description>
+	    <any type="variant" limittypes="intArray floatArray"/>
+	    <value type="intArray"></value>
+    </param>
+
+    <param type="int" name="ntaylorterms" subparam="true">
+      <description>Number of Taylor coefficients in the spectral model</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="stringArray" name="restoringbeam" subparam="true">
+            <description>Restoring beam shape to use. Default is the PSF main lobe width. </description>
+	    <value type="stringArray">['','','']</value>
+    </param>
+
+
+
+<!--============================================== -->
+<!--                            Iteration Control Parameters                                         -->
+<!--============================================== -->
+
+
+    <param type="int" name="niter">
+      <description>Maximum number of iterations (0=psf,dirty -1=psf)</description>
+      <value type="int">500</value>
+    </param>
+
+    <param type="double" name="gain" subparam="true">
+      <description>Loop gain</description>
+      <value type="double">0.1</value>
+    </param>
+
+    <param type="double" name="threshold" subparam="true">
+      <description>Stopping threshold (number, in units of Jy)</description>
+      <value type="double">0.0</value>
+    </param>
+
+    <param type="int" name="cycleniter" subparam="true">
+      <description>Maximum number of minor-cycle iterations before triggering a major cycle</description>
+      <value type="int">-1</value>
+    </param>
+
+    <param type="double" name="cyclefactor" subparam="true">
+      <description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</description>
+      <value type="double">1.0</value>
+    </param>
+
+    <param type="double" name="minpsffraction" subparam="true">
+      <description>PSF fraction that marks the max depth of cleaning in the minor cycle </description>
+      <value type="double">0.05</value>
+    </param>
+
+    <param type="double" name="maxpsffraction" subparam="true">
+      <description>PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
+      <value type="double">0.8</value>
+    </param>
+
+    <param type="bool" name="interactive" subparam="true">
+	    <description>True to be able to modify masks and parameters at runtime</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="string" name="savemodel" subparam="true">
+	    <description>Options to save model at the end (none, virtual, modelcolumn)</description>
+	    <value type="string">"none"</value>
+<!--	    <allowed kind="enum">
+	      <value>none</value>
+              <value>virtual</value>
+	      <value>modelcolumn</value>
+	    </allowed> -->
+    </param>
+
+
+
+<!--============================================== -->
+<!--                            Other Operational Parameters                                       -->
+<!--============================================== -->
+
+    <param type="bool" name="parallel">
+	    <description>Run major cycles in parallel</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="string" name="clusterdef" subparam="true">
+            <description>Name of a file that contains the cluster definition</description>
+	    <value type="string"></value>
+    </param>
+
+    <param type="string" name="workdir" subparam="true">
+            <description>Directory name for per-node products (default=imagename.workdir)</description>
+	    <value type="string"></value>
+    </param>
+
+
+<!--=============================================== -->
+<!--===============  Constraints                        ============== -->
+
+   <constraints>
+
+
+     <when param="vis">
+      <notequals type="string" value=""> 
+	 <default param="field"><value>""</value></default>
+	 <default param="spw"><value>""</value></default>
+	 <default param="timerange"><value>""</value></default>
+	 <default param="uvrange"><value>""</value></default>
+	 <default param="antenna"><value>""</value></default>
+	 <default param="scan"><value>""</value></default>
+	 <default param="observation"><value>""</value></default>
+	 <default param="intent"><value>""</value></default>
+	 <default param="datacolumn"><value>"corrected"</value></default>
+       </notequals>
+      </when> 
+
+<!--
+     <when subparam="selectdata">
+      <equals type="bool" value="True"> 
+	 <default param="field"><value>""</value></default>
+	 <default param="spw"><value>""</value></default>
+	 <default param="timerange"><value>""</value></default>
+	 <default param="uvrange"><value>""</value></default>
+	 <default param="antenna"><value>""</value></default>
+	 <default param="scan"><value>""</value></default>
+	 <default param="observation"><value>""</value></default>
+	 <default param="intent"><value>""</value></default>
+       </equals>
+      </when> 
+-->
+
+
+     <when param="imagename">
+       <notequals type="string" value=""> 
+	 <default param="imsize"><value>[100,100]</value></default>
+	 <default param="cellsize"><value>"1arcsec"</value></default>
+	 <default param="phasecenter"><value>""</value></default>
+	 <default param="stokes"><value>"I"</value></default>
+	 <default param="projection"><value>"SIN"</value></default>
+       </notequals>
+      </when> 
+
+
+     <when param="specmode">
+       <equals type="string" value="mfs">
+	 <default param="reffreq"><value>""</value></default>
+<!--	 <default param="ntaylorterms"><value>1</value></default> -->
+       </equals>
+       <equals type="string" value="cube">
+	 <default param="nchan"><value>-1</value></default>
+	 <default param="start"><value>""</value></default>
+	 <default param="step"><value>""</value></default>
+	 <default param="frame"><value>""</value></default>
+	 <default param="veltype"><value>"radio"</value></default>
+	 <default param="restfreq"><value>[]</value></default>
+	 <default param="interpolation"><value>"linear"</value></default>
+       </equals>
+       <equals type="string" value="cubesrc">
+	 <default param="nchan"><value>-1</value></default>
+	 <default param="start"><value>""</value></default>
+	 <default param="step"><value>""</value></default>
+	 <default param="frame"><value>""</value></default>
+	 <default param="veltype"><value>"radio"</value></default>
+	 <default param="restfreq"><value>[]</value></default>
+	 <default param="sysvel"><value>""</value></default>
+	 <default param="sysvelframe"><value>""</value></default>
+	 <default param="interpolation"><value>"linear"</value></default>
+       </equals>
+       <equals type="string" value="cubedata">
+	 <default param="nchan"><value>-1</value></default>
+	 <default param="start"><value>""</value></default>
+	 <default param="step"><value>""</value></default>
+	 <default param="veltype"><value>"radio"</value></default>
+	 <default param="restfreq"><value>[]</value></default>
+	 <default param="interpolation"><value>"linear"</value></default>
+       </equals>
+     </when>
+
+     <when param="gridmode">
+       <equals type="string" value="standard">
+       </equals>
+       <equals type="string" value="widefield">
+	 <default param="wprojplanes"><value>1</value></default>
+	 <default param="facets"><value>1</value></default>
+       </equals>
+       <equals type="string" value="mosaic">
+	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="normtype"><value>"flatnoise"</value></default>
+       </equals>
+       <equals type="string" value="imagemosaic">
+	 <default param="wprojplanes"><value>1</value></default>
+	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="normtype"><value>"flatnoise"</value></default>
+       </equals>
+       <equals type="string" value="awproject">
+	 <default param="wprojplanes"><value>1</value></default>
+	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="normtype"><value>"flatnoise"</value></default>
+	 <default param="psterm"><value>False</value></default>
+	 <default param="cfcache"><value>""</value></default>
+	 <default param="computepastep"><value>360.0</value></default>
+	 <default param="rotatepastep"><value>5.0</value></default>
+	 <default param="wideband"><value>False</value></default>
+	 <default param="conjbeams"><value>False</value></default>
+       </equals>
+     </when>
+
+     <when param="weighting">
+       <equals type="string" value="natural">
+	 <default param="uvtaper"><value>[]</value></default>
+       </equals>
+       <equals type="string" value="uniform">
+       </equals>
+       <equals type="string" value="briggs">
+	 <default param="robust"><value>0.5</value></default>
+	 <default param="npixels"><value>0</value></default>
+	 <default param="uvtaper"><value>[]</value></default>
+       </equals>
+     </when>
+
+<!--
+     <when param="uvtaper">
+       <equals type="bool" value="False">
+       </equals>
+       <equals type="bool" value="True">
+	 <default param="outertaper"><value>[]</value></default>
+	 <default param="innertaper"><value>[]</value></default>
+       </equals>
+     </when>
+-->
+
+     <when param="deconvolver">
+       <equals type="string" value="hogbom">
+       </equals>
+       <equals type="string" value="multiscale">
+	 <default param="scales"><value type="intArray"></value></default>
+       </equals>
+       <equals type="string" value="mtmfs">
+	 <default param="scales"><value type="intArray"></value></default>
+	 <default param="ntaylorterms"><value>2</value></default>  
+       </equals>
+     </when>
+
+     <when param="niter">
+       <notequals type="int" value="0">
+	 <default param="gain"><value>0.1</value></default>
+	 <default param="threshold"><value>0.0</value></default>
+	 <default param="cycleniter"><value>-1</value></default>
+	 <default param="cyclefactor"><value>1.0</value></default>
+	 <default param="minpsffraction"><value>0.05</value></default>
+	 <default param="maxpsffraction"><value>0.8</value></default>
+	 <default param="interactive"><value>False</value></default>
+	 <default param="savemodel"><value>"none"</value></default>
+       </notequals>
+     </when>
+
+     <when param="parallel">
+       <equals type="bool" value="False">
+       </equals>
+       <equals type="bool" value="True">
+	 <default param="clusterdef"><value>""</value></default>
+	 <default param="workdir"><value>""</value></default>
+       </equals>
+     </when>
+
+   </constraints>
+
+  </input>
+  
+  <returns type="void"/>
+
+  <example>
+
+      (Refactored) Imaging task
+
+      NOTE : Please test only the major cycle ( i.e. niter=0 ) at this time.  Thanks.
+
+      Missing parameters and functions : post-deconvolution pbcor, mask handling, 
+
+  </example>
+
+</task>
+
+</casaxml>

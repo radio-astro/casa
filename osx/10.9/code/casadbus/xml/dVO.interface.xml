@@ -1,0 +1,98 @@
+<?xml version="1.0" ?>
+<!-- with Qt generate with: qdbusxml2cpp  -v -c QtdVO -i "casaqt/QtUtilities/QtStringMap.h" -p QtdVO.h:QtdVO.cc dVO.interface.xml -->
+<node name="/casa/vo/sevice">
+  <interface name="edu.nrao.casa.dVO">
+    <method name="cancel">
+      <!-- input:  int                      = observable id
+        -->
+      <arg direction="in"  type="i" name="id"/>
+    </method>
+    <method name="query">
+      <!-- input:  ra: double               = right ascension, ICRS
+                   dec: double              = declination, ICRS
+                   ra_size: double          = width of region of interest (degrees)
+                   dec_size: double         = height of region of interest (degrees)
+                   format: string           = desired image format(s)
+                   params: map<string,v>    = extra parameters
+                   vos: vector<string>      = vo servers to use
+           output: int                      = observable id
+        -->
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In5" value="QVariantMap"/>
+	  <annotation name="com.trolltech.QtDBus.QtTypeName.In5" value="QVariantMap"/>	  
+      <arg direction="in"  type="d" name="ra"/>
+      <arg direction="in"  type="d" name="dec"/>
+      <arg direction="in"  type="d" name="ra_size"/>
+      <arg direction="in"  type="d" name="dec_size"/>
+      <arg direction="in"  type="s" name="format"/>
+      <arg direction="in"  type="a{sv}" name="params"/>
+      <arg direction="in"  type="as" name="vos"/>
+      <arg direction="out" type="i"/>
+    </method>
+    <signal name="query_begin">
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <annotation name="com.trolltech.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <arg type="i" name="id" />
+      <arg type="s" name="service" />
+      <arg type="a{ss}" name="values" />
+    </signal>
+    <signal name="query_description">
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <annotation name="com.trolltech.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <arg type="i" name="id" />
+      <arg type="s" name="service" />
+      <arg type="a{ss}" name="values" />
+    </signal>
+    <signal name="query_data">
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <annotation name="com.trolltech.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <arg type="i" name="id" />
+      <arg type="s" name="service" />
+      <arg type="a{ss}" name="values" />
+    </signal>
+    <signal name="query_end">
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <annotation name="com.trolltech.QtDBus.QtTypeName.In2" value="QtStringMap"/>
+      <arg type="i" name="id" />
+      <arg type="s" name="service" />
+      <arg type="a{ss}" name="values" />
+    </signal>
+    <signal name="query_error">
+      <arg type="i" name="id" />
+      <arg type="s" name="service" />
+      <arg type="s" name="message" />
+    </signal>
+    <signal name="query_warning">
+      <arg type="i" name="id" />
+      <arg type="s" name="service" />
+      <arg type="s" name="message" />
+    </signal>
+    <method name="fetch">
+      <!-- input:  string                   = URL to fetch
+		           string                   = path to save fetched URL
+                   bool                     = progress (progress signals?)
+           output: int                      = observable id
+        -->
+      <arg direction="in"  type="s" name="url"/>
+      <arg direction="in"  type="s" name="output"/>
+      <arg direction="in"  type="b"  name="progress"/>
+      <arg direction="out" type="i"/>
+    </method>
+    <signal name="fetch_error">
+      <arg type="i" name="id" />
+      <arg type="s" name="path" />
+      <arg type="s" name="message" />
+    </signal>
+    <signal name="fetch_progress">
+      <arg type="i" name="id" />
+      <arg type="s" name="path" />
+	  <arg type="d" name="total_size" />
+	  <arg type="d" name="total_done" />
+	  <arg type="d" name="ultotal" />
+	  <arg type="d" name="uldone" />
+    </signal>
+    <signal name="fetch_complete">
+      <arg type="i" name="id" />
+      <arg type="s" name="path" />
+    </signal>
+  </interface>
+</node>

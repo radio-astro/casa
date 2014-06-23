@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="exportasdm" category="import/export">
+
+  <shortdescription>Convert a CASA visibility file (MS) into an ALMA or EVLA Science Data Model</shortdescription>
+
+  <input>
+
+    <param type="string" name="vis" kind="ms" mustexist="true">
+          <description>MS name</description>
+          <value></value>
+    </param>
+
+
+    <param type="string" name="asdm" kind="asdm" mustexist="false">
+          <description>Name of output ASDM directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="datacolumn"  ignorecase="True">
+	    <description>specifies which MS data column is used to fill the visibilites in the ASDM</description>
+	    <value>data</value>
+	    <allowed kind="enum">
+	       <value>data</value>
+	       <value>corrected</value>
+	       <value>model</value>
+	    </allowed>
+    </param>
+    <param type="string" name="archiveid">
+	    <description>the X0 in uid://X0/X1/X&lt;running&gt;</description>
+	    <value>S0</value>
+    </param>
+    <param type="string" name="rangeid">
+	    <description>the X1 in uid://X0/X1/X&lt;running&gt;</description>
+	    <value>X1</value>
+    </param>
+    <param type="string" name="subscanduration">
+	    <description>maximum duration of a subscan in the output ASDM</description>
+	    <value>24h</value>
+    </param>
+    <param type="string" name="sbduration">
+	    <description>maximum duration of a scheduling block (and therefore exec block) in the output ASDM</description>
+	    <value>2700s</value>
+    </param>
+    <param type="bool" name="apcorrected">
+	    <description>data to be marked as having atmospheric phase correction</description>
+	    <value>False</value>
+    </param>
+    <param type="bool" name="verbose">
+	    <description>produce log output</description>
+	    <value>True</value>
+    </param>
+    <param type="bool" name="showversion">
+	    <description>Report the version of ASDM class set being used</description>
+	    <value>True</value>
+    </param>
+
+    <param type="string" name="useversion" >
+	    <description>Selects the version of MS2asdm to be used (\'v3\' (default and only option presently))</description>
+	    <value>v3</value>
+	    <allowed kind="enum">
+	      <value>v3</value>
+	      <value></value>
+	    </allowed>
+    </param>
+
+    </input>
+
+  <returns type="bool"/>
+
+  <example>
+
+  exportasdm(vis='ngc4826.ms', asdm='uid___S021_X1418_X1', 
+             datacolumn='corrected', archiveid='S021', rangeid='X1418', 
+             verbose=False)
+  will produce an ASDM named 'uid___S021_X1418_X1' using the 
+  datacolumn 'corrected' in the MS 'ngc4826.ms' with minimal
+  log output. 
+
+  The sbduration parameter controls the number of execution blocks (EBs)
+  into which exportasdm subdivides the visibilities from your input MS.
+  If the total observation time in the MS is shorter than what is given 
+  in sbduration, a single EB will be created.
+
+  Note concerning ALMA data: exportasdm presently is not able to export 
+  from MSs containing WVR data. If you attempt to export such an MS, you
+  will receive an error message saying that you can only export data of
+  processor type "CORRELATOR". It will also give you the list of SPWs
+  which contain CORRELATOR data. You will then have to split out these
+  SPWs using the task "split" and run exportasdm on the resulting MS. 
+
+  Also EVLA data can be exported. Note here that exportasdm does not produce
+  online flags and that a subsequent reimport of the data must be done with
+  online=False. Also, importevla will only work on your ASDM if you have 
+  exported it with apcorrected=False (the default).
+
+   importevla('xosrosdm', vis = 'xosro.ms')
+   exportasdm(vis='xosro.ms', asdm='xosrosdm', apcorrected=False)
+   importevla(asdm='xosro2asdm', vis='xosro2-reimp.ms', online=False)
+
+  </example>
+
+</task>
+
+</casaxml>

@@ -1,0 +1,3339 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-04-15  remove tool stuff
+% STM 2007-04-19  start main update
+% STM 2007-05-14  kumar's corrections
+% STM 2007-06-15  start to bring to Alpha Patch 1 level
+% STM 2007-06-16  add NGC5921 example
+% STM 2007-09-25  beta version
+% STM 2007-10-09  add Jupiter example
+% STM 2007-10-10  spell-checked
+% STM 2008-03-18  update to patch 1.0
+% STM 2008-06-10  patch 2.0, new clean task
+% STM 2008-09-30  Patch 3 editing start
+% STM 2008-10-05  Patch 3 add EF widefield text
+% STM 2008-12-02  Add list of primary beams
+% STM 2009-05-29  Patch 4 
+% STM 2009-06-05  Patch 4 clarkstokes
+% STM 2009-06-19  Patch 4 clean output images
+% STM 2009-11-09  Release 0 places for boxit and autoclean
+% STM 2009-11-13  boxit and autoclean from Amy Kimball
+% STM 2009-12-15  Release 3.0.0 final
+% JO 2010-01-17     Release 3.0.1 edits
+% JO 2010-05-25     Release 3.0.2 edits
+% JO 2010-06-22     remove makemask references
+% JO 2010-10-13   Release 3.1.0 edits
+% JO 2011-04-20  Release 3.2.0 edits start
+% JO 2011-05-25 nterms threshold calification
+% JO 2011-10-03 edits for Release 3.3
+% JO 2011-10-03 remove autoclean
+% JO 2012-04-19 edits for 3.4.0
+% JO 2012-10-18 edits for 4.0.0
+% JO 2013-05-20 edits for 4.1.0
+% JO 2013-12-16 edits for 4.2.0
+
+\chapter{Synthesis Imaging}
+\label{chapter:im}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im} tool handles synthesis imaging operations.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+This chapter describes how to make and deconvolve images starting from
+calibrated interferometric data, possibly supplemented with
+single-dish data or an image made from single-dish data.  This data
+must be available in CASA (see \S~\ref{chapter:io} on importing data).
+See \S~\ref{chapter:cal} for information on calibrating synthesis 
+data.  In the following sections, the user will learn how to 
+make various types of images from synthesis data, reconstruct images
+of the sky using the available deconvolution techniques, include
+single-dish information in the imaging process, and to prepare
+to use the results of imaging for improvement of the calibration 
+process (``self-calibration'').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Imaging Tasks Overview}
+\label{section:im.tasks}
+
+The current imaging and deconvolution tasks are:
+\begin{itemize}
+   \item {\tt clean} --- calculate a deconvolved image with a selected clean
+         algorithm, including mosaicing, or make a dirty image
+         (\S~\ref{section:im.clean}),
+   \item {\tt feather} --- combine a single dish and synthesis image in the
+         Fourier plane (\S~\ref{section:im.feather}),
+   \item {\tt deconvolve} --- image-plane only deconvolution based on
+         the dirty image and beam, using one of several algorithms
+         (\S~\ref{section:im.deconvolve}),
+   \item {\tt pclean} --- an experimental task for {\tt clean} to work
+     in a parallelized way for multi-node and core computing systems
+          (\S~\ref{section:im.pclean})
+\end{itemize}
+
+There are also tasks that help you set up the imaging or interface
+imaging with calibration:
+
+\begin{itemize}
+   \item {\tt boxit} - create ``cleanbox'' deconvolution regions automatically
+         from an image
+	 (\S~\ref{section:im.mask.boxit}),
+%   \item {\tt makemask} - create ``cleanbox'' deconvolution regions
+%         from a box specification or file (\S~\ref{section:im.mask.makemask}),
+   \item {\tt ft} - add a source model to the MS (\S~\ref{section:im.ft}).
+\end{itemize}
+
+The full ``tool kit'' that allows expert-level imaging must still be
+used if you do not find enough functionality within the tasks above. 
+
+Information on other useful tasks and parameter setting can be found in:
+\begin{itemize}
+   \item {\tt listobs} --- list what's in a MS (\S~\ref{section:io.list}),
+   \item {\tt split}--- Write out new MS containing calibrated data
+      from a subset of the original MS (\S~{section:cal.split}),
+   \item {\tt cvel} --- regrid a spectral MS onto a new frequency
+      channel system
+      (\S~\ref{section:cal.other.cvel}),
+   \item data selection --- general data selection syntax
+      (\S~\ref{section:io.selection}),
+   \item {\tt viewer} --- image display including region statistics and
+         image cube slice and profile capabilities
+         (\S~\ref{chapter:display}).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Common Imaging Task Parameters}
+\label{section:im.pars}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.setimage} method is used to set many of the
+     common image parameters.  The {\tt im.advise} method
+     gives helpful advice for setting up for imaging.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+We now describe some parameters that are common to the imaging
+tasks.  These should behave the same way in any imaging task
+that they are found in.  These are in alphabetical order.\\[1cm]
+
+
+{\bf ALERT:} {\tt clean} tries to use up to four cores on the computer that
+it is running on. If this is not desired, the environment variable
+{\it OMP\_NUM\_THREAD} can be set to a lower value. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt cell} }
+\label{section:im.pars.cell}
+
+The {\tt cell} parameter defines the pixel size in the
+x and y axes for the output
+image.  If given as floats or integers, this is the cell size
+in arc seconds, e.g.
+\small
+\begin{verbatim}
+  cell=[0.5,0.5]
+\end{verbatim}
+\normalsize
+make 0.5$''$ pixels.
+You can also give the cell size in {\it quantities}, e.g.
+\small
+\begin{verbatim}
+  cell=['1arcmin', '1arcmin']
+\end{verbatim}
+\normalsize
+If a single value is given, then square pixels of that size
+are assumed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt field} }
+\label{section:im.pars.field}
+
+The {\tt field} parameter selects the field indexes or names
+to be used in imaging.  Unless you are making a mosaic, this
+is usually a single index or name:
+\small
+\begin{verbatim}
+  field = '0'             #   First field (index 0)
+  field = '1331+305'      #   3c286
+  field = '*'             #   all fields in dataset
+\end{verbatim}
+\normalsize
+
+The syntax for {\tt field} selection is given in 
+\S~\ref{section:io.selection.field}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt imagename} }
+\label{section:im.pars.imagename}
+
+The value of the {\tt imagename} parameter is used as the root name
+of the output image.  Depending on the particular task and the
+options chosen, one or more images with names built from that root
+will be created.  
+For example, the {\tt clean} task run with
+{\tt imagename='ngc5921} 
+a series of output images will be created with the names
+{\tt ngc5921.clean}, {\tt ngc5921.residual}, {\tt ngc5921.model}, etc.
+
+{\bf If an image with that name already exists, it will in general
+be overwritten.  Beware using names of existing images however.
+If the {\tt clean} is run using an {\tt imagename} where 
+{\tt <imagename>.residual} and {\tt <imagename>.model} already
+exist then {\tt clean} will continue starting from these
+(effectively restarting from the end of the previous {\tt clean}).} 
+Thus, if multiple runs of {\tt clean} are run consecutively
+with the same {\tt imagename}, then the cleaning is incremental
+(as in the {\tt difmap} package).
+
+The output image may also have a different beam per plane. For
+datasets with very large fractional bandwidth, {\tt clean} will use a
+different PSF for each channel when the PSF changes by more than half
+a pixel as a function of frequency. To smooth to a common resolution,
+one can either use the parameter {\tt resmooth}
+(\S\,\ref{section:im.pars.resmooth}) to smooth to the smallest common
+possible beam, {\tt restoringbeam} for an arbitrary, larger beam,
+(\S\,\ref{section:im.clean.restoringbeam}), or the task {\tt imsmooth}
+(\S~\ref{section:analysis.imsmooth}) after {\tt clean}ing. Data
+analysis tasks such as {\tt immoments} in CASA support changing beams
+per plane.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt imsize} }
+\label{section:im.pars.imsize}
+
+The image size in numbers of pixels on the x and y axes is
+set by {\tt imsize}.  For example,
+\small
+\begin{verbatim}
+  imsize = [640, 640]
+\end{verbatim}
+\normalsize makes a square image 640 pixels on a side.  If a single
+value is given, then a square image of that dimension is made.  The
+underlying algorithms work best for certain image sizes. If you pick a
+size where that algorithm will be particularly slow, the logger will
+send a warning message, suggesting the nearest optimal values. In
+general, the best performance is obtained with image sizes that are
+even and factorizable to 2,3,5,7 only. An easy rule of thumb would be
+$2^{n}\times10$ where $n$ is an integer number, like 160, 320, 640,
+1280, 2560, etc.
+
+
+%This
+%need not be a power of two, but for optimal performance should
+%be a ``composite'' number divisible only by 2 and also 3 and/or
+%5.  Note that in the example above $288 = 2^5 \cdot 3^2$.
+%
+%{\bf ALERT:} You will be warned if you give a non-composite
+%{\tt imsize} and it will suggest the nearest appropriate value.
+%But it will continue cleaning so you may have to abort if you want
+%to make use of this suggestion.  
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt mode} }
+\label{section:im.pars.mode}
+
+The {\tt mode} parameter defines how the frequency channels in the
+synthesis MS are mapped onto the image.  The allowed values are:
+{\tt mfs}, {\tt channel}, {\tt velocity}, {\tt frequency}.
+The {\tt mode} parameter
+is expandable, with some options uncovering a number of
+sub-parameters, depending upon its value.
+
+%%%%%%
+\subsubsection{Mode {\tt mfs} }
+\label{section:im.pars.mode.mfs}
+\small
+\begin{verbatim}
+mode                =      'mfs'        #  Spectral gridding type (mfs, channel,
+                                        #   velocity, frequency)
+     nterms         =          1        #  Number of terms used to model the sky
+                                        #   frequency dependence (Note: nterms>1
+                                        #   is under development)
+     reffreq        =         ''        #  Reference frequency for MFS (relevant
+                                        #   only if nterms > 1),'' defaults to
+                                        #   central data-frequency
+\end{verbatim}
+\normalsize
+
+The default {\tt mode='mfs'} emulates multi-frequency synthesis in
+that each visibility-channel datum $k$ with baseline vector
+$\bvec{B}_k$ at wavelength $\lambda_k$ is gridded into the uv-plane at
+$\bvec{u}_k = \bvec{B}_k/\lambda_k$.  The result is one or more images
+(depending on {\tt nterms}), regardless of how many channels are in the input dataset.
+The first image plane is at the frequency given by the midpoint between
+the highest and lowest frequency channels in the input {\tt spw}(s).
+Currently, there is no way to choose the center frequency of the 
+output image plane independently.
+
+WideBand imaging ({\tt mfs} with {\tt nterms}$>1$) is now available in
+CASA. This algorithm models the wide-band sky brightness as a linear
+combination of Gaussian-like functions whose amplitudes follow a
+Taylor-polynomial in frequency.  The output images are a set of
+Taylor-coefficient images, from which spectral index and curvature
+maps are derived. The {\tt reffreq} parameter sets the reference
+frequency $\nu_0$ about which the Taylor expansion is done. The Taylor
+expansion is a polynomial in frequency:
+
+\begin{equation}
+I_{\nu}^{\rm sky}=\sum_{t} I_{t}^{\rm sky} \left(\frac{\nu-\nu_0}{\nu_0}\right)^t
+\label{eq.ia:taylor}
+\end{equation}
+$I_{t}^{\rm sky}$ an image of the $t^{\rm th}$
+coefficient of the Taylor-polynomial expansion.
+
+When Eq.\,\ref{eq.ia:taylor} is applied on a source with a spectral index
+
+\begin{equation}
+I_{\nu}^{\rm sky}=I_{\nu_0}^{\rm sky} \left(\frac{\nu}{\nu_0}\right)^{\alpha + \beta \log(\nu/\nu_0)}
+\label{eq.ia:specindex}
+\end{equation}
+
+The Taylor terms $I_{t}^{\rm sky}$ can be used to constrain the sky
+brightness, $\alpha$, and $\beta$ through
+
+\begin{equation}
+I_{\nu_0}^{\rm sky}=I_{0}^{\rm sky}
+\label{eq.ia:taylorsky}
+\end{equation}
+
+\begin{equation}
+\alpha= \frac{I_1^{\rm sky}}{I_{\nu_0}^{\rm sky}}=\frac{I_1^{\rm sky}}{I_{0}^{\rm sky}} \\
+\label{eq.ia:tayloralpha}
+\end{equation}
+
+\begin{equation}
+\beta=\frac{I_2^{\rm sky}}{I_{\nu_0}^{\rm sky}}-\frac{\alpha(\alpha-1)}{2}=\frac{I_2^{\rm sky}}{I_{0}^{\rm sky}}-\frac{\alpha(\alpha-1)}{2}
+%=I_2^{\rm sky}-\frac{[(I_1^{\rm sky})^2/I_0^{\rm sky}]-I_1^{\rm sky}}{2}
+\label{eq.ia:taylorbeta}
+\end{equation}
+
+
+
+For more information, please see Rau, U. \& Cornwell, T. J. 2011, ``A
+multi-scale multi-frequency deconvolution algorithm for synthesis
+imaging in radio interferometry'', A\&A, 532, 71 % \url{http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2011A\%26A...532A..71R\&db_key=AST\&link_type=ABSTRACT\&high=4b90831b1d31322}
+
+{\bf Alert:} The MS-MFS (multiscale-multifrequency) algorithm in the
+current release is new and is still being
+developed/tested/debugged. Its basic operation has been tested on
+wide-band JVLA data for Stokes I imaging.
+
+{\bf Explanation of the Parameters:} \\
+{\tt nterms}: The number of terms in the Taylor polynomial used to
+model the frequency structure.  {\tt nterms}$>1$ triggers MS-MFS. {\tt
+  nterms}$=1$ triggers standard point-source clean or
+multi-scale-clean.  Note: The choice of {\tt nterms} follows the same
+rules used while fitting a polynomial to a 1D set of noisy data
+points. To prevent overfitting, the order of the polynomial needs to
+depend on the available signal-to-noise in the data.  A very rough
+rule-of-thumb is as follows: For high SNR data (single channel
+SNR$>$100), and fields dominated by point-sources with spectral
+indices around $-1.0$ across a 2:1 bandwidth, choose {\tt nterms}$=3$
+or $4$. For lower SNR data ($5<$SNR$<100$), flatter spectra, or when
+there is significant extended emission, {\tt nterms}$=2$ is a much
+safer option. For very low SNR data (SNR$<5$), choose {\tt nterms}$=1$).
+
+
+
+{\tt reffreq}: The reference frequency used to compute Taylor
+functions $[ ({\rm freq} - {\rm reffreq})/({\rm reffreq}) ]^{i}$.  If
+left blank ({\tt reffreq}=''), it defaults to the middle frequency of
+the selected data.  Note : For the current release, the use of {\tt
+  reffreq}='' is recommended.
+
+
+
+{\tt multiscale}: The MS-MFS algorithm always uses scale sizes set via
+the {\tt multiscale} parameter.  For point-source deconvolution, set
+{\tt multiscale}=[0] (also the default).  Note: Unlike standard
+msclean ({\tt multiscale} = [0,6,10,....] with {\tt nterms}=1), with
+higher {\tt nterms} the largest specified scale size must lie within
+the sampled range of the interferometer. If not, there can be an
+ambiguity in the spectral reconstruction at very large spatial scales.
+
+{\tt gridmode}: Wideband W-Projection is supported, and can be
+triggered via {\tt gridmode}='widefield'.
+
+
+{\tt modelimage}: Supply a list of Taylor-coefficient images, to start the deconvolution from.  
+               If only one image is specified, it will be used as the model for the 'tt0' image. 
+     
+
+{\bf Output images}: [xxx.image.tt0,
+               xxx.image.tt1,... ] : Images of Taylor coefficients
+               that describe the frequency-structure.  The "tt0" image
+               is the total-intensity image at the reference
+               frequency, and is equivalent to "xxx.image" obtained
+               via standard imaging.
+
+
+               [xxx.image.alpha, xxx.image.beta] : Spectral index and
+               spectral curvature at the reference-frequency. These
+               are computed from tt0, tt1, tt2 only for regions of the
+               image where there is sufficient signal-to-noise to
+               compute them. These regions are chosen via a threshold
+               on the intensity image (tt0) computed as MAX(
+               userthreshold*5 , peakresidual/10 ) ). This threshold
+               is reported in the logger.  Elsewhere, the values are
+               currently set to zero.
+
+                [xxx.image.alpha.error] contains the errors of the
+                spectral index solutions.
+
+
+The following is a list of differences between MS-MFS ({\tt
+                 nterms}$>1$) and standard imaging, in the current
+               CASA release.
+
+\begin{enumerate}
+
+
+\item Iterations always proceed as cs-clean major/minor cycles, and
+  uses the full psf during minor cycle iterations. There are currently
+  no user-controls on the {\tt cyclespeedup}, and the flux-limit per major cycle is
+  chosen as 10\% of the peak residual. In future releases, this will
+  be made more adaptive/controllable.
+
+\item Currently, the following options are not supported for {\tt
+    nterms}$>1$: {\tt psfmode,} {\tt pbcorr}, {\tt minpb}, {\tt
+    imagermode}='mosaic', {\tt
+    gridmode}='aprojection', {\tt cyclespeedup}, and allowed are one
+  of Stokes I, Q, U, V, RR, LL, XX, YY at a time. More options and combinations are currently under
+  development and testing. Under 'Using CASA' $\rightarrow$ 'Other
+  Documentation' $\rightarrow$ 'Imaging Algorithms in CASA' you can
+  find the latest implementations. 
+
+\end{enumerate}
+
+
+%%%%%%
+\subsubsection{Mode {\tt channel} }
+\label{section:im.pars.mode.channel}
+
+{\bf ALERT:} Note that {\tt mode='channel'} is intended as a shortcut
+to produce a cube based on the input MS channelization.  It will be in
+the frame of the input MS.  We recommend that users instead use the
+{\tt 'velocity'} and {\tt 'frequency'} modes which will produce cubes
+in other frames with more control of the cube spacing.  These modes
+have defaults that will work from the MS spacing, reproducing the
+action of {\tt mode='channel'}.
+
+If {\tt mode='channel'} is chosen, then an image cube will be
+created. This is an expandable parameter, with dependent parameters:
+\small
+\begin{verbatim}
+mode              =  'channel'   #  Spectral image definition(mfs,
+                                 #   channel, velocity,frequency)
+   nchan          =         -1   #  Number of channels (planes) in output image
+   start          =          0   #  first input channel to use
+   width          =          1   #  Number of input channels to average
+   interpolation  =   'nearest'   #  Spectral interpolation(nearest, linear, cubic)
+\end{verbatim}
+\normalsize The default {\tt nchan=-1} will automatically produce a
+cube with the number of channels needed to span the (regridded)
+spectral windows of the MS. If multiple MSs are used, the spectral
+frames of these need to be identical, e.g. LSRK\footnote{Note that
+  when TOPO is used, it refers to a time stamp at a given observation date. If
+more than one observation in TOPO is specified, this may lead to vastly
+erroneous values. Any conversion from TOPO to other frames such as
+BARY and LSRK should be performed for each individual observation,
+prior to clean or concatenation}.  {\bf ALERT:} This
+often results in extra blank channels at the beginning and end of the
+image cube, so it is usually more precise to specify {\tt nchan} and
+{\tt start} to get what you want. For best results, we also recommend
+{\tt 'nearest'} interpolation for the {\tt mode=channel}.
+
+The channelization of the resulting image is determined by the
+channelization in the MS of {\tt vis} of the first {\tt spw} specified
+(the ``reference {\tt spw}''). The actual channels to be gridded and
+used in the clean are selected via the {\tt spw} parameter as usual.
+The resulting image cube will have {\tt nchan} channels spaced evenly
+in frequency.  The first output channel will be located at the
+frequency of channel {\tt start} in the (first) reference {\tt spw}
+(independent of what channels are selected using {\tt spw}).  If {\tt
+  width}$ > 1$, then input MS channels with centers within a frequency
+range given by $({\tt width}+1)/2$ times the reference {\tt spw}
+spacing will be gridded together (as in {\tt mode = 'mfs'} above) into
+the channels of the output image cube.  The output channel spacing is
+thus given by {\tt width} channels in the reference {\tt spw} of the
+MS.
+  
+The {\tt interpolation} sub-parameter
+(\S~\ref{section:im.pars.mode.interpolation}) sets how channels are
+gridded into the image cube planes.  For {\tt 'nearest'}, the
+channels in {\tt spw} beyond the first are mapped
+into the nearest output image channel within half a channel (if
+any).  Otherwise, the chosen interpolation scheme will be used.
+Image channels that lie outside the MS frequency range or
+have no data mapped to them will be blank in the output image,
+but will be in the cube.  
+
+Example: 
+\small
+\begin{verbatim}
+mode         = 'channel'       
+     nchan   =         46   
+     start   =          5   
+     width   =          1   
+\end{verbatim}
+\normalsize
+which will produce a 46-channel cube starting with channel 5 of the MS
+with the same channel width as the MS.  {\em Note: the {\tt start}
+channel is in reference to the channels in the MS, not the subset
+selected by {\tt spw}.}
+
+%%%%%%
+\subsubsection{Mode {\tt frequency} }
+\label{section:im.pars.mode.frequency}
+
+For {\tt mode='frequency'}, an output image cube is created
+with {\tt nchan} channels spaced evenly in frequency.
+\small
+\begin{verbatim}
+mode              = 'frequency'   #  Spectral image definition(mfs,
+                                  #   channel, velocity,frequency)
+   nchan          =          -1   #  Number of channels (planes) in output image
+   start          =          ''   #  Frequency of first image channel:
+                                  #   e.q. '1.4GHz'(''=default)
+   width          =          ''   #  Image channel frequency width:
+                                  #   e.g '1.0kHz'(''=default)
+   interpolation  =    'linear'   #  Spectral interpolation(nearest, linear, cubic)
+   outframe       =          ''   #  velocity frame of output image
+\end{verbatim}
+\normalsize
+The frequency of the first output channel is given by {\tt start}
+and spacing by {\tt width}.  Output channels have width also given by {\tt width}.
+The sign of {\tt width}
+determines whether the output channels ascend or descend in
+frequency.  Data from the input MS with centers that lie within one-half an input
+channel overlap of the frequency range of $\pm{\tt width}/2$ centered
+on the output channels are gridded together.  
+
+The defaults are designed to safely choose output cube channels to
+span the input MS(s).
+The default {\tt nchan=-1} will choose the number of channels needed
+to span the frequencies of the channels in the MS.  
+The defaults {\tt start=''} and {\tt width=''} will use the channel
+frequency and width of the first channel of the first specified
+spectral window selected in {\tt spw}.  {\bf ALERT:} As in ``channel''
+mode, this is currently the first channel of the first {\tt spw}, not
+the first channel selected from that {\tt spw}.  
+
+The {\tt interpolation} sub-parameter
+(\S~\ref{section:im.pars.mode.interpolation}) sets how channels are
+gridded into the image cube planes.
+
+Using the NGC5921 dataset as an example:
+\small
+\begin{verbatim}
+mode          =   'frequency'       
+     nchan    =            21        
+     start    = '1412.830MHz'     
+     width    =       '50kHz'        
+     outframe =        'LSRK'
+\end{verbatim}
+\normalsize
+would produce a 21-channel output cube with 50~kHz wide channels
+rather than the default channelization of the MS (24.4~kHz).
+
+%{\bf ALERT:} In Patch 3 and earlier, it will current grid each
+%channel of the input MS to the nearest image plane, or two if it lies 
+%on or close to the border between two planes in frequency or velocity.
+%Thus if you choose to make an image with the channelization
+%non-integral multiples of the MS channel width, you will see effects
+%in the image cube where some planes have higher or lower noise than
+%others depending on how many input channels went into the plane.  We
+%will fix this behavior and use true interpolation in future releases.
+%In the meantime we suggest you use {\tt mode='channel'} or be careful
+%with the choice of {\tt start} and {\tt width}.
+
+%%%%%%
+\subsubsection{Mode {\tt velocity} }
+\label{section:im.pars.mode.velocity}
+
+If {\tt mode='velocity'} is chosen, then an output image cube
+with {\tt nchan} channels will be created, with channels spaced
+evenly in velocity.  Parameters are:
+\small
+\begin{verbatim}
+mode              = 'velocity'   #  Spectral image definition(mfs,
+                                 #   channel, velocity,frequency)
+   nchan          =         -1   #  Number of channels (planes) in output image
+   start          =         ''   #  Velocity of first image channel:
+                                 #   e.g '0.0km/s'(''=default)
+   width          =         ''   #  Image channel velocity width: e.g
+                                 #   '-1.0km/s'(''=default)
+   interpolation  =  'linear'    #  Spectral interpolation(nearest,
+                                 #   linear, cubic)
+   outframe       =         ''   #  velocity reference frame of output
+                                 #   image; '' =input
+   veltype        =    'radio'   #  velocity definition
+\end{verbatim}
+\normalsize
+Note that velocities are calculated with respect to the rest frequency
+in the MS or specified through the {\tt restfreq} parameter
+(\S~\ref{section:im.pars.restfreq}).
+
+The velocity of the first output channel is given by {\tt start}
+and spacing by {\tt width}.  Averaging is as in
+{\tt mode='frequency'}.  The {\tt interpolation} sub-parameter
+(\S~\ref{section:im.pars.mode.interpolation}) sets how channels are
+gridded into the image cube planes.
+
+The defaults are designed to safely choose output cube channels to
+span the input MS(s).
+The default {\tt nchan=-1} will choose the number of channels needed
+to span the velocities of the channels in the MS.  
+The defaults {\tt start=''} and {\tt width=''} will use the channel
+velocity and width of the first channel of the first specified
+spectral window selected in {\tt spw}.  {\bf ALERT:} As in ``channel''
+mode, this is currently the first channel of the first {\tt spw}, not
+the first channel selected from that {\tt spw}.  
+
+Again, using the NGC5921 dataset as an example:
+\small
+\begin{verbatim}
+mode          =   'velocity'        
+     nchan    =           21        
+     start    = '1383.0km/s'      
+     width    =     '10km/s'        
+     outframe =       'LSRK'
+\end{verbatim}
+\normalsize
+Note that in this case the velocity axis runs forward, as opposed to
+the default channelization for {\tt 'channel'} or {\tt 'frequency'}.
+
+%{\bf ALERT:} In Patch 3 and earlier, it will current grid each
+%channel of the input MS to the nearest image plane, or two if it lies 
+%on or close to the border between two planes in frequency or velocity.
+%Thus if you choose to make an image with the channelization
+%non-integral multiples of the MS channel width, you will see effects
+%in the image cube where some planes have higher or lower noise than
+%others depending on how many input channels went into the plane.  We
+%will fix this behavior and use true interpolation in future releases.
+%In the meantime we suggest you use {\tt mode='channel'} or be careful
+%with the choice of {\tt start} and {\tt width}.
+
+%%%%%%
+\subsubsection{Sub-parameter {\tt interpolation} }
+\label{section:im.pars.mode.interpolation}
+
+The {\tt interpolation} sub-parameter controls how spectral channels
+in the MS are gridded into the output image cube.  This is available 
+in all {\tt mode}s except {\tt 'mfs'}.  The options are: 
+{\tt 'nearest'}, {\tt 'linear'}, {\tt 'cubic'}.
+
+For {\tt 'nearest'}, the channels in {\tt spw} beyond the first are
+mapped into the nearest output image channel within half a channel (if
+any).
+
+For {\tt 'linear'}, the channels are gridded into the planes using
+weights given by a linear function of the frequency of the MS channel
+versus the plane.  Each input channel will be mapped to 1 or 2 output
+planes.  For most users, this is the best choice.
+
+For {\tt 'cubic'}, the channels are gridded using a cubic
+interpolation function. 
+
+'Linear' and 'cubic' interpolation methods require that there are two
+datapoints that sandwich your new, regridded bin. This can introduce
+edge effects like in the first or last channel or adjacent to flagged
+channels where data is only available on one side of the
+spectrum. {\tt interpolation='nearest'} will avoid such edge effects
+but may not work so well for data with spws that overlap. For {\tt
+  mode='velocity'} or {\tt 'frequency'}, 'linear' interpolation
+usually works best and for {\tt mode='channel'} the 'nearest'
+interpolation method is superior. But this could be different
+for your dataset and you should carefully check your results.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt resmooth} }
+\label{section:im.pars.resmooth}
+For large cubes, the psf will change as a function of frequency. {\tt
+  clean} will produce cubes with different synthesized beams per
+plane.  All CASA analysis tasks can deal with such cubes. If one would
+like a common psf for all planes, typically the smallest possible
+beam, one can invoke the {\tt resmooth} Boolean
+parameter. Alternatively, the cube can be convolved to the smallest
+common beam in a separate step vis {\tt imsmooth} (see
+Sect.\,\ref{section:analysis.imsmooth}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt phasecenter} }
+\label{section:im.pars.phasecenter}
+
+The {\tt phasecenter} parameter indicates which of the field IDs 
+should be used to define the phase center of the mosaic image,
+or what that phase center is in RA and Dec.
+The default action is to use the first one given in the 
+{\tt field} list.
+
+For example:
+\small
+\begin{verbatim}
+   phasecenter='5'                        # field 5 in multi-src ms
+   phasecenter='J2000 19h30m00 -40d00m00' # specify position
+\end{verbatim}
+\normalsize
+
+Note that the format for angles prefers to use {\tt hm} for RA/time
+units and {\tt dm} for Dec/Angle units as separators.  The colon
+{\tt ::} separator is interpreted as RA/time even if its used for the
+Dec, so be careful not to copy/paste from other sources.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt restfreq} }
+\label{section:im.pars.restfreq}
+
+The value of the {\tt restfreq} parameter, if set, will over-ride
+the rest frequency in the header of the first input MS to define
+the velocity frame of the output image.
+
+{\bf ALERT:} The {\tt restfreq} parameter takes the options
+of transitions and frequencies as in the corresponding {\tt plotxy}
+parameter (\S~\ref{section:edit.plot.plotxy.restfreq}), but the
+frame information is controlled under the {\tt mode} parameter
+(\S~\ref{section:im.pars.mode}).
+
+For example:
+\small
+\begin{verbatim}
+   restfreq='115.2712GHz',
+\end{verbatim}
+\normalsize
+will set the rest frequency to that of the CO 1-0 line.
+
+{\bf ALERT:} Setting {\tt restfreq} explicitly here in
+{\tt clean} is good practice, and may be necessary if your MS has
+been concatenated from different files for different spectral
+windows (\S~\ref{section:io.concat}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt spw} }
+\label{section:im.pars.spw}
+
+The {\tt spw} parameter selects the spectral windows that will
+be used to form the image, and possibly a subset of channels
+within these windows.
+
+The {\tt spw} parameter is a string with an integer, list
+of integers, or a range, e.g.  
+\small
+\begin{verbatim}
+  spw = '1'                #  select spw 1
+  spw = '0,1,2,3'          #  select spw 0,1,2,3
+  spw = '0~3'              #  same thing using ranges
+\end{verbatim}
+\normalsize
+You can select channels in the same string with a {\tt :} separator,
+for example
+\small
+\begin{verbatim}
+  spw = '1:10~30'          #  select channels 10-30 of spw 1
+  spw = '0:5~55,3:5;6;7'   #  chans 5-55 of spw 0 and 5,6,7 of spw 3
+\end{verbatim}
+\normalsize
+This uses the standard syntax for {\tt spw} selection is given in 
+\S~\ref{section:io.selection.spw}.  See that section for more
+options.
+
+Note that the order in which multiple {\tt spw}s are given is
+important for {\tt mode = 'channel'}, as
+this defines the origin for the channelization of the resulting
+image.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt stokes} }
+\label{section:im.pars.stokes}
+
+The {\tt stokes} parameter specifies the Stokes parameters for the
+resulting images.  Note that forming Stokes {\tt Q} and {\tt U} images
+requires the presence of
+cross-hand polarizations (e.g. {\tt RL} and {\tt LR} for circularly
+polarized systems such as the VLA) in the data.  
+Stokes {\tt V} requires both parallel
+hands ({\tt RR} and {\tt :LL}) for circularly polarized systems or
+the cross-hands ({\tt XY} and {\tt YX}) for linearly polarized systems
+such as ALMA and ATCA.
+
+This parameter is specified as a string of up to four letters and can
+indicate stokes parameters themselves, Right/Left hand polarization
+products, or linear polarization products (X/Y). 
+For example,
+\small
+\begin{verbatim}
+  stokes = 'I'            # Intensity only
+  stokes = 'IQU'          # Intensity and linear polarization
+  stokes = 'IV'           # Intensity and circular polarization
+  stokes = 'IQUV'         # All Stokes imaging
+  stokes = 'RR'           # Right hand polarization only
+  stokes = 'XXYY'         # Both linear polarizations 
+\end{verbatim}
+\normalsize
+are common choices (see the inline help of {\tt clean} for a full
+range of possible options).
+The output image will have planes (along the ``polarization axis'')
+corresponding to the chosen Stokes parameters.  
+
+If as input to deconvolution tasks such as {\tt clean}, the {\tt stokes} parameter
+includes polarization planes other than I, then choosing {\tt psfmode='hogbom'} 
+(\S~\ref{section:im.clean.psfmode.hogbom}) or {\tt psfmode='clarkstokes'} 
+(\S~\ref{section:im.clean.psfmode.clarkstokes}) will clean (search for
+components) each plane sequentially, while {\tt psfmode='clark'} 
+(\S~\ref{section:im.clean.psfmode.clark}) will deconvolve jointly.
+
+{\bf Alert:} As of Release 3.2, {\tt clean} expects that all input
+polarizations are present. E.g. if you have RR and LL dual
+polarization data and you flagged parts of RR but not LL, {\tt clean} will
+ignore {\bf both} polarizations in slice. It is possible to split out a
+polarization product with {\tt split} and image separately. But you
+will not be able to combine these part-flagged data in the uv-domain. 
+We will remove that restriction in a future
+CASA release.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt uvtaper} }
+\label{section:im.pars.uvtaper}
+
+This controls the radial weighting of visibilities in the uv-plane
+(see \S~\ref{section:im.pars.weighting} below) through the multiplication
+of the visibilities by the Fourier transform of an elliptical Gaussian.
+This is itself a Gaussian, and thus the visibilities are ``tapered'' with
+weights decreasing as a function of uv-radius.
+
+The {\tt uvtaper} parameter expands the menu upon setting {\tt uvtaper=True} 
+to reveal the following sub-parameters:
+\small
+\begin{verbatim}
+uvtaper       =       True   #  Apply additional uv tapering of  visibilities.
+   outertaper =         []   #  uv-taper on outer baselines in uv-plane
+   innertaper =         []   #  uv-taper in center of uv-plane (not
+implemented)
+\end{verbatim}
+\normalsize
+The sub-parameters specify the size and optionally shape and
+orientation of this Gaussian in the uv-plane or optionally the
+sky plane.  The {\tt outertaper} refers to a Gaussian centered on 
+the origin of the uv-plane.
+
+Some examples:
+\small
+\begin{verbatim}
+   outertaper=[]                                  # no outer taper applied
+   outertaper=['5klambda']                        # circular uv taper FWHM=5 kilo-lambda
+   outertaper=['5klambda','3klambda','45.0deg']   # elliptical Gaussian
+   outertaper=['10arcsec']                        # on-sky FWHM 10"
+   outertaper=['300.0']                           # 300m in aperture plane
+\end{verbatim}
+\normalsize
+Note that if no units are given on the taper, then the default units
+are assumed to be meters in aperture plane.
+
+{\bf ALERT:} The {\tt innertaper} option is not yet implemented. 
+
+%Note that since this filter effectively {\it multiplies} the intrinsic
+%visibility weights, the resulting image will not have a PSF given by the size of the
+%filter, but a PSF given by its intrinsic size convolved by the filter.  Thus you should
+%end up with a synthesized beam of size equal to the quadratic sum of the original beam
+%and the filter.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt weighting} }
+\label{section:im.pars.weighting}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.weight} method has more weighting options
+     than available in the imaging tasks.  See the 
+     {\bf User Reference Manual} for more information on
+     imaging weights.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+In order to image your data, we must have a map from the visibilities
+to the image.  Part of that map, which is effectively a convolution,
+is the weights by which each visibility is multiplied before gridding.
+The first factor in the weighting is the ``noise'' in that visibility,
+represented by the data weights in the MS (which is calibrated along
+with the visibility data).
+The weighting function can also depend upon the uv locus of that visibility
+(e.g. a ``taper'' to change resolution).  This is actually controlled
+by the {\tt uvtaper} parameter (see \S~\ref{section:im.pars.uvtaper}).
+The weighting matrix also includes the convolution kernel that
+distributes that visibility onto the uv-plane during gridding before
+Fourier transforming to make the image of the sky.  This depends upon
+the density of visibilities in the uv-plane (e.g. ``natural'',
+``uniform'', ``robust'' weighting).
+
+The user has control over all of these.
+
+{\bf ALERT:} You can find a weighting description in the online
+User Reference Manual at:
+
+\url{http://casa.nrao.edu/docs/casaref/imager.weight.html}
+
+
+The {\tt weighting} parameter expands the menu to include various 
+sub-parameters depending upon the mode chosen:
+
+%%%%%%
+\subsubsection{{\tt 'natural'} weighting }
+\label{section:im.pars.weighting.natural}
+
+For {\tt weighting='natural'}, visibilities are weighted only by the
+data weights, which are calculated during filling and calibration and
+should be equal to the inverse noise variance on that visibility.
+Imaging weight $w_i$ of sample $i$ is given by
+\begin{equation}
+  w_i = \omega_i = {1 \over \sigma^2_k}
+\end{equation}
+where the data weight $\omega_i$ is determined from $\sigma_i$ is the
+rms noise on visibility $i$.
+When data is gridded into the same uv-cell for imaging, the weights
+are summed, and thus a higher uv density results in higher imaging
+weights.  No sub-parameters are linked to this mode choice.  It is the
+default imaging weight mode, and it should produce ``optimum'' image
+with the lowest noise (highest signal-to-noise ratio).  Note that
+this generally produces images with the poorest angular resolution,
+since the density of visibilities falls radially in the uv-plane
+
+%%%%%%
+\subsubsection{{\tt 'uniform'} weighting }
+\label{section:im.pars.weighting.uniform}
+
+For {\tt weighting = 'uniform'}, the data weights are calculated
+as in {\tt 'natural'} weighting.  The data is then gridded to
+a number of cells in the uv-plane, and after all data is gridded
+the uv-cells are re-weighted to have ``uniform'' imaging weights.
+This pumps
+up the influence on the image of data with low weights (they are
+multiplied up to be the same as for the highest weighted data), which
+sharpens resolution and reduces the sidelobe level in the
+field-of-view, but increases the rms image noise. No sub-parameters are
+linked to this mode choice.
+
+For uniform weighting, we first grid the inverse variance $\omega_i$
+for all selected data onto a grid with uv cell-size given by $2/FOV$
+where $FOV$ is the specified field of view (defaults to the image
+field of view).  This forms the gridded weights $W_k$. The weight of
+the $i$-th sample is then: 
+\begin{equation}
+  w_i = {\omega_i \over W_k}.
+\end{equation}
+
+%%%%%%
+\subsubsection{{\tt 'superuniform'} weighting }
+\label{section:im.pars.weighting.superuniform}
+
+The {\tt weighting = 'superuniform'} mode is similar to the
+{\tt 'uniform'} weighting mode but there is now an additional
+{\tt npixels} sub-parameter that specifies a change to the number of 
+cells on a side (with respect to uniform weighting) to define a
+uv-plane patch for the weighting renormalization.  
+If {\tt npixels=0} you get uniform weighting.
+
+%%%%%%
+\subsubsection{{\tt 'radial'} weighting }
+\label{section:im.pars.weighting.radial}
+
+The {\tt weighting = 'radial'} mode is a seldom-used option that
+increases the weight by the radius in the uv-plane, i.e.
+\begin{equation}
+  w_i = \omega_i \cdot \sqrt{u^2_i + v^2_i}.
+\end{equation}
+Technically, I would call that an inverse uv-taper since it depends on
+uv-coordinates and not on the data per-se.
+Its effect is to reduce the rms sidelobes for an east-west synthesis
+array.  This option has limited utility.
+
+%%%%%%
+\subsubsection{{\tt 'briggs'} weighting }
+\label{section:im.pars.weighting.briggs}
+
+The {\tt weighting = 'briggs'} mode is an implementation of the
+flexible weighting scheme developed by Dan Briggs in his PhD thesis.
+See:
+
+\url{http://www.aoc.nrao.edu/dissertations/dbriggs/}
+
+This choice brings up the sub-parameters:
+\small
+\begin{verbatim}
+weighting      =   'briggs'   #   Weighting to apply to visibilities 
+     robust    =        0.0   #   Briggs robustness parameter
+     npixels   =          0   #   number of pixels to determine uv-cell size 0=> field of view
+\end{verbatim}
+\normalsize
+
+The actual weighting scheme used is:
+\begin{equation}
+   w_i={\omega_i\over{1 + W_k f^2}}
+\end{equation}
+where $W_k$ is defined as in {\tt uniform} and {\tt superuniform}
+weighting, and
+\begin{equation}
+   f^2={{(5*10^{-R})^2}\over{{\sum_k W_k^2}\over{\sum_i \omega_i}}}
+\end{equation}
+and $R$ is the robust parameter. 
+
+The key parameter is the {\tt robust} parameter, which sets $R$ in the
+Briggs equations.  The scaling of $R$ is such that $R = 0$ gives a
+good trade-off between resolution and sensitivity. The {\tt robust}
+$R$ takes value between $-2.0$ (close to uniform weighting) 
+to $2.0$ (close to natural).
+
+Superuniform weighting can be combined with Briggs weighting
+using the {\tt npixels} sub-parameter.  This works as in 
+{\tt 'superuniform'} weighting 
+(\S~\ref{section:im.pars.weighting.superuniform}).
+
+%%%%%%
+\subsubsection{{\tt 'briggsabs'} weighting }
+\label{section:im.pars.weighting.briggsabs}
+
+For {\tt weighting='briggsabs'}, a slightly different Briggs weighting is used,
+with
+\begin{equation}
+  w_i={\omega_i\over{W_k R^2 + 2 \sigma_R^2}}
+\end{equation}
+where $R$ is the robust parameter and $\sigma_R$ is the {\tt noise}
+parameter. 
+
+This choice brings up the sub-parameters:
+\small
+\begin{verbatim}
+weighting      = 'briggsabs'  #   Weighting to apply to visibilities 
+     robust    =      0.0     #   Briggs robustness parameter
+     noise     =  '0.0Jy'     #   noise parameter for briggs weighting when rmode='abs'
+     npixels   =        0     #   number of pixels to determine uv-cell size 0=> field of view
+\end{verbatim}
+\normalsize
+
+Otherwise, this works as {\tt weighting='briggs'} above 
+(\S~\ref{section:im.pars.weighting.briggs}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt vis} }
+\label{section:im.pars.vis}
+
+
+The value of the {\tt vis} parameter is either the name of a single
+MS, or a list of strings containing the names of multiple MSs, that
+should be processed to produce the image.  The MS referred to by the
+first name in the list (if more than one) is used to determine
+properties of the image such as channelization and rest frequency.
+
+For example,
+\small
+\begin{verbatim}
+  vis = 'ngc5921.ms'
+\end{verbatim}
+\normalsize
+set a single input MS, while
+\small
+\begin{verbatim}
+  vis = ['ngc5921_day1.ms', 'ngc5921_day2.ms', 'ngc5921_day3.ms']
+\end{verbatim}
+\normalsize points to three separate measurement sets that will be
+gridded together to form the image.  This means that you do not have
+to concatenate datasets, for example from different configurations,
+before imaging. 
+
+For the multiple MS case, all selection commands like {\tt field},
+{\tt spw}, etc. are lists that refer to the list of input MSs,
+like 
+
+\small
+\begin{verbatim}
+spw=['1:2~9','0:10~22','<2']
+field=['0','ngc5921','12']
+\end{verbatim}
+\normalsize
+
+will use the first entry of each selection criterion and apply it to
+the first dataset (\verb+spw='1:2~9'+ and \verb+field='0'+ to
+\verb+'ngc5921_day1.ms'+), the second selection criterion to the
+second dataset etc.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Primary beams in imaging }
+\label{section:im.pars.pb}
+% Added STM 2008-12-02 based on KG info
+
+The CASA imaging task and tools use primary beams based on models
+for each observatory's antenna types.  In addition to different 
+antenna diameters, different functions may be used.  
+
+The voltage patterns are based on the following antenna primary beams,
+based on the {\tt TELESCOPE\_NAME} keyword in the {\tt OBSERVATION}
+table:
+\begin{description}
+\item[VLA] --- Airy disk fitted to measurement. Note that a R/L beam
+squint is also included with feed dependent angle;
+
+\item[ALMA] --- Airy disk for 12m dish with a blockage of 1m;
+
+\item[ATA] --- Airy disk for 6m dish;
+
+\item[ATCA] --- polynomial fitted to measurement of main lobe;
+
+\item[BIMA, HATCREEK] --- Gaussian with halfwidth of $\lambda$/2D;
+
+\item[CARMA] --- Airy patterns for the BIMA or OVRO dish sizes as appropriate;
+
+\item[GBT] --- polynomial fitted to measurement of main lobe;
+
+\item[GMRT] --- VLA Airy disk scaled to 45.0m;
+
+\item[IRAMPDB] --- Airy disk for dish of 15m with a blockage of 1m;
+
+\item[NRAO12M] ---  VLA beam scaled to 12m;
+
+\item[OVRO] --- VLA Airy disk scaled to 10.4m;
+
+\item[SMA] --- Spheroidal function fit to FWHM;
+
+\item[WSRT] --- polynomial fitted to measurement of main lobe;
+
+\end{description}
+
+If the telescope name is unknown, or is CARMA or ALMA, then the
+{\tt DISH\_DIAMETER} in the {\tt ANTENNA} table is used with a
+scaled VLA pattern.
+
+% Fixed in 2.4.0
+%{\bf ALERT:} Currently this generic beam is only implemented for 
+%{\tt imagermode='mosaic'} in {\tt clean}, but in the future will
+%be enabled for all cases.
+
+In mosaicking mode, {\tt clean} will use frequency-dependent primary beams. 
+It also appears that Airy or spheroidal beams are best behaved for mosaics
+(see \S~\ref{section:im.clean.mosaic}). 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Deconvolution using CLEAN ({\tt clean})}
+\label{section:im.clean}
+
+To create an image and then deconvolve it with the CLEAN algorithm,
+use the {\tt clean} task.  This task will work for single-field data,
+or for multi-field mosaics (\S~\ref{section:im.clean.mosaic}), in both
+narrow and wide-field imaging modes.  
+
+
+\normalsize {\bf ALERT:} For large fractional bandwidths the psf in
+{\tt clean} may vary considerably with frequency in data cubes. To
+accommodate this fact we have introduced a per-plane psf (dirty beam)
+when the change is larger than half the size of a pixel. Analysis
+tasks in CASA can deal with such beam variation. If a single beam size
+is requested, {\tt imsmooth} can be invoked on the {\tt clean}
+products to smooth to a common, uniform beam for all channels. 
+
+
+{\bf Toolkit Note:} MEM is not included in {\tt clean}, but is
+available in the toolkit.
+
+{\tt clean} will use the {\tt CORRECTED\_DATA} column from your
+measurement set if it exists. If that column is not available, it will
+use {\tt DATA}. The {\tt clean} task utilizes many of the common imaging
+parameters.  These are described above in \S~\ref{section:im.pars}.
+There are also a number of parameters specific to {\tt clean}.  These
+are listed and described below.
+
+The default inputs to {\tt clean} are:
+\small
+\begin{verbatim}
+#  clean :: Deconvolve an image with selected algorithm
+vis                 =         ''   #  name of input visibility file
+imagename           =       ['']   #  Pre-name of output images
+outlierfile         =         ''   #  Text file with image names, sizes, centers
+field               =         ''   #  Field Name
+spw                 =         ''   #  Spectral windows:channels: '' is all
+selectdata          =      False   #  Other data selection parameters
+mode                =      'mfs'   #   Type of selection (mfs, channel, velocity,frequency)
+     nterms         =          1   #  Number of taylor terms to use
+                                   #   for modeling the sky frequency dependence
+     reffreq        =         ''   #  Reference frequency for MFS
+                                   #   (relevant only if nterms > 1)
+
+gridmode            =         ''   #  The kind gridding kernel to be
+                                   #   used for FFT-based transforms
+niter               =        500   #  Maximum number of iterations
+gain                =        0.1   #  Loop gain for cleaning
+threshold           =   '0.0mJy'   #  Flux level to stop cleaning.  Must include units
+psfmode             =    'clark'   #  method of PSF calculation to use during minor cycles
+imagermode          =         ''   #   Use csclean or mosaic.  If '', use psfmode
+multiscale          =         []   #  deconvolution scales (pixels);
+                                   #   [] = default standard clean
+interactive         =      False   #  use interactive clean (with GUI viewer)
+mask                =         []   #  cleanbox(es), mask image(s),
+                                   #   and/or region(s)  used in cleaning
+imsize              = [256, 256]   #  x and y image size in pixels,
+                                   #   symmetric for single value
+cell                = ['1.0arcsec', '1.0arcsec'] #  x and y cell size. default unit arcsec
+phasecenter         =         ''   #  Image phase center: position or field index
+restfreq            =         ''   #  rest frequency to assign to image (see help)
+stokes              =        'I'   #  Stokes params to image (eg I,IV, QU,IQUV)
+weighting           =  'natural'   #  Weighting of uv (natural, uniform, briggs, ...)
+uvtaper             =      False   #  Apply additional uv tapering of  visibilities.
+modelimage          =         ''   #  Name of model image(s) to initialize cleaning
+restoringbeam       =       ['']   #  Output Gaussian restoring beam for CLEAN image
+pbcor               =      False   #  Output primary beam-corrected image
+minpb               =        0.1   #  Minimum PB level to use
+usescratch          =      False   #  True if to save model
+                                   #   visibilities in MODEL_DATA column
+async               =      False   #  If true the taskname must be
+                                   #   started using clean(...)
+\end{verbatim}
+\normalsize
+
+The {\tt clean} task will produce a number of output images based
+on the root name given in {\tt imagename}.  
+These include:
+\small
+\begin{verbatim}
+   <imagename>.clean.image                # the restored image
+   <imagename>.clean.flux                 # the effective response (e.g. for pbcor)
+   <imagename>.clean.flux.pbcoverage      # the PB coverage (ftmachine='mosaic' only)
+   <imagename>.clean.model                # the model image
+   <imagename>.clean.residual             # the residual image
+   <imagename>.clean.psf                  # the synthesized (dirty) beam
+\end{verbatim}
+
+
+The {\tt mode}, {\tt psfmode}, {\tt imagermode}, and {\tt weighting}
+parameters open up other sub-parameters.  These are detailed
+in the common imaging task parameters section
+(\S~\ref{section:im.pars}).  The {\tt gridmode} parameter
+(\S~\ref{section:im.clean.gridmode}) is available to select more
+advanced imaging options such as widefield imaging and beam squint
+correction.
+
+A typical setup for {\tt clean} on the NGC5921 dataset, 
+after setting parameter values, might look like:
+\small
+\begin{verbatim}
+vis             = 'ngc5921.usecase.ms.contsub' #  Name of input visibility file
+imagename       = 'ngc5921.usecase.clean' #  Pre-name of output images
+field           =        '0' # Field Name
+spw             =         '' # Spectral windows:channels: '' is all
+selectdata      =      False # Other data selection parameters
+mode            =  'channel' # Type of selection (mfs, channel, velocity, frequency)
+     nchan      =         46 # Number of channels (planes) in output image
+     start      =          5 # first input channel to use
+     width      =          1 # Number of input channels to average
+ interpolation  =  'linear' # Spectral interpolation (nearest, linear, cubic)
+
+gridmode        =         '' # The kind gridding kernel to be used for
+                             #  FFT-based transforms
+niter           =       6000 # Maximum number of iterations
+gain            =        0.1 # Loop gain for cleaning
+threshold       =        8.0 # Flux level to stop cleaning.  Must include units
+psfmode         =    'clark' # method of PSF calculation to use during minor cycles
+imagermode      =         '' # Use csclean or mosaic, or image-plane only if ''
+multiscale      =         [] # set deconvolution scales (pixels)
+interactive     =      False # use interactive clean (with GUI viewer)
+mask            = [108, 108, 148, 148] #  cleanbox(es), mask image(s),
+                             #  and/or region(s)
+imsize          = [256, 256]   #  x and y image size in pixels
+cell            = [15.0, 15.0] #  x and y cell size. default unit arcsec
+phasecenter     =         '' # Image phase center: position or field index
+restfreq        =         '' # rest frequency to assign to image (see help)
+stokes          =        'I' # Stokes params to image (eg I,IV, QU,IQUV)
+weighting       =   'briggs' # Weighting to apply to visibilities
+     robust     =        0.5 # Briggs robustness parameter
+     npixels    =          0 # uv-cell size in pixels 0=> field of view
+
+uvtaper         =      False # Apply additional uv tapering of  visibilities.
+modelimage      =         '' # Name of model image(s) to initialize cleaning
+restoringbeam   =       [''] # Output Gaussian restoring beam for CLEAN image
+pbcor           =      False # Output primary beam-corrected image
+minpb           =        0.1 # Minimum PB level to use
+async           =      False        
+\end{verbatim}
+\normalsize
+
+An example of the {\tt clean} task to
+create a continuum image from many channels is given below: 
+\small
+\begin{verbatim}
+clean(vis='ggtau.1mm.split.ms', # Use data in ggtau.1mm.split.ms
+      imagename='ggtau.1mm',    # Name output images 'ggtau.1mm.*' on disk
+      psfmode='clark',          # Use the Clark CLEAN algorithm
+      imagermode='',            # Do not mosaic or use csclean
+      mask='',                  # Do not use clean box or mask
+      niter=500, gain=0.1,      # Iterate 500 times using gain of 0.1
+      mode='mfs',               # multi-frequency synthesis (combine channels)
+      spw='0~2:2~57',           # Combine channels from 3 spectral windows
+      field='0',                # 
+      stokes='I',               # Image stokes I polarization
+      weighting='briggs',       # Use Briggs robust weighting 
+      rmode='norm',robust=0.5,  #    with robustness parameter of 0.5
+      cell=[0.1,0.1],           # Using 0.1 arcsec pixels
+      imsize=[256,256])         # Set image size = 256x256 pixels
+
+\end{verbatim}
+\normalsize
+
+This example will clean the entire inner quarter of the primary beam.
+However, if you want to limit the region over which you allow the
+algorithm to find clean components then you can make a deconvolution
+region (or mask).  To use a deconvolution region, box, or mask, set
+the {\tt mask} parameter (\S~\ref{section:im.clean.mask}).
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.clean} method is used for CLEANing data.
+     There are a number of methods used to set up the clean,
+     including {\tt im.setoptions}.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+For example, you can set up a simple 'cleanbox' region.  To do this, make
+a first cut at the image and clean the inner quarter.  Then use the
+{\tt viewer} to look at the image and get an idea of where the
+emission is located.  You can use the {\tt viewer adjustment} panel to
+view the image in pixel coordinates and read out the pixel locations
+of your cursor.  
+
+Then, you can use those pixel read-outs you just go to define a clean
+box region with the CASA region format described in
+Chapter\,\ref{chapter:regionformat}. For example, say you have a
+continuum source near the center of your image between the pixel
+coordinates [80,80] and [120,120], you may use the rectangular region: 
+\small
+\begin{verbatim}
+   mask='box[[80pix,80pix],[120pix,120pix]]' 
+\end{verbatim}
+\normalsize
+
+For more complicated and multiple clean regions, it will be best to
+use the {\tt viewer} to create them interactively or to create a region file
+(Chapter\,\ref{chapter:regionformat}) and use that file as an input
+like:
+
+\begin{verbatim}
+   mask='myregions.txt' 
+\end{verbatim}
+\normalsize
+
+The following are the {\tt clean} specific parameters and their
+allowed values, followed by a description of carrying out 
+interactive cleaning.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt psfmode}}
+\label{section:im.clean.psfmode}
+
+The {\tt psfmode} parameter chooses the ``algorithm'' that will be used
+to calculate the synthesized beam for use during the minor cycles in
+the image plane. The value types are strings.
+Allowed choices are {\tt 'clark'} (default) and {\tt 'hogbom'}. 
+
+\subsubsection{The {\tt clark} algorithm}
+\label{section:im.clean.psfmode.clark}
+
+In the {\tt 'clark'} algorithm, the cleaning is split into minor and
+major cycles. In the minor cycles only the brightest points are
+cleaned, using a subset of the point spread function. In the major
+cycle, the points thus found are subtracted correctly by using an
+FFT-based convolution.  This algorithm is reasonably fast.
+Also, for polarization imaging, Clark searches for the peak in 
+$I^2+Q^2+U^2+V^2$.
+
+\subsubsection{The {\tt hogbom} algorithm}
+\label{section:im.clean.psfmode.hogbom}
+
+The {\tt hogbom} algorithm is the ``Classic'' image-plane CLEAN, where
+model pixels are found iteratively by searching for the peak. Each
+point is subtracted from the full residual image using the shifted and
+scaled point spread function.  In general, this is not a good choice for most
+imaging problems ({\tt clark} or {\tt csclean} are preferred) as it does not
+calculate the residuals accurately.  But in some cases, with poor
+uv-coverage and/or a PSF with bad sidelobes, the Hogbom algorithm will
+do better as it uses a smaller beam patch.  For polarization cleaning,
+Hogbom searches for clean peak in $I$, $Q$, $U$, and $V$ independently.
+
+\subsubsection{The {\tt clarkstokes} algorithm}
+\label{section:im.clean.psfmode.clarkstokes}
+
+In the {\tt 'clarkstokes'} algorithm, the Clark psf 
+(\S~\ref{section:im.clean.psfmode.clark}) is used, but for 
+polarization imaging the Stokes planes are cleaned sequentially for
+components instead of jointly as in {\tt 'clark'}.  This means
+that this is the same as {\tt 'clark'} for Stokes I imaging only.
+This option can also be combined with {\tt imagermode='csclean'}
+(\S~\ref{section:im.clean.imagermode}).
+
+\subsection{The {\tt multiscale} parameter}
+\label{section:im.clean.multiscale}
+
+%{\bf ALERT:} The {\tt multiscale} option is currently under
+%development and should be used with caution and be considered
+%as an ``experimental'' algorithm.  The multi-scale CLEAN
+%method is known to need careful tuning in order to properly converge.
+%However, currently the only control for
+%{\tt multiscale} in the {\tt clean} task is the
+%setting of the {\tt scales}.
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.setscales} method sets the multi-scale Gaussian
+     widths.  In addition to choosing a list of sizes in pixels,
+     you can just pick a number of scales and get a geometric series 
+     of sizes.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+To activate multi-scale mode, specify a non-blank list of scales in
+the {\tt multiscale} parameter.  A good rule of thumb for starters is
+{\tt [ 0, 2xbeam, 5xbeam ]}, and maybe adding larger scales up to the
+maximum scale the interferometer can image.  E.g. for a 2 arcsecond
+beam\\ 
+
+\small
+\begin{verbatim}
+  multiscale = [0,6,10,30]    # Four scales including point sources
+\end{verbatim}
+\normalsize
+These are given in numbers of pixels, and specify FWHM of the
+Gaussians used to compute the filtered images.
+
+Setting the {\tt multiscale} parameter to a non-empty list opens up the sub-parameter:
+\small
+\begin{verbatim}
+multiscale          = [0, 6, 10, 30]    #  set deconvolution scales (pixels)
+     negcomponent   =         -1        #  Stop cleaning if the
+                                        #   largest scale finds this number of neg
+                                        #   components
+     smallscalebias =        0.6        #  a bias to give more weight
+                                        #   toward smaller scales
+\end{verbatim}
+\normalsize
+The {\tt negcomponent} sub-parameter is here to set
+the point at which the clean terminates because of negative
+components.  For {\tt negcomponent > 0}, component search will cease
+when this number of negative components are found at the largest
+scale.  If {\tt negcomponent = -1} then component search will continue
+even if the largest component is negative.
+
+Increasing {\tt smallscalebias} gives more weight to small scales.  A
+value of 1.0 weighs the largest scale to zero and a value $<0.2$
+weighs all scales nearly equally. The default of 0.6 is usually a good
+number as it corresponds to a weighting that approximates the
+normalization of each component by its area. Depending on the image,
+however, it may be necessary to tweak the {\tt smallscalebias} for a
+better convergence of the algorithm. Note that currently, this
+parameter is ignored by the MS-MFS algorithm. It will be available in a
+future release.
+
+Multi-scale cleaning is also not as sensitive to the loop gain as
+regular cleaning algorithms. A loop {\tt gain} of 0.3 may still work
+fine and will considerably speed up the processing time. Increasing
+the {\tt cyclefactor} by a few (e.g. 5) may provide better stability
+in the solution, in particular when the data exhibit a severely
+non-Gaussian dirty beam.
+
+
+The CASA multi-scale algorithm uses ``Multi-scale CLEAN'' to
+deconvolve using delta-functions and circular Gaussians as the basis
+functions for the model, instead of just delta-functions or pixels as
+in the other clean algorithms.  This algorithm is still in the
+experimental stage, mostly because we are working on better algorithms
+for setting the scales for the Gaussians.  The sizes of the Gaussians
+are set using the {\tt scales} sub-parameter.  
+
+We are working on defining a better algorithm for scale setting.  In
+the toolkit, there is an {\tt nscale} argument which sets scales
+\begin{equation}
+  \theta_i = \theta_{bmin}\,10^{(i-N/2)/2}
+\end{equation}
+where $N=${\tt nscales} and $\theta_{bmin}$ is the fitted FWHM of the minor
+axis of the CLEAN beam.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt gain} }
+\label{section:im.clean.gain}
+
+The {\tt gain} parameter sets the fraction of the flux density in
+the residual image that is removed and placed into the clean model
+at each minor cycle iteration.  The default value is {\tt gain = 0.1}
+and is suitable for a wide-range of imaging problems.  Setting it to
+a smaller gain per cycle, such as {\tt gain = 0.05}, can sometimes 
+help when cleaning images with lots of diffuse emission.  Larger values,
+up to {\tt gain=1}, are probably too aggressive and are not recommended.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{clean_inter_control}{6}
+\caption{\label{fig:clean_inter_control} Close-up of the top of the 
+interactive {\tt clean} window.  Note the boxes at the left
+(where the {\tt iterations}, {\tt cycles}, and {\tt threshold} can
+be changed), the buttons that control add/erase, the application
+of mask to channels, and whether to stop, complete, or continue
+cleaning, and the row of Mouse-button tool assignment icons.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt imagermode} }
+\label{section:im.clean.imagermode}
+
+This choose the mode of operation of {\tt clean}, either as
+single-field deconvolution using image-plane major and minor
+cycles only ({\tt imagermode=''}), single-field deconvolution
+using Cotton-Schwab (CS) residual visibilities for major cycles
+({\tt imagermode='csclean'}), or multi-field mosaics using CS
+major cycles ({\tt imagermode='mosaic'}).
+
+
+
+The default {\tt imagermode='csclean'} choice specifies the Cotton-Schwab algorithm.  This
+opens up the sub-parameters
+\small
+\begin{verbatim}
+imagermode          =  'csclean'         #  Options: 'csclean' or
+                                        #   'mosaic', '', uses psfmode
+     cyclefactor    =        1.5        #  Controls how often major
+                                        #   cycles are done. (e.g. 5 for
+                                        #   frequently)
+     cyclespeedup   =         -1        #  Cycle threshold doubles in
+                                        #   this number of iterations
+
+\end{verbatim}
+\normalsize
+These options are explained below.
+In the CS mode, cleaning is split into minor and major cycles. For each field, a
+minor cycle is performed using the PSF algorithm specified in
+{\tt psfmode} (\S~\ref{section:im.clean.psfmode}).
+At major-cycle breakpoints, the points
+thus found are subtracted from the original visibilities. A fast
+variant does a convolution using a FFT. This will be faster for large
+numbers of visibilities.  If you want to be extra careful, double the image 
+size from that used for the Clark clean and set a mask to clean only
+the inner quarter or less (this is not done by default).
+This is probably the best choice for high-fidelity deconvolution 
+of images without lots of large-scale structure.
+
+Note that when using the Cotton-Schwab algorithm with a {\tt threshold}
+(\S~\ref{section:im.clean.thresh}), there may be strange
+behavior when you hit the threshold with a major cycle.  In
+particular, it may be above threshold again at the start of the next
+major cycle.  This is particularly noticeable when cleaning a cube,
+where different channels will hit the threshold at different times.
+
+In the empty mode ({\tt imagermode=''}), the major and minor
+clean cycles work off of the gridded FFT dirty image, with residuals
+updated using the PSF calculation algorithm set by the {\tt psfmode}
+parameter (\S~\ref{section:im.clean.psfmode}).  This method is not
+recommended for high dynamic range or high fidelity imaging 
+applications, but can be significantly faster than CS clean (the default).
+Note that for this option only, if {\tt mask=''} (no mask or box
+set) then it will clean the inner quarter of the image by
+default.
+
+{\bf ALERT:} You will see a warning message in the logger, 
+similar to this:
+\small
+\begin{verbatim}
+Zero Pixels selected with a Flux limit of 0.000551377 and a maximum Residual of 0.00751239
+\end{verbatim}
+\normalsize
+whenever it find 0 pixels above the threshold.  This is normal,
+and not a problem, if you've specified a non-zero threshold.
+On the other hand, if you get this warning with the threshold set to
+the default of {\tt '0Jy'}, then you should look carefully at your
+inputs or your data, since this usually means that the masking is bad.
+
+The option {\tt imagermode='mosaic'} is for multi-field mosaics.  This
+choice opens up the sub-parameters 
+\small
+\begin{verbatim}
+imagermode          =   'mosaic'   #  Use csclean or mosaic.  If '', use psfmode
+     mosweight      =      False   #  Individually weight the fields of the mosaic
+     ftmachine      =   'mosaic'   #  Gridding method for the image
+     scaletype      =    'SAULT'   #  Controls scaling of pixels in the image plane.
+     cyclefactor    =        1.5   #  change depth in between of  csclean cycle
+     cyclespeedup   =         -1   #  Cycle threshold doubles in this number of iteration
+\end{verbatim}
+\normalsize
+These options are explained below.  
+
+%%%%%%
+\subsubsection{Sub-parameter {\tt cyclefactor} }
+\label{section:im.clean.imagermode.cyclefactor}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.setmfcontrol} method sets the parameters that control
+     the cycles and primary beam used in mosaicing.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+This sub-parameter is activated for {\tt imagermode='csclean'} and
+{\tt 'mosaic'}.
+
+The {\tt cyclefactor} parameter allows the user to change the
+threshold at which the deconvolution cycle will stop and then degrid and
+subtract the model from the visibilities to form the residual. This is
+with respect to the breaks between minor and major cycles that the
+{\tt clean} part would normally force.  Larger values force a major
+cycle more often.  
+
+This parameter in effect controls the threshold used by CLEAN to test whether
+a major cycle break and reconciliation occurs:
+\small
+\begin{verbatim}
+     cycle threshold = cyclefactor * max sidelobe * max residual
+\end{verbatim}
+\normalsize
+
+
+If {\tt mosaic} or {\tt csclean} diverges on your data, try a larger
+{\tt cyclefactor}. A larger value typically increases the
+robustness of your deconvolution. The price, however, will be a slower
+algorithm.  On the other hand, if you find that the cleaning is slow
+due to taking too many major cycle breaks, then reduce
+{\tt cyclefactor}.
+
+Note that currently the {\tt cycle\_threshold} will saturate at a
+maximum value of 0.80 even when you set {\tt cyclefactor} to a very
+high value or you have very high PSF sidelobes.  This means that with
+a {\tt gain = 0.1} you will get 3 minor cycles per major cycle when
+hitting the limit.
+
+\noindent Some rules of thumb:\\
+
+If you have data taken with a small number of antennas, for example
+from ALMA in the commissioning and early-science phase, then you will
+have high sidelobes in the PSF.  In this case, you will have to reduce
+{\tt cyclefactor} considerably, likely into the range 0.25 to 0.5,
+if you want efficient cleaning of simple source structures (e.g. point
+sources).  You can use the {\tt viewer} to look at your PSF image
+and see what the maximum sidelobe level is and judge accordingly.
+
+However, if your uv-coverage results in a poor PSF and you have
+complex source structure, then you should reconcile often (a
+{\tt cyclefactor} of 4 or 5). For reasonable PSFs, use
+{\tt cyclefactor} in the range 1.5 to 2.0. For good PSFs, or for
+faster cleaning at the expense of some fidelity, we recommend trying a
+lower value, e.g. {\tt cyclefactor = 0.25}, which at least in some
+of our mosaicing tests led to a speedup of around a factor of two with
+little change in residuals. 
+
+%%%%%%
+\subsubsection{Sub-parameter {\tt cyclespeedup} }
+\label{section:im.clean.imagermode.cyclespeedup}
+
+This sub-parameter is activated for {\tt imagermode='csclean'} and
+{\tt 'mosaic'}.
+
+The {\tt cyclespeedup} parameter allows the user to let {\tt clean}
+to raise the threshold at which a major cycle is forced if it is not
+converging to that threshold.  To do this, set {\tt cyclespeedup} to
+an integer number of iterations at which if the threshold is not reached,
+the threshold will be doubled.  See {\tt cyclefactor} above for more
+details.  By default this is turned off ({\tt cyclespeedup = -1}).
+In our tests, a value like {\tt cyclespeedup = 50} has been used successfully.
+
+%%%%%%
+\subsubsection{Sub-parameter {\tt ftmachine} }
+\label{section:im.imagermode.mosaic.ftmachine}
+
+This sub-parameter is activated for {\tt imagermode='mosaic'}. 
+{\bf Note:} The actual ``ftmachine'' used may be overridden by choices
+made to other parameters, such as {\tt gridmode}.
+
+The {\tt ftmachine} parameter controls the gridding method and kernel to be
+used to make the image.  A string value type is expected.
+Choices are: {\tt 'ft'}, {\tt 'sd'}, {\tt 'both'}, or {\tt 'mosaic'} (the default).
+
+The {\tt 'ft'} option uses the standard gridding kernel (as used in 
+{\tt clean}).
+
+The {\tt 'sd'} option forces gridding as in single-dish data.
+
+For combining single-dish and interferometer MS in the imaging, the
+{\tt 'both'} option will allow {\tt clean} to choose the {\tt `ft'}
+or {\tt 'sd'} machines as appropriate for the data.
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.setoptions} method sets the parameters relevant to
+     mosaic imaging, such as the {\tt ftmachine}.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+The {\tt 'mosaic'} option (the default) uses the Fourier transform of the
+frequency-dependent primary beam (the aperture cross-correlation function in the uv-plane) as
+the gridding kernel.  This allows the data from the multiple fields to be
+gridded down to a single uv-plane, with a significant speed-up in 
+performance in most (non-memory limited) cases.  The effect of this extra
+convolution is an additional multiplication (apodization) by the primary
+beam in the image plane.  This can be corrected for, but does result in
+an image with optimal signal to noise ratio across it.
+
+The primary beams used in CASA are described in \S~\ref{section:im.pars.pb}.
+
+{\tt ALERT:} Note that making a non-square image (e.g. using
+unequal values in {\tt imsize}) for {\tt ftmachine='mosaic'} will grid 
+the data into a uv-plane with correspondingly non-square cells.  This
+has not been extensively tested, and may results in undesired image
+artifacts.  We recommend that the user make square mosaic images when
+possible, but in principle non-square images should work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Sub-parameter {\tt mosweight} }
+\label{section:im.imagermode.mosaic.mosweight}
+
+If {\tt mosweight=False} (default) then the data will be
+weighted for optimal signal to noise ratio across the mosaic image. 
+This should be used for most cases.
+
+If {\tt mosweight=True} then individual mosaic field relative weights
+will be readjusted on a per visibility basis (much like uniform
+gridding weights).  This may give better performance in cases where
+one or a few fields in the mosaic have drastically different weights
+and/or integration time, and it is desired that the noise be more
+``uniform'' across the mosaic image.  Use this with care, we have
+not explored its use fully.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Sub-parameter {\tt scaletype} }
+\label{section:im.clean.imagermode.scaletype}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The {\tt im.setmfcontrol} method gives more options for
+     controlling the primary beam and noise across the image.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+The {\tt scaletype} parameter controls weighting of pixels in the 
+image plane.  This sub-parameter is activated for {\tt imagermode='mosaic'}.
+
+The default {\tt scaletype='PBCOR'} scales the
+image to have the correct flux scale across it (out to the beam
+level cutoff {\tt minpb}).  This means that the noise level will
+vary across the image, being increased by the inverse of the 
+weighted primary beam responses that are used to rescale the
+fluxes.  This option should
+be used with care, particularly if your data has very different exposure
+times (and hence intrinsic noise levels) between the mosaic fields.
+
+If {\tt scaletype='SAULT'} then the image will be scaled so as to have
+constant noise across it.  This means that the point source response
+function varies across the image attenuated by the weighted primary
+beam(s).  However, this response is output in the {\tt .flux} image
+and can be later used to correct this.
+
+Note that this scaling as a function of position in the image occurs
+after the weighting of mosaic fields specified by {\tt mosweight}
+and implied by the gridding weights ({\tt ftmachine} and {weighting}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt threshold} revisited}
+\label{section:im.clean.imagermode.threshold}
+
+For mosaics, the specification of the threshold is not
+straightforward, as it is in the single field case.  This is because
+the different fields can be observed to different depths, and get
+different weights in the mosaic.  We now provide internal rescaling
+(based on {\tt scaletype}) so {\tt clean} does
+its component search on a properly weighted and scaled version of the sky.
+
+For {\tt ftmachine='ft'}, the minor cycles of the deconvolution are
+performed on an image that has been weighted to have constant noise,
+as in {\tt 'SAULT'} weighting (see
+\S~\ref{section:im.clean.imagermode.scaletype}).  This is equivalent to making
+a dirty mosaic by coadding dirty images made from the individual 
+pointings with a sum of the mosaic contributions to a given pixel
+weighted by so as to give constant noise across the image.
+This means that the flux scale can vary across the mosaic depending
+on the effective noise (higher weighted regions have lower noise, and
+thus will have higher ``fluxes'' in the {\tt 'SAULT'} map).  Effectively,
+the flux scale that threshold applies to is that at the center of the
+highest-weighted mosaic field, with higher-noise regions down-scaled
+accordingly.  Compared to the true sky, this image has a factor of
+the PB, plus a scaling map (returned in the {\tt .flux} image).
+You will preferentially find components in the low-noise
+regions near mosaic centers.
+
+When {\tt ftmachine='mosaic'} and {\tt scaletype='SAULT'}, the
+deconvolution is also performed on a ``constant noise image'',
+as detailed above for {\tt 'ft'}. 
+
+{\tt ALERT:} The intrinsic image made using {\tt ftmachine='mosaic'} is equivalent
+to a dirty mosaic that is formed by coadding dirty images made from
+the individual fields after apodizing each by the PB function.  Thus
+compared to the true sky, this has a factor of the PB$^2$ in it.  You
+would thus preferentially find components in the centers of the mosaic
+fields (even more so than in the {\tt 'ft'} mosaics).  We now rescale
+this image internally at major-cycle (and interactive) boundaries
+based on {\tt scaletype}, and do not have a way to clean on the raw
+unscaled dirty image (as was done in previous released versions).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt interactive} }
+\label{section:im.clean.interactive}
+
+If {\tt interactive=True} is set, then an interactive window
+will appear at various ``cycle'' stages while you clean, so you
+can set and change mask regions.  These breakpoints are controlled
+by the {\tt npercycle} sub-parameter which sets the number of
+iterations of clean before stopping.
+\small
+\begin{verbatim}
+interactive    =   True   #  use interactive clean (with GUI viewer)
+   npercycle   =    100   #  Number of iterations before interactive prompt
+\end{verbatim}
+\normalsize
+Note that {\tt npercycle} is currently the only way to control the
+breakpoints in interactive clean. 
+
+For spectral cube imaging, it is often easier to deal with each
+channel in turn, rather than cleaning all channels in each cycle.  We
+therefore provide the {\tt chaniter=True} option under 'mode', where
+it will clean a channel fully before moving to the next one.  You will
+set masks for each channel. 
+
+See the example of interactive cleaning in 
+\S~\ref{section:im.clean.exampleinteractive}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt mask} }
+\label{section:im.clean.mask}
+
+The {\tt mask} parameter takes a list of elements, each of which can
+be a list of coordinates specifying a box,
+or a string pointing to the name of a cleanbox file, mask image, or
+region file.  These are used by CLEAN to define a region to search for components.  
+
+Note that for {\tt imagermode=''} (\S~\ref{section:im.clean.imagermode}) 
+the default with {\tt mask=''} is to restrict {\tt clean} to the inner
+quarter of the image.
+
+%%%%%%
+\subsubsection{Setting clean boxes }
+\label{section:im.clean.mask.box}
+
+{\tt mask} can be a list of CASA regions.  For example,
+\small
+\begin{verbatim}
+  mask = 'box[[80pix, 80pix],[120pix,120pix]],circle[[150pix,150pix],10pix]'
+\end{verbatim}
+\normalsize defines a box and a circle. They will be applied to all
+channels. To define different regions for different channel ranges, it
+will be best to use interactive mode in clean, the {\tt viewer} (note
+that the {\tt viewer} still created old format regions - they are
+still supported in CASA 3.3) or to create a CASA region file that
+contain the different regions. Chapter\,\ref{chapter:regionformat}
+describes the syntax of CASA regions. They can be specified by;
+
+\small
+\begin{verbatim}
+  mask = 'regionfile.rgn, regionfile2.rgn'
+\end{verbatim}
+\normalsize
+
+%%%%%%
+\subsubsection{Using clean mask images}
+\label{section:im.clean.mask.maskimage}
+
+You can give the {\tt mask} parameter a string containing the
+name of a mask image to be used for CLEAN to search for components.  
+%You can use the {\tt makemask} task
+%(\S~\ref{section:im.mask.makemask}) to construct this mask, or use 
+You can use {\tt interactive=True} to create such a mask for your image
+(\S~\ref{section:im.clean.interactive}).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt minpb} }
+\label{section:im.clean.minpb}
+
+The {\tt minpb} parameter sets the level down to which the primary
+beam (or more correctly the voltage patterns in the array) can go and
+have a given pixel included in the image.  This is important as it
+defines where the edge of the visible image or mosaic is. 
+The default is $0.1$ or
+equivalent to the 10\% response level.  If there is a lot of emission
+near the edge, then set this lower if you want to be
+able to clean it out.
+
+NOTE: The {\tt minpb} parameter is the level in the ``primary beam''
+(PB) at which the cut is made.  If you are using {\tt ftmachine='mosaic'}
+(\S~\ref{section:im.imagermode.mosaic.ftmachine}), this will show
+up in the {\tt .flux.pbcoverage} image (new in version 2.4.0).
+See the discussion of {\tt threshold} 
+(\S~\ref{section:im.clean.imagermode.threshold}) for related issues.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt modelimage} }
+\label{section:im.clean.modelimage}
+
+The {\tt modelimage} parameter specifies the name(s) of one or more
+input starting image(s) to use to calculate the first residual before
+cleaning.  These are used in addition to any image with a name
+defaulting from the {\tt imagename} root (e.g. on a restart).
+The output model will contain this model plus
+clean components found during deconvolution.  
+
+If the units of the image are {\tt Jy/pixel}, then this is treated
+as a model image.
+
+If the units of the image are {\tt Jy/beam} or Jy per solid angle,
+then this is treated as a ``single-dish'' image and rescaled by
+the resolution (in the {\tt 'beam'} image header keyword). Inclusion
+of the SD image here is superior to feathering it in later.
+See \S~\ref{section:im.feather} for more information on feathering.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt niter} }
+\label{section:im.clean.niter}
+
+The {\tt niter} parameter sets the maximum total number of minor-cycle CLEAN
+iterations to be performed during this run of {\tt clean}.  If restarting
+from a previous state, it will carry on from where it was.  Note that
+the {\tt threshold} parameter can cause the CLEAN to be terminated before
+the requested number of iterations is reached.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt pbcor} }
+\label{section:im.clean.pbcor}
+
+The {\tt pbcor} parameter controls whether the final {\tt .image} 
+is scaled to correct for the Primary Beam of the array or not.
+
+If {\tt pbcor=False} (the default), then no such scaling is done
+and the image is in whatever ``raw'' scaling used by the 
+{\tt imagermode} algorithm underneath.  For single-field cleaning
+with {\tt imagermode=''} or {\tt 'csclean'}, this is the standard
+constant-noise image.  If {\tt imagermode='mosaic'}, then this is
+the {\tt 'SAULT'} scaled image (regardless of what {\tt scaletype}
+is set to).
+
+If {\tt pbcor=True}, the at the end of deconvolution and imaging the
+``raw'' image is rescaled by dividing by the noise and PB correction
+image.  This is what is output by {\tt clean} as the {\tt .flux}
+image.  
+
+Note that regardless of what you set {\tt pbcor} to, you can recover
+the other option using {\tt immath} (\S~\ref{section:analysis.immath})
+to either multiply or divide by the {\tt .flux} image.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt restoringbeam} }
+\label{section:im.clean.restoringbeam}
+
+The {\tt restoringbeam} parameter allows the user to set a specific
+Gaussian restoring beam to make the final restored {\tt .image} from
+the final {\tt .model} and residuals.
+
+If {\tt restoringbeam=''} (the default), then the restoring beam
+is calculated by fitting to the PSF (e.g. the {\tt .psf} image).
+For a mosaic, this is at the center of the field closest to the
+{\tt phasecenter}.
+
+The restoring beam can also be used to establish a single beam for
+large fractional bandwidths. If the PSF changes more than half a pixel
+across all channels in a cube, the PSF itself will be stored in the
+form of a cube, changing size from channel to channel. A specified
+restoring beam will output all planes at the same resolution and thus
+collapse to a single PSF (note that this can also be done in hindsight
+using {\tt imsmooth}).
+
+To specify a restoring beam, provide {\tt restoringbeam} a list of 
+{\tt [bmaj, bmin, bpa]} which are the parameters of an elliptical
+Gaussian.  The default units are in arc-seconds for {\tt bmaj, bmin}
+components and degrees for the {\tt bpa} component.
+
+For example,
+\small
+\begin{verbatim}
+   restoringbeam=['10arcsec']                  # circular Gaussian FWHM 10"
+   restoringbeam=['10.0','5.0','45.0deg']      # 10"x5" at PA=45 degrees
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt threshold} }
+\label{section:im.clean.thresh}
+
+The {\tt threshold} parameter instructs {\tt clean} to terminate when
+the maximum absolute residual reaches this level or below.  Note
+that it may not reach this residual level due to the value of the
+{\tt niter} parameter which may cause it to terminate early.
+
+If {\tt threshold} is given a floating-point number, then this is the
+threshold in milli-Jansky.
+
+You can also supply a flux density {\em quanta} to threshold, e.g.
+\small
+\begin{verbatim}
+   threshold = '8.0mJy'
+   threshold = '0.008Jy'
+\end{verbatim}
+\normalsize
+(these do the same thing).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Parameter {\tt gridmode} }
+\label{section:im.clean.gridmode}
+
+The {\tt gridmode} parameter is now provided to access more
+advanced deconvolution capabilities.  The default 
+{\tt gridmode=''} is recommended for most cases.
+
+The {\tt gridmode='widefield'} option allows imaging in the
+wide-field regime where the W-term is not negligible.  The
+CASA implementation allows both standard uv-plane faceting as
+well as the W-Projection algorithm
+\footnote{Cornwell et al. IEEE JSTSP (2008).}
+or a combination of the two.  Its sub-parameters are:
+\small
+\begin{verbatim}
+gridmode          = 'widefield'  #  Gridding kernel for FFT-based
+                                 #   transforms, default='' None
+     wprojplanes  =          1   #  Number of w-projection planes for convolution
+     facets       =          1   #  Number of facets along each axis (main image only)
+\end{verbatim}
+\normalsize
+The {\tt wprojplanes} parameter sets the number of pre-computed w-planes
+used for the W-Projection algorithm ({\tt wprojplanes=1} disables
+w-projection).  The {\tt facets} parameter sets the number of facets
+used.  W-Projection, if used, is done for each facet.
+See \S~\ref{section:im.clean.widefield} below for more on wide-field
+imaging. 
+
+%%The {\tt gridmode='aprojection'} option enables the gridding-based
+%%correction for RL beam-squint in off-axis systems (such as the VLA).
+%%The sub-parameters are:
+%%\small
+%%\begin{verbatim}
+%%gridmode    = 'aprojection'  #  Gridding kernel for FFT-based transforms, default='' None
+%%   cfcache  = 'cfcache.dir'  #  Convolution function cache directory
+%%   painc    =      360.0     #  Parallactic angle increment (degrees) for convolution function
+%%\end{verbatim}
+%%\normalsize
+%%Higher dynamic range imaging applications will require a-projection
+%%with correspondingly small (e.g. 10-degree) {\tt painc} at the cost of
+%%speed (see below).  {\bf ALERT:} This option is still under test and development,
+%%so be careful in its use.
+
+
+%\subsubsection{A-Projection}
+{\tt gridmode='aprojection'}: A-Projection is an algorithm to account
+for the effects of the antenna primary beam (PB) during imaging.  The
+time-dependent effects of the PB are projected-out during the imaging
+phase and the PB is included in the prediction phase of the iterative
+image deconvolution (see Bhatnagar, Cornwell, Golap \& Uson 2008,
+A\&A, 487, 419) for more details.  Please also refer to this
+publication in your papers if this algorithm is used for imaging. The
+narrow-band A-Projection can be used by setting the
+{\tt gridmode='aprojection'} in the clean task.  This opens up the following
+new parameters:
+
+\small
+\begin{verbatim}
+     gridmode    = 'aprojection'     #  Gridding kernel for FFT-based
+                                     #   transforms, default='' None
+     cfcache     = 'cfcache.dir'     #  Convolution function cache directory
+     rotpainc    =        5.0        #  Parallactic angle increment
+                                     #   (degrees) for OTF A-term rotation
+     painc       =      360.0        #  Parallactic angle increment
+                                     #   (degrees) for computing A-term
+\end{verbatim}
+\normalsize
+
+{\tt cfcache} is used to cache functions required in the A-Projection
+algorithm.  The PB is rotated on-the-fly when a change of greater than
+{\tt rotpainc} is detected.  Alternatively, PB is re-computed if the P.A.
+changes by greater than {\tt painc}.
+
+Note that this code is still in the development and testing stage and
+should be used on shared-risk basis.  Note also that the cost of
+imaging will be higher when using A-Projection.  Therefore make a
+careful evaluation of whether you need to invoke it.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Interactive Cleaning --- Example}
+\label{section:im.clean.exampleinteractive}
+
+If {\tt interactive=True} is set, then an interactive window
+will appear at various ``cycle'' stages while you clean, so you
+can set and change mask regions.  These breakpoints are controlled
+by the {\tt npercycle} sub-parameter which sets the number of
+iterations of clean before stopping.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{clean_jupiter_inter_0}{3}
+\pngname{clean_jupiter_inter_1}{3}
+\caption{\label{fig:clean_inter1} Screen-shots of the interactive 
+{\tt clean} window during deconvolution of the VLA 6m Jupiter
+dataset.  We start from the calibrated data, but before any 
+self-calibration. In the initial stage (left), the window pops up 
+and you can see it dominated by a bright source in the center.
+Next (right), we zoom in and draw a box around this emission.
+We have also at this stage dismissed the tape deck and Position
+Tracking parts of the display 
+(\S~\ref{section:display.viewerGUI.displaypanel}) 
+as they are not used here.  We have also changed the 
+{\tt iterations} to 30 for this boxed clean.
+We will now hit the Next Action {\bf Continue Cleaning} button 
+(the green clockwise arrow) to start cleaning. } 
+\hrulefill
+\end{center}
+\end{figure}
+
+The window controls are fairly self-explanatory.  It is basically a
+form of the {\tt viewer}.  A close-up of the controls are shown in
+Figure~\ref{fig:clean_inter_control}, and an example can be found in 
+Figures~\ref{fig:clean_inter1}--\ref{fig:clean_inter3}.  
+You assign one of the drawing functions
+(rectangle or polygon, default is rectangle) to the right-mouse button
+(usually), then use it to mark out regions on the image.  Zoom in if
+necessary (standard with the left-mouse button assignment).
+Double-click inside the marked region to add it to the mask.  If you
+want to reduce the mask, click the {\bf Erase} radio button (rather
+than {\bf Add}), then mark and select as normal.  
+When finished setting or changing your mask, click the green
+clockwise arrow ``Continue Cleaning'' Next Action button.  
+If you want to finish your clean with
+no more changes to the mask, hit the blue right arrow 
+``Apply mask edits and proceed with non-interactive clean''
+button.  If you want to terminate the clean, click the red X
+``Stop deconvolving now'' button.
+
+While stopped in an interactive step, you can change a number of
+control parameters in the boxes provided at the left of the menu
+bar.  The main use of this is
+to control how many {\tt iterations} before the next breakpoint
+(initially set to {\tt npercycle}), how many cycles before completion
+(initially equal to {\tt niter}/{\tt npercycle}), and to
+change the {\tt threshold} for ending cleaning.  
+Typically, the user would start
+with a relatively small number of iterations (50 or 100) to clean the
+bright emission in tight mask regions, and then increase this as you
+get deeper and the masking covers more of the emission region.  For
+extended sources, you may end up needing to clean a large number
+of components (10000 or more) and thus it is useful to set {\tt niter}
+to a large number to begin with --- you can always terminate the 
+clean interactively when you think it is done.  Note that if you
+change {\tt iterations} you may also want to change {\tt cycles} or
+your clean may terminate before you expect it to.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{clean_jupiter_inter_2}{3}
+\pngname{clean_jupiter_inter_3}{3}
+\caption{\label{fig:clean_inter2} We continue in our interactive 
+{\tt clean}ing of Jupiter from where Figure~\ref{fig:clean_inter1}
+left off.  In the first (left) panel, we have cleaned 30 iterations
+in the region previously marked, and are zoomed in again ready to
+extend the mask to pick up the newly revealed emission. 
+Next (right), we have used the Polygon
+tool to redraw the mask around the emission, and are ready to 
+{\bf Continue Cleaning} for another 100 iterations.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+For strangely shaped emission regions, you may find using the polygon
+region marking tool (the second from the right in the button
+assignment toolbar) the most useful.
+  
+The sequence of cleaning starting with the ``raw'' externally
+calibrated data is shown in
+Figures~\ref{fig:clean_inter1} -- \ref{fig:clean_inter3}.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{clean_jupiter_inter_4}{3}
+\pngname{clean_jupiter_inter_5}{3}
+\caption{\label{fig:clean_inter3} We continue in our interactive 
+{\tt clean}ing of Jupiter from where Figure~\ref{fig:clean_inter2}
+left off.  In the first (left) panel,  it has cleaned deeper, and
+we come back and zoom in to see that our current mask is good and
+we should clean further.  We change {\tt npercycle} to 500 (from 100)
+in the box at upper right of the window.  In the final panel (right),
+we see the results after this clean.  The residuals are such that we
+should terminate the {\tt clean} using the red X button 
+and use our model for self-calibration.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+The final result of all this cleaning for Jupiter is shown in
+Figure~\ref{fig:clean_polfinal}.  The {\tt viewer} 
+(\S~\ref{chapter:display}) was used to overplot the polarized
+intensity contours and linear polarization vectors calculated using
+{\tt immath} (\S~\ref{section:analysis.immath}) on the total
+intensity.  See the following chapters on how to make the most of
+your imaging results.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{clean_jupiter_viewpol}{6}
+\caption{\label{fig:clean_polfinal} 
+After clean and self-calibration using the intensity image, we 
+arrive at the final polarization image of Jupiter.  Shown in
+the {\tt viewer} superimposed on the intensity raster is the
+linear polarization intensity (green contours) and linear polarization
+B-vectors (vectors).  The color of the contours and the sampling and
+rotation by 90 degrees of the vectors was set in the Display Options
+panel.  A LEL expression was used in the Load Data panel to mask the
+vectors on the polarized intensity.}
+\hrulefill
+\end{center}
+\end{figure}
+
+For spectral cube images you can use the tapedeck to move through the
+channels.  You also use the panel with radio buttons for choosing
+whether the mask you draw applies to the
+{\tt Displayed Plane} or to {\tt All Channels}.
+See Figure~\ref{fig:clean_n5921_inter} for an example.  Note that
+currently the {\tt Displayed Plane} option is set by default.  
+This toggle is unimportant for single-channel images or {\tt mode='mfs'}.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{clean_n5921_inter}{4.5}
+\caption{\label{fig:clean_n5921_inter} Screen-shot of the interactive 
+{\tt clean} window during deconvolution of the NGC5921 spectral
+line dataset.  Note where we have selected
+the mask to apply to the {\tt Displayed Plane} rather than
+{\tt All Channels}.  We have just used the
+Polygon tool to draw a mask region around the emission in this
+channel, which will apply to this channel only. } 
+\hrulefill
+\end{center}
+\end{figure}
+
+{\bf Advanced Tip:} Note that while in interactive {\tt clean}, you
+are using the {\tt viewer}. Thus, you have the ability to open and
+register other images in order to help you set up the clean mask.
+For example, if you have a previously cleaned image of a complex
+source or mosaic that you wish to use to guide the placement of boxes
+or polygons, just use the {\bf Open} button or menu item to bring in
+that image, which will be visible and registered on top of your dirty
+residual image that you are cleaning on.  You can then draw masks as
+usual, which will be stored in the mask layer as before.  Note you can
+blink between the new and dirty image, change the colormap and/or
+contrast, and carry out other standard viewer operations.  See
+\S~\ref{chapter:display} for more on the use of the {\tt viewer}.
+
+{\bf ALERT:} Currently, interactive spectral line cleaning
+is done globally over the cube, with halts for interaction after
+searching all channels for the requested {\tt npercycle} total
+iterations.  It is more convenient for the user to treat the
+channels in order, cleaning each in turn before moving on.  This
+will be implemented in an upcoming update.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Mosaic imaging}
+\label{section:im.clean.mosaic}
+
+The {\tt clean} task contains the capability to image multiple
+pointing centers together into a single ``mosaic'' image.  This
+ability is controlled by setting {\tt imagermode='mosaic'}
+(\S~\ref{section:im.clean.imagermode}).
+
+The key parameter that controls how {\tt clean} produces the mosaic
+is the {\tt ftmachine} sub-parameter 
+(\S~\ref{section:im.imagermode.mosaic.ftmachine}).  For 
+{\tt ftmachine='ft'}, {\tt clean} will perform a weighted combination
+of the images produced by transforming each mosaic pointing
+separately.  This can be slow, as the individual sub-images must be
+recombined in the image plane.  {\bf NOTE:} this option is preferred
+for data taken with sub-optimal mosaic sampling (e.g. fields too 
+far apart, on a sparse irregular pattern, etc.).
+
+The primary beams used in CASA are described in \S~\ref{section:im.pars.pb}.
+
+If {\tt ftmachine='mosaic'}, then the data are gridded onto a single
+uv-plane which is then transformed to produce the single output 
+image.  This is accomplished by using a gridding kernel that 
+approximates the transform of the primary beam pattern.  Note that
+for this mode the {\tt <imagename>.flux} image includes this
+convolution kernel in its effective weighted response pattern (needed
+to ``primary-beam correct'' the output image).  For this mode only,
+an additional image {\tt <imagename>.flux.pbcoverage} is produced that
+is the primary-beam coverage only used to compute the {\tt minpb}
+cutoff (\S~\ref{section:im.clean.minpb}).
+
+{\bf ALERT:} In order to avoid aliasing artifacts for
+{\tt ftmachine='mosaic'} in the mosaic image, due to the discrete
+sampling of the mosaic pattern on the sky, you should make an image
+in which the desired unmasked part of the image (above {\tt minpb}) 
+lies within the inner quarter.  In other words, make an image twice
+as big as necessary to encompass the mosaic.
+
+It is also important to choose an appropriate {\tt phasecenter} for
+your output mosaic image (\S~{section:im.pars.phasecenter}). The phase
+center should not be at the edge of an image with pointings around
+it. In that case, FFT aliasing may creep into the image. 
+
+
+An example of a simple mosaic {\tt clean} call is shown below: 
+\small
+\begin{verbatim}
+clean(vis='n4826_tboth.ms',        
+       imagename='tmosaic',         
+       mode='channel',
+       nchan=30,start=46,           # Make the output cube 30 chan
+       width=4,                     # start with 46 of spw 0, avg by 4 chans
+       spw='0~2',
+       field='0~6',
+       cell=[1.,1.],
+       imsize=[256,256],
+       stokes='I',
+       psfmode='clark',
+       niter=500,
+       imagermode='mosaic',
+       scaletype='SAULT',
+       cyclefactor=0.1)
+\end{verbatim}
+\normalsize
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Heterogeneous imaging}
+\label{section:im.clean.hetero}
+
+The {\tt clean} task and underlying tools can handle cases where
+there are multiple dish sizes, and thus voltage patterns and primary
+beams, in the array.  This is effected by using the dish sizes stored
+in the {\tt ANTENNA} sub-table of the MS.  Depending on how the data
+was written and imported into CASA, the user may have to manually edit
+this table to insert the correct dish sizes (e.g. using {\tt
+browsetable} or the {\tt tb} table tool).  
+
+
+% \subsection{The {\tt entropy} algorithm}
+% \label{section:im.clean.entropy}
+% 
+% There is an option to use the Maximum Entropy deconvolution algorithm
+% instead of CLEAN.  The MEM implementation here is fairly basic, and
+% does not include advanced convergence criteria or other improvements.
+% 
+% The sub-parameters are:
+% \small
+% \begin{verbatim}
+% alg                 =  'entropy' # deconvolution algorithm: clark, hogbom, multiscale, entropy
+%      sigma          =   '0.01Jy' # Image sigma to try to achieve
+%      targetflux     =    '1.0Jy' # Target flux for final image
+%      constrainflux  =      False # Constrain image to match target flux
+%      prior          =       [''] # Name of MEM prior images
+% \end{verbatim}
+% \normalsize
+% 
+% The standard usage is to supply MEM with an estimate of the total flux
+% in the image ({\tt targetflux}), an estimated noise level ({\tt sigma}),
+% and perhaps a ``prior'' model image ({\tt prior}).  For example,
+% the {\tt targetflux} can be measured using autocorrelations, or more
+% commonly guessed using {\tt plotxy} with {\tt xaxis='uvdist'} and
+% {\tt yaxis='amp'}.  The {\tt sigma} parameter will control the convergence.
+% 
+% {\bf ALERT:}  This is a basic version of MEM, and also an
+% experimental implementation for mosaicing.  Beware.
+% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Polarization imaging}
+\label{section:im.clean.polarization}
+
+The {\tt clean} task handles full and partial Stokes polarization
+imaging through the setting of the {\tt stokes} parameter 
+(\S~\ref{section:im.pars.stokes}).  The subsequent deconvolution of
+the polarization planes of the image and the search for clean
+components is controlled by the {\tt psfmode} parameter
+(\S~\ref{section:im.clean.psfmode}).  If the {\tt stokes} parameter
+includes polarization planes other than I, then choosing {\tt psfmode='hogbom'} 
+(\S~\ref{section:im.clean.psfmode.hogbom}) or {\tt psfmode='clarkstokes'} 
+(\S~\ref{section:im.clean.psfmode.clarkstokes}) will clean (search for
+components) each plane sequentially, while {\tt psfmode='clark'} 
+(\S~\ref{section:im.clean.psfmode.clark}) will deconvolve jointly.
+
+The interactive {\tt clean} example given above 
+(\S~\ref{section:im.clean.exampleinteractive}) shows
+a case of polarization imaging. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Wide-field imaging and deconvolution in {\tt clean}}
+\label{section:im.clean.widefield}
+
+When imaging sufficiently large angular regions, the sky can no longer
+be treated as a two-dimensional plane and the use of the standard {\tt clean}
+task will produce distortions around sources that become
+increasingly severe with increasing distance from the phase center.
+In this case, one must use a ``wide-field'' imaging algorithm such as
+w-projection or faceting.
+
+When is wide-field imaging needed? The number of required facets $N$ depends on
+the  maximum baseline $B_{\rm max}$, the dish diameter $D$ and the
+wavelength $\lambda$ as:
+
+\begin{equation}
+N=\frac{B_{\rm max}\,\lambda}{D^{2}}
+\label{eq:imaging.wproj.facets}
+\end{equation} 
+
+and w-projection is required when $N>1$. (For details, see ``Synthesis
+Imaging in Radio Astronomy II'', ed. Taylor, G., Carilli, C., Perley,
+R. 1999). With 25\,m diameter JVLA dishes (which implies that imaging
+is requested out to the primary beam FWHM), w-projection is required
+for array configurations as listed in
+Table\,\ref{tab:imaging.w-projection.config}.
+
+\begin{table}
+\begin{tabular}{ccc}
+\hline
+Receiver Band & Wavelength [cm] & Array configurations \\
+\hline
+4             &  430            &  A/B/C/D \\
+L             &  20             &  A/B/C \\
+S             &  10             &  A/B \\
+C             &  5              &  A \\
+X             &  3              &  A \\
+Ku            &  2              &  A \\
+K             &  1.4            &  -- \\
+Ka            &  0.9            &  -- \\
+Q             &  0.7            &  -- \\
+\hline
+\end{tabular}
+\caption{Combinations of observing band (wavelength,) and antenna
+  array configurations that require w-projection. \label{tab:imaging.w-projection.config}}
+\end{table}
+
+
+
+%When is wide-field imaging needed?  It depends on the expected dynamic
+%range the image.  In order to keep the phase error associated with the
+%sky/array curvature less than about $5^\circ$ (good to about 500:1
+%dynamic range), use the following table, suitably scaled, for
+%guidance:
+%\small
+%\begin{verbatim}
+%        Maximum Radius of Image Before widefield is Needed
+%          Assuming 5 deg phase error and 35-km Baseline
+%
+%           Wavelength                 Radius of image
+%              6 cm                       1.4 arcmin
+%             20 cm                       2.6 arcmin
+%             90 cm                       5.3 arcmin
+%
+%  Radius of image ~ SQRT (Wavelength * phase error / Maximum baseline)
+%      (arcmin)              (cm)          (deg)           (km)
+%\end{verbatim}
+%\normalsize
+%If a relatively small image is being made, but there are outliers
+%sources beyond the above limits, then widefield should also be used.
+
+The relevant inputs for {\tt clean} for wide-field imaging are:
+\small
+\begin{verbatim}
+gridmode            = 'widefield'       #  The kind gridding kernel to
+                                        #   be used for FFT-based transforms
+     wprojplanes    =          1        #  Number of w-projection planes for convolution
+     facets         =          1        #  Number of facets along each axis (main image only)
+\end{verbatim}
+\normalsize
+Most of the {\tt clean} parameters behave as described previously.
+
+Wide-field imaging can be carried out using two major modes: First, the
+w-projection mode as chosen with {\tt ftmachine} deals with the w-term
+(the phase associated with the sky/array curvature) internally.  Secondly, the image can be
+broken into many facets, each small enough so that the w-term is not
+significant.  These two basic methods can be combined, as discussed
+below in \S~\ref{section:im.clean.widefield.combo}.
+
+%%%%%%%%%%%%%%
+\subsubsection{Outlier fields}
+\label{section:im.clean.widefield.outliers}
+
+When using wide-field imaging, the position and image size of any
+independent images must be specified. Those positions will be used to
+add additional cleaning components to strong sources that may reside
+in that area and influence the central image.
+
+There are a two options to specify the outlier fields:
+
+
+{\bf Direct listing of fields} The outlier field directions are
+provided via their centers ({\tt phasecenter} parameter), and their
+sizes as a second entry in the {\tt imsize} parameter, e.g. 128 pixels
+in the example below. {\tt clean} will derive two additional images
+and their names are to be provided in the {\tt imagename} field that
+will then be a list of the main field name plus the outlier field
+names:
+
+\small
+\begin{verbatim}
+vis           = 'wfield.ms'                #  name of input visibility file
+imagename=['n5921','outlier1','outlier2']  #  Pre-name of output images
+outlierfile   = ''                         #  Text file with image names, sizes, centers
+mask          = [['image_setup.rgn'],[''],['']] 
+imsize        = [[2048,2048],[128,128],[128,128]]   #  Image size in pixels (nx,ny)
+cell          = '1.0arcsec'                #  The image cell size in arcseconds [x,y].
+phasecenter   = ['','J2000 13h27m20.98 43d26m28.0', 'J2000 13h30m52.158 43d23m08.00']
+\end{verbatim}
+\normalsize
+
+{\bf Outlier file} For many outlier fields, it may be easier to setup
+the main interface to {\tt clean} for the main field only and list
+outlier fields in an additional {\tt outlierfile}:
+
+
+\small
+\begin{verbatim}
+imagename='n5921'
+outlierfile = 'outliers.txt'
+imsize=[1024,1024]
+phasecenter = ''
+\end{verbatim}
+\normalsize
+
+{\it outliers.txt} provides all outlier fields with a syntax that is
+similar to the direct input, but separated by field. Below is an
+example for an {\tt outlierfile}:
+
+\small
+\begin{verbatim}
+#content of outliers.txt
+#
+#outlier field1
+imagename='outlier1'
+imsize=[512,512]
+phasecenter = 'J2000 13h30m52.15 43d23m08.0'
+mask='box[[245pix,245pix],[265pix,265pix]]'
+#
+#outlier field2
+imagename='outlier2'
+imsize=[512,512]
+phasecenter = 'J2000 13h24m08.16 43d09m48.0'
+\end{verbatim}
+\normalsize
+
+The syntax rules for the outlier files are:
+\begin{itemize}
+\item each field must begin with {\tt imagename} followed by 
+\item {\tt imsize} and {\tt phasecenter} must be given
+\item optionally a {\tt mask} can be provided. The {\tt mask}
+  parameter follows the CASA region file convention
+  (Chapter\,\ref{chapter:regionformat}) or can be a mask file or LEL
+  string.
+\end{itemize}
+
+
+The older AIPS-style convention (and box definition) that was used in
+CASA 3.2 and earlier is still supported in CASA 3.3 but will be
+deprecated for CASA 3.4 and higher.
+
+%%%%%%%%%%%%%%
+\subsubsection{Setting up w-projection}
+\label{section:im.clean.widefield.wproj}
+
+The w-projection mode is controlled using {\tt wprojplanes}
+sub-parameter, e.g. 
+\small
+\begin{verbatim}
+gridmode            = 'widefield'       #  The kind gridding kernel to
+                                        #   be used for FFT-based transforms
+     wprojplanes    =         64        #  Number of w-projection planes for convolution
+     facets         =          1        #  Number of facets along each axis (main image only)
+\end{verbatim}
+\normalsize
+will construct 64 w-projection planes.
+
+%A reasonable value for {\tt wprojplanes} is equal to $n_w = B_{max}({\rm in k}\lambda)
+%\times {\rm imagewidth}({\rm in arcmin}^2) / 600$, with a minimum
+%value of $n_w=16$.  
+The w-projection algorithm is much faster than using faceting, but it does
+consume a lot of memory.  On most 32-bit machines with 1 or 2 Mbytes
+of memory, images larger than about $4000\times 4000$ cannot be made.
+
+%%%%%%%%%%%%%%
+\subsubsection{Setting up faceting}
+\label{section:im.clean.widefieldfacet}
+
+Faceting will break the image into many small parts.  This
+is invoked using {\tt facets}:
+\small
+\begin{verbatim}
+gridmode            = 'widefield'       #  The kind gridding kernel to be used for FFT-based transforms
+     wprojplanes    =          1        #  Number of w-projection planes for convolution
+     facets         =          7        #  Number of facets along each axis (main image only)
+\end{verbatim}
+\normalsize
+In this example the image is broken into 49 ($7\times7$) facets.
+
+A reasonable value of facets is such that the image width of each facet
+does not need the w-term correction.  The computation method with pure
+faceting is slow, so that w-projection is recommended
+
+%%%%%%%%%%%%%%
+\subsubsection{Combination of w-projection and faceting}
+\label{section:im.clean.widefield.combo}
+
+You can also use a combination of w-projection and faceting:
+\small
+\begin{verbatim}
+gridmode            = 'widefield'       #  The kind gridding kernel to be used for FFT-based transforms
+     wprojplanes    =         32        #  Number of w-projection planes for convolution
+     facets         =          3        #  Number of facets along each axis (main image only)
+\end{verbatim}
+\normalsize
+This hybrid method allows for a smaller number of {\tt wprojplanes} in order
+to try to conserve memory if the image size approached the memory limit
+of the computer.  However, there is a large penalty in execution time.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Primary Beam Correction ({\tt impbcor}, {\tt widebandpbcor})}
+\label{section:im.impbcor}
+
+
+The primary beam correction can be applied during the imaging with
+{\tt clean}. It is also possible to correct after imaging using the
+task {\tt impbcor} for 'regular' data sets, or {\tt widebandpbcorr}
+for those that used the Taylor-term expansion function in {\tt clean}
+({\tt nterms>1}). {\tt pbcor} has the following inputs:
+
+\small
+\begin{verbatim}
+#  impbcor :: Construct a primary beam corrected image from an image
+and a primary beam pattern.
+imagename           =         ''        #  Name of the input image
+pbimage             =         ''        #  Name of the primary beam
+                                        #   image which must exist or
+                                        #   array of values for the pb response. Default ""
+outfile             =         ''        #  Output image name. If empty, no image is written.
+                                        #   Default ""
+box                 =         ''        #  One or more boxes to use
+                                        #   for fit region(s). Default is
+                                        #   to use the entire directional plane.
+     region         =         ''        #  The region to correct. Default is entire image. If
+                                        #   both box and region are specified, box is used and
+                                        #   region is not.
+
+chans               =         ''        #  The frequency planes to correct. Default is all
+                                        #   frequencies.
+stokes              =        'I'        #  The correlations to correct. Default is all.
+mask                =         []        #  Boolean LEL expression or mask region.  Default is
+                                        #   none.
+mode                = 'velocity'        #  Divide or multiply the image by the primary beam
+                                        #   image. Minimal match supported. Default "divide"
+cutoff              =       -1.0        #  PB cutoff. If mode is "d", all values less than this
+                                        #   will be masked. If "m", all values greater will be
+                                        #   masked. Less than 0, no cutoff. Default no cutoff
+wantreturn          =      False        #  Return an image tool
+                                        #   referencing the corrected image?
+async               =      False        #  If true the taskname must be started using
+                                        #   impbcor(...)
+\end{verbatim}
+\normalsize                             
+
+The main inputs are the input image and the image of a primary beam in
+the {\tt pbimage} parameter. The {\tt mode} parameter will typically
+be {\it 'divide'} but it is also possible to multiply with the beam
+pattern.
+
+{\tt widebandpbcor} has the following options
+
+\small
+\begin{verbatim}
+#  widebandpbcor :: Wideband PB-correction on the output of the MS-MFS algorithm
+vis                 =         ''        #  Name of measurement set.
+imagename           =         ''        #  Name-prefix of multi-termimages to operate on.
+nterms              =          2        #  Number of taylor terms to use
+threshold           =         ''        #  Intensity above which to
+                                        #   re-calculate spectral index
+action              =    'pbcor'        #  PB-correction (pbcor) or
+                                        #   only calc spectral-index (calcalpha)
+     reffreq        =         ''        #  Reference frequency (if specified in clean)
+     pbmin          =        0.2        #  PB threshold below which to not correct
+     field          =         ''        #  Fields to include in the PB calculation
+     spwlist        =         ''        #  List of N spw ids
+     chanlist       =         []        #  List of N channel ids
+     weightlist     =         []        #  List of N weights (relative)
+
+async               =      False        #  If true the taskname must
+                                        #   be started using widebandpbcor(...)
+\end{verbatim}
+\normalsize  
+
+{\tt action='pbcor'} computes Taylor-coefficient images that represent
+the primary beam spectrum and applies them to the input Taylor
+coefficient images. The {\tt action='calcalpha'} will recalculate
+spectral index maps based on the primary beam correction polynomials. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Combined Single Dish and Interferometric Imaging 
+         ({\tt feather})}
+\label{section:im.feather}
+
+The term ``feathering'' is used in radio imaging to describe how to
+combine or ``feather'' two images together by forming a weighted
+sum of their Fourier transforms in the (gridded) uv-plane.
+Intermediate size scales are down-weighted to give interferometer
+resolution while preserving single-dish total flux density.
+
+The feathering technique does the following:
+\begin{enumerate}
+\item The single-dish and interferometer images are Fourier
+      transformed. 
+    \item The beam from the single-dish image is Fourier transformed
+      ($FTSDB(u,v)$), (alternatively, one can specify some smaller
+      portion of the single dish aperture, which corresponds to a
+      wider beam).
+\item The Fourier transform of the interferometer image is multiplied
+      by ($1-FTSDB(u,v)$).  This basically down weights the shorter
+      spacing data from the interferometer image.
+\item The Fourier transform of the single-dish image is scaled by the
+      volume ratio of the interferometer restoring beam to the single
+      dish beam.
+\item The results from 3 and 4 are added and Fourier transformed
+      back to the image plane.
+\end{enumerate}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Other Packages:}
+     The {\tt feather} task is analogous to the AIPS {\tt IMERG} 
+     task and the MIRIAD {\tt immerge} task with option 
+     {\tt 'feather'}.
+  \end{boxedminipage}
+\end{wrapfigure}
+The term feathering derives from the tapering or down-weighting of the
+data in this technique; the overlapping, shorter spacing data from the
+deconvolved interferometer image is weighted down compared to the
+single dish image while the overlapping, longer spacing data from the
+single-dish are weighted down compared to the interferometer image.
+
+The tapering uses the transform of the low resolution point spread
+function. This can be specified as an input image or the appropriate
+telescope beam for the single-dish.  The point spread function for a
+single dish image may also be calculated using {\tt clean}.
+
+Advice: Note that if you are feathering large images, be advised to
+have the number of pixels along the X and Y axes to be composite
+numbers and definitely not prime numbers. In general FFTs work much
+faster on even and composite numbers. You may use subimage function of
+the image tool to trim the number of pixels to something desirable.
+
+The inputs for {\tt feather} are:
+\small
+\begin{verbatim}
+#  feather :: Combine two images using their Fourier transforms
+imagename           =         ''        #  Name of output feathered image
+highres             =         ''        #  Name of high resolution (interferometer) image
+lowres              =         ''        #  Name of low resolution (single dish) image
+sdfactor            =        1.0        #  Scale factor to apply to Single Dish image
+effdishdiam         =       -1.0        #  New effective SingleDish diameter to use in m
+lowpassfiltersd     =      False        #  Filter out the high spatial frequencies of the SD
+                                        #   image
+async               =      False        #  If true the taskname must be started using
+\end{verbatim}
+\normalsize 
+
+
+The single-dish data cube is specified by the {\tt lowres} and the
+interferometric data cube by the {\tt highres} keyword. The combined,
+feathered output cube name is given by the {\tt imagename}
+parameter. {\tt sdfactor} can be used to adjust the flux calibration
+of the images. Since single-dish processing typically involves the fit
+of a baseline level, it might be the one with the most uncertain
+calibration and {\tt sdfactor} will multiply with the single-dish
+image values for any needed correction.
+
+
+The weighting functions for the data are usually the Fourier transform
+of the Single Dish beam FFT(PB$_{SD}$) for the Single dish data, and
+the inverse, 1-FFT(PB$_{SD}$) for the interferometric data. It is
+possible, however, to change the weighting functions by pretending
+that the SD is smaller in size via the {\tt effdishdiameter}
+parameter. This tapers the high spatial frequencies of the SD data and
+adds more weight to the interferometric data. The {\tt
+  lowpassfiltersd} can take out artifacts at very high spatial
+frequencies that are often present but non-physical in SD data.
+
+
+Note that the only inputs are for images and {\tt feather} will
+attempt to regrid the images to a common shape, i.e. pixel size, pixel
+numbers, and spectral channels. {\tt feather} does not do any
+deconvolution but combines presumably deconvolved images after the
+fact. This implies that the short spacings extrapolated by the
+deconvolution process will be those that are down-weighted the
+most. The single dish image must have a well-defined beam shape and
+the correct flux units for a model image (Jy/beam instead of Jy/pixel)
+so use the tasks {\tt imhead} and {\tt immath} first to convert if
+needed.
+
+Starting with a cleaned synthesis image and a low resolution image
+from a single dish telescope, the following example shows how they
+can be feathered:
+\small
+\begin{verbatim}
+feather(imagename='feather.im',      # Create an image called feather.im
+       highres='synth.im',           # The synthesis image is called synth.im
+        lowres='single_dish.im'       # The SD image is called single_dish.im
+       )
+\end{verbatim}
+\normalsize
+
+\subsection{Visual Interface for {\tt feather} ({\tt casafeather})}
+\label{section:im.casafeather}
+
+CASA also provides a visual interface to the {\tt feather} task. The
+interface is run {\it from a command line outside CASA} by typing {\tt
+  casafeather} in a shell. Fig.\,\ref{fig:casafeather} shows an
+example. As a first step, one needs to specify a high and a low
+resolution image, typically an interferometric and a single dish
+map. Note that the single dish map needs to be in units of Jy
+beam$^{-1}$. An output image is usually specified, too, and an
+additional image, such as a non-deconvolved (dirty) interferometric
+image can be specified, too.  On the main GUI, press ``Feather'' to
+start the feathering process, which includes regridding the low
+resolution image to the high resolution image.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{casafeather}{6}
+\caption{\label{fig:casafeather} Visual ``casafeather'' interface
+to the {\tt feather} task.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+``casafeather'' has the ability to show two major rows of displays
+(see Fig.\,\ref{fig:casafeather}) that can be turned on or off.  A
+good visualization is usually obtained by making both axes
+logarithmic. This can be specified in the ``Customize menu'', the {\it
+  toothed wheel} symbol at the top of the panel. The two rows of
+displays are: 1) ``Original Data Slice'': Cuts through the u and v
+directions of the Fourier transformed input images. A vertical line
+shows the location of the effective dish diameter(s).  2) ``Feathered
+Data Slice'': The same cuts, but scaled by the ``low resolution scale
+factor'' and weighted by the weighting functions (see
+\S\,\ref{section:im.feather}). In this display, the weighting
+functions themselves are shown, too.
+
+At the top of the display {\tt effdshdiameter} for u and v and {\tt sdfactor} can be
+provided in the ``Effective Dish Diameter'' and ``Low Resolution
+Scale Factor'' input boxes. 
+
+
+
+The data can be visualized in different forms. The data type to be
+displayed can be selected in the ``Color Options'' menu. The data can
+be the unmodified, original data, or data that have been convolved with
+the high or low resolution beams. One can also select to display data
+that were weighted and scaled by the functions discussed above.
+
+The data can also be displayed in the form of a ``scatter plot''
+(Fig.\,\ref{fig:feather-scatter}). This allows one to check for
+differences in flux. In particular, the scaling parameter should be
+adjusted such that the flux of the Low-resolution data, convolved with
+the High beam, weighted and scaled, is the same as the Dirty data,
+convolved with the Low beam, weighted (use the High resolution data
+instead of the Dirty data if the latter are not available). If that can be
+achieved, the flux adjustments should be roughly correct. The
+``scatter plot'' can display any two data sets on the two axes,
+selected from the ``Color Preferences'' menu.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{feather-scatter}{6}
+\caption{\label{fig:feather-scatter} The scatter plot in casafeather.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+
+The ``Customize'' button at the top (toothed wheel), allows one to set
+the display parameters as seen in Fig.\,\ref{fig:feather-selection}.
+Options are to show the slice plot, the scatter plot, or the
+legend. One can also select between logarithmic and linear axes, and
+whether the x-axis for the slices are in the u, or v, or both
+directions, or, alternatively a radial average in the uv-plane can be
+used. For data cubes one can also select a particular velocity plane,
+or to average the data across all velocity channels.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{feather-selection}{6}
+\caption{\label{fig:feather-selection}  The casafeather ``customize'' window.} 
+\hrulefill
+\end{center}
+\end{figure}
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Making Deconvolution Masks or Box Regions}
+\label{section:im.mask}
+
+For most careful imaging, you will want to restrict the region over
+which you allow CLEAN components to be found.  To do this, you can
+create a 'deconvolution region' or 'mask' image using the {\tt boxit}
+or the {\tt viewer}.
+%{\tt makemask} tasks.  
+Note that {\tt clean} can take simple boxes
+or box files as direct input to its {\tt mask} parameter, so these
+tasks are most useful when direct input to clean (or use of
+interactive clean) will not suffice.
+
+There are two ways to construct region files or mask images for use
+in deconvolution.  The {\tt boxit} task will find a set of box regions
+based upon an input image and control parameters.  
+%The {\tt makemask}
+%task will construct a mask image from a box specfication or a box
+%file.  
+
+%%%%%%%%%%%
+\subsection{Making Deconvolution Regions from an Image ({\tt boxit})}
+\label{section:im.mask.boxit}
+
+%%%XXX begin Amy modifications XXX%%%
+The {\tt boxit} task creates ``cleanbox'' deconvolution regions automatically
+from an image.  It searches the image to find ``islands'': all contiguous
+sets of pixels above the given threshold.  The extreme x- and y-pixels of the
+island are used to determine the corners of a rectangular box that covers each
+island.  The set of boxes are written out into a single region file with
+extension {\tt .rgn}.  {\tt Boxit} works on single-plane images as well as
+multi-channel images: in the latter case, the thresholding and boxing is done
+separately in each plane of the image.  The output region file from {\tt boxit}
+can be used as the {\tt mask} input parameter for the {\tt clean} task
+(\S~\ref{section:im.clean}).
+%%%XXX end Amy modifications XXX%%%
+
+The parameter inputs for {\tt boxit} are:
+\small
+\begin{verbatim}
+#  boxit :: Box regions in image above given threshold value.
+imagename    =         ''   #  Name of image to threshold
+regionfile   =         ''   #  Output region file
+threshold    =   '0.0mJy'   #  Threshold value.  Must include units.
+minsize      =          2   #  Minimum number of pixels for a boxable island
+diag         =      False   #  Count diagonal connections?
+boxstretch   =          1   #  Increase box sizes by this many pixels beyond thresholded pixels.
+overwrite    =      False   #  Overwrite existing region file?
+async        =      False   #  If true the taskname must be started using boxit(...)
+\end{verbatim}
+\normalsize 
+
+%%%XXX begin Amy modifications XXX%%%
+%XX: Some of the parameters are standard imaging parameters
+%(\S~\ref{section:im.pars}).
+The {\tt regionfile} parameter specifies the root name of the region file.  It
+will automatically be given {\tt .rgn} as the file extension.  
+The {\tt minsize} parameter specifies the smallest island that qualifies to be
+boxed.  It refers to the total number of pixels in the island. 
+To include pixels connected only on the diagonal as being part of the same
+island, set the {\tt diag} parameter to {\tt True}.  The {\tt boxstretch}
+parameter increases the size of the boxes beyond the extent of the island, and
+can range from -1 to 5.  For a value of 1 (the default), the
+box is stretched by one pixel in each outward direction; therefore, each side
+of the box lengthens by two pixels.  Finally, the parameter {\tt overwrite}
+specifies whether an existing region file can be overwritten.
+%%%XXX end Amy modifications XXX%%%
+
+{\bf ALERT:} The {\tt boxit} task is a prototype under active development and
+coded in Python. Eventually we will add functionality to deal with the creation of
+non-rectangular regions and with multi-plane masks, as well as efficiency
+improvements.  %%%XXX Amy modification; added missing word "as" to above
+%%%sentence before "efficiency" XXX%%%
+
+%%%%%%%%%%%
+%\subsection{Making Deconvolution Masks from Boxes ({\tt makemask})}
+%\label{section:im.mask.makemask}
+%
+%The parameter inputs for {\tt makemask} are:
+%\small
+%\begin{verbatim}
+%#  makemask :: Derive a mask image from a cleanbox and set of imaging parameters:
+%
+%cleanbox      =         []   #   Clean box file or regions
+%vis           =         ''   #   Name of input visibility file (if no input image)
+%imagename     =         ''   #   Name of output mask images
+%mode          =      'mfs'   #   Type of selection (mfs, channel, velocity)
+%imsize        = [256, 256]   #   Image size in spatial pixels [x,y]
+%cell          =     [1, 1]   #   Cell size in arcseconds
+%phasecenter   =         ''   #   Field identifier or direction of the phase center
+%stokes        =        'I'   #   Stokes parameter to image (I,IV,IQU,IQUV)
+%field         =        '0'   #   Field ids list to use in mosaic
+%spw           =        '0'   #   Spectral window identifier (0-based)
+%\end{verbatim}
+%\normalsize 
+%The majority of the parameters are the standard imaging parameters
+%(\S~\ref{section:im.pars}).  The {\tt cleanbox} parameter uses the
+%syntax for cleanboxes as in the {\tt clean} parameter {\tt mask} (see
+%\S~\ref{section:im.clean.mask}), with the option for {\tt 'interactive'}
+%also.  The {\tt imagename} parameter specifies the name
+%for the output mask image.
+%
+%You can use the {\tt viewer} to figure out the cleanbox blc-trc x-y
+%settings, make the mask image, and then bring it into the viewer as a
+%contour image over your deconvolved image to compare exactly where
+%your mask regions are relative to the actual emission.  In this
+%example, create a mask from many cleanbox regions specified in a file
+%on disk ({\tt cleanboxes.txt}) containing
+%\small
+%\begin{verbatim}
+%1 80 80 120 120
+%2 20 40 24 38
+%3 70 42 75 66
+%\end{verbatim}
+%\normalsize
+%where each line specifies the field index and the blc x-y and trc x-y
+%positions of that cleanbox.  For example, in {\tt casapy}, you can do
+%this easily:
+%\small
+%\begin{verbatim}
+%CASA <29>: !cat > cleanboxes.txt
+%IPython system call: cat > cleanboxes.txt
+%1 80 80 120 120
+%2 20 40 24 38
+%3 70 42 75 66
+%<CNTL-D>
+%CASA <30>: !cat cleanboxes.txt
+%IPython system call: cat cleanboxes.txt
+%1 80 80 120 120
+%2 20 40 24 38
+%3 70 42 75 66
+%\end{verbatim}
+%\normalsize
+%
+%Then, in CASA,
+%\small
+%\begin{verbatim}
+%makemask(vis='source.ms',
+%         imagename='source.mask',
+%	 cleanbox='cleanboxes.txt',
+%         mode='mfs',                  # make a multi-frequency synthesis map (combine channels)
+%         imsize=[200,200])            # Set image size = 200x200 pixels
+%         cell=[0.1,0.1],              # Using 0.1 arcsec pixels
+%         spw='0,1,2',                 # Combine channels from 3 spectral windows
+%         field='0',                   # Use the first field in this split dataset
+%         stokes='I')                  # Image stokes I polarization
+%\end{verbatim}
+%\normalsize
+%This task will then create a mask image that has the 3 cleanboxes
+%specified in the {\tt cleanboxes.txt} file.  
+%
+%You can also specify the {\tt cleanbox} as a list (of lists) of
+%blc,trc pairs (4 veritices), e.g.
+%\small
+%\begin{verbatim}
+%   cleanbox = [[80, 80, 120, 120], [20, 40, 24, 38], [70, 42, 75, 66]]
+%\end{verbatim}
+%\normalsize
+%is equivalent to the {\tt cleanboxes.txt} given above.  Likewise,
+%\small
+%\begin{verbatim}
+%   cleanbox = [80, 80, 120, 120]
+%\end{verbatim}
+%\normalsize
+%puts in a single cleanbox.
+%
+%Note that you must specify a visibility dataset and create the image
+%properties so the mask image will have the same dimensions as the
+%image you want to actually clean.  
+%
+%{\bf ALERT:} Eventually we will add functionality to deal with the creation of
+%non-rectangular regions and with multi-plane masks.  There is also no
+%{\tt cleanbox='interactive'} version currently available.  You have to run
+%{\tt clean} with {\tt cleanbox='interactive'} to generate a mask graphically.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Insert an Image Model ({\tt ft})}
+\label{section:im.ft}
+
+%\begin{wrapfigure}{r}{2.5in}
+%  \begin{boxedminipage}{2.5in}
+%     \centerline{\bf Inside the Toolkit:}
+%     The {\tt im.ft} method does what the {\tt ft} task does.
+%     Its main use is setting the {\tt MODEL\_DATA} column in the
+%     MS so that the {\tt cb} tool can use it for subsequent
+%     calibration.
+%  \end{boxedminipage}
+%\end{wrapfigure}
+
+The {\tt ft} task will add a source model (units should be Jy/pixel)
+or a clean component list
+to a Measurement Set.  This is especially useful if
+you have a resolved calibrator and you want to start with a model of
+the source before you derive accurate gain solutions.  This is also
+helpful for self-calibration (see \S~\ref{section:im.selfcal} below).
+
+The inputs for {\tt ft} are:
+\small
+\begin{verbatim}
+#  ft :: Insert a source model into the MODEL_DATA column of a visibility set:
+vis                 =         ''        #  Name of input visibility file (MS)
+field               =         ''        #  Field selection
+spw                 =         ''        #  Spw selection
+model               =         ''        #  Name of input model image(s)
+nterms              =          1        #  Number of terms used to model the sky
+                                        #   frequency dependence
+complist            =         ''        #  Name of component list
+incremental         =      False        #  Add to the existing model visibility?
+usescratch          =      False        #  If True predicted  visibility  is stored in
+                                        #   MODEL_DATA column
+async               =      False        #  If true the taskname must be started using
+                                        #   ft(...)
+\end{verbatim}
+\normalsize
+
+An example on how to do this: 
+\small
+\begin{verbatim}
+ft(vis='n75.ms',                   # Start with the visibility dataset n75.ms
+   field='1328',                   # Select field name '1328+307' (minimum match) 
+   model='1328.model.image')       # Name of the model image you have already
+\end{verbatim}
+\normalsize
+This example will add the source model '1328.model.imag' to all
+entries that match the field name '1328'. If the parameter {\tt
+  usescratch} is set to {\tt 'True'}, {\tt ft} will Fourier transform the
+source model and fill the {\tt MODEL\_DATA} column with the data. This,
+however, is only needed in special applications and {\tt usescratch=F}
+is the default.
+
+Alternatively, one can add a clean component list to be used as a
+model to the MS. The following procedure is an example:
+
+\small
+\begin{verbatim}
+# for a point source with no spectral index
+cl.addcomponent(flux=0.39, fluxunit='Jy',shape='point', dir='J2000 19h33m09s 15d01m20s')
+ 
+# for a Gaussian with a spectral index
+cl.addcomponent(flux=1.25, fluxunit='mJy', polarization='Stokes',
+dir='J2000 19h30m00s 15d00m00s', shape='gaussian', majoraxis='10arcsec',
+minoraxis='6arcsec', positionangle='0deg', freq='1.25GHz',
+spectrumtype='spectral index', index=-0.8)
+###you can add more components if you wish by calling addcomponent repeatedly with different params
+ 
+##save it to disk
+cl.rename('my_component.cl')
+cl.close()
+ 
+## write the model into the measurement set ('myms')
+ft(vis='myms', complist='my_component.cl')
+\end{verbatim}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image-plane deconvolution ({\tt deconvolve})}
+\label{section:im.deconvolve}
+
+If you have only an image (obtained from some telescope) and an image
+of its point spread function, then you can attempt a simple image-plane
+deconvolution.  Note that for interferometer data, full uv-plane 
+deconvolution using {\tt clean} or similar algorithm is superior!
+
+The default inputs for {\tt deconvolve} are:
+\small
+\begin{verbatim}
+#  deconvolve :: Deconvolving a point spread function from an image
+
+imagename   =         '' #   Name of image to deconvolve
+model       =         '' #   Name of output image to which deconvolved components are stored
+psf         =         '' #   Name of psf or gaussian parameters if psf is assumed gaussian
+alg         =    'clark' #   Deconvolution algorithm to use
+niter       =         10 #   number of iteration to use in deconvolution process
+gain        =        0.1 #   CLEAN gain parameter 
+threshold   =    '0.0Jy' #   level below which sources will not be deconvolved
+mask        =         '' #   Name of image that has mask to limit region of deconvolution
+async       =      False #   if True run in the background, prompt is freed
+
+\end{verbatim}
+\normalsize
+
+The algorithm ({\tt alg}) options are: {\tt 'clark'}, {\tt 'hogbom'}, 
+{\tt 'multiscale'} or {\tt 'mem'}.  The {\tt 'multiscale'} and
+{\tt 'mem'} options will open the usual set of sub-parameters for these
+methods.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Self-Calibration}
+\label{section:im.selfcal}
+
+Once you have a model image or set of model components reconstructed
+from your data using one of the deconvolution techniques described
+above, you can use it to refine your calibration.  This is called
+{\it self-calibration} as it uses the data to determine its own
+calibration (rather than observations of special calibration sources).
+
+In principle, self-calibration is no different than the calibration
+process we described earlier (\S~\ref{chapter:cal}).  In effect, you
+alternate between calibration and imaging cycles, refining the calibration
+and the model as you go.  The trick is you have to be careful, as defects
+in early stages of the calibration can get into the model, and thus
+prevent the calibration from improving.  In practice, it is best to
+not clean very deeply early on, so that the CLEAN model contains
+correct components only.  
+
+One important thing to keep in mind is that the self-calibration
+relies upon having the most recent source model inside the MS.  This is indeed
+the case if you follow the imaging (using {\tt clean})
+directly by the self-calibration.  If you have done something strange
+in between and have lost or overwritten source model
+(for example done some extra cleaning that you do not want to keep),
+then use the {\tt ft} task (see \S~\ref{section:im.ft} above), which 
+adds a source model image or clean component lists to an MS.  
+
+Likewise, during self-calibration (once you have a new calibration
+solution) the imaging part
+relies upon having the {\tt CORRECTED\_DATA} column contain
+the self-calibrated data.  This is done with the {\tt applycal}
+task (\S~\ref{section:cal.correct.apply}).  
+
+The {\tt clearcal} command can be used during the self-calibration if
+you need to clear the {\tt CORRECTED\_DATA} column and revert to the
+original {\tt DATA}.  If you need to restore the {\tt CORRECTED\_DATA}
+to any previous stage in the self-calibration, use {\tt applycal}
+again with the appropriate calibration tables.
+
+{\bf ALERT:} In later patches we
+will change the tasks so that users need not worry what is contained in
+the MS scratch columns and how to fill them.  CASA will handle that 
+underneath for you!
+
+For now, we refer the user back to the calibration chapter for
+a reminder on how to run the calibration tasks. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parallel Cleaning ({\tt pclean})}
+\label{section:im.pclean}
+
+{\tt pclean} is an {\bf experimental} task to allow clean speedup by using
+more than a single computing node. 
+
+The inputs are somewhat different from {\tt clean} but we will merge
+the two tasks in the future: 
+\small
+\begin{verbatim}
+#  pclean :: Invert and deconvolve images with parallel engines
+vis                 =         ''        #  Name of input visibility file
+imagename           =         ''        #  Pre-name of output images
+imsize              = [256, 256]        #  Image size in pixels (nx,ny), symmetric for
+                                        #   single value
+cell                = ['1.0arcsec', '1.0arcsec'] #  The image cell size in arcseconds.
+phasecenter         =         ''        #  Image center: direction or field index
+stokes              =         ''        #  Stokes params to image (eg I,IV,IQ,IQUV)
+mask                =         ''        #  mask image
+field               =         ''        #  Field Name or id
+spw                 =         ''        #  Spectral windows e.g. '0~3', '' is all
+ftmachine           =       'ft'        #  Fourier Transform Engine ('ft', 'sd', 'mosaic'
+                                        #   or 'wproject')
+alg                 =    'clark'        #  Deconvolution algorithm ('clark', 'hogbom',
+                                        #   'multiscale')
+cyclefactor         =        1.5        #  Control number of major cycle, threshold of
+                                        #   cycle=residualPeak*psfSidelobe*cyclefactor
+niter               =        500        #  Maximum number of iterations
+gain                =        0.1        #  Gain to use in deconvolution
+threshold           =    '0.0Jy'        #  Flux level to stop cleaning, must include
+                                        #   units: '1.0mJy'
+weighting           =  'natural'        #  Type of weighting
+mode                =   'continuum'     #  Clean mode ('continuum', 'cube')
+interactive         =      False        #  Interactive clean
+overwrite           =      False        #  Overwrite an existing model image
+uvtaper             =      False        #  Apply additional uv tapering of visibilities
+timerange           =         ''        #  Range of time to select from data
+uvrange             =         ''        #  Select data within uvrange
+antenna             =         ''        #  Select data based on antenna/baseline
+scan                =         ''        #  Scan number range
+observation         =         ''        #  Observation ID range
+pbcor               =      False        #  Correct for the primary beam post deconvolution
+minpb               =        0.2        #  Fractional of peak of pb coverage where to stop
+                                        #   the  pb correction
+clusterdef          =         ''        #  File that contains cluster definition
+async               =      False        #  If true the taskname must be started using
+                                        #   pclean(...)
+\end{verbatim}
+\normalsize
+
+In {\tt pclean}, the parameter {\tt alg} controls whether the 'clark',
+'hogbom', or 'multiscale' cleaning algorithms are used. 'ft', 'sd',
+'mosaic', and 'wproject' are specified via {\tt ftmachine}, similar to
+{\tt imagermode} in {\tt clean}. Important is the {\tt clusterdef}
+parameter. It specifies a file with all computer names, the number of
+CPU cores and temporary directories that can be used for {\tt
+  pclean}. It is formatted like:
+
+\small
+\begin{verbatim}
+############################
+hal9000, 10,   /home/ptest
+sal9000, 12,   /home/ptest
+nearstar, 6,    /home/ptest
+############################
+\end{verbatim}
+\normalsize
+
+It is advisable to leave one or to cores unused by {\tt pclean} on
+computers that run the task. This will allow other, sometimes vital,
+processes to continue. 
+
+{\bf IMPORTANT: The user has to have password-less ssh
+  access\footnote{see e.g. \url{http://www.linuxpro1blem.org/art_9.html}} to all
+  the computers used in a cluster definition file and the working
+  directories have to be cross-mounted by all the computers under the
+  same name.}
+
+
+{\tt pclean} attempts so slice the data in time bins for continuum
+imaging and in channel bins for spectral imaging and sends
+sub-processes to the individual nodes. Since they all report back to
+the main terminal while they are executed, the logging may look a bit
+messy. After the clean processes on the nodes have concluded, the data will
+be put back together to create single image files.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Examples of Imaging}
+\label{section:im.examples}
+
+The data reduction tutorials on \url{casaguides.nrao.edu} provide
+walkthroughs for
+high and low frequency, spectral line and polarization imaging techniques. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

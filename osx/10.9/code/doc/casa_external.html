@@ -1,0 +1,79 @@
+
+<html>
+<head>
+<title>AIPS++ to CASA Migration</title>
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#cc0f0f" vlink="#00009c">
+<p>
+<h2>For External AIPS++ Library Users:</h2>
+<p>
+Once your local AIPS++ sitemanager has converted the system to the
+new code and library organization you will need to do two things.
+
+<p>
+Firstly you need to change the the AIPS++ includes (reflecting the
+new structure) of your source files. The script <tt>dosedincl</pre>
+(in the AIPS++ bin directory) will do this for all .h, .cc and
+templates files in the working directory and all its subdirectories
+recursively.
+
+<p>
+Secondly you need to change your makefiles so that the correct libraries
+are linked with. The following list shows the new libraries and the
+modules they contain.
+<pre>
+casa=BasicSL Arrays Containers Exceptions IO Inputs OS Utilities System BasicMath Quanta Logging
+scimath=Deconvolution Fitting Functionals Mathematics
+tables=Tables LogTables
+measures=Measures TableMeasures
+fits=FITS
+lattices=Lattices LatticeMath
+coordinates=Coordinates
+components=ComponentModels SpectralComponents
+images=Images Wnbt
+ms=MeasurementSets
+msvis=MSVis
+calibration=CalTables
+ionosphere=Ionosphere
+flagging=Flagging
+dish=SDCalibration SDIterators
+simulators=Simulators
+synthesis=DataSampling IDL MeasurementComponents MeasurementEquations Parallel
+graphics=Graphics X11
+tasking=Benchmarks Glish Guiutils Tasking Widgets
+</pre>
+
+The library dependencies are:
+<pre>
+LINKcasa        := casa
+LINKscimath     := scimath casa
+LINKtables      := tables casa
+LINKmeasures    := measures tables scimath casa
+LINKfits        := fits measures tables scimath casa
+LINKlattices    := lattices tables scimath casa
+LINKcoordinates := coordinates fits measures tables scimath casa
+LINKcomponents  := components coordinates fits measures tables scimath casa
+LINKimages      := images components coordinates lattices fits measures tables scimath casa
+LINKms          := ms fits measures tables scimath casa
+LINKmsvis       := msvis ms fits measures tables scimath casa
+LINKcalibration := calibration msvis ms fits measures tables scimath casa
+LINKionosphere  := ionosphere measures tables scimath casa
+LINKflagging    := flagging msvis ms lattices fits measures tables scimath casa
+LINKdish        := dish ms coordinates lattices fits measures tables scimath casa
+LINKsimulators  := simulators ms fits measures tables scimath casa
+LINKsynthesis   := synthesis calibration msvis ms images components coordinates lattices fits measures tables scimath casa
+LINKgraphics    := graphics casa
+LINKtasking     := tasking graphics msvis ms images components coordinates lattices fits measures tables scimath casa
+</pre>
+The object code of each package is contained in a library
+<tt>lib'package'.a.<//tt>. 
+Please note that package <tt>scimath</tt> also has a Fortran library
+<tt>libscimath_f.a</tt>.
+
+<p>
+The libraries needed in your links depend on the AIPS++ code being
+used. For example, if the AIPS++ measures are used, you need to include
+libmeasures.a, libtables.a, libscimath.a and libcasa.a (in that order).
+</body>
+</html>

@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FeatherMainClass</class>
+ <widget class="QMainWindow" name="FeatherMainClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1086</width>
+    <height>486</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Feather</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_8"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>48</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="highResolutionLabel">
+          <property name="minimumSize">
+           <size>
+            <width>20</width>
+            <height>19</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>&lt;font color='black'&gt;&lt;/font&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lowResolutionLabel">
+          <property name="minimumSize">
+           <size>
+            <width>20</width>
+            <height>19</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>&lt;font color='black'&gt;&lt;/font&gt;
+
+</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QLabel" name="featherTopLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>64</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap>:/images/feather.png</pixmap>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="featherBottomLabel">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap>:/images/featherFlipped.png</pixmap>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="outputLabel">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>38</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <property name="spacing">
+       <number>1</number>
+      </property>
+      <item>
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>13</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="xGroupBox">
+        <property name="title">
+         <string>U</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Effective Dish Diameter</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="dishDiameterXLineEdit">
+           <property name="maximumSize">
+            <size>
+             <width>75</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>A low resolution dish diameter in the horizontal direction.  This field can be left blank and a default will be used.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="dishDiameterXLimitLabel">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>13</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Low Resolution Scale Factor:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="singleDishFactorLineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>The low resolution scale factor.  If this field is left blank, 1 will be used.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="featherButton">
+            <property name="toolTip">
+             <string>Feather together the specified high resolution and low resolution image in the Fourier plane.</string>
+            </property>
+            <property name="text">
+             <string>Feather</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_10">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>17</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="yGroupBox">
+        <property name="toolTip">
+         <string>Select this group box to specify an elliptical dish diameter.</string>
+        </property>
+        <property name="title">
+         <string>V</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Effective Dish Diameter</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="dishDiameterYLineEdit">
+           <property name="maximumSize">
+            <size>
+             <width>75</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>A low resolution dish diameter in the vertical direction.  This field can be left blank and a default will be used.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="dishDiameterYLimitLabel">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>18</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QWidget" name="plotHolderWidget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>200</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="minimumSize">
+    <size>
+     <width>900</width>
+     <height>40</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionImageFiles"/>
+   <addaction name="actionPreferences"/>
+   <addaction name="actionPreferencesColor"/>
+   <addaction name="separator"/>
+   <addaction name="actionRectangleZoom"/>
+   <addaction name="actionDiameterSelector"/>
+   <addaction name="separator"/>
+   <addaction name="actionHelp"/>
+  </widget>
+  <action name="actionImageFiles">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/fileFolder.png</normaloff>:/images/fileFolder.png</iconset>
+   </property>
+   <property name="text">
+    <string>Specify the low and high resolution input images files and the feathered output image file.</string>
+   </property>
+   <property name="toolTip">
+    <string>Specify the low and high resolution input images files and the feathered output image file.</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/settings.png</normaloff>:/images/settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Customize plot settings.</string>
+   </property>
+   <property name="toolTip">
+    <string>Customize plot settings.</string>
+   </property>
+  </action>
+  <action name="actionPreferencesColor">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/colorWheel.png</normaloff>:/images/colorWheel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Customize color preferences.</string>
+   </property>
+   <property name="toolTip">
+    <string>Customize color preferences.</string>
+   </property>
+  </action>
+  <action name="actionRectangleZoom">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/zoom.png</normaloff>:/images/zoom.png</iconset>
+   </property>
+   <property name="text">
+    <string>Press to set rectangular zoom mode with the left mouse button (shift+left mouse in dish diameter mode).</string>
+   </property>
+   <property name="toolTip">
+    <string>Press to set rectangular zoom mode with the left mouse button (shift+left mouse in dish diameter mode).</string>
+   </property>
+  </action>
+  <action name="actionDiameterSelector">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/diameterSelector.png</normaloff>:/images/diameterSelector.png</iconset>
+   </property>
+   <property name="text">
+    <string>Press to set dish diameter selection mode with the left mouse button (shift+left mouse in zoom mode).</string>
+   </property>
+   <property name="toolTip">
+    <string>Press to set dish diameter selection mode with the left mouse button (shift+left mouse in zoom mode).</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/help.png</normaloff>:/images/help.png</iconset>
+   </property>
+   <property name="text">
+    <string>Feather Information</string>
+   </property>
+   <property name="toolTip">
+    <string>Information about Feather.</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="Feather.qrc"/>
+ </resources>
+ <connections/>
+</ui>

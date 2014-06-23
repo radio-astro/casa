@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MomentSettingsWidgetRadio</class>
+ <widget class="QWidget" name="MomentSettingsWidgetRadio">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>805</width>
+    <height>241</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+    <horstretch>1</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>200</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MomentSettingsWidgetRadio</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0,0,0,0,0">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="sizeConstraint">
+    <enum>QLayout::SetDefaultConstraint</enum>
+   </property>
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>9</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="channelGroupBox">
+     <property name="maximumSize">
+      <size>
+       <width>500</width>
+       <height>800</height>
+      </size>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Channels</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;table border=&quot;0&quot; style=&quot;-qt-table-type: root; margin-top:4px; margin-bottom:4px; margin-left:4px; margin-right:4px;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;border: none;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;Select a table row then shift+click the &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;graph with the left mouse and drag.&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>13</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>&lt;font color='black'&gt;Interval Count:&lt;/font&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="channelIntervalCountSpinBox">
+          <property name="toolTip">
+           <string>Specify the number of intervals to collapse.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>13</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="channelTable">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Specify the range (minimum and maximum) for
+each of the intervals to be collapsed.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_8">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>2</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <property name="sizeConstraint">
+      <enum>QLayout::SetNoConstraint</enum>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="momentLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>&lt;font color='black'&gt;Moment(s):&lt;/font&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>80</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QListWidget" name="momentList">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>234</width>
+         <height>195</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>1677795</width>
+         <height>1677795</height>
+        </size>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>10</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Select the moment(s) you would like to calculate.</string>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::MultiSelection</enum>
+       </property>
+       <property name="resizeMode">
+        <enum>QListView::Adjust</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_9">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>2</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Thresholding</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="rightMargin">
+         <number>2</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QRadioButton" name="includeRadioButton">
+            <property name="toolTip">
+             <string>Specify a range of pixel values to include.</string>
+            </property>
+            <property name="text">
+             <string>Include</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="excludeRadioButton">
+            <property name="toolTip">
+             <string>Specify a range of pixel values to exclude.</string>
+            </property>
+            <property name="text">
+             <string>Exclude</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="noneRadioButton">
+            <property name="toolTip">
+             <string>Include all pixels.</string>
+            </property>
+            <property name="text">
+             <string>None (All)</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <spacer name="horizontalSpacer_12">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="symmetricIntervalCheckBox">
+            <property name="toolTip">
+             <string>If this box is checked, the thresholding interval will
+assumed to be symmetric with a maximum and minimum
+of the same magnitude.  Only one of the maximum
+and minimum will need to be specified.</string>
+            </property>
+            <property name="text">
+             <string>Symmetric Interval</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_13">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <spacer name="horizontalSpacer_10">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>13</width>
+              <height>30</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="minIncludeLabel">
+            <property name="text">
+             <string>&lt;font color='black'&gt;Start:&lt;/font&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="minThresholdLineEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_14">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>13</width>
+              <height>30</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>13</width>
+              <height>30</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="maxIncludeLabel">
+            <property name="text">
+             <string>&lt;font color='black'&gt;End:&lt;/font&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="maxThresholdLineEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_11">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>13</width>
+              <height>30</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="graphThresholdButton">
+            <property name="toolTip">
+             <string>Examine a histogram of the pixels to specify
+a thresholding interval graphically.</string>
+            </property>
+            <property name="text">
+             <string>Specify Graphically...</string>
+            </property>
+            <property name="default">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>13</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="outputButton">
+         <property name="toolTip">
+          <string>Specify a location for the file(s) containing
+the collapsed image.</string>
+         </property>
+         <property name="text">
+          <string>Select Root Output File...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="collapseButton">
+         <property name="toolTip">
+          <string>Collapse the image using the specified moment(s)
+and criteria.</string>
+         </property>
+         <property name="text">
+          <string>Collapse</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

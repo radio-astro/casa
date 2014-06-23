@@ -1,0 +1,49 @@
+\documentclass[11pt]{report}         %% dss
+\usepackage{aips2help,hyperref}
+\usepackage{wrapfig,boxedminipage}
+%\usepackage{psboxit}
+\usepackage{graphicx}
+%\usepackage[maxfloats=50]{morefloats}
+% suppress toc, lof and lot files that have been edited
+%\nofiles
+\def\plotfiddle#1#2#3#4#5#6#7{\centering \leavevmode
+    \vbox to#2{\rule{0pt}{#2}}
+    \special{psfile=#1 voffset=#7 hoffset=#6 vscale=#5 hscale=#4 angle=#3}}
+%% plottwo uses commands from the epsf.sty file
+\def\plottwo#1#2{\centering \leavevmode
+    \epsfxsize=.45\columnwidth \epsfbox{#1} \hfil
+    \epsfxsize=.45\columnwidth \epsfbox{#2}}
+\newcommand{\doPS}{F}
+\newcommand{\gname}[2]{\if T\doPS \includegraphics{FIG/PS/#1.eps}
+     \else \includegraphics[width=#2in]{FIG/JPG/#1.jpg} \fi}
+\newcommand{\pname}[1]{\includegraphics{FIG/PS/#1.eps}}
+\newcommand{\psname}[2]{\includegraphics[width=#2in]{FIG/EPS/#1.eps}}
+\newcommand{\pngname}[2]{\includegraphics[width=#2in, viewport=0 0 220 334]{FIG/PNG/#1.png}}
+\newcommand{\pnghigh}[2]{\includegraphics[height=#2in]{FIG/PNG/#1.png}}
+
+%
+% STM: boldface italic for vectors in text and in superscripts
+\newcommand{\bvec}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\sbvec}[1]{\mbox{\boldmath $\scriptstyle #1$}}
+
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{-.1in}
+\setlength{\evensidemargin}{-.1in}
+\setlength{\textheight}{8.5in}
+\setlength{\topmargin}{-.2in}
+\setlength{\parindent}{0.4in}
+
+\begin{document}                                 %% dss
+
+\def\htmlref#1#2{{(html:\bf#1~\it#2)}}           %% dss
+\def\tool{{\tt tool}}                            %% dss
+\def\aipspp{{\it AIPS$++$}}                      %% dss
+\def\tools{{\tt tools}}                          %% dss
+\def\stff#1{{\tt #1}}                            %% dss
+\def\glish{{\it Glish\/}}                        %% dss
+\def\htmladdnormallink#1#2{{(html:\bf#1~\it#2)}} %% dss
+\def\gif{\bf }                                   %% dss
+\def\mf{\bf }                                    %% dss
+
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{4}

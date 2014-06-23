@@ -1,0 +1,154 @@
+AATM News
+=========
+
+Version 0.5
+-----------
+
+Correct a memory leak. Initial work to support averageing over channel
+width.
+
+Version 0.4.3.1
+---------------
+
+Fix bug in the "absorption" test program which was causing incorrect
+opacities. No changes to the main library.
+
+Version 0.4.3
+-------------
+
+Fix a bug causing a segmantation fault at certain lower pressures
+(when gcc 4.4 family is used at least). This is related ALMA CSV-526.
+
+Version 0.4.2
+-------------
+
+Fix to small discontinuity in the opacities as a function of
+frequencies.  Some lines were not taken into account to save
+computational time when they should have been
+(ATMRefractiveIndex.cpp).
+
+Fixed an issue which can sometimes produce a crash in the DSB mode
+(ATMSpectralGrid.cpp).
+
+Version 0.4.1
+-------------
+
+Fixed a bug in ATMSpectralGrid.cpp: the frequencies of the image band
+(DSB mode) were wrong when the spectral grid was defined from a LSB
+band with negative resolution or an USB band with positive resolution.
+
+Version 0.3
+-----------
+
+* Merge the changes from Juan's upstream code. This version correspond
+  exactly to ALMA release XXXX
+
+Version 0.2
+-----------
+
+Improvements:
+
+* <stdio.h> includes satisfy new versions of g++ (Bug #479022)
+
+* Zero humidity does not cause a crash (Bug #463154)
+
+* Fix typo in  InverseLength::sget  (Bug #387670)
+
+* RefractiveIndex::getRefractivity_o2 now calls 16o17o (Bug #387672)
+
+* Correct the destructor in RefractiveIndexProfile 
+
+* SpectralGrid::getBandwidth(unsigned int spwId) now uses swpid
+  argument (Bug #387673)
+
+Version 0.1
+-----------
+
+Improvements:
+
+* Test programs dispersive and absorption now take into account the
+  non-linearity in conversion of pwv to relative humidty. This
+  resolves a small (~1%) problem with derivatives of path/absorption
+  at high relative humidities.
+
+* Test program "dispersive" now prints results with higher precision
+  to allow more accurate derivative calculations
+
+
+UPSTREAM TRACKING:
+
+* ATMTemperature takes Faranhait as units (?)
+
+* When fitting for coupling, there is a check that it doesn't exceed 1
+
+* Removal of some dead code 
+
+* A number of functions in ATMProfile have been moved out-of-line and
+  into the implementation file
+
+* Algorigthm changes in ATMProfile
+
+* Constructor in ATMPercent.cpp changed to reckognise the word "percent"
+
+* Constructor in ATMOpacity changed to reckognise words neper
+
+* Chnages to contructors in ATMLength
+
+Version 0.09
+------------
+
+Bug fixes:
+
+* On certain compilers static const memebers in SMATest were not being
+  compiled correctly, so replaced them with non-static members
+
+Version 0.08
+------------
+
+UPSTREAM TRACKING:
+
+Synchronised with the current version of ATM in the ALMA CVS
+Trunk. Some changes that occurred due to this synchronisation:
+
+* Some function names with "Wet" in their name changed to "H2O" in
+  their name.
+
+* File "ATMTypeName.h" has been removed -- no more class AtmosphereType
+
+* Files ATMAtmosphereType.h and ATMAtmosphereType.cpp have been removed
+
+* Fiels ATMType.h and ATMType.cpp have been removed
+
+* Atmosphere types are now specified by an unsigned integer *only*.
+  See AtmProfile::getAtmosphereType() for descriptions.
+
+OTHER CHANGES:
+
+* Improvements to the test programs "dispersive" and "absorption"
+
+
+Version 0.07
+------------
+
+Building:
+
+* Use more modern boost autoconf macros which should make it easier to
+  build on a variety of platforms
+
+Version 0.06
+------------
+
+New features:
+
+* Command line program "dispersive" which computes the dispersive
+  delay for a simple atmosphere illustrative of the AOS site
+
+* Command line program "absorption" similar to above but computing the
+  absorption
+
+
+Version 0.05
+------------
+
+This is the first public release version.
+

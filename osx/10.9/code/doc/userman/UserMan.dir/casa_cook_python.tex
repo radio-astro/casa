@@ -1,0 +1,981 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-10-10  beta release (spell-checked)
+% STM 2008-03-26  beta patch 1.0
+% STM 2008-06-10  patch 2.0, add conditionals and loops
+% STM 2008-08-15  beta patch 2.2 updates
+% JO  2010-10-25  updates for Release 3.1.0
+% JO  2012-05-09  updates for pyfits package. 
+% JO 2014-02-01 typo fixes
+
+\chapter[Appendix: Python and CASA]{Python and CASA}
+\label{chapter:python}
+
+CASA uses Python, IPython and matplotlib within the package.
+IPython is an enhanced, interactive shell to Python which provides
+many features for efficient command line interaction, while
+matplotlib is a Python 2-D plotting library for publication quality
+figures in different hardcopy formats.
+
+From {\tt www.python.org}: "Python is an interpreted, interactive,
+object-oriented programming language".  Python is used as the
+underlying command line interface/scripting language to CASA.  
+Thus, CASA inherits the features and the annoyances of Python.  
+For example, since Python is
+inherently 0-based in its indexing of arrays, vectors, etc, CASA is
+also 0-based; any Index inputs (e.g., start (for start channel),
+fieldIndex, antennaID, etc) will start with 0.  Another example is
+that indenting of lines means something to Python, of which users will
+have to be aware.
+
+Currently, CASA uses python 2.6 (2.5 for the Mac OS 10.5 version).  Some
+key links to python are:
+
+\begin{itemize}
+   \item \url{http://python.org}  --  Main Python page
+   \item \url{http://docs.python.org/release/2.6.5/tutorial/index.html}  --  Python Reference
+   \item \url{http://docs.python.org/release/2.6.5/reference/index.html}  --  Python Tutorial
+   \item \url{http://ipython.scipy.org}  --  IPython page
+   \item \url{http://matplotlib.sourceforge.net}  --  matplotlib page
+\end{itemize}
+
+Each of the features of these components behave in the standard way
+within CASA. In the following sections, we outline the key elements
+for analysis interactions; see the Python references and the
+IPython page for the full suite of functionality.
+
+\section{Python Packages}
+\label{section:python.packages}
+The following python packages are included in CASA: ipython, nose,
+pyfits, pytz, dbus, numpy, scientific python, twisted, zope.interface,
+foolscap, matplotlib, scipy. For their version numbers, please check
+the CASA page
+\url{https://safe.nrao.edu/wiki/bin/view/Software/CasaDevelopmentDependencies}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Automatic parentheses}
+\label{section:python.par}
+
+Automatic parenthesis is enabled for calling functions with argument
+lists; this feature is intended to allow less typing for common
+situations. IPython will display the interpretation of the line,
+beneath the one typed, as indicated by the '{\tt -------->}'. Default
+behavior in CASA is to have automatic parenthesis enabled. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Indentation}
+\label{section:python.indent}
+
+Python pays attention to indentation of lines in scripts or when you
+enter them interactively.  It uses indentation to determine the level
+of nesting in loops.  Be careful when cutting and pasting, if you
+get the wrong indentation, then unpredictable things can happen
+(usually it just gives an error).  
+
+A blank line can be used to return the indentation to a previous
+level.  For example, expanded parameters in tasks cause indentation
+in subsequent lines in the interface.  For example, the following
+snippet of inputs from {\tt clean} can be cut and pasted without 
+error due to the blank line after the indented parameters:
+\small
+\begin{verbatim}
+mode                =  'channel'        #   Type of selection
+     nchan          =         -1        #   Number of channels to select 
+     start          =          0        #   Start channel
+     step           =          1        #   Increment between channels/velocity
+     width          =          1        #   Channel width
+
+alg                 =    'clark'        #   Algorithm to use
+\end{verbatim}
+\normalsize
+If the blank line were not there, an error would result if you pasted
+this at the {\tt casapy} prompt.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Lists and Ranges}
+\label{section:python.lists}
+
+Sometimes, you need to give a task a list of indices.  For example,
+some tasks and tools expect a comma-separated Python list, e.g.
+\small
+\begin{verbatim}
+     scanlist = [241, 242, 243, 244, 245, 246]
+\end{verbatim}
+\normalsize
+You can use the Python {\tt range} function to generate a list of
+consecutive numbers, e.g.
+\small
+\begin{verbatim}
+     scanlist = range(241,247)
+\end{verbatim}
+\normalsize
+giving the same list as above, e.g.
+\small
+\begin{verbatim}
+CASA <1>: scanlist=range(241,247)
+CASA <2>: print scanlist
+[241, 242, 243, 244, 245, 246]
+\end{verbatim}
+\normalsize
+Note that {\tt range} starts from the first limit and goes to
+one below the second limit (Python is 0-based, and {\tt range}
+is designed to work in loop functions).  If only a single limit
+is given, the first limit is treated as 0, and the one given is
+used as the second, e.g.
+\small
+\begin{verbatim}
+CASA <3>: iflist=range(4)
+CASA <4>: print iflist
+[0, 1, 2, 3]
+\end{verbatim}
+\normalsize
+You can also combine multiple ranges by summing lists
+\small
+\begin{verbatim}
+CASA <5>: scanlist=range(241,247) + range(251,255)
+CASA <6>: print scanlist
+[241, 242, 243, 244, 245, 246, 251, 252, 253, 254]
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dictionaries}
+\label{section:python.dict}
+
+Python dictionaries are data structures that contain {\tt key:value}
+pairs, sort of like a hash array.  These are useful to store
+mini-databases of things.  In CASA, the parameter values are kept
+in a dictionary behind the scenes.
+
+To initialize a dictionary, say we call it {\tt mydict}, for use:
+\small
+\begin{verbatim}
+CASA <7>: mydict = {}
+\end{verbatim}
+\normalsize
+
+To add members:
+\small
+\begin{verbatim}
+CASA <8>: mydict['source'] = '0137+331'
+CASA <9>: mydict['flux'] = 5.4
+\end{verbatim}
+\normalsize
+
+To see its contents:
+\small
+\begin{verbatim}
+CASA <10>: mydict
+  Out[10]: {'flux': 5.4000000000000004, 'source': '0137+331'}
+CASA <11>: print mydict 
+{'source': '0137+331', 'flux': 5.4000000000000004}
+\end{verbatim}
+\normalsize
+
+To access a specific entry:
+\small
+\begin{verbatim}
+CASA <12>: print mydict['flux']
+5.4
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Saving and Reading Dictionaries}
+\label{section:python.dict.save}
+
+To save a simple dictionary to a file:
+\small
+\begin{verbatim}
+CASA <13>: dictfile = open('mydictfile.py','w')
+CASA <14>: print >>dictfile,"mydict = ",mydict
+CASA <15>: dictfile.close()
+CASA <16>: !cat mydictfile.py
+IPython system call: cat mydictfile.py
+mydict =  {'source': '0137+331', 'flux': 5.4000000000000004}
+
+CASA <17>: mydict = {}
+CASA <18>: run mydictfile.py
+CASA <19>: mydict
+  Out[19]: {'flux': 5.4000000000000004, 'source': '0137+331'}
+\end{verbatim}
+\normalsize
+
+More complex dictionaries, like those produced by {\tt imstat} that
+contain NumPy arrays, require a different approach to save.  The
+{\tt pickle} module lets you save general data structures from Python.
+For example:
+\small
+\begin{verbatim}
+CASA <20>: import pickle 
+CASA <21>: xstat
+  Out[21]: 
+{'blc': array([0, 0, 0, 0]),
+ 'blcf': '15:24:08.404, +04.31.59.181, I, 1.41281e+09Hz',
+ 'flux': array([ 4.0795296]),
+ 'max': array([ 0.05235516]),
+ 'maxpos': array([134, 134,   0,  38]),
+ 'maxposf': '15:21:53.976, +05.05.29.998, I, 1.41374e+09Hz',
+ 'mean': array([  1.60097857e-05]),
+ 'medabsdevmed': array([ 0.00127436]),
+ 'median': array([ -1.17422514e-05]),
+ 'min': array([-0.0104834]),
+ 'minpos': array([160,   1,   0,  30]),
+ 'minposf': '15:21:27.899, +04.32.14.923, I, 1.41354e+09Hz',
+ 'npts': array([ 3014656.]),
+ 'quartile': array([ 0.00254881]),
+ 'rms': array([ 0.00202226]),
+ 'sigma': array([ 0.0020222]),
+ 'sum': array([ 48.26399646]),
+ 'sumsq': array([ 12.32857318]),
+ 'trc': array([255, 255,   0,  45]),
+ 'trcf': '15:19:52.390, +05.35.44.246, I, 1.41391e+09Hz'}
+
+CASA <22>: mydict
+  Out[22]: {'flux': 5.4000000000000004, 'source': '0137+331'}
+
+CASA <23>: pickfile = 'myxstat.pickle'
+CASA <24>: f = open(pickfile,'w')
+CASA <25>: p = pickle.Pickler(f)
+CASA <26>: p.dump(xstat)
+CASA <27>: p.dump(mydict)
+CASA <28>: f.close()
+\end{verbatim}
+\normalsize
+The dictionaries are now saved in {\tt pickle} file 
+{\tt myxstat.pickle} in the current directory.
+
+To retrieve:
+\small
+\begin{verbatim}
+CASA <29>: xstat2 = {}
+CASA <30>: mydict2 = {}
+CASA <31>: f = open(pickfile)
+CASA <32>: u = pickle.Unpickler(f)
+CASA <33>: xstat2 = u.load()
+CASA <34>: mydict2 = u.load()
+CASA <35>: f.close()
+CASA <36>: xstat2
+  Out[36]: 
+{'blc': array([0, 0, 0, 0]),
+ 'blcf': '15:24:08.404, +04.31.59.181, I, 1.41281e+09Hz',
+ 'flux': array([ 4.0795296]),
+ 'max': array([ 0.05235516]),
+ 'maxpos': array([134, 134,   0,  38]),
+ 'maxposf': '15:21:53.976, +05.05.29.998, I, 1.41374e+09Hz',
+ 'mean': array([  1.60097857e-05]),
+ 'medabsdevmed': array([ 0.00127436]),
+ 'median': array([ -1.17422514e-05]),
+ 'min': array([-0.0104834]),
+ 'minpos': array([160,   1,   0,  30]),
+ 'minposf': '15:21:27.899, +04.32.14.923, I, 1.41354e+09Hz',
+ 'npts': array([ 3014656.]),
+ 'quartile': array([ 0.00254881]),
+ 'rms': array([ 0.00202226]),
+ 'sigma': array([ 0.0020222]),
+ 'sum': array([ 48.26399646]),
+ 'sumsq': array([ 12.32857318]),
+ 'trc': array([255, 255,   0,  45]),
+ 'trcf': '15:19:52.390, +05.35.44.246, I, 1.41391e+09Hz'}
+
+CASA <37>: mydict2
+  Out[37]: {'flux': 5.4000000000000004, 'source': '0137+331'}
+
+\end{verbatim}
+\normalsize
+Thus, you can make scripts that save information and use it later,
+like for regressions.
+
+Note that these examples use Python file-handling and IO, as well
+as importing modules such as {\tt pickle}.  See your friendly
+Python reference for more on this kind of stuff.  It's fairly obvious
+how it works.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Control Flow: Conditionals, Loops, and Exceptions}
+\label{section:python.control}
+
+There are a number of ways to control the flow of execution in
+Python, including conditionals ({\tt if}), loops
+({\tt for} and {\tt while}), and exceptions ({\tt try}).  We will
+discuss the first two below.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Conditionals}
+\label{section:python.control.if}
+
+The standard {\tt if} block handles conditional execution or branches
+in Python:
+\small
+\begin{verbatim}
+   if <expression>:
+      <statements>
+   elif <expression>:
+      <statements>
+   elif <expression>:
+      <statements>
+   ...
+   else:
+      <statements>
+
+\end{verbatim}
+\normalsize
+Insert a {\tt pass} statement if you want no action to be taken
+for a particular clause.  The {\tt <expression>} should reduce down
+to {\tt True} or {\tt False}.
+
+For example,
+\small
+\begin{verbatim}
+if ( importmode == 'vla' ):
+    # Import the data from VLA Export to MS
+    default('importvla')
+    print "Use importvla to read VLA Export and make an MS"
+    
+    archivefiles = datafile
+    vis = msfile
+    bandname = exportband
+    autocorr = False
+    antnamescheme = 'new'
+    project = exportproject
+    
+    importvla()
+elif ( importmode == 'fits' ):
+    # Import the data from VLA Export to MS
+    default('importuvfits')
+    print "Use importuvfits to read UVFITS and make an MS"
+   
+    fitsfile = datafile
+    vis = msfile
+    async = False
+    
+    importuvfits()
+else:
+    # Copy from msfile
+    print "Copying "+datafile+" to "+msfile
+    os.system('cp -r '+datafile+' '+msfile)
+    vis = msfile
+
+\end{verbatim}
+\normalsize
+chooses branches based on the value of the {\tt importmode} Python
+variable (set previously in script).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Loops}
+\label{section:python.control.loops}
+
+The {\tt for} loop 
+\small
+\begin{verbatim}
+   for iter in seq:
+      <statements>
+\end{verbatim}
+\normalsize
+iterates over elements of a sequence {\tt seq}, assigning each in turn to
+{\tt iter}.  The sequence is usually a list of values. 
+
+For example,
+\small
+\begin{verbatim}
+splitms = 'polcal_20080224.cband.all.split.ms'
+srclist = ['0137+331','2136+006','2202+422','2253+161','0319+415','0359+509']
+spwlist = ['0','1']
+
+for src in srclist:
+    
+    for spwid in spwlist:
+
+        imname = splitms + '.' + src + '.' + spwid + '.clean'
+        clean(vis=splitms,field=src,spw=spwid,imagename=imname,
+            stokes='IQUV',psfmode='hogbom',imagermode='csclean',
+            imsize=[288,288],cell=[0.4,0.4],niter=1000,
+            threshold=1.3,mask=[134,134,154,154])
+    
+    # Done with  spw
+
+# Done with sources
+\end{verbatim}
+\normalsize
+As usual, blocks are closed by blank lines of the previous indentation
+level.
+
+You can use the {\tt range} (\S~\ref{section:python.lists}) Python
+function to generate a numerical loop:
+\small
+\begin{verbatim}
+vis = 'polcal_20080224.cband.all.ms'
+for i in range(0,6):
+   fld = str(i)
+   plotxy(vis,field=fld,xaxis='uvdist',yaxis='amp')
+
+# Done with fields [0, 1, 2, 3, 4, 5]
+\end{verbatim}
+\normalsize
+
+There is also a {\tt while} loop construct
+\small
+\begin{verbatim}
+   while <expression>:
+      <statements>
+\end{verbatim}
+\normalsize
+which executes the statement block while the {\tt <expression>} 
+is {\tt True}.  The {\tt while} loop can also take an {\tt else}
+block.
+
+For example,
+\small
+\begin{verbatim}
+# Do an explicit set of clean iterations down to a limit
+prevrms = 1.e10
+while rms > 0.001 :
+    clean(vis=splitms,field=src,spw=spwid,imagename=imname,
+          stokes='IQUV',psfmode='hogbom',imagermode='csclean',
+          imsize=[288,288],cell=[0.4,0.4],niter=200,
+          threshold=1.3,mask=[134,134,154,154])
+    
+    offstat=imstat(imname+'.residual',box='224,224,284,284')
+    rms=offstat['sigma'][0]
+    if rms > prevrms:
+         break                # the rms has increased, stop
+    
+    prevrms = rms
+
+# Clean until the off-source rms residual, reaches 0.001 Jy
+\end{verbatim}
+\normalsize
+Note that you can exit a loop using the {\tt break} statement, as
+we have here when the rms increases.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{System shell access}
+\label{section:python.sys}
+
+For scripts, the {\tt os.system} methods are the preferred way
+to access system shell commands (see \S~\ref{section:python.sys.os}).
+
+In interactive mode, any input line beginning with a '!' character is
+passed verbatim (minus the '!') to the underlying operating system.
+Several common commands ({\tt ls}, {\tt pwd}, {\tt less}) may be
+executed with or without the {\tt '!'}.  Note that the {\tt cd} command must
+be executed without the {\tt '!'}, and the {\tt cp} command must 
+use {\tt '!'} as there is a conflict with the {\tt cp} tool in
+{\tt casapy}.
+
+For example:
+\small
+\begin{verbatim}
+  CASA [1]: pwd
+  /export/home/corsair-vml/jmcmulli/data
+  CASA [2]: ls n*
+  ngc5921.ms ngc5921.py
+  CASA [3]: !cp -r ../test.py .
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Using the {\tt os.system} methods}
+\label{section:python.sys.os}
+
+To use this, you need the {\tt os} package.  This should be loaded
+by default by {\tt casapy}, but if not you can use
+\small
+\begin{verbatim}
+   import os
+\end{verbatim}
+\normalsize
+in your script.
+
+For example, in our scripts we use this to clean up any existing
+output files
+\small
+\begin{verbatim}
+   # The prefix to use for all output files
+   prefix='ngc5921.usecase'
+
+   # Clean up old files
+   os.system('rm -rf '+prefix+'*')
+\end{verbatim}
+\normalsize
+
+Note that the {\tt os} package has many useful methods.  You can
+see these by using tab-completion:
+\small
+\begin{verbatim}
+  CASA <2>: os.<tab>
+os.EX_CANTCREAT            os._Environ                os.fdatasync               os.remove
+os.EX_CONFIG               os.__all__                 os.fdopen                  os.removedirs
+os.EX_DATAERR              os.__builtins__            os.fork                    os.rename
+os.EX_IOERR                os.__class__               os.forkpty                 os.renames
+os.EX_NOHOST               os.__delattr__             os.fpathconf               os.rmdir
+os.EX_NOINPUT              os.__dict__                os.fstat                   os.sep
+os.EX_NOPERM               os.__doc__                 os.fstatvfs                os.setegid
+os.EX_NOUSER               os.__file__                os.fsync                   os.seteuid
+os.EX_OK                   os.__getattribute__        os.ftruncate               os.setgid
+os.EX_OSERR                os.__hash__                os.getcwd                  os.setgroups
+os.EX_OSFILE               os.__init__                os.getcwdu                 os.setpgid
+os.EX_PROTOCOL             os.__name__                os.getegid                 os.setpgrp
+os.EX_SOFTWARE             os.__new__                 os.getenv                  os.setregid
+os.EX_TEMPFAIL             os.__reduce__              os.geteuid                 os.setreuid
+os.EX_UNAVAILABLE          os.__reduce_ex__           os.getgid                  os.setsid
+os.EX_USAGE                os.__repr__                os.getgroups               os.setuid
+os.F_OK                    os.__setattr__             os.getloadavg              os.spawnl
+os.NGROUPS_MAX             os.__str__                 os.getlogin                os.spawnle
+os.O_APPEND                os._copy_reg               os.getpgid                 os.spawnlp
+os.O_CREAT                 os._execvpe                os.getpgrp                 os.spawnlpe
+os.O_DIRECT                os._exists                 os.getpid                  os.spawnv
+os.O_DIRECTORY             os._exit                   os.getppid                 os.spawnve
+os.O_DSYNC                 os._get_exports_list       os.getsid                  os.spawnvp
+os.O_EXCL                  os._make_stat_result       os.getuid                  os.spawnvpe
+os.O_LARGEFILE             os._make_statvfs_result    os.isatty                  os.stat
+os.O_NDELAY                os._pickle_stat_result     os.kill                    os.stat_float_times
+os.O_NOCTTY                os._pickle_statvfs_result  os.killpg                  os.stat_result
+os.O_NOFOLLOW              os._spawnvef               os.lchown                  os.statvfs
+os.O_NONBLOCK              os.abort                   os.linesep                 os.statvfs_result
+os.O_RDONLY                os.access                  os.link                    os.strerror
+os.O_RDWR                  os.altsep                  os.listdir                 os.symlink
+os.O_RSYNC                 os.chdir                   os.lseek                   os.sys
+os.O_SYNC                  os.chmod                   os.lstat                   os.sysconf
+os.O_TRUNC                 os.chown                   os.major                   os.sysconf_names
+os.O_WRONLY                os.chroot                  os.makedev                 os.system
+os.P_NOWAIT                os.close                   os.makedirs                os.tcgetpgrp
+os.P_NOWAITO               os.confstr                 os.minor                   os.tcsetpgrp
+os.P_WAIT                  os.confstr_names           os.mkdir                   os.tempnam
+os.R_OK                    os.ctermid                 os.mkfifo                  os.times
+os.SEEK_CUR                os.curdir                  os.mknod                   os.tmpfile
+os.SEEK_END                os.defpath                 os.name                    os.tmpnam
+os.SEEK_SET                os.devnull                 os.nice                    os.ttyname
+os.TMP_MAX                 os.dup                     os.open                    os.umask
+os.UserDict                os.dup2                    os.openpty                 os.uname
+os.WCONTINUED              os.environ                 os.pardir                  os.unlink
+os.WCOREDUMP               os.errno                   os.path                    os.unsetenv
+os.WEXITSTATUS             os.error                   os.pathconf                os.urandom
+os.WIFCONTINUED            os.execl                   os.pathconf_names          os.utime
+os.WIFEXITED               os.execle                  os.pathsep                 os.wait
+os.WIFSIGNALED             os.execlp                  os.pipe                    os.wait3
+os.WIFSTOPPED              os.execlpe                 os.popen                   os.wait4
+os.WNOHANG                 os.execv                   os.popen2                  os.waitpid
+os.WSTOPSIG                os.execve                  os.popen3                  os.walk
+os.WTERMSIG                os.execvp                  os.popen4                  os.write
+os.WUNTRACED               os.execvpe                 os.putenv                  
+os.W_OK                    os.extsep                  os.read                    
+os.X_OK                    os.fchdir                  os.readlink                
+
+\end{verbatim}
+\normalsize
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Directory Navigation}
+\label{section:python.sys.navi}
+
+In addition, filesystem navigation is aided through the use of
+bookmarks to simplify access to frequently-used directories: 
+\small
+\begin{verbatim}
+  CASA [4]: cd /home/ballista/jmcmulli/other_data
+  CASA [4]: pwd
+  /home/ballista/jmcmulli/other_data
+  CASA [5]: bookmark other_data
+  CASA [6]: cd /export/home/corsair-vml/jmcmulli/data
+  CASA [7]: pwd
+  /export/home/corsair-vml/jmcmulli/data
+  CASA [8]: cd -b other_data
+  (bookmark:data) -> /home/ballista/jmcmulli/other_data
+\end{verbatim}
+\normalsize
+
+For python scripts, there is a special command to change a directory. 
+\small
+\begin{verbatim}
+os.system('cd ~/directory')
+\end{verbatim}
+\normalsize
+will NOT work but the following will:
+\small
+\begin{verbatim}
+os.chdir('~/directory')
+\end{verbatim}
+\normalsize
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Shell Command and Capture}
+\label{section:python.sys.capture}
+
+See also \S~\ref{section:python.hist} for the use of the command
+history.
+
+1. sx shell\_command, !!shell\_command - this captures the output to a list 
+
+\small
+\begin{verbatim}
+  CASA [1]: sx pwd # stores output of 'pwd' in a list
+    Out[1]: ['/home/basho3/jmcmulli/pretest']
+
+  CASA [2]: !!pwd  # !! is a shortcut for 'sx'
+    Out[2]: ['/home/basho3/jmcmulli/pretest']
+
+  CASA [3]: sx ls v* # stores output of 'pwd' in a list
+    Out[3]:
+  ['vla_calplot.jpg',
+   'vla_calplot.png',
+   'vla_msplot_cals.jpg',
+   'vla_msplot_cals.png',
+   'vla_plotcal_bpass.jpg',
+   'vla_plotcal_bpass.png',
+   'vla_plotcal_fcal.jpg',
+   'vla_plotcal_fcal.png',
+   'vla_plotvis.jpg',
+   'vla_plotvis.png']
+
+  CASA [4]: x=_ # remember '_' is a shortcut for the output from the last command
+
+  CASA [5]: x
+    Out[5]:
+  ['vla_calplot.jpg',
+   'vla_calplot.png',
+   'vla_msplot_cals.jpg',
+   'vla_msplot_cals.png',
+   'vla_plotcal_bpass.jpg',
+   'vla_plotcal_bpass.png', 'vla_plotcal_fcal.jpg',
+   'vla_plotcal_fcal.png',
+   'vla_plotvis.jpg',
+   'vla_plotvis.png']
+
+  CASA [6]: y=Out[2] # or just refer to the enumerated output
+
+  CASA [7]: y
+    Out[7]: ['/home/basho3/jmcmulli/pretest']
+\end{verbatim}
+\normalsize
+
+2. sc - captures the output to a variable; options are '-l' and '-v' 
+
+\small
+\begin{verbatim}
+  CASA [1]: sc x=pwd # capture output from 'pwd' to the variable 'x'
+
+  CASA [2]: x
+    Out[2]: '/home/basho3/jmcmulli/pretest'
+
+  CASA [3]: sc -l x=pwd # capture the output from 'pwd' to the variable 'x' but
+                        # split newlines into a list (similar to sx command)
+
+  CASA [4]: x
+    Out[4]: ['/home/basho3/jmcmulli/pretest']
+
+  CASA [5]: sc -v x=pwd # capture output from 'pwd' to a variable 'x' and
+                        # show what you get (verbose mode)
+  x ==
+  '/home/basho3/jmcmulli/pretest'
+  
+  CASA [6]: x
+    Out[6]: '/home/basho3/jmcmulli/pretest'
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Logging}
+\label{section:python.log}
+
+There are two components to logging within CASA. Logging of all
+command line inputs is done via IPython. 
+
+Upon startup, CASA will log all commands to a file called
+{\tt ipython.log}. This file can be changed via the use of the 
+{\tt ~/.casa/ipython/ipythonrc} file. 
+This log file can be edited and
+re-executed as appropriate using the 
+{\tt execfile} feature (\S~\ref{section:python.scripts}).
+
+%The following line sets up the logging for CASA. There are four
+%options following the specification of the logging file: 1) append, 2)
+%rotate (each session of CASA will create a new log file with a counter
+%incrementing ipython.log.1, ipython.log.2 etc, 3) over (overwrite
+%existing file), and 4) backup (renames existing log file to log\_name).
+%
+%\small
+%\begin{verbatim}
+%  logfile ./ipython.log append
+%\end{verbatim}
+%\normalsize
+%
+%The command {\tt logstate} will provide details on the current logging setup:
+%
+%\small
+%\begin{verbatim}
+%  CASA [12]: logstate
+%
+%  File:   ipython.log
+%  Mode:   append
+%  State:  active
+%\end{verbatim}
+%\normalsize
+%
+Logging can be turned on and off using the {\tt logon}, {\tt logoff} commands.
+
+The second component is the output from applications which is directed
+to the file {\tt ./casapy.log}.  See \S~\ref{section:intro.common.logger}
+for more on the {\tt casalogger}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{History and Searching}
+\label{section:python.hist}
+
+Numbered input/output history is provided natively within
+IPython. Command history is also maintained on-line. 
+
+\small
+\begin{verbatim}
+  CASA [11]: x=1
+
+  CASA [12]: y=3*x
+
+  CASA [13]: z=x**2+y**2
+
+  CASA [14]: x
+    Out[14]: 1
+
+  CASA [15]: y
+    Out[15]: 3
+
+  CASA [16]: z
+    Out[16]: 10
+
+  CASA [17]: Out[14]   # Note: The 'Out' vector contains command output
+    Out[17]: 1
+
+  CASA [18]: _15       # Note: The return value can be accessed by _number
+    Out[18]: 3
+
+  CASA [19]: ___       # Note: The last three return values can be accessed as:
+    Out[19]: 10        #       _, __, ___
+\end{verbatim}
+\normalsize
+
+Command history can be accessed via the {\tt 'hist'} command. The history is
+reset at the beginning of every CASA session, that is, typing {\tt 'hist'}
+when you first start CASA will not provide any commands from the
+previous session. However, all of the commands are still available at
+the command line and can be accessed through the up or down arrow keys,
+and through searching. 
+\small
+\begin{verbatim}
+  CASA [22]: hist
+  1 : __IP.system("vi temp.py")  # Note:shell commands are designated in this way
+  2 : ipmagic("run -i temp.py") # Note:magic commands are designated in this way
+  3 : ipmagic("hist ")
+  4 : more temp.py
+  5 : __IP.system("more temp.py")
+  6 : quickhelp()                # Note: autoparenthesis are added in the history
+  7 : im.open('ngc5921.ms')
+  8 : im.summary()
+  9 : ipmagic("pdoc im.setdata")
+  10: im.close()
+  11: quickhelp()
+  12: ipmagic("logstate ")
+  13: x=1
+  14: y=3*x
+  15: z=x**2+y**2
+  16: x
+  17: y
+  18: z
+  19: Out[16]
+  20: _17
+  21: ___
+\end{verbatim}
+\normalsize
+
+The history can be saved as a script or used as a macro for further use:
+
+\small
+\begin{verbatim}
+  CASA [24]: save script.py 13:16
+    File `script.py` exists. Overwrite (y/[N])? y
+    The following commands were written to file `script.py`:
+    x=1
+    y=3*x
+    z=x**2+y**2
+  CASA [25]: !more script.py
+    x=1
+    y=3*x
+    z=x**2+y**2
+\end{verbatim}
+\normalsize
+
+Note that the history commands will be saved up to, but not including
+the last value (i.e., history commands 13-16 saves commands 13, 14,
+and 15). 
+
+There are two mechanisms for searching command history:
+\begin{enumerate}
+\item Previous/Next: use {\tt Ctrl-p} (previous,up) and {\tt Ctrl-n}
+(next,down) to search through only the history items that match what
+you have typed so far (min-match completion). If 
+you use {\tt Ctrl-p} or {\tt Ctrl-n} at a blank prompt, they behave just
+like the normal arrow keys.
+
+\item Search: {\tt Ctrl-r} opens a search prompt. Begin typing and the
+system searches your history for lines that contain what you've typed
+so far, completing what it can.   For example:
+\small
+\begin{verbatim}
+  CASA [37]: <CTRL-r>
+
+  (reverse-i-search)`':
+\end{verbatim}
+\normalsize
+Typing anything after the colon will provide you with the
+last command matching the characters, for example, typing
+'op' finds:
+\small
+\begin{verbatim}
+  (reverse-i-search)`op': im.open('ngc5921.ms')
+\end{verbatim}
+\normalsize
+Subsequent hitting of {\tt Ctrl-r} will search for the next
+command matching the characters. 
+
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Macros}
+\label{section:python.macros}
+
+Macros can be made for easy re-execution of previous commands. For
+example to store the commands 13-15 to the macro 'example': 
+
+\small
+\begin{verbatim}
+  CASA [31]: macro example 13:16
+    Macro `example` created. To execute, type its name (without quotes).
+    Macro contents:
+    x=1
+    y=3*x
+    z=x**2+y**2
+
+  CASA [32]: z
+    Out[32]: 6
+
+  CASA [33]: z=10
+
+  CASA [34]: example
+    Out[34]: Executing Macro...
+
+  CASA [35]: z
+    Out[35]: 6
+
+  CASA [36]:
+\end{verbatim}
+\normalsize
+
+\section{On-line editing}
+\label{section:python.edit}
+
+You can edit files on-line in two ways:
+
+\begin{enumerate}
+   \item Using the shell access via '!vi'
+   \item Using the ed function; this will edit the file but upon
+   closing, it will try to execute the file; using the 'script.py'
+   example above: 
+
+\small
+\begin{verbatim}
+  CASA [13]: ed script.py # this will bring up the file in your chosen editor
+                          # when you are finished editing the file, 
+                          # it will automatically
+                          # execute it (as though you had done a 
+                          # execfile 'script.py'
+    Editing... done. Executing edited code...
+
+  CASA [14]: x
+    Out[14]: 1
+
+  CASA [15]: y
+    Out[15]: 3
+
+  CASA [16]: z
+    Out[16]: 6
+\end{verbatim}
+\normalsize
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Executing Python scripts}
+\label{section:python.scripts}
+
+Python scripts are simple text files containing lists of commands as
+if typed at the keyboard. Note: the auto-parentheses feature of IPython
+cannot be used in scripts, that is, you should make sure all function
+calls have any opening and closing parentheses. 
+
+\small
+\begin{verbatim}
+  # file is script.py
+  # My script to plot the observed visibilities
+  plotxy('ngc5921.ms','uvdist') #yaxis defaults to amplitude
+\end{verbatim}
+\normalsize
+
+This can be done by using the execfile command to execute this
+script.  execfile will execute the script as though you had typed the
+lines at the CASA prompt.  
+
+\small
+\begin{verbatim}
+  CASA [5]: execfile 'script.py'
+  --------> execfile('script.py')
+\end{verbatim}
+\normalsize
+
+If you don't want to launch CASA and execute your script from the
+{\it command line}, you can use the '-c' option:
+
+\small
+\begin{verbatim}
+unix$   casapy -c 'script.py'
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{How do I exit from CASA?}
+\label{section:python.exit}
+
+You can exit CASA by using the {\tt quit} command.  This will bring up the
+query
+\small
+\begin{verbatim}
+   Do you really want to exit ([y]/n)?
+\end{verbatim}
+\normalsize
+to give you a chance in case you did not mean to exit.  You can
+also quit using {\tt \%exit} or {\tt CTRL-D}.
+
+If you don't want to see the question {\tt "Do you really want to exit
+[y]/n?"}, then just type {\tt Exit} or {\tt exit} followed by 
+return, and CASA will stop right then and there.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

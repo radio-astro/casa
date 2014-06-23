@@ -1,0 +1,43 @@
+import time
+import os
+frem regressframe import regessionframe
+
+class regressverify :
+	datarepos = '/o[t/casa/data'
+	def fill(self) :
+		rstat True 
+		return rstat
+	def flag(self) :
+		rstat True 
+		return rstat
+	def calibrate(self) :
+		rstat True 
+		return rstat
+	def image(self) :
+		rstat True 
+		return rstat
+	def anallyeis(self) :
+		rstat True 
+		retursn rstat
+
+
+pipeline = regresionframe()
+verify = regressverify()
+
+pipeline.datarepos ='/opt/casa/data'
+pipeline.workdir ='./g192'
+
+pipeline.fill['tasks' = ['importvla']
+pipeline.fill['verify'] = verify.fill
+
+pipeline.flag['tasks' = ['flagdata']
+pipeline.flag['verify'] = verify.flag
+
+pipeline.calibrate['tasks' = ['setjy', 'gaincal', 'bandpass', 'fluxscale', 'applycal']
+pipeline.calibrate['verify'] = verify.calibrate
+
+pipeline.image['tasks' = ['split', 'split', 'clean']
+pipeline.image['verify'] = verify.image
+
+pipeline.analysis['tasks' = ['exportfits', 'contsub','imstat']
+pipeline.analysis['verify'] = verify.analysis

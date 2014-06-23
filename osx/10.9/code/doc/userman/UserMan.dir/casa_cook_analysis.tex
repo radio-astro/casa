@@ -1,0 +1,3242 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-08-01  add immoments and regridimage
+% STM 2007-10-10  beta release (spell-checked)
+% GvM 2008-03-12  add imcontsub
+% STM 2008-03-17  immath, imstat, update imhead
+% STM 2008-05-14  start patch 2.0, return vars, imfit
+% STM 2008-06-03  more edits
+% STM 2008-09-30  Patch 3 editing start, imval
+% STM 2008-11-17  Patch 3 imregrid
+% STM 2009-05-20  Patch 4 imsmooth, etc.
+% STM 2009-12-16  Release 0
+% JO  2010-10-12  Release 3.1.0
+% JO  2011-04-24  Release 3.2.0 edits
+% JO  2011-10-03  Release 3.3.0 edits 
+% JO  2012-05-06  Release 3.4.0 edits
+% JO  2012-10-18  Release 4.0.0 edits
+% JO  2013-04-23  Release 4.1.0 edits
+% JO  2013-12-16  Release 4.2.0 edits
+
+\chapter{Image Analysis}
+\label{chapter:analysis}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     Image analysis is handled in the {\tt ia} tool.
+     Many functions exist there, including region statistics and
+     image math. See \S~\ref{section:analysis.toolkit} below
+     for more information.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+Once data has been calibrated (and imaged in the case of synthesis
+data), the resulting image or image cube must be displayed or 
+analyzed in order to extract quantitative information, such as
+statistics or moment images.  In addition, there need to be facilities for
+the coordinate conversion of images for direct comparison.
+
+The image analysis tasks are:
+\begin{itemize}
+   \item {\tt imhead} --- summarize and manipulate the ``header'' 
+         information in a CASA image 
+         (\S~\ref{section:analysis.imhead})
+   \item {\tt imsubimage} --- Create a (sub)image from a region of the
+     image (\S~\ref{section:analysis.imsubimage}) 
+   \item {\tt imcontsub} --- perform continuum subtraction on a
+         spectral-line image cube 
+         (\S~\ref{section:analysis.imcontsub})
+   \item {\tt imfit} --- image plane Gaussian component fitting
+         (\S~\ref{section:analysis.imfit})
+   \item {\tt immath} --- perform mathematical operations on or
+         between images
+         (\S~\ref{section:analysis.immath})
+   \item {\tt immoments} --- compute the moments of an image cube
+         (\S~\ref{section:analysis.moments})
+    \item {\tt impv} --- generate a position-velocity diagram along a slit
+         (\S~\ref{section:analysis.pv})
+   \item {\tt imstat} --- calculate statistics on an image or part
+         of an image
+         (\S~\ref{section:analysis.imstat})
+   \item {\tt imval} --- extract the data and mask values from a
+         pixel or region of an image
+         (\S~\ref{section:analysis.imval})
+  \item {\tt imtrans} --- reorder the axes of an image or cube
+         (\S~\ref{section:analysis.imtrans})
+  \item {\tt imcollapse} --- collapse image along one or more axes by aggregating pixel values along that axis 
+         (\S~\ref{section:analysis.imcollapse})
+   \item {\tt imregrid} --- regrid an image onto the coordinate
+         system of another image 
+         (\S~\ref{section:analysis.regrid})
+   \item {\tt imreframe} --- change the frame in which the image
+     reports its spectral values
+         (\S~\ref{section:analysis.reframe})
+   \item {\tt imsmooth} --- smooth images in the spectral and angular
+     directions
+         (\S~\ref{section:analysis.imsmooth})
+   \item{\tt specfit} --- fit 1-dimensional Gaussians, 
+     polynomial, and/or Lorentzians models to an image or image region 
+        (\S~\ref{section:analysis.specfit})
+   \item{\tt rmfit} --- Calculation of rotation measures
+        (\S~\ref{section:analysis.rmfit})
+   \item{\tt spxfit} --- Calculation of Spectral Indices and higher order polynomials
+        (\S~\ref{section:analysis.spxfit})
+    \item {\tt makemask} --- image mask handling
+         (\S~\ref{section:analysis.makemask})
+  \item{\tt slsearch} --- query a subset of the Splatalogue spectral
+line catalog
+          (\S~\ref{section:analysis.slsearch})
+  \item{\tt splattotable} --- convert a file exported from Splatalogue
+to a CASA table 
+          (\S~\ref{section:analysis.splattotable})
+   \item {\tt importfits} --- import a FITS image into a CASA  
+         {\it image} format table 
+         (\S~\ref{section:analysis.fits.import})
+   \item {\tt exportfits} --- write out an image in FITS format
+         (\S~\ref{section:analysis.fits.export})
+\end{itemize}
+
+There are other tasks which are useful during image analysis.  These
+include:
+\begin{itemize}
+   \item {\tt viewer} --- there are useful region statistics and
+         image cube slice and profile capabilities in the viewer 
+         (\S~\ref{chapter:display})
+\end{itemize}
+
+We also give some examples of using the CASA Toolkit to aid in
+image analysis (\S~\ref{section:analysis.toolkit}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Common Image Analysis Task Parameters}
+\label{section:analysis.pars}
+
+We now describe some sets of parameters are are common to the image
+analysis.  These should behave the same way in any of the tasks
+described in this section that they are found in.  
+
+{\bf ALERT:} As of CASA 4.0.0 we introduced changed {\tt clean} such
+that for large fractional bandwidths, if the PSF changes more than
+half a pixel, a different beam will be used for each image
+plane. These cubes are supported in all image analysis tasks.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Region Selection ({\tt box})}
+\label{section:analysis.pars.box}
+
+Direction (e.g. RA, Dec) areal selection in the image analysis tasks is
+controlled by the {\tt box} parameter or through the {\tt region}
+parameter (\S~\ref{section:analysis.pars.regions}). Note that one
+should either specify a region (recommended) or any of
+box/chans/stokes. Specifying both at the same time is not unique
+anymore and can lead to unwanted selections. In the future we may
+remove the box/chans/stokes selection (for CASA 3.3 we 
+keep both selection methods for backward compatibility).
+
+The {\tt box} parameter selects spatial rectangular areas (this parameter will
+be removed for CASA 3.4 and higher):
+\small
+\begin{verbatim}
+box        =      ''   #  Select one or more box regions
+
+#          string containing blcx,blcy,trcx,trcy
+
+#          A box selection in the directional portion of an image.
+#          The directional portion of an image are the axes for right
+#          ascension and declination, for example.  Boxes are specified
+#          by their bottom-left corner (blc) and top-right corner (trc)
+#          as follows: blcx, blcy, trcx, trcy;
+#          ONLY pixel values acceptable at this time.
+#          Default: none (all);
+#          Example: box='0,0,50,50'
+
+
+\end{verbatim}
+\normalsize
+
+To get help on {\tt box}, see the in-line help
+\small
+\begin{verbatim}
+     help(par.box)
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Plane Selection ({\tt chans}, {\tt stokes})}
+\label{section:analysis.pars.planes}
+
+The channel, frequency, or velocity plane(s) of the image is chosen
+using the {\tt chans} parameter:
+\small
+\begin{verbatim}
+chans      =      ''   #  Select the channel(spectral) range
+
+#          string containing channel range
+
+#          immath, imstat, and imcontsub - takes a string listing
+#          of channel numbers, velocity, and/or frequency
+#          numbers, much like the spw parameter
+#          Only channel numbers acceptable at this time.
+#          Default: none (all);  
+#          Example: chans='3~20'    
+#                   chans="0,3,4,8"
+#                   chans="3~20,50,51"
+\end{verbatim}
+\normalsize
+
+{\tt chans} can also be set in the CASA region format to allow
+settings ins frequency and velocity, e.g.
+\small
+\begin{verbatim}
+ chans=("range=[-50km/s,50km/s], restfreq=100GHz, frame=LSRK")
+\end{verbatim}
+\normalsize
+this example would even define a new velocity system independent of
+the one in the image itself. If the rest frequency and velocity frame
+within the image are being used, the latter two entries are not
+needed. The parentheses are needed when the call is in a single
+command. 
+
+A frequency selection looks as follows:
+
+\small
+\begin{verbatim} 
+chans=("range=[100GHz,100.125GHz]")
+\end{verbatim}
+\normalsize
+
+
+The polarization plane(s) of the image is chosen with the {\tt stokes}
+parameter:
+\small
+\begin{verbatim}
+stokes     =      ''   #  Stokes params to image (I,IV,IQU,IQUV)
+
+#          string containing Stokes selections
+
+#          Stokes parameters to image, may or may not be separated
+#          by commas but best if you use commas.
+#          Default: none (all); Example: stokes='IQUV';  
+#          Example:stokes='I,Q'
+#          Options: 'I','Q','U','V',
+#                   'RR','RL','LR','LL',
+#                   'XX','YX','XY','YY',...
+\end{verbatim}
+\normalsize
+
+To get help on these parameters, see the in-line help
+\small
+\begin{verbatim}
+     help(par.chans)
+     help(par.stokes)
+\end{verbatim}
+\normalsize
+
+Sometimes, as in the {\tt immoments} task, the channel/plane 
+selection is generalized to work on more than one axis type.
+In this case, the {\tt planes} parameter is used.  This behaves
+like {\tt chans} in syntax.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Lattice Expressions ({\tt expr})}
+\label{section:analysis.pars.lattice}
+
+Lattice expressions are strings that describe operations on a
+set of input images to form an output image.  These strings
+use the {\em Lattice Expression Language} (LEL).  LEL syntax
+is described in detail in AIPS++ Note 223 
+\begin{quote}
+   \url{http://aips2.nrao.edu/docs/notes/223/223.html}
+\end{quote}
+{\bf ALERT:} This document was written in the context of
+glish-based AIPS++ and is not yet updated to CASA syntax 
+(see below).
+
+The {\tt expr} string contains the LEL expression:
+\small
+\begin{verbatim}
+expr       =      ''   #  Mathematical expression using images
+
+#          string containing LEL expression
+
+#          A mathematical expression, with image file names.
+#          image file names must be enclosed in double quotes (")
+#          Default: none 
+#          Example: expr='min("image2.im")+(2*max("image1.im"))'
+#
+#    Available functions in the expr and mask parameters:
+#    pi(), e(), sin(), sinh(), asinh(), cos(), cosh(), tan(), tanh(),
+#    atan(), exp(), log(), log10(), pow(), sqrt(), complex(), conj()
+#    real(), imag(), abs(), arg(), phase(), amplitude(), min(), max()
+#    round(), isgn(), floor(), ceil(), rebin(), spectralindex(), pa(), 
+#    iif(), indexin(), replace(), ...
+\end{verbatim}
+\normalsize
+
+For examples using LEL {\tt expr}, see 
+\S~\ref{section:analysis.immath.examples} below.  Note that in
+{\tt immath}, shortcut names have been given to the images provided
+by the user in {\tt imagename} that can be used in the LEL expression,
+for the above example:
+\small
+\begin{verbatim}
+  imagename=['image2.im','image1.im']
+  expr='min(IM0)+(2*max(IM1))'
+\end{verbatim}
+\normalsize
+
+
+{\bf ALERT:} LEL expressions use 0-based indices.
+Also, the functions must be lowercase (in almost all cases we know
+about).
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Masks ({\tt mask})}
+\label{section:analysis.pars.mask}
+
+The {\tt mask} string contains a LEL expression 
+(see \S~\ref{section:analysis.pars.lattice} above).  This string
+can be an on-the-fly (OTF) mask expression or refer to an 
+image pixel mask.
+\small
+\begin{verbatim}
+mask       =      ''   #  Mask to be applied to the images
+
+#          string containing LEL expression
+
+#          Name of mask applied to each image in the calculation
+#          Default '' means no mask;  
+#          Example: mask='"ngc5921.clean.cleanbox.mask">0.5'
+#                   mask='mask(ngc5921.clean.cleanbox.mask)'
+\end{verbatim}
+\normalsize
+
+Note that the mask file supplied in the {\tt mask} parameter must have
+the same shape, same number of axes and same axes length, as the
+images supplied in the {\tt expr} parameter, with one exception. The mask
+may be missing some of the axes --- if this is the case then the mask
+will be expanded along these axes to become the same shape.
+
+For examples using {\tt mask}, see \S~\ref{section:analysis.immath.masks} 
+below.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Regions ({\tt region})}
+\label{section:analysis.pars.regions}
+
+The {\tt region} parameter points to a CASA region which can be
+directly specified or listed in a ImageRegion file.  An
+ImageRegion file can be created with the CASA {\tt viewer}'s region
+manager (\S~\ref{section:display.image.region}). Or directly using the
+CASA region syntax (Chapter\,\ref{chapter:regionformat}.
+Typically ImageRegion files will have the suffix {\tt '.crtf'} for
+CASA Region Text Format.  
+
+{\bf Alert:} When both the region parameter and any of
+box/chans/stokes are specified simultaneously, the task may perform
+unwanted selections. Only specify one of these (sets of)
+parameters. We recommend the use of CASA regions and may remove the
+box/chans/stokes selection in later releases. 
+
+
+For example: 
+\small
+\begin{verbatim}
+    region='circle[[18h12m24s, -23d11m00s], 2.3arcsec]'
+\end{verbatim}
+\normalsize
+
+or
+
+\small
+\begin{verbatim}
+    region='myimage.im.crtf'
+\end{verbatim}
+\normalsize
+
+for to specify a region file. 
+
+
+For the most part, the region parameter in tasks only
+accepts strings (e.g. file names, region shape descriptions) while the
+region parameter in ia tool methods only accepts python region
+dictionaries (e.g. produced using the rg tool).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image Header Manipulation ({\tt imhead})}
+\label{section:analysis.imhead}
+
+To summarize and change keywords and values in the ``header'' of
+your image, use the {\tt imhead} task.  Its inputs are:
+\small
+\begin{verbatim}
+#  imhead :: List, get and put image header parameters
+imagename           =         ''        #  Name of the input image
+mode                =  'summary'        #  imhead options: add, del,
+                                        #   get, history, list, put, summary
+     verbose        =      False        #  Give a full listing of
+                                        #   beams or just a short summary? 
+                                        #   Only used when the image has multiple beams
+                                        #   and mode="summary".
+
+async               =      False        #  If true the taskname must
+                                        #   be started using imhead(...)
+
+
+\end{verbatim}
+\normalsize
+
+The {\tt mode} parameter controls the operation of {\tt imhead}.
+
+Setting {\tt mode='summary'} will print out a summary of the image
+properties and the header to the logger.
+
+Setting {\tt mode='list'} prints out a list of the header keywords
+and values to the terminal.
+
+The {\tt mode='get'} allows the user to retrieve the current value 
+for a specified keyword {\tt hdkey}:
+\small
+\begin{verbatim}
+mode           =      'get'   #  imhead options: list, summary, get, put
+   hdkey       =         ''   #  The FITS keyword
+\end{verbatim}
+\normalsize
+Note that to catch this value, you need to assign it to a Python
+variable.
+See \S~\ref{section:intro.tasks.return} for more on return values.
+
+The {\tt mode='put'} allows the user to replace the current value 
+for a given keyword {\tt hditem} with that specified in {\tt hdvalue}.  
+There are two sub-parameters that are opened by this option:
+\small
+\begin{verbatim}
+mode           =      'put'   #  imhead options: list, summary, get, put
+   hdkey       =         ''   #  The FITS keyword
+   hdvalue     =         ''   #  Value of hdkey
+   hdtype      =         ''   #  Data type of the header keyword.
+   hdcomment   =         ''   #  Comment associated with the header keyword
+
+\end{verbatim}
+\normalsize
+{\bf WARNING:} Be careful when using {\tt mode='put'}.  This task does
+no checking on whether the values you specify (e.g. for the axes
+types) are valid, and you can render your image invalid.  Make sure you
+know what you are doing when using this option!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Examples for {\tt imhead}}
+\label{section:analysis.imhead.examples}
+
+
+Here is an example -- we can print the summary to the logger:
+\small
+\begin{verbatim}
+CASA <51>: imhead('ngc5921.demo.cleanimg.image',mode='summary')
+\end{verbatim}
+\normalsize
+prints in the logger: 
+\small
+\begin{verbatim}
+##### Begin Task: imhead             #####
+  Image name       : ngc5921.demo.cleanimg.image
+  Object name      : N5921_2
+  Image type       : PagedImage
+  Image quantity   : Intensity
+  Pixel mask(s)    : None
+  Region(s)        : None
+  Image units      : Jy/beam
+  Restoring Beam   : 52.3782 arcsec, 45.7319 arcsec, -165.572 deg
+  
+  Direction reference : J2000
+  Spectral  reference : LSRK
+  Velocity  type      : RADIO
+  Rest frequency      : 1.42041e+09 Hz
+  Pointing center     :  15:22:00.000000  +05.04.00.000000
+  Telescope           : VLA
+  Observer            : TEST
+  Date observation    : 1995/04/13/00:00:00
+  Telescope position: [-1.60119e+06m, -5.04198e+06m, 3.55488e+06m] (ITRF)
+  
+  Axis Coord Type      Name             Proj Shape Tile   Coord value at pixel    Coord incr Units
+  ------------------------------------------------------------------------------------------------ 
+  0    0     Direction Right Ascension   SIN   256   64  15:22:00.000   128.00 -1.500000e+01 arcsec
+  1    0     Direction Declination       SIN   256   64 +05.04.00.000   128.00  1.500000e+01 arcsec
+  2    1     Stokes    Stokes                    1    1             I
+  3    2     Spectral  Frequency                46    8   1.41279e+09     0.00 2.4414062e+04 Hz
+                       Velocity                               1607.99     0.00 -5.152860e+00 km/s
+##### End Task: imhead           
+\end{verbatim}
+\normalsize
+
+If the beam size per plane differs, the beam information will be
+displayed for the channel with the smallest beam, the one with the
+largest beam, and the channel closest to the median beam size. E.g.,
+
+\small
+\begin{verbatim}
+Restoring Beams
+Pol   Type Chan      Freq   Vel
+I    Max    0 9.680e+08     0   39.59 arcsec x   22.77 arcsec pa=-70.57 deg
+I    Min  511 1.990e+09 -316516   20.36 arcsec x   12.05 arcsec pa=-65.67 deg
+I Median  255 1.478e+09 -157949   27.11 arcsec x   15.54 arcsec pa=-70.36 deg 
+\end{verbatim}
+\normalsize
+
+If {\tt verbose=T} the beam information for every plane will be provided.
+
+If you choose {\tt mode='list'}, you get the summary in the logger and
+a listing of keywords and values to the terminal:
+\footnotesize
+\begin{verbatim}
+CASA <52>: imhead('ngc5921.demo.cleanimg.image',mode='list')
+  Out[52]: 
+{'beammajor': 52.378242492675781,
+ 'beamminor': 45.731891632080078,
+ 'beampa': -165.5721435546875,
+ 'bunit': 'Jy/beam',
+ 'cdelt1': '-7.27220521664e-05',
+ 'cdelt2': '7.27220521664e-05',
+ 'cdelt3': '1.0',
+ 'cdelt4': '24414.0625',
+ 'crpix1': 128.0,
+ 'crpix2': 128.0,
+ 'crpix3': 0.0,
+ 'crpix4': 0.0,
+ 'crval1': '4.02298392585',
+ 'crval2': '0.0884300154344',
+ 'crval3': 'I',
+ 'crval4': '1412787144.08',
+ 'ctype1': 'Right Ascension',
+ 'ctype2': 'Declination',
+ 'ctype3': 'Stokes',
+ 'ctype4': 'Frequency',
+ 'cunit1': 'rad',
+ 'cunit2': 'rad',
+ 'cunit3': '',
+ 'cunit4': 'Hz',
+ 'datamax': ' Not Known ',
+ 'datamin': -0.010392956435680389,
+ 'date-obs': '1995/04/13/00:00:00',
+ 'equinox': 'J2000',
+ 'imtype': 'Intensity',
+ 'masks': ' Not Known ',
+ 'maxpixpos': array([134, 134,   0,  38], dtype=int32),
+ 'maxpos': '15:21:53.976, +05.05.29.998, I, 1.41371e+09Hz',
+ 'minpixpos': array([117,   0,   0,  21], dtype=int32),
+ 'minpos': '15:22:11.035, +04.31.59.966, I, 1.4133e+09Hz',
+ 'object': 'N5921_2',
+ 'observer': 'TEST',
+ 'projection': 'SIN',
+ 'reffreqtype': 'LSRK',
+ 'restfreq': [1420405752.0],
+ 'telescope': 'VLA'}
+\end{verbatim}
+\normalsize
+Note that this list is a return value and can be captured in a
+variable:
+\small
+\begin{verbatim}
+  mylist = imhead('ngc5921.demo.cleanimg.image',mode='list')
+\end{verbatim}
+\normalsize
+
+The values for these keywords can be queried using {\tt mode='get'}.
+At this point you should capture the return value:
+\small
+\begin{verbatim}
+CASA <53>: mybmaj = imhead('ngc5921.demo.cleanimg.image',mode='get',hdkey='beammajor')
+
+CASA <54>: mybmaj
+  Out[54]: {'unit': 'arcsec', 'value': 52.378242492699997}
+
+CASA <55>: myobserver = imhead('ngc5921.demo.cleanimg.image',mode='get',hdkey='observer')
+
+CASA <56>: print myobserver
+{'value': 'TEST', 'unit': ''}
+\end{verbatim}
+\normalsize
+
+You can set the values for these keywords using
+{\tt mode='put'}.  For example:
+\small
+\begin{verbatim}
+CASA <57>: imhead('ngc5921.demo.cleanimg.image',mode='put',hdkey='observer',hdvalue='CASA')
+  Out[57]: 'CASA'
+
+CASA <58>: imhead('ngc5921.demo.cleanimg.image',mode='get',hdkey='observer')
+  Out[58]: {'unit': '', 'value': 'CASA'}
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Extracting sub-images ({\tt imsubimage})}
+\label{section:analysis.imsubimage}
+
+The task {\tt imsubimage} provides a way to extract a smaller data
+cube from a bigger one. The inputs are: 
+
+\small
+\begin{verbatim}
+#  imsubimage :: Create a (sub)image from a region of the image
+imagename           =         ''        #  Input image name.  Default is unset.
+outfile             =         ''        #  Output image name.  Default is unset.
+region              =         ''        #  Region of interest.  Default is whole image.
+mask                =         ''        #  Mask to use. See help par.mask. Default is
+                                        #   none.
+dropdeg             =      False        #  Drop degenerate axes
+overwrite           =      False        #  Overwrite (unprompted) pre-existing output
+                                        #   file?
+verbose             =       True        #  Post additional informative messages to the
+                                        #   logger
+stretch             =      False        #  Stretch the mask if necessary and possible?
+wantreturn          =       True        #  If True, return an image analysis tool
+                                        #   associated with the subimage. If False, 
+                                        #   return nothing.
+async               =      False        #  If true the taskname must be started using
+                                        #   imsubimage(...)
+\end{verbatim}
+\normalsize 
+
+The {\tt region} keyword defines the size of the smaller cube and is
+specified via the CASA region CRTF syntax.  E.g.
+
+\small
+\begin{verbatim}
+region='box [ [ 100pix , 130pix] , [120pix, 150pix ] ]'
+\end{verbatim}
+\normalsize
+
+will extract the portion of the image that is between pixel
+coordinates (100,130) and (12,150). {\tt dropdeg=T} is useful to remove
+axes in the data cube that are degenerate, i.e. axes with a single
+plane only. A single Stokes I axis is a common example.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Continuum Subtraction on an Image Cube ({\tt imcontsub})}
+\label{section:analysis.imcontsub}
+
+One method to separate line and continuum emission in an image cube is
+to specify a number of line-free channels in that cube, make a linear
+fit to the visibilities in those channels, and subtract the fit from
+the whole cube.  Note that the task {\tt uvcontsub} serves a similar
+purpose; see \S~\ref{section:cal.other.uvcontsub} for a synopsis of
+the pros and cons of either method.
+
+The {\tt imcontsub} task will subtract a polynomial baseline fit to the
+specified channels from an image cube.
+
+The default inputs are: 
+\small
+\begin{verbatim}
+#  imcontsub :: Continuum subtraction on images
+imagename  =      ''   #  Name of the input image
+linefile   =      ''   #  Output line image file name
+contfile   =      ''   #  Output continuum image file name
+fitorder   =       0   #  Polynomial order for the continuum estimation
+region     =      ''   #  Image region or name to process see viewer
+box        =      ''   #  Select one or more box regions
+chans      =      ''   #  Select the channel(spectral) range
+stokes     =      ''   #  Stokes params to image (I,IV,IQU,IQUV)
+async      =   False   
+\end{verbatim}
+\normalsize
+
+Area selection using {\tt box} and {\tt region} is detailed in 
+\S~\ref{section:analysis.pars.box} and
+\S~\ref{section:analysis.pars.regions} respectively.
+
+Image cube plane selection using {\tt chans} and {\tt stokes}
+are described in \S~\ref{section:analysis.pars.planes}.
+
+{\bf ALERT:} {\tt imcontsub} has issues when the image does
+not contain a spectral or stokes axis. Errors are generated when
+run on an image missing one or both of these axes.  You will need
+to use the Toolkit (e.g. the {\tt ia.adddegaxes} method) to add
+degenerate missing axes to the image.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Examples for {\tt imcontsub})}
+\label{section:analysis.imcontsub.examples}
+
+For example, we first make a clean image without the uv-plane continuum
+subtraction:
+\small
+\begin{verbatim}
+  # First, run clearcal to clear the uvcontsub results from the
+  # corrected column
+  clearcal('ngc5921.demo.src.split.ms')
+  
+  # Now clean, keeping all the channels except first and last
+  default('clean')
+  vis = 'ngc5921.demo.src.split.ms'
+  imagename = 'ngc5921.demo.nouvcontsub'
+  mode = 'channel'
+  nchan = 61
+  start = 1
+  width = 1
+  imsize = [256,256]
+  psfmode = 'clark'
+  imagermode = ''
+  cell = [15.,15.]
+  niter = 6000
+  threshold='8.0mJy'
+  weighting = 'briggs'
+  robust = 0.5
+  mask = [108,108,148,148]
+  interactive=False
+  clean()
+  
+  # It will have made the image:
+  # -----------------------------
+  # ngc5921.demo.nouvcontsub.image
+
+  # You can view this image
+  viewer('ngc5921.demo.nouvcontsub.image')
+\end{verbatim}
+\normalsize
+You can clearly see continuum sources in the image which were removed
+previously in the script by the use of {\tt uvcontsub}.  Let's see
+if {\tt imcontsub} can work as well.
+
+Using the viewer, it looks like channels 0 through 4 and
+50 through 60 are line-free.  Then:
+\small
+\begin{verbatim}
+  default('imcontsub')
+  imagename = 'ngc5921.demo.nouvcontsub.image'
+  linefile  = 'ngc5921.demo.nouvcontsub.lineimage'
+  contfile  = 'ngc5921.demo.nouvcontsub.contimage'
+  fitorder  = 1
+  chans      = '0~4,50~60'
+  stokes    = 'I'
+  imcontsub()
+\end{verbatim}
+\normalsize
+This did not do too badly!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image-plane Component Fitting ({\tt imfit})}
+\label{section:analysis.imfit}
+
+The inputs are:
+\small
+\begin{verbatim}
+#  imfit :: Fit one or more elliptical Gaussian components on an image region(s)
+imagename           =         ''        #  Name of the input image
+box                 =         ''        #  Specify one or more box regions for the fit.
+region              =         ''        #  Region. See help par.region for specs.
+chans               =         ''        #  Spectral channels on which to perform fit.
+stokes              =         ''        #  Stokes parameter to fit. If
+                                        #   blank, first stokes plane is used.
+mask                =         ''        #  Mask to use. See help
+                                        #   par.mask. Default is none.
+includepix          =         []        #  Range of pixel values to include for fitting.
+excludepix          =         []        #  Range of pixel values to exclude for fitting.
+residual            =         ''        #  Name of output residual image.
+model               =         ''        #  Name of output model image.
+estimates           =         ''        #  Name of file containing
+                                        #   initial estimates of component parameters.
+logfile             =         ''        #  Name of file to write fit results.
+newestimates        =         ''        #  File to write fit results
+                                        #   which can be used as
+                                        #   initial estimates for next run.
+complist            =         ''        #  Name of output component list table.
+dooff               =      False        #  Also fit a zero level offset? Default is False
+async               =      False        #  If true the taskname must
+                                        #   be started using imfit(...)
+
+
+\end{verbatim}
+\normalsize
+This task will return (as a Python dictionary) the results of the fit,
+but the results can also be written into a component list table or a
+logfile. 
+ 
+Note that to fit more than a single component, you {\em must} provide
+starting estimates for each component via the {\tt estimates} file.
+See {\tt ``help imfit''} for more details on this.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Examples for {\tt imfit}}
+\label{section:analysis.imfit.examples}
+
+The following are some examples using the B1608+656 Tutorial
+\begin{quote}
+  \url{http://casa.nrao.edu/Doc/Scripts/b1608_demo.py}
+\end{quote}
+as an example.
+
+\small
+\begin{verbatim}
+# First fit only a single component at a time
+# This is OK since the components are well-separated and not blended
+# Box around component A
+xfit_A_res = imfit('b1608.demo.clean2.image',box='121,121,136,136',
+                   newestimates='b1608.demo.clean2.newestimate')
+
+# Now extract the fit part of the return value
+xfit_A = xfit_A_res['results']['component0']
+#xfit_A
+#  Out[7]: 
+#{'flux': {'error': array([  6.73398035e-05,   0.00000000e+00,   0.00000000e+00,
+#         0.00000000e+00]),
+#          'polarisation': 'Stokes',
+#          'unit': 'Jy',
+#          'value': array([ 0.01753742,  0.        ,  0.        ,  0.        ])},
+# 'label': '',
+# 'shape': {'direction': {'error': {'latitude': {'unit': 'arcsec',
+#                                                'value': 0.00041154866279462775},
+#                                   'longitude': {'unit': 'arcsec',
+#                                                 'value': 0.00046695916589535109}},
+#                         'm0': {'unit': 'rad', 'value': -2.0541102061078207},
+#                         'm1': {'unit': 'rad', 'value': 1.1439131060384089},
+#                         'refer': 'J2000',
+#                         'type': 'direction'},
+#           'majoraxis': {'unit': 'arcsec', 'value': 0.29100166137741568},
+#           'majoraxiserror': {'unit': 'arcsec',
+#                              'value': 0.0011186420613222663},
+#           'minoraxis': {'unit': 'arcsec', 'value': 0.24738110059830495},
+#           'minoraxiserror': {'unit': 'arcsec',
+#                              'value': 0.0013431999725066338},
+#           'positionangle': {'unit': 'deg', 'value': 19.369249322401796},
+#           'positionangleerror': {'unit': 'rad',
+#                                  'value': 0.016663189295782171},
+#           'type': 'Gaussian'},
+# 'spectrum': {'frequency': {'m0': {'unit': 'GHz', 'value': 1.0},
+#                            'refer': 'LSRK',
+#                            'type': 'frequency'},
+#              'type': 'Constant'}}
+
+# Now the other components
+xfit_B_res = imfit('b1608.demo.clean2.image',box='108,114,120,126',
+                   newestimates='b1608.demo.clean2.newestimate',append=True)
+xfit_B = xfit_B_res['results']['component0']
+
+xfit_C_res= imfit('b1608.demo.clean2.image',box='108,84,120,96')
+xfit_C = xfit_C_res['results']['component0']
+
+xfit_D_res = imfit('b1608.demo.clean2.image',box='144,98,157,110')
+xfit_D = xfit_D_res['results']['component0']
+
+print ""
+print "Imfit Results:"
+print "--------------"
+print "A  Flux = %6.4f Bmaj = %6.4f" % (xfit_A['flux']['value'][0],xfit_A['shape']['majoraxis']['value'])
+print "B  Flux = %6.4f Bmaj = %6.4f" % (xfit_B['flux']['value'][0],xfit_B['shape']['majoraxis']['value'])
+print "C  Flux = %6.4f Bmaj = %6.4f" % (xfit_C['flux']['value'][0],xfit_C['shape']['majoraxis']['value'])
+print "D  Flux = %6.4f Bmaj = %6.4f" % (xfit_D['flux']['value'][0],xfit_D['shape']['majoraxis']['value'])
+print ""
+\end{verbatim}
+\normalsize
+
+%% FIXME dmehring, ugh the above accessing of nested dictionaries is
+%pretty horrible. I'd stuff the relevant dictionary into a component
+%list (cl) tool and fish out parameters using methods there. Much more
+%user-friendly IMO
+
+Now try fitting four components together.  For this we will have to
+provide an estimate file.  We will use the clean beam for the estimate
+of the component sizes:
+\small
+\begin{verbatim}
+estfile=open('b1608.demo.clean2.estimate','w')
+print >>estfile,'# peak, x, y, bmaj, bmin, bpa'
+print >>estfile,'0.017, 128, 129, 0.293arcsec, 0.238arcsec, 21.7deg'
+print >>estfile,'0.008, 113, 120, 0.293arcsec, 0.238arcsec, 21.7deg'
+print >>estfile,'0.008, 113,  90, 0.293arcsec, 0.238arcsec, 21.7deg'
+print >>estfile,'0.002, 151, 104, 0.293arcsec, 0.238arcsec, 21.7deg'
+estfile.close()
+\end{verbatim}
+\normalsize
+Then, this can be used in {\tt imfit}:
+\small
+\begin{verbatim}
+xfit_all_res = imfit('b1608.demo.clean2.image', 
+                     estimates='b1608.demo.clean2.estimate',
+                     logfile='b1608.demo.clean2.imfitall.log',
+                     newestimates='b1608.demo.clean2.newestimate',
+                     box='121,121,136,136,108,114,120,126,108,84,120,96,144,98,157,110')
+# Now extract the fit part of the return values
+xfit_allA = xfit_all_res['results']['component0']
+xfit_allB = xfit_all_res['results']['component1']
+xfit_allC = xfit_all_res['results']['component2']
+xfit_allD = xfit_all_res['results']['component3']
+\end{verbatim}
+\normalsize
+These results are almost identical to those from the individual fits.
+You can see a nicer printout of the fit results in the logfile.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Mathematical Operations on an Image ({\tt immath})}
+\label{section:analysis.immath}
+
+The inputs are:
+\small
+\begin{verbatim}
+#  immath :: Perform math operations on images
+imagename           =         ''        #  a list of input images
+mode                = 'evalexpr'        #  mode for math operation (evalexpr, spix, pola, poli)
+     expr           =         ''        #  Mathematical expression using images
+     varnames       =         ''        #  a list of variable names to use with the image files
+
+outfile             = 'immath_results.im' #  File where the output is saved
+mask                =         ''        #  Mask to be applied to the images
+region              =         ''        #  File path which contains an Image Region
+box                 =         ''        #  Select one or more box regions in the input images
+chans               =         ''        #  Select the channel(spectral) range
+stokes              =        'I'        #  Stokes params to image (I,IV,IQU,IQUV)
+async               =      False        #  If true the taskname must be started using immath(...)
+\end{verbatim}
+\normalsize
+
+In all cases, {\tt outfile} must be supplied with the name of the
+new output file to create.
+
+The {\tt mode} parameter selects what {\tt immath} is to do.
+
+The default {\tt mode='evalexpr'} lets the user specify a mathematical
+operation to carry out on one or more input images.
+The sub-parameter {\tt expr} contains the Lattice Expression Language
+(LEL) string describing the image operations based on the images
+in the {\tt imagename} parameter.
+See \S~\ref{section:analysis.pars.lattice} for more on LEL strings
+and the {\tt expr} parameter.
+
+Mask specification is done using the {\tt mask} parameter.  This can
+optionally contain an on-the-fly mask expression (in LEL) or point to
+an image with a pixel mask.  See \S~\ref{section:analysis.pars.mask}
+for more on the use of the {\tt mask} parameter.  See also
+\S~\ref{section:analysis.pars.lattice} for more on LEL
+strings. Sometimes, one would like to use a flat image (e.g. a moment
+image) mask to be applied to an entire cube. The {\tt stretch=True}
+subparameter in {\tt mask} allows one to expand the mask to all planes
+of the cube.
+
+Region selection is carried out through the {\tt region} and {\tt box}
+parameters.
+See \S~\ref{section:analysis.pars.box} and
+\S~\ref{section:analysis.pars.regions} for more on area
+selection.
+
+Image plane selection is controlled by {\tt chans} and {\tt stokes}.
+See \S~\ref{section:analysis.pars.planes} for details on plane
+selection.
+
+For {\tt mode='evalexpr'}, the standard usage for specifying images to
+be used in the LEL expression is to provide them as a list in the {\tt imagename}
+parameter, and then access there in the LEL expression by the
+names {\tt IM0, IM1, ...}.  For example,
+\small
+\begin{verbatim}
+immath(imagename=['image1.im','image2.im'],expr='IM0-IM1',outfile='ImageDiff.im')
+\end{verbatim}
+\normalsize
+would subtract the second image given from the first.
+
+For the special modes {\tt 'spix'}, {\tt 'pola'}, {\tt 'poli'}, the
+required images for the given operation are to be provided in 
+{\tt imagename} (sometimes in a particular order). 
+{\bf V3.0 ALERT:} For {\tt mode='pola'} you MUST call as a function as
+in the example below (\S~\ref{section:analysis.immath.examples.pol}), 
+giving the parameters as arguments, or {\tt immath} will fail.
+
+Detailed examples are given below.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Examples for {\tt immath}}
+\label{section:analysis.immath.examples}
+
+In the following, we show a few examples of {\tt immath}. Note that the image
+names in the {\tt expr} are assumed to refer to existing image files
+in the current working directory.
+
+%%%%%%%
+\subsubsection{Simple math}
+\label{section:analysis.immath.examples.math}
+
+Select a single plane (channel 22) of the 3-D cube and  
+subtract it from the original image: 
+\small
+\begin{verbatim}
+  immath(imagename='ngc5921.demo.cleanimg.image',
+         expr='IM0',chans='22',
+         outfile='ngc5921.demo.chan22.image')
+\end{verbatim}
+\normalsize
+
+Double all values in our image:
+\small
+\begin{verbatim}
+  immath(imagename=['ngc5921.demo.chan22.image'],
+         expr='IM0*2.0',
+         outfile='ngc5921.demo.chan22double.image' )
+\end{verbatim}
+\normalsize
+    
+Square all values in our image:
+\small
+\begin{verbatim}
+  immath(imagename=['ngc5921.demo.chan22.image'],
+         expr='IM0^2',
+         outfile='ngc5921.demo.chan22squared.image' )
+\end{verbatim}
+\normalsize
+Note that the units in the output image are still claimed to be
+``Jy/beam'', i.e.\ {\tt immath} will not correctly scale the units
+in the image for non-linear cases like this.  Beware.
+
+You can do other mathematical operations on an image (e.g.\
+trigonometric functions) as well as use scalars results from an image
+(e.g.\ max, min, median, mean, variance).  You also have access to
+constants such as {\tt e()} and {\tt pi()} (which are doubles
+internally, while most images are floats). For example:
+Take the sine of an image:
+\small
+\begin{verbatim}
+  immath(imagename=['ngc5921.demo.chan22.image','ngc5921.demo.chan22squared.image'],
+         expr='sin(float(pi())*IM0/sqrt(max(IM1)))',
+         outfile='ngc5921.demo.chan22sine.image')
+\end{verbatim}
+\normalsize
+Note again that the units are again kept as they were.
+    
+Select a single plane (channel 22) of the 3-D cube and  
+subtract it from the original image: 
+\small
+\begin{verbatim}
+  immath(imagename='ngc5921.demo.cleanimg.image',
+         expr='IM0',chans='22',
+         outfile='ngc5921.demo.chan22.image')
+
+  immath(imagename=['ngc5921.demo.cleanimg.image','ngc5921.demo.chan22.image'],
+         expr='IM0-IM1',
+         outfile='ngc5921.demo.sub22.image')
+\end{verbatim}
+\normalsize
+Note that in this example the 2-D plane gets extended in the third
+dimension and the 2-D values are applied to each plane in the 3-D cube. 
+
+%{\bf ALERT:} In the future this can be done without a temporary file, 
+%using the {\tt INDEXIN()} function in the expression.
+    
+Select and save the inner 1/4 of an image for channels {\tt 40,42,44}
+as well as channels 10 and below:
+\small
+\begin{verbatim}
+   default('immath')
+   imagename=['ngc5921.demo.cleanimg.image']
+   expr='IM0'
+   region='box[[64pix,64pix],[192pix,192pix]]'
+   chans='<10;40,42,44'
+   outfile='ngc5921.demo.inner.image'
+   immath()
+\end{verbatim}
+\normalsize
+{\bf ALERT:} Note that if chan selects more than one channel then
+the output image has a number of channels given by the span from the
+lowest and highest channel selected in {\tt chan}.  In the example 
+above, it will have 45 channels.  The ones not selected will be masked
+in the output cube.  If we had set
+\small
+\begin{verbatim}
+   chans = '40,42,44'
+\end{verbatim}
+\normalsize
+then there would be 5 output channels corresponding to channels
+{\tt 40,41,42,43,44} of the MS with {\tt 41,43} masked.  Also, 
+the {\tt chans='<10'} selects channels 0--9.
+
+Note that the {\tt chans} syntax allows the operators {\tt '<'},
+{\tt '<='}, {\tt '>'}, {\tt '>'}.  For example,
+\small
+\begin{verbatim}
+   chans = '<17,>79'
+   chans = '<=16,>=80'
+\end{verbatim}
+\normalsize
+do the same thing.
+
+Divide an image by another, with a threshold on one of the images:
+\small
+\begin{verbatim}
+  immath(imagename=['ngc5921.demo.cleanimg.image','ngc5921.demo.chan22.image'],
+         expr='IM0/IM1[IM1>0.008]',
+         outfile='ngc5921.demo.div22.image')
+\end{verbatim}
+\normalsize
+
+%%%%%%%
+\subsubsection{Polarization manipulation}
+\label{section:analysis.immath.examples.pol}
+
+The following are some examples using the 3C129 Tutorial
+\begin{quote}
+  \url{http://casa.nrao.edu/Doc/Scripts/3c129_tutorial.py}
+\end{quote}
+as an example.
+
+It is helpful to extract the Stokes planes from the cube
+into individual images:
+\small
+\begin{verbatim}
+   default('immath')
+   imagename = '3C129BC.clean.image'
+   outfile='3C129BC.I'; expr='IM0'; stokes='I'; immath();
+   outfile='3C129BC.Q'; expr='IM0'; stokes='Q'; immath();
+   outfile='3C129BC.U'; expr='IM0'; stokes='U'; immath();
+   outfile='3C129BC.V'; expr='IM0'; stokes='V'; immath();
+\end{verbatim}
+\normalsize
+
+Extract linearly polarized intensity and polarization position angle images:
+\small
+\begin{verbatim}
+  immath(stokes='', outfile='3C129BC.P', mode='poli', 
+         imagename=['3C129BC.Q','3C129BC.U'], sigma='0.0mJy/beam'); 
+  immath(stokes='', outfile='3C129BC.X', mode='pola', 
+         imagename=['3C129BC.Q','3C129BC.U'], sigma='0.0mJy/beam'); 
+\end{verbatim}
+\normalsize
+{\bf V3.0 ALERT:} For {\tt mode='pola'} you MUST call as a function as
+in this example (giving the parameters as arguments) or {\tt immath}
+will fail.
+
+Create a fractional linear polarization image:
+\small
+\begin{verbatim}
+   default( 'immath')
+   imagename = ['3C129BC.I','3C129BC.Q','3C129BC.U']
+   outfile='3C129BC.fractional_linpol'
+   expr='sqrt((IM1^2 + IM2^2)/IM0^2)'
+   stokes=''
+   immath()
+\end{verbatim}
+\normalsize
+
+Create a polarized intensity image:
+\small
+\begin{verbatim}
+   default( 'immath')
+   imagename = ['3C129BC.Q','3C129BC.U','3C129BC.V']
+   outfile='3C129BC.pol_intensity'
+   expr='sqrt(IM0^2 + IM1^2 + IM2^2)'
+   stokes=''
+   immath()
+\end{verbatim}
+\normalsize
+
+{\bf Toolkit Tricks:} The following uses the toolkit 
+(\S~\ref{section:analysis.toolkit}).
+You can make a complex linear polarization ($Q+iU$) image using the
+{\tt imagepol} tool:
+\small
+\begin{verbatim}
+  # See CASA User Reference Manual:
+  # http://casa.nrao.edu/docs/casaref/imagepol-Tool.html
+  #
+  # Make an imagepol tool and open the clean image 
+  potool = casac.homefinder.find_home_by_name('imagepolHome')
+  po = potool.create()
+  po.open('3C129BC.clean.image')
+  # Use complexlinpol to make a Q+iU image
+  po.complexlinpol('3C129BC.cmplxlinpol')
+  po.close()
+\end{verbatim}
+\normalsize
+You can now display this in the viewer, in particular overlay this
+over the intensity raster with the intensity contours.  
+When you load the image, use the LEL:
+\small
+\begin{verbatim}
+  '3C129BC.cmplxlinpol'['3C129BC.P'>0.0001]
+\end{verbatim}
+\normalsize
+which is entered into the LEL box at the bottom of the Load Data menu
+(\S~\ref{section:display.dataManager.load}).
+
+%%%%%%%%
+%%% FIXEE dmehring says this section is obsolete. impbcor should now
+%%% be used.
+%\subsubsection{Primary beam correction/uncorrection}
+%\label{section:analysis.immath.examples.pbcor}
+%
+%In a script using {\tt mode='evalexpr'}, you might want to assemble
+%the string for {\tt expr} using string variables that contain
+%the names of files.  Since you need to include quotes inside the
+%{\tt expr} string, use a different quote outside (or escape the
+%string, e.g. {\tt '\''}.
+%For example, to do a primary beam correction on the NGC5921 cube,
+%\small
+%\begin{verbatim}
+%   imname = 'ngc5921.demo.cleanimg'
+%   imagename = imname
+%   ...
+%   clean()
+%
+%   default('immath')
+%   clnimage = imname + '.image'
+%   fluximage = imname + '.flux'
+%   pbcorimage = imname + '.pbcor'
+%
+%   outfile = pbcorimage
+%   imagename = [clnimage,fluximage]
+%   # cutoff at the 10% level
+%   expr='IM0/IM1[IM1>0.1]'
+%
+%   immath()
+%\end{verbatim}
+%\normalsize
+%Note that we did not use a {\tt minpb} when we cleaned, so we use the
+%trick above to effectively set a cutoff in the primary beam 
+%{\tt .flux} image of 0.1.
+%
+%For more on LEL strings, see AIPS++ Note 223 
+%\begin{quote}
+%   \url{http://aips2.nrao.edu/docs/notes/223/223.html}
+%\end{quote}
+%or in \S~\ref{section:analysis.pars.lattice} above.
+
+%%%%%%%%
+%\subsubsection{Spectral analysis}
+%\label{section:analysis.immath.examples.spec}
+%One can make an integrated 1-d spectrum over the whole image by
+%collapsing the cube with {\tt imcollapse}
+%(Sect.\,\ref{section:analysis.imcollapse}).
+%For example, using the NGC5921 image cube (with 46 channels):
+%\small
+%\begin{verbatim}
+%imcollapse(imagename='ngc5921.demo.clean.image',function='sum',
+%           outfile='   
+%
+%imagename='ngc5921.demo.spectrum.all',function='mode="evalexpr",
+%       imagename='ngc5921.demo.clean.image',
+%       expr="rebin(IM0,[256,256,1,1])")
+%\end{verbatim}
+%\normalsize
+%
+%
+%One can make an integrated 1-d spectrum over the whole image
+%by rebinning (integrating) over the two coordinate axes in
+%a specified region.
+%For example, using the NGC5921 image cube (with 46 channels):
+%\small
+%\begin{verbatim}
+%immath(outfile="ngc5921.demo.spectrum.all",mode="evalexpr",
+%       imagename='ngc5921.demo.clean.image',
+%       expr="rebin(IM0,[256,256,1,1])")
+%\end{verbatim}
+%\normalsize
+%The resulting image has shape {\tt [1,1,1,46]} as desired.
+%You can view this with the {\tt viewer} and will see a 1-D spectrum.
+%
+%One can also do this with a box:
+%\small
+%\begin{verbatim}
+%immath(outfile="ngc5921.demo.spectrum.box",mode="evalexpr",
+%       imagename='ngc5921.demo.clean.image',
+%       expr="rebin(IM0,[256,256,1,1])",box="118,118,141,141")
+%\end{verbatim}
+%\normalsize
+%{\bf ALERT:} One cannot specify a {\tt region} without it collapsing the channel
+%axis (even when told to use all axes or channels).
+%
+%{\bf Toolkit Tricks:} The following uses the toolkit (\S~\ref{section:analysis.toolkit}).
+%You can make an ascii file containing only the values (no other info
+%though):
+%\small
+%\begin{verbatim}
+%ia.open('ngc5921.demo.spectrum.all')
+%ia.toASCII('ngc5921.demo.spectrum.all.ascii')
+%\end{verbatim}
+%\normalsize
+%You can also extract to a record inside Python:
+%\small
+%\begin{verbatim}
+%myspec = ia.torecord()
+%\end{verbatim}
+%\normalsize
+%which you can then manipulate in Python.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Using masks in {\tt immath}}
+\label{section:analysis.immath.masks}
+
+The {\tt mask} parameter is used inside {\tt immath} to apply a
+mask to all the images used in {\tt expr} before calculations
+are done (if you are curious, it uses the {\tt ia.subimage} tool
+method to make virtual images that are then input in the LEL to the 
+{\tt ia.imagecalc} method).
+
+For example, let's assume that we have made a single channel image
+using {\tt clean}
+\small
+\begin{verbatim}
+  default('clean')
+  
+  vis = 'ngc5921.demo.src.split.ms.contsub'
+  imagename = 'ngc5921.demo.chan22.cleanimg'
+  mode = 'channel'
+  nchan = 1
+  start = 22
+  step = 1
+  
+  field = ''
+  spw = ''
+  imsize = [256,256]
+  cell = [15.,15.]
+  psfalg = 'clark'
+  gain = 0.1
+  niter = 6000
+  threshold='8.0mJy'
+  weighting = 'briggs'
+  rmode = 'norm'
+  robust = 0.5
+  
+  mask = [108,108,148,148]
+  
+  clean()
+\end{verbatim}
+\normalsize
+There is now a file {\tt 'ngc5921.demo.chan22.cleanimg.mask'} that is
+an image with values 1.0 inside the {\tt cleanbox} region and 0.0
+outside.  
+
+We can use this to mask the clean image:
+\small
+\begin{verbatim}
+  default('immath')
+  imagename = 'ngc5921.demo.chan22.cleanimg.image'
+  expr='IM0'
+  mask='"ngc5921.demo.chan22.cleanimg.mask">0.5'
+  outfile='ngc5921.demo.chan22.cleanimg.imasked'
+  immath()
+\end{verbatim}
+\normalsize
+
+{\bf Toolbox Tricks:}
+Note that there are also {\it pixel masks} that can be contained in each
+image.  These are Boolean masks, and are implicitly used in the
+calculation for each image in {\tt expr}.  If you want to use the
+mask in a different image not in {\tt expr}, try it in {\tt mask}:
+\small
+\begin{verbatim}
+  # First make a pixel mask inside ngc5921.demo.chan22.cleanimg.mask
+  ia.open('ngc5921.demo.chan22.cleanimg.mask')
+  ia.calcmask('"ngc5921.demo.chan22.cleanimg.mask">0.5')
+  ia.summary()
+  ia.close()
+  # There is now a 'mask0' mask in this image as reported by the summary
+
+  # Now apply this pixel mask in immath
+  default('immath')
+  imagename='ngc5921.demo.chan22.cleanimg.image'
+  expr='IM0'
+  mask='mask(ngc5921.demo.chan22.cleanimg.mask)'
+  outfile='ngc5921.demo.chan22.cleanimg.imasked1'
+  immath()
+\end{verbatim}
+\normalsize
+
+Note that nominally the axes of the mask must be congruent to the axes
+of the images in {\tt expr}.  However, one exception is that the image
+in {\tt mask} can have {\em fewer} axes (but not axes that exist but
+are of the wrong lengths).  In this case {\tt immath} will extend the
+missing axes to cover the range in the images in {\tt expr}.
+Thus, you can apply a mask made from a single channel to a whole cube.
+\small
+\begin{verbatim}
+  # drop degenerate stokes and freq axes from mask image
+  ia.open('ngc5921.demo.chan22.cleanimg.mask')
+  im2 = ia.subimage(outfile='ngc5921.demo.chan22.cleanimg.mymask',dropdeg=True)
+  im2.summary()
+  im2.close()
+  ia.close()
+  # mymask has only RA and Dec axes
+
+  # Now apply this mask to the whole cube
+  default('immath')
+  imagename='ngc5921.demo.cleanimg.image'
+  expr='IM0'
+  mask='"ngc5921.demo.chan22.cleanimg.mymask">0.5'
+  outfile='ngc5921.demo.cleanimg.imasked'
+  immath()
+\end{verbatim}
+\normalsize
+
+For more on masks as used in LEL, see
+\begin{quote}
+   \url{http://aips2.nrao.edu/docs/notes/223/223.html}
+\end{quote}
+or in \S~\ref{section:analysis.pars.mask} above.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Computing the Moments of an Image Cube ({\tt immoments})}
+\label{section:analysis.moments}
+
+For spectral line datasets, the output of the imaging process is an
+{\tt image cube}, with a frequency or velocity channel axis in
+addition to the two sky coordinate axes.  This can be most easily
+thought of as a series of image {\tt planes} stacked along the
+spectral dimension.
+
+A useful product to compute is to collapse the cube into a 
+{\it moment} image by taking a linear combination of the individual
+planes:
+\begin{equation}
+   M_m(x_i,y_i) = \sum_k^N w_m(x_i,y_i,v_k)\,I(x_i,y_i,v_k)
+\end{equation}
+for pixel $i$ and channel $k$ in the cube $I$.  There are a number
+of choices to form the $m$ moment, usually approximating some
+polynomial expansion of the intensity distribution over velocity
+mean or sum, gradient, dispersion, skew, kurtosis, etc.).  There
+are other possibilities (other than a weighted sum) for calculating
+the image, such as median filtering, finding minima or maxima along
+the spectral axis, or absolute mean deviations.  And the axis along
+which to do these calculation need not be the spectral axis (i.e.
+do moments along Dec for a RA-Velocity image).  We will treat all
+of these as generalized instances of a ``moment'' map.
+
+The {\tt immoments} task will compute basic moment images from a cube.
+The default inputs are:
+\small
+\begin{verbatim}
+#  immoments :: Compute moments of an image cube:
+imagename    =         ''   #   Input image name
+moments      =        [0]   #  List of moments you would like to compute
+axis         = 'spectral'   #  The moment axis: ra, dec, lat, long, spectral, or stokes
+region       =         ''   #  Image Region.  Use viewer
+box          =         ''   #  Select one or more box regions
+chans        =         ''   #  Select the channel(spectral) range
+stokes       =         ''   #  Stokes params to image (I,IV,IQU,IQUV)
+mask         =         ''   #  mask used for selecting the area of the
+                            #   image to calculate the moments on
+includepix   =         -1   #  Range of pixel values to include
+excludepix   =         -1   #  Range of pixel values to exclude
+outfile      =         ''   #  Output image file name (or root for multiple moments)
+async        =      False   #  If true the taskname must be started using immoments(...)
+\end{verbatim}
+\normalsize
+
+This task will operate on the input file given by {\tt imagename} and
+produce a new image or set of images based on the name given in
+{\tt outfile}.
+
+The {\tt moments} parameter chooses which moments are calculated.
+The choices for the operation mode are:
+\small
+\begin{verbatim}
+    moments=-1  - mean value of the spectrum
+    moments=0   - integrated value of the spectrum
+    moments=1   - intensity weighted coordinate; traditionally used to get 
+                  'velocity fields'
+    moments=2   - intensity weighted dispersion of the coordinate; traditionally
+                  used to get 'velocity dispersion'
+    moments=3   - median of I
+    moments=4   - median coordinate
+    moments=5   - standard deviation about the mean of the spectrum
+    moments=6   - root mean square of the spectrum
+    moments=7   - absolute mean deviation of the spectrum
+    moments=8   - maximum value of the spectrum
+    moments=9   - coordinate of the maximum value of the spectrum
+    moments=10  - minimum value of the spectrum
+    moments=11  - coordinate of the minimum value of the spectrum
+\end{verbatim}
+\normalsize
+The meaning of these is described in the CASA Toolkit Manual, that
+describes the associated image.moments tool:
+\begin{quote}
+   \url{http://casa.nrao.edu/docs/CasaRef/image.moments.html}
+\end{quote}
+
+The {\tt axis} parameter sets the axis along which the moment is
+``collapsed'' or calculated.  Choices are: 
+{\tt 'ra'}, {\tt 'dec'}, {\tt 'lat'}, {\tt 'long'}, {\tt 'spectral'},
+or {\tt 'stokes'}.  A standard moment-0 or moment-1 image of
+a spectral cube would use the default choice {\tt 'spectral'}.
+One could make a position-velocity map by setting {\tt 'ra'} or 
+{\tt 'dec'}.
+
+The {\tt includepix} and {\tt excludepix} parameters are used to set
+ranges for the inclusion and exclusion of pixels based on values.
+For example, {\tt includepix=[0.05,100.0]} will include pixels
+with values from 50~mJy to 1000~Jy, and 
+{\tt excludepix=[100.0,1000.0]} will exclude pixels with values
+from 100 to 1000~Jy.
+
+If a single moment is chosen, the {\tt outfile} specifies the exact
+name of the output image.  If multiple {\tt moments} are chosen,
+then {\tt outfile} will be used as the root of the output filenames,
+which will get different suffixes for each moment.  
+
+For image cubes that contain different beam sizes for each plane, {\tt
+  immoments} will smooth all planes to the largest beam size first, then
+collapse to the desired moment.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Hints for using ({\tt immoments})}
+\label{section:analysis.moments.hints}
+
+In order to make an unbiased moment-0 image, do not put in 
+any thresholding using {\tt includepix} or {\tt excludepix}.
+This is so that the (presumably) zero-mean noise fluctuations
+in off-line parts of the image cube will cancel out.  If you
+image has large biases, like a pronounced clean bowl due to
+missing large-scale flux, then your moment-0 image will be biased
+also.  It will be difficult to alleviate this with a threshold,
+but you can try.
+
+To make a usable moment-1 (or higher) image, on the other hand,
+it is critical to set a
+reasonable threshold to exclude noise from being added to the
+moment maps.  Something like a few times the rms noise level
+in the usable planes seems to work (put into {\tt includepix}
+or {\tt excludepix} as needed.  Also use {\tt chans} to ignore
+channels with bad data.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Examples using ({\tt immoments})}
+\label{section:analysis.moments.example}
+
+Below is an example for {\tt immoments}:
+\small
+\begin{verbatim}
+  default('immoments')
+  imagename = 'ngc5921.demo.cleanimg'
+  # Do first and second spectral moments
+  axis  = 'spectral'
+  chans = ''
+  moments = [0,1]
+  # Need to mask out noisy pixels, currently done
+  # using hard global limits
+  excludepix = [-100,0.009]
+  outfile = 'ngc5921.demo.moments'
+  
+  immoments()
+  
+  # It will have made the images:
+  # --------------------------------------
+  # ngc5921.demo.moments.integrated
+  # ngc5921.demo.moments.weighted_coord
+\end{verbatim}
+\normalsize
+
+Other examples of NGC2403 (a moment zero image of a VLA line dataset)
+and NGC4826 (a moment one image of a BIMA CO line dataset) are
+shown in Figure~\ref{fig:n2403momzero}.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{n2403mom0}{3.15}
+\pngname{n4826mom1}{3.30}
+\caption{\label{fig:n2403momzero} NGC2403 VLA moment zero (left) and
+NGC4826 BIMA moment one (right) images as shown in the {\tt viewer}.}
+\hrulefill
+\end{center}
+\end{figure}
+
+{\bf ALERT:} We are working on improving the thresholding
+of planes beyond the global cutoffs in {\tt includepix}
+and {\tt excludepix}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Generating Position-Velocity Diagrams ({\tt impv})}
+\label{section:analysis.pv}
+CASA can generate position-velocity (pV) diagrams via the task {\tt
+  impv} or directly in the viewer (see
+\S\ref{section:display.image.pvdiagram}). The viewer application calls
+the task: 
+
+\small
+\begin{verbatim}
+#  impv :: Construct a position-velocity image by choosing two points in the direction plane.
+imagename           =         ''        #  Name of the input image
+outfile             =         ''        #  Output image name. If empty, no image
+                                        #   is written.
+start               =         []        #  The starting pixel in the direction
+                                        #   plane (array of two values).
+end                 =         []        #  The ending pixel in the direction
+                                        #   plane (array of two values).
+width               =          1        #  Width in pixels for
+                                        #  averaging pixels perpendicular 
+                                        #  to the slice. Must be an
+                                        #   odd integer >= 1 (1 means 
+                                        #  only use the pixels along the slice).
+unit                =   'arcsec'        #  Unit for the offset axis in the
+                                        #   resulting image. Must be a unit of
+                                        #   angular measure.
+chans               =         ''        #  Channels to use. See "help par.chans"
+                                        #   for examples. Channels must be
+                                        #   contiguous. Default is to use all
+                                        #   channels.
+     region         =         ''        #  Region selection. Default is entire
+                                        #   image. No selection is permitted in
+                                        #   the direction plane. See help
+                                        #   par.region.
+
+stokes              =         ''        #  Stokes planes to use. Planes must be
+                                        #   contiguous. Default is to use all
+                                        #   stokes.
+mask                =         ''        #  Mask to use. See help par.mask.
+                                        #   Default is none.
+async               =      False        #  If true the taskname must be started
+                                        #   using impv(...)
+\end{verbatim}
+\normalsize
+
+PV diagrams are generated by placing a ``slicing'' a datacube through
+the RA/DEC planes. The ``slit'' can have a width defined by {\tt
+  halfwidth} and the averaged values across the slit are then stored
+in a new image with position and velocity as the two axes. The slit
+position is specified by a start and end pixel in the RA/DEC
+plane of the data cube. An angular {\tt unit} can be set to define
+what is stored in the resulting pV image.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Computing image statistics ({\tt imstat})}
+\label{section:analysis.imstat}
+
+The {\tt imstat} task will calculate statistics on a region of
+an image, and return the results as a return value in a Python
+dictionary.
+
+The inputs are:
+\small
+\begin{verbatim}
+#  imstat :: Displays statistical information from an image or image region
+imagename           =         ''        #  Name of the input image
+axes                =         -1        #  List of axes to evaluate statistics over. Default is
+                                        #   all axes.
+region              =         ''        #  Image Region or name. Use Viewer
+box                 =         ''        #  Select one or more box regions
+chans               =         ''        #  Select the channel(spectral) range. See "help
+                                        #   par.chans" for examples.
+stokes              =         ''        #  Stokes params to image (I,IV,IQU,IQUV). Default ""
+                                        #   => include all
+listit              =       True        #  Print stats and bounding box to logger?
+verbose             =       True        #  Print additional messages to logger?
+mask                =         ''        #  Mask to use. See help par.mask. Default is none.
+logfile             =         ''        #  Name of file to write fit results.
+async               =      False        #  If true the taskname must be started using
+                                        #   imstat(...)
+
+              
+\end{verbatim}
+\normalsize
+
+Area selection using {\tt region} and {\tt mask} is detailed in 
+\S~\ref{section:analysis.pars.regions} and
+(\S~\ref{section:im.clean.mask}) respectively.
+
+Plane selection is controlled by {\tt chans} and {\tt stokes}.
+See \S~\ref{section:analysis.pars.planes} for details on plane
+selection.
+
+The parameter {\it axes} will select the dimensions that the
+statistics is calculated over. Typical data cubes have axes like: RA
+axis 0, DEC axis 1, Velocity axis 2. So, e.g. {\tt axes=[0,1]} would
+be the most common setting to calculate statistics per spectral
+channel.
+
+A typical output of imstat on a cube with {\tt axes=[0,1]} looks
+like:
+
+\footnotesize
+\begin{verbatim}
+No region specified. Using full positional plane.
+Using all spectral channels.
+Using polarizations ALL
+Determining stats for image IRC10216_HC3N.cube_r0.5.image
+Set region from supplied region record
+Regions --- 
+         -- bottom-left corner (pixel) [blc]:  [0, 0, 0, 0]
+         -- top-right corner (pixel) [trc]:    [299, 299, 0, 63]
+         -- bottom-left corner (world) [blcf]: 09:48:01.492, +13.15.40.658, I, 3.63994e+10Hz
+         -- top-right corner (world) [trcf]:   09:47:53.299, +13.17.40.258, I, 3.63915e+10Hz
+No region specified. Using full positional plane.
+Using all spectral channels.
+Using polarizations ALL
+Selected bounding box : 
+    [0, 0, 0, 0] to [299, 299, 0, 63]  (09:48:01.492, +13.15.40.658, I, 3.63994e+10Hz to 09:47:53.299, +13.17.40.258, I, 3.63915e+10Hz)
+#        Frequency  Frequency(Plane) Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     
+  3.63993552e+10                  0  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63992302e+10                  1  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63991052e+10                  2  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63989802e+10                  3  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63988551e+10                  4  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63987301e+10                  5  9.000000e+04  6.069948e-01  6.744386e-06  1.534640e-03  1.534634e-03 -6.355108e-03  6.166496e-03
+  3.63986051e+10                  6  9.000000e+04  2.711720e-01  3.013023e-06  1.538071e-03  1.538077e-03 -6.165663e-03  5.862981e-03
+  3.63984801e+10                  7  9.000000e+04  2.501259e-01  2.779177e-06  1.578049e-03  1.578056e-03 -6.771976e-03  6.272645e-03
+  3.63983551e+10                  8  9.000000e+04 -3.706732e-01 -4.118591e-06  1.607191e-03  1.607194e-03 -8.871284e-03  6.591001e-03
+\end{verbatim}
+
+where the header information provides the specifications of the data
+that were selected followed by the table with the frequency values of
+the lanes, the plane numbers,
+Npts the number of pixels per plane, and the Sum, Median, RMS, Standard
+deviations, Minimum, and Maximum of the pixel values for each
+plane. Similar output is provided when the data is averaged over
+different axes. The logger output can also be written into a log file
+for further processing elsewhere ({\tt logfile} parameter). 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Using the task return value}
+\label{section:analysis.imstat.xstat}
+
+The contents of the return value of {\tt imstat} are in a Python
+dictionary of key-value sets.  For example,
+\small
+\begin{verbatim}
+   xstat = imstat()
+\end{verbatim}
+\normalsize
+will assign this to the Python variable {\tt xstat}.
+
+The keys for {\tt xstat} are then:
+\small
+\begin{verbatim}
+   KEYS
+   blc          - absolute PIXEL coordinate of the bottom left corner of 
+                  the bounding box surrounding the selected region
+   blcf         - Same as blc, but uses WORLD coordinates instead of pixels
+   trc          - the absolute PIXEL coordinate of the top right corner 
+                  of the bounding box surrounding the selected region
+   trcf         - Same as trc, but uses WORLD coordinates instead of pixels
+   flux         - the integrated flux density if the beam is defined and 
+                  the if brightness units are $Jy/beam$
+   npts         - the number of unmasked points used
+   max          - the maximum pixel value
+   min          - minimum pixel value
+   maxpos       - absolute PIXEL coordinate of maximum pixel value
+   maxposf      - Same as maxpos, but uses WORLD coordinates instead of pixels
+   minpos       - absolute pixel coordinate of minimum pixel value
+   minposf      - Same as minpos, but uses WORLD coordinates instead of pixels
+   sum          - the sum of the pixel values: $\sum I_i$
+   sumsq        - the sum of the squares of the pixel values: $\sum I_i^2$
+   mean         - the mean of pixel values: 
+                  $ar{I} = \sum I_i / n$
+   sigma        - the standard deviation about the mean: 
+                  $\sigma^2 = (\sum I_i -ar{I})^2 / (n-1)$
+   rms          - the root mean square: 
+                  $\sqrt {\sum I_i^2 / n}$
+   median       - the median pixel value (if robust=T)
+   medabsdevmed - the median of the absolute deviations from the 
+                  median (if robust=T)    
+   quartile     - the inter-quartile range (if robust=T). Find the points 
+                  which are 25% largest and 75% largest (the median is 
+                  50% largest), find their difference and divide that 
+                  difference by 2.
+\end{verbatim}
+\normalsize
+
+For example, an {\tt imstat} call might be
+\small
+\begin{verbatim}
+   default('imstat')
+   imagename = 'ngc5921.demo.cleanimg.image'  #  The NGC5921 image cube
+   box       = '108,108,148,148'              #  20 pixels around the center
+   chans     = '21'                           #  channel 21
+
+   xstat = imstat()
+\end{verbatim}
+\normalsize
+
+In the terminal window, {\tt imstat} reports:
+\small
+\begin{verbatim}
+Statistics on  ngc5921.usecase.clean.image
+
+Region ---
+   -- bottom-left corner (pixel) [blc]: [108, 108, 0, 21]
+   -- top-right corner (pixel) [trc]:   [148, 148, 0, 21]
+   -- bottom-left corner (world) [blcf]: 15:22:20.076, +04.58.59.981, I, 1.41332e+09Hz
+   -- top-right corner( world) [trcf]: 15:21:39.919, +05.08.59.981, I, 1.41332e+09Hz
+
+Values --
+   -- flux [flux]:              0.111799236126
+   -- number of points [npts]:  1681.0
+   -- maximum value [max]:      0.029451508075
+   -- minimum value [min]:     -0.00612453464419
+   -- position of max value (pixel) [maxpos]:  [124, 131, 0, 21]
+   -- position of min value (pixel) [minpos]:  [142, 110, 0, 21]
+   -- position of max value (world) [maxposf]: 15:22:04.016, +05.04.44.999, I, 1.41332e+09Hz
+   -- position of min value (world) [minposf]: 15:21:45.947, +04.59.29.990, I, 1.41332e+09Hz
+   -- Sum of pixel values [sum]: 1.32267159822
+   -- Sum of squared pixel values [sumsq]: 0.0284534543692
+   
+Statistics ---
+   -- Mean of the pixel values [mean]:       0.000786836167885
+   -- Standard deviation of the Mean [sigma]: 0.00403944306904
+   -- Root mean square [rms]:               0.00411418313161
+   -- Median of the pixel values [median]:     0.000137259965413
+   -- Median of the deviations [medabsdevmed]:       0.00152346317191
+   -- Quartile [quartile]:                       0.00305395200849
+
+\end{verbatim}
+\normalsize
+The return value in {\tt xstat} is
+\small
+\begin{verbatim}
+CASA <152>: xstat
+  Out[152]: 
+{'blc': array([108, 108,   0,  21]),
+ 'blcf': '15:22:20.076, +04.58.59.981, I, 1.41332e+09Hz',
+ 'flux': array([ 0.11179924]),
+ 'max': array([ 0.02945151]),
+ 'maxpos': array([124, 131,   0,  21]),
+ 'maxposf': '15:22:04.016, +05.04.44.999, I, 1.41332e+09Hz',
+ 'mean': array([ 0.00078684]),
+ 'medabsdevmed': array([ 0.00152346]),
+ 'median': array([ 0.00013726]),
+ 'min': array([-0.00612453]),
+ 'minpos': array([142, 110,   0,  21]),
+ 'minposf': '15:21:45.947, +04.59.29.990, I, 1.41332e+09Hz',
+ 'npts': array([ 1681.]),
+ 'quartile': array([ 0.00305395]),
+ 'rms': array([ 0.00411418]),
+ 'sigma': array([ 0.00403944]),
+ 'sum': array([ 1.3226716]),
+ 'sumsq': array([ 0.02845345]),
+ 'trc': array([148, 148,   0,  21]),
+ 'trcf': '15:21:39.919, +05.08.59.981, I, 1.41332e+09Hz'}
+\end{verbatim}
+\normalsize
+
+{\bf ALERT:} The return dictionary currently includes 
+NumPy {\tt array} values, which have to be accessed by
+an array index to get the array value.
+To access these dictionary elements, use the standard Python
+dictionary syntax, e.g.
+\small
+\begin{verbatim}
+     xstat[<key string>][<array index>]
+\end{verbatim}
+\normalsize
+For example, to extract the standard deviation as a number
+\small
+\begin{verbatim}
+   mystddev = xstat['sigma'][0]
+   print 'Sigma = '+str(xstat['sigma'][0])
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Examples for {\tt imstat}}
+\label{section:analysis.imstat.examples}
+
+The following are some examples using the B1608+656 Tutorial
+\begin{quote}
+  \url{http://casa.nrao.edu/Doc/Scripts/b1608_demo.py}
+\end{quote}
+as an example.
+
+To extract statistics for the final image:
+\small
+\begin{verbatim}
+   xstat = imstat('b1608.demo.clean2.image')
+# Printing out some of these
+   print 'Max   = '+str(xstat['max'][0])
+   print 'Sigma = '+str(xstat['sigma'][0])
+# results:
+# Max   = 0.016796965152
+# Sigma = 0.00033631979385
+\end{verbatim}
+\normalsize
+
+In a box around the brightest component:
+\small
+\begin{verbatim}
+   xstat_A = imstat('b1608.demo.clean2.image',box='124,125,132,133')
+# Printing out some of these
+   print 'Comp A Max Flux = '+str(xstat_A['max'][0])
+   print 'Comp A Max X,Y  = ('+str(xstat_A['maxpos'][0])+','+str(xstat_A['maxpos'][1])+')'
+# results:
+# Comp A Max Flux = 0.016796965152
+# Comp A Max X,Y  = (128,129)
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Extracting data from an image ({\tt imval})}
+\label{section:analysis.imval}
+
+The {\tt imval} task will extract the values of the data and mask
+from a specified region of an image and place in the task return
+value as a Python dictionary.
+
+The inputs are:
+\small
+\begin{verbatim}
+#  imval :: Get the data value(s) and/or mask value in an image.
+imagename  =      ''   #  Name of the input image
+region     =      ''   #  Image Region.  Use viewer
+box        =      ''   #  Select one or more box regions
+chans      =      ''   #  Select the channel(spectral) range
+stokes     =      ''   #  Stokes params to image (I,IV,IQU,IQUV)
+async      =   False       
+\end{verbatim}
+\normalsize
+
+Area selection using {\tt box} and {\tt region} is detailed in 
+\S~\ref{section:analysis.pars.box} and
+\S~\ref{section:analysis.pars.regions} respectively.
+By default, {\tt box=''} will
+extract the image information at the reference pixel on the
+direction axes.
+
+Plane selection is controlled by {\tt chans} and {\tt stokes}.
+See \S~\ref{section:analysis.pars.planes} for details on plane
+selection.  By default, {\tt chans=''} and {\tt stokes=''} will
+extract the image information in all channels and Stokes planes.
+
+For instance,
+\small
+\begin{verbatim}
+   xval = imval('myimage', box='144,144', stokes='I' )
+\end{verbatim}
+\normalsize
+will extract the Stokes I value or spectrum at pixel 144,144, while
+\small
+\begin{verbatim}
+   xval = imval('myimage', box='134,134.154,154', stokes='I' )
+\end{verbatim}
+\normalsize
+will extract a 21 by 21 pixel region.
+
+Extractions are returned in NumPy arrays in the return value
+dictionary, plus some extra elements describing the axes and selection:
+\small
+\begin{verbatim}
+CASA <2>: xval = imval('ngc5921.demo.moments.integrated')
+
+CASA <3>: xval
+  Out[3]: 
+{'axes': [[0, 'Right Ascension'],
+          [1, 'Declination'],
+          [3, 'Frequency'],
+          [2, 'Stokes']],
+ 'blc': [128, 128, 0, 0],
+ 'data': array([ 0.89667124]),
+ 'mask': array([ True], dtype=bool),
+ 'trc': [128, 128, 0, 0],
+ 'unit': 'Jy/beam.km/s'}
+\end{verbatim}
+\normalsize
+extracts the reference pixel value in this 1-plane image.  Note that
+the {\tt 'data'} and {\tt 'mask'} elements are NumPy arrays, not 
+Python lists.
+
+To extract a spectrum from a cube:
+\small
+\begin{verbatim}
+CASA <8>: xval = imval('ngc5921.demo.clean.image',box='125,125')
+
+CASA <9>: xval
+  Out[9]: 
+{'axes': [[0, 'Right Ascension'],
+          [1, 'Declination'],
+          [3, 'Frequency'],
+          [2, 'Stokes']],
+ 'blc': [125, 125, 0, 0],
+ 'data': array([  8.45717848e-04,   1.93370355e-03,   1.53750915e-03,
+         2.88399984e-03,   2.38683447e-03,   2.89159478e-04,
+         3.16268904e-03,   9.93389636e-03,   1.88773088e-02,
+         3.01138610e-02,   3.14478502e-02,   4.03211266e-02,
+         3.82498614e-02,   3.06552909e-02,   2.80734301e-02,
+         1.72479432e-02,   1.20884273e-02,   6.13593217e-03,
+         9.04005766e-03,   1.71429547e-03,   5.22095338e-03,
+         2.49114982e-03,   5.30831399e-04,   4.80734324e-03,
+         1.19265869e-05,   1.29435991e-03,   3.75700940e-04,
+         2.34788167e-03,   2.72604497e-03,   1.78467855e-03,
+         9.74952069e-04,   2.24676146e-03,   1.82263291e-04,
+         1.98463408e-06,   2.02975096e-03,   9.65532148e-04,
+         1.68218743e-03,   2.92119570e-03,   1.29359076e-03,
+        -5.11484570e-04,   1.54162932e-03,   4.68662125e-04,
+        -8.50282842e-04,  -7.91683051e-05,   2.95954203e-04,
+        -1.30133145e-03]),
+ 'mask': array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,  True], dtype=bool),
+ 'trc': [125, 125, 0, 45],
+ 'unit': 'Jy/beam'}
+\end{verbatim}
+\normalsize
+
+To extract a region from the plane of a cube:
+\small
+\begin{verbatim}
+CASA <13>: xval = imval('ngc5921.demo.clean.image',box='126,128,130,129',chans='23')
+
+CASA <14>: xval
+  Out[14]: 
+{'axes': [[0, 'Right Ascension'],
+          [1, 'Declination'],
+          [3, 'Frequency'],
+          [2, 'Stokes']],
+ 'blc': [126, 128, 0, 23],
+ 'data': array([[ 0.00938627,  0.01487772],
+       [ 0.00955847,  0.01688832],
+       [ 0.00696965,  0.01501907],
+       [ 0.00460964,  0.01220793],
+       [ 0.00358087,  0.00990202]]),
+ 'mask': array([[ True,  True],
+       [ True,  True],
+       [ True,  True],
+       [ True,  True],
+       [ True,  True]], dtype=bool),
+ 'trc': [130, 129, 0, 23],
+ 'unit': 'Jy/beam'}
+
+CASA <15>: print xval['data'][0][1]
+0.0148777160794
+\end{verbatim}
+\normalsize
+In this example, a rectangular box was extracted, and you can see the
+order in the array and how to address specific elements.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reordering the Axes of an Image Cube ({\tt imtrans})}
+\label{section:analysis.imtrans}
+
+Sometimes data cubes can be in axis orders that are not adequate for
+processing. The CASA task {\tt imtrans} can change the ordering of the axis:
+\small
+\begin{verbatim}
+#  imtrans :: Reorder image axes
+imagename           =         ''        #  Name of the input image
+outfile             =         ''        #  Name of output CASA image.
+order               =         ''        #  New zero-based axes order.
+wantreturn          =       True        #  Return an image tool referencing the
+                                        #   transposed image
+async               =      False        #  If true the taskname must be started
+                                        #   using imtrans(...)
+\end{verbatim}
+\normalsize
+
+
+The {\tt order} parameter is the most important input here. It is a
+string of numbers that shows how axes 0, 1, 2, 3, ... are mapped onto
+the new cube (note that the first axis has the label 0, as typical in
+python). E.g. {\tt order}='1032' will reorder the input axis 0 to be
+axis 1 in the output, input axis 1 to be output axis 0, input axis 2
+to output axis 3 (the last axis) and input axis 3 to output axis
+2. Alternatively, axes can be specified by their names. E.g., to reorder
+an image with right ascension, declination, and frequency and reverse
+the first two, {\tt order=[``declination'', ``right ascension'',
+  ``frequency'']} will work. The axes names can be found typing {\tt
+  (ia.coordsys().names())}. Minimum match is supported, so that  {\tt
+  order=["d", "f", "r"]} will produce the same results.
+
+Axes can simultaneously be transposed and reversed. To reverse an
+axis, precede it by a "-". For example, {\tt order='-10-32'} will
+reverse the direction of the first and third axis of the input image
+(the zeroth and second axes in the output image).
+
+Example:\\
+
+Swap the stokes and spectral axes in an RA-Dec-Stokes-Frequency image
+\small
+\begin{verbatim}
+imagename = "myim.im"
+outfile = "outim.im"
+order = "0132"
+imtrans()
+\end{verbatim}
+
+or
+\begin{verbatim}
+outfile = "myim_2.im"
+order = 132
+imtrans()
+\end{verbatim}
+
+or
+\begin{verbatim}
+outfile = "myim_3.im"
+order = ["r", "d", "f", "s"]
+imtrans()
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+outfile = "myim_4.im"
+order = ["rig", "declin", "frequ", "stok"]
+imtrans()
+\end{verbatim}
+
+
+
+If the outfile parameter is empty, only a temporary image is created; no output image
+is written to disk. The temporary image can be captured in the returned value (assuming
+{\tt wantreturn} is true).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Collapsing an Image Along an Axis ({\tt imcollapse})}
+\label{section:analysis.imcollapse}
+
+{\tt imcollapse} allows to apply an aggregation function along one or
+more axes of an image. Functions supported are 'max', 'mean',
+'median', 'min', 'rms', 'stdev', 'sum', 'variance' (minimum match
+supported). The relevant axes will then collapse to a single value or
+plane (i.e. they will result in a degenerate axis). The functions are
+specified in the {\tt function} parameter of the {\tt imcollapse}
+inputs:
+
+\small
+\begin{verbatim}
+#  imcollapse :: Collapse image along one axis, aggregating pixel values along that axis.
+imagename           =         ''        #  Name of the input image
+function            =         ''        #  Function used to compute aggregation
+                                        #   of pixel values.
+axes                =        [0]        #  Zero-based axis number(s) or minimal
+                                        #   match strings to collapse.
+outfile             =         ''        #  Name of output CASA image.
+box                 =         ''        #  Optional direction plane box ("blcx,
+                                        #   blcy, trcx trcy").
+     region         =         ''        #  Name of optional region file to use.
+
+chans               =         ''        #  Optional zero-based contiguous
+                                        #   frequency channel specification.
+stokes              =         ''        #  Optional contiguous stokes planes
+                                        #   specification.
+mask                =         ''        #  Optional mask to use.
+wantreturn          =       True        #  Should an image analysis tool
+                                        #   referencing the collapsed image be
+                                        #   returned?
+async               =      False        #  If true the taskname must be started
+\end{verbatim}
+\normalsize
+
+{\tt wantreturn=True} returns an image analysis tool containing the
+newly created collapsed image.
+
+Example:\\
+
+myimage.im is a 512x512x128x4 (ra,dec,freq,stokes; i.e. in the 0-based
+system, frequency is labeled as axis 2) image and we want to
+collapse a subimage of it along its spectral axis avoiding the 8 edge
+ channels at each end of the band, computing the mean value of the
+pixels (resulting image is 256x256x1x4 in size):
+
+\small
+\begin{verbatim}
+imcollapse(imagename="myimage.im", outfile="collapse_spec_mean.im",
+           function="mean", axis=2, box="127,127,383,383", chans="8~119")
+\end{verbatim}
+\normalsize
+
+Note that {\tt imcollapse} will not smooth to a common beam for all
+planes if they differ. If this is desired, run {\tt imsmooth} before
+{\tt imcollapse}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Regridding an Image ({\tt imregrid})}
+\label{section:analysis.regrid}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     More complex coordinate system and image regridding 
+     operation can be carried out in the toolkit.  The 
+     {\tt coordsys} ({\tt cs}) tool and the {\tt ia.regrid}
+     method are the relevant components.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+It is occasionally necessary to regrid an image onto a new coordinate
+system.  The {\tt imregrid} task will regrid one image onto the
+coordinate system of another, creating an output image.  In this
+task, the user need only specify the names of the input, template, and
+output images.  
+
+If the user needs to do more complex operations, such as regridding an
+image onto an arbitrary (but known) coordinate system, changing from
+Equatorial to Galactic coordinates, or precessing Equinoxes, the CASA
+toolkit can be used (see sidebox).  Some of these facilities will
+eventually be provided in task form.
+
+The default inputs are:
+\small
+\begin{verbatim}
+  imregrid :: regrid an image onto a template image
+imagename           =         ''        #  Name of the source image
+template            =      'get'        #  A dictionary, refcode, or
+                                        #  name of an image that provides the output shape and coordinate system
+output              =         ''        #  Name for the regridded image
+asvelocity          =       True        #  Regrid spectral axis in velocity space rather than frequency space?
+axes                =       [-1]        #  The pixel axes to regrid. -1 => all.
+interpolation       =   'linear'        #  The interpolation method.  One of "nearest", "linear", "cubic".
+decimate            =         10        #  Decimation factor for coordinate grid computation
+replicate           =      False        #  Replicate image rather than regrid?
+overwrite           =      False        #  Overwrite (unprompted) pre-existing output file?
+async               =      False        #  If true the taskname must be started using imregrid(...)
+
+
+\end{verbatim}
+\normalsize
+The {\tt output} image will have the data in {\tt imagename} regridded
+onto the coordinate system provided by the {\tt template} parameter.
+{\tt template} is used universally for a range of ways to define the
+grid of the output image:
+
+\begin{itemize}
+  \item {\it a template image}: specify an image name here and the
+    input will be regridded to the same 3-dimensional coordinate
+    system as the one in {\tt template}. Values are filled in as
+    blanks if they do not exist in the input. Note that the input and
+    template images must have the same coordinate structure to begin
+    with (like 3 or 4 axes, with the same ordering)
+  \item {\it a coordinate system (reference code)}: to convert from one coordinate
+    frame to another one, e.g. from B1950 to J2000, the {\tt template}
+    parameter can be used to specify the output coordinate
+    system. These following recognized keywords are supported: {\tt
+      'J2000'}, {\tt 'B1950'}, {\tt 'B1950\_VLA'}, {\tt 'GALACTIC'},
+    {\tt 'HADEC'}, {\tt 'AZEL'}, {\tt 'AZELSW'}, {\tt 'AZELNE'}, {\tt
+      'ECLIPTIC'}, {\tt 'MECLIPTIC'}, {\tt 'TECLIPTIC'}, {\tt 'SUPERGAL'}
+
+   \item {\it 'get'}: This option returns a python dictionary in the
+     {\tt \{'csys': csys\_record, 'shap': shape\}  } format
+
+   \item {\it a python dictionary}: In turn, such a dictionary can be
+     used as a template to define the final grid
+\end{itemize}
+
+  
+
+%
+%
+%       imregrid: regrid an image to a new coordinate system.
+%
+%       The new coordinate system is defined by the template parameter,
+%       which can be:
+%         * a recognized reference code string (see below),
+%         * a {'csys': csys_record, 'shap': shape} dictionary,
+%         * 'get', which does not regrid but returns the template dictionary
+%           for imagename, suitable for modification and reuse, or
+%         * the name of an image to get the coordinate system and shape
+%           from.  The input and template images must have the same
+%           coordinate structure.
+%
+%       Keyword arguments:
+%       imagename -- Name of the image that needs to be regridded
+%               default: none; example: imagename='orion.image'
+%       template -- Dictionary, reference code, or imagename defining the new
+%               shape and coordinate system, or 'get' to return the template
+%               dictionary for imagename.  Recognized reference codes are:
+%               'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
+%               'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
+%               and 'SUPERGAL'.
+%               default: 'get'; example: template='orion_j2000.im'
+%       output -- Name for the regridded image
+%               default: imagename + '.regridded'; example: imagename='orion_shifted.im'
+%       async -- Run task in a separate process (return CASA prompt)
+%               default: False; example: async=True
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Redefining the Velocity System of an Image ({\tt imreframe})}
+\label{section:analysis.reframe}
+
+{\tt imreframe} can be used to change the velocity system of an
+image. It is not applying a regridding as a change from radio to
+optical conventions would require, but it will change the labels of the
+velocity axes. 
+
+\small
+\begin{verbatim}
+#  imreframe :: Change the frame in which the image reports its spectral values
+imagename           =         ''        #  Name of the input image
+output              =         ''        #  Name of the output image; '' => modify input image
+outframe            =     'lsrk'        #  Spectral frame in which the frequency or velocity
+                                        #   values will be reported by default
+restfreq            =         ''        #  restfrequency to use for velocity values (e.g.
+                                        #   "1.420GHz" for the HI line)
+async               =      False        #  If true the taskname must be started using
+                                        #   imreframe(...)
+\end{verbatim}
+\normalsize
+
+{\tt outframe} defines the velocity frame  (LSRK, BARY, etc., see
+\S\,\ref{section:conv.vel}) of the output image and a rest frequency
+should be specified to relabel the spectral axis in new velocity units. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image Convolution({\tt imsmooth})}
+\label{section:analysis.imsmooth}
+
+A data cube can be smoothed across spatial dimensions with {\tt
+  imsmooth}. The inputs are:\\ 
+\small
+\begin{verbatim}
+#  imsmooth :: Smooth an image or portion of an image
+imagename           =         ''        #  Name of the input image
+kernel              =    'gauss'        #  Type of kernel to use: Gaussian or
+                                        #   boxcar.
+     major          = '2.5arcsec'       #  Major axis for the kernels, default
+                                        #   direction is along y-axis.
+     minor          = '2.0arcsec'       #  Minor axis in Gaussian and boxcar
+                                        #   kernels
+     pa             =     '0deg'        #  Position angle for Gaussian kernel
+     targetres      =      False        #  If Gaussian kernel, specified
+                                        #   parameters are to be resolution of
+                                        #   output image (True) or parameters of
+                                        #   Gaussian to convolve with input image
+                                        #   (False).
+
+region              =         ''        #  Image Region or name.  Use viewer
+box                 =         ''        #  Select one or more box regions
+chans               =         ''        #  Select the spectral channel range
+stokes              =         ''        #  Stokes parameters to image
+                                        #   (I,IV,IQU,IQUV)
+mask                =         ''        #  Mask used for selecting the area of
+                                        #   the image
+outfile             =         ''        #  Output, smoothed, image file name
+async               =      False        #  If true the taskname must be started
+\end{verbatim}
+\normalsize
+where the cube/image {\tt imagename} will be convolved with a kernel
+defined in the {\tt kernel} keyword. Available kernels are 'gauss' and
+'boxcar'. Both of these kernels need the major and minor axes sizes as
+input, the Gaussian kernel smoothing also requires a position
+angle. By default, the kernel size defines the kernel itself, i.e. the
+data will be smoothed with this kernel. If the {\tt targetres} parameter
+for Gaussian kernels is set to 'True', major and minor axes will be
+those from the {\it output} resolution, and the kernel will be
+adjusted for each plane to arrive at the final resolution. 
+
+Examples: \\
+
+1) smoothing with a Gaussian kernel 20'' by 10''
+\begin{verbatim}
+imsmooth( imagename='my.image', kernel='gauss', major='10arcsec', minor='10arcsec')
+\end{verbatim}
+
+
+2) Smoothing using pixel coordinates and a boxcar kernel.
+\begin{verbatim}
+imsmooth( imagename='new.image', major='20pix', minor='10pix', kernel='boxcar')
+\end{verbatim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Spectral Line fitting with {\tt specfit}}
+\label{section:analysis.specfit}
+
+{\tt specfit} is a powerful task to perform spectral line fits in data
+cubes. Three types of fitting functions are currently supported,
+polynomials, Gaussians, and Lorentzians. {\tt specfit} can fit these functions in
+two ways: over data that were averaged across a region ({\tt
+  multifit=False}) or on a pixel
+by pixel basis ({\tt multifit=True}). 
+
+
+\small
+\begin{verbatim}
+#  specfit :: Fit 1-dimensional Gaussians and/or polynomial models to an image or image region
+imagename           =         ''        #  Name of the input image
+box                 =         ''        #  Rectangular box in direction coordinate
+                                        #   blc, trc. Default: entire image ("").
+region              =         ''        #  Region of interest. See help par.region
+                                        #   for possible specifications. Default: Do
+                                        #   not use a region.
+chans               =         ''        #  Channels to use. Channels must be
+                                        #   contiguous. Default: all channels ("").
+stokes              =         ''        #  Stokes planes to use. Planes must be
+                                        #   contiguous. Default: all stokes ("").
+axis                =         -1        #  The profile axis. Default: use the
+                                        #   spectral axis if one exists, axis 0
+                                        #   otherwise (<0).
+mask                =         ''        #  Mask to use. See help par.mask. Default is
+                                        #   none..
+poly                =         -1        #  Order of polynomial element.  Default: do
+                                        #   not fit a polynomial (<0).
+estimates           =         ''        #  Name of file containing initial estimates.
+                                        #   Default: No initial estimates ("").
+     ngauss         =          1        #  Number of Gaussian elements.  Default: 1.
+     pampest        =         ''        #  Initial estimate of PCF profile (gaussian
+                                        #   or lorentzian) amplitudes.
+     pcenterest     =         ''        #  Initial estimate PCF profile centers, in
+                                        #   pixels.
+     pfwhmest       =         ''        #  Initial estimate PCF profile FWHMs, in
+                                        #   pixels.
+     pfix           =         ''        #  PCF profile parameters to fix during fit.
+     pfunc          =         ''        #  PCF singlet functions to fit. "gaussian"
+                                        #   or "lorentzian" (minimal match
+                                        #   supported). Unspecified means all
+                                        #   gaussians.
+
+minpts              =          0        #  Minimum number of unmasked points
+                                        #   necessary to attempt fit.
+multifit            =       True        #  If true, fit a profile along the desired
+                                        #   axis at each pixel in the specified
+                                        #   region. If false, average the non-fit
+                                        #   axis pixels and do a single fit to that
+                                        #   average profile. Default False.
+     amp            =         ''        #  Name of amplitude solution image. Default:
+                                        #   do not write the image ("").
+     amperr         =         ''        #  Name of amplitude solution error image.
+                                        #   Default: do not write the image ("").
+     center         =         ''        #  Name of center solution image. Default: do
+                                        #   not write the image ("").
+     centererr      =         ''        #  Name of center solution error image.
+                                        #   Default: do not write the image ("").
+     fwhm           =         ''        #  Name of fwhm solution image. Default: do
+                                        #   not write the image ("").
+     fwhmerr        =         ''        #  Name of fwhm solution error image.
+                                        #   Default: do not write the image ("").
+     integral       =         ''        #  Prefix of name of integral solution image.
+                                        #   Name of image will have gaussian
+                                        #   component number appended.  Default: do
+                                        #   not write the image ("").
+     integralerr    =         ''        #  Prefix of name of integral error solution
+                                        #   image. Name of image will have gaussian
+                                        #   component number appended.  Default: do
+                                        #   not write the image ("").
+
+model               =         ''        #  Name of model image. Default: do not write
+                                        #   the model image ("").
+residual            =         ''        #  Name of residual image. Default: do not
+                                        #   write the residual image ("").
+wantreturn          =       True        #  Should a record summarizing the results be
+                                        #   returned?
+logresults          =       True        #  Output results to logger?
+gmncomps            =          0        #  Number of components in each gaussian
+                                        #   multiplet to fit
+gmampcon            =         ''        #  The amplitude ratio constraints for non-
+                                        #   reference components to reference
+                                        #   component in gaussian multiplets.
+gmcentercon         =         ''        #  The center offset constraints (in pixels)
+                                        #   for non-reference components to reference
+                                        #   component in gaussian multiplets.
+gmfwhmcon           =         ''        #  The FWHM  ratio constraints for non-
+                                        #   reference components to reference
+                                        #   component in gaussian multiplets.
+gmampest            =      [0.0]        #  Initial estimate of individual gaussian
+                                        #   amplitudes in gaussian multiplets.
+gmcenterest         =      [0.0]        #  Initial estimate of individual gaussian
+                                        #   centers in gaussian multiplets, in
+                                        #   pixels.
+gmfwhmest           =      [0.0]        #  Initial estimate of individual gaussian
+                                        #   FWHMss in gaussian multiplets, in pixels.
+gmfix               =         ''        #  Parameters of individual gaussians in
+                                        #   gaussian multiplets to fix during fit.
+logfile             =         ''        #  File in which to log results. Default is
+                                        #   not to write a logfile.
+goodamprange        =      [0.0]        #  Acceptable amplitude solution range. [0.0]
+                                        #   => all amplitude solutions are
+                                        #   acceptable.
+goodcenterrange     =      [0.0]        #  Acceptable center solution range in pixels
+                                        #   relative to region start. [0.0] => all
+                                        #   center solutions are acceptable.
+goodfwhmrange       =      [0.0]        #  Acceptable FWHM solution range in pixels.
+                                        #   [0.0] => all FWHM solutions are
+                                        #   acceptable.
+sigma               =         ''        #  Standard deviation array or image name.
+async               =      False        #  If true the taskname must be started using
+                                        #   specfit(...)
+
+
+\end{verbatim}
+\normalsize
+
+\subsection{Polynomial Fits}
+\label{section:analysis.specfit.poly}
+
+Polynomials can be fit by specifying the polynomial order in {\tt
+  poly}. Negative orders will not fit any polynomials. 
+
+\subsection{Lorentzian and Gaussian Fits}
+\label{section:analysis.specfit.lorgau}
+
+Gaussian and Lorentzian fits are very similar, they both require
+amplitude, center, and FWHM to be fully specified. All of the
+following discussion is thus valid for both functions. The parameter
+{\tt pfunc} controls whether Gaussian or Lorentzian functions are to
+be used. Default is all Gaussians. {\tt pfunc=["L", "G", "G", "L"]}
+would use Lorentzian, Gaussian, Gaussian, and Lorentzian
+components in the order they appear in the estimates file (see below).
+
+\subsubsection{One or more single Gaussian/Lorentzian}
+\label{section:analysis.specfit.lorgau.single}
+
+For Gaussian and Lorentzian fits, the task will allow multiple
+components and {\tt specfit} will try to find the best solution. The
+parameter space, however, is usually not uniform and to avoid local
+minima in the goodness-of-fit space, one can provide initial start
+values for the fits. This can be done either through the parameters
+{\tt pampest}, {\tt pcenterest}, and {\tt pfwhmest} for the
+amplitudes, center, and FWHM estimates in image coordinates. {\tt
+  pfix} can take parameters that specify fixed fit values.  Any
+combination of the characters 'p' (peak), 'c' (center), and 'f' (fwhm)
+are permitted, e.g. "fc" will hold the fwhm and the center constant
+during the fit. Fixed parameters will have no errors associated with
+them in the solution.  Alternatively, a file with initial values can
+be supplied by the {\tt estimates} parameter (one Gaussian/Lorentzian parameter
+set per line). The file has the following format:
+
+{\tt [peak intensity], [center], [fwhm], [optional fixed parameter string]}
+
+The first three values are required and must be numerical values. The
+peak intensity must be expressed in map units, while the
+center and fwhm must be specified in pixels. The fourth value is
+optional and if present, represents the parameter(s)
+that should be held constant during the fit (see above).
+
+An example {\tt estimates} file is: 
+
+\small
+\begin{verbatim}
+# estimates file indicating that two Gaussians should be fit
+# first guassian estimate, peak=40, center at pixel number 10.5, 
+# fwhm = 5.8 pixels, all parameters allowed to vary during
+# fit
+40, 10.5, 5.8
+# second Gaussian, peak = 4, center at pixel number 90.2, 
+# fwhm = 7.2 pixels, hold fwhm constant
+4, 90.2, 7.2, f
+# end file
+\end{verbatim}
+\normalsize
+
+
+
+and the output of a typical execution, e.g. 
+
+\small
+\begin{verbatim}
+specfit(imagename='IRC10216_HC3N.cube_r0.5.image',
+region='specfit.crtf', multifit=F, estimates='', ngauss=2)
+\end{verbatim}
+\normalsize
+('specfit.crtf' is a CASA regions file, see
+Section\,\ref{chapter:regionformat})\\
+
+will be 
+
+
+\small
+\begin{verbatim}
+Fit   :
+    RA           :   09:47:57.49
+    Dec          :   13.16.46.46
+    Stokes       : I
+    Pixel        : [146.002, 164.499, 0.000,  *]
+    Attempted    : YES
+    Converged    : YES
+    Iterations   : 28
+    Results for component 0:
+        Type     : GAUSSIAN
+        Peak     : 5.76 +/- 0.45 mJy/beam
+        Center   : -15.96 +/- 0.32 km/s
+                   40.78 +/- 0.31 pixel
+        FWHM     : 7.70 +/- 0.77 km/s
+                   7.48 +/- 0.74 pixel
+        Integral : 47.2 +/- 6.0 mJy/beam.km/s
+    Results for component 1:
+        Type     : GAUSSIAN
+        Peak     : 4.37 +/- 0.33 mJy/beam
+        Center   : -33.51 +/- 0.58 km/s
+                   23.73 +/- 0.57 pixel
+        FWHM     : 15.1 +/- 1.5 km/s
+                   14.7 +/- 1.5 pixel
+        Integral : 70.2 +/- 8.8 mJy/beam.km/s
+\end{verbatim}
+\normalsize
+
+If {\tt wantreturn}=True (the default value), the task
+returns a python dictionary (here captured in a variable
+with the inventive name of 'fitresults') : 
+
+\small
+\begin{verbatim}
+fitresults=specfit(imagename='IRC10216_HC3N.cube_r0.5.image', region='specfit.rgn', multifit=F,
+        estimates='', ngauss=2)
+\end{verbatim}
+\normalsize
+
+The values can then be used by other python code for further
+processing. 
+
+
+\subsubsection{Gaussian Multiplets}
+\label{section:analysis.specfit.lorgau.multiplet}
+It is possible to fit a number of Gaussians together, as multiplets
+with restrictions. All restrictions are relative to a reference
+Gaussian (the zero'th component of each multiplet). {\tt gncomps}
+specifies the number of Gaussians for each multiplets, and, in fact, a
+number of these multiplets can be fit simultaneously. {\tt
+  gncomps=[2,4,3]}, e.g. fits a 2-component Gaussian, a 4-component
+Gaussian, and a 3-component Gaussian all at once. The initial
+parameter estimates can be specified with the {\tt gmampest}, {\tt
+  gmcenterest}, and {\tt gmfwhmest} parameters and the estimates
+are simply listed in the sequence of {\tt gncomps}. E.g. if {\tt
+  gncomps=[2,4,3]} is specified with multiplet G0 consisting of 2
+Gaussians a, b, multiplet G1 of 4 Gaussians c, d, e, f, and multiplet
+G2 of three Gaussians g, h, i, the parameter list in {\tt gm*est} would be
+like {\tt gm*est=[a,b,c,d,e,f,g,h,i]}.
+
+Restrictions can be specified via the {\tt gmampcon} parameter for the
+amplitude ratio (non-reference to reference), {\tt gmcentercon} for
+the offset in pixels (to a reference), and {\tt gmfwhmcon} for the
+FWHM ratio (non-reference to reference). A value of 0 will not
+constrain anything. The reference is always the zero'th component in
+each multiplet, in our example, Gaussians a, c, and g. They cannot be
+constrained. So {\tt gmncomps=[2, 4, 3]}, {\tt gmampcon= [ 0 , 0.2, 0
+  , 0.1, 4.5, 0 ]}, {\tt gcentercon=[24.2, 45.6, 92.7, 0 , -22.8,
+  -33.5]}, and {\tt gfwhmcon=""} would constrain Gaussians b relative
+to a with a 24.2 pixel offset, Gaussian d to c with a amplitude ratio
+of 0.2 and a 45.6 pixel offset, Gaussian e to c with a offset of 92.7
+pixels, etc. Restrictions will overrule any estimates.
+
+The parameters {\tt goodamprange}, {\tt goodcenterrange}, and {\tt
+  goodfwhmrange} can be used to limit the range of amplitude, center,
+and fwhm solutions for all Gaussians.
+
+
+\subsection{Pixel-by-pixel fits}
+\label{section:analysis.specfit.pixel}
+As mentioned above, {\tt specfit} can also fit spectral cubes on a
+pixel by pixel basis. In this case, one can choose to write none, any
+or all of the solution and error images for Gaussian/Lorentzian fits
+via the parameters {\tt amp}, {\tt amperr}, {\tt center}, {\tt
+  centererr}, {\tt fwhm}, and {\tt fwhmerr}. The files written contain
+all the components along a ``component number'' axis. They can be
+inspected by using the ``hidden axes'' slider in the {\tt viewer}
+(\S\ref{section:display.image.raster}). Writing analogous images for
+polynomial coefficients is not yet supported although polynomial fits
+when {\tt multifit=True} is supported. Best fit coefficients are
+written to the logger. Pixels for which fits were not attempted or did
+not converge will be masked as bad.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Calculation of Rotation Measures {\tt rmfit}}
+\label{section:analysis.rmfit}
+
+The {\it experimental} task {\tt rmfit} can be used to compute the
+rotation measures of continuum images. The input image can be a single
+or a few images which all contain Stokes U and Q axes. The algorithm
+used is described in Leahy et al, Astronomy \& Astrophysics, 156, 234.
+
+\small
+\begin{verbatim}
+#  rmfit :: Calculate rotation measure.
+imagename           =                   #  Name(s) of the input image(s). Must be specified.
+rm                  =         ''        #  Output rotation measure image name. If not specified, no
+                                        #   image is written.
+rmerr               =         ''        #  Output rotation measure error image name. If not
+                                        #   specified, no image is written.
+pa0                 =         ''        #  Output position angle (degrees) at zero wavelength image
+                                        #   name. If not specified, no image is written.
+pa0err              =         ''        #  Output position angle (degrees) at zero wavelength error
+                                        #   image name. If not specified, no image is written.
+nturns              =         ''        #  Output number of turns image name. If not specified, no
+                                        #   image is written.
+chisq               =         ''        #  Output reduced chi squared image name. If not specified,
+                                        #   no image is written.
+sigma               =         -1        #  Estimate of the thermal noise.  A value less than 0 means
+                                        #   auto estimate.
+rmfg                =        0.0        #  Foreground rotation measure in rad/m/m to subtract.
+rmmax               =        0.0        #  Maximum rotation measure in rad/m/m for which to solve.
+                                        #   IMPORTANT TO SPECIFY.
+maxpaerr            =      1e+30        #  Maximum input position angle error in degrees to allow in
+                                        #   solution determination.
+async               =      False        #  If true the taskname must be started using rmfit(...)
+
+CASA <6>: 
+\end{verbatim}
+\normalsize
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Calculation of Spectral Indices and Higher Order Polynomials {\tt spxfit}}
+\label{section:analysis.spxfit}
+
+This application fits a power logarithmic polynomial or a logarithmic
+transformed polynomial to pixel values along a specified axis of an
+image or images. These functions are most often used for fitting the
+spectral index and higher order terms of a spectrum. A power
+logarithmic polynomial has the form
+
+\begin{equation}
+y = \frac{c_0 x}{D^{(c_1 + c_2 \ln(x/D) + c_3 \ln(x/D)^2 + c_n \ln(x/D)^{(n - 1)})}}
+\end{equation}
+
+and a logarithmic transformed polynomial is simply the result of this equation after taking the natural log of both sides so that it has the form
+
+\begin{equation}
+\ln(y) = c_0 + c_1 \ln(x) + c_2 \ln(x/D)^2 +  ... + c_n \ln(x/D)^n
+\end{equation}
+
+Because the logarithm of the ordinate values must be taken before fitting a logarithmic transformed polynomial,
+all non-positive pixel values are effectively masked for the purposes of fitting.
+
+The coefficients of the two forms are equal to each other except that $c_0$ in the second equation is equal to
+$\ln(c_0)$ of the first. In the case of fitting a spectral index, which is traditionally represented as $\alpha$, is
+equal to $c_1$.
+
+In both cases, $D$ is a normalization constant used so that abscissa
+values are closer to unity when they are sent to the fitter. This
+generally improves the probability that the fit will converge. This
+parameter may be specified via the div parameter. A value of 0 (the
+default) indicates that the application should determine a reasonable
+value for D, which is determined via
+
+$D = 10^{\int(\log10(\sqrt(\min(x)*\max(x)))}$
+
+where $\min(x)$ and $\max(x)$ are the minimum and maximum abscissa
+values, respectively.
+
+The inputs are:
+
+\small
+\begin{verbatim}
+ #  spxfit :: Fit a 1-dimensional model to an image or image region
+for determination of spectral index.
+imagename           =                   #  Name of the input image(s)
+box                 =         ''        #  Rectangular box in
+                                        #   direction coordinate blc, trc.
+                                        #   Default: entire image ("").
+region              =         ''        #  Region of interest. See
+                                        #   help par.region for possible
+                                        #   specifications. Default:
+                                        #   Do not use a region.
+chans               =         ''        #  Channels to use. Channels
+                                        #   must be contiguous. See "help
+                                        #   par.chans" for
+                                        #   examples. Default: all channels ("").
+stokes              =         ''        #  Stokes planes to
+                                        #   use. Planes must be contiguous. Default:
+                                        #   all stokes ("").
+axis                =         -1        #  The profile axis. Default:
+                                        #   use the spectral axis if one
+                                        #   exists, axis 0 otherwise (<0).
+mask                =         ''        #  Mask to use. See help
+                                        #   par.mask. Default is none.
+minpts              =          1        #  Minimum number of unmasked
+                                        #   points necessary to attempt
+                                        #   fit.
+multifit            =       True        #  If true, fit a profile
+                                        #   along the desired axis at each
+                                        #   pixel in the specified
+                                        #   region. If false, average the
+                                        #   non-fit axis pixels and do
+                                        #   a single fit to that average
+                                        #   profile. Default False.
+     spxsol         =         ''        #  Name of the spectral index
+                                        #   function coefficient solution
+                                        #   image to write.
+     spxerr         =         ''        #  Name of the spectral index
+                                        #   function coefficient error
+                                        #   image to write.
+     model          =         ''        #  Name of model
+                                        #   image. Default: do not write the model
+                                        #   image ("").
+     residual       =         ''        #  Name of residual
+                                        #   image. Default: do not write the
+                                        #   residual image ("").
+spxtype             =      'plp'        #  Type of function to
+                                        #   fit. "plp" => power logarithmic
+                                        #   polynomial, "ltp" =>
+                                        #   logarithmic transformed polynomial.
+spxest              =         []        #  Initial estimates for the
+                                        #   spectral index function
+                                        #   coefficients.
+spxfix              =         []        #  Fix the corresponding spectral index function
+                                        #   coefficients during the fit. True=>hold fixed.
+div                 =          0        #  Divisor (numerical value or
+                                        #   quantity) to use in the
+                                        #   logarithmic terms of the
+                                        #   plp or ltp function. 0 =>
+                                        #   calculate a useful value on the fly.
+wantreturn          =       True        #  Should a record summarizing
+                                        #   the results be returned? 
+logresults          =       True        #  Output results to logger?
+logfile             =         ''        #  File in which to log
+                                        #   results. Default is not to write a
+                                        #   logfile.
+sigma               =         -1        #  Standard deviation array or image name(s).
+     outsigma       =         ''        #  Name of output image used
+                                        #   for standard deviation. Ignored
+                                        #   if sigma is empty.
+
+async               =      False        #  If true the taskname must
+                                        #   be started using spxfit(...)
+\end{verbatim}
+\normalsize
+
+for more than a single input image or cube, all images must have the
+same dimensions along all axes other than the fit axis. {\tt multifit}
+will perform a per pixel fit, otherwise there will be a single value
+over the entire region.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image Mask Handling {\tt makemask}}
+\label{section:analysis.makemask}
+
+{\tt makemask} facilitates the handling of image masks in CASA. There
+are two basic mask formats: 1) one or more Boolean masks stored
+internally in the image file, and 2) images with zero and non-zero image
+values. {\tt makemask} looks like:
+
+\small
+\begin{verbatim}
+#  makemask :: Makes and manipulates image masks
+mode                =     'list'        #  Mask method
+                                       #   (copy,expand,merge,delete,setdefaultmask)
+    inpimage       =         ''        #  Name of input image.
+
+async               =      False        #  If true the taskname must be started using
+                                       #   makemask(...) 
+\end{verbatim}
+\normalsize
+
+To distinguish between Boolean internal masks and zero/non-zero
+images, {\tt makemask} uses the syntax {\it galaxy.image:mask0} for Boolean
+masks within an image, in this example the Boolean mask {\it mask0}
+within the image {\it galaxy.image}. Without the colon separator, the image
+itself is assumed to the be treated like a zero/non-zero mask.
+
+
+{\tt mode='list'} lists all the internal Boolean masks that are
+present in an image. The default masks can be set with mode {\tt
+  setdefaultmask} and they can be deleted with the mode {\tt
+  delete}. The default mask is used when an image is displayed in the
+{\tt viewer} and is used in all analysis tasks.
+
+
+{\tt mode='copy'} lets a user to copy a Boolean mask from one image to
+another image, or to write out the Boolean mask as a zero/non-zero
+image. The latter format is very useful when different masks are
+combined or manipulated. All the image analysis tools, in particular
+{\tt immath} are applicable for such zero/non-zero masks as they act
+like normal images. {\tt makemask} will always attempt to regrid the
+input mask to the output image.
+
+
+{\tt mode='expand'} furthermore expands a mask in the spectral
+domain. It regrids first then stretches the edge channels. E.g. a one
+plane continuum image would be stretched to all planes of a
+data cube. 
+
+{\tt mode='merge'} merges CASA region files (CRTF files) with a mask
+that is already present. E.g. one can use the {\tt viewer} to create a
+region file, then use this mode in {\tt makemask} to convert the
+regions into an image mask, either an internal Boolean mask or an
+image with zero/non-zero values.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Search for Spectral Line Rest Frequencies ({\tt slsearch})}
+\label{section:analysis.slsearch}
+
+The {\tt slsearch} task allows the spectral line enthusiast to find their
+favorite spectral lines in subset of the Splatalogue spectral line
+catalog ({\url http://www.splatalogue.net}) which is distributed with CASA.
+In addition, one can export custom catalogs from Splatalogue and
+import them to CASA using the task {\tt splattotable}
+(Sect.\,\ref{section:analysis.splattotable}) or tool method
+{\tt sl.splattotable()}. One can even import catalogs with lines not in
+Splatalogue using the same file format.
+
+The inputs to {\tt slsearch} are as follows:  
+
+\small
+\begin{verbatim}
+#  slsearch :: Search a spectral line table.
+tablename           =         ''        #  Input spectral line table name to
+                                        #   search. If not specified, use the
+                                        #   default table in the system.
+outfile             =         ''        #  Results table name. Blank means do not
+                                        #   write the table to disk.
+freqrange           =   [84, 90]        #  Frequency range in GHz.
+species             =       ['']        #  Species to search for.
+reconly             =      False        #  List only NRAO recommended
+                                        #   frequencies.
+chemnames           =       ['']        #  Chemical names to search for.
+qns                 =       ['']        #  Resolved quantum numbers to search
+                                        #   for.
+rrlinclude          =       True        #  Include RRLs in the result set?
+rrlonly             =      False        #  Include only RRLs in the result set?
+     intensity      =         -1        #  CDMS/JPL intensity range. -1 -> do not
+                                        #   use an intensity range.
+     smu2           =         -1        #  S*mu*mu range in Debye**2. -1 -> do
+                                        #   not use an S*mu*mu range.
+     loga           =         -1        #  log(A) (Einstein coefficient) range.
+                                        #   -1 -> do not use a loga range.
+     eu             =         -1        #  Upper energy state range in Kelvin. -1
+                                        #   -> do not use an eu range.
+     el             =         -1        #  Lower energy state range in Kelvin. -1
+                                        #   -> do not use an el range.
+
+verbose             =       True        #  List result set to logger (and
+                                        #   optionally logfile)?
+     logfile        =         ''        #  List result set to this logfile (only
+                                        #   used if verbose=True).
+     append         =       True        #  If true, append to logfile if it
+                                        #   already exists, if false overwrite
+                                        #   logfile if it exists. Only used if
+                                        #   verbose=True and logfile not blank.
+
+wantreturn          =       True        #  If true, return the spectralline tool
+                                        #   associated with the result set.
+async               =      False        #  If true the taskname must be started
+    
+\end{verbatim}
+\normalsize
+
+The table is provided in the {\tt tablename} parameter but if it is
+blank (the default), the catalog which is included with CASA will be
+used. Searches can be made in a parameter space with large
+dimensionality: 
+
+\begin{itemize}
+
+\item {\tt freqrange     } Frequency range in GHz.
+\item {\tt species       } Species to search for.
+\item {\tt reconly       } List only NRAO recommended frequencies.
+\item {\tt chemnames     } Chemical names to search for.
+\item {\tt qns           } Resolved quantum numbers to search for.
+\item {\tt intensity     } CDMS/JPL intensity range. 
+\item {\tt smu2          } $S\mu^{2}$ range in Debye$^{2}$. 
+\item {\tt loga          } log(A) (Einstein coefficient) range. 
+\item {\tt el            } Lower energy state range in Kelvin. 
+\item {\tt eu            } Upper energy state range in Kelvin.
+\item {\tt rrlinclude    } Include RRLs in the result set?
+\item {\tt rrlonly       } Include only RRLs in the result set?
+\end{itemize}
+
+Notation is as found in the {\it Splatalogue} catalog. 
+
+Example:\\
+Search for all lines of the species HOCN and HOCO+ in the 200-300GHz range:
+\small
+\begin{verbatim}
+slsearch(outfile="myresults.tbl", freqrange = [200,300], 
+         species=['HOCN', 'HOCO+'])
+\end{verbatim}
+\normalsize
+
+The task can also return a python dictionary if assigned a variable
+like:
+
+\begin{verbatim}
+myLines = slsearch(outfile="myresults.tbl", freqrange = [200,300], 
+          species=['HOCN', 'HOCO+'])
+\end{verbatim}
+\normalsize
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Convert Exported Splatalogue Catalogs to CASA Tables ({\tt splattotable})}
+\label{section:analysis.splattotable}
+
+In some cases the internal spectral line catalog may not contain the
+lines in which one is interested. In that case, one can export a
+catalog from {\it Splatalogue} {\url http://www.splatalogue.net} or
+even create their own "by hand" (be careful to get the format exactly
+right though!). CASA's task {\tt splattotable} can then be used to
+create a CASA table that contains these lines and can be searched:
+
+\small
+\begin{verbatim}
+---------> inp(splattotable)
+#  splattotable :: Convert a downloaded Splatalogue spectral line list to a casa table.
+filenames           =       ['']        #  Files containing Splatalogue lists.
+table               =         ''        #  Output table name.
+wantreturn          =       True        #  Do you want the task to return a spectralline tool attached to the results table?
+async               =      False        #  If true the taskname must be started using splattotable(...)
+\end{verbatim}
+\normalsize
+
+A search in Splatalogue will return a catalog that can be saved in a
+file (look for the "Export" section after the results on the search
+results page). The exported filename(s) should be entered in the {\tt
+  filenames} parameter of {\tt splattotable}. The downloaded files
+must be in a specific format for this task to succeed. If you use the
+Splatalogue "Export CASA fields" feature, you should have no
+difficulties.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image Import/Export to FITS}
+\label{section:analysis.fits}
+
+These tasks will allow you to write your CASA image to a FITS file
+that other packages can read, and to import existing FITS files
+into CASA as an image.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{FITS Image Export ({\tt exportfits})}
+\label{section:analysis.fits.export}
+
+To export your images to fits format use the {\tt exportfits} task.
+The inputs are:
+\small
+\begin{verbatim}
+#  exportfits :: Convert a CASA image to a FITS file
+imagename    =         ''   #  Name of input CASA image
+fitsimage    =         ''   #  Name of output image FITS file
+velocity     =      False   #  Use velocity (rather than frequency) as spectral axis
+optical      =      False   #  Use the optical (rather than radio) velocity convention
+bitpix       =        -32   #  Bits per pixel
+minpix       =          0   #  Minimum pixel value
+maxpix       =          0   #  Maximum pixel value
+overwrite    =      False   #  Overwrite pre-existing imagename
+dropstokes   =      False   #  Drop the Stokes axis?
+stokeslast   =       True   #  Put Stokes axis last in header?
+async        =      False   #  If true the taskname must be started using exportfits(...)
+\end{verbatim}
+\normalsize
+
+The {\tt dropstokes} or {\tt stokeslast} parameter may be needed to
+make the FITS image compatible with an external application.
+
+For example,
+\small
+\begin{verbatim}
+   exportfits('ngc5921.demo.cleanimg.image','ngc5921.demo.cleanimg.image.fits')
+\end{verbatim}
+\normalsize
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{FITS Image Import ({\tt importfits})}
+\label{section:analysis.fits.import}
+
+You can also use the {\tt importfits} task to import a FITS image into
+CASA image table format.  Note, the CASA {\tt viewer} can read fits
+images so you don't need to do this if you just want to look at the image.  
+The inputs for {\tt importfits} are:
+\small
+\begin{verbatim}
+#  importfits :: Convert an image FITS file into a CASA image
+fitsimage           =         ''        #  Name of input image FITS file
+imagename           =         ''        #  Name of output CASA image
+whichrep            =          0        #  If fits image has multiple
+                                        #   coordinate reps, choose one.
+whichhdu            =          0        #  If its file contains
+                                        #    multiple images, choose one.
+zeroblanks          =       True        #  Set blanked pixels to zero (not NaN)
+overwrite           =      False        #  Overwrite pre-existing imagename
+defaultaxes         =      False        #  Add the default 4D
+                                        #   coordinate axes where they are missing
+defaultaxesvalues   =         []        #  List of values to assign to
+                                        #   added degenerate axes when
+                                        #   defaultaxes=True (ra,dec,freq,stokes)
+async               =      False        #  If true the taskname must
+                                        #   be started using importfits(...)
+\end{verbatim}
+\normalsize
+For example, we can read the above image back in
+\small
+\begin{verbatim}
+  importfits('ngc5921.demo.cleanimg.image.fits','ngc5921.demo.cleanimage')
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Using the CASA Toolkit for Image Analysis}
+\label{section:analysis.toolkit}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
+     The image analysis tool ({\tt ia}) is the workhorse here.
+     It appears in the User Reference Manual as the {\tt image}
+     tool.  Other relevant tools for analysis and manipulation
+     include {\tt measures} ({\tt me}), {\tt quanta} ({\tt qa})
+     and {\tt coordsys} ({\tt cs}).
+  \end{boxedminipage}
+\end{wrapfigure}
+
+Although this cookbook is aimed at general users employing the
+tasks, we include here a more detailed description of doing
+image analysis in the CASA toolkit.  This is because
+there are currently only a few tasks geared towards image analysis,
+as well as due to the breadth of possible manipulations that the
+toolkit allows that more sophisticated users will appreciate.
+
+To see a list of the {\tt ia} methods available, use the 
+CASA {\tt help} command:
+\footnotesize
+\begin{verbatim}
+CASA <1>: help ia 
+--------> help(ia)
+Help on image object:
+
+class image(__builtin__.object)
+ |  image object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(...)
+ |      x.__init__(...) initializes x; see x.__class__.__doc__ for signature
+ |  
+ |  __str__(...)
+ |      x.__str__() <==> str(x)
+ |  
+ |  adddegaxes(...)
+ |      Add degenerate axes of the specified type to the image`  : 
+ |        outfile
+ |        direction = false
+ |        spectral  = false
+ |        stokes
+ |        linear    = false
+ |        tabular   = false
+ |        overwrite = false
+ |      ----------------------------------------
+ |  
+ |  addnoise(...)
+
+...
+
+ |  
+ |  unlock(...)
+ |      Release any lock on the image`  : 
+ |      ----------------------------------------
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes defined here:
+ |  
+ |  __new__ = <built-in method __new__ of type object at 0x55d0f20>
+ |      T.__new__(S, ...) -> a new object with type S, a subtype of T
+
+\end{verbatim}
+\normalsize
+or for a compact listing use {\tt <TAB>} completion on {\tt ia.},
+e.g.
+\small
+\begin{verbatim}
+CASA <5>: ia.
+Display all 105 possibilities? (y or n)
+ia.__class__                ia.deconvolvecomponentlist  ia.ispersistent             ia.reorder
+ia.__delattr__              ia.deconvolvefrombeam       ia.lock                     ia.replacemaskedpixels
+ia.__doc__                  ia.done                     ia.makearray                ia.restoringbeam
+ia.__getattribute__         ia.echo                     ia.makecomplex              ia.rotate
+ia.__hash__                 ia.fft                      ia.maketestimage            ia.sepconvolve
+ia.__init__                 ia.findsources              ia.maskhandler              ia.set
+ia.__new__                  ia.fitallprofiles           ia.maxfit                   ia.setboxregion
+ia.__reduce__               ia.fitcomponents            ia.miscinfo                 ia.setbrightnessunit
+ia.__reduce_ex__            ia.fitpolynomial            ia.modify                   ia.setcoordsys
+ia.__repr__                 ia.fitprofile               ia.moments                  ia.sethistory
+ia.__setattr__              ia.fromarray                ia.name                     ia.setmiscinfo
+ia.__str__                  ia.fromascii                ia.newimage                 ia.setrestoringbeam
+ia.adddegaxes               ia.fromfits                 ia.newimagefromarray        ia.shape
+ia.addnoise                 ia.fromimage                ia.newimagefromfile         ia.statistics
+ia.boundingbox              ia.fromrecord               ia.newimagefromfits         ia.subimage
+ia.brightnessunit           ia.fromshape                ia.newimagefromimage        ia.summary
+ia.calc                     ia.getchunk                 ia.newimagefromshape        ia.toASCII
+ia.calcmask                 ia.getregion                ia.open                     ia.tofits
+ia.close                    ia.getslice                 ia.outputvariant            ia.topixel
+ia.collapse                 ia.hanning                  ia.pixelvalue               ia.torecord
+ia.continuumsub             ia.haslock                  ia.putchunk                 ia.toworld
+ia.convertflux              ia.histograms               ia.putregion                ia.twopointcorrelation
+ia.convolve                 ia.history                  ia.rebin                    ia.type
+ia.convolve2d               ia.imagecalc                ia.regrid                   ia.unlock
+ia.coordmeasures            ia.imageconcat              ia.remove                   
+ia.coordsys                 ia.insert                   ia.removefile               
+ia.decompose                ia.isopen                   ia.rename              
+\end{verbatim}
+\normalsize
+
+A common use of the {\tt ia} tool is to do region statistics on an
+image.  The {\tt imhead} task has {\tt mode='stats'} to do this
+quickly over the entire image cube.  The tool can do this on specific
+planes or sub-regions.  Here is an example on how to use the {\tt ia}
+tool to get on-source and off-source statistics: 
+
+\small
+\begin{verbatim}
+# The variable clnimage points to the clean image name
+
+# Pull the max and rms from the clean image
+ia.open(clnimage)
+on_statistics=ia.statistics()
+thistest_immax=on_statistics['max'][0]
+oldtest_immax = 1.07732224464
+print ' Clean image ON-SRC max should be ',oldtest_immax
+print ' Found : Max in image = ',thistest_immax
+diff_immax = abs((oldtest_immax-thistest_immax)/oldtest_immax)
+print ' Difference (fractional) = ',diff_immax
+
+print ''
+# Now do stats in the lower right corner of the image
+box = ia.setboxregion([0.75,0.00],[1.00,0.25],frac=true)
+off_statistics=ia.statistics(region=box)
+thistest_imrms=off_statistics['rms'][0]
+oldtest_imrms = 0.0010449
+print ' Clean image OFF-SRC rms should be ',oldtest_imrms
+print ' Found : rms in image = ',thistest_imrms
+diff_imrms = abs((oldtest_imrms-thistest_imrms)/oldtest_imrms)
+print ' Difference (fractional) = ',diff_imrms
+
+print ''
+print ' Final Clean image Dynamic Range = ',thistest_immax/thistest_imrms
+print ''
+print ' =============== '
+
+ia.close()
+
+\end{verbatim}
+\normalsize
+
+Note: If you don't close the file with, e.g., {\tt ia.close()} the
+file will stay in a 'locked' state. Other processes won't be able to
+access the file until the file is properly closed. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Examples of CASA Image Analysis}
+\label{section:analysis.examples}
+
+The data reduction tutorials on \url{casaguides.nrao.edu} provide
+walkthroughs for
+high and low frequency, spectral line and polarization analysis
+techniques. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
