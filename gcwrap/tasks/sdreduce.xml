@@ -201,7 +201,7 @@ sdbalseline, for more information.
     </param>
 
     <param type="bool" name="scanaverage" subparam="true">
-            <description>average spectra within a scan number [True, False] (see examples in help of sdaverage)</description>
+            <description>average spectra within a scan number. Effective only when timeaverage=True. [True, False] (see examples in help of sdaverage)</description>
             <value>False</value>
     </param>
 
