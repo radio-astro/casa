@@ -186,8 +186,10 @@ class ImageDisplay(object):
         data = image.data
         xtitle = image.axes[0].name
         xdata = image.axes[0].data
+        xunits = image.axes[0].units
         ytitle = image.axes[1].name
         ydata = image.axes[1].data
+        yunits = image.axes[1].units
         dataunits = image.units
         datatype = image.datatype
         indices = np.indices(np.shape(data))
@@ -216,6 +218,7 @@ class ImageDisplay(object):
         flagrules = np.array(flagrules)
         flagind = np.indices(np.shape(flagrules))[0]
 
+#        for flagcmd in []:
         for flagcmd in flagcmds:
             # ignore if the flagcm.rulename says so
             if flagcmd.rulename == 'ignore':
@@ -276,11 +279,20 @@ class ImageDisplay(object):
         # matplotlib
         plt.subplot(1, nplots, plotnumber)
 
+        if ydata[0]==ydata[-1]:
+            # sometimes causes empty plots if min==max
+            extent=[xdata[0], xdata[-1], ydata[0], ydata[-1]+1]
+        else:
+            extent=[xdata[0], xdata[-1], ydata[0], ydata[-1]]
         plt.imshow(np.transpose(data), cmap=cmap, norm=norm, vmin=vmin,
-          vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect)
+          vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect,
+          extent=extent)
         lims = plt.axis()
 
-        plt.xlabel(xtitle, size=15)
+        xlabel = xtitle
+        if xunits:
+            xlabel = '%s [%s]' % (xlabel, xunits)
+        plt.xlabel(xlabel, size=15)
         for label in plt.gca().get_xticklabels():
             label.set_fontsize(10)
         plt.title(subtitle, fontsize='large')
