@@ -29,18 +29,18 @@
 
 #include <casa/aipstype.h>
 #include <casa/BasicSL/Complexfwd.h>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
-#define SPIIT std::tr1::shared_ptr<casa::ImageInterface<T> >
-#define SPCIIT std::tr1::shared_ptr<const casa::ImageInterface<T> >
+#define SPIIT shared_ptr<casa::ImageInterface<T> >
+#define SPCIIT shared_ptr<const casa::ImageInterface<T> >
 
 namespace casa {
 	template<class T> class ImageInterface;
 
-	typedef std::tr1::shared_ptr<const ImageInterface<Float> > SPCIIF;
-	typedef std::tr1::shared_ptr<ImageInterface<Float> > SPIIF;
-	typedef std::tr1::shared_ptr<const ImageInterface<Complex> > SPCIIC;
-	typedef std::tr1::shared_ptr<ImageInterface<Complex> > SPIIC;
+	typedef shared_ptr<const ImageInterface<Float> > SPCIIF;
+	typedef shared_ptr<ImageInterface<Float> > SPIIF;
+	typedef shared_ptr<const ImageInterface<Complex> > SPCIIC;
+	typedef shared_ptr<ImageInterface<Complex> > SPIIC;
 }
 
 #endif

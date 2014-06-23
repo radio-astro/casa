@@ -164,7 +164,7 @@ std::set<Int> MSMetaData::getScanNumbers() const {
 	if (_uniqueScanNumbers.size() > 0) {
 		return _uniqueScanNumbers;
 	}
-	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	shared_ptr<Vector<Int> > allScans = _getScans();
 	std::set<Int> myUniqueScans(allScans->begin(), allScans->end());
 	if (_cacheUpdated(sizeof(Int)*myUniqueScans.size())) {
 		_uniqueScanNumbers = myUniqueScans;
@@ -203,8 +203,8 @@ uInt MSMetaData::nRows(CorrelationType cType) {
 		return nRows();
 	}
 	uInt nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -223,8 +223,8 @@ uInt MSMetaData::nRows(
 	Int scanNumber, Int fieldID
 ) const {
 	uInt nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
     _getRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -245,8 +245,8 @@ uInt MSMetaData::nRows(
 
 uInt MSMetaData::nRows(CorrelationType cType, Int fieldID) const {
 	uInt nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -265,8 +265,8 @@ uInt MSMetaData::nRows(CorrelationType cType, Int fieldID) const {
 
 Double MSMetaData::nUnflaggedRows() const {
 	Double nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -279,8 +279,8 @@ Double MSMetaData::nUnflaggedRows(CorrelationType cType) const {
 		return nUnflaggedRows();
 	}
 	Double nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -299,8 +299,8 @@ Double MSMetaData::nUnflaggedRows(
 	Int scanNumber, Int fieldID
 ) const {
 	Double nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -320,8 +320,8 @@ Double MSMetaData::nUnflaggedRows(
 
 Double MSMetaData::nUnflaggedRows(CorrelationType cType, Int fieldID) const {
 	Double nACRows, nXCRows;
-	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
-	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
+	shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -340,10 +340,10 @@ Double MSMetaData::nUnflaggedRows(CorrelationType cType, Int fieldID) const {
 
 void MSMetaData::_getRowStats(
 	uInt& nACRows, uInt& nXCRows,
-	std::tr1::shared_ptr<AOSFMapI>& scanToNACRowsMap,
-	std::tr1::shared_ptr<AOSFMapI>& scanToNXCRowsMap,
-	std::tr1::shared_ptr<std::map<Int, uInt> >& fieldToNACRowsMap,
-	std::tr1::shared_ptr<std::map<Int, uInt> >& fieldToNXCRowsMap
+	shared_ptr<AOSFMapI>& scanToNACRowsMap,
+	shared_ptr<AOSFMapI>& scanToNXCRowsMap,
+	shared_ptr<std::map<Int, uInt> >& fieldToNACRowsMap,
+	shared_ptr<std::map<Int, uInt> >& fieldToNXCRowsMap
 ) const {
 	// this method is responsible for setting _nACRows, _nXCRows, _scanToNACRowsMap,
 	// _scanToNXCRowsMap, _fieldToNACRowsMap, _fieldToNXCRowsMap
@@ -401,9 +401,9 @@ void MSMetaData::_getRowStats(
 	std::set<Int> scanNumbers = getScanNumbers();
 	std::set<Int>::const_iterator lastScan = scanNumbers.end();
 	std::set<Int> uniqueFieldIDs, uniqueArrIDs, uniqueObsIDs;
-	std::tr1::shared_ptr<Vector<Int> > fieldIDs = _getFieldIDs();
-	std::tr1::shared_ptr<Vector<Int> > obsIDs = _getObservationIDs();
-	std::tr1::shared_ptr<Vector<Int> > arrIDs = _getArrayIDs();
+	shared_ptr<Vector<Int> > fieldIDs = _getFieldIDs();
+	shared_ptr<Vector<Int> > obsIDs = _getObservationIDs();
+	shared_ptr<Vector<Int> > arrIDs = _getArrayIDs();
 	uniqueFieldIDs.insert(fieldIDs->begin(), fieldIDs->end());
 	uniqueArrIDs.insert(arrIDs->begin(), arrIDs->end());
 	uniqueObsIDs.insert(obsIDs->begin(), obsIDs->end());
@@ -449,9 +449,9 @@ void MSMetaData::_getRowStats(
 		(*fieldToNACRowsMap)[*fieldNum] = 0;
 		(*fieldToNXCRowsMap)[*fieldNum] = 0;
 	}
-	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
+	shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
+	shared_ptr<Vector<Int> > scans = _getScans();
 
 	Vector<Int>::const_iterator aEnd = ant1->end();
 	Vector<Int>::const_iterator a1Iter = ant1->begin();
@@ -485,8 +485,8 @@ void MSMetaData::_getRowStats(
 }
 
 void MSMetaData::_getAntennas(
-	std::tr1::shared_ptr<Vector<Int> >& ant1,
-	std::tr1::shared_ptr<Vector<Int> >& ant2
+	shared_ptr<Vector<Int> >& ant1,
+	shared_ptr<Vector<Int> >& ant2
 ) const {
 	if (
 		_antenna1 && _antenna1->size() > 0
@@ -512,24 +512,24 @@ void MSMetaData::_getAntennas(
 	}
 }
 
-std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getScans() const {
+shared_ptr<Vector<Int> > MSMetaData::_getScans() const {
 	if (_scans && _scans->size() > 0) {
 		return _scans;
 	}
 	String scanColName = MeasurementSet::columnName(MSMainEnums::SCAN_NUMBER);
-	std::tr1::shared_ptr<Vector<Int> > scans(new Vector<Int>(ROScalarColumn<Int>(*_ms, scanColName).getColumn()));
+	shared_ptr<Vector<Int> > scans(new Vector<Int>(ROScalarColumn<Int>(*_ms, scanColName).getColumn()));
 	if (_cacheUpdated(sizeof(Int)*scans->size())) {
 		_scans = scans;
 	}
 	return scans;
 }
 
-std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getObservationIDs() const {
+shared_ptr<Vector<Int> > MSMetaData::_getObservationIDs() const {
 	if (_observationIDs && _observationIDs->size() > 0) {
 		return _observationIDs;
 	}
 	static const String obsColName = MeasurementSet::columnName(MSMainEnums::OBSERVATION_ID);
-	std::tr1::shared_ptr<Vector<Int> > obsIDs(
+	shared_ptr<Vector<Int> > obsIDs(
 		new Vector<Int>(ROScalarColumn<Int>(*_ms, obsColName).getColumn())
 	);
 	if (_cacheUpdated(sizeof(Int)*obsIDs->size())) {
@@ -538,12 +538,12 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getObservationIDs() const {
 	return obsIDs;
 }
 
-std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getArrayIDs() const {
+shared_ptr<Vector<Int> > MSMetaData::_getArrayIDs() const {
 	if (_arrayIDs && _arrayIDs->size() > 0) {
 		return _arrayIDs;
 	}
 	static const String arrColName = MeasurementSet::columnName(MSMainEnums::ARRAY_ID);
-	std::tr1::shared_ptr<Vector<Int> > arrIDs(
+	shared_ptr<Vector<Int> > arrIDs(
 		new Vector<Int>(ROScalarColumn<Int>(*_ms, arrColName).getColumn())
 	);
 	if (_cacheUpdated(sizeof(Int)*arrIDs->size())) {
@@ -552,12 +552,12 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getArrayIDs() const {
 	return arrIDs;
 }
 
-std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getFieldIDs() const {
+shared_ptr<Vector<Int> > MSMetaData::_getFieldIDs() const {
 	if (_fieldIDs && ! _fieldIDs->empty()) {
 		return _fieldIDs;
 	}
 	String fieldIdColName = MeasurementSet::columnName(MSMainEnums::FIELD_ID);
-	std::tr1::shared_ptr<Vector<Int> > fields(
+	shared_ptr<Vector<Int> > fields(
 		new Vector<Int>(ROScalarColumn<Int>(*_ms, fieldIdColName).getColumn())
 	);
 	if (_cacheUpdated(sizeof(Int)*fields->size())) {
@@ -566,12 +566,12 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getFieldIDs() const {
 	return fields;
 }
 
-std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getStateIDs() const {
+shared_ptr<Vector<Int> > MSMetaData::_getStateIDs() const {
 	if (_stateIDs && _stateIDs->size() > 0) {
 		return _stateIDs;
 	}
 	static const String stateColName = MeasurementSet::columnName(MSMainEnums::STATE_ID);
-	std::tr1::shared_ptr<Vector<Int> > states(
+	shared_ptr<Vector<Int> > states(
 		new Vector<Int>(ROScalarColumn<Int>(*_ms, stateColName).getColumn())
 	);
     Int maxState = max(*states);
@@ -588,13 +588,13 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getStateIDs() const {
 	return states;
 }
 
-std::tr1::shared_ptr<Vector<Int> > MSMetaData::_getDataDescIDs() const {
+shared_ptr<Vector<Int> > MSMetaData::_getDataDescIDs() const {
 	if (_dataDescIDs && ! _dataDescIDs->empty()) {
 		return _dataDescIDs;
 	}
 	static const String ddColName = MeasurementSet::columnName(MSMainEnums::DATA_DESC_ID);
 	ROScalarColumn<Int> ddCol(*_ms, ddColName);
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs(
+	shared_ptr<Vector<Int> > dataDescIDs(
 		new Vector<Int>(ddCol.getColumn())
 	);
 	if (_cacheUpdated(sizeof(Int)*dataDescIDs->size())) {
@@ -609,7 +609,7 @@ std::set<Int> MSMetaData::getScansForState(const Int stateID) {
 	}
 	std::set<Int> uniqueScans;
 	std::map<Int, std::set<Int> > myScanToStatesMap = _getScanToStatesMap();
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
+	shared_ptr<Vector<Int> > scans = _getScans();
 	uniqueScans.insert(scans->begin(), scans->end());
 	std::set<Int>::const_iterator lastScan = uniqueScans.end();
 	std::set<Int> scansForState;
@@ -936,8 +936,8 @@ void MSMetaData::_getFieldsAndSpwMaps(
 		spwToFieldMap = _spwToFieldIDsMap;
 		return;
 	}
-	std::tr1::shared_ptr<Vector<Int> >  allDDIDs = _getDataDescIDs();
-	std::tr1::shared_ptr<Vector<Int> >  allFieldIDs = _getFieldIDs();
+	shared_ptr<Vector<Int> >  allDDIDs = _getDataDescIDs();
+	shared_ptr<Vector<Int> >  allFieldIDs = _getFieldIDs();
 	Vector<Int>::const_iterator endDDID = allDDIDs->end();
 	Vector<Int>::const_iterator curField = allFieldIDs->begin();
 	fieldToSpwMap.clear();
@@ -1062,8 +1062,8 @@ void MSMetaData::_getScansAndDDIDMaps(
 	scanToDDIDMap.clear();
 	ddIDToScanMap.clear();
 	ddIDToScanMap.resize(this->nDataDescriptions());
-	std::tr1::shared_ptr<Vector<Int> > allDDIDs = _getDataDescIDs();
-	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	shared_ptr<Vector<Int> > allDDIDs = _getDataDescIDs();
+	shared_ptr<Vector<Int> > allScans = _getScans();
 	Vector<Int>::const_iterator end = allDDIDs->end();
 	Vector<Int>::const_iterator myscan = allScans->begin();
 	for (
@@ -1296,10 +1296,10 @@ vector<std::map<Int, Quantity> > MSMetaData::getFirstExposureTimeMap() {
 		return _firstExposureTimeMap;
 	}
 	uInt nDataDescIDs = nDataDescriptions();
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
-	std::tr1::shared_ptr<Vector<Double> > times = _getTimes();
-	std::tr1::shared_ptr<Quantum<Vector<Double> > > exposureTimes = _getExposureTimes();
+	shared_ptr<Vector<Int> > scans = _getScans();
+	shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
+	shared_ptr<Vector<Double> > times = _getTimes();
+	shared_ptr<Quantum<Vector<Double> > > exposureTimes = _getExposureTimes();
 	vector<std::map<Int, Quantity> > firstExposureTimeMap(nDataDescIDs);
 	vector<std::map<Int, Double> > tmap(nDataDescIDs);
 	Vector<Int>::const_iterator siter = scans->begin();
@@ -1636,7 +1636,7 @@ std::set<Int> MSMetaData::getScansForTimes(
 ) {
 	_checkTolerance(tol);
 	std::set<Int> uniqueScans = getScanNumbers();
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
+	shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
 	Double minTime = center - tol;
 	Double maxTime = center + tol;
 	std::set<Int> scans;
@@ -1653,7 +1653,7 @@ std::set<Int> MSMetaData::getScansForTimes(
 	return scans;
 }
 
-std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTimesMap() const {
+shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTimesMap() const {
 	if (_scanToTimesMap && ! _scanToTimesMap->empty()) {
 		return _scanToTimesMap;
 	}
@@ -1663,7 +1663,7 @@ std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTi
 	Vector<Double> times = *_getTimes();
 	Vector<Double>::const_iterator curTime = times.begin();
 
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap(
+	shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap(
 		new std::map<Int, std::set<Double> >()
 	);
 	while (curScan != lastScan) {
@@ -1687,12 +1687,12 @@ std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTi
 	return scanToTimesMap;
 }
 
-std::tr1::shared_ptr<Vector<Double> > MSMetaData::_getTimes() const {
+shared_ptr<Vector<Double> > MSMetaData::_getTimes() const {
 	if (_times && ! _times->empty()) {
 		return _times;
 	}
 	String timeColName = MeasurementSet::columnName(MSMainEnums::TIME);
-	std::tr1::shared_ptr<Vector<Double> > times(
+	shared_ptr<Vector<Double> > times(
 		new Vector<Double>(	 ScalarColumn<Double>(*_ms, timeColName).getColumn())
 	);
 	if (_cacheUpdated(sizeof(Double)*times->size())) {
@@ -1701,14 +1701,14 @@ std::tr1::shared_ptr<Vector<Double> > MSMetaData::_getTimes() const {
 	return times;
 }
 
-std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaData::_getExposureTimes() {
+shared_ptr<Quantum<Vector<Double> > > MSMetaData::_getExposureTimes() {
 	if (_exposures && ! _exposures->getValue().empty()) {
 		return _exposures;
 	}
 	String colName = MeasurementSet::columnName(MSMainEnums::EXPOSURE);
 	ScalarColumn<Double> exposure (*_ms, colName);
 	String unit = *exposure.keywordSet().asArrayString("QuantumUnits").begin();
-	std::tr1::shared_ptr<Quantum<Vector<Double> > > ex(
+	shared_ptr<Quantum<Vector<Double> > > ex(
 		new Quantum<Vector<Double> >(exposure.getColumn(), unit)
 	);
 	if (_cacheUpdated((20 + sizeof(Double))*ex->getValue().size())) {
@@ -1717,12 +1717,12 @@ std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaData::_getExposureTimes() 
 	return ex;
 }
 
-std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaData::_getFlags() const {
+shared_ptr<ArrayColumn<Bool> > MSMetaData::_getFlags() const {
 	if (_flagsColumn && ! _flagsColumn->nrow() > 0) {
 		return _flagsColumn;
 	}
 	String flagColName = MeasurementSet::columnName(MSMainEnums::FLAG);
-	std::tr1::shared_ptr<ArrayColumn<Bool> > flagsColumn(
+	shared_ptr<ArrayColumn<Bool> > flagsColumn(
 		new ArrayColumn<Bool>(*_ms, flagColName)
 	);
 	uInt mysize = 0;
@@ -1745,7 +1745,7 @@ std::set<Double> MSMetaData::getTimesForScans(
 		times.insert(allTimes.begin(), allTimes.end());
 		return times;
 	}
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
+	shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
 	std::set<Int> scanNumbers = getScanNumbers();
 	std::set<Int>::const_iterator scan = scans.begin();
 	std::set<Int>::const_iterator end = scans.end();
@@ -1777,11 +1777,11 @@ void MSMetaData::_getTimesAndInvervals(
 		return;
 	}
 	scanToTimeRangeMap.clear();
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
+	shared_ptr<Vector<Int> > scans = _getScans();
 	Vector<Int>::const_iterator sIter = scans->begin();
 	Vector<Int>::const_iterator sEnd = scans->end();
 
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
+	shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator dIter = dataDescIDs->begin();
 
 	String timeCentroidColName = MeasurementSet::columnName(
@@ -1896,10 +1896,10 @@ void MSMetaData::_getFieldsAndScansMaps(
 	fieldToScansMap.clear();
 	scanToFieldsMap.clear();
 	std::set<Int> scans;
-	std::tr1::shared_ptr<Vector<Int> > fieldIds = _getFieldIDs();
+	shared_ptr<Vector<Int> > fieldIds = _getFieldIDs();
 	Vector<Int>::const_iterator curFieldID = fieldIds->begin();
 	Vector<Int>::const_iterator end = fieldIds->end();
-	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	shared_ptr<Vector<Int> > allScans = _getScans();
 	Vector<Int>::const_iterator curScan = allScans->begin();
 	while (curFieldID != end) {
 		fieldToScansMap[*curFieldID].insert(*curScan);
@@ -2071,8 +2071,8 @@ std::set<Int> MSMetaData::getFieldsForTimes(
 	_checkTolerance(tol);
 	Double minTime = center - tol;
 	Double maxTime = center + tol;
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
-	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
+	shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
+	shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
 	_getFieldsAndTimesMaps(
 		fieldToTimesMap, timeToFieldsMap
 	);
@@ -2104,8 +2104,8 @@ void MSMetaData::_checkTolerance(const Double tol) {
 }
 
 void MSMetaData::_getFieldsAndTimesMaps(
-		std::tr1::shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
-		std::tr1::shared_ptr<std::map<Double, std::set<Int> > >& timeToFieldsMap
+		shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
+		shared_ptr<std::map<Double, std::set<Int> > >& timeToFieldsMap
 ) {
 	// This method is responsible for setting _fieldToTimesMap and _timeToFieldMap
 	if (
@@ -2118,8 +2118,8 @@ void MSMetaData::_getFieldsAndTimesMaps(
 	}
 	fieldToTimesMap.reset(new std::map<Int, std::set<Double> >());
 	timeToFieldsMap.reset(new std::map<Double, std::set<Int> >());
-	std::tr1::shared_ptr<Vector<Int> > allFields = _getFieldIDs();
-	std::tr1::shared_ptr<Vector<Double> > allTimes = this->_getTimes();
+	shared_ptr<Vector<Int> > allFields = _getFieldIDs();
+	shared_ptr<Vector<Double> > allTimes = this->_getTimes();
 	Vector<Int>::const_iterator lastField = allFields->end();
 	Vector<Double>::const_iterator curTime = allTimes->begin();
 	for (
@@ -2141,8 +2141,8 @@ std::set<Double> MSMetaData::getTimesForField(const Int fieldID) {
 	if (! _hasFieldID(fieldID)) {
 		return std::set<Double>();
 	}
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
-	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
+	shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
+	shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
 	_getFieldsAndTimesMaps(
 		fieldToTimesMap, timeToFieldsMap
 	);
@@ -2330,7 +2330,7 @@ Matrix<Bool> MSMetaData::getUniqueBaselines() {
 	if (! _uniqueBaselines.empty()) {
 		return _uniqueBaselines;
 	}
-	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
+	shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
 
 	Vector<Int>::const_iterator a1Iter = ant1->begin();
@@ -2456,10 +2456,10 @@ std::map<Double, Double> MSMetaData::_getTimeToTotalBWMap(
 
 void MSMetaData::_getUnflaggedRowStats(
 	Double& nACRows, Double& nXCRows,
-	std::tr1::shared_ptr<AOSFMapD>& scanNACRows,
-	std::tr1::shared_ptr<AOSFMapD>& scanNXCRows,
-	std::tr1::shared_ptr<std::map<Int, Double> >& fieldNACRows,
-	std::tr1::shared_ptr<std::map<Int, Double> >& fieldNXCRows
+	shared_ptr<AOSFMapD>& scanNACRows,
+	shared_ptr<AOSFMapD>& scanNXCRows,
+	shared_ptr<std::map<Int, Double> >& fieldNACRows,
+	shared_ptr<std::map<Int, Double> >& fieldNXCRows
 ) const {
 	// This method is responsible for setting _nUnflaggedACRows, _nUnflaggedXCRows,
 	// _unflaggedFieldNACRows, _unflaggedFieldNXCRows, _unflaggedScanNACRows,
@@ -2508,9 +2508,9 @@ void MSMetaData::_getUnflaggedRowStats(
 	nACRows = 0;
 	nXCRows = 0;
 	std::set<Int> uniqueFieldIDs, uniqueArrIDs, uniqueObsIDs;
-	std::tr1::shared_ptr<Vector<Int> > fieldIDs = _getFieldIDs();
-	std::tr1::shared_ptr<Vector<Int> > obsIDs = _getObservationIDs();
-	std::tr1::shared_ptr<Vector<Int> > arrIDs = _getArrayIDs();
+	shared_ptr<Vector<Int> > fieldIDs = _getFieldIDs();
+	shared_ptr<Vector<Int> > obsIDs = _getObservationIDs();
+	shared_ptr<Vector<Int> > arrIDs = _getArrayIDs();
 
 	uniqueFieldIDs.insert(fieldIDs->begin(), fieldIDs->end());
 	uniqueArrIDs.insert(arrIDs->begin(), arrIDs->end());
@@ -2559,10 +2559,10 @@ void MSMetaData::_getUnflaggedRowStats(
 		(*fieldNACRows)[*fieldNum] = 0;
 		(*fieldNXCRows)[*fieldNum] = 0;
 	}
-	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
+	shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
+	shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
+	shared_ptr<Vector<Int> > scans = _getScans();
 
 	Vector<Int>::const_iterator aEnd = ant1->end();
 	Vector<Int>::const_iterator a1Iter = ant1->begin();
@@ -2578,7 +2578,7 @@ void MSMetaData::_getUnflaggedRowStats(
     std::map<Int, uInt> dataDescIDToSpwMap = _getDataDescIDToSpwMap();
 	std::set<uInt> a, b, c, d, e;
 	vector<SpwProperties> spwInfo = _getSpwInfo(a, b, c, d, e);
-	std::tr1::shared_ptr<ArrayColumn<Bool> > flags = _getFlags();
+	shared_ptr<ArrayColumn<Bool> > flags = _getFlags();
 
 	while (a1Iter!=aEnd) {
 		//if (! *flagIter) {
@@ -2694,10 +2694,10 @@ void MSMetaData::_getSpwsAndIntentsMaps(
 		_intentToSpwsMap = intentToSpwsMap;
 		return;
 	}
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
+	shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator curDDID = dataDescIDs->begin();
 	Vector<Int>::const_iterator endDDID = dataDescIDs->end();
-	std::tr1::shared_ptr<Vector<Int> > states = _getStateIDs();
+	shared_ptr<Vector<Int> > states = _getStateIDs();
 	Vector<Int>::const_iterator curState = states->begin();
 	std::map<Int, uInt> dataDescToSpwMap = _getDataDescIDToSpwMap();
 	while (curDDID!=endDDID) {
@@ -2739,8 +2739,8 @@ void MSMetaData::_getFieldsAndStatesMaps(
 		stateToFieldsMap = _stateToFieldsMap;
 		return;
 	}
-	std::tr1::shared_ptr<Vector<Int> > allStates = _getStateIDs();
-	std::tr1::shared_ptr<Vector<Int> > allFields = _getFieldIDs();
+	shared_ptr<Vector<Int> > allStates = _getStateIDs();
+	shared_ptr<Vector<Int> > allFields = _getFieldIDs();
 	Vector<Int>::const_iterator endState = allStates->end();
 	Vector<Int>::const_iterator curField = allFields->begin();
 	fieldToStatesMap.clear();
@@ -3029,7 +3029,7 @@ Bool MSMetaData::_hasFieldID(const Int fieldID) {
 
 std::set<Int> MSMetaData::getUniqueFiedIDs() {
 	if (_uniqueFieldIDs.empty()) {
-		std::tr1::shared_ptr<Vector<Int> > allFieldIDs = _getFieldIDs();
+		shared_ptr<Vector<Int> > allFieldIDs = _getFieldIDs();
 		_uniqueFieldIDs.insert(allFieldIDs->begin(), allFieldIDs->end());
 	}
 	return _uniqueFieldIDs;
@@ -3047,7 +3047,7 @@ Bool MSMetaData::_hasStateID(const Int stateID) {
 		);
 	}
 	if (_uniqueStateIDs.empty()) {
-		std::tr1::shared_ptr<Vector<Int> > allStateIDs = _getStateIDs();
+		shared_ptr<Vector<Int> > allStateIDs = _getStateIDs();
 		_uniqueStateIDs.insert(allStateIDs->begin(), allStateIDs->end());
 	}
 	return _uniqueStateIDs.find(stateID) != _uniqueStateIDs.end();

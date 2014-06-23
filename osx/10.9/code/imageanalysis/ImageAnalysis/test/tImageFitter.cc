@@ -114,7 +114,7 @@ int main() {
     const ImageInterface<Float> *jykms = new FITSImage(datadir + "jyperbeamkmpersec.fits");
     const ImageInterface<Float> *gaussNoPol = new FITSImage(datadir + "gauss_no_pol.fits");
     const ImageInterface<Float> *twoGauss = new FITSImage(datadir + "two_gaussian_model.fits");
-    std::auto_ptr<const ImageInterface<Float> > multiplane(
+    auto_ptr<const ImageInterface<Float> > multiplane(
     	new FITSImage(datadir + "gauss_multiplane.fits")
     );
 	const Path compTable(dirName + "/myCompList.cl");

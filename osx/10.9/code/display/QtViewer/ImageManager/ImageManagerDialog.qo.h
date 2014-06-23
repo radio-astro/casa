@@ -31,7 +31,8 @@
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <casa/BasicSL/String.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
+
 
 namespace casa {
 
@@ -133,7 +134,7 @@ namespace casa {
 		//Returns the transparency to use when combining images.
 		//float getTransparency() const;
 		//Get the min and max intensity of the image.
-		bool getIntensityMinMax( std::tr1::shared_ptr<ImageInterface<float> > img,
+		bool getIntensityMinMax( shared_ptr<ImageInterface<float> > img,
 		                         double* intensityMin, double* intensityMax );
         //Generate a color map based on a single base color (RGB mode).
 		Colormap* generateColorMap( QColor baseColor);

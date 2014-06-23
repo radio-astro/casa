@@ -71,7 +71,7 @@
 #include <graphics/X11/X_exit.h>
 #include <display/QtPlotter/QtProfileGUI.ui.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 inline void initPlotterResource() {
 	Q_INIT_RESOURCE(QtPlotter);
@@ -124,11 +124,11 @@ namespace casa {
 
 
 
-		QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name = 0,
+		QtProfile(shared_ptr<ImageInterface<Float> > img, const char *name = 0,
 		          QWidget *parent = 0, std::string rcstr="prf");
 
 		~QtProfile();
-		MFrequency::Types determineRefFrame(std::tr1::shared_ptr<ImageInterface<Float> > img, bool check_native_frame = false );
+		MFrequency::Types determineRefFrame(shared_ptr<ImageInterface<Float> > img, bool check_native_frame = false );
 
 		virtual std::string rcid( ) const {
 			return rcid_;
@@ -155,18 +155,18 @@ namespace casa {
 		String getXAxisUnit() const;
 		QString getFileName() const;
 		QString getImagePath() const;
-		std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName="") const;
+		shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName="") const;
 		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const;
 		const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
 		void persist( const QString& key, const QString& value );
 		QString read( const QString & key ) const;
 		void imageCollapsed(String path, String dataType, String displayType,
-				Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img);
+				Bool autoRegister, Bool tmpData, shared_ptr<ImageInterface<Float> > img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
 		virtual MFrequency::Types getReferenceFrame() const;
 
-		typedef std::pair<QString, std::tr1::shared_ptr<ImageInterface<float> > > OverplotInterface;
+		typedef std::pair<QString, shared_ptr<ImageInterface<float> > > OverplotInterface;
 		//typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 
 		static const String SHAPE_ELLIPSE;
@@ -206,7 +206,7 @@ namespace casa {
 
 		void changeTopAxisCoordinateType( const QString & text );
 		virtual void closeEvent ( QCloseEvent *);
-		void resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name = 0);
+		void resetProfile(shared_ptr<ImageInterface<Float> > img, const char *name = 0);
 		void wcChanged( const String,
 		                const Vector<Double>, const Vector<Double>,
 		                const Vector<Double>, const Vector<Double>,
@@ -238,13 +238,13 @@ namespace casa {
 		/**
 		 * Returns whether or not the image can be profiled.
 		 */
-		bool isImageSupported(std::tr1::shared_ptr<ImageInterface<float> > img );
+		bool isImageSupported(shared_ptr<ImageInterface<float> > img );
 
 	signals:
 		void hideProfile();
 		void coordinateChange(const String&);
 		void showCollapsedImg(String path, String dataType, String displayType,
-				Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img);
+				Bool autoRegister, Bool tmpData, shared_ptr<ImageInterface<Float> > img);
 		void channelSelect( int channelIndex );
 		void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
 		void movieChannel( int startChannel, int endChannel );
@@ -253,7 +253,7 @@ namespace casa {
 	private:
 		void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
 		void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-		void fillPlotTypes(const std::tr1::shared_ptr<ImageInterface<Float> > img);
+		void fillPlotTypes(const shared_ptr<ImageInterface<Float> > img);
 		void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
 		void printIt(QPrinter*);
 		bool exportASCIISpectrum(QString &fn);
@@ -262,21 +262,21 @@ namespace casa {
 		void setUnitsText( String unitStr );
 		void resetYUnits( const QString& units);
 		void outputCurve( int k, QTextStream& ts, Float scaleFactor );
-		int getFreqProfileTabularIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img);
-		SpectralCoordinate resetTabularConversion(std::tr1::shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid);
+		int getFreqProfileTabularIndex(shared_ptr<const ImageInterface<Float> > img);
+		SpectralCoordinate resetTabularConversion(shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid);
 		bool isSpectralAxis() const;
 		void initializeSpectralProperties();
-		SpectralCoordinate getSpectralAxis( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid );
+		SpectralCoordinate getSpectralAxis( shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid );
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
 		String getRegionShape();
 		int computeCB( const String& xa, const String& ya, const String& za );
-		void getBeamInfo( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Double& beamArea, Double& beamSolidAngle) const;
-		SpectralCoordinate getSpectralCoordinate( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid );
+		void getBeamInfo( shared_ptr<const ImageInterface<Float> > imagePtr, Double& beamArea, Double& beamSolidAngle) const;
+		SpectralCoordinate getSpectralCoordinate( shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid );
 		bool parseRestFrequency( const String& restStr, Quantity& result ) const;
 
 		bool generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-					std::tr1::shared_ptr<casa::ImageInterface<Float> > imagePtr,
+					shared_ptr<casa::ImageInterface<Float> > imagePtr,
 					const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 					String restFreq="", const String& frame="");
@@ -302,7 +302,7 @@ namespace casa {
 		                                 Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
 		void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
 		                       const Vector<double> &wxv, const Vector<double> &wyv );
-		/*bool getFrequencyProfileWrapper( std::tr1::shared_ptr<ImageInterface<Float> >& img, const Vector<double> &wxv, const Vector<double> &wyv,
+		/*bool getFrequencyProfileWrapper( shared_ptr<ImageInterface<Float> >& img, const Vector<double> &wxv, const Vector<double> &wyv,
 		                                 Vector<Float> &z_xval, Vector<Float> &z_yval,
 		                                 const String& xytype, const String& specaxis,
 		                                 const Int& whichStokes, const Int& whichTabular,
@@ -337,7 +337,7 @@ namespace casa {
 		void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
 		void setYUnitConversionVisibility( bool visible );
 		//ImageAnalysis* analysis;
-		std::tr1::shared_ptr<ImageInterface<Float> > image;
+		shared_ptr<ImageInterface<Float> > image;
 
 		//For deciding whether or not it makes sense to show the top axis when
 		//multiple images are loaded.
@@ -345,19 +345,19 @@ namespace casa {
 		bool isFrequencyMatch();
 		bool isVelocityMatch();
 		//int getChannelCount( ImageAnalysis* analysis );
-		int getChannelCount( std::tr1::shared_ptr<ImageInterface<float> >& img);
-		std::tr1::shared_ptr<ImageInterface<float> > findImageWithMaximumChannels();
+		int getChannelCount( shared_ptr<ImageInterface<float> >& img);
+		shared_ptr<ImageInterface<float> > findImageWithMaximumChannels();
 		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
 				bool allowVelocity=true );
-		double getUnitsPerChannel( std::tr1::shared_ptr<ImageInterface<Float> > img , bool* ok, const QString& matchUnits );
+		double getUnitsPerChannel( shared_ptr<ImageInterface<Float> > img , bool* ok, const QString& matchUnits );
 		QString readTopAxis() const;
 		void persistTopAxis( const QString& units );
 		void assignProfileType( const String& shape, int regionPointCount );
-		void addOverplotToCanvas( std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
+		void addOverplotToCanvas( shared_ptr<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
 					Vector<Float>& yVals, const QString& ky );
 
 		bool _generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-					std::tr1::shared_ptr<const casa::ImageInterface<Float> > imagePtr,
+					shared_ptr<const casa::ImageInterface<Float> > imagePtr,
 					const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 					String restFreq, const String& frame);

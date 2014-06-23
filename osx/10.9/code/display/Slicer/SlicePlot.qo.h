@@ -32,7 +32,7 @@
 #include <display/region/RegionEnums.h>
 #include <display/Slicer/ImageSlice.qo.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 class QwtPlotCurve;
 
@@ -50,7 +50,7 @@ namespace casa {
 		SlicePlot(QWidget *parent = NULL, bool fullVersion = false );
 
 		//Data
-		void setImage( std::tr1::shared_ptr<ImageInterface<float> > img );
+		void setImage( shared_ptr<ImageInterface<float> > img );
 		void updateChannel( int channel );
 		bool setRegionSelected( int regionId, bool selected );
 
@@ -128,7 +128,7 @@ namespace casa {
 		void resetExistingCurveColors();
 
 		QList<QColor> curveColors;
-		std::tr1::shared_ptr<ImageInterface<float> > image;
+		shared_ptr<ImageInterface<float> > image;
 		ImageAnalysis* imageAnalysis;
 		QMap<int, ImageSlice*> sliceMap;
 

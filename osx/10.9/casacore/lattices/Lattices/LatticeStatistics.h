@@ -466,7 +466,7 @@ private:
                             Bool dropDeg);
 
 // Convert a AccumType to a Float for plotting.
-   static Float convertATtoF (AccumType value) {return Float(std::real(value));};
+   static Float convertATtoF (AccumType value) {return Float(localreal(value));};
 
 // Find the next good or bad point in an array
    Bool findNextDatum     (uInt& iFound,
@@ -557,6 +557,14 @@ private:
    void _latticePosToStoragePos(
 		 IPosition& storagePos, const IPosition& latticePos
    );
+
+ private:
+
+    inline static double localreal(double x) { return x; }
+    inline static float localreal(float x) { return x; }
+    inline static double localreal(std::complex<double> x) { return x.real( ); }
+    inline static float localreal(std::complex<float> x) { return x.real( ); }
+
 };
 
 
@@ -670,6 +678,7 @@ public:
 
 
 private:
+
     Vector<T> range_p;
     Bool noInclude_p, noExclude_p, fixedMinMax_p;
     IPosition minPos_p, maxPos_p;

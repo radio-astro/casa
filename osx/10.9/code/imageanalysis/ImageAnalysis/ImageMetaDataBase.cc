@@ -152,8 +152,8 @@ Record ImageMetaDataBase::_makeHeader() const {
 }
 
 const TableRecord ImageMetaDataBase::_miscInfo() const {
-	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+	shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+	shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
 	const TableRecord misc = imf ? imf->miscInfo() : imc->miscInfo();
 	return misc;
 }
@@ -312,8 +312,8 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 }
 
 uInt ImageMetaDataBase::_ndim() const {
-	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+	shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+	shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
 	uInt ndim = imf ? imf->ndim() : imc->ndim();
 	return ndim;
 }
@@ -667,8 +667,8 @@ Bool ImageMetaDataBase::areChannelAndStokesValid(
 }
 
 Record ImageMetaDataBase::_calcStats() const {
-	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+	shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+	shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
 	if (imf) {
 		return _calcStatsT(imf);
 	}
@@ -678,7 +678,7 @@ Record ImageMetaDataBase::_calcStats() const {
 }
 
 template <class T> Record ImageMetaDataBase::_calcStatsT(
-	std::tr1::shared_ptr<const ImageInterface<T> > image
+	shared_ptr<const ImageInterface<T> > image
 ) const {
 	if ( _getComplexImage()) {
 		// the min and max and associated positions

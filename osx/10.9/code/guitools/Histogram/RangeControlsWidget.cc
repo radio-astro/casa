@@ -80,7 +80,7 @@ void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
 	}
 }
 
-void RangeControlsWidget::setImage(const std::tr1::shared_ptr<const ImageInterface<Float > > image ){
+void RangeControlsWidget::setImage(const shared_ptr<const ImageInterface<Float > > image ){
 	this->image = image;
 	Unit unit = this->image->units();
 	QString unitStr( unit.getName().c_str());
@@ -99,7 +99,7 @@ void RangeControlsWidget::percentageChanged( const QString& newPercentage ){
 		float maxValue = TOTAL_PERCENT - leftPercent / 2;
 		minValue = minValue / TOTAL_PERCENT;
 		maxValue = maxValue / TOTAL_PERCENT;
-		if ( image != NULL ){
+		if ( image ){
 			if ( percentCalculator != NULL ){
 				delete percentCalculator;
 				percentCalculator = NULL;
@@ -204,7 +204,7 @@ RangeControlsWidget::~RangeControlsWidget(){
 //                       Percentage Calculator
 //*************************************************************************
 
-PercentageCalculator::PercentageCalculator( float minValue, float maxValue, const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
+PercentageCalculator::PercentageCalculator( float minValue, float maxValue, const shared_ptr<const ImageInterface<Float> > image ){
 	this->minValue = minValue;
 	this->maxValue = maxValue;
 	this->image = image;

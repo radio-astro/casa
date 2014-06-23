@@ -33,7 +33,7 @@
 #include <casa/BasicSL/String.h>
 #include <vector>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -116,7 +116,7 @@ namespace casa {
 			enum YScaleTo { ScaleTop, ScaleBottom };
 			enum XScaleTo { ScaleLeft, ScaleRight };
 			enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
-			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			std::list<shared_ptr<RegionInfo> > *generate_dds_centers( );
 			ImageRegion *get_image_region( DisplayData* ) const;
 
 			void drawRegion( bool );

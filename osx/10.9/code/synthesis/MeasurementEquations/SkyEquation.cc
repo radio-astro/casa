@@ -73,7 +73,7 @@
 #include <casa/System/ProgressMeter.h>
 
 #include <memory>
-using std::auto_ptr;
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

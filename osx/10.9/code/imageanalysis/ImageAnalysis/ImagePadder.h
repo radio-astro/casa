@@ -32,7 +32,7 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 class MDirection;
 

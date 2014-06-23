@@ -1,6 +1,6 @@
 #ifndef SDMDataObjectStreamReader_CLASS
 #define SDMDataObjectStreamReader_CLASS
-#include <utility>
+#include <casa/cppconfig.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>

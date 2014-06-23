@@ -313,7 +313,7 @@ SPIIF PVGenerator::generate() const {
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
 	dc1.toWorld(worldEnd, Vector<Double>(end));
-	std::auto_ptr<DirectionCoordinate> rotCoord(
+	auto_ptr<DirectionCoordinate> rotCoord(
 		dynamic_cast<DirectionCoordinate *>(
 			dc1.rotate(Quantity(paInRad, "rad"))
 		)
@@ -361,7 +361,7 @@ SPIIF PVGenerator::generate() const {
 	) + nPixels;
 
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-	std::tr1::shared_ptr<ImageInterface<Float> > rotated;
+	shared_ptr<ImageInterface<Float> > rotated;
 	if (paInRad == 0) {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
 		rotated.reset(
@@ -503,7 +503,7 @@ SPIIF PVGenerator::generate() const {
 		*collapsed, Record(), "", 0, False, AxesSpecifier(keep, axisPath),
 		False, True
 	);
-	std::auto_ptr<ArrayLattice<Bool> > newMask;
+	auto_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {
 		// because the mask doesn't lose its degenerate axis when subimaging.
 		Array<Bool> newArray = collapsed->pixelMask().get().reform(cDropped.shape());

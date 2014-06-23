@@ -239,7 +239,7 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
 			<< "plane will be convolved to the largest beam size " << maxBeam
 			<< " prior to calculating moments" << LogIO::POST;
-		std::tr1::shared_ptr<TempImage<T> > imageCopy(
+		shared_ptr<TempImage<T> > imageCopy(
 			new TempImage<Float>(
 				TiledShape(_image->shape()), _image->coordinates()
 			)

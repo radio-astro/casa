@@ -55,7 +55,7 @@ namespace casa {
 				return all_regions;
 			}
 			viewer::region::region_list_type &regions( RegionTool *tool );
-			std::tr1::shared_ptr<viewer::region::region_list_type> regions( viewer::region::PointLocation loc,
+			shared_ptr<viewer::region::region_list_type> regions( viewer::region::PointLocation loc,
 			        viewer::region::RegionSelect select );
 			viewer::region::PointInfo state( viewer::Region *region );
 
@@ -77,7 +77,7 @@ namespace casa {
 
 		private:
 
-			std::tr1::shared_ptr<viewer::region::region_list_type> filter( std::tr1::shared_ptr<viewer::region::region_list_type>,
+			shared_ptr<viewer::region::region_list_type> filter( shared_ptr<viewer::region::region_list_type>,
 			        viewer::region::RegionSelect );
 
 			void *operator new( size_t ); // { /* refresh( ) with automatic creation/deletion in mind */ }
@@ -85,7 +85,7 @@ namespace casa {
 			State( ) { }
 
 			typedef std::map< RegionTool*, viewer::region::region_list_type > tool_regions_type;
-			typedef std::map< viewer::region::PointLocation, std::tr1::shared_ptr<viewer::region::region_list_type> > state_count_type;
+			typedef std::map< viewer::region::PointLocation, shared_ptr<viewer::region::region_list_type> > state_count_type;
 
 			WorldCanvas *wc_;
 			double x_, y_;

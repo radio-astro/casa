@@ -31,7 +31,7 @@
 #include <measures/Measures/MPosition.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -381,10 +381,10 @@ private:
 	mutable std::map<Int, std::set<uInt> > _scanToSpwsMap, _scanToDDIDsMap;
 	mutable std::set<Int> _uniqueScanNumbers, _uniqueFieldIDs, _uniqueStateIDs;
 	mutable std::set<uInt> _avgSpw, _tdmSpw, _fdmSpw, _wvrSpw, _sqldSpw;
-	mutable std::tr1::shared_ptr<Vector<Int> > _antenna1, _antenna2, _scans, _fieldIDs,
+	mutable shared_ptr<Vector<Int> > _antenna1, _antenna2, _scans, _fieldIDs,
 		_stateIDs, _dataDescIDs, _observationIDs, _arrayIDs;
-	mutable std::tr1::shared_ptr<AOSFMapI> _scanToNACRowsMap, _scanToNXCRowsMap;
-	mutable std::tr1::shared_ptr<std::map<Int, uInt> > _fieldToNACRowsMap, _fieldToNXCRowsMap;
+	mutable shared_ptr<AOSFMapI> _scanToNACRowsMap, _scanToNXCRowsMap;
+	mutable shared_ptr<std::map<Int, uInt> > _fieldToNACRowsMap, _fieldToNXCRowsMap;
 	mutable std::map<Int, uInt> _dataDescIDToSpwMap, _dataDescIDToPolIDMap;
 	std::map<std::pair<uInt, uInt>, Int> _spwPolIDToDataDescIDMap;
  	mutable std::map<Int, std::set<String> > _scanToIntentsMap;
@@ -396,14 +396,14 @@ private:
 		_fieldToStatesMap, _stateToFieldsMap, _sourceToFieldsMap;
 	mutable vector<String> _fieldNames, _antennaNames, _observatoryNames, _stationNames;
 	std::map<String, uInt> _antennaNameToIDMap;
-	mutable std::tr1::shared_ptr<Vector<Double> > _times;
-	std::tr1::shared_ptr<Quantum<Vector<Double> > > _exposures;
-	mutable std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
+	mutable shared_ptr<Vector<Double> > _times;
+	shared_ptr<Quantum<Vector<Double> > > _exposures;
+	mutable shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
 	mutable std::map<String, std::set<Int> > _intentToFieldIDMap, _intentToScansMap;
 	std::map<String, std::set<uInt> > _intentToSpwsMap;
 
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _fieldToTimesMap;
-	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > _timeToFieldsMap;
+	shared_ptr<std::map<Int, std::set<Double> > > _fieldToTimesMap;
+	shared_ptr<std::map<Double, std::set<Int> > > _timeToFieldsMap;
 
 	mutable vector<MPosition> _observatoryPositions, _antennaPositions;
 	mutable vector<Quantum<Vector<Double> > > _antennaOffsets;
@@ -411,11 +411,11 @@ private:
 	Matrix<Bool> _uniqueBaselines;
 	Quantity _exposureTime;
 	mutable Double _nUnflaggedACRows, _nUnflaggedXCRows;
-	mutable std::tr1::shared_ptr<std::map<Int, Double> > _unflaggedFieldNACRows, _unflaggedFieldNXCRows;
-	mutable std::tr1::shared_ptr<AOSFMapD> _unflaggedScanNACRows, _unflaggedScanNXCRows;
+	mutable shared_ptr<std::map<Int, Double> > _unflaggedFieldNACRows, _unflaggedFieldNXCRows;
+	mutable shared_ptr<AOSFMapD> _unflaggedScanNACRows, _unflaggedScanNXCRows;
 	const String _taqlTableName;
 	const vector<const Table*> _taqlTempTable;
-	mutable std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
+	mutable shared_ptr<ArrayColumn<Bool> > _flagsColumn;
 	mutable std::map<Int, vector<Double> > _scanToTimeRangeMap;
 	mutable std::map<Int, std::map<uInt, Double> > _scanSpwToIntervalMap;
 	mutable Bool _spwInfoStored;
@@ -453,27 +453,27 @@ private:
 	vector<std::set<String> > _getSpwToIntentsMap();
 
 	void _getAntennas(
-		std::tr1::shared_ptr<Vector<Int> >& ant1,
-		std::tr1::shared_ptr<Vector<Int> >& ant2
+		shared_ptr<Vector<Int> >& ant1,
+		shared_ptr<Vector<Int> >& ant2
 	) const;
 
-	std::tr1::shared_ptr<Vector<Int> > _getScans() const;
+	shared_ptr<Vector<Int> > _getScans() const;
 
-	std::tr1::shared_ptr<Vector<Int> > _getObservationIDs() const;
+	shared_ptr<Vector<Int> > _getObservationIDs() const;
 
-	std::tr1::shared_ptr<Vector<Int> > _getArrayIDs() const;
+	shared_ptr<Vector<Int> > _getArrayIDs() const;
 
-	std::tr1::shared_ptr<Vector<Int> > _getFieldIDs() const;
+	shared_ptr<Vector<Int> > _getFieldIDs() const;
 
-	std::tr1::shared_ptr<Vector<Int> > _getStateIDs() const;
+	shared_ptr<Vector<Int> > _getStateIDs() const;
 
-	std::tr1::shared_ptr<Vector<Int> > _getDataDescIDs() const;
+	shared_ptr<Vector<Int> > _getDataDescIDs() const;
 
-	std::tr1::shared_ptr<Vector<Double> > _getTimes() const;
+	shared_ptr<Vector<Double> > _getTimes() const;
 
-	std::tr1::shared_ptr<Quantum<Vector<Double> > > _getExposureTimes();
+	shared_ptr<Quantum<Vector<Double> > > _getExposureTimes();
 
-	std::tr1::shared_ptr<ArrayColumn<Bool> > _getFlags() const;
+	shared_ptr<ArrayColumn<Bool> > _getFlags() const;
 
 	std::map<Int, std::set<Int> > _getScanToStatesMap() const;
 
@@ -558,8 +558,8 @@ private:
 	);
 
 	void _getFieldsAndTimesMaps(
-		std::tr1::shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
-		std::tr1::shared_ptr<std::map<Double, std::set<Int> > >& timesToFieldMap
+		shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
+		shared_ptr<std::map<Double, std::set<Int> > >& timesToFieldMap
 	);
 
 	std::map<Int, uInt> _getDataDescIDToSpwMap() const;
@@ -570,22 +570,22 @@ private:
 
 	vector<String> _getStationNames();
 
-	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _getScanToTimesMap() const;
+	shared_ptr<std::map<Int, std::set<Double> > > _getScanToTimesMap() const;
 
 	void _getRowStats(
 		uInt& nACRows, uInt& nXCRows,
-		std::tr1::shared_ptr<AOSFMapI>& scanToNACRowsMap,
-		std::tr1::shared_ptr<AOSFMapI>& scanToNXCRowsMap,
-		std::tr1::shared_ptr<std::map<Int, uInt> >& fieldToNACRowsMap,
-		std::tr1::shared_ptr<std::map<Int, uInt> >& fieldToNXCRowsMap
+		shared_ptr<AOSFMapI>& scanToNACRowsMap,
+		shared_ptr<AOSFMapI>& scanToNXCRowsMap,
+		shared_ptr<std::map<Int, uInt> >& fieldToNACRowsMap,
+		shared_ptr<std::map<Int, uInt> >& fieldToNXCRowsMap
 	) const;
 
 	void _getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
-		std::tr1::shared_ptr<AOSFMapD>& scanToNACRowsMap,
-		std::tr1::shared_ptr<AOSFMapD>& scanToNXCRowsMap,
-		std::tr1::shared_ptr<std::map<Int, Double> >& fieldToNACRowsMap,
-		std::tr1::shared_ptr<std::map<Int, Double> >& fieldToNXCRowsMap
+		shared_ptr<AOSFMapD>& scanToNACRowsMap,
+		shared_ptr<AOSFMapD>& scanToNXCRowsMap,
+		shared_ptr<std::map<Int, Double> >& fieldToNACRowsMap,
+		shared_ptr<std::map<Int, Double> >& fieldToNXCRowsMap
 	) const;
 
 	void _getTimesAndInvervals(

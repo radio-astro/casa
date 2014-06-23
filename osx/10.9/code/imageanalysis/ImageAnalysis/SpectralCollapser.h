@@ -32,7 +32,7 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -131,7 +131,7 @@ private:
    Bool _cleanTmpData(const String &tmpFileName) const;
    Bool _cleanTmpData(const String &tmpData, const String &tmpError) const;
    Bool _getQualitySubImg(const ImageInterface<Float>* image, const Bool &data, SubImage<Float> &qualitySub);
-   Bool _getQualitySubImgs(SPCIIF image, std::tr1::shared_ptr<SubImage<Float> >& subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const;
+   Bool _getQualitySubImgs(SPCIIF image, shared_ptr<SubImage<Float> >& subData, shared_ptr<SubImage<Float> >&  subError) const;
    Bool _getOutputName(const String &wcsInp, String &outImg, String &outImgData, String &outImgError) const;
    Bool _collapse(const SPCIIF image, const String &aggString,
    		const String& chanInp, const String& outname) const;

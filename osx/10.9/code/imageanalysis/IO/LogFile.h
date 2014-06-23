@@ -30,7 +30,7 @@
 
 #include <casa/IO/FiledesIO.h>
 #include <casa/namespace.h>
-#include <memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -86,7 +86,7 @@ private:
     String _filename;
     Bool _append;
     Int _fileHandle;
-    std::auto_ptr<FiledesIO> _fileIO;
+    auto_ptr<FiledesIO> _fileIO;
 
 };
 }

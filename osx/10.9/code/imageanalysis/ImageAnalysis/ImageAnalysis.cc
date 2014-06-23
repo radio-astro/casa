@@ -637,7 +637,7 @@ Record* ImageAnalysis::boundingbox(
 	IPosition trc(sl.end());
 	IPosition inc(sl.stride());
 	IPosition length(sl.length());
-	std::auto_ptr<Record> outRec(new Record());
+	auto_ptr<Record> outRec(new Record());
 	outRec->define("blc", blc.asVector());
 	outRec->define("trc", trc.asVector());
 	outRec->define("inc", inc.asVector());
@@ -1282,11 +1282,11 @@ SPIIF ImageAnalysis::_fitpolynomial(
 		mask, 0, False
 	);
 	delete pMaskRegion;
-    std::tr1::shared_ptr<ImageRegion> region(pRegionRegion);
+    shared_ptr<ImageRegion> region(pRegionRegion);
 	IPosition imageShape = subImage.shape();
 
 	// Make subimage from input error image
-	std::tr1::shared_ptr<SubImage<Float> > pSubSigmaImage;
+	shared_ptr<SubImage<Float> > pSubSigmaImage;
 	if (!sigmaFile.empty()) {
 		PagedImage<Float> sigmaImage(sigmaFile);
 		if (!sigmaImage.shape().conform(_imageFloat->shape())) {
@@ -1294,7 +1294,7 @@ SPIIF ImageAnalysis::_fitpolynomial(
 				<< LogIO::EXCEPTION;
 		}
 		if (Region.nfields() > 0) {
-			std::tr1::shared_ptr<ImageRegion> pR(
+			shared_ptr<ImageRegion> pR(
 				ImageRegion::fromRecord(
 					_log.get(), sigmaImage.coordinates(),
 					sigmaImage.shape(), Region
@@ -1363,7 +1363,7 @@ SPIIF ImageAnalysis::_fitpolynomial(
 	// Copy mask from input image so that we exclude the OTF mask
 	// in the output.  The OTF mask is just used to select what we fit
 	// but should not be copied to the output
-	std::tr1::shared_ptr<SubImage<Float> > pSubImage2(
+	shared_ptr<SubImage<Float> > pSubImage2(
 		region.get() != 0
 		? new SubImage<Float> (*_imageFloat, *region, True)
 		: new SubImage<Float> (*_imageFloat, True)
@@ -1657,9 +1657,9 @@ Bool ImageAnalysis::insert(
 
 	ImageInterface<Float>* pInImage = 0;
 	ImageUtilities::openImage(pInImage, infile);
-	std::auto_ptr<ImageInterface<Float> > inImage(pInImage);
+	auto_ptr<ImageInterface<Float> > inImage(pInImage);
 	// Create region and subImage for image to be inserted
-	std::auto_ptr<const ImageRegion> pRegion(
+	auto_ptr<const ImageRegion> pRegion(
 		ImageRegion::fromRecord(
 			verbose ? _log.get() : 0, pInImage->coordinates(),
 			pInImage->shape(), Region
@@ -2034,7 +2034,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// give the default value as a blank string rather than a null vector.
 	String tmpImageName;
 	Record r;
-	std::auto_ptr<ImageInterface<Float> > pIm;
+	auto_ptr<ImageInterface<Float> > pIm;
 	try {
         SPIIF  x;
 		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
@@ -2622,7 +2622,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 
 	// Apply new linear transform matrix to coordinate
 	if (cSysTo.type(coordInd) == Coordinate::DIRECTION) {
-		std::auto_ptr<DirectionCoordinate> c(
+		auto_ptr<DirectionCoordinate> c(
 			dynamic_cast<DirectionCoordinate *>(
 				cSysTo.directionCoordinate(coordInd).rotate(pa)
 			)
@@ -2630,7 +2630,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 		cSysTo.replaceCoordinate(*c, coordInd);
 	}
 	else {
-		std::auto_ptr<LinearCoordinate> c(
+		auto_ptr<LinearCoordinate> c(
 			dynamic_cast<LinearCoordinate *>(
 				cSysTo.linearCoordinate(coordInd).rotate(pa)
 			)

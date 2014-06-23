@@ -76,7 +76,7 @@ namespace casa {
 	}
 
 
-	void PixelRangeDialog::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
+	void PixelRangeDialog::setImage( const shared_ptr<const ImageInterface<Float> > img ) {
 		plotWidget->setImage( img, true );
 		spectralIndex = -1;
 

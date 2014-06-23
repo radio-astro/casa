@@ -699,7 +699,7 @@ private:
 #else
 
 #include <QPointF>
-#include <utility>
+#include <casa/cppconfig.h>
 
 using namespace std;
 

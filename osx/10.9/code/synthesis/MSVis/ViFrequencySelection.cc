@@ -2,7 +2,7 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <ms/MeasurementSets/MSSelection.h>
 
-#include <utility>
+#include <casa/cppconfig.h>
 
 using namespace std;
 

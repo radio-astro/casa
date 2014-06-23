@@ -51,12 +51,12 @@ const uInt ImageProfileFitterResults::_lsPlane = 1;
 
 
 ImageProfileFitterResults::ImageProfileFitterResults(
-	const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-	const Array<std::tr1::shared_ptr<ProfileFitResults> >* const &fitters, const SpectralList& nonPolyEstimates,
-	const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int polyOrder, Int fitAxis,
+	const shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
+	const Array<shared_ptr<ProfileFitResults> >* const &fitters, const SpectralList& nonPolyEstimates,
+	const shared_ptr<const SubImage<Float> > subImage, Int polyOrder, Int fitAxis,
 	uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 	uInt nPLPCoeffs, uInt nLTPCoeffs,
-	Bool logResults, Bool multiFit, const std::tr1::shared_ptr<LogFile> logfile,
+	Bool logResults, Bool multiFit, const shared_ptr<LogFile> logfile,
 	const String& xUnit, const String& summaryHeader
 ) : _logResults(logResults), _multiFit(multiFit), _xUnit(xUnit), _summaryHeader(summaryHeader),
 	_nGaussSinglets(nGaussSinglets), _nGaussMultiplets(nGaussMultiplets),
@@ -76,8 +76,8 @@ void ImageProfileFitterResults::createResults() {
 	_resultsToLog();
 }
 
-std::auto_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_createPCFArrays() const {
-	std::auto_ptr<vector<vector<Array<Double> > > > pcfArrays(
+auto_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_createPCFArrays() const {
+	auto_ptr<vector<vector<Array<Double> > > > pcfArrays(
 		new vector<vector<Array<Double> > >(
 			NGSOLMATRICES, vector<Array<Double> >(_nGaussMultiplets+_nOthers)
 		)
@@ -175,14 +175,14 @@ void ImageProfileFitterResults::_marshalFitResults(
 	Array<Bool>& attemptedArr, Array<Bool>& successArr,
 	Array<Bool>& convergedArr, Array<Bool>& validArr,
 	Array<String>& typeMat, Array<Int>& niterArr,
-	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+	Array<Int>& nCompArr, auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
 	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays, Bool returnDirection,
     Array<String>& directionInfo, Array<Bool>& mask
 ) {
     IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
-	//Array<std::tr1::shared_ptr<ProfileFitResults> >::const_iterator fitter = _fitters->begin();
+	//Array<shared_ptr<ProfileFitResults> >::const_iterator fitter = _fitters->begin();
 	const CoordinateSystem& csysSub = _subImage->coordinates();
 	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
 		? &csysSub.directionCoordinate() : 0;
@@ -201,7 +201,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 		inIter++
 	) {
         IPosition pixel = inIter.position();
-        const std::tr1::shared_ptr<ProfileFitResults> fitter = (*_fitters)(pixel);
+        const shared_ptr<ProfileFitResults> fitter = (*_fitters)(pixel);
 		if (! fitter) {
 			continue;
 		}
@@ -378,7 +378,7 @@ void ImageProfileFitterResults::_setResults() {
     // correspond location in the _fitters array. Final structure index
     // corresponds to the sub component number (eg for multiple singlets or
     // for gaussian multiplet components
-	std::auto_ptr<vector<vector<Array<Double> > > > pcfArrays = _createPCFArrays();
+	auto_ptr<vector<vector<Array<Double> > > > pcfArrays = _createPCFArrays();
     IPosition bShape(1, max(_nPLPCoeffs, _nLTPCoeffs));
     bShape.prepend(fitterShape);
 	Array<Double> blank(bShape, fNAN);
@@ -451,11 +451,11 @@ void ImageProfileFitterResults::_setResults() {
 	ImageCollapser<Float> collapser(
 		_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
 	);
-    std::tr1::shared_ptr<TempImage<Float> > tmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(
+    shared_ptr<TempImage<Float> > tmp = dynamic_pointer_cast<TempImage<Float> >(
     	collapser.collapse()
     );
     ThrowIf(! tmp, "Unable to perform dynamic cast");
-	std::tr1::shared_ptr<TempImage<Float> > myTemplate(tmp);
+	shared_ptr<TempImage<Float> > myTemplate(tmp);
 	_results.define("attempted", attemptedArr);
 	_results.define(_SUCCEEDED, successArr);
 	_results.define(_CONVERGED, convergedArr);
@@ -825,7 +825,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 		inIter++
 	) {
 		subimPos = inIter.position();
-        const std::tr1::shared_ptr<ProfileFitResults> fitter = (*_fitters)(subimPos);
+        const shared_ptr<ProfileFitResults> fitter = (*_fitters)(subimPos);
 		if (! fitter) {
 			continue;
 		}

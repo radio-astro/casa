@@ -29,7 +29,7 @@
 #ifndef REGION_REGIONSOURCE_H_
 #define REGION_REGIONSOURCE_H_
 #include <list>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 #include <display/region/RegionCreator.h>
 #include <display/Utilities/dtor.h>
 #include <display/Display/MouseToolState.h>
@@ -52,7 +52,7 @@ namespace casa {
 
 		class RegionSourceKernel : public dtorNotifiee {
 		public:
-			typedef std::tr1::shared_ptr<RegionSourceKernel> shared_kernel_ptr_type;
+			typedef shared_ptr<RegionSourceKernel> shared_kernel_ptr_type;
 
 			RegionSourceKernel( ) { }
 			virtual ~RegionSourceKernel( );
@@ -75,14 +75,14 @@ namespace casa {
 
 		protected:
 			friend class RegionSource;
-			virtual std::tr1::shared_ptr<Rectangle> rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-			virtual std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
-			virtual std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
-			virtual std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
-			virtual std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
-			virtual std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-			virtual std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size ) = 0;
-			virtual std::tr1::shared_ptr<PVLine> pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
+			virtual shared_ptr<Rectangle> rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
+			virtual shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
+			virtual shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
+			virtual shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
+			virtual shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
+			virtual shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
+			virtual shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size ) = 0;
+			virtual shared_ptr<PVLine> pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
 
 			virtual QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const = 0;
 
@@ -96,28 +96,28 @@ namespace casa {
 		public:
 			typedef RegionSourceKernel::shared_kernel_ptr_type shared_kernel_ptr_type;
 
-			std::tr1::shared_ptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+			shared_ptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 				return kernel_->rectangle(region_creator,wc,blc_x,blc_y,trc_x,trc_y);
 			}
-			virtual std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) {
+			virtual shared_ptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) {
 				return kernel_->polygon(region_creator,wc,x1,y1);
 			}
-			virtual std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
+			virtual shared_ptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
 				return kernel_->polygon(region_creator,wc,pts);
 			}
-			virtual std::tr1::shared_ptr<Polyline> polyline( WorldCanvas *wc, double x1, double y1 ) {
+			virtual shared_ptr<Polyline> polyline( WorldCanvas *wc, double x1, double y1 ) {
 				return kernel_->polyline(region_creator,wc,x1,y1);
 			}
-			virtual std::tr1::shared_ptr<Polyline> polyline( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
+			virtual shared_ptr<Polyline> polyline( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
 				return kernel_->polyline(region_creator,wc,pts);
 			}
-			virtual std::tr1::shared_ptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+			virtual shared_ptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 				return kernel_->ellipse(region_creator,wc,blc_x,blc_y,trc_x,trc_y);
 			}
-			virtual std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size ) {
+			virtual shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size ) {
 				return kernel_->point(region_creator,wc,x,y,sym,size);
 			}
-			std::tr1::shared_ptr<PVLine> pvline( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+			shared_ptr<PVLine> pvline( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 				return kernel_->pvline(region_creator,wc,blc_x,blc_y,trc_x,trc_y);
 			}
 

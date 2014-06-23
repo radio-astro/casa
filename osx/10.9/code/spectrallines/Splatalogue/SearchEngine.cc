@@ -167,7 +167,7 @@ SplatalogueTable* SearchEngine::search(
 	query << " ORDER BY " << SplatalogueTable::FREQUENCY;
 
 	Table resTable = _runQuery(query.str());
-	std::auto_ptr<SplatalogueTable> resSplatTable(new SplatalogueTable(resTable));
+	auto_ptr<SplatalogueTable> resSplatTable(new SplatalogueTable(resTable));
 	if (!resultsTableName.empty()) {
 		resSplatTable->rename(resultsTableName, Table::NewNoReplace);
 		resSplatTable->flush(True, True);

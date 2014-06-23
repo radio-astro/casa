@@ -65,7 +65,6 @@ casa_add_library( casadbus
   session/Dispatcher.cc
   types/record.cc
   types/variant.cc
-  types/nullptr.cc
   utilities/BusAccess.cc
   utilities/Conversion.cc
   utilities/Diagnostic.cc
@@ -86,7 +85,6 @@ casa_add_library( casadbus
   session/Dispatcher.cc
   types/record.cc
   types/variant.cc
-  types/nullptr.cc
   utilities/BusAccess.cc
   utilities/Conversion.cc
   utilities/Diagnostic.cc
@@ -114,7 +112,6 @@ install (FILES
 	)
 install (FILES
 	types/functor.h
-	types/nullptr.h
 	types/ptr.h
 	types/record.h
 	types/variant.h

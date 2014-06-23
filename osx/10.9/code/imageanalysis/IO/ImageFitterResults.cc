@@ -51,7 +51,7 @@ vector<String> ImageFitterResults::_prefixes = vector<String>();
 
 
 ImageFitterResults::ImageFitterResults(
-	SPCIIF image, std::tr1::shared_ptr<LogIO> log
+	SPCIIF image, shared_ptr<LogIO> log
 ) : _image(image), _log(log), _bUnit(image->units().getName()) {}
 
 ImageFitterResults::~ImageFitterResults() {}
@@ -133,8 +133,8 @@ void ImageFitterResults::writeCompList(
 String ImageFitterResults::resultsHeader(
 	const String& chans, const Vector<uInt>& chanVec,
 	const String& region, const String& mask,
-	std::tr1::shared_ptr<std::pair<Float, Float> > includePixelRange,
-	std::tr1::shared_ptr<std::pair<Float, Float> > excludePixelRange,
+	shared_ptr<std::pair<Float, Float> > includePixelRange,
+	shared_ptr<std::pair<Float, Float> > excludePixelRange,
 	const String& estimates
 ) const {
 	ostringstream summary;
@@ -271,9 +271,13 @@ String ImageFitterResults::fluxToString(
 
 vector<String> ImageFitterResults::unitPrefixes(Bool includeCenti) {
 	if (_prefixes.empty()) {
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
+		_prefixesWithCenti = {"T","G","M","k","","c","m","u","n"};
+		_prefixes = {"T","G","M","k","","m","u","n"};
+#else
 		_prefixesWithCenti = list_of("T")("G")("M")("k")("")("c")("m")("u")("n");
 		_prefixes = list_of("T")("G")("M")("k")("")("m")("u")("n");
-
+#endif
 	}
 	if (includeCenti) {
 		return _prefixesWithCenti;

@@ -39,7 +39,7 @@
 #include <display/Display/AttValBase.h>
 #include <display/DisplayEvents/DisplayEH.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -631,8 +631,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return 0;
 		}
 		// Returns a pointer that should *not* be deleted...
-		virtual std::tr1::shared_ptr<ImageInterface<Float> > imageinterface( ) {
-			return std::tr1::shared_ptr<ImageInterface<Float> >();
+		virtual shared_ptr<ImageInterface<Float> > imageinterface( ) {
+			return shared_ptr<ImageInterface<Float> >();
 		}
 
 		virtual void setSubstituteTitleText( const String /*title*/ ){

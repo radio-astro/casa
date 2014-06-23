@@ -47,6 +47,8 @@ namespace casa {
 	Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.plotserver")
     public:
 
+	operator QObject*( ) { return dynamic_cast<QObject*>((QDBusAbstractAdaptor*)this); }
+
 	// name used to initialize connection to dbus
 	QString dbusName( ) const { return QtPlotServer::name( ); }
 	bool connectToDBus( const QString &dbus_name="" )

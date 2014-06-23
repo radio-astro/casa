@@ -176,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 	private:
-		typedef std::list<std::tr1::shared_ptr<viewer::Polygon> > polygonlist;
+		typedef std::list<shared_ptr<viewer::Polygon> > polygonlist;
 
 		void start_new_polygon( WorldCanvas *, int x, int y );
 
@@ -187,8 +187,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// replace a single vertex.
 		virtual void set(const Int x, const Int y, const Int pt);
 
-		std::tr1::shared_ptr<viewer::Polygon> resizing_region;
-		std::tr1::shared_ptr<viewer::Polygon> creating_region;
+		shared_ptr<viewer::Polygon> resizing_region;
+		shared_ptr<viewer::Polygon> creating_region;
 
 		// push/pop last vertex
 		// <group>
@@ -246,7 +246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		double moving_linx_;
 		double moving_liny_;
 
-		std::tr1::shared_ptr<viewer::Polygon> building_polygon;
+		shared_ptr<viewer::Polygon> building_polygon;
 		viewer::RegionSource *rfactory;
 		polygonlist polygons;
 		PanelDisplay *pd_;

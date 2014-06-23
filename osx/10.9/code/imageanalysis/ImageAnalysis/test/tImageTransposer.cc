@@ -43,7 +43,7 @@ void writeTestString(const String& test) {
 }
 
 void testException(
-	const String& test, const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& test, const auto_ptr<ImageInterface<Float> > &image,
 	const String& order, const String outname
 ) {
 	writeTestString(test);
@@ -56,7 +56,7 @@ void testException(
 }
 
 void testException(
-	const String& test, const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& test, const auto_ptr<ImageInterface<Float> > &image,
 	const Vector<String>& order, const String outname
 ) {
 	writeTestString(test);
@@ -69,7 +69,7 @@ void testException(
 }
 
 void testException(
-	const String& test, const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& test, const auto_ptr<ImageInterface<Float> > &image,
 	uInt order, const String outname
 ) {
 	writeTestString(test);
@@ -82,7 +82,7 @@ void testException(
 }
 
 void testBeam(
-	const std::auto_ptr<ImageInterface<Float> > &in,
+	const auto_ptr<ImageInterface<Float> > &in,
 	ImageInterface<Float>& out
 ) {
 	GaussianBeam inBeam = in->imageInfo().restoringBeam();
@@ -96,7 +96,7 @@ void testBeam(
 }
 
 void testNoReorder(
-	const std::auto_ptr<ImageInterface<Float> > &image,
+	const auto_ptr<ImageInterface<Float> > &image,
 	const String& outname
 ) {
 	PagedImage<Float> outImage(outname);
@@ -125,7 +125,7 @@ void testNoReorder(
 }
 
 void test201Reordering(
-	const std::auto_ptr<ImageInterface<Float> > &image,
+	const auto_ptr<ImageInterface<Float> > &image,
 	const String& outname
 ) {
 	PagedImage<Float> outImage(outname);
@@ -165,7 +165,7 @@ void test201Reordering(
 }
 
 void test_20_1Reordering(
-	const std::auto_ptr<ImageInterface<Float> > &image,
+	const auto_ptr<ImageInterface<Float> > &image,
 	const String& outname
 ) {
 	PagedImage<Float> outImage(outname);
@@ -220,7 +220,7 @@ int main() {
 	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
 	String datadir = parts[0] + "/data/regression/unittest/imtrans/";
 	delete [] parts;
-	std::auto_ptr<ImageInterface<Float> > goodInputImage(
+	auto_ptr<ImageInterface<Float> > goodInputImage(
 		new FITSImage(datadir + "reorder_in.fits")
 	);
 

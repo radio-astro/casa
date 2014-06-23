@@ -44,7 +44,7 @@
 
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 #ifdef INTERACTIVE_ITERATION
 #include <casadbus/interfaces/SynthImager.adaptor.h>
@@ -78,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			SIIterBot_state &operator=( const SIIterBot_state & );
 
 		public:
-			SIIterBot_state( std::tr1::shared_ptr<SIIterBot_callback> );
+			SIIterBot_state( shared_ptr<SIIterBot_callback> );
 			~SIIterBot_state( );
 
 			/****
@@ -265,7 +265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Array<Double> itsSummaryMinor;
 			Array<Int>    itsSummaryMajor;
 
-			std::tr1::shared_ptr<SIIterBot_callback> callback;
+			shared_ptr<SIIterBot_callback> callback;
 	};
 
 	class SIIterBot_adaptor
@@ -277,7 +277,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 		{
 			public:
-				SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> state, const std::string &bus_name, const std::string &object_path );
+				SIIterBot_adaptor( shared_ptr<SIIterBot_state> state, const std::string &bus_name, const std::string &object_path );
 				~SIIterBot_adaptor();
 
 				bool incrementController( )	{ return state->incrementController( ); }
@@ -316,7 +316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 											{ return state->getSummary( ); }
 
 			private:
-				std::tr1::shared_ptr<SIIterBot_state> state;
+				shared_ptr<SIIterBot_state> state;
 
 		};
     

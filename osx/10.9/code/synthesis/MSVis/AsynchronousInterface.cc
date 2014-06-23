@@ -8,7 +8,7 @@
 #include <synthesis/MSVis/VisibilityIteratorImplAsync.h>
 
 #include <ostream>
-#include <utility>
+#include <casa/cppconfig.h>
 #include <boost/lexical_cast.hpp>
 
 using namespace boost;

@@ -27,7 +27,7 @@
 #ifndef PLOTOPTIONS_H_
 #define PLOTOPTIONS_H_
 
-#include <utility>
+#include <casa/cppconfig.h>
 #include <cctype>
 #include <vector>
 

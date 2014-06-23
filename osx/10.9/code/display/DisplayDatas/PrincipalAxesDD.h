@@ -38,7 +38,7 @@
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/Utilities/StatusSink.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -366,8 +366,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// so these functions are used to allow only the
 		// LatticePADisplayData<T> template to only return an
 		// image analysis object for the non-complex version...
-		ImageAnalysis *create_image_analysis( std::tr1::shared_ptr<ImageInterface<float> > ) const;
-		ImageAnalysis *create_image_analysis( std::tr1::shared_ptr<ImageInterface<Complex> > ) const {
+		ImageAnalysis *create_image_analysis( shared_ptr<ImageInterface<float> > ) const;
+		ImageAnalysis *create_image_analysis( shared_ptr<ImageInterface<Complex> > ) const {
 			return 0;
 		}
 

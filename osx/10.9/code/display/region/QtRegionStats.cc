@@ -81,8 +81,8 @@ namespace casa {
 				connect( sliceToolButton, SIGNAL(clicked()), this, SIGNAL(show1DSliceTool()));
 			}
 
-			bool SliceStats::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
-				std::tr1::shared_ptr<SliceRegionInfo> sliceInfo = std::tr1::dynamic_pointer_cast<SliceRegionInfo>(info);
+			bool SliceStats::updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> info ) {
+				shared_ptr<SliceRegionInfo> sliceInfo = dynamic_pointer_cast<SliceRegionInfo>(info);
 				if ( sliceInfo ) {
 					Polyline* polylineRegion = sliceInfo->getRegion();
 					polylineRegion->addPlot( this->getPlotHolder(), sliceInfo->label());
@@ -98,8 +98,8 @@ namespace casa {
 				connect( pvwidth, SIGNAL(valueChanged(int)), this, SIGNAL(setPVInfo(int)) );
 			}
 
-			bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
-				std::tr1::shared_ptr<PVLineRegionInfo> pvinfo = std::tr1::dynamic_pointer_cast<PVLineRegionInfo>(info);
+			bool pvline_stats_t::updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> info ) {
+				shared_ptr<PVLineRegionInfo> pvinfo = dynamic_pointer_cast<PVLineRegionInfo>(info);
 				if ( pvinfo ) {
 					pixel_pt1->setText(QString::fromStdString(pvinfo->pixelStrings( )[0]));
 					pixel_pt2->setText(QString::fromStdString(pvinfo->pixelStrings( )[1]));
@@ -135,7 +135,7 @@ namespace casa {
 
 		QtRegionStats::~QtRegionStats( ) { }
 
-		void QtRegionStats::updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionInfo> stats, Region* region ) {
+		void QtRegionStats::updateStatistics( shared_ptr<casa::viewer::RegionInfo> stats, Region* region ) {
 			
 			new_stats_box(stats->type(), region, stats->label() )->setLabels( stats->label( ), stats->description( ) );
 
@@ -229,7 +229,7 @@ namespace casa {
 			}
 		}
 
-		bool QtRegionStats::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
+		bool QtRegionStats::updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> info ) {
 			return stats_box_ ? stats_box_->updateStatisticsInfo( info ) : false;
 		}
 

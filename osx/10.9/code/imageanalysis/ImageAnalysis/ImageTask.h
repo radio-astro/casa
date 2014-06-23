@@ -143,7 +143,7 @@ protected:
 
     String _summaryHeader() const;
 
-    inline const std::tr1::shared_ptr<LogIO> _getLog() const {return _log;}
+    inline const shared_ptr<LogIO> _getLog() const {return _log;}
 
     inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
 
@@ -151,7 +151,7 @@ protected:
 
     inline Bool _getStretch() const {return _stretch;}
 
-    const std::tr1::shared_ptr<LogFile> _getLogFile() const;
+    const shared_ptr<LogFile> _getLogFile() const;
 
     Bool _writeLogfile(
     	const String& output, const Bool open=True,
@@ -189,15 +189,15 @@ protected:
 
 private:
     const SPCIIT _image;
-    std::tr1::shared_ptr<LogIO> _log;
+    shared_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
     	_suppressHistory, _dropDegen;
-	std::auto_ptr<FiledesIO> _logFileIO;
+	auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
-	std::tr1::shared_ptr<LogFile> _logfile;
+	shared_ptr<LogFile> _logfile;
 	mutable vector<std::pair<String, String> > _newHistory;
 };
 

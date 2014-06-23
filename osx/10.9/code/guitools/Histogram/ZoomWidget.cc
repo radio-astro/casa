@@ -118,7 +118,7 @@ void ZoomWidget::calculateRange( ){
 		float maxValue = TOTAL_PERCENT - leftPercent / 2;
 		minValue = minValue / TOTAL_PERCENT;
 		maxValue = maxValue / TOTAL_PERCENT;
-		if ( image != NULL ){
+		if ( image ){
 			Vector<Float> intensities = LatticeFractile<Float>::maskedFractiles (*image, minValue, maxValue);
 			int intensityCount = intensities.nelements();
 			if ( intensityCount == 2 ){
@@ -131,7 +131,7 @@ void ZoomWidget::calculateRange( ){
 	}
 }
 
-void ZoomWidget::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
+void ZoomWidget::setImage( const shared_ptr<const ImageInterface<Float> > image ){
 	this->image = image;
 }
 

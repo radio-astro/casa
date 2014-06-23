@@ -922,6 +922,12 @@ namespace casa{
     
     //    aTerm_p->makeConvFunction(image,vb,wConvSize,pa,cfs,cfwts);
   }
+
+  inline static double localreal(double x) { return x; }
+  inline static float localreal(float x) { return x; }
+  inline static double localreal(std::complex<double> x) { return x.real( ); }
+  inline static float localreal(std::complex<float> x) { return x.real( ); }
+
   //
   //----------------------------------------------------------------------
   //
@@ -939,9 +945,9 @@ namespace casa{
     Bool found=False;
     Float threshold;
     // Threshold as a fraction of the peak (presumed to be the center pixel).
-    if (abs(peak) != 0) threshold = real(abs(peak));
+    if (abs(peak) != 0) threshold = localreal(abs(peak));
     else 
-      threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
+      threshold   = localreal(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     threshold *= aTerm_p->getSupportThreshold();
     //    threshold *=  0.1;
@@ -1227,7 +1233,7 @@ namespace casa{
 	  IPosition plane1(ndx);
 	  plane1=ndx;
 	  plane1(2)=1; // The other poln. plane
-	  outBuf(plane1) = real(outBuf(ndx));
+	  outBuf(plane1) = localreal(outBuf(ndx));
 	}
   }
   //

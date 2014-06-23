@@ -31,7 +31,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/region/Polygon.h>
 #include <display/DisplayEvents/MultiPolyTool.h>
-#include <casadbus/types/nullptr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -61,22 +60,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// finish building the polygon...
 		// could still be needed for flagging measurement sets...
 		if ( ev.modifiers( ) & Display::KM_Double_Click )  {
-			if ( memory::nullptr.check(building_polygon) == false ) {
+			if ( building_polygon ) {
 				// upon double-click close polygon if more than 2 vertices...
 				// otherwise, add another vertex...
 				if ( building_polygon->numVertices( ) > 3 ) {
 					// greater than 3 because the last vertex is pre-loaded
 					// and adjusted as the user moves the mouse...
 					building_polygon->closeFigure( );
-					building_polygon = memory::nullptr;
+					building_polygon.reset( );
 
 					// avoid degenerate polygons...
-					if ( memory::nullptr.check(creating_region) == false ) {
+					if ( creating_region ) {
 						if ( creating_region->degenerate( ) ) {
 							viewer::Region *nix = creating_region.get( );
 							rfactory->revokeRegion(nix);
 						}
-						creating_region = memory::nullptr;
+						creating_region.reset( );
 						viewer::Region::creatingRegionEnd( );
 					}
 					refresh( );
@@ -105,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// constructing a polygon...
-		if ( memory::nullptr.check(building_polygon) == false ) {
+		if ( building_polygon ) {
 			building_polygon->addVertex( linx1, liny1, true );
 			building_polygon->addVertex( linx1, liny1 );
 			refresh( );
@@ -124,8 +123,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// check for click within one (or more) regions...
-		resizing_region = memory::nullptr;
-		moving_regions.clear( );			// ensure that moving state is clear...
+		resizing_region.reset( );
+		moving_regions.reset( );			// ensure that moving state is clear...
 		for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
 			if ( (*iter)->clickWithin( linx1, liny1 ) )
 				moving_regions.push_back(*iter);
@@ -156,7 +155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		if ( memory::nullptr.check(building_polygon) == false ) {
+		if ( building_polygon ) {
 			building_polygon->addVertex( linx, liny, true );
 			refresh( );
 			return;
@@ -164,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		bool refresh_needed = false;
 		bool region_selected = false;
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( resizing_region ) {
 			// resize the rectangle
 			double linx1, liny1;
 			try {
@@ -178,8 +177,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
-		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
+		shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+		if ( creation && checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
 				unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
@@ -246,9 +245,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MultiPolyTool::keyReleased(const WCPositionEvent &ev) {
 
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( resizing_region ) {
 			// resize finished
-			resizing_region = memory::nullptr;
+			resizing_region.reset( );
 		}
 
 		if ( moving_regions.size( ) > 0 ) {
@@ -293,8 +292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
-		if ( memory::nullptr.check(creating_region) == false &&
-		        ev.key( ) != Display::K_Escape ) {
+		if ( creating_region && ev.key( ) != Display::K_Escape ) {
 			// when creating a polygon, non-escape keys are ignored...
 			return;
 		}
@@ -310,14 +308,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			uInt x = ev.pixX();
 			uInt y = ev.pixY();
 
-			resizing_region = memory::nullptr;
+			resizing_region.reset( );
 			moving_regions.clear( );		// ensure that moving state is clear...
-			if ( memory::nullptr.check(creating_region) == false ) {
+			if ( creating_region ) {
 				viewer::Region *nix = creating_region.get( );
 				rfactory->revokeRegion(nix);
 				viewer::Region::creatingRegionEnd( );
-				creating_region = memory::nullptr;
-				building_polygon = memory::nullptr;
+				creating_region.reset( );
+				building_polygon.reset( );
 			}
 
 			double linx, liny;
@@ -517,7 +515,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                            bool is_annotation, VOID */*region_specific_state*/ ) {
 		if ( pts.size( ) <= 2 ) return false;
 		if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-		std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
+		shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
 		result->setLabel( label );
 		result->setLabelPosition( label_pos );
 		result->setLabelDelta( label_off );
@@ -554,7 +552,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 		creating_region = building_polygon = (rfactory->polygon( wc, linx, liny ));
-		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		viewer::Region::creatingRegionBegin(dynamic_pointer_cast<viewer::Region>(creating_region));
 		building_polygon->addVertex(linx,liny);
 		resizing_region_handle = 1;
 		polygons.push_back( building_polygon );

@@ -45,11 +45,10 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <display/region/QtRegionState.qo.h>
 #include <display/region/RegionEnums.h>
-#include <casadbus/types/nullptr.h>
 
 #include <casa/Arrays/Vector.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
@@ -126,7 +125,7 @@ namespace casa {
 			ImageRegion_state( ) : count_(0) { }
 			ImageRegion_state( ImageRegion *ir, size_t region_count ) : imageregion(ir), count_(region_count) { }
 			ImageRegion_state( const ImageRegion_state &other ) : imageregion(other.imageregion), count_(other.count_) { }
-			operator std::tr1::shared_ptr<ImageRegion>( ) {
+			operator shared_ptr<ImageRegion>( ) {
 				return imageregion;
 			}
 			size_t regionCount( ) const {
@@ -136,7 +135,7 @@ namespace casa {
 			void* operator new (std::size_t) throw (std::logic_error) {
 				throw std::logic_error("allocating an object not intended for dynamic allocation");
 			}
-			std::tr1::shared_ptr<ImageRegion> imageregion;
+			shared_ptr<ImageRegion> imageregion;
 			size_t count_;
 		};
 
@@ -338,19 +337,19 @@ namespace casa {
 				if ( hold_signals < 0 ) hold_signals = 0;
 			}
 
-			virtual std::list<std::tr1::shared_ptr<RegionInfo> > *statistics( ) {
+			virtual std::list<shared_ptr<RegionInfo> > *statistics( ) {
 				return generate_dds_statistics( );
 			}
 
 			// called when creating regions to allow suppression of corner-handle drawing...
-			static std::tr1::shared_ptr<viewer::Region> creatingRegion( ) {
+			static shared_ptr<viewer::Region> creatingRegion( ) {
 				return creating_region;
 			}
-			static void creatingRegionBegin( std::tr1::shared_ptr<viewer::Region> r ) {
+			static void creatingRegionBegin( shared_ptr<viewer::Region> r ) {
 				creating_region = r;
 			}
 			static void creatingRegionEnd( ) {
-				creating_region = memory::nullptr;
+				creating_region.reset( );
 			}
 
 			//Histogram functionality
@@ -495,11 +494,11 @@ namespace casa {
 
 		protected:
 			void initHistogram();
-			virtual std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_statistics( );
+			virtual std::list<shared_ptr<RegionInfo> > *generate_dds_statistics( );
 
 			// hook to allow generate_dds_statistics( ) to generate statistics
 			// for rectangular measurement set regions...
-			virtual void generate_nonimage_statistics( DisplayData*, std::list<std::tr1::shared_ptr<RegionInfo> > * ) { }
+			virtual void generate_nonimage_statistics( DisplayData*, std::list<shared_ptr<RegionInfo> > * ) { }
 			// newInfoObject(...) is currently only used for PVLine regions, but it should be used for
 			// other regions to allow for specialized creation of the region info objects for display
 			// in "statistics"...
@@ -513,14 +512,14 @@ namespace casa {
 			virtual const std::set<Region*> &get_selected_regions( );
 			virtual ImageRegion_state get_image_selected_region( DisplayData* );
 
-			virtual std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( ) = 0;
+			virtual std::list<shared_ptr<RegionInfo> > *generate_dds_centers( ) = 0;
 
 			static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 			inline double linear_average( double a, double b ) const {
 				return (a + b) / 2.0;
 			}
-			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, std::tr1::shared_ptr<ImageInterface<Float> > image, ImageRegion& imgReg);
+			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, shared_ptr<ImageInterface<Float> > image, ImageRegion& imgReg);
 			RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 			region::Units current_xunits( ) const;
@@ -558,7 +557,7 @@ namespace casa {
 			bool mouse_in_region;
 
 			// Holds a pointer to the region currently being created...
-			static std::tr1::shared_ptr<Region> creating_region;
+			static shared_ptr<Region> creating_region;
 
 		private slots:
 			//Called when the histogram stack needs to be changed due

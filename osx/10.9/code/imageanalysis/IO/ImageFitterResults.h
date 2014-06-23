@@ -64,7 +64,7 @@ public:
 		OVERWRITE
 	};
 
-	ImageFitterResults(SPCIIF image, std::tr1::shared_ptr<LogIO> log);
+	ImageFitterResults(SPCIIF image, shared_ptr<LogIO> log);
 
 	~ImageFitterResults();
 
@@ -111,8 +111,8 @@ public:
 	String resultsHeader(
 		const String& chans, const Vector<uInt>& chanVec,
 		const String& region, const String& mask,
-		std::tr1::shared_ptr<std::pair<Float, Float> > includePixelRange,
-		std::tr1::shared_ptr<std::pair<Float, Float> > excludePixelRange,
+		shared_ptr<std::pair<Float, Float> > includePixelRange,
+		shared_ptr<std::pair<Float, Float> > excludePixelRange,
 		const String& estimates
 	) const;
 
@@ -126,7 +126,7 @@ public:
 
 private:
 	SPCIIF _image;
-	std::tr1::shared_ptr<LogIO> _log;
+	shared_ptr<LogIO> _log;
 	ComponentList _convolvedList;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors,
 		_majorAxes, _minorAxes,

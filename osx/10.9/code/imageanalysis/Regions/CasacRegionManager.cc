@@ -413,7 +413,7 @@ void CasacRegionManager::_setRegion(
 				<< LogIO::EXCEPTION;
 		}
 		try {
-			std::auto_ptr<Record> rec(readImageFile(regionName, ""));
+			auto_ptr<Record> rec(readImageFile(regionName, ""));
 			regionRecord = *rec;
 			diagnostics = "Region read from binary region file " + regionName;
 			return;
@@ -915,7 +915,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	const CoordinateSystem& csys = getcoordsys();
 	TempImage<Float> x(imShape, csys);
 	x.set(0);
-	std::tr1::shared_ptr<const SubImage<Float> >subimage(
+	shared_ptr<const SubImage<Float> >subimage(
 		new SubImage<Float>(
 			SubImageFactory<Float>::createSubImage(
 				x, *regionRec, "", _getLog(), False,
@@ -924,7 +924,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 		)
 	);
 	ImageMetaData md(
-		std::tr1::dynamic_pointer_cast<const ImageInterface<Float> >(subimage)
+		dynamic_pointer_cast<const ImageInterface<Float> >(subimage)
 	);
 	uInt nChan = md.nChannels();
 	const SpectralCoordinate& subsp = subimage->coordinates().spectralCoordinate();

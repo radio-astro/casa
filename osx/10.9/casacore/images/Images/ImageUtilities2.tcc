@@ -276,12 +276,12 @@ template <typename T> void ImageUtilities::openImage(
 }
 
 template <typename T>
-std::tr1::shared_ptr<ImageInterface<T> > ImageUtilities::openImage(
+shared_ptr<ImageInterface<T> > ImageUtilities::openImage(
 	const String& fileName
 ) {
 	ImageInterface<T>* p = 0;
 	ImageUtilities::openImage(p, fileName);
-	return std::tr1::shared_ptr<ImageInterface<T> >(p);
+	return shared_ptr<ImageInterface<T> >(p);
 }
 
 template <typename T> void ImageUtilities::openImage(

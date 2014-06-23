@@ -51,7 +51,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 ) {
     // The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
-	std::auto_ptr<ImageRegion> outMaskMgr(0);
+	auto_ptr<ImageRegion> outMaskMgr(0);
     if (! mask.empty()) {
     	String mymask = mask;
     	for (uInt i=0; i<2; i++) {
@@ -110,7 +110,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 			);
 	}
 	else {
-		std::auto_ptr<ImageRegion> outRegionMgr(
+		auto_ptr<ImageRegion> outRegionMgr(
 			ImageRegion::fromRecord(
 				os, inImage.coordinates(),
 				inImage.shape(), region

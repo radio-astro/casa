@@ -102,7 +102,7 @@ namespace casa {
 
 			void drawRegion( bool );
 
-			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			std::list<shared_ptr<RegionInfo> > *generate_dds_centers( );
 
 			QtMouseToolNames::PointRegionSymbols marker_;
 

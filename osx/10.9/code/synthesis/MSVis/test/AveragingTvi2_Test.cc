@@ -10,7 +10,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <map>
 #include <memory>
-#include <utility>
+#include <casa/cppconfig.h>
 #include <cmath>
 
 using namespace std;

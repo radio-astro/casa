@@ -37,7 +37,7 @@
 
 #include <casa/aips.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 #define _LOCATEA "ImageMetaDataRW" << __FUNCTION__ << " "
 #define _ORIGINA LogOrigin("ImageMetaDataRW", __FUNCTION__)
@@ -45,11 +45,11 @@
 namespace casa {
 
 ImageMetaDataRW::ImageMetaDataRW(
-	std::tr1::shared_ptr<ImageInterface<Float> > image
+	shared_ptr<ImageInterface<Float> > image
 ) : ImageMetaDataBase(), _floatImage(image), _complexImage() {}
 
 ImageMetaDataRW::ImageMetaDataRW(
-	std::tr1::shared_ptr<ImageInterface<Complex> > image
+	shared_ptr<ImageInterface<Complex> > image
 ) : ImageMetaDataBase(), _floatImage(), _complexImage(image) {}
 
 Record ImageMetaDataRW::toRecord(Bool verbose) const {

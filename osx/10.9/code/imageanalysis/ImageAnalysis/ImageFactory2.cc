@@ -74,7 +74,7 @@ void ImageFactory::_centerRefPix(
 CoordinateSystem* ImageFactory::_makeCoordinateSystem(
     const Record& coordinates, const IPosition& shape
 ) {
-    std::auto_ptr<CoordinateSystem> pCS;
+    auto_ptr<CoordinateSystem> pCS;
     if (coordinates.nfields() == 1) { 
         // must be a record as an element
         Record tmp(coordinates.asRecord(RecordFieldId(0)));

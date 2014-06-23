@@ -97,7 +97,7 @@ SPIIF ImageRegridder::regrid() const {
 			}
 		}
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > workIm = regridByVel
+	shared_ptr<ImageInterface<Float> > workIm = regridByVel
 		? _regridByVelocity()
 		: _regrid();
 	return _prepareOutputImage(*workIm);
@@ -164,7 +164,7 @@ SPIIF ImageRegridder::_regrid() const {
 		IPosition finalShape = _kludgedShape;
 		Int specAxisNumber = workIm->coordinates().spectralAxisNumber(False);
 		finalShape[specAxisNumber] = _nReplicatedChans;
-		std::tr1::shared_ptr<ImageInterface<Float> > replicatedIm(
+		shared_ptr<ImageInterface<Float> > replicatedIm(
 			new TempImage<Float>(finalShape, csys)
 		);
 		Array<Float> fillerPixels = workIm->get();
@@ -182,7 +182,7 @@ SPIIF ImageRegridder::_regrid() const {
 			finalMask(slice) = fillerMask;
 		}
 		replicatedIm->put(finalPixels);
-		std::tr1::dynamic_pointer_cast<TempImage<Float> >(replicatedIm)->attachMask(
+		dynamic_pointer_cast<TempImage<Float> >(replicatedIm)->attachMask(
 			ArrayLattice<Bool>(finalMask)
 		);
 		SpectralCoordinate spTo = _csysTo.spectralCoordinate();
@@ -248,7 +248,7 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 	}
 	else {
 		// Only include the wanted stokes
-		std::tr1::shared_ptr<ImageConcat<Float> > concat(
+		shared_ptr<ImageConcat<Float> > concat(
 			new ImageConcat<Float>(
 				workIm->coordinates().polarizationAxisNumber(False)
 			)
@@ -308,7 +308,7 @@ void ImageRegridder::_checkOutputShape(
 	}
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regridByVelocity() const {
+shared_ptr<ImageInterface<Float> > ImageRegridder::_regridByVelocity() const {
 	ThrowIf(
 		_csysTo.spectralCoordinate().frequencySystem(True)
 		!= _getImage()->coordinates().spectralCoordinate().frequencySystem(True),
@@ -325,12 +325,12 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regridByVelocity()
 		"so cannot regrid by velocity."
 	);
 
-	std::auto_ptr<CoordinateSystem> csys(
+	auto_ptr<CoordinateSystem> csys(
 		dynamic_cast<CoordinateSystem *>(_csysTo.clone())
 	);
 	SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
-	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
- 	std::tr1::shared_ptr<SubImage<Float> > maskedClone(
+	auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
+ 	shared_ptr<SubImage<Float> > maskedClone(
 		new SubImage<Float>(
 			SubImageFactory<Float>::createSubImage(
 				*clone, *_getRegion(), _getMask(), 0, False,
@@ -339,7 +339,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regridByVelocity()
 		)
 	);
  	clone.reset(0);
-	std::auto_ptr<CoordinateSystem> coordClone(
+	auto_ptr<CoordinateSystem> coordClone(
 		dynamic_cast<CoordinateSystem *>(maskedClone->coordinates().clone())
 	);
 
@@ -429,10 +429,10 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regridByVelocity()
 	regridder.setStretch(_getStretch());
 	regridder.setSpecAsVelocity(False);
 
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = regridder._regrid();
+	shared_ptr<ImageInterface<Float> > outImage = regridder._regrid();
 
 	// replace the temporary linear coordinate with the saved spectral coordinate
-	std::auto_ptr<CoordinateSystem> newCoords(
+	auto_ptr<CoordinateSystem> newCoords(
 		dynamic_cast<CoordinateSystem *>(outImage->coordinates().clone())
 	);
 
@@ -575,8 +575,8 @@ void ImageRegridder::_finishConstruction() {
 }
 
 Bool ImageRegridder::_doImagesOverlap(
-	std::tr1::shared_ptr<const ImageInterface<Float> > image0,
-	std::tr1::shared_ptr<const ImageInterface<Float> >image1
+	shared_ptr<const ImageInterface<Float> > image0,
+	shared_ptr<const ImageInterface<Float> >image1
 ) {
 	const CoordinateSystem csys0 = image0->coordinates();
 	const CoordinateSystem csys1 = image1->coordinates();

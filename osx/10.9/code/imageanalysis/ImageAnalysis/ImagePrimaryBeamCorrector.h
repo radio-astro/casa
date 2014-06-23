@@ -34,7 +34,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -118,7 +118,7 @@ protected:
 
 
 private:
-	std::auto_ptr<ImageInterface<Float> > _pbImage;
+	auto_ptr<ImageInterface<Float> > _pbImage;
 
 	Float _cutoff;
 	Mode _mode;

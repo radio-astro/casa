@@ -38,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <>
 	Float LatticeAsVector<Complex>::getVariance() {
-		std::tr1::shared_ptr<MaskedLattice<Complex> > ml = maskedLattice();
+		shared_ptr<MaskedLattice<Complex> > ml = maskedLattice();
 		Float clip = 10.0;
 		Float realVar = 0.0;
 		Float imagVar = 0.0;

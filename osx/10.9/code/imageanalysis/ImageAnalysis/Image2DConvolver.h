@@ -36,7 +36,7 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -102,7 +102,7 @@ public:
 	// units and logger will be copied from the input to the output
 	// unless you indicate not to (copyMiscellaneous).
 	static void convolve(
-		LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
+		LogIO& os, shared_ptr<ImageInterface<T> > imageOut,
 		const ImageInterface<T>& imageIn,
 		const VectorKernel::KernelTypes kernelType,
 		const IPosition& pixelAxes,

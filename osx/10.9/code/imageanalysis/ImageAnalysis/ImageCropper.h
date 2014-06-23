@@ -31,7 +31,7 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -72,7 +72,7 @@ public:
 	// and <src>box</src>="", <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// of the input image.
 	ImageCropper(
-		const std::tr1::shared_ptr<const ImageInterface<T> > image,
+		const shared_ptr<const ImageInterface<T> > image,
 		const Record *const &regionRec, const String& box, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite
@@ -83,7 +83,7 @@ public:
 
 	// Perform the cropping. If <src>wantReturn</src> is True, a shared_ptr which
 	// wraps the cropped image is returned. If False, an empty shared_ptr is returned.
-	std::tr1::shared_ptr<ImageInterface<T> > crop(const Bool wantReturn) const;
+	shared_ptr<ImageInterface<T> > crop(const Bool wantReturn) const;
 
 	// Set the axes along which to do the cropping. An empty set means
 	// crop all axes.

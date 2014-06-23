@@ -132,7 +132,7 @@ void ImageConvolver<T>::convolve(LogIO& os,
 
     Lattice<T>* pNewKernel = 0;
     LatticeUtilities::addDegenerateAxes (pNewKernel, kernel, inShape.nelements());
-    std::auto_ptr<Lattice<T> > pnkMgr(pNewKernel);
+    auto_ptr<Lattice<T> > pnkMgr(pNewKernel);
 // Normalize kernel.  
   
     LatticeExprNode node;

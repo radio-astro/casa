@@ -43,7 +43,7 @@ namespace casa {
 			(*ct_it).second->insert(region);								\
 		else {																\
 			count_map.insert( state_count_type::value_type( viewer::region::STATE,	\
-				std::tr1::shared_ptr<viewer::region::region_list_type>(new viewer::region::region_list_type( )) ) ); \
+				shared_ptr<viewer::region::region_list_type>(new viewer::region::region_list_type( )) ) ); \
 			ct_it = count_map.find(viewer::region::STATE);					\
 			if ( ct_it != count_map.end( ) )								\
 				(*ct_it).second->insert(region);							\
@@ -80,13 +80,13 @@ namespace casa {
 		return ct_it != count_map.end( ) ? (*ct_it).second->size() : 0;
 	}
 
-	std::tr1::shared_ptr<viewer::region::region_list_type> RegionTool::State::regions( viewer::region::PointLocation loc,
+	shared_ptr<viewer::region::region_list_type> RegionTool::State::regions( viewer::region::PointLocation loc,
 	        viewer::region::RegionSelect select ) {
 		state_count_type::iterator ct_it = count_map.find(loc);
 		if ( ct_it != count_map.end( ) ) {
 			return select == viewer::region::SelectAny ? (*ct_it).second : filter((*ct_it).second,select );
 		} else {
-			return std::tr1::shared_ptr<viewer::region::region_list_type>(new viewer::region::region_list_type( ));
+			return shared_ptr<viewer::region::region_list_type>(new viewer::region::region_list_type( ));
 		}
 	}
 
@@ -114,9 +114,9 @@ namespace casa {
 		if ( refresh_count > 0 ) wc_->refresh( );
 	}
 
-	std::tr1::shared_ptr<viewer::region::region_list_type> RegionTool::State::filter( std::tr1::shared_ptr<viewer::region::region_list_type> orig,
+	shared_ptr<viewer::region::region_list_type> RegionTool::State::filter( shared_ptr<viewer::region::region_list_type> orig,
 	        viewer::region::RegionSelect select ) {
-		std::tr1::shared_ptr<viewer::region::region_list_type> result(new viewer::region::region_list_type( ));
+		shared_ptr<viewer::region::region_list_type> result(new viewer::region::region_list_type( ));
 		for ( viewer::region::region_list_type::iterator it=orig->begin( ); it != orig->end( ); ++it ) {
 			viewer::region::RegionTypes region_type = viewer::region::select_to_region(select);
 			if ( select == viewer::region::SelectAny || region_type == (*it)->type( ) ) {

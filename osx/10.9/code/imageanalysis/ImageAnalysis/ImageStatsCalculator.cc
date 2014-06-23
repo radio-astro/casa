@@ -63,8 +63,8 @@ ImageStatsCalculator::~ImageStatsCalculator() {}
 
 Record ImageStatsCalculator::calculate() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	std::auto_ptr<vector<String> > messageStore(
-		_getLogFile() == 0 ? 0 : new vector<String>()
+	auto_ptr<vector<String> > messageStore(
+		(bool) _getLogFile() ? 0 : new vector<String>()
 	);
 	Record retval = statistics(messageStore.get());
 	Bool writeFile = _openLogfile();
@@ -103,7 +103,7 @@ Record ImageStatsCalculator::calculate() {
 }
 
 void ImageStatsCalculator::_reportDetailedStats(
-	const std::tr1::shared_ptr<const ImageInterface<Float> > tempIm,
+	const shared_ptr<const ImageInterface<Float> > tempIm,
 	const Record& retval
 ) {
 	CoordinateSystem csys = tempIm->coordinates();

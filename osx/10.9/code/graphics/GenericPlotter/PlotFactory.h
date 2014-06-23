@@ -38,7 +38,7 @@
 #include <graphics/GenericPlotter/Plotter.h>
 #include <graphics/GenericPlotter/PlotTool.h>
 
-#include <utility>
+#include <casa/cppconfig.h>
 
 #include <casa/namespace.h>
 

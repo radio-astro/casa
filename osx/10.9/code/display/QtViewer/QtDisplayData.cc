@@ -364,7 +364,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							regridder.setMethod(method);
 							regridder.setSpecAsVelocity(True);
 							im_ = regridder.regrid();
-							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
+							// auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
 						std::string slice_description = ddo["slice"];
 						if ( slice_description != "" && slice_description != "none" ) {
@@ -377,7 +377,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									if ( for_each(vec.begin( ),vec.end( ),check_str( )) ) {
 										Slicer slicer = for_each(vec.begin( ),vec.end( ),str_to_slicer( ));
 										SubImage<Float> *subim = new SubImage<Float>( (const ImageInterface<Float>&) *im_, slicer );
-										//std::auto_ptr<ImageInterface<Float> > imptr(im_);
+										//auto_ptr<ImageInterface<Float> > imptr(im_);
 										im_.reset(subim);
 									}
 								} catch( const AipsError &err ) {
@@ -454,7 +454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dd_->setOptions( record, outRecord );
 	}
 
-	void QtDisplayData::setImage(std::tr1::shared_ptr<ImageInterface<Float> > img ) {
+	void QtDisplayData::setImage(shared_ptr<ImageInterface<Float> > img ) {
 		im_=img;
 	}
 

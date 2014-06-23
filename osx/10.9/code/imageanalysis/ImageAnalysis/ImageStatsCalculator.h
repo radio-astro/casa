@@ -35,7 +35,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -130,8 +130,8 @@ protected:
     inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
-    std::auto_ptr<ImageStatistics<Float> > _statistics;
-    std::auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
+    auto_ptr<ImageStatistics<Float> > _statistics;
+    auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
     Bool _oldStatsStorageForce;
     Vector<Int> _axes;
     Vector<String> _plotStats;
@@ -152,7 +152,7 @@ private:
     );
 
     void _reportDetailedStats(
-    	const std::tr1::shared_ptr<const ImageInterface<Float> > tempIm,
+    	const shared_ptr<const ImageInterface<Float> > tempIm,
     	const Record& retval
     );
 };

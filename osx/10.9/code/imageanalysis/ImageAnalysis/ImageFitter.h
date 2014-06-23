@@ -179,7 +179,7 @@ protected:
 private:
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
-	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
+	shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
 	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
 	Vector<String> _fixed, _deconvolvedMessages;
 	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed, _correlatedNoise, _useBeamForNoise;
@@ -202,7 +202,7 @@ private:
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
 	Int _stokesPixNumber, _chanPixNumber;
 	ImageFitterResults _results;
-	std::auto_ptr<Quantity> _noiseFWHM;
+	auto_ptr<Quantity> _noiseFWHM;
 	Quantity _pixWidth;
 
 	const static String _class;
@@ -284,8 +284,8 @@ private:
 		ComponentList& convolvedList, ComponentList& deconvolvedList,
 		Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
 		SPIIF& residualImage, SPIIF& modelImage,
-		std::tr1::shared_ptr<TempImage<Float> >& tImage,
-		std::tr1::shared_ptr<ArrayLattice<Bool> >& initMask,
+		shared_ptr<TempImage<Float> >& tImage,
+		shared_ptr<ArrayLattice<Bool> >& initMask,
 		Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
 		Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages, const IPosition& planeShape,
 		const Array<Float>& pixels, const Array<Bool>& pixelMask, const Fit2D& fitter,

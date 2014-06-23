@@ -346,6 +346,11 @@ enum MethodTypes {
 
 protected:
 
+   inline static double my_real(double x) { return x; }
+   inline static float my_real(float x) { return x; }
+   inline static double my_real(std::complex<double> x) { return x.real( ); }
+   inline static float my_real(std::complex<float> x) { return x.real( ); }
+
    LogIO os_p;
    Bool showProgress_p;
    Int momentAxisDefault_p;
@@ -398,7 +403,7 @@ protected:
                        PGPlotter& plotter);
 
 // Convert a <tt>T</tt> to a <tt>Float</tt> for plotting
-   static Float convertT (const T value) {return Float(real(value));};
+   static Float convertT (const T value) {return Float(my_real(value));};
 
 // Convert a <tt>Float</tt> (from plotting) to a <tt>T</tt> 
    static T convertF (const Float value) {return T(value);};

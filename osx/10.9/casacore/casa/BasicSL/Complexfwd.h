@@ -41,10 +41,7 @@
 // </synopsis>
 
 // <group name=Complexfwd>
-
-namespace std {
-  template<class T> class complex;
-}
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

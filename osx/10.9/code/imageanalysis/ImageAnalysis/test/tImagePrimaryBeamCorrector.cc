@@ -120,10 +120,10 @@ int main() {
     os << "tImagePrimaryBeamCorrector_tmp_" << pid;
     String dirName = os.str();
 	Directory workdir(dirName);
-    std::auto_ptr<FITSImage> im1(new FITSImage(datadir + "pbtest1_im.fits"));
-    std::auto_ptr<FITSImage> pb1(new FITSImage(datadir + "pbtest1_pb.fits"));
-    std::auto_ptr<FITSImage> im2(new FITSImage(datadir + "pb2_im.fits"));
-    std::auto_ptr<FITSImage> pb2(new FITSImage(datadir + "pb2_pb.fits"));
+    auto_ptr<FITSImage> im1(new FITSImage(datadir + "pbtest1_im.fits"));
+    auto_ptr<FITSImage> pb1(new FITSImage(datadir + "pbtest1_pb.fits"));
+    auto_ptr<FITSImage> im2(new FITSImage(datadir + "pb2_im.fits"));
+    auto_ptr<FITSImage> pb2(new FITSImage(datadir + "pb2_pb.fits"));
 
 	workdir.create();
 	dirName += "/";
@@ -131,7 +131,7 @@ int main() {
     try {
     	{
     		cout << "*** Test full image divide ***" << endl;
-    		std::auto_ptr<ImagePrimaryBeamCorrector> pb(
+    		auto_ptr<ImagePrimaryBeamCorrector> pb(
     			new ImagePrimaryBeamCorrector(
     				im1.get(), pb1.get(), 0, "", "", "", "",
     				"", dirName + "pbtest1.pbcor", False, 0, False,
@@ -162,7 +162,7 @@ int main() {
 			cout << "*** Test full image divide with cutoff ***" << endl;
 			for (uInt i=0; i<2; i++) {
 				cout << __LINE__ << endl;
-				std::auto_ptr<ImagePrimaryBeamCorrector> pb(
+				auto_ptr<ImagePrimaryBeamCorrector> pb(
 					(i == 0)
 					? new ImagePrimaryBeamCorrector(
 						im1.get(), pb1.get(), 0, "", "", "", "",
@@ -190,7 +190,7 @@ int main() {
     	{
 			cout << "*** Test full image divide with cutoff. Primary beam is 2 D, image is 4 D ***" << endl;
 			for (uInt i=0; i<2 ;i++) {
-				std::auto_ptr<ImagePrimaryBeamCorrector> pb(
+				auto_ptr<ImagePrimaryBeamCorrector> pb(
 					(i == 0)
 					? new ImagePrimaryBeamCorrector(
 						im2.get(), pb2.get(), 0, "", "", "", "",
@@ -239,7 +239,7 @@ int main() {
     	{
 			cout << "*** Test full image multiply with cutoff. Primary beam is 2 D, image is 4 D ***" << endl;
 			for (uInt i=0; i<2; i++) {
-				std::auto_ptr<ImagePrimaryBeamCorrector> pb(
+				auto_ptr<ImagePrimaryBeamCorrector> pb(
 					(i == 0)
 					? new ImagePrimaryBeamCorrector(
 						im2.get(), pb2.get(), 0, "", "", "", "",

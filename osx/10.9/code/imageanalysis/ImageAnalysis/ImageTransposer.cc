@@ -129,7 +129,7 @@ SPIIF ImageTransposer::transpose() const {
 	}
 	output->put(reorderArray(dataCopy, _order));
 	if (_getImage()->hasPixelMask()) {
-		std::auto_ptr<Lattice<Bool> > maskLattice(
+		auto_ptr<Lattice<Bool> > maskLattice(
 			_getImage()->pixelMask().clone()
 		);
 		Array<Bool> maskCopy = maskLattice->get();

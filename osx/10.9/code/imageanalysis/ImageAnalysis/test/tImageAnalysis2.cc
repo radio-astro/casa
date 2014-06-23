@@ -53,7 +53,7 @@ int main() {
 
             // CAS-2533
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -97,7 +97,7 @@ int main() {
 		{
 			// CAS-2533
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -131,7 +131,7 @@ int main() {
 		{
 			// CAS-2533
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -165,7 +165,7 @@ int main() {
 		{
 			// CAS-2533
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -209,7 +209,7 @@ int main() {
 		{
 			// wavelength output
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -271,7 +271,7 @@ int main() {
 		{
 			// wavelength output
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -323,7 +323,7 @@ int main() {
 		{
 			// wavelength output
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
@@ -509,7 +509,7 @@ int main() {
 		{
 			// Tabular Coordinate Instead of Spectral Coordinate
 			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/18h03m_tabular_axis.image");
-			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			shared_ptr<casa::ImageInterface<float> > imgPtr( img );
 			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);

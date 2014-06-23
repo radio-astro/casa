@@ -41,7 +41,7 @@
 
 #include <QtCore/qmath.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 	namespace viewer {
@@ -102,7 +102,7 @@ namespace casa {
 				SlicePlot* slicePlot = NULL;
 				if ( !slicePlots.contains(key)) {
 					slicePlot = new SlicePlot();
-					std::tr1::shared_ptr<ImageInterface<Float> > imagePtr( image );
+					shared_ptr<ImageInterface<Float> > imagePtr( image );
 					slicePlot->setImage( /*image*/imagePtr );
 					setPlotLineColor( slicePlot );
 					slicePlots.insert( key , slicePlot );
@@ -135,7 +135,7 @@ namespace casa {
 			if ( wc_ != NULL  ) {
 				DisplayData* dd = wc_->csMaster();
 				if ( dd != NULL ) {
-					std::tr1::shared_ptr<ImageInterface<float> > masterImage(dd->imageinterface());
+					shared_ptr<ImageInterface<float> > masterImage(dd->imageinterface());
 					if ( masterImage != NULL ) {
 						slicePlot->setImage( masterImage );
 						imageName = masterImage->name(true).c_str();
@@ -749,7 +749,7 @@ namespace casa {
 				y1 = y2;
 			}
 
-			if ( selected && memory::nullptr.check( creating_region ) ) {
+			if ( selected && ! creating_region ) {
 
 				// get bounding rectangle...
 				double blc_x, blc_y, trc_x, trc_y;
@@ -1184,8 +1184,8 @@ namespace casa {
 
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > *Polyline::generate_dds_centers() {
-			std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
+		std::list<shared_ptr<RegionInfo> > *Polyline::generate_dds_centers() {
+			std::list<shared_ptr<RegionInfo> > *region_centers = new std::list<shared_ptr<RegionInfo> >( );
 
 			if( wc_==0 ) return region_centers;
 
@@ -1219,7 +1219,7 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
+					shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
 
 					if ( ! image ) continue;
 
@@ -1230,7 +1230,7 @@ namespace casa {
 					processed.insert(std::map<String,bool>::value_type(description,true));
 
 					RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
-					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo(name,description,layercenter, this)));
+					region_centers->push_back(shared_ptr<RegionInfo>(new SliceRegionInfo(name,description,layercenter, this)));
 				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Polyline::generate_dds_centers( ): %s\n", errMsg_.c_str() );

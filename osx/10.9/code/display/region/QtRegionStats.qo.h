@@ -31,7 +31,7 @@ namespace casa {
 				void setLabels( const std::string &label, const std::string &desc );
 				virtual RegionInfo::InfoTypes type( ) const = 0;
 				virtual QPushButton *next( ) = 0;
-				virtual bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> ) {
+				virtual bool updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> ) {
 					return false;
 				}
 			protected:
@@ -76,7 +76,7 @@ namespace casa {
 				QWidget* getPlotHolder() {
 					return plotHolderWidget;
 				}
-				bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
+				bool updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> );
 			signals:
 				void show1DSliceTool();
 			};
@@ -91,7 +91,7 @@ namespace casa {
 				virtual QPushButton *next( ) {
 					return next_button;
 				}
-				bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
+				bool updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> );
 			protected:
 				void enterEvent (QEvent *);
 				void showEvent ( QShowEvent * );
@@ -118,13 +118,13 @@ namespace casa {
 			void addstats( std::list<std::pair<String,String> > *stats );
 #endif
 
-			void updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionInfo> stats, Region* region = NULL );
+			void updateStatistics( shared_ptr<casa::viewer::RegionInfo> stats, Region* region = NULL );
 
 			void setCenterBackground(QString background);
 
 			void setNext( QStackedWidget *, QtRegionStats * );
 
-			bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
+			bool updateStatisticsInfo( shared_ptr<casa::viewer::RegionInfo> );
 
 		protected slots:
 			void go_next( );

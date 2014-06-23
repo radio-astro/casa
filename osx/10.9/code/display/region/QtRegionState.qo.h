@@ -67,10 +67,10 @@ namespace casa {
 
 			void updateCoord( );
 			void updateStatistics(  );
-			void updateStatistics( std::list<std::tr1::shared_ptr<RegionInfo> > *stats );
+			void updateStatistics( std::list<shared_ptr<RegionInfo> > *stats );
 			void updateFrameInformation( int count );
 			void reloadStatistics( );
-			void updateCenters( std::list<std::tr1::shared_ptr<RegionInfo> > *centers );
+			void updateCenters( std::list<shared_ptr<RegionInfo> > *centers );
 			void setCenterBackground(QString background);
 			void clearStatistics( );
 			void addHistogram(QWidget* histogram);
@@ -252,7 +252,7 @@ namespace casa {
 
 		private:
 			void initRegionState( );
-			void statisticsUpdate( QtRegionStats *regionStats, std::tr1::shared_ptr<casa::viewer::RegionInfo> regionInfo );
+			void statisticsUpdate( QtRegionStats *regionStats, shared_ptr<casa::viewer::RegionInfo> regionInfo );
 			unsigned int setting_combo_box;
 			int pre_dd_change_statistics_count;
 			HistogramTab* histogramTab;

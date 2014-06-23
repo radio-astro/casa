@@ -36,7 +36,7 @@ const String ImageCropper<T>::_class = "ImageCropper";
 
 template <class T>
 ImageCropper<T>::ImageCropper(
-	const std::tr1::shared_ptr<const ImageInterface<T> > image,
+	const shared_ptr<const ImageInterface<T> > image,
 	const Record *const &regionRec, const String& box,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
@@ -79,12 +79,12 @@ void ImageCropper<T>::setAxes(const std::set<uInt>& axes) {
 }
 
 template <class T>
-std::tr1::shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
+shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
 	const Bool wantReturn
 ) const {
 	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
-	std::auto_ptr<ImageInterface<T> > myClone(this->_getImage()->cloneII());
+	auto_ptr<ImageInterface<T> > myClone(this->_getImage()->cloneII());
 	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
 		*myClone, *this->_getRegion(), this->_getMask(),
 		this->_getLog().get(), False, AxesSpecifier(), this->_getStretch(), True
@@ -136,7 +136,7 @@ std::tr1::shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
 		subImage, lcbox.toRecord(""), "",
 		this->_getLog().get(), False, AxesSpecifier(), False, True
 	);
-	std::tr1::shared_ptr<ImageInterface<T> > outImage( this->_prepareOutputImage(cropped));
+	shared_ptr<ImageInterface<T> > outImage( this->_prepareOutputImage(cropped));
 	if (! wantReturn) {
 		outImage.reset();
 	}

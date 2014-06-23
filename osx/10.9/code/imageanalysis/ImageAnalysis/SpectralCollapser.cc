@@ -147,8 +147,8 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 	_getOutputName(wcsInp, outname, outnameData, outnameError);
 
 	if (_hasQualAxis){
-		std::tr1::shared_ptr<SubImage<Float> > subData;
-		std::tr1::shared_ptr<SubImage<Float> > subError;
+		shared_ptr<SubImage<Float> > subData;
+		shared_ptr<SubImage<Float> > subError;
 		if (!_getQualitySubImgs(_image, subData, subError)){
 			msg = String("Can not split image: ") + _image->name(True) + String(" to data and error array!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
@@ -443,7 +443,7 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 	return True;
 }
 
-Bool SpectralCollapser::_getQualitySubImgs(SPCIIF image, std::tr1::shared_ptr<SubImage<Float> >&  subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const{
+Bool SpectralCollapser::_getQualitySubImgs(SPCIIF image, shared_ptr<SubImage<Float> >&  subData, shared_ptr<SubImage<Float> >&  subError) const{
 
 	// check whether the image origin is FITS
 	const FITSQualityImage  * const qImg = dynamic_cast<const FITSQualityImage*const>(image.get());

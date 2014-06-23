@@ -420,7 +420,7 @@ template<class T> void ImageCollapser<T>::_doMedian(
 	if (image->hasPixelMask()) {
 		mask = mask && image->pixelMask().get(False);
 	}
-	std::auto_ptr<Array<Bool> > outMask(0);
+	auto_ptr<Array<Bool> > outMask(0);
 	Bool hasMaskedPixels = ! allTrue(mask);
 	for (stepper.reset(); !stepper.atEnd(); stepper++) {
 		Slicer slicer(stepper.position(), stepper.endPosition(), Slicer::endIsLast);

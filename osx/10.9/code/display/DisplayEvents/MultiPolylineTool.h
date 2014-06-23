@@ -169,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 	private:
-		typedef std::list<std::tr1::shared_ptr<viewer::Polyline> > polylinelist;
+		typedef std::list<shared_ptr<viewer::Polyline> > polylinelist;
 		void start_new_polyline( WorldCanvas *, int x, int y );
 
 		// Set the polyline vertices. itsNPoints should already be set, and
@@ -179,8 +179,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// replace a single vertex.
 		virtual void set(const Int x, const Int y, const Int pt);
 
-		std::tr1::shared_ptr<viewer::Polyline> resizing_region;
-		std::tr1::shared_ptr<viewer::Polyline> creating_region;
+		shared_ptr<viewer::Polyline> resizing_region;
+		shared_ptr<viewer::Polyline> creating_region;
 
 		// push/pop last vertex
 		// <group>
@@ -241,7 +241,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		double moving_linx_;
 		double moving_liny_;
 
-		std::tr1::shared_ptr<viewer::Polyline> building_polyline;
+		shared_ptr<viewer::Polyline> building_polyline;
 		viewer::RegionSource *rfactory;
 		polylinelist polylines;
 		PanelDisplay *pd_;

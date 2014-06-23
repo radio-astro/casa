@@ -34,7 +34,7 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -64,13 +64,13 @@ class ImageProfileFitterResults {
 
 public:
 	ImageProfileFitterResults(
-		const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-		const Array<std::tr1::shared_ptr<ProfileFitResults> >* const &fitters,
+		const shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
+		const Array<shared_ptr<ProfileFitResults> >* const &fitters,
 		const SpectralList& nonPolyEstimates,
-		const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
+		const shared_ptr<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
 		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 		uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
-		const std::tr1::shared_ptr<LogFile> logfile, const String& xUnit,
+		const shared_ptr<LogFile> logfile, const String& xUnit,
 		const String& summaryHeader
 	);
 
@@ -161,18 +161,18 @@ private:
 		_ltpName, _ltpErrName, _sigmaName, _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
-    const Array<std::tr1::shared_ptr<ProfileFitResults> >* const  _fitters;
+    const Array<shared_ptr<ProfileFitResults> >* const  _fitters;
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
 	// on which the fit is performed.
-	const std::tr1::shared_ptr<const SubImage<Float> > _subImage;
+	const shared_ptr<const SubImage<Float> > _subImage;
 	Int _polyOrder, _fitAxis;
 	vector<axisType> _axisTypes;
 	Array<String> _worldCoords;
 	Record _results;
 	const static uInt _nOthers, _gsPlane, _lsPlane;
-	std::tr1::shared_ptr<LogFile> _logfile;
-	std::tr1::shared_ptr<LogIO> _log;
+	shared_ptr<LogFile> _logfile;
+	shared_ptr<LogIO> _log;
    	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
    	const CoordinateSystem _csysIm;
    	String _plpDivisor;
@@ -183,7 +183,7 @@ private:
 
     String _getTag(const uInt i) const;
 
-    std::auto_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
+    auto_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
 
     String _elementToString(
     	const Double value, const Double error,
@@ -221,7 +221,7 @@ private:
         Array<Bool>& attemptedArr, Array<Bool>& successArr,
         Array<Bool>& convergedArr, Array<Bool>& validArr,
         Array<String>& typeMat, Array<Int>& niterArr,
-        Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+        Array<Int>& nCompArr, auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
         vector<Array<Double> >& plpArrayss, vector<Array<Double> >& ltpArrays, Bool returnDirection,
         Array<String>& directionInfo, Array<Bool>& mask 
     ); 

@@ -1668,9 +1668,9 @@ Record Flagger::run (Bool trial, Bool reset)
 
 					sprintf(subtitle,"pass %d (data)",npass+1);
 
-					std::auto_ptr<ProgressMeter> progmeter(NULL);
+					auto_ptr<ProgressMeter> progmeter(NULL);
 					if (chunk.num(TIME) > progmeter_limit) {
-						progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+						progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
 					}
 
 					// start pass for all active agents
@@ -1769,9 +1769,9 @@ Record Flagger::run (Bool trial, Bool reset)
 					sprintf(subtitle,"pass %d (dry)",npass+1);
 					//cout << "-----------subtitle=" << subtitle << endl;
 
-					std::auto_ptr<ProgressMeter> progmeter(NULL);
+					auto_ptr<ProgressMeter> progmeter(NULL);
 					if (chunk.num(TIME) > progmeter_limit) {
-						progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+						progmeter = auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
 					}
 					// start pass for all active agents
 					for( uInt ival = 0; ival<acc.size(); ival++ )
@@ -1813,9 +1813,9 @@ Record Flagger::run (Bool trial, Bool reset)
 				sprintf(subtitle,"pass (flag)");
 				//cout << "-----------subtitle=" << subtitle << endl;
 
-				std::auto_ptr<ProgressMeter> progmeter(NULL);
+				auto_ptr<ProgressMeter> progmeter(NULL);
 				if (chunk.num(TIME) > progmeter_limit) {
-					progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
+					progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
 				}
 				for (uInt i = 0; i<acc.size(); i++)
 					if (active_init(i))

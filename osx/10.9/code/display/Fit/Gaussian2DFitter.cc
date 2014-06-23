@@ -65,7 +65,7 @@ namespace casa {
 		logFile = write;
 	}
 
-	void Gaussian2DFitter::setFitParameters( std::tr1::shared_ptr<const ImageInterface<Float> > image, const String& box,
+	void Gaussian2DFitter::setFitParameters( shared_ptr<const ImageInterface<Float> > image, const String& box,
 	        int channelNum, const String& estimatesFileName, const String& residualImage,
 	        const Vector<Float>& include, const Vector<Float>& exclude ) {
 		this->image = image;
@@ -95,7 +95,7 @@ namespace casa {
 		}
 	}
 
-	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(const std::tr1::shared_ptr<const ImageInterface<Float> > image, const QString& colorName) const {
+	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(const shared_ptr<const ImageInterface<Float> > image, const QString& colorName) const {
 		return fitResultList.toDrawingDisplay( image.get(), colorName );
 	}
 

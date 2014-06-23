@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		bool checkType( viewer::region::RegionTypes t ) {
 			return t == viewer::region::PointRegion;
 		}
-		virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
+		virtual shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
 
 	};
 

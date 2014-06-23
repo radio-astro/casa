@@ -70,10 +70,10 @@ namespace casa {
 			}
 		}
 
-// std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
-//     return std::tr1::shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
+// shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
+//     return shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
 // }
-		std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+		shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 			Rectangle *result = new Rectangle( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
 			// save Region to RegionSource mapping for later revocation...
@@ -97,13 +97,13 @@ namespace casa {
 			connect( this, SIGNAL( newCorners( double, double, double, double)),
 			         result, SLOT( adjustCorners( double, double, double, double)));
 			result->releaseSignals( );
-			return std::tr1::shared_ptr<Rectangle>(result);
+			return shared_ptr<Rectangle>(result);
 		}
 
-// std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
-//     return std::tr1::shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
+// shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
+//     return shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
 // }
-		std::tr1::shared_ptr<PVLine> QtRegionSourceKernel::pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+		shared_ptr<PVLine> QtRegionSourceKernel::pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 			PVLine *result = new PVLine( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
 			// save Region to RegionSource mapping for later revocation...
@@ -127,14 +127,14 @@ namespace casa {
 			connect( this, SIGNAL( newCorners( double, double, double, double)),
 			         result, SLOT( adjustCorners( double, double, double, double)));
 			result->releaseSignals( );
-			return std::tr1::shared_ptr<PVLine>(result);
+			return shared_ptr<PVLine>(result);
 		}
 
 		void QtRegionSourceKernel::adjustPosition( double blcx, double blcy, double trcx, double trcy ) {
 			emit newCorners( blcx, blcy, trcx, trcy );
 		}
 
-		std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon(
+		shared_ptr<Polygon> QtRegionSourceKernel::polygon(
 		    RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) {
 			Polygon *result = new Polygon( this, wc, x1, y1, true );
 
@@ -156,11 +156,11 @@ namespace casa {
 			         this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 			                       const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
-			return std::tr1::shared_ptr<Polygon>(result);
-			// return std::tr1::shared_ptr<Polygon>( );
+			return shared_ptr<Polygon>(result);
+			// return shared_ptr<Polygon>( );
 		}
 
-		std::tr1::shared_ptr<Polyline> QtRegionSourceKernel::polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) {
+		shared_ptr<Polyline> QtRegionSourceKernel::polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) {
 			Polyline *result = new Polyline( this, wc, x1, y1, true );
 
 			// save Region to RegionSource mapping for later revocation...
@@ -181,12 +181,12 @@ namespace casa {
 			         this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 			                       const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
-			return std::tr1::shared_ptr<Polyline>(result);
-			// return std::tr1::shared_ptr<Polygon>( );
+			return shared_ptr<Polyline>(result);
+			// return shared_ptr<Polygon>( );
 		}
 
 
-		std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon(
+		shared_ptr<Polygon> QtRegionSourceKernel::polygon(
 		    RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
 			Polygon *result = new Polygon( this, wc, pts, true );
 
@@ -208,11 +208,11 @@ namespace casa {
 			                       const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
 			result->releaseSignals( );
-			return std::tr1::shared_ptr<Polygon>(result);
-			// return std::tr1::shared_ptr<Polygon>( );
+			return shared_ptr<Polygon>(result);
+			// return shared_ptr<Polygon>( );
 		}
 
-		std::tr1::shared_ptr<Polyline> QtRegionSourceKernel::polyline(
+		shared_ptr<Polyline> QtRegionSourceKernel::polyline(
 		    RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
 
 			Polyline *result = new Polyline( this, wc, pts, false );
@@ -235,10 +235,10 @@ namespace casa {
 			                       const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
 			result->releaseSignals( );
-			return std::tr1::shared_ptr<Polyline>(result);
+			return shared_ptr<Polyline>(result);
 		}
 
-		std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+		shared_ptr<Rectangle> QtRegionSourceKernel::ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 			Ellipse *result = new Ellipse( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
 			// save Region to RegionSource mapping for later revocation...
@@ -259,10 +259,10 @@ namespace casa {
 			                       const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
 			result->releaseSignals( );
-			return std::tr1::shared_ptr<Rectangle>(result);
+			return shared_ptr<Rectangle>(result);
 		}
 
-		std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y,
+		shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y,
 		        QtMouseToolNames::PointRegionSymbols sym, int size ) {
 			Point *result = new Point( this, wc, x, y, true, sym );
 			result->setMarkerScale(size);
@@ -286,7 +286,7 @@ namespace casa {
 			connect( this, SIGNAL( newCorners( double, double, double, double)),
 			         result, SLOT( adjustCorners( double, double, double, double)));
 			result->releaseSignals( );
-			return std::tr1::shared_ptr<Rectangle>(result);
+			return shared_ptr<Rectangle>(result);
 		}
 
 		QtMouseToolNames::PointRegionSymbols QtRegionSourceKernel::currentPointSymbolType( ) const {

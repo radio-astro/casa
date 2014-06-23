@@ -1690,6 +1690,11 @@ IPosition LatticeStatistics<T>::locInStorageLattice(const IPosition& latticePosi
    return pos;
 }
 
+inline static double localreal(double x) { return x; }
+inline static float localreal(float x) { return x; }
+inline static double localreal(std::complex<double> x) { return x.real( ); }
+inline static float localreal(std::complex<float> x) { return x.real( ); }
+
 template <class T>
 void LatticeStatistics<T>::minMax (Bool& none,
                                    AccumType& dMin, AccumType& dMax,  
@@ -1713,7 +1718,7 @@ void LatticeStatistics<T>::minMax (Bool& none,
    const Int n1 = d.nelements();
 
    for (Int i=0; i<n1; i++) {
-     if (real(n(i)) > 0.5) {
+     if (localreal(n(i)) > 0.5) {
         if (init) {
            dMin = d(i);
            dMax = d(i);
@@ -2359,7 +2364,7 @@ Bool LatticeStatistics<T>::plotStats (
    plotter.page();
 
    if (nL>0) {
-      plotter.swin(real(xMin), real(xMax), real(yLMin), real(yLMax));
+      plotter.swin(localreal(xMin), localreal(xMax), localreal(yLMin), localreal(yLMax));
       if (nR>0) {
          plotter.box("BCNST", 0.0, 0, "BNST", 0.0, 0);
       } else {
@@ -2451,7 +2456,7 @@ Bool LatticeStatistics<T>::plotStats (
 
    i = -1;
    if (nR>0) {
-      plotter.swin(real(xMin), real(xMax), real(yRMin), real(yRMax));
+      plotter.swin(localreal(xMin), localreal(xMax), localreal(yRMin), localreal(yRMax));
       plotter.sci (1); 
       if (nL>0) 
          plotter.box("", 0.0, 0, "CMST", 0.0, 0);
@@ -2530,12 +2535,12 @@ Bool LatticeStatistics<T>::plotStats (
       yb = result(Slice(4,4));
       Float dy = yb(1) - yb(0);
 
-      Float mx = real(xMin) + dx;
+      Float mx = localreal(xMin) + dx;
       Float my;
       if (nR > 0) {
-         my = real(yRMax) + 0.5*dy;
+         my = localreal(yRMax) + 0.5*dy;
       } else {
-         my = real(yLMax) + 0.5*dy;
+         my = localreal(yLMax) + 0.5*dy;
       }
 
       Int tbg;
@@ -2601,8 +2606,8 @@ Bool LatticeStatistics<T>::findNextDatum (uInt& iFound,
 //  Bool     False if didn't find another valid datum
 {
    for (uInt i=iStart; i<n; i++) {
-      if ( (findGood && real(mask(i))>0.5) ||
-           (!findGood && real(mask(i))<0.5) ) {
+      if ( (findGood && localreal(mask(i))>0.5) ||
+           (!findGood && localreal(mask(i))<0.5) ) {
         iFound = i;
         return True;
       }
@@ -2851,7 +2856,7 @@ Bool LatticeStatistics<T>::someGoodPoints ()
          // this needs to be Int64, not Int as it was, to support > 2.1 Gpixel images
          // of course it will still fail for > 9.1 Epixel images, but hopefully we
          // won't have to worry about those for a few more Moore timescales.
-         someGoodPointsValue_p = Int64(real(stats(pos))+0.1) > 0;
+         someGoodPointsValue_p = Int64(localreal(stats(pos))+0.1) > 0;
          return someGoodPointsValue_p;
       } else {
 
@@ -2876,7 +2881,7 @@ Bool LatticeStatistics<T>::someGoodPoints ()
 
          for (pixelIterator.reset(); !pixelIterator.atEnd(); pixelIterator++) {
             for (Int i=0; i<n1; i++) {
-               if (Int(real(pixelIterator.matrixCursor()(i,NPTS))+0.1) > 0) {
+               if (Int(localreal(pixelIterator.matrixCursor()(i,NPTS))+0.1) > 0) {
                   someGoodPointsValue_p = True;
                   return someGoodPointsValue_p;
                }

@@ -136,24 +136,24 @@ namespace casa
   //
   struct IChangeDetector {
      // return True if a change occurs in the given row since the last call of update
-     virtual Bool changed(const VisBuffer &vb, Int row) const throw(AipsError) = 0;
+     virtual Bool changed(const VisBuffer &vb, Int row) = 0;
      // start looking for a change from the given row of the VisBuffer
-     virtual void update(const VisBuffer &vb, Int row) throw(AipsError) = 0;
+     virtual void update(const VisBuffer &vb, Int row) = 0;
      
      // reset to the state which exists just after construction
-     virtual void reset() throw(AipsError) = 0;
+     virtual void reset() = 0;
 
      // some derived methods, which use the abstract virtual function changed(vb,row)
      
      // return True if a change occurs somewhere in the buffer
-     Bool changed(const VisBuffer &vb) const throw(AipsError);
+     Bool changed(const VisBuffer &vb);
      // return True if a change occurs somewhere in the buffer starting from row1
      // up to row2 (row2=-1 means up to the end of the buffer). The row number, 
      // where the change occurs is returned in the row2 parameter
-     Bool changedBuffer(const VisBuffer &vb, Int row1, Int &row2) const throw(AipsError);
+     Bool changedBuffer(const VisBuffer &vb, Int row1, Int &row2);
   protected:
      // a virtual destructor to make the compiler happy
-     virtual ~IChangeDetector() throw(AipsError);
+     virtual ~IChangeDetector();
   };
   //
   //////////////////////////////////////////////////////////////////////////////
@@ -172,21 +172,21 @@ namespace casa
      ParAngleChangeDetector():pa_tolerance_p(0.0) {};
      // set up the tolerance, which determines how much the position angle should
      // change to report the change by this class
-     ParAngleChangeDetector(const Quantity &pa_tolerance) throw(AipsError);
+     ParAngleChangeDetector(const Quantity &pa_tolerance);
 
      virtual void setTolerance(const Quantity &pa_tolerance);
      // reset to the state which exists just after construction
-     virtual void reset() throw(AipsError);
+     virtual void reset();
 
      // return parallactic angle tolerance
-     Quantity getParAngleTolerance() const throw(AipsError);
+     Quantity getParAngleTolerance() const;
       
      // implementation of the base class' virtual functions
      
      // return True if a change occurs in the given row since the last call of update
-     virtual Bool changed(const VisBuffer &vb, Int row) const throw(AipsError);
+     virtual Bool changed(const VisBuffer &vb, Int row);
      // start looking for a change from the given row of the VisBuffer
-     virtual void update(const VisBuffer &vb, Int row) throw(AipsError);
+     virtual void update(const VisBuffer &vb, Int row);
   };
 
   //

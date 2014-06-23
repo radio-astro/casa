@@ -51,7 +51,8 @@
 #include <display/DisplayDatas/LatticeAsRaster.h>
 #include <casa/Utilities/CountedPtr.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
+
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -428,7 +429,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (qdd->imageInterface()) {
 
-					std::tr1::shared_ptr<ImageInterface<Float> > pImage;
+					shared_ptr<ImageInterface<Float> > pImage;
 					pImage.reset(new SubImage<Float>(
 					    *(qdd->imageInterface()), *reg, False));
 
@@ -1159,7 +1160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			ImageRegion* reg = (qdd->imageInterface())
 			                   ->getImageRegionPtr(regname);
 
-			std::tr1::shared_ptr<ImageInterface<Float> > pImage( new SubImage<Float>(*(qdd->imageInterface()),
+			shared_ptr<ImageInterface<Float> > pImage( new SubImage<Float>(*(qdd->imageInterface()),
 			                             *reg, False));
 
 			DisplayData *dd = 0;

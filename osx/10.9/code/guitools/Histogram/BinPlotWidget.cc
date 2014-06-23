@@ -177,7 +177,7 @@ void BinPlotWidget::resetAxisTitles(){
 		binPlot.setAxisTitle( QwtPlot::yLeft, leftTitle );
 
 		QString xAxisTitle = "Intensity";
-		if ( image != NULL ){
+		if ( image ){
 			Unit unit = image->units();
 			QString unitStr( unit.getName().c_str());
 			if ( fitWidget != NULL ){
@@ -197,7 +197,7 @@ void BinPlotWidget::resetAxisTitles(){
 
 void BinPlotWidget::resetPlotTitle(){
 	QString imageNameStr;
-	if ( image != NULL && displayPlotTitle ){
+	if ( image && displayPlotTitle ){
 		String imageName = image->name(True );
 		imageNameStr = imageName.c_str();
 	}
@@ -1168,7 +1168,7 @@ Histogram* BinPlotWidget::findHistogramFor( int id ){
 
 bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 	bool success = false;
-	if ( image != NULL && region != NULL ){
+	if ( image && region != NULL ){
 		Histogram* histogram = findHistogramFor( id );
 		histogram->setRegion( region );
 		success = histogram->reset();
@@ -1191,7 +1191,7 @@ std::vector<float> BinPlotWidget::getXValues() const {
 	return values;
 }
 
-bool BinPlotWidget::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img,
+bool BinPlotWidget::setImage( const shared_ptr<const ImageInterface<Float> > img,
 		bool waitOnHistogram ){
 	bool success = true;
 	if ( img.get() != NULL && image.get() != img.get()){

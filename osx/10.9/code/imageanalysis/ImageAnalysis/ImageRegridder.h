@@ -31,7 +31,7 @@
 #include <scimath/Mathematics/Interpolate2D.h>
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -139,13 +139,13 @@ private:
 
 	void _finishConstruction();
 
-	std::tr1::shared_ptr<ImageInterface<Float> > _regrid() const;
+	shared_ptr<ImageInterface<Float> > _regrid() const;
 
-	std::tr1::shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
+	shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
 
 	static Bool _doImagesOverlap(
-		std::tr1::shared_ptr<const ImageInterface<Float> > image0,
-		std::tr1::shared_ptr<const ImageInterface<Float> > image1
+		shared_ptr<const ImageInterface<Float> > image0,
+		shared_ptr<const ImageInterface<Float> > image1
 	);
 
 	static Vector<std::pair<Double, Double> > _getDirectionCorners(

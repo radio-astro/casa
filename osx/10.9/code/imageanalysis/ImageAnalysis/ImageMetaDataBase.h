@@ -32,7 +32,7 @@
 #include <imageanalysis/ImageTypedefs.h>
 #include <casa/aips.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -199,7 +199,7 @@ private:
 	String _doStandardFormat(Double value, const String& unit) const;
 
 	template <class T> Record _calcStatsT(
-		std::tr1::shared_ptr<const ImageInterface<T> > image
+		shared_ptr<const ImageInterface<T> > image
 	) const;
 
 

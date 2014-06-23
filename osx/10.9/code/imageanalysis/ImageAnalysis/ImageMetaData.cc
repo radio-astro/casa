@@ -43,22 +43,22 @@
 namespace casa {
 
 ImageMetaData::ImageMetaData(
-	std::tr1::shared_ptr<const ImageInterface<Float> > imagef
+	shared_ptr<const ImageInterface<Float> > imagef
 ) : ImageMetaDataBase(), _floatImage(imagef), _complexImage(), _info(imagef->imageInfo()),
 	_csys(imagef->coordinates()) {}
 
 ImageMetaData::ImageMetaData(
-	std::tr1::shared_ptr<ImageInterface<Float> > imagef
+	shared_ptr<ImageInterface<Float> > imagef
 ) : ImageMetaDataBase(), _floatImage(imagef), _complexImage(), _info(imagef->imageInfo()),
 	_csys(imagef->coordinates()) {}
 
 ImageMetaData::ImageMetaData(
-	std::tr1::shared_ptr<const ImageInterface<Complex> > imagec
+	shared_ptr<const ImageInterface<Complex> > imagec
 ) : ImageMetaDataBase(), _floatImage(), _complexImage(imagec), _info(imagec->imageInfo()),
 	_csys(imagec->coordinates()) {}
 
 ImageMetaData::ImageMetaData(
-	std::tr1::shared_ptr<ImageInterface<Complex> > imagec
+	shared_ptr<ImageInterface<Complex> > imagec
 ) : ImageMetaDataBase(), _floatImage(), _complexImage(imagec), _info(imagec->imageInfo()),
 	_csys(imagec->coordinates()) {}
 
@@ -104,8 +104,8 @@ GaussianBeam ImageMetaData::_getBeam() const {
 
 String ImageMetaData::_getBrightnessUnit() const {
 	if (_bunit.empty()) {
-		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+		shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
 		_bunit = imf ? imf->units().getName() : imc->units().getName();
 	}
 	return _bunit;
@@ -149,8 +149,8 @@ String ImageMetaData::_getObject() const {
 
 Vector<String> ImageMetaData::_getMasks() const {
 	if (_masks.empty()) {
-		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
-		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+		shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
 		_masks = imf
 			? imf->regionNames(RegionHandler::Masks)
 			: imc->regionNames(RegionHandler::Masks);

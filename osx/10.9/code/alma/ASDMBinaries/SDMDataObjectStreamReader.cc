@@ -233,7 +233,7 @@ namespace asdmbinaries {
       trim(value);
     }
 
-    return make_pair<string, string>(name, value);
+    return pair<string, string>(name, value);
   }
 
   pair<string, string> SDMDataObjectStreamReader::requireHeaderField(const string & hf) {

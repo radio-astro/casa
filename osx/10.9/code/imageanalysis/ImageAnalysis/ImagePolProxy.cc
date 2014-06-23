@@ -488,7 +488,7 @@ namespace casa { //# name space casa begins
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
 	       itsImPol->isMasked(), False);
 
-    std::auto_ptr<ImageInterface<Complex> > x(pOutComplex);
+    auto_ptr<ImageInterface<Complex> > x(pOutComplex);
 
     // Make Expr
     ImageExpr<Complex> expr = itsImPol->complexFractionalLinearPolarization();
@@ -797,10 +797,10 @@ namespace casa { //# name space casa begins
     ImageInterface<Float>* pRMOutErr = 0;
     makeImage (pRMOut, outRM, cSysRM, shapeRM, True, False);
     // manage naked pointers so exception throwing doesn't leave open images
-    std::auto_ptr<ImageInterface<Float> > managed5(pRMOut);
+    auto_ptr<ImageInterface<Float> > managed5(pRMOut);
 
     makeImage (pRMOutErr, outRMErr, cSysRM, shapeRM, True, False);
-    std::auto_ptr<ImageInterface<Float> > managed6(pRMOutErr);
+    auto_ptr<ImageInterface<Float> > managed6(pRMOutErr);
 
     CoordinateSystem cSysPA;
     IPosition shapePA =
@@ -808,16 +808,16 @@ namespace casa { //# name space casa begins
     ImageInterface<Float>* pPA0Out = 0;
     ImageInterface<Float>* pPA0OutErr = 0;
     makeImage (pPA0Out, outPA0, cSysPA, shapePA, True, False);
-    std::auto_ptr<ImageInterface<Float> > managed1(pPA0Out);
+    auto_ptr<ImageInterface<Float> > managed1(pPA0Out);
     makeImage (pPA0OutErr, outPA0Err, cSysPA, shapePA, True, False);
-    std::auto_ptr<ImageInterface<Float> > managed2(pPA0OutErr);
+    auto_ptr<ImageInterface<Float> > managed2(pPA0OutErr);
 
     ImageInterface<Float>* pNTurnsOut = 0;
     makeImage (pNTurnsOut, outNTurns, cSysRM, shapeRM, True, False);
-    std::auto_ptr<ImageInterface<Float> > managed3(pNTurnsOut);
+    auto_ptr<ImageInterface<Float> > managed3(pNTurnsOut);
     ImageInterface<Float>* pChiSqOut = 0;
     makeImage (pChiSqOut, outChiSq, cSysRM, shapeRM, True, False);
-    std::auto_ptr<ImageInterface<Float> > managed4(pChiSqOut);
+    auto_ptr<ImageInterface<Float> > managed4(pChiSqOut);
 
     // Make plotter
     PGPlotter pgPlotter;

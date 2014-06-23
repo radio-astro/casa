@@ -319,7 +319,7 @@ namespace casa {
 //                      Data Processing
 //-------------------------------------------------------------------
 
-	void SlicePlot::setImage( std::tr1::shared_ptr<ImageInterface<float> > img ) {
+	void SlicePlot::setImage( shared_ptr<ImageInterface<float> > img ) {
 		if ( img && image != img ) {
 			//Reset the image.  The units the image is using may have changed.
 			image = img;

@@ -405,7 +405,7 @@ namespace casa {
 
 		// Get the spectral axis number.
 		// TODO: Generalize this to any hidden axis
-		std::tr1::shared_ptr<const ImageInterface<float> > image = taskMonitor->getImage();
+		shared_ptr<const ImageInterface<float> > image = taskMonitor->getImage();
 		DisplayCoordinateSystem cSys = image -> coordinates();
 		int spectralAxisNumber = cSys.spectralAxisNumber();
 		if ( spectralAxisNumber < 0 ){
@@ -451,7 +451,7 @@ namespace casa {
 		if ( imageAnalysis == NULL ) {
 			// a cast might work, but I'm just going to clone it to be safe - dmehring shared_ptr refactor
 			// cloning was what the old ImageAnalysis constructor did anyway
-			std::tr1::shared_ptr<ImageInterface<float> > image2(image->cloneII());
+			shared_ptr<ImageInterface<float> > image2(image->cloneII());
 			imageAnalysis = new ImageAnalysis( image2 );
 
 		}
@@ -500,7 +500,7 @@ namespace casa {
 			for ( int i = 0; i < static_cast<int>(results.size()); i++ ) {
 				String outName = results[i].getOutputFileName();
 				bool outputTemporary = results[i].isTemporaryOutput();
-				std::tr1::shared_ptr<ImageInterface<Float> > newImage = results[i].getImage();
+				shared_ptr<ImageInterface<Float> > newImage = results[i].getImage();
 				taskMonitor->imageCollapsed(outName, "image", "raster", True, outputTemporary, newImage );
 			}
 			taskMonitor->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE );
@@ -549,7 +549,7 @@ namespace casa {
 		}
 		Converter* converter = Converter::getConverter( oldUnits, newUnits );
 		if ( imageAnalysis != NULL ){
-			std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = imageAnalysis->getImage();
+			shared_ptr<const ImageInterface<Float> > imagePtr = imageAnalysis->getImage();
 			Bool validCoord;
 			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate(imagePtr, validCoord );
 			for ( int i = 0; i < channelIntervalCount; i++ ) {
@@ -618,7 +618,7 @@ namespace casa {
 		delete collapseThread;
 		collapseThread = NULL;
 		if ( taskMonitor != NULL ) {
-			std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::const_pointer_cast<ImageInterface <Float> >(taskMonitor->getImage());
+			shared_ptr<ImageInterface<Float> > img = const_pointer_cast<ImageInterface <Float> >(taskMonitor->getImage());
 			imageAnalysis = new ImageAnalysis(img);
 		}
 	}
@@ -713,7 +713,7 @@ namespace casa {
 			connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 		}
 		// ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage().get());
-		std::tr1::shared_ptr<ImageInterface<Float> > image(std::tr1::const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
+		shared_ptr<ImageInterface<Float> > image(const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
 		thresholdingBinDialog->setImage( image );
 		thresholdingBinDialog->show();
 		QString minValueStr = ui.minThresholdLineEdit->text();

@@ -442,7 +442,7 @@ class ImageAnalysis
     	Bool copyMask=True
     );
 
-    Bool isFloat() const { return _imageFloat; }
+    Bool isFloat() const { return (bool) _imageFloat; }
 
  private:
     //Note:  getFreqProfile has been replaced by imageanalysis/PixelValueManipulator
@@ -477,15 +477,15 @@ class ImageAnalysis
     SPIIF _imageFloat;
     SPIIC _imageComplex;
 
-    std::auto_ptr<LogIO> _log;
+    auto_ptr<LogIO> _log;
 
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    std::tr1::shared_ptr<ImageHistograms<Float> > _histograms;
+    shared_ptr<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    std::tr1::shared_ptr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
+    shared_ptr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
     Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 

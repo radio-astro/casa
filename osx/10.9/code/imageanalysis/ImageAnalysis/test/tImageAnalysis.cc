@@ -53,12 +53,12 @@ int main() {
         delete [] parts;
 		writeTestString("Verify fix for CAS-2195: error if image has no direction coordinate but does have linear coordiante");
 		FITSImage* fits = new FITSImage(datadir + "/linearCoords.fits");
-		std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( fits );
+		shared_ptr<casa::ImageInterface<float> > imgPtr( fits );
 		ImageAnalysis ia(imgPtr );
         {
             // CAS-2533
             PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-            std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr2( img );
+            shared_ptr<casa::ImageInterface<float> > imgPtr2( img );
             ImageAnalysis analysis(imgPtr2);
 
             Vector<casa::Double> wxv(2);
@@ -98,7 +98,7 @@ int main() {
         {
             // wavelength output
             PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
-            std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+            shared_ptr<casa::ImageInterface<float> > imgPtr( img );
             ImageAnalysis analysis(imgPtr);
 
             Vector<casa::Double> wxv(2);
@@ -139,7 +139,7 @@ int main() {
         {
             writeTestString("histograms() test");
             FITSImage* image = new FITSImage(datadir + "/histogram_test.fits");
-            std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( image );
+            shared_ptr<casa::ImageInterface<float> > imgPtr( image );
             ImageAnalysis ia( imgPtr);
             Record regionRec;
             String mask;
@@ -190,7 +190,7 @@ int main() {
         	TempImage<Float>* x = new TempImage<Float>(TiledShape(IPosition(3,10,10,1)), csys);
         	Array<Float> data(IPosition(3,10,10,1));
         	data.set(0);
-        	std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( x );
+        	shared_ptr<casa::ImageInterface<float> > imgPtr( x );
         	ImageAnalysis ia(imgPtr);
         	Vector<Double> xy;
         	Vector<Float> zxaxis, zyaxis;

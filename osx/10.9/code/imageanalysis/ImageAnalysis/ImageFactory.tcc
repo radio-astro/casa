@@ -106,7 +106,7 @@ template <class T> SPIIT ImageFactory::_fromShape(
 	);
 
     CoordinateSystem mycsys;
-	std::auto_ptr<CoordinateSystem> csysPtr;
+	auto_ptr<CoordinateSystem> csysPtr;
 
 	if (coordinates.empty()) {
 		mycsys = CoordinateUtil::makeCoordinateSystem(

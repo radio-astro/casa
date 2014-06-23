@@ -39,7 +39,7 @@
 #include <QDebug>
 #include <QMenu>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 using namespace std;
 
@@ -91,7 +91,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img, bool waitOnHistogram = false );
+    bool setImage( const shared_ptr<const ImageInterface<Float> > img, bool waitOnHistogram = false );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -246,7 +246,7 @@ private:
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    std::tr1::shared_ptr<const ImageInterface<Float> > image;
+    shared_ptr<const ImageInterface<Float> > image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;

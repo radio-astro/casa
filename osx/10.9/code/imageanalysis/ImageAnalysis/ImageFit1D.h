@@ -283,8 +283,8 @@ public:
 		   Bool doAbs, const Double* const &abscissaDivisor
    );
 private:
-   std::auto_ptr<ImageInterface<T> > itsImagePtr;
-   std::auto_ptr<ImageInterface<T> > itsWeightPtr;
+   auto_ptr<ImageInterface<T> > itsImagePtr;
+   auto_ptr<ImageInterface<T> > itsWeightPtr;
    uInt itsAxis;
 
 // In the future I will be able to template the fitter on T. For now

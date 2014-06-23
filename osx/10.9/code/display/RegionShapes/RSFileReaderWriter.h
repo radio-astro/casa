@@ -32,7 +32,7 @@
 #include <display/Display/PanelDisplay.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 
-#include <utility>
+#include <casa/cppconfig.h>
 
 #include <casa/namespace.h>
 using namespace std;

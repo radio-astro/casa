@@ -2,7 +2,7 @@
 
 #include <stdcasa/cboost_foreach.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -31,7 +31,7 @@ template<class T> void ImageFFTer<T>::fft() const {
 	_checkExists(_amp);
 	_checkExists(_phase);
 	_checkExists(_complex);
-	std::auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
+	auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
 	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
 		*clone, *this->_getRegion(), this->_getMask(), this->_getLog().get(),
 		False, AxesSpecifier(), this->_getStretch()

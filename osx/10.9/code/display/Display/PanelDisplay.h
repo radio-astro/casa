@@ -29,7 +29,7 @@
 #define TRIALDISPLAY_PANELDISPLAY_H
 
 #include <casa/aips.h>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 #include <casa/Containers/List.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/SimOrdMap.h>
@@ -143,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		ConstListIter<WorldCanvas* >* myWCLI;
 
-		virtual void addTool(const String& key, const std::tr1::shared_ptr<MultiWCTool> & );
+		virtual void addTool(const String& key, const shared_ptr<MultiWCTool> & );
 		/* virtual void addTool(const String& key, MultiWCTool* value); */
 		virtual void removeTool(const String& key);
 		virtual void setToolKey(const String& toolname,
@@ -154,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void enableTools();
 		virtual void enableTool(const String& toolname);
 		virtual void disableTool(const String& toolname);
-		virtual const std::tr1::shared_ptr<MultiWCTool> getTool(const String& key);
+		virtual const shared_ptr<MultiWCTool> getTool(const String& key);
 
 		virtual ListIter<WorldCanvas* > wcs() {
 			//return itsWCLI;
@@ -235,7 +235,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//ListIter<WorldCanvasHolder* >* itsWCHLI;
 
-		SimpleOrderedMap<String, std::tr1::shared_ptr<MultiWCTool> > itsMWCTools;
+		SimpleOrderedMap<String, shared_ptr<MultiWCTool> > itsMWCTools;
 
 		// unSetup the Geometry.
 		void unSetupGeometry();

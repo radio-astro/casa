@@ -34,9 +34,7 @@
 #include <casa/Quanta/Quantum.h>
 
 
-namespace std {
-	template <class T1, class T2> class pair;
-}
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

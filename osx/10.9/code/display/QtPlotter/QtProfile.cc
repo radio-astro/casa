@@ -76,7 +76,7 @@
 #include <QMessageBox>
 #include <limits>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa {
 
@@ -114,7 +114,7 @@ namespace casa {
 	QtProfile::~QtProfile() {
 	}
 
-	QtProfile::QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name, QWidget *parent, std::string rcstr)
+	QtProfile::QtProfile(shared_ptr<ImageInterface<Float> > img, const char *name, QWidget *parent, std::string rcstr)
 		:QMainWindow(parent),
 //pc(0),
 //te(0),
@@ -362,7 +362,7 @@ namespace casa {
 	}
 
 
-	MFrequency::Types QtProfile::determineRefFrame(std::tr1::shared_ptr<ImageInterface<Float> > img, bool check_native_frame ) {
+	MFrequency::Types QtProfile::determineRefFrame(shared_ptr<ImageInterface<Float> > img, bool check_native_frame ) {
 		MFrequency::Types freqtype = MFrequency::DEFAULT;
 		if ( img ){
 			DisplayCoordinateSystem cSys=img->coordinates();
@@ -542,7 +542,7 @@ namespace casa {
 		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 	}
 
-	bool QtProfile::isImageSupported(std::tr1::shared_ptr<ImageInterface<float> > imagePtr ){
+	bool QtProfile::isImageSupported(shared_ptr<ImageInterface<float> > imagePtr ){
 		bool imageSupported = true;
 		const DisplayCoordinateSystem& displayCoords = imagePtr->coordinates();
 		bool spectralAxis = displayCoords.hasSpectralAxis();
@@ -728,7 +728,7 @@ namespace casa {
 		emit hideProfile();
 	}
 
-	void QtProfile::resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name) {
+	void QtProfile::resetProfile(shared_ptr<ImageInterface<Float> > img, const char *name) {
 		image = img;
 		try {
 			specFitSettingsWidget->reset( );
@@ -812,7 +812,7 @@ namespace casa {
 		profileStatus->showMessage(position);
 	}
 
-	SpectralCoordinate QtProfile::getSpectralAxis( std::tr1::shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid ){
+	SpectralCoordinate QtProfile::getSpectralAxis( shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid ){
 		SpectralCoordinate coord;
 		valid = false;
 		if ( imagePtr ){
@@ -851,7 +851,7 @@ namespace casa {
 		}
 	}
 
-	SpectralCoordinate QtProfile::resetTabularConversion( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid ){
+	SpectralCoordinate QtProfile::resetTabularConversion( shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid ){
 
 		int tabularIndex = Util::getTabularFrequencyAxisIndex( imagePtr );
 		if ( tabularIndex >= 0 ){
@@ -1216,11 +1216,11 @@ namespace casa {
 	}
 
 	/*int QtProfile::getChannelCount( ImageAnalysis* analysis ){
-		std::tr1::shared_ptr<const ImageInterface<float> > img(analysis->getImage());
+		shared_ptr<const ImageInterface<float> > img(analysis->getImage());
 		return getChannelCount( img );
 	}*/
 
-	int QtProfile::getChannelCount( std::tr1::shared_ptr<ImageInterface<float> >& img){
+	int QtProfile::getChannelCount( shared_ptr<ImageInterface<float> >& img){
 		DisplayCoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
@@ -1240,9 +1240,9 @@ namespace casa {
 		return channelCount;
 	}
 
-	std::tr1::shared_ptr<ImageInterface<float> > QtProfile::findImageWithMaximumChannels(){
+	shared_ptr<ImageInterface<float> > QtProfile::findImageWithMaximumChannels(){
 		int maxChannelCount = getChannelCount( image );
-		std::tr1::shared_ptr<ImageInterface<float> > maxChannelImage = image;
+		shared_ptr<ImageInterface<float> > maxChannelImage = image;
 		if ( over ){
 			QListIterator<OverplotInterface> i(*over);
 			while (i.hasNext() && stateMProf) {
@@ -1278,7 +1278,7 @@ namespace casa {
 			//Get the minimum and maximum x-value for the top axis
 			//Of all the images we are overplotting, use the one with the maximum
 			//number of channels.
-			std::tr1::shared_ptr<ImageInterface<Float> > maxChannelImage = findImageWithMaximumChannels();
+			shared_ptr<ImageInterface<Float> > maxChannelImage = findImageWithMaximumChannels();
 			//int tabularIndex = getFreqProfileTabularIndex( maxChannelImage );
 			//We don't have to worry about smoothing here because we are only using
 			//the x-values.
@@ -1307,7 +1307,7 @@ namespace casa {
 	}
 
 	bool QtProfile::generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-			std::tr1::shared_ptr<casa::ImageInterface<Float> > img,
+			shared_ptr<casa::ImageInterface<Float> > img,
 			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 			String restFreq, const String& frame){
@@ -1336,7 +1336,7 @@ namespace casa {
 			Record	stokesRegion = Record(leregion.toRecord(""));
 			String empty("");
 			SubImage<Float> result = SubImageFactory<Float>::createSubImage(*img, stokesRegion, empty, NULL, False);
-			std::tr1::shared_ptr<ImageInterface<Float> > subImage( new SubImage<Float>(result) );
+			shared_ptr<ImageInterface<Float> > subImage( new SubImage<Float>(result) );
 			ok = _generateProfile(resultXValues, resultYValues, subImage, regionX, regionY,
 									shape, combineType, unit, coordinateType,
 									restFreq, frame);
@@ -1359,7 +1359,7 @@ namespace casa {
 
 
 	bool QtProfile::_generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-			std::tr1::shared_ptr<const casa::ImageInterface<Float> > imagePtr,
+			shared_ptr<const casa::ImageInterface<Float> > imagePtr,
 			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 			String restFreq, const String& frame){
@@ -2077,7 +2077,7 @@ namespace casa {
 	}
 
 
-	void QtProfile::fillPlotTypes(const std::tr1::shared_ptr<ImageInterface<Float> > img) {
+	void QtProfile::fillPlotTypes(const shared_ptr<ImageInterface<Float> > img) {
 		if ( img ){
 			// check whether plot mode "flux" make sense
 			bool allowFlux(false);
@@ -2443,7 +2443,7 @@ namespace casa {
 		profileStatus->showMessage(position);
 	}
 
-	/*bool QtProfile::getFrequencyProfileWrapper( std::tr1::shared_ptr<ImageInterface<Float> >& img,
+	/*bool QtProfile::getFrequencyProfileWrapper( shared_ptr<ImageInterface<Float> >& img,
 			const Vector<double> &wxv, const Vector<double> &wyv,
 	        Vector<Float> &z_xval, Vector<Float> &z_yval,
 	        const String& xytype, const String& specaxis,
@@ -2548,7 +2548,7 @@ namespace casa {
 		return ok;
 	}
 
-	int QtProfile::getFreqProfileTabularIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
+	int QtProfile::getFreqProfileTabularIndex(shared_ptr<const ImageInterface<Float> > img ) {
 		Int whichTabular = -1;
 
 		const DisplayCoordinateSystem& cSys = img->coordinates();
@@ -2786,7 +2786,7 @@ namespace casa {
 			while (i.hasNext() && stateMProf) {
 				OverplotInterface overplot = i.next();
 				QString ky = overplot.first;
-				std::tr1::shared_ptr<ImageInterface<Float> >  ana = overplot.second;
+				shared_ptr<ImageInterface<Float> >  ana = overplot.second;
 				//int tabularIndex = getFreqProfileTabularIndex( ana );
 
 				Vector<Float> xval(100);
@@ -2909,11 +2909,11 @@ namespace casa {
 		}
 	}
 
-	void QtProfile::addOverplotToCanvas( std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
+	void QtProfile::addOverplotToCanvas( shared_ptr<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
 			Vector<Float>& yVals, const QString& ky ){
 		Double beamAngle = 0;
 		Double beamArea = 0;
-		//std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = ana->getImage();
+		//shared_ptr<const ImageInterface<Float> > imagePtr = ana->getImage();
 		getBeamInfo( imagePtr, beamAngle, beamArea );
 		Bool validSpectrum;
 		SpectralCoordinate coord = getSpectralAxis( imagePtr, validSpectrum );
@@ -2922,7 +2922,7 @@ namespace casa {
 		}
 	}
 
-	double QtProfile::getUnitsPerChannel( std::tr1::shared_ptr<ImageInterface<Float> > img , bool* ok, const QString& matchUnits ){
+	double QtProfile::getUnitsPerChannel( shared_ptr<ImageInterface<Float> > img , bool* ok, const QString& matchUnits ){
 		//We just care about the min and the max so we use a vector
 		//of size 2.
 		Vector<Float> xval(2);
@@ -3002,7 +3002,7 @@ namespace casa {
 				while (i.hasNext() && stateMProf) {
 					OverplotInterface overplot = i.next();
 					//QString ky = overplot.first;
-					std::tr1::shared_ptr<ImageInterface<Float> > ana = overplot.second;
+					shared_ptr<ImageInterface<Float> > ana = overplot.second;
 					double overUnitsPerChannel = getUnitsPerChannel( ana, &unitsAvailable, matchUnits );
 					if ( !unitsAvailable ){
 						unitsMatch = false;
@@ -3198,7 +3198,7 @@ namespace casa {
 		return imagePath;
 	}
 
-	SpectralCoordinate QtProfile::getSpectralCoordinate( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid ){
+	SpectralCoordinate QtProfile::getSpectralCoordinate( shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid ){
 		if ( !imagePtr ){
 			valid = false;
 			SpectralCoordinate coord;
@@ -3212,7 +3212,7 @@ namespace casa {
 
 	bool QtProfile::getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const {
 		bool success = true;
-		std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = getImage( curveName );
+		shared_ptr<const ImageInterface<Float> > imagePtr = getImage( curveName );
 		if ( !imagePtr ){
 			success = false;
 		}
@@ -3222,7 +3222,7 @@ namespace casa {
 		return success;
 	}
 
-	std::tr1::shared_ptr<const ImageInterface<Float> > QtProfile::getImage( const QString& imageName ) const {
+	shared_ptr<const ImageInterface<Float> > QtProfile::getImage( const QString& imageName ) const {
 		//First look for a specific image with the name
 		if ( imageName.length() > 0 && over ) {
 			QListIterator<OverplotInterface> i( *over );
@@ -3230,7 +3230,7 @@ namespace casa {
 				OverplotInterface overplot = i.next();
 				QString ky = overplot.first;
 				if ( ky == imageName ) {
-					std::tr1::shared_ptr<const ImageInterface<Float> > imageInterface = overplot.second;
+					shared_ptr<const ImageInterface<Float> > imageInterface = overplot.second;
 					return imageInterface;
 				}
 			}
@@ -3270,7 +3270,7 @@ namespace casa {
 	}
 
 	void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister,
-			Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+			Bool tmpData, shared_ptr<ImageInterface<Float> > img) {
 		emit showCollapsedImg(path, dataType, displayType, autoRegister, tmpData, img);
 	}
 
@@ -3341,7 +3341,7 @@ namespace casa {
 
 	}
 
-	void QtProfile::getBeamInfo( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr,
+	void QtProfile::getBeamInfo( shared_ptr<const ImageInterface<Float> > imagePtr,
 			Double& beamAngle, Double& beamArea) const {
 		//Get the major and minor axis beam widths.
 		ImageInfo information = imagePtr->imageInfo();

@@ -63,7 +63,7 @@ void ImagePadder::setPaddingPixels(
 
 SPIIF ImagePadder::pad(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
+	auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch()

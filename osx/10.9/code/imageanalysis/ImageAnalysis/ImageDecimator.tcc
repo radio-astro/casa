@@ -53,7 +53,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 	LogOrigin lor = LogOrigin(getClass(), __func__);
 	*this->_getLog() << lor;
 	SPIIT clone(this->_getImage()->cloneII());
-	std::tr1::shared_ptr<SubImage<T> >subImage(
+	shared_ptr<SubImage<T> >subImage(
 		new SubImage<T>(
 			SubImageFactory<T>::createSubImage(
 				*clone, *this->_getRegion(), this->_getMask(), 0,
@@ -97,7 +97,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 	uInt ndim = subImage->ndim();
 	IPosition begin(ndim, 0);
 	IPosition end = cursorShape - 1;
-	std::tr1::shared_ptr<ArrayLattice<Bool> > outMask(
+	shared_ptr<ArrayLattice<Bool> > outMask(
 		isMasked ? new ArrayLattice<Bool>(out.shape()) : 0
 	);
 	IPosition outPos = begin;
@@ -122,7 +122,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 			subImage, IPosition(1, _axis), False,
 			ImageCollapserData::MEAN, "", False
 		);
-		std::auto_ptr<Record> reg;
+		auto_ptr<Record> reg;
 
 		Vector<Double> start(ndim);
 		Vector<Int> lattShape(ndim);

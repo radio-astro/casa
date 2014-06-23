@@ -250,11 +250,11 @@ class CalStatsPhase : public CalStats {
         const Vector<T>& oValue );
 
     // The maximum number of iterations for unwrapping
-    static const uInt NUM_ITER_UNWRAP = 50;
+    static const uInt NUM_ITER_UNWRAP;
 
     // The new time range per unwrapping iteration is this factor times the
     // present time increment
-    static const Double NEW_RANGE_FACTOR = 5.0;
+    static const Double NEW_RANGE_FACTOR;
 
 };
 

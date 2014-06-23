@@ -104,7 +104,7 @@ private:
 		SPCIIT image
 	) const;
 
-	void _addImage(std::auto_ptr<ImageConcat<T> >& pConcat, const String& name) const;
+	void _addImage(auto_ptr<ImageConcat<T> >& pConcat, const String& name) const;
 
 };
 }

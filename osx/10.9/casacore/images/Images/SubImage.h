@@ -261,7 +261,7 @@ private:
   PtrHolder<ImageInterface<T> > itsImagePtr;
   // tried to make this PtrHolder and SPtrHolder, but segfaults happened
   // in gcwrap tests in call to pixelMask() (itsSubLatPtr->pixelMask())
-  std::tr1::shared_ptr<SubLattice<T> >    itsSubLatPtr;
+  shared_ptr<SubLattice<T> >    itsSubLatPtr;
 
 
   /*

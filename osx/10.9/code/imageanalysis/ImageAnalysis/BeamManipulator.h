@@ -48,7 +48,7 @@ public:
 
 private:
 	SPIIT _image;
-	std::tr1::shared_ptr<LogIO> _log;
+	shared_ptr<LogIO> _log;
 
 	BeamManipulator() {}
 

@@ -150,10 +150,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsVector(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
+		LatticeAsVector(shared_ptr<ImageInterface<T> > image, const uInt xAxis,
 		                const uInt yAxis, const uInt mAxis,
 		                const IPosition fixedPos);
-		LatticeAsVector(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
+		LatticeAsVector(shared_ptr<ImageInterface<T> > image, const uInt xAxis,
 		                const uInt yAxis);
 		// </group>
 

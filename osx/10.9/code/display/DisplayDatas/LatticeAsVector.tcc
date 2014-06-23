@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	LatticeAsVector<T>::LatticeAsVector(std::tr1::shared_ptr<ImageInterface<T> > image,
+	LatticeAsVector<T>::LatticeAsVector(shared_ptr<ImageInterface<T> > image,
 	                                    const uInt xAxis, const uInt yAxis,
 	                                    const uInt mAxis,
 	                                    const IPosition fixedPos)
@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	LatticeAsVector<T>::LatticeAsVector(std::tr1::shared_ptr<ImageInterface<T> > image,
+	LatticeAsVector<T>::LatticeAsVector(shared_ptr<ImageInterface<T> > image,
 	                                    const uInt xAxis, const uInt yAxis)
 		: LatticePADisplayData<T>(image, xAxis, yAxis),
 		  itsUnits(Unit()) {

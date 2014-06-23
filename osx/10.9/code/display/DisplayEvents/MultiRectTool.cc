@@ -39,13 +39,12 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageStatistics.h>
 #include <display/DisplayDatas/MSAsRaster.h>
-#include <casadbus/types/nullptr.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 // sometimes (?) gcc fails to instantiate this function, so this
 // explicit instantiation request may be necessary... <drs>
-// template bool casa::memory::operator==(casa::std::tr1::shared_ptr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
+// template bool casa::memory::operator==(casa::shared_ptr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -105,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// check for click within one (or more) regions...
-		resizing_region = memory::nullptr;
+		resizing_region.reset( );
 		moving_regions.clear( );			// ensure that moving state is clear...
 		for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
 			if ( (*iter)->clickWithin( linx1, liny1 ) )
@@ -139,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		bool refresh_needed = false;
 		bool region_selected = false;
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( resizing_region ) {
 			// resize the rectangle
 			double linx1, liny1;
 			try {
@@ -152,8 +151,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// return;
 		}
 
-		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
-		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
+		shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+		if ( creation && checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			rectanglelist processing = rectangles;
 			for ( rectanglelist::reverse_iterator iter = processing.rbegin(); iter != processing.rend(); ++iter ) {
@@ -201,17 +200,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MultiRectTool::keyReleased(const WCPositionEvent &ev) {
 
 		// avoid degenerate rectangles...
-		if ( memory::nullptr.check(creating_region) == false ) {
+		if ( creating_region ) {
 			viewer::Region::creatingRegionEnd( );
 			if ( creating_region->degenerate( ) ) {
 				viewer::Region *nix = creating_region.get( );
 				rfactory->revokeRegion(nix);
 				if ( creating_region == resizing_region ) {
-					resizing_region = memory::nullptr;
+					resizing_region.reset( );
 					resizing_region_handle = 0;
 				}
 			}
-			creating_region = memory::nullptr;
+			creating_region.reset( );
 		}
 
 		// 	Bool wasActive = itsActive;
@@ -254,9 +253,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( resizing_region ) {
 			// resize finished
-			resizing_region = memory::nullptr;
+			resizing_region.reset( );
 		}
 
 		if ( moving_regions.size( ) > 0 ) {
@@ -318,7 +317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			uInt x = ev.pixX();
 			uInt y = ev.pixY();
 
-			resizing_region = memory::nullptr;
+			resizing_region.reset( );
 			moving_regions.clear( );		// ensure that moving state is clear...
 
 			double linx, liny;
@@ -810,7 +809,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			try {
 				if ( ! padd->conformsTo(*itsCurrentWC) ) continue;
 
-				std::tr1::shared_ptr<ImageInterface<Float> > image = padd->imageinterface( );
+				shared_ptr<ImageInterface<Float> > image = padd->imageinterface( );
 
 				if ( image == 0 ) continue;
 
@@ -890,12 +889,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
+	shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
 		////// this is the code we would like to use (removing the "region source"), but currently the profile tool
 		////// queues off of events from the region source...
 		// viewer::Rectangle *result = new viewer::Rectangle( wc, dock_, x1, y1, x2, y2, true );
 		// result->releaseSignals( );
-		// return std::tr1::shared_ptr<viewer::Rectangle>(result);
+		// return shared_ptr<viewer::Rectangle>(result);
 		return rfactory->rectangle( wc, x1, y1, x2, y2 );
 	}
 
@@ -925,7 +924,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if ( pts.size( ) != 2 ) return false;
 		if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-		std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second, region_specific_state );
+		shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second, region_specific_state );
 		result->setLabel( label );
 		result->setLabelPosition( label_pos );
 		result->setLabelDelta( label_off );
@@ -963,13 +962,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, 0 );
-		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		viewer::Region::creatingRegionBegin(dynamic_pointer_cast<viewer::Region>(creating_region));
 		rectangles.push_back( resizing_region );
 
 		if ( type( ) != POINTTOOL )
 			resizing_region_handle = 1;
 		else
-			resizing_region = memory::nullptr;
+			resizing_region.reset( );
 
 		set(x,y, x,y);
 		moving_regions.clear( );		// ensure that moving state is clear...

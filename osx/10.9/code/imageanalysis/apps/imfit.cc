@@ -30,7 +30,7 @@
 
 #include <casa/Inputs/Input.h>
 #include <images/Images/ImageUtilities.h>
-
+#include <casa/cppconfig.h>
 #include <casa/namespace.h>
 
 Int main(Int argc, char *argv[]) {
@@ -81,23 +81,23 @@ Int main(Int argc, char *argv[]) {
 	);
 	if (includePixelRange.nelements() == 1) {
 		imFitter.setIncludePixelRange(
-			std::make_pair<Float, Float> (includePixelRange[0], includePixelRange[0])
+			std::pair<Float, Float> (includePixelRange[0], includePixelRange[0])
 		);
 	}
 	else if (includePixelRange.nelements() == 2) {
 		imFitter.setIncludePixelRange(
-			std::make_pair<Float, Float> (includePixelRange[0], includePixelRange[1])
+			std::pair<Float, Float> (includePixelRange[0], includePixelRange[1])
 		);
 
 	}
 	if (excludePixelRange.nelements() == 1) {
 		imFitter.setExcludePixelRange(
-			std::make_pair<Float, Float> (excludePixelRange[0], excludePixelRange[0])
+			std::pair<Float, Float> (excludePixelRange[0], excludePixelRange[0])
 		);
 	}
 	else if (excludePixelRange.nelements() == 2) {
 		imFitter.setExcludePixelRange(
-			std::make_pair<Float, Float> (excludePixelRange[0], excludePixelRange[1])
+			std::pair<Float, Float> (excludePixelRange[0], excludePixelRange[1])
 		);
 	}
     if(! logfile.empty()) {

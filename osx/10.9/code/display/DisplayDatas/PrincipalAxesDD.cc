@@ -2448,7 +2448,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	PrincipalAxesDD::PrincipalAxesDD(const PrincipalAxesDD &):DisplayData()
 	{}
 
-	ImageAnalysis *PrincipalAxesDD::create_image_analysis( std::tr1::shared_ptr<ImageInterface<float> > img ) const {
+	ImageAnalysis *PrincipalAxesDD::create_image_analysis( shared_ptr<ImageInterface<float> > img ) const {
 		return img ? new ImageAnalysis(img) : 0;
 	}
 

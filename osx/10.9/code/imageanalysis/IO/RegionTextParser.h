@@ -117,7 +117,7 @@ private:
 	const static Regex startNPair;
 
 	CoordinateSystem _csys;
-	std::auto_ptr<LogIO> _log;
+	auto_ptr<LogIO> _log;
 	ParamSet _currentGlobals;
 	Vector<AsciiAnnotationFileLine> _lines;
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;

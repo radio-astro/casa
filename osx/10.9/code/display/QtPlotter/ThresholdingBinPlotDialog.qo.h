@@ -30,7 +30,7 @@
 #include <utility>
 #include <QMainWindow>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 using namespace std;
 
@@ -49,7 +49,7 @@ namespace casa {
 
 	public:
 		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
-		void setImage( const std::tr1::shared_ptr<const ImageInterface<Float> >  img );
+		void setImage( const shared_ptr<const ImageInterface<Float> >  img );
 		void setInterval( double minValue, double maxValue );
 		pair<double,double> getInterval() const;
 		~ThresholdingBinPlotDialog();

@@ -1056,6 +1056,12 @@ void AnnotationBase::_initColors() {
 	if (_doneColorInit) {
 		return;
 	}
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
+	_colors = {{"black", BLACK}, {"blue", BLUE}, {"cyan", CYAN},
+		   {"gray", GRAY}, {"green", GREEN}, {"magenta", MAGENTA},
+		   {"orange", ORANGE}, {"red", RED}, {"white", WHITE},
+		   {"yellow", YELLOW}};
+#else
 	_colors = map_list_of
 			("black", BLACK)
 			("blue", BLUE)
@@ -1067,6 +1073,7 @@ void AnnotationBase::_initColors() {
 			("red", RED)
 			("white", WHITE)
 			("yellow", YELLOW);
+#endif
 	for (
 		map<string, RGB>::const_iterator iter=_colors.begin();
 			iter != _colors.end(); iter++

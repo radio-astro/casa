@@ -38,7 +38,7 @@
 //# display library includes:
 #include <display/DisplayDatas/LatticePADD.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -150,10 +150,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsMarker(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
+		LatticeAsMarker(shared_ptr<ImageInterface<T> > image, const uInt xAxis,
 		                const uInt yAxis, const uInt mAxis,
 		                const IPosition fixedPos);
-		LatticeAsMarker(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
+		LatticeAsMarker(shared_ptr<ImageInterface<T> > image, const uInt xAxis,
 		                const uInt yAxis);
 		// </group>
 

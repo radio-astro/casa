@@ -30,7 +30,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 class MDirection;
 
@@ -155,7 +155,7 @@ protected:
 
 
 private:
-	std::auto_ptr<vector<Double> > _start, _end;
+	auto_ptr<vector<Double> > _start, _end;
 	uInt _width;
 	String _unit;
 	static const String _class;

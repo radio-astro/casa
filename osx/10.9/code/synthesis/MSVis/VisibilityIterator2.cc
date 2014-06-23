@@ -39,7 +39,7 @@
 #include <cstdarg>
 #include <map>
 #include <set>
-#include <utility>
+#include <casa/cppconfig.h>
 #include <vector>
 
 using namespace std;

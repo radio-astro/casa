@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d image-based ctor
 	template <class T>
-	LatticeAsRaster<T>::LatticeAsRaster( std::tr1::shared_ptr<ImageInterface<T> > image,const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink ) :
+	LatticeAsRaster<T>::LatticeAsRaster( shared_ptr<ImageInterface<T> > image,const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink ) :
 		LatticePADisplayData<T>( image, xAxis, yAxis, mAxis, fixedPos, sink ) {
 		setupElements();
 		String attString("colormodel");
@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d image-based ctor
 	template <class T>
-	LatticeAsRaster<T>::LatticeAsRaster(std::tr1::shared_ptr<ImageInterface<T> > image,
+	LatticeAsRaster<T>::LatticeAsRaster(shared_ptr<ImageInterface<T> > image,
 	                                    const uInt xAxis, const uInt yAxis) :
 		LatticePADisplayData<T>(image, xAxis, yAxis) {
 		setupElements();

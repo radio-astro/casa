@@ -110,7 +110,7 @@ public:
 	);
 
 	template <typename T>
-	static std::tr1::shared_ptr<ImageInterface<T> > openImage(
+	static shared_ptr<ImageInterface<T> > openImage(
 		const String& fileName
 	);
 //  </group>

@@ -32,7 +32,7 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 
-#include <utility>
+#include <casa/cppconfig.h>
 
 #include <casa/namespace.h>
 using namespace std;

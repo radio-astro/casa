@@ -38,7 +38,7 @@
 #include <display/DisplayDatas/LatticePADD.h>
 #include <display/Display/DParameterRange.h>
 
-#include <tr1/memory>
+#include <casa/cppconfig.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -186,8 +186,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsContour(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-		LatticeAsContour(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
+		LatticeAsContour(shared_ptr<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticeAsContour(shared_ptr<ImageInterface<T> > image, const uInt xAxis,
 		                 const uInt yAxis);
 		// </group>
 

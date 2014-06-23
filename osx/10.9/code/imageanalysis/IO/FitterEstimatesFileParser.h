@@ -105,7 +105,7 @@ class FitterEstimatesFileParser {
 	private:
 		ComponentList _componentList;
 		Vector<String> _fixedValues;
-		std::auto_ptr<LogIO> _log;
+		auto_ptr<LogIO> _log;
 		Vector<Double> _peakValues, _xposValues, _yposValues;
 		//Vector<Quantity> fluxValues, majValues, minValues, paValues;
 		Vector<Quantity> _majValues, _minValues, _paValues;

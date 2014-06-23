@@ -43,7 +43,7 @@
 namespace casa {
 
 template<class T> void ImageAnalysis::_calc(
-	std::tr1::shared_ptr<ImageInterface<T> > image,
+	shared_ptr<ImageInterface<T> > image,
 	const LatticeExprNode& node
 ) {
 
@@ -149,7 +149,7 @@ template<class T> void ImageAnalysis::_calc(
 }
 
 template<class T> Bool ImageAnalysis::_calcmask(
-    std::tr1::shared_ptr<ImageInterface<T> > image,
+    shared_ptr<ImageInterface<T> > image,
     const LatticeExprNode& node,
     const String& maskName, const Bool makeDefault
 ) {

@@ -115,7 +115,7 @@ Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &o
 }
 
 template <class T> void Image2DConvolver<T>::convolve(
-	LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
+	LogIO& os, shared_ptr<ImageInterface<T> > imageOut,
 	const ImageInterface<T>& imageIn, const VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
 	const Bool autoScale, const Double scale, const Bool copyMiscellaneous,
@@ -180,7 +180,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 	String brightnessUnitOut;
 	ImageInfo iiOut = imageOut->imageInfo();
 	if (imageInfo.hasMultipleBeams()) {
-		// std::tr1::shared_ptr<const ImageInterface<T> > imageOutConst(imageOut);
+		// shared_ptr<const ImageInterface<T> > imageOutConst(imageOut);
 		ImageMetaData md(imageOut);
 		uInt nChan = md.nChannels();
 		uInt nPol = md.nStokes();

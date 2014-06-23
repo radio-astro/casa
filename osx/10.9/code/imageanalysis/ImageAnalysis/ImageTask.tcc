@@ -186,7 +186,7 @@ template <class T> void ImageTask<T>::setLogfile(const String& lf) {
 	catch (const AipsError& x) {}
 }
 
-template <class T> const std::tr1::shared_ptr<LogFile> ImageTask<T>::_getLogFile() const {
+template <class T> const shared_ptr<LogFile> ImageTask<T>::_getLogFile() const {
 	ThrowIf(
 		! _logfileSupport,
 		"Logic Error: This task does not support writing of a log file"
@@ -305,12 +305,12 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-	std::tr1::shared_ptr<TempImage<T> > tmpImage(
+	shared_ptr<TempImage<T> > tmpImage(
 		new TempImage<T>(
 			TiledShape(oShape), csys
 		)
 	);
-	std::auto_ptr<ArrayLattice<Bool> > mymask;
+	auto_ptr<ArrayLattice<Bool> > mymask;
 	if (mask != 0) {
 		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
 	}

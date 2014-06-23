@@ -113,7 +113,7 @@ bool Histogram::compute( ){
 	return success;
 }
 
-ImageHistograms<Float>* Histogram::filterByChannels( const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
+ImageHistograms<Float>* Histogram::filterByChannels( const shared_ptr<const ImageInterface<Float> > image ){
 	ImageHistograms<Float>* imageHistogram = NULL;
 	if ( channelMin != ALL_CHANNELS && channelMax != ALL_CHANNELS ){
 		//Create a slicer from the image
@@ -148,7 +148,7 @@ ImageHistograms<Float>* Histogram::filterByChannels( const std::tr1::shared_ptr<
 	return imageHistogram;
 }
 
-void Histogram::setImage(const std::tr1::shared_ptr<const ImageInterface<Float> > img ){
+void Histogram::setImage(const shared_ptr<const ImageInterface<Float> > img ){
 	image = img;
 }
 
@@ -170,7 +170,7 @@ bool Histogram::reset(){
 			}
 			else {
 				//Make the histogram based on the region
-				std::tr1::shared_ptr<SubImage<Float> > subImage(new SubImage<Float>( *image, *region ));
+				shared_ptr<SubImage<Float> > subImage(new SubImage<Float>( *image, *region ));
 				if ( subImage.get() != NULL ){
 					histogramMaker = filterByChannels( subImage );
 				}

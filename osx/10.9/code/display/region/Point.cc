@@ -216,7 +216,7 @@ namespace casa {
 				pc->drawFilledRectangle( x-1-inc, y-1-inc, x+1+inc, y+1+inc );
 			}
 
-			if ( memory::nullptr.check( creating_region ) ) {
+			if ( ! creating_region ) {
 				pushDrawingEnv(region::DotLine,1);
 				if ( weaklySelected( ) || marked( ) ) {
 					// Switching to a circle seemed good, but the rendering of a circle
@@ -310,13 +310,13 @@ namespace casa {
 			return result;
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > * Point::generate_dds_centers( ) {
+		std::list<shared_ptr<RegionInfo> > * Point::generate_dds_centers( ) {
 			// In principle there is no need to implement this,
 			// it would go to Rectangle::generate_dds_centers() otherwise
 			// and really try to fit a Gaussian to a point, certainly
 			// without success. Implementing it here as an empty method
 			// just accelerates matters (MK)
-			return new std::list<std::tr1::shared_ptr<RegionInfo> >( );
+			return new std::list<shared_ptr<RegionInfo> >( );
 		}
 
 		bool Point::output_region( ds9writer &out, WorldCanvas *, const std::vector<std::pair<double,double> > &pts ) const {

@@ -1121,10 +1121,17 @@ void fBM::initialize(const Int seed, const Float beta) {
       }
     // The complex to real transform does not check that the
     // imaginary component of the values where u=0 are zero
+#if defined(HAVE_STDCPP)
     F2(s(0)/2,0).imag()=0.;
     F2(0,s(1)/2).imag()=0.;
     // cout << endl;
     F2(s(0)/2,s(1)/2).imag()=0.;
+#else
+    F2(s(0)/2,0).imag(0.);
+    F2(0,s(1)/2).imag(0.);
+    // cout << endl;
+    F2(s(0)/2,s(1)/2).imag(0.);
+#endif
     // for (uInt i=0; i<s(0)/2; i++)
     // 	for (uInt j=0; j<s(1)/2; j++) {
     // 	  phase = 2.*pi*uDist_p();

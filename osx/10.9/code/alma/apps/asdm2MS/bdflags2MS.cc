@@ -3,7 +3,7 @@
 #include <bitset>
 #include <vector>
 #include <algorithm>
-#include <utility>
+#include <casa/cppconfig.h>
 
 using namespace std;
 
@@ -153,16 +153,16 @@ public:
 
   pair<const T* , const T*>  consume(unsigned int n) {
     LOGENTER("BDFFlgasConsumer::pair<const T* , const T*>  consume(unsigned int n)");
-    if (i0 >= numItems) return make_pair<const T*, const T*>(NULL, NULL);
+    if (i0 >= numItems) return pair<const T*, const T*>(NULL, NULL);
     i1 = i0 + n;
     if (i1 > numItems)
-      return make_pair<const T*, const T*>(NULL, NULL);
+      return pair<const T*, const T*>(NULL, NULL);
     
     const T* p0 = items_p + i0;
     const T* p1 = items_p + i1;
     i0 = i1;
     LOGEXIT("BDFFlgasConsumer::pair<const T* , const T*>  consume(unsigned int n)");
-    return make_pair<const T*, const T*>(p0, p1);
+    return pair<const T*, const T*>(p0, p1);
   }
 }; // end of class BDFFlagConsumer.
 
@@ -253,7 +253,8 @@ public:
     for_each(values.begin(), values.end(), bind(&vector<T>::push_back, var(MSFlags_v), _1));
 
     orderedByTimeBALDD_vvv.back().back().push_back(MSFlagCellDescriptor_v.size());
-    MSFlagCellDescriptor_v.push_back(MSFlagCellDescriptor(make_pair<unsigned int, unsigned int>(numChan, ((numPol==3)? 4:numPol)),
+
+    MSFlagCellDescriptor_v.push_back(MSFlagCellDescriptor(pair<unsigned int, unsigned int>(numChan, ((numPol==3)? 4:numPol)),
 							  offset));
     LOGEXIT("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
   }
@@ -317,7 +318,7 @@ public:
     }
     
     LOGEXIT("MSFlagAccumulator::cellDescriptors(bool MSORDER=true)");
-    return make_pair< vector<pair <unsigned int, unsigned int> *>*,
+    return pair< vector<pair <unsigned int, unsigned int> *>*,
       vector<T*>* >(&flagShapes_p_v, &flagValues_p_v);
   }
 
@@ -594,7 +595,7 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
   }
 
   LOGEXIT("put");
-  return make_pair<uInt, uInt> (iRow0, numFlaggedRows);
+  return pair<uInt, uInt> (iRow0, numFlaggedRows);
 }
 
 void loadBDFlags(map<string, unsigned int>& abbrev2bitpos) {

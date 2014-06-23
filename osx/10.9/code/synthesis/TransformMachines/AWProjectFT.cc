@@ -744,6 +744,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
       cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p); 
   }
+
+  inline static double localreal(double x) { return x; }
+  inline static float localreal(float x) { return x; }
+  inline static double localreal(std::complex<double> x) { return x.real( ); }
+  inline static float localreal(std::complex<float> x) { return x.real( ); }
+
   //
   //---------------------------------------------------------------
   //
@@ -808,7 +814,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  IPosition plane1(ndx);
 	  plane1=ndx;
 	  plane1(2)=1; // The other poln. plane
-	  outBuf(plane1) = real(outBuf(ndx));
+	  outBuf(plane1) = localreal(outBuf(ndx));
 	}
 
     pbNormalized_p = True;

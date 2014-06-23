@@ -483,7 +483,7 @@ namespace casa {
 		}
 	}
 
-	void Fit2DTool::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > image ) {
+	void Fit2DTool::setImage( shared_ptr<const ImageInterface<Float> > image ) {
 		if ( image.get() != this->image.get() ){
 			this->image = image;
 			QString unitStr;
