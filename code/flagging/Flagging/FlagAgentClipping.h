@@ -37,7 +37,7 @@ public:
 protected:
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
+	// void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags afor a given mapped visibility point
 	bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);

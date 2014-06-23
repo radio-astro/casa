@@ -199,6 +199,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	return;
 }
 
+/*
 void
 FlagAgentClipping::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
@@ -217,6 +218,7 @@ FlagAgentClipping::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 	*logger_p << LogIO::DEBUG1 << " clipmax is " << clipmax_p << LogIO::POST;
 
 }
+*/
 
 bool
 FlagAgentClipping::computeInRowFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMapper &visibilities,
