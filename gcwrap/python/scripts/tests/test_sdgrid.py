@@ -400,8 +400,33 @@ class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
 class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
     """
     Test for flag
+    test300. test channel flag
+    test301. test row flag
+    test302. test row flag (all rows of a pol flagged)
+    test303. test combination of channel and row flags 
+
+    Input data has 2 pol x 4channels x 2 rows.
+    [How to generate input data]
+    nchan = 4
+    orgscan = 'testimage1chan.1point.asap'
+    outscan = ('testgrid%dchan.1point.asap' % nchan)
+    sdcoadd(infiles = [orgscan, orgscan], outfile = outscan)
+    tb.open(outscan, nomodify=False)
+    subtb = tb.query('POLNO==0') # nrow=2
+    sp0 = numpy.array([[10.]*nchan, [1.]*nchan])
+    subtb.putcol('SPECTRA', sp0.transpose())
+    subtb.putcol('FLAGTRA', sp0.transpose()*0)
+    subtb.close()
+    subtb = tb.query('POLNO==1') # nrow=2
+    sp1 = numpy.array([[15.]*nchan, [7.]*nchan])
+    subtb.putcol('SPECTRA', sp1.transpose())
+    subtb.putcol('FLAGTRA', sp1.transpose()*0)
+    subtb.close()
+    tb.close()
     """
-    rawfile='testimage1chan.1point.asap'
+    rawfile='testgrid4chan.1point.asap'
+    outfile='sdgrid_flagging.asap'
+    nchan = 4
     
     def setUp(self):
         if os.path.exists(self.rawfile):
@@ -418,59 +443,125 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
 
     def test300(self):
         """Test 300: Test channel flagging"""
-        # channel flag pol0 data
+        # channel flag pol0 data chan=0~1 @row0 and chan=1~2@row1 
         tb.open(self.rawfile,nomodify=False)
-        fl=tb.getcell('FLAGTRA',0)
-        fl[:]=1
-        tb.putcell('FLAGTRA',0,fl)
+        subtb = tb.query("POLNO==0")
+        for irow in range(subtb.nrows()):
+            fl=subtb.getcell('FLAGTRA',irow)
+            fl[irow:irow+2]=1
+            subtb.putcell('FLAGTRA',irow,fl)
+        subtb.close()
         tb.close()
-
         # exec task
-        npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
-        self.assertEqual(res,None,
-                         msg='Any error occurred during gridding')
-
-        # test result
-        self._testresult(npix)
+        # POL0 should be [1., flagged, 10., 5.5]
+        # POL1 should be [11.]*nchan
+        refdata = [self._create_masked_array([1., numpy.nan, 10., 5.5]),
+                   self._create_masked_array([11.]*self.nchan)]
+        self.run_test(refdata)
 
     def test301(self):
-        """Test 301: Test row flagging"""
-        # row flag pol0 data
+        """Test 301: Test row flagging (one of two rows)"""
+        # row flag the first row of pol1 data
         tb.open(self.rawfile,nomodify=False)
-        fl=tb.getcell('FLAGROW',0)
+        subtb = tb.query("POLNO==1")
+        fl=subtb.getcell('FLAGROW',0)
         fl=1
-        tb.putcell('FLAGROW',0,fl)
+        subtb.putcell('FLAGROW',0,fl)
+        subtb.close()
+        tb.close()
+        # exec task
+        # POL0 should be [5.5]*nchan
+        # POL1 should be [7.]*nchan
+        refdata = [self._create_masked_array([5.5]*self.nchan),
+                   self._create_masked_array([7.]*self.nchan)]
+        self.run_test(refdata)
+
+    def test302(self):
+        """Test 302: Test row flagging all rows"""
+        # row flag all rows of pol0 data
+        tb.open(self.rawfile,nomodify=False)
+        subtb = tb.query("POLNO==0")
+        fl=subtb.getcol('FLAGROW')
+        fl[:]=1
+        subtb.putcol('FLAGROW',fl)
+        subtb.close()
         tb.close()
 
         # exec task
-        npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        # POL0 should be flagged
+        # POL1 should be [11.]*nchan
+        refdata = [self._create_masked_array([numpy.nan]*self.nchan, True),
+                   self._create_masked_array([11.]*self.nchan)]
+        self.run_test(refdata)
+
+    def test303(self):
+        """Test 303: Test combination of row and channel flagging"""
+        # flag chans=1~2 in the second row of pol0 data and
+        # row flag the first row
+        tb.open(self.rawfile,nomodify=False)
+        subtb = tb.query("POLNO==0")
+        fl=subtb.getcell('FLAGTRA',0)
+        fl[1:3] = 1
+        fl=subtb.putcell('FLAGTRA',0,fl)
+        fl=subtb.getcell('FLAGROW',1)
+        fl=1
+        subtb.putcell('FLAGROW',1,fl)
+        subtb.close()
+        tb.close()
+
+        # exec task
+        # POL0 should be [10., flagged, flagged, 10.]
+        # POL1 should be [11.]*nchan
+        refdata = [self._create_masked_array([10., numpy.nan, numpy.nan, 10.]),
+                   self._create_masked_array([11.]*self.nchan)]
+        self.run_test(refdata)
+
+    ####################
+    # Helper functions
+    ####################
+    def _create_masked_array(self, data, mask=None):
+        if mask is None: mask=numpy.isnan(numpy.array(data))
+        return numpy.ma.masked_array(data, mask)
+
+    def run_test(self, refdata):
+        npix=1
+        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',weight='UNIFORM',
+                   npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
-
+        self._test_results(self.outfile, refdata)
+    
+    def _test_results(self, filename, refdata):
+        # assert output file is generated
+        self._checkfile(filename)
         # test result
-        self._testresult(npix)
+        tb.open(filename)
+        try:
+            nrow = tb.nrows()
+            spec = tb.getcol('SPECTRA').transpose()
+            cflag = tb.getcol('FLAGTRA').transpose()
+            rflag = tb.getcol('FLAGROW')
+        except: raise
+        finally: tb.close()
+        # check row number
+        self.assertEqual(nrow,len(refdata),
+                         msg='output row number differs: %d (expected: %d)' % (nrow, len(refdata)))
+        # spectra and flagtra
+        for irow in range(nrow):
+            ref = refdata[irow]
+            sp = spec[irow]
+            flg = (rflag[irow]!=0) or (cflag[irow]!=0)
+            # check num chan
+            self.assertEqual(len(sp),len(ref),
+                             msg='nchan in row=%d differs: %d (expected: %d)' % (irow, len(sp), len(ref)))
+            # check flag and spectra
+            spma = self._create_masked_array(sp, flg)
+            if ref.mask.all():
+                self.assertTrue(spma.mask.all(), msg='spectram in row=%d should been all flagged' % irow)
+            else:
+                self.assertTrue((spma==ref).all(),
+                                msg='spectrum or flag in row=%d differs: %s (expected: %s)' % (irow, str(spma), str(ref)))
 
-    def _testresult(self,npix):
-        self.getdata()
-        
-        # center is only nonzero pixel
-        npol=2
-        width=1
-        nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        # pol0 is flagged so that data must be zero
-        #nonzeropix_ref2=(numpy.array([nonzeropix_ref[0][1]]),
-        #                 numpy.array([nonzeropix_ref[1][1]]))
-        nonzeropix_ref2=numpy.array([nonzeropix_ref[1]])
-        nonzeropix=self.data.nonzero()[1]
-        #print nonzeropix
-        self.nonzero(nonzeropix_ref2,nonzeropix)
-
-        # pol1 must be 1.0
-        pol1=self.data[0,nonzeropix[0]]
-        self.check(1.0,pol1)
-        
 
 ###
 # Test various weighting
@@ -892,59 +983,6 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
     
-class sdgrid_flagging2(sdgrid_unittest_base,unittest.TestCase):
-    """
-    This is test suite for handling flag information in sdgrid.
-    """
-    rawfile='testimage1chan.map.asap'
-    modified_file=rawfile+'.mod'
-    def setUp(self):
-        if os.path.exists(self.rawfile):
-            shutil.rmtree(self.rawfile)
-        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-
-        table = gentools(['tb'])[0]
-        table.open(self.rawfile, nomodify=False)
-        spectra = table.getcol('SPECTRA')
-        flagtra = table.getcol('FLAGTRA')
-        spectra_new = numpy.concatenate([spectra, spectra])
-        flagtra_new = numpy.concatenate([flagtra, flagtra])
-        table.putcol('SPECTRA', spectra_new)
-        table.putcol('FLAGTRA', flagtra_new)
-        table.close()
-        
-        default(sdgrid)
-
-    def tearDown(self):
-        if (os.path.exists(self.rawfile)):
-            shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.outfile)):
-            shutil.rmtree(self.outfile)
-
-    def test_channelflag(self):
-        """test_channelflag: test specific channels are flagged"""
-        # flag all channels
-        scan = sd.scantable(self.rawfile, average=False)
-        mask = scan.create_mask([0,0])
-        scan.flag(mask)
-        scan.save(self.modified_file, overwrite=True)
-
-        # run sdgrid
-        npix=17
-        res=sdgrid(infiles=self.modified_file,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
-        self.assertEqual(res,None,
-                         msg='Any error occurred during gridding')
-        
-        # check result
-        table = gentools(['tb'])[0]
-        table.open(self.outfile)
-        flagtra = table.getcol('FLAGTRA')
-        table.close()
-        self.assertTrue(all(flagtra[0] != 0),
-                        msg='Channel 0 should be flagged for all spectra')
-        self.assertTrue(all(flagtra[1] == 0),
-                        msg='Channel 1 should not be flagged')
-        
 class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
                         sdgrid_unittest_base,unittest.TestCase):
     """
@@ -1384,5 +1422,4 @@ def suite():
             sdgrid_clipping, sdgrid_flagging,
             sdgrid_weighting, sdgrid_map,
             sdgrid_dec_correction, sdgrid_grid_center,
-            sdgrid_flagging2,
             sdgrid_selection]
