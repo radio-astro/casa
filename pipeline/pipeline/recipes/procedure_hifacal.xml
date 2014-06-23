@@ -63,10 +63,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_bpflagchans</Command>
         <ParameterSet>
-          <Parameter>
-              <Keyword xmlns="">diffmad_nchan_limit</Keyword>
-              <Value xmlns="">10000</Value>
-          </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
