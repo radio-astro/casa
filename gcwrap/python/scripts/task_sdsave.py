@@ -198,6 +198,14 @@ def _fillweight(vis):
         casalog.post('tempolary caltable name: %s'%(caltable))
         try:
             gencal(vis=vis, caltable=caltable, caltype='tsys')
+            # add 0.5*INTERVAL to the TIME values in caltable to make them time of
+            # integration midpoint, because gencal currently sets (TIME_VIS -
+            # INTERVAL_VIS/2), namely start time, into TIME in its output based on
+            # ALMA's conventions...(2014/6/17 WK)
+            with sdutil.tbmanager(caltable, nomodify=False) as tbcal:
+                with sdutil.tbmanager(vis) as tbvis:
+                    interval = tbvis.getcol('INTERVAL')[0]
+                tbcal.putcol('TIME', tbcal.getcol('TIME') + 0.5*interval)
             applycal(vis=vis, docallib=False, gaintable=[caltable], applymode='calonly')
         except Exception, e:
             # Tsys application failed so that reset WEIGHT and SIGMA to 1.0
