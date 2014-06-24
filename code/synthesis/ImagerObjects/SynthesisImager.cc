@@ -616,7 +616,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
-    os << "----------------------------------------------------------- Run Major Cycle -------------------------------------" << LogIO::POST;
 
     Bool lastcycle=False;
     if( controlRecord.isDefined("lastcycle") )
@@ -625,6 +624,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cout << "lastcycle : " << lastcycle << endl;
       }
     //else {cout << "No lastcycle" << endl;}
+
+    os << "----------------------------------------------------------- Run ";
+    if (lastcycle) os << "(Last) " ;
+    os << "Major Cycle -------------------------------------" << LogIO::POST;
+    
     try
       {    
 	runMajorCycle(False, useViVb2, lastcycle);

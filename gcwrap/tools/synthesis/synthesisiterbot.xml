@@ -73,7 +73,7 @@ This is used to construct {\tt synthesisiterbot} tool.
 <input>
 
 </input>
-<returns type="bool"/>
+<returns type="int"/>
 </method>
 
 

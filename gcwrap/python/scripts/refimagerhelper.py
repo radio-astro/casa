@@ -167,11 +167,15 @@ class PySynthesisImager:
               initrec =  self.SDtools[immod].initminorcycle() 
               self.IBtool.mergeinitrecord( initrec );
               print "Peak res of field ",immod, " : " ,initrec['peakresidual']
+              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
         # Check with the iteration controller about convergence.
          stopflag = self.IBtool.cleanComplete()
          print 'Converged : ', stopflag
-         return stopflag
+         if( stopflag>0 ):
+             stopreasons = ['iteration limit', 'threshold', 'force stop']
+             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
+         return (stopflag>0)
 
 #############################################
     def makePSF(self):
@@ -191,7 +195,7 @@ class PySynthesisImager:
             self.PStools[immod].scattermodel() 
 
         if self.IBtool != None:
-            lastcycle = self.IBtool.cleanComplete()
+            lastcycle = (self.IBtool.cleanComplete() > 0)
         else:
             lastcycle = True
         self.runMajorCycleCore(lastcycle)
@@ -549,11 +553,16 @@ class PyParallelDeconvolver(PySynthesisImager):
              retrec = self.PH.pullval("initrec", immod )
              self.IBtool.mergeinitrecord( retrec[immod] )
              print "Peak res of field ",immod, " on node ", immod , ": " ,retrec[immod]['peakresidual']
+             casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
         # Check with the iteration controller about convergence.
         stopflag = self.IBtool.cleanComplete()
         print 'Converged : ', stopflag
-        return stopflag
+        if( stopflag>0 ):
+            stopreasons = ['iteration limit', 'threshold', 'force stop']
+            casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
+        return (stopflag>0)
+
 
 #############################################
 

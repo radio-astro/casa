@@ -41,8 +41,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                5:{'readonly':False,  'usescratch':False, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'} 
                }
 
-          ###  5 has a bug. When trying to read the virtual model (in plotms), there is an error
-          ###   ' RecordInterface: field is unknown '
+          ###  Note : 2 or 3 has a bug. When trying to read the virtual model (in plotms), the plotted values are
+          ###           different when using a modelcolumn or a virtual model. Needs more checking.
 
           if testid > 5:
                print 'No such test.'
