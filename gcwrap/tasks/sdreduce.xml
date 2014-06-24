@@ -108,7 +108,7 @@ sdbalseline, for more information.
     </param>
 
     <param type="string" name="timerange">
-	    <description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help of sdcal)</description>
+	    <description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help)</description>
 	    <value></value>
     </param>
 
