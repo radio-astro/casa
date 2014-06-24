@@ -35,6 +35,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/OS/HostInfo.h>
+#include <casa/System/ProgressMeter.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
@@ -144,6 +146,15 @@ void MSUVBin::createOutputMS(const Int nrrow){
 		  outMsPtr_p->initRefs();
 		}
 		TableCopy::copySubTables(outMsPtr_p->pointing(), (mss_p[0])->pointing());
+
+	MSColumns msc(*outMsPtr_p);
+	msc.data().fillColumn(Matrix<Complex>(npol_p, nchan_p, Complex(0.0)));
+	msc.flagRow().fillColumn(True);
+	msc.flag().fillColumn(Matrix<Bool>(npol_p, nchan_p, True));
+	msc.weight().fillColumn(Vector<Float>(npol_p, 0.0));
+	msc.weightSpectrum().fillColumn(Matrix<Float>(npol_p, nchan_p, 0.0));
+	outMsPtr_p->flush(True);
+
 	existOut_p=False;
 
 }
@@ -184,7 +195,23 @@ void MSUVBin::storeGridInfo(){
 
 }
 
-Bool MSUVBin::fillOutputMS(){
+Bool MSUVBin::fillOutputMS(const Bool forceDisk){
+  Double imagevol=Double(nx_p)*Double(ny_p)*Double(npol_p)*Double(nchan_p)*8.0/1e6; //in MB
+  Double memoryMB=Double(HostInfo::memoryFree())/1024.0 ;
+  Bool retval;
+  //forcing disk version for testing
+  if( (imagevol > 0.5*memoryMB) || forceDisk){
+    cerr << "Filling via disk " << endl;
+    retval= fillBigOutputMS();
+  }
+  else{
+    cerr << "Filling via ram " << endl;
+    retval=fillSmallOutputMS();
+  }
+  return retval;
+}
+
+Bool MSUVBin::fillSmallOutputMS(){
 	if(mss_p.nelements()==0)
 		throw(AipsError("No valid input MSs defined"));
 	Vector<Double> incr;
@@ -244,6 +271,51 @@ Bool MSUVBin::fillOutputMS(){
 	storeGridInfo();
 	return True;
 }
+
+Bool MSUVBin::fillBigOutputMS(){
+
+	if(mss_p.nelements()==0)
+			throw(AipsError("No valid input MSs defined"));
+	Vector<Double> incr;
+	Vector<Int> cent;
+	Matrix<Double> uvw;
+	//need to build or recover csys at this stage
+	makeCoordsys();
+	Double reffreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
+	Int nrrows=makeUVW(reffreq, incr, cent, uvw);
+	createOutputMS(nrrows);
+	if(!existOut_p)
+	  MSColumns(*outMsPtr_p).uvw().putColumn(uvw);
+	nrrows=0;
+	for (uInt k=0; k < mss_p.nelements() ; ++k)
+	  nrrows+=(mss_p[k])->nrow();
+	
+	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), False);
+	vi::VisBuffer2* vb=iter.getVisBuffer();
+	iter.originChunks();
+	iter.origin();
+	Matrix<Int> locuv;
+	
+	ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
+                         "", "", "", True);
+	Double rowsDone=0.0;
+	for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
+				for(iter.origin(); iter.more(); iter.next()){
+	
+				  locateuvw(locuv, incr, cent, vb->uvw());
+				  inplaceGridData(*vb, locuv);
+					//
+					//gridData(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
+					//		ant1,ant2,timeCen, locuv);
+				  rowsDone+=Double(vb->nRows());
+				  pm.update(rowsDone);
+				}
+	}
+	
+	storeGridInfo();
+	return True;
+}
+
 Int MSUVBin::makeUVW(const Double reffreq, Vector<Double>& increment,
 		Vector<Int>& center, Matrix<Double>& uvw){
 		Vector<Int> shp(2);
@@ -417,6 +489,134 @@ void MSUVBin::datadescMap(const vi::VisBuffer2& vb){
 
 }
 
+void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb, const Matrix<Int>& locuv){
+	//we need polmap and chanmap;
+	datadescMap(vb);
+	//Dang i thought the new vb will return Data or FloatData if correctedData was
+	//not there
+	Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
+	Int nrows=vb.nRows();
+	//	Cube<Complex> grid(npol_p, nchan_p, nrows);
+	//	Matrix<Float> wght(npol_p,nrows);
+	//	Cube<Float> wghtSpec(npol_p,nchan_p,nrows);
+	//	Cube<Bool> flag(npol_p, nchan_p,nrows);
+	//	Vector<Bool> rowFlag(nrows);
+	//	Matrix<Double> uvw(3, nrows);
+	//	Vector<Int> ant1(nrows);
+	//	Vector<Int> ant2(nrows);
+	//	Vector<Double> timeCen(nrows);
+	//	Vector<uInt> rowids(nrows);
+	//cerr << outMsPtr_p.null() << endl;
+	MSColumns msc(*outMsPtr_p);
+	
+	///Index
+	Vector<Int> rowToIndex(nx_p*ny_p, -1);
+	Int numUniq=0;
+	for (Int k=0; k <nrows; ++k){
+	  Int newrow=locuv(1,k)*nx_p+locuv(0,k);
+	  if(rowToIndex[newrow] <0){ 
+	    rowToIndex[newrow]=numUniq;
+	    ++numUniq;
+	  }
+	}
+	cerr << "numrows " << vb.nRows() << " nuniq " << numUniq << endl;
+	Cube<Complex> grid(npol_p, nchan_p, numUniq);
+	Matrix<Float> wght(npol_p,numUniq);
+	Cube<Float> wghtSpec(npol_p,nchan_p,numUniq);
+	Cube<Bool> flag(npol_p, nchan_p,numUniq);
+	Vector<Bool> rowFlag(numUniq);
+	Matrix<Double> uvw(3, numUniq);
+	Vector<Int> ant1(numUniq);
+	Vector<Int> ant2(numUniq);
+	Vector<Double> timeCen(numUniq);
+	Vector<uInt> rowids(numUniq);
+	Vector<Bool> rowvisited(numUniq, False);
+
+	/*	for (Int k=0; k < vb.nRows(); ++k){
+	  Int newrow=locuv(1,k)*nx_p+locuv(0,k);
+	  rowids[k]=uInt(newrow);
+	  rowFlag[k]=msc.flagRow()(newrow);
+	  grid[k]=msc.data().get(newrow);
+	  wghtSpec[k]=msc.weightSpectrum().get(newrow);
+	  flag[k]=msc.flag().get(newrow);
+	  uvw[k]=msc.uvw().get(newrow);
+	  cerr << newrow << " rowFlag " << rowFlag[k] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,k) << endl;
+	  ant1[k]=msc.antenna1()(newrow);
+	  ant2[k]=msc.antenna2()(newrow);
+	  timeCen[k]=msc.time()(newrow);
+	}
+
+	*/
+	for (Int k=0; k < nrows; ++k){
+	  //Have to reject uvws out of range.
+	  if(locuv(0,k) > -1 && locuv(0,k) < nx_p && locuv(1,k)> -1 && locuv(1,k) < ny_p){
+		Int newrow=locuv(1,k)*nx_p+locuv(0,k);
+		Int actrow=rowToIndex[newrow];
+		rowids[actrow]=uInt(newrow);
+		if(!rowvisited[actrow]){
+		  rowvisited[actrow]=True;
+		  rowFlag[actrow]=msc.flagRow()(newrow);
+		  wghtSpec[actrow]=msc.weightSpectrum().get(newrow);
+		  flag[actrow]=msc.flag().get(newrow);
+		  uvw[actrow]=msc.uvw().get(newrow);
+		  ant1[actrow]=msc.antenna1()(newrow);
+		  ant2[actrow]=msc.antenna2()(newrow);
+		  timeCen[actrow]=msc.time()(newrow);
+		  grid[actrow]=msc.data().get(newrow);
+		}
+		if(rowFlag[actrow] && !(vb.flagRow()(k))){
+		  //	  cerr << newrow << " rowFlag " << rowFlag[actrow] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,actrow) << endl;
+		  rowFlag[actrow]=False;
+		  uvw(2,actrow)=vb.uvw()(2,k);
+		  //	  cerr << newrow << " rowFlag " << rowFlag[actrow] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,actrow) << endl;
+		  ant1[actrow]=vb.antenna1()(k);
+		  ant2[actrow]=vb.antenna2()(k);
+		  timeCen[actrow]=vb.time()(k);		  
+		}
+		for(Int chan=0; chan < vb.nChannels(); ++chan ){
+		  if(chanMap_p(chan) >=0){
+		    for(Int pol=0; pol < vb.nCorrelations(); ++pol){
+		      if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0)){
+			Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k):
+			  vb.visCube()(pol,chan,k)*vb.weight()(pol,k);
+			grid(polMap_p(pol),chanMap_p(chan),actrow)
+			  = (grid(polMap_p(pol),chanMap_p(chan),actrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),actrow)
+			     + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),actrow));
+			flag(polMap_p(pol),chanMap_p(chan),actrow)=False;
+			//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
+			//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
+			wghtSpec(polMap_p(pol),chanMap_p(chan),actrow) += vb.weight()(pol,k);
+		      }
+		    }
+		  }
+		}
+		for (Int pol=0; pol < wght.shape()(0); ++pol){
+				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
+		  wght(pol,actrow)=median(wghtSpec.xyPlane(actrow).row(pol));
+				//cerr << "pol " << pol << " newrow "<< newrow << " weight "<< wght(pol, newrow) << endl;
+		}
+	  }
+	}
+	//now lets put back the stuff
+	RefRows elrow(rowids);
+	msc.flagRow().putColumnCells(elrow, rowFlag);
+	//reference row
+	//Matrix<Complex>matdata(grid.xyPlane(k));
+	msc.data().putColumnCells(elrow, grid);
+	//Matrix<Float> matwgt(wghtSpec.xyPlane(k));
+	msc.weightSpectrum().putColumnCells(elrow, wghtSpec);
+	//Matrix<Bool> matflag(flag.xyPlane(k));
+	msc.flag().putColumnCells(elrow, flag);
+	//Vector<Double> vecuvw(uvw.column(k));
+	msc.uvw().putColumnCells(elrow, uvw);
+	msc.antenna1().putColumnCells(elrow, ant1);
+	msc.antenna2().putColumnCells(elrow, ant2);
+	msc.time().putColumnCells(elrow, timeCen);
+	//outMsPtr_p->flush(True);
+	///////
+		
+}
+
 void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		Matrix<Float>& wght, Cube<Float>& wghtSpec,
 		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
@@ -438,6 +638,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				//uvw(1,newrow)=vb.uvw()(1,k);
 				/////
 				uvw(2,newrow)=vb.uvw()(2,k);
+				cerr << newrow << " rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,newrow) << endl;
 				ant1(newrow)=vb.antenna1()(k);
 				ant2(newrow)=vb.antenna2()(k);
 				timeCen(newrow)=vb.time()(k);

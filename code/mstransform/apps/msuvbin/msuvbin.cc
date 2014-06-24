@@ -48,7 +48,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
   Input inp;
-  inp.version("2014/03/30 by Code Monkey MLLN, HTST");
+  inp.version("2014/06/18 by CM MLLN, HTST");
   // Title of CM  i.e Code Monkey is
   //Master Lead Lion Ninja and Honcho Tiger Samurai Team 
   inp.create("vis", "ngc5921.ms", "MS to be binned");
@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
   inp.create("nchan","1", "number of output channel");
   inp.create("fstart", "1.420GHz", "frequency of first channel in LSRK");
   inp.create("fstep", "1KHz", "channel width");
+  inp.create("fdb", "False", "Force to go through disk and not use ram");
   inp.readArguments(argc, argv);
   String msname=inp.getString("vis");
   String outMS=inp.getString("outvis");
@@ -107,12 +108,13 @@ int main(int argc, char **argv) {
   String field=inp.getString("field");
   String spw=inp.getString("spw");
   
+  Bool forceDisk=inp.getBool("fdb");
   
   MSUVBin binner(phaseCenter, nx,
 		 ny, nchan, ncorr, cellx, celly, fstart, fstep);
   binner.selectData(msname, field, spw);
   binner.setOutputMS(outMS);
-  binner.fillOutputMS();
+  binner.fillOutputMS(forceDisk);
   
 
   return 0;
