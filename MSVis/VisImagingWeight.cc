@@ -245,11 +245,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               fid=multiFieldMap_p(mapid);
               Int nRow=vb->nRows();
               Int nChan=vb->nChannels();
+	      //Oww !!! temporary implementation of old vb.flag just to see if things work
+	      Matrix<Bool> flag;
+	      cube2Matrix(vb->flagCube(), flag);
               for (Int row=0; row<nRow; row++) {
                   for (Int chn=0; chn<nChan; chn++) {
-                	  //Oww !!! temporary implementation of old vb.flag just to see if things work
-                	  Matrix<Bool> flag;
-                	  cube2Matrix(vb->flagCube(), flag);
+                	  
+			
                       if(!flag(chn,row)) {
                           Float f=vb->getFrequency(row, chn)/C::c;
                           u=vb->uvw()(0,row)*f;
