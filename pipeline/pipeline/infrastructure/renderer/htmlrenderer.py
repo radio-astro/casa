@@ -6123,7 +6123,8 @@ class WebLogGenerator(object):
                  T2_3_1MRenderer,      # data set topic
                  T2_3_2MRenderer,      # calibration topic
                  T2_3_3MRenderer,      # flagging topic
-                 T2_3_4MRenderer,      # line finding topic
+                 # disable unused line finding topic for July 2014 release
+#                  T2_3_4MRenderer,      # line finding topic
                  T2_3_5MRenderer,      # imaging topic
                  T2_3_6MRenderer,      # miscellaneous topic
                  T2_3MDetailsRenderer, # QA details pages
