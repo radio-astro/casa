@@ -1244,7 +1244,7 @@ class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for handling flags in MSWriter
 ###
-class sdsave_flagging(unittest.TestCase,sdsave_unittest_base):
+class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
     """
     Read Scantable data, modify flags in various ways, and write as MS.
     """
@@ -2504,13 +2504,68 @@ class sdsave_weighting2(sdsave_unittest_base, unittest.TestCase):
 
                 self.assertTrue(all(diff_weight < self.tol))
                 self.assertTrue(all(diff_sigma < self.tol))        
-                
+
+
+class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
+    """
+    Verify correct handling of flag information in sdsave for scantable output.
+    no changes must be made on any flag information.
+    """
+    infile = 'flagtest.asap'
+    outfile = 'flagtest_out.asap'
+    flagged_row_list = [0,1]
+    flagged_chan_row_list = [1,2]
+    flagged_chan_list = [[5,9],[15,19],[94,98]]
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.outfile)):
+            shutil.rmtree(self.outfile)
+
+    def test_flag(self):
+        sdsave(infile=self.infile,outfile=self.outfile,outform='ASAP')
+        self.verifyflag(self.outfile)
+
+    def verifyflag(self, outfile):
+        tb.open(outfile)
+        assert (tb.nrows() == 4)
+        for i in xrange(tb.nrows()):
+            rowflag = tb.getcell('FLAGROW', i)
+            rowflag_ref = 1 if self.get_index(i, self.flagged_row_list) >= 0 else 0
+            self.assertEqual(rowflag, rowflag_ref)
+
+            mask = tb.getcell('FLAGTRA', i)
+            mask_ref = numpy.zeros(100, numpy.int32)
+            if self.get_index(i, self.flagged_chan_row_list) >= 0:
+                for j in xrange(len(self.flagged_chan_list)):
+                    idx_start = self.flagged_chan_list[j][0]
+                    idx_end   = self.flagged_chan_list[j][1]+1
+                    for k in xrange(idx_start, idx_end):
+                        mask_ref[k] = 128
+            self.assertTrue(all(mask == mask_ref))
+        tb.close()
+
+    def get_index(self, value, list):
+        try:
+            return list.index(value)
+        except:
+            return -1
+
+
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
-            sdsave_freq_labeling,sdsave_flagging,
-            sdsave_scan_number,sdsave_test_splitant,
+            sdsave_freq_labeling, sdsave_flaggingMS,
+            sdsave_scan_number, sdsave_test_splitant,
             sdsave_selection_syntax, sdsave_scanrate,
-            sdsave_weighting, sdsave_weighting2
+            sdsave_weighting, sdsave_weighting2, sdsave_flag
             ]
