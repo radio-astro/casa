@@ -649,8 +649,86 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
+###
+# Test on flag
+###
+class sdscale_testflag(unittest.TestCase,sdscale_unittest_base):
+    """
+    Test on flag information handling
+
+    Test data, sdscale_flagtest.asap, is artificial data with the following
+    status:
+
+       - nrow = 4
+       - nchan = 100
+       - rows #0 and #1 are row-flagged
+       - channels 5 to 9, 15 to 19, and 94 to 98 are flagged in rows #1 and #2
+       - all spectral values are 1.0
+       - all tsys values are 1.0
+
+    if a spectrum is row-flagged, scaling must not be applied on the spectrum.
+    as for spectra which are not row-flagged, scaling must be applied to the 
+    spectra/tsys values for all channels regardless of channel-flag values. 
+    """
+    # Input and output names
+    rawfile='sdscale_flagtest.asap'
+    prefix=sdscale_unittest_base.taskname+'TestFlag'
+    outfile=prefix+'.asap'
+    flagged_chan_list = [[5,9],[15,19],[94,98]]
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+
+        default(sdscale)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testflag(self):
+        """Testflag: verify proper handling of flag information"""
+        factor = 2.0
+        scaletsys=True
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during calibration')
+
+        # check if no changes applied on flag values
+        tb.open(self.outfile)
+        rowflags = tb.getcol('FLAGROW')
+        rowflags_ref = numpy.array([1, 1, 0, 0])
+        self.assertTrue(all(rowflags==rowflags_ref))
+        for i in xrange(tb.nrows()):
+            chanflag = tb.getcell('FLAGTRA', i)
+            chanflag_ref = numpy.zeros(100, numpy.int32)
+            if i in [1, 2]:
+                for j in xrange(len(self.flagged_chan_list)):
+                    idx_start = self.flagged_chan_list[j][0]
+                    idx_end   = self.flagged_chan_list[j][1]+1
+                    for k in xrange(idx_start, idx_end):
+                        chanflag_ref[k] = 128
+            self.assertTrue(all(chanflag==chanflag_ref))
+        tb.close()
+
+        #check spectra and tsys values
+        tb.open(self.outfile)
+        for i in xrange(tb.nrows()):
+            spec = tb.getcell('SPECTRA', i)
+            spec_ref = numpy.ones(100, numpy.float)
+            tsys = tb.getcell('TSYS', i)
+            tsys_ref = numpy.ones(100, numpy.float)
+            if i in [2, 3]:
+                spec_ref *= factor
+                tsys_ref *= factor
+            self.assertTrue(all(spec==spec_ref))
+            self.assertTrue(all(tsys==tsys_ref))
+        tb.close()
+
 
 def suite():
     return [sdscale_test0,sdscale_test1,
             sdscale_test2,sdscale_test3,
-            sdscale_test4]
+            sdscale_test4,sdscale_testflag]
