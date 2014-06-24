@@ -97,7 +97,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        << ", CycleNiter=" << loopcontrols.getCycleNiter() 
        << ", Gain=" << loopcontrols.getLoopGain()
        << LogIO::POST;
-    
+
+    Float maxResidualAcrossPlanes=0.0;
+
     for( Int chanid=0; chanid<nSubChans;chanid++)
       {
 	for( Int polid=0; polid<nSubPols; polid++)
@@ -139,11 +141,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//cout << "SDAlgoBase: After one step, dec : " << deconvolverid << "  plane : " << subimageid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << endl; 
 		
 		loopcontrols.incrementMinorCycleCount( iterdone );
-		loopcontrols.setPeakResidual( peakresidual );
-		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
-					      modelflux, peakresidual );
 
 		stopCode = checkStop( loopcontrols,  peakresidual );
+
+		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
+					      modelflux, peakresidual );
 
 	      }// end of minor cycle iterations for this subimage.
 	    
@@ -179,8 +181,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       os << LogIO::POST;
 	    
 	    loopcontrols.resetCycleIter(); 
+
+	    maxResidualAcrossPlanes = max ( maxResidualAcrossPlanes , peakresidual );
+
 	    
 	  }// end of SubImage Loop
+	
+	loopcontrols.setPeakResidual( maxResidualAcrossPlanes );
+
+
       }
   }// end of deconvolve
   

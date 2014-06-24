@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// virtual bool majorCycleRequired(Float currentPeakResidual);
 
-			bool cleanComplete();
+			int cleanComplete();
     
 			/* --- Functions for interacting with Minor Cycle Control --- */
 			Record getMinorCycleControls();

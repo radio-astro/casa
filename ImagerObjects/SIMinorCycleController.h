@@ -130,7 +130,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* This variable keeps track of the maximum number of iterations done
        during a major cycle */
     Int   itsMaxCycleIterDone;
-    
 
    Float itsPeakResidual;
    Float itsIntegratedFlux;
