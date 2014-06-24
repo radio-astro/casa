@@ -354,6 +354,11 @@ class Plot(object):
         if not os.path.exists(thumb_dir):
             os.mkdir(thumb_dir) 
 
+        if not os.path.exists(self.abspath):
+            LOG.warning('Cannot create thumbnail. Original image not found: '
+                        '%s', self.abspath)
+            return self.basename
+
         # Set the command to perform. The module defines whether to use sips
         # or ImageMagick; all that remains is to append, in order, the output
         # and input files

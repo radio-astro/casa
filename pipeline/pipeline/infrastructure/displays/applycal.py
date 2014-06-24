@@ -181,6 +181,11 @@ class PlotmsLeaf(object):
 
         task = casa_tasks.plotms(**task_args)
         task.execute(dry_run=False)
+        
+        if not os.path.exists(self._plotfile):
+            LOG.info('The last plotms call did not generate an output file. '
+                     'If the data selection was flagged, this is to be ' 
+                     'expected.')
 
 
 class SpwComposite(common.LeafComposite):
