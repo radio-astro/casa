@@ -26,7 +26,7 @@ class TsysflagchansInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       intentgroups=None, metric=None,
       flag_edges=None, edge_limit=None, 
-      flag_sharps=None, sharps_limit=None, niter=None):
+      flag_sharps=None, sharps_limit=None, niter=None, prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -182,7 +182,7 @@ class Tsysflagchans(basetask.StandardTaskTemplate):
         flaggerinputs = flagger.Inputs(
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
-          rules=rules, niter=inputs.niter)
+          rules=rules, niter=inputs.niter, prepend=inputs.prepend)
         flaggertask = flagger(flaggerinputs)
 
         # Execute it to flag the data view
