@@ -510,8 +510,16 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
                     "thread for layer(s): " + layers + ".",
                     PlotLogger::MSG_DEBUG);
         }
-        
-        drawThread->start();
+        bool useThreading = true;
+        if ( this->m_parent != NULL ){
+        	useThreading = this->m_parent->isThreading();
+        }
+        if ( useThreading ){
+        	drawThread->start();
+        }
+        else {
+        	drawThread->run();
+        }
     } else {
         // Finish operation.
         PlotOperationPtr op;
@@ -528,22 +536,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
     m_parent->logMethod(CLASS_NAME, "drawItems", false);
 }
 
-Bool QPLayeredCanvas::isDrawing( bool scripting ){
-	bool canvasDrawing = false;
-	if ( scripting ){
-		//Terminate the draw thread sooner rather than later if it is done.
-		if ( m_drawThread != NULL ){
-			if ( m_drawThread->isFinished() && !m_drawThread->isRunning()){
-				itemDrawingFinished();
-			}
-		}
-		bool threadRunning = (m_drawThread != NULL );
-		bool redrawing = (m_drawThread == NULL) && m_redrawWaiting;
-		canvasDrawing = ( threadRunning || redrawing );
-	}
-	else {
-		canvasDrawing = m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
-	}
+Bool QPLayeredCanvas::isDrawing( ){
+	bool canvasDrawing = m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
 	return canvasDrawing;
 }
 
