@@ -6,10 +6,11 @@ from tasks import *
 from taskinit import *
 import exceptions
 import testhelper as th
+from parallel.parallel_data_helper import ParallelDataHelper
 import unittest
 
 '''
-functional tests for task hanningsmooth2. It tests the following parameters:
+functional tests for task hanningsmooth2
 '''
 
 # Path for data
@@ -48,6 +49,23 @@ class test_base(unittest.TestCase):
             shutil.copytree(datapath+self.msfile, self.msfile)
             
         default(hanningsmooth2)
+
+    def createMMS(self, msfile, column='data', axis='auto',scans='',spws=''):
+        '''Create MMSs for tests with input MMS'''
+        prefix = msfile.rstrip('.ms')
+        if not os.path.exists(msfile):
+            os.system('cp -RL '+datapath + msfile +' '+ msfile)
+        
+        # Create an MMS for the tests
+        self.testmms = prefix + ".test.mms"
+        default(mstransform)
+        
+        if os.path.exists(self.testmms):
+            os.system("rm -rf " + self.testmms)
+            
+        print "................. Creating test MMS .................."
+        partition(vis=msfile, outputvis=self.testmms, datacolumn=column,
+                    createmms=True,separationaxis=axis, scan=scans, spw=spws)
 
 
 class hanningsmooth2_test1(test_base):
@@ -121,6 +139,9 @@ class hanningsmooth2_test1(test_base):
 
     def test4(self):
         '''hanningsmooth2 - Test 4: Theoretical and calculated values should be the same for MMS-case'''
+        
+        # create a test MMS. It creates self.testmms
+        self.createMMS(self.msfile)
         self.outputms = 'hann4.mms'
         
       # check correct flagging (just for one row as a sample)
@@ -131,7 +152,9 @@ class hanningsmooth2_test1(test_base):
         self.assertTrue(flag_col['r1'][0][62] == [False])
         
         data_col = th.getVarCol(self.msfile, 'DATA')        
-        hanningsmooth2(vis=self.msfile, outputvis=self.outputms, datacolumn='data', createmms=True)
+        hanningsmooth2(vis=self.testmms, outputvis=self.outputms, datacolumn='data', keepmms=True)
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms), 'Output should be an MMS')
+        
         corr_col = th.getVarCol(self.outputms, 'DATA')
         nrows = len(corr_col)
 
@@ -234,15 +257,28 @@ class hanningsmooth2_test2(test_base):
         self.setUp_almams()
 
     def tearDown(self):
-        pass
         if (os.path.exists(self.outputms)):
             shutil.rmtree(self.outputms,ignore_errors=True)       
              
     def test_default_cols(self):
         '''hanningsmooth2: Default datacolumn=all and MMS output'''
+        
+        self.createMMS(self.msfile,column='all')
         self.outputms = 'hannall.ms'
 
-        hanningsmooth2(vis=self.msfile, outputvis=self.outputms, createmms=True)
+        hanningsmooth2(vis=self.testmms, outputvis=self.outputms)
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms), 'Output should be an MMS')
+        
+        # Should have all scratch columns in output
+        cd = th.getColDesc(self.outputms, 'DATA')
+        self.assertGreater(len(cd), 0, 'DATA column does not exist')
+        cc = th.getColDesc(self.outputms, 'CORRECTED_DATA')
+        self.assertGreater(len(cc), 0, 'CORRECTED_DATA does not exist')
+        
+        # Now repeat the above steps but create an output MS by setting keepmms=False
+        os.system('rm -rf '+self.outputms)
+        hanningsmooth2(vis=self.testmms, outputvis=self.outputms, keepmms=False)
+        self.assertFalse(ParallelDataHelper.isParallelMS(self.outputms), 'Output should be a normal MS')
         
         # Should have all scratch columns in output
         cd = th.getColDesc(self.outputms, 'DATA')

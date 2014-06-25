@@ -38,31 +38,11 @@
         <value></value>
     </param>
 
-    <param type="bool" name="createmms">
-    <description>Create a multi-MS output.</description>
-    <value>False</value>
+        <!-- MMS-CASE parameters -->
+    <param type="bool" name="keepmms">
+        <description>If the input is a Multi-MS the output will also be a Multi-MS.</description>
+    <value>True</value>
     </param>
-	    <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-	        <description>Axis to do parallelization across(scan,spw,both).</description>
-	        <value>both</value>
-	        <allowed kind="enum" ignorecase="true">
-	            <value>both</value>
-	            <value>spw</value>
-	            <value>scan</value>
-	        </allowed>
-	    </param>
-	    <param type="int" name="numsubms" subparam="true">
-	        <description>The number of Sub-MSs to create.</description>
-	        <value>64</value>
-	    </param>
-	    <param type="bool" name="parallel" subparam="true">
-	        <description>Create a multi-MS in parallel using simple_cluster.</description>
-	        <value>True</value>
-	    </param>        
-	    <param type="int" name="ddistart" subparam="true" visibility="hidden">
-	        <description>For internal use only. Do not change it!</description>
-	        <value>-1</value>
-	    </param>
     
     <!-- SELECTION parameters -->    
     <param type="any" name="field">
@@ -146,19 +126,7 @@
             <value>lag_data,data</value>
         </allowed>
     </param>
-    				
-        			
-    <constraints>
-          <when param="createmms">
-            <equals type="bool" value="False"/>
-            <equals type="bool" value="True">
-                  <default param="separationaxis"><value type="string">both</value></default>
-                  <default param="numsubms"><value type="int">64</value></default>
-                  <default param="parallel"><value type="bool">True</value></default>
-           </equals>
-          </when>
-    </constraints>
-    
+    				    
     </input>
 
 <example>
@@ -171,29 +139,14 @@
     outputvis -- Name of output visibility file (MS or MMS)
         default: ''; example: outputvis='out_ngc5921.mms'
 
-    createmms -- Create a multi-MS as the output.
-        default: False
+    keepmms -- Create a Multi-MS as the output if the input is a Multi-MS.
+        default: True
 
-        If True, it will create the smoothed data in a Multi-MS partitioned
-        in the given 'separationaxis' parameter. See 'help partition' for a description
-        of a Multi-MS structure.
-
-        separationaxis -- Axis to do parallelization across. 
-            default: 'both'
-            options: 'scan', 'spw', 'both'
-            The 'both' option will try to partition in both scan and spw axes.
-
-        numsubms -- The number of sub-MSs to create (int).
-            default: 64
-
-        parallel -- Create a multi-MS in parallel, using the simple_cluster
-                    infrastructure. It will run the tool several times in parallel,
-                    one instance for each subMS. Note that for small MSs, we
-                    recommend to not change this parameter as the overhead of creating
-                    a cluster may be larger than the gain to run in parallel. (bool)
-            default: False 
-
-		
+        By default it will create a Multi-MS when the input is a Multi-MS.
+        The output Multi-MS will have the same partition axis of the input MMS.
+        See 'help partition' for more information on the MMS format.
+ 
+    		
 	--- Data selection parameters ---
 	
     field -- Select field using field id(s) or field name(s).

@@ -4,16 +4,12 @@ import string
 import copy
 import math
 from taskinit import *
-from task_mstransform import MSTHelper
+from parallel.parallel_data_helper import ParallelDataHelper
 import testhelper as th
 
 def hanningsmooth2(vis=None, 
                    outputvis=None,
-                   createmms=None,
-                   separationaxis=None,
-                   numsubms=None,
-                   parallel=None,
-                   ddistart=None,        # to be used by mstransform internally. Hidden parameter!
+                   keepmms=None,
                    field=None,
                    spw=None, 
                    scan=None, 
@@ -36,38 +32,32 @@ def hanningsmooth2(vis=None,
     
     
     # Initiate the helper class    
-    msth = MSTHelper(locals()) 
-    msth.setTaskName('hanningsmooth2')
+    pdh = ParallelDataHelper("hanningsmooth2", locals()) 
 
     # Validate input and output parameters
     try:
-        msth.setupIO()
+        pdh.setupIO()
     except Exception, instance:
         casalog.post('%s'%instance,'ERROR')
         return False
 
-    # Create an output MMS
-    if createmms:   
+    # Input vis is an MMS
+    if pdh.isParallelMS(vis) and keepmms:
         
-        # The user decides to run in parallel or sequential
-        if not parallel:
-            casalog.post('Will process the MS in sequential')
-            msth.bypassParallelProcessing(1)
-        else:
-            msth.bypassParallelProcessing(0)
-            casalog.post('Will process the MS in parallel')
+        if not pdh.validateInputParams():        
+            raise Exception, 'Unable to continue with MMS processing'
+                        
+        pdh.setupCluster('hanningsmooth2')
 
-        # Get a cluster
-        msth.setupCluster(thistask='hanningsmooth2')
-        
-        # Execute the jobs using simple_cluster
+        # Execute the jobs
         try:
-            msth.go()
+            pdh.go()
         except Exception, instance:
             casalog.post('%s'%instance,'ERROR')
             return False
                     
         return True
+
 
     # Actual task code starts here
 
@@ -80,13 +70,11 @@ def hanningsmooth2(vis=None,
         # Gather all the parameters in a dictionary.        
         config = {}
         
-        config = msth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
+        config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=observation,
                     feed=feed)
         
-        # ddistart will be used in the tool when re-indexing the spw table
-        config['ddistart'] = ddistart
         
         # Check if CORRECTED column exists, when requested
         datacolumn = datacolumn.upper()
