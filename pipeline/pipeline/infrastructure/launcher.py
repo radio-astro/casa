@@ -140,6 +140,7 @@ class Context(object):
         self.logtype = 'MOUS'
 
         self.logs['casa_commands'] = 'casa_commands.log'
+        self.logs['pipeline_script'] = 'casa_pipescript.py'
 
     @property
     def stage(self):

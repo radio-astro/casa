@@ -77,7 +77,7 @@ def format_score(scores, result):
 </div>
 
 % if 'casalogs' in pcontext.logs:
-<h4>CASA logs</h4>
+<h4>CASA logs and scripts</h4>
 <ul>
 %for log_url in pcontext.logs['casalogs']:
 <% 
@@ -89,6 +89,13 @@ def format_score(scores, result):
 %endfor
 <% 
    log_url = pcontext.logs['casa_commands']
+   fp = os.path.join(pcontext.report_dir, log_url)
+   total_bytes = os.path.getsize(fp)
+   filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
+%>
+	<li>download <a href="${log_url}" download="${log_url}">${log_url}</a> (${str(filesize)})</li>
+<% 
+   log_url = pcontext.logs['pipeline_script']
    fp = os.path.join(pcontext.report_dir, log_url)
    total_bytes = os.path.getsize(fp)
    filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)

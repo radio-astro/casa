@@ -1268,7 +1268,8 @@ def _log_task(task, dry_run):
                                 subsequent_indent='# ',
                                 width=78,
                                 break_long_words=False)
-        comment = '%s\n' % '\n'.join(wrapped)
+        comment = ('raise Error(\'The casa commands log is not executable!\')\n'
+                   '\n%s\n' % '\n'.join(wrapped))
 
     comment += '\n# %s\n#\n' % getattr(task.inputs, '_pipeline_casa_task', 'unknown pipeline task')
 
