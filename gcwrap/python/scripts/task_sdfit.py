@@ -125,6 +125,12 @@ class sdfit_worker(sdutil.sdtask_template):
     
         for irow in range(scantab.nrow()):
             casalog.post( "start row %d" % (irow) )
+            # check for FLAGROW
+            if scantab._getflagrow(irow):
+                casalog.post( "the row is flagged. skip fitting " )
+                self.fitparams.append([[0,0,0]])
+                self.result['nfit']+=[-1]
+                continue
             numlines = self.nlines[irow] if isinstance(self.nlines,list) \
                        else self.nlines
 
