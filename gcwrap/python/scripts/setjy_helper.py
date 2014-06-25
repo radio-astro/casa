@@ -455,10 +455,10 @@ class ss_setjy_helper:
               newclinrec['nelements']=1
               newclinrec['component0']=clinrec['component'+str(icomp)]
               mycl.fromrecord(newclinrec)
-              if os.access("/tmp",os.W_OK):
-                tmpclpath = "/tmp/"
-              elif os.access("./",os.W_OK):
+              if os.access("./",os.W_OK):
                 tmpclpath = "./"
+              elif os.access("/tmp",os.W_OK):
+                tmpclpath = "/tmp/"
               tmpclpath=tmpclpath+"_tmp_setjyCLfile"
               if os.path.exists(tmpclpath):
                  shutil.rmtree(tmpclpath)

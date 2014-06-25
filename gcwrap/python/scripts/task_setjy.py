@@ -17,7 +17,8 @@ def setjy(vis=None, field=None, spw=None,
     """Fills the model column for flux density calibrators."""
 
     casalog.origin('setjy')
-    casalog.post("standard="+standard)
+    casalog.post("standard="+standard,'DEBUG1')
+
     # Take care of the trivial parallelization
     if ( not listmodels and ParallelTaskHelper.isParallelMS(vis) and usescratch):
         # jagonzal: We actually operate in parallel when usescratch=True because only
