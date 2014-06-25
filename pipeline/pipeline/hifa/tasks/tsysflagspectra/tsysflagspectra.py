@@ -63,7 +63,7 @@ class TsysflagspectraInputs(basetask.StandardInputs):
       flag_hi=None, fhi_limit=None, fhi_minsample=None,
       flag_tmf1=None, tmf1_axis=None, tmf1_limit=None,
       flag_maxabs=None, fmax_limit=None,
-      niter=None):
+      niter=None, prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -313,7 +313,7 @@ class Tsysflagspectra(basetask.StandardTaskTemplate):
         matrixflaggerinputs = viewflaggers.MatrixFlaggerInputs(
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
-          rules=rules, niter=inputs.niter)
+          rules=rules, niter=inputs.niter, prepend=inputs.prepend)
         flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
 
         # Execute it to flag the data view
