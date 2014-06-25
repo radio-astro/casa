@@ -121,6 +121,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       delete mss_p[k];
     }
     if(rvi_p) delete rvi_p;
+    rvi_p=NULL;
+
     //    cerr << "IN DESTR"<< endl;
     //    VisModelData::listModel(mss4vi_p[0]);
   }
@@ -735,18 +737,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        try {
     	//Int nx=itsMaxShape[0];
     	//Int ny=itsMaxShape[1];
-    	Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
-    	Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
-      os << LogIO::NORMAL // Loglevel INFO
-         << "Set imaging weights : " ; //<< LogIO::POST;
-
-      if (type=="natural") {
-        os << LogIO::NORMAL // Loglevel INFO
-           << "Natural weighting" << LogIO::POST;
-        imwgt_p=VisImagingWeight("natural");
-      }
+	 Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
+	 Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
+	 os << LogIO::NORMAL // Loglevel INFO
+	    << "Set imaging weights : " ; //<< LogIO::POST;
+	 
+	 if (type=="natural") {
+	   os << LogIO::NORMAL // Loglevel INFO
+	      << "Natural weighting" << LogIO::POST;
+	   imwgt_p=VisImagingWeight("natural");
+	 }
       else if (type=="radial") {
-    	  os << "Radial weighting" << LogIO::POST;
+	os << "Radial weighting" << LogIO::POST;
     	  imwgt_p=VisImagingWeight("radial");
       }
       else{
@@ -815,9 +817,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				  << LogIO::POST;
     		  Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
 
-    		  imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
+		  //		  cerr << "rmode " << rmode << " noise " << noise << " robust " << robust << " npixels " << actualNPixels << " cellsize " << actualCellSize << " multifield " << multiField << endl;
+		  //		  Timer timer;
+		  //timer.mark();
+		  //Construct imwgt_p with old vi for now if old vi is in use as constructing with vi2 is slower 
+		  if(rvi_p !=NULL){
+		    imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust,
                                  actualNPixels, actualNPixels, actualCellSize,
                                  actualCellSize, 0, 0, multiField);
+		  }
+		  else{
+		    ////This is slower by orders of magnitude as of 2014/06/25
+		    imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
+                                 actualNPixels, actualNPixels, actualCellSize,
+                                 actualCellSize, 0, 0, multiField);
+		  }
+		    //timer.show("After making visweight ");
 
     	  }
     	  else {
