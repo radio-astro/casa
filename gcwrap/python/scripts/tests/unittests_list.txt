@@ -132,7 +132,7 @@ test_sdimaging                  takeshi.nakazato@nao.ac.jp
 test_sdimprocess                takeshi.nakazato@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp
 test_sdmath                     takeshi.nakazato@nao.ac.jp
-#test_sdplot                     kana.sugi@nao.ac.jp
+test_sdplot                     kana.sugi@nao.ac.jp
 test_sdreduce                   kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
 test_sdscale                    takeshi.nakazato@nao.ac.jp
