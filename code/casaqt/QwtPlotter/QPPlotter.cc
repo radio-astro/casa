@@ -131,6 +131,11 @@ QPPlotter::~QPPlotter() {
 
 void QPPlotter::showGUI(bool showGUI) {
     setVisible(showGUI);
+    m_guiShown = showGUI;
+}
+
+bool QPPlotter::isGuiShown() const {
+	return m_guiShown;
 }
 
 pair<int, int> QPPlotter::size() const {

@@ -447,8 +447,7 @@ void PlotMSPlot::holdDrawing() {
    vector<PlotCanvasPtr> canv = canvases();
     for(unsigned int i = 0; i < canv.size(); i++){
     	if ( !canv[i].null() ){
-    		bool scriptClient = !itsParent_->guiShown();
-    		bool canvasDrawing = canv[i]->isDrawing( scriptClient );
+    		bool canvasDrawing = canv[i]->isDrawing();
     		if ( canvasDrawing ){
     			waitOnCanvas( canv[i]);
     		}
@@ -474,11 +473,14 @@ void PlotMSPlot::waitOnCanvas( const PlotCanvasPtr& canvas ){
 		int maxCalls =  60;
 
 		bool scriptClient = !itsParent_->guiShown();
-		bool canvasDrawing = canvas->isDrawing( scriptClient );
+		if ( scriptClient ){
+			return;
+		}
+		bool canvasDrawing = canvas->isDrawing( );
 	   while(  canvasDrawing && callIndex < maxCalls ){
 	        usleep(1000000);
 	        callIndex++;
-	        canvasDrawing = canvas->isDrawing( scriptClient );
+	        canvasDrawing = canvas->isDrawing();
 	    }
 	}
 }
