@@ -55,10 +55,17 @@ def listpartition(vis=None, createdict=None, listfile=None):
         
         # It is a multi-MS
         if ismms:
-            casalog.post('This is a multi-MS')
             mslist = mslocal.getreferencedtables()
             mslist.sort()
             sname = 'Sub-MS'
+            
+            # Get the AxisType of the MMS
+            axis = ph.axisType(vis)
+            if axis == '':
+                axis = 'unknown'
+                
+            casalog.post('This is a multi-MS with separation axis = '+axis)
+
         else:
             mslist.append(vis)
             sname = 'MS'
