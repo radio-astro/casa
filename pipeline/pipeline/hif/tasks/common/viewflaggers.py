@@ -13,7 +13,8 @@ LOG = infrastructure.get_logger(__name__)
 class MatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
-        flagsettertask=None, rules=None, niter=None, extendfields=None):
+        flagsettertask=None, rules=None, niter=None, extendfields=None,
+        prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -40,8 +41,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         niter = inputs.niter
 
         if inputs.extendfields:
-            LOG.info('flagcmds will be extended by removing selection in following fields: %s'
-              % inputs.extendfields)
+            LOG.info('%s flagcmds will be extended by removing selection in following fields: %s'
+              % (inputs.prepend, inputs.extendfields))
 
         iter = 1
         flags = []
@@ -62,11 +63,11 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
             # set any flags raised
             if newflags:
-                LOG.warning('%s iteration %s raised %s flagging commands' % \
-                  (os.path.basename(inputs.vis), iter, len(newflags)))
+                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
+                  (inputs.prepend, os.path.basename(inputs.vis), iter, len(newflags)))
             else:
-                LOG.info('%s iteration %s raised %s flagging commands' % \
-                  (os.path.basename(inputs.vis), iter, len(newflags)))
+                LOG.info('%s%s iteration %s raised %s flagging commands' % \
+                  (inputs.prepend, os.path.basename(inputs.vis), iter, len(newflags)))
             flagsettertask.flags_to_set(newflags)
             ignore = self._executor.execute(flagsettertask)
 
@@ -468,7 +469,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 class VectorFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
-        flagsettertask=None, rules=None, niter=None, intent=None):
+        flagsettertask=None, rules=None, niter=None, intent=None, prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -514,11 +515,11 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
             # set any flags raised
             if newflags:
-                LOG.warning('%s iteration %s raised %s flagging commands' % \
-                  (os.path.basename(inputs.vis), iter, len(newflags)))
+                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
+                  (inputs.prepend, os.path.basename(inputs.vis), iter, len(newflags)))
             else:
-                LOG.info('%s iteration %s raised %s flagging commands' % \
-                  (os.path.basename(inputs.vis), iter, len(newflags)))
+                LOG.info('%s%s iteration %s raised %s flagging commands' % \
+                  (inputs.prepend, os.path.basename(inputs.vis), iter, len(newflags)))
             flagsettertask.flags_to_set(newflags)
             ignore = self._executor.execute(flagsettertask)
 
