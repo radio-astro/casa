@@ -194,7 +194,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
               fnm_limit = inputs.fnm_limit,
               flag_hi=False,
               flag_maxabs=False,
-              flag_tmf1=False)
+              flag_tmf1=False,
+              prepend='flag nmedian - ')
 
             flagtask = Tsysflagspectra(flaginputs)
             # Execute it to flag the data view
@@ -213,7 +214,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
               fmax_limit=inputs.fd_max_limit,
               flag_nmedian=False,
               flag_hi=False,
-              flag_tmf1=False)
+              flag_tmf1=False,
+              prepend='flag derivative - ')
 
             flagtask = Tsysflagspectra(flaginputs)
             result.add('derivative', self._executor.execute(flagtask))
@@ -229,7 +231,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
               intentgroups="['ATMOSPHERE','BANDPASS','AMPLITUDE']",
               flag_edges=True,
               edge_limit=inputs.fe_edge_limit,
-              flag_sharps=False)
+              flag_sharps=False,
+              prepend='flag edgechans - ')
 
             flagtask = Tsysflagchans(flaginputs)
             result.add('edgechans', self._executor.execute(flagtask))
@@ -250,7 +253,9 @@ class Tsysflag(basetask.StandardTaskTemplate):
               tmf1_axis='Antenna1',
               tmf1_limit=inputs.ff_tmf1_limit,
               flag_nmedian=False,
-              flag_hi=False)
+              flag_hi=False,
+              prepend='flag fieldshape - ')
+
 
             flagtask = Tsysflagspectra(flaginputs)
             result.add('fieldshape', self._executor.execute(flagtask))
@@ -266,7 +271,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
               metric='antenna_diff',
               flag_edges=False,
               flag_sharps=True,
-              sharps_limit=inputs.fb_sharps_limit)
+              sharps_limit=inputs.fb_sharps_limit,
+              prepend='flag birdies - ')
 
             flagtask = Tsysflagchans(flaginputs)
             result.add('birdies', self._executor.execute(flagtask))
