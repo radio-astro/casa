@@ -1340,6 +1340,28 @@ cb.close()
 </example>
 </method>
 
+<method type="function" name="changeWeightConvention">
+   <shortdescription>Modify the WEIGHT column dividing between the number of
+   channels in order to be compliant with 4.2.2 WEIGHT convention</shortdescription>
+
+<returns type="bool"/>
+
+<description>
+
+Modify the WEIGHT column dividing between the number of 
+channels in order to be compliant with 4.2.2 WEIGHT convention
+
+</description>
+
+<example>
+
+cb.open('ngc5921.ms')
+cb.changeWeightConvention()
+cb.close()
+
+</example>
+</method>
+
 
 
 <method type="function" name="fluxscale">

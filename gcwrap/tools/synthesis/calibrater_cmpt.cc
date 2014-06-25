@@ -740,6 +740,42 @@ calibrater::initweights()
   return retval;
 }
 
+bool calibrater::changeWeightConvention()
+{
+
+	if (!itsMS)
+	{
+		*itsLog << LogIO::SEVERE << "Must first open a MeasurementSet." << endl << LogIO::POST;
+		return false;
+	}
+
+	Bool retval = True;
+
+	try
+	{
+		logSink_p.clearLocally();
+		LogIO os(LogOrigin("calibrater", "changeWeightConvention"), logSink_p);
+		os << "Beginning changeWeightConvention---------------------------" << LogIO::POST;
+
+		// Update HISTORY table
+		itsCalibrater->writeHistory(os);
+
+		// Apply the calibration solutions to the uv-data
+		retval = itsCalibrater->changeWeightConvention();
+		AlwaysAssert (retval, AipsError);
+
+		os << "Finished changing weight convention" << LogIO::POST;
+
+	}
+	catch (AipsError x)
+	{
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+	return retval;
+}
+
 //----------------------------------------------------------------------------
 //Fluxscale - bootstrap the flux density scale from std. amplitude calibrators
 casac::record* calibrater::fluxscale(

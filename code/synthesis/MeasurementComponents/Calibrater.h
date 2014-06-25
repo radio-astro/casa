@@ -171,6 +171,9 @@ class Calibrater
   // Initialize sigma/weight according to bandwidth/exposure
   Bool initWeights();
 
+  // Modify the WEIGHT column dividing between the number of channels in order to be compliant with 4.2.2 WEIGHT convention
+  Bool changeWeightConvention();
+
   // Solve for a given calibration component
   Bool solve();
 

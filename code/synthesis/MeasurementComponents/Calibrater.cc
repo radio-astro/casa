@@ -1313,9 +1313,56 @@ Bool Calibrater::corrupt() {
 }
 
 
+Bool Calibrater::changeWeightConvention()
+{
+
+	logSink() << LogOrigin("Calibrater", "changeWeightConvention") << LogIO::NORMAL;
+	Bool retval = False;
+
+	try {
+
+		if (!ok()) throw(AipsError("Calibrater not prepared for changeWeightConvention!"));
+
+		Block<Int> columns;
+		columns.resize(5);
+		columns[0] = MS::ARRAY_ID;
+		columns[1] = MS::SCAN_NUMBER;
+		columns[2] = MS::FIELD_ID;
+		columns[3] = MS::DATA_DESC_ID;
+		columns[4] = MS::TIME;
+
+		vi::SortColumns sc(columns);
+		vi::VisibilityIterator2 vi2(*ms_p, sc, True);
+		vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+		for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk())
+		{
+			for (vi2.origin(); vi2.more(); vi2.next())
+			{
+				Int nChan = vb->nChannels();
+				vb->setWeight(vb->weight() / nChan);
+				vb->writeChangesBack();
+			}
+		}
+
+		retval = True;
+	}
+	catch (AipsError x)
+	{
+		logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+		logSink() << "Resetting all calibration application settings." << LogIO::POST;
+
+		unsetapply();
+
+		throw(AipsError("Error in Calibrater::changeWeightConvention."));
+	}
+
+	return retval;
+}
+
 Bool Calibrater::initWeights() {
 
-  logSink() << LogOrigin("Calibrater","initWeights2") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","changeWeightConvention") << LogIO::NORMAL;
   Bool retval = true;
 
   try {
