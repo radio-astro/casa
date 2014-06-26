@@ -58,9 +58,11 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <tables/LogTables/NewFile.h>
 
+#include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/SpectralComponents/SpectralListFactory.h>
 
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
+#include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -1432,7 +1434,7 @@ record* image::deconvolvefrombeam(
 		Angular2DGaussian decon;
 		Bool retval = False;
 		try {
-			retval = myBeam.deconvolve(decon, mySource);
+			retval = GaussianDeconvolver::deconvolve(decon, mySource, myBeam);
 			success = True;
 		}
 		catch (const AipsError& x) {
@@ -1479,7 +1481,7 @@ record* image::beamforconvolvedsize(
 		GaussianBeam myConvolved(convolvedParam[0], convolvedParam[1], convolvedParam[2]);
 		GaussianBeam neededBeam;
 		try {
-			if (mySource.deconvolve(neededBeam, myConvolved)) {
+			if (GaussianDeconvolver::deconvolve(neededBeam, myConvolved, mySource)) {
 				// throw without a message here, it will be caught
 				// in the associated catch block and a new error will
 				// be thrown with the appropriate message.
@@ -1533,7 +1535,7 @@ record* image::commonbeam() {
 		}
 		else {
 			// multiple beams in this image
-			beam = myInfo.getBeamSet().getCommonBeam();
+			beam = CasaImageBeamSet(myInfo.getBeamSet()).getCommonBeam();
 		}
 		beam.setPA(casa::Quantity(beam.getPA("deg", True), "deg"));
 		Record x = beam.toRecord();

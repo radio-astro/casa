@@ -15,6 +15,8 @@ image(std::tr1::shared_ptr<casa::ImageAnalysis> ia);
 
 private:
 
+typedef GaussianBeam Angular2DGaussian;
+
 mutable casa::LogIO _log;
 
 // This class needs to be templated. For now, we maintain two pointers.

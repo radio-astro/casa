@@ -10,6 +10,7 @@
 #include <tr1/memory>
 
 namespace casa {
+	class GaussianBeam;
 	class LogIO;
 	class ImageAnalysis;
 	class ImageStatsCalculator;
