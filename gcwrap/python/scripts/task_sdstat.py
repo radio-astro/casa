@@ -85,6 +85,7 @@ class sdstat_worker(sdutil.sdtask_template):
         self.savestats = ''
         self.returnstats = {}
         rootidx = []
+        unflagged_rows = []
 
 #         # Warning for multi-IF data
 #         if len(self.scan.getifnos()) > 1:
@@ -184,46 +185,72 @@ class sdstat_worker(sdutil.sdtask_template):
                      'sum', 'mean', 'median', 'rms',
                      'stddev']
         for name in statsname:
-            v = self.scan.stats(name,self.msk,self.format_string)
+            v = self.scan.stats(name,self.msk,self.format_string, None, True)
             self.result[name] = list(v) # if len(v) > 1 else v[0]
             if sd.rcParams['verbose']:
                 self.savestats += get_text_from_file(tmpfile)
 
         # calculate additional statistics (eqw and integrated intensity)
         self.__calc_eqw_and_integf()
-
+        
         if sd.rcParams['verbose']:
             # Print equivalent width
-            out = self.__get_statstext('eqw', self.abclbl, 'eqw')
+            out = self.__get_statstext('eqw', self.abclbl, 'eqw', self.unflagged_rows)
             self.savestats += out
 
             # Print integrated flux
-            outp = self.__get_statstext('Integrated intensity', self.intlbl, 'totint')
+            outp = self.__get_statstext('Integrated intensity', self.intlbl, 'totint', self.unflagged_rows)
             self.savestats += outp
 
             # to logger
             casalog.post(out[:-2]+outp)
 
+        self.unflagged_rows.reverse()
+        for name in statsname:
+            row_list = range(self.scan.nrow())
+            row_list.reverse()
+            for irow in row_list:
+                try:
+                    self.unflagged_rows.index(irow)
+                except:
+                    del self.result[name][irow]
+
     def __calc_eqw_and_integf(self):
         eqw = None
         integratef = None
+        self.unflagged_rows = []
         if isinstance(self.result['max'],list):
             # User selected multiple scans,ifs
             ns = len(self.result['max'])
             eqw=[]
             integratef=[]
+            j = 0
+            end_rows = False
             for i in range(ns):
+                while self.scan._getflagrow(j):
+                    j += 1
+                    if j == ns:
+                        end_rows = True
+                        break
+                if end_rows: break
+                    
                 #Get bin width
-                abcissa, lbl = self.scan.get_abcissa(rowno=i)
+                abcissa, lbl = self.scan.get_abcissa(rowno=j)
                 dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
+
                 # Construct equivalent width (=sum/max)
-                eqw = eqw + [get_eqw(self.result['max'][i],
-                                     self.result['min'][i],
-                                     self.result['sum'][i],
+                eqw = eqw + [get_eqw(self.result['max'][j],
+                                     self.result['min'][j],
+                                     self.result['sum'][j],
                                      dabc)]
                 # Construct integrated flux
-                integratef = integratef + [get_integf(self.result['sum'][i], dabc)]
+                integratef = integratef + [get_integf(self.result['sum'][j], dabc)]
+
+                self.unflagged_rows.append(j)
+                j += 1
+                if j == ns: break
         else:
+            self.unflagged_rows = [0]
             # Single scantable only
             abcissa, lbl = self.scan.get_abcissa(rowno=0)
             dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
@@ -300,16 +327,16 @@ class sdstat_worker(sdutil.sdtask_template):
         self.xunit = check_unit(self.abclbl,self.abclbl,'_')
         self.intunit = check_unit(ordlbl,ordlbl+'.'+self.abclbl,'_.'+self.abclbl)
 
-    def __get_statstext(self, title, label, key):
+    def __get_statstext(self, title, label, key, eff_rows):
         sep = "--------------------------------------------------"
-        head = string.join([sep,string.join([" ","%s ["%(title),label,"]"]," "),sep],'\n')
+        head = string.join([sep,string.join([" %s ["%(title),label,"]"]," "),sep],'\n')
         tail = ''
         out = head + '\n'
         val = self.result[key]
         if isinstance(val,list):
             ns = len(val)
             for i in xrange(ns):
-                out += self.__get_statstr(i, val[i], sep)
+                out += self.__get_statstr(eff_rows[i], val[i], sep)
         else:
             out += self.__get_statstr(0, val, sep)
         out += '\n%s'%(tail)
@@ -323,7 +350,7 @@ class sdstat_worker(sdutil.sdtask_template):
         if self.scan.nif(-1) > 1: out +=  ' IF[%d] ' % (self.scan.getif(irow))
         if self.scan.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.scan.getpol(irow))
         out += ('= %'+self.format_string) % (val) + '\n'
-        out +=  "%s\n "%(separator)
+        out +=  "%s\n"%(separator)
         return out 
 
 def check_unit(unit_in,valid_unit=None,default_unit=None):
