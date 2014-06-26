@@ -234,6 +234,10 @@ class ParallelDataHelper(ParallelTaskHelper):
         isSelected = False
                 
         mysel = {}
+        if spw.isspace() or spw.__len__() == 0:
+            # TODO: do this later!!!!!
+            spw = '*'
+            return False
         mysel['spw'] = spw
         
         msTool = mstool()
