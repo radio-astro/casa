@@ -31,7 +31,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/BasicSL.h>
 #include <casa/Quanta/Quantum.h>
-#include <components/ComponentModels/GaussianBeam.h>
+#include <scimath/Mathematics/GaussianBeam.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
