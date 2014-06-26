@@ -24,11 +24,26 @@ class sdtpimaging_unittest_base:
     taskname='sdtpimaging'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
     allowance=0.01
+
+    def _set_mask(self, name, mask=None):
+        """Set mask to image. the mask is cleared up if mask=None"""
+        ia.open(name)
+        try:
+            old_mask = ia.maskhandler('default')
+            if mask is None:
+                ia.calcmask('T', asdefault=True)
+            else:
+                ia.maskhandler('set',mask)
+        except: raise
+        finally: ia.close()
+        return old_mask
     
-    def _compare(self, refdata, outdata):
+    def _compare(self, refdata, outdata, ignoremask=True):
         self._checkfile(outdata)
+        if ignoremask: old_mask = self._set_mask(outdata)
         refstat = imstat( imagename=refdata )
         outstat = imstat( imagename=outdata )
+        if ignoremask: ret = self._set_mask(outdata, old_mask)
         keys = ['max', 'min', 'mean', 'maxpos', 'minpos', 'rms' ]
         for key in keys:
             ref = refstat[key]
@@ -237,5 +252,90 @@ class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
         self._compare(self.refimage,self.outimage)
         
 
+###
+# Test flag handling in sdtpimaging
+###
+class sdtpimaging_flag(unittest.TestCase,sdtpimaging_unittest_base):
+    """
+    Test flag handling in sdtpimaging
+
+    How to generate input data:
+    Use simobserve to generate an MS of single strip of scans
+    (20 integration):
+    
+    simobserve(project='tpimaging', skymodel='m51ha.model',
+    indirection='J2000 00h00m00 -27d00m00',incell='0.5arcsec',
+    incenter='300GHz',inwidth='10kHz',mapsize=['100arcsec','5arcsec'],
+    maptype='square',pointingspacing='5arcsec',obsmode='sd',totaltime='1')
+    # modify table
+    tb.open('tpimaging/tpimaging.aca.tp.sd.ms', nomodify=False)
+    data = tb.getcol('DATA')
+    for ipol in range(len(data)):
+        data[ipol][0].real = range(len(data[ipol][0]))
+        data[ipol][0][7:13].real += 3. # add source offset to scan=7-12
+        data[ipol][0][15:17].real = 100. # add spurious to scan=15,16
+    tb.putcol('DATA', data)
+    # set scan number 0
+    zeros = tb.getcol('SCAN_NUMBER')
+    zeros *= 0
+    tb.putcol('SCAN_NUMBER', zeros)
+    tb.putcol('FIELD_ID', zeros)
+    tb.close()
+    split(vis='tpimaging/tpimaging.aca.tp.sd.ms', outputvis='tpimaging_1row.ms',datacolumn='data')
+    """
+    infile = 'tpimaging_1row.ms'
+    # phasecenter need to be shifted for -1 pixel do to boundary difference.
+    center = 'J2000 23:59:59.81295 -27d00m00'
+    cell = '5arcsec'
+    flagrows = [15,16]
+    ref_bl = [0,0,0,0,0,0,0,3,3,3,3,3,3,0,0,85,84,0,0,0]
+    nrow = len(ref_bl)
+    prefix=sdtpimaging_unittest_base.taskname+'Flag'
+    outimage = prefix+'.image'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdtpimaging)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _chanflag_ms_rows(self, filename, rows):
+        self._checkfile(filename)
+        if type(rows) == int: rows = [int]
+        tb.open(filename, nomodify=False)
+        try:
+            flg = tb.getcol("FLAG")
+            for irow in rows:
+                for ipol in range(len(flg)):
+                    flg[ipol][0][irow] = True
+            tb.putcol("FLAG", flg)
+        except: raise
+        finally: tb.close()
+
+    def test_flag_baseline(self):
+        """test flag in calmode=baseline"""
+        self._chanflag_ms_rows(self.infile,self.flagrows)
+        sdtpimaging(infile=self.infile,calmode='baseline', masklist=[5,5],
+                    createimage=False)
+
+    def test_flag_image1(self):
+        """test flag in imaging (1 chan -> 1chan)"""
+        self._chanflag_ms_rows(self.infile,self.flagrows)
+        outfile=self.outimage
+        cell=[self.cell, self.cell]
+        imsize=[self.nrow, 1]
+        sdtpimaging(infile=self.infile,calmode='none', createimage=True,
+                    outfile=outfile,cell=cell,imsize=imsize,
+                    phasecenter=self.center,gridfunction='BOX')
+        
+
+
 def suite():
-    return [sdtpimaging_test0,sdtpimaging_test1,sdtpimaging_test2]
+    return [sdtpimaging_test0,sdtpimaging_test1,sdtpimaging_test2,
+            sdtpimaging_flag]

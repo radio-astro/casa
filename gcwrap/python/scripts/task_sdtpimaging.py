@@ -1,8 +1,10 @@
 # sd task for total power raster scan imaging
+import time
+import shutil
 import numpy
 import pylab as pl
 
-from taskinit import casalog
+from taskinit import casalog, gentools
 
 import asap as sd
 import sdutil
@@ -89,7 +91,6 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
         # back up original file if backup == True
         casalog.post('%s column in %s will be overwritten.'%(self.datacol,self.infile))
         if self.backup:
-            import time
             backupname = self.infile.rstrip('/')+'.sdtpimaging.bak.'+time.asctime(time.gmtime()).replace(' ','_')
             casalog.post('The task will create a back up named %s'%backupname)
             self.open_table(self.infile)
@@ -129,6 +130,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
             casalog.post( "Arranging data by scans..." )
 
             data = []
+            flag = []
             ndat0 = 0
             ndat = 0
             if self.selnpol == 1: np = self.selpol
@@ -136,6 +138,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
             casalog.post( "select %s data..." % self.corrtypestr[np] )
             for i in xrange(self.nscan):
                 idata = []
+                iflag = []
                 #for j in xrange(nsubscan):
                 for j in xrange(self.nsubscan[i]):
                     # may be need to iterate on each antenna 
@@ -143,19 +146,27 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     #selsubtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
                     selsubtb = self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
                     datcol = selsubtb.getcol(self.datacol)
+                    flgcol = selsubtb.getcol("FLAG") # only channel flag is needed to be hanled in MS
                     selsubtb.close()
                     if self.npol > 1 and self.selnpol == 1:
                         #casalog.post( "select %s data..." % corrtypestr[selpol] )
                         rdatcol = datcol[self.selpol].real
+                        flagcell = flgcol[self.selpol]
                     else:
                         rdatcol = datcol[self.selcorrtypeind[np]].real
+                        flagcell = flgcol[self.selpol]
                     (m,n) = rdatcol.shape
+                    if flagcell.shape != (m,n):
+                        raise Exception, "Data conformation error. Shape of FLAG and %s differs." % self.datacol
                     rdatcol = rdatcol.reshape(n)
+                    flagcell = flagcell.reshape(n)
                     #data.append(rdatcol)
                     idata.append(rdatcol)
+                    iflag.append(flagcell)
                     ndat0 = ndat
                     ndat += len(rdatcol)
                 data.append(idata)
+                flag.append(iflag)
             if abs(self.plotlevel) > 0:
                 pl.xlim(0,ndat)
                 t1 = pl.getp(pl.gca(), 'xticklabels')
@@ -167,8 +178,10 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     for j in xrange(self.nsubscan[i]):
                         mdat0 = mdat
                         mdat += len(data[i][j])
+                        masked_data = numpy.ma.masked_array(data[i][j], flag[i][j])
                         #pl.plot(xrange(mdat0,mdat),data[i][j],symbols[subscans[j]%2])
-                        pl.plot(xrange(mdat0,mdat), data[i][j], symbols[self.subscans[i][j]%2])
+                        #pl.plot(xrange(mdat0,mdat), data[i][j], symbols[self.subscans[i][j]%2])
+                        pl.plot(xrange(mdat0,mdat), masked_data, symbols[self.subscans[i][j]%2])
                         ax = pl.gca()
                         if i == 1: 
                             leg = ax.legend(('even subscan no.', 'odd subscan no.'), numpoints=1, handletextsep=0.01) 
@@ -202,14 +215,18 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     else:
                         msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (self.left_mask-1, len(masks)-self.right_mask, len(masks)-1)
                         casalog.post(msg, "INFO")
-                    masks[:self.left_mask] = True
-                    masks[-self.right_mask:] = True
+                    #Use edge channels for fitting excluding flagged integrations.
+                    #masks[:self.left_mask] = True
+                    #masks[-self.right_mask:] = True
+                    masks[:self.left_mask] = (flag[i][j][:self.left_mask]==False)
+                    masks[-self.right_mask:] = (flag[i][j][-self.right_mask:]==False)
                     x = xrange(len(data[i][j]))
                     if self.plotlevel > 1:
                         pl.cla()
                         pl.ioff()
                         pl.title('scan %s subscan %s'%(self.scans[i],self.subscans[i][j]))
-                        pl.plot(x, data[i][j], 'b')
+                        #pl.plot(x, data[i][j], 'b')
+                        pl.plot(x, numpy.ma.masked_array(data[i][j], flag[i][j]), 'b')
                     f.set_data(x, data[i][j], mask=masks)
                     f.fit()
                     #f.plot(residual=True, components=[1], plotparms=True)
@@ -223,7 +240,8 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                         pl.ioff()
                         pl.title('scan %s subscan %s'%(self.scans[i], self.subscans[i][j]))
                         pl.ion()
-                        pl.plot(x, data[i][j], 'g')
+                        #pl.plot(x, data[i][j], 'g')
+                        pl.plot(x, numpy.ma.masked_array(data[i][j], flag[i][j]), 'g')
                         pl.draw()
                         if interactive: check=raw_input('Hit return for Next\n')
                     cdat = numpy.concatenate([cdat,data[i][j]])
@@ -328,8 +346,17 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
         #self.imager.setsdoptions(convsupport=5)
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=-1, truncate=-1, gwidth=-1, jwidth=-1)
         self.imager.makeimage(type='singledish-observed', image=self.outfile)
-        #self.imager.makeimage(type='singledish', image=outfile)
+        #self.imager.makeimage(type='singledish', image=self.outfile)
+        # create temporal weight image for masking
+        weightfile_temp = self.outfile+".weight."+str(time.time()).replace('.', '_')
+        self.imager.makeimage(type='coverage', image=weightfile_temp)
         self.close_imager()
+        # Handle mask
+        my_ia = gentools(['ia'])[0]
+        my_ia.open(self.outfile)
+        my_ia.calcmask("'%s'>%f" % (weightfile_temp,0.0), asdefault=True)
+        my_ia.close()
+        shutil.rmtree(weightfile_temp)
 
     def __compile_common(self):
         # antenna parameter handling
@@ -524,7 +551,10 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
         self.open_table(self.infile)
         subt = self.table.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (self.antid, self.antid))
         datcol = subt.getcol(self.datacol)
+        flgcol = subt.getcol("FLAG")  # only channel flag is needed to be hanled in MS
         (l,m,n) = datcol.shape
+        if flgcol.shape != (l,m,n):
+            raise Exception, "Data conformation error. Shape of FLAG and %s differs." % self.datacol
         nrow = subt.nrows()
         subt.close()
         self.close_table()
@@ -541,9 +571,11 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
             if title:
                 pl.title(self.infile+' Ant:'+ self.antnameused+' '+self.corrtypestr[ip])
             datcol2 = datcol[ip].reshape(n)
+            flgcol2 = flgcol[ip].reshape(n)
             if self.plotlevel > 0:
                 pl.ion()
-            pl.plot(range(len(datcol2)), datcol2, 'g.')
+            #pl.plot(range(len(datcol2)), datcol2, 'g.')
+            pl.plot(range(len(datcol2)), numpy.ma.masked_array(datcol2, flgcol2), 'g.')
             pl.xlim(0, nrow)
             t1 = pl.getp(pl.gca(), 'xticklabels')
             t2 = pl.getp(pl.gca(), 'yticklabels')
