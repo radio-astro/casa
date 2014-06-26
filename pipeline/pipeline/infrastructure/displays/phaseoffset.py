@@ -84,13 +84,14 @@ class PhaseOffsetPlot(object):
         data = [(state, common.CaltableWrapper.from_caltable(c)) for state, c in caltable_map.items()]
 
         # some sanity checks, as unequal caltables have bit me before
-        if len(data) > 1:
-            wrapper1 = data[0][1]
-            for state, wrapper2 in data[1:]:
-                assert utils.areEqual(wrapper1.time, wrapper2.time), 'Time columns are not equal'
-                assert utils.areEqual(wrapper1.antenna, wrapper2.antenna), 'Antenna columns are not equal'
-                assert utils.areEqual(wrapper1.spw, wrapper2.spw), 'Spw columns are not equal'
-                assert utils.areEqual(wrapper1.scan, wrapper2.scan), 'Scan columns are not equal'
+        # this doesn't work when WVR data are missing and should be interpolated over
+#         if len(data) > 1:
+#             wrapper1 = data[0][1]
+#             for state, wrapper2 in data[1:]:
+#                 assert utils.areEqual(wrapper1.time, wrapper2.time), 'Time columns are not equal'
+#                 assert utils.areEqual(wrapper1.antenna, wrapper2.antenna), 'Antenna columns are not equal'
+#                 assert utils.areEqual(wrapper1.spw, wrapper2.spw), 'Spw columns are not equal'
+#                 assert utils.areEqual(wrapper1.scan, wrapper2.scan), 'Scan columns are not equal'
 
         self.data = data
         self._caltables_loaded = True
