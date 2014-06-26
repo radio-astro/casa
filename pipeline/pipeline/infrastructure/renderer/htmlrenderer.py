@@ -622,7 +622,7 @@ class T1_3MRenderer(RendererBase):
                         flagtable = {}
 			for field in resultitem.flagsummary.keys():
 			    #each field
-			    intents = ','.join([f.intents for f in ms.get_fields() if field in f.name][0])
+			    intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET') if field in f.name][0])
 			    
 			    flagsummary = resultitem.flagsummary[field]
 			
