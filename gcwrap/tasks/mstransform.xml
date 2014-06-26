@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     the output to disk multiple times. The main features of this task
     are:
     
-    * take an input MS or Multi-MS
+    * take an input MS or Multi-MS (MMS)
     * ability to create an output MS or MMS
     * spw combination and separation
     * channel averaging taking weights into account
@@ -26,7 +26,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     All these transformations will be applied on the fly without any writing to
     disk to optimize I/O. The user can ask to create a Multi-MS in parallel using CASA's 
-    cluster infrastructure using the parameters createmms and parallel. See simple_cluster 
+    cluster infrastructure using the parameter createmms. See simple_cluster 
     for more information on the cluster infrastructure.
 
     This task is implemented in a modular way to preserve the functionalities
@@ -48,6 +48,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     transformed in the same way as the other data columns, but this is not statistically 
     correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
     to define the applicable error propagation formulas.
+    
+    NOTE: the input/output in mstransform have a one-to-one relation.
+          input MS  --  output MS
+          input MMS --  output MMS
+    
+       unless the user sets the parameter createmms to True to create the following:
+          input MS  --  output MMS
 
 </description>
 
@@ -58,20 +65,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value type="string"></value>
     </param>
 
+    <param type="bool" name="monolithic_processing" subparam="true" visibility="hidden">
+        <description>Hidden parameter for internal use only. Do not change it!</description>
+        <value>False</value>
+    </param>
+    
     <!-- OUTPUT parameters -->    
     <param type="string" name="outputvis">
-        <description>Name of output Measurement set or Multi-MS.</description>
+        <description>Name of output Measurement Set or Multi-MS.</description>
         <value></value>
     </param>
         <param type="bool" name="createmms">
-            <description>Create a multi-MS output.</description>
+            <description>Create a multi-MS output from an input MS.</description>
             <value>False</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan,spw,both).</description>
-            <value>both</value>
+            <description>Axis to do parallelization across(scan,spw,auto).</description>
+            <value>auto</value>
             <allowed kind="enum" ignorecase="true">
-                <value>both</value>
+                <value>auto</value>
                 <value>spw</value>
                 <value>scan</value>
             </allowed>
@@ -80,12 +92,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>The number of Sub-MSs to create.</description>
             <value>64</value>
         </param>
-        <param type="bool" name="parallel" subparam="true">
-            <description>Create a multi-MS in parallel using simple_cluster.</description>
+        <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
+            <description>Hidden parameter for internal use only. Do not change it!</description>
             <value>False</value>
         </param>        
         <param type="int" name="ddistart" subparam="true" visibility="hidden">
-            <description>For internal use only. Do not change it!</description>
+            <description>Hidden parameter for internal use only. Do not change it!</description>
             <value>-1</value>
         </param>
 
@@ -339,10 +351,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <when param="createmms">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
-                  <default param="separationaxis"><value type="string">both</value></default>
+                  <default param="separationaxis"><value type="string">auto</value></default>
                   <default param="numsubms"><value type="int">64</value></default>
-                  <default param="parallel"><value type="bool">False</value></default>
-           </equals>
+            </equals>
           </when>
           <when param="datacolumn">
             <equals type="string" value="corrected"></equals>
@@ -397,17 +408,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     vis -- Name of input visibility file
         default: ''; example: vis='ngc5921.ms'
 
-    outputvis -- Name of output visibility file
+    outputvis -- Name of output visibility file or Multi-MS
         default: ''; example: outputvis='ngc5921.mms'
 
-    createmms -- Create a multi-MS as the output.
+    createmms -- Create an output multi-MS from an input MS.
         default: False
 
-        If False, it will work like the split task and create a
-        normal MS, split according to the given data selection parameters.
-        Note that, when this parameter is set to False, a simple_cluster
-        will not be created.
+        This parameter only has effect if set to True, when it will try
+        to create an output Multi-MS from an input MS. The one-to-one
+        relation of input/output in mstransform is:
+          input MS  --  output MS
+          input MMS --  output MMS
     
+        by setting createmms=True, the following is possible:
+          input MS  --  output MMS
+            
         The combination of some transformations and createmms=True is not possible in
         some cases, depending on the choice of separationaxis. The following table 
         summarizes this:
@@ -416,26 +431,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         --------------------------------------------------------------------------------------
         spw                NO         NO         YES        YES           YES           YES
         scan               YES        YES        YES        YES           YES*          YES
-        both               NO         NO         YES        YES           YES*          YES
+        scan,spw           NO         NO         YES        YES           YES*          YES
 
-        * --> it can partition per scan or scan,spw but cannot let timebins span across scans
+        * --> it can partition per scan or scan,spw (auto), but cannot let timebins span across scans
               when timeaverage=True. The task will reset timespan to None in these cases.
         
 
         separationaxis -- Axis to do parallelization across. 
-            default: 'both'
-            options: 'scan', 'spw', 'both'
-            The 'both' option will try to partition in both scan and spw axes.
+            default: 'auto'
+            options: 'scan', 'spw', 'auto'
+            The 'auto' option will try to partition in both scan and spw axes.
 
         numsubms -- The number of sub-MSs to create (int).
             default: 64
-
-        parallel -- Create a multi-MS in parallel, using the simple_cluster
-                    infrastructure. It will run the tool several times in parallel,
-                    one instance for each subMS. Note that for small MSs, we
-                    recommend to not change this parameter as the overhead of creating
-                    a cluster may be larger than the gain to run in parallel. (bool)
-            default: False
                 
     tileshape -- List with 1 or 3 elements describing the tile shape that will be used
                  to save the columns to disk. (list)
@@ -545,11 +553,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  of a row must be flagged for it to be droppable, and a row must be
                  well defined to be keepable. 
     
-            IMPORTANT: Regardless of this parameter, flagged data is never included in 
-                       channel averaging. On the other hand, partially flagged rows will 
-                       always be included in time averaging. The average value of the 
-                       flagged data will be written to the output with the corresponding
-                       flag set to True.    
+            IMPORTANT: Regardless of this parameter, flagged data is never included in
+                       channel averaging. On the other hand, partially flagged rows will
+                       always be included in time averaging. The average value of the
+                       flagged data for averages containing ONLY flagged data in the relevant
+                       output channel will be written to the output with the corresponding
+                       flag set to True, while only unflagged data is used on averages where
+                       there is some unflagged data with the flag set to False.
+       
         default: True (keep completely flagged rows in the output)
 		
 	
