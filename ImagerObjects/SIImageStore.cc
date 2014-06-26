@@ -1256,6 +1256,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return beam;
   }
 
+  void SIImageStore::makeImageBeamSet()
+  {
+    // For all chans/pols, call getPSFGaussian() and put it into ImageBeamSet(chan,pol).
+    AlwaysAssert( itsImageShape.nelements() == 4, AipsError );
+    Int nx = itsImageShape[0];
+    Int ny = itsImageShape[1];
+    Int npol = itsImageShape[2];
+    Int nchan = itsImageShape[3];
+    itsPSFBeams.resize( nchan, npol );
+    
+    for( Int chanid=0; chanid<nchan;chanid++) {
+      for( Int polid=0; polid<npol; polid++ ) {
+
+	IPosition substart(4,0,0,polid,chanid);
+	IPosition substop(4,nx-1,ny-1,polid,chanid);
+	Slicer psfslice(substart, substop,Slicer::endIsLast);
+	SubImage<Float> subPsf( *psf() , psfslice, True );
+	GaussianBeam beam;
+	
+	try
+	  {
+	    StokesImageUtil::FitGaussianPSF( subPsf, beam );
+	    itsPSFBeams.setBeam( chanid, polid, beam );
+	  }
+	catch(AipsError &x)
+	  {
+	    	LogIO os( LogOrigin("SIImageStore","getPSFGaussian",WHERE) );
+	    	os << "[C" << chanid << ":P" << polid << "] Error in fitting a Gaussian to the PSF : " << x.getMesg() << LogIO::POST;
+	    //	    throw( AipsError("Error in fitting a Gaussian to the PSF : " + x.getMesg()) );
+	  }
+
+	//	itsPSFBeams.setBeam( chanid, polid, beam );
+	
+      }
+    }
+  }// end of make beam set
+
+  ImageBeamSet SIImageStore::getBeamSet()
+  { return itsPSFBeams; }
+
+  void SIImageStore::printBeamSet()
+  {
+    LogIO os( LogOrigin("SIImageStore","printBeamSet",WHERE) );
+    AlwaysAssert( itsImageShape.nelements() == 4, AipsError );
+    if( itsImageShape[3] == 1 && itsImageShape[2]==1 )
+      {
+	GaussianBeam beam = itsPSFBeams.getBeam();
+	os << "Restoring beam : " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+ }
+    else
+      {
+	itsPSFBeams.summarize( os, False, itsCoordSys );
+      }
+  }
+
   GaussianBeam SIImageStore::restorePlane()
   {
 
@@ -1394,8 +1449,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								      chan, lsumwt.shape()[3],
 								      pol, lsumwt.shape()[2], 
 								      target );
-		LatticeExpr<Float> le( (*subim)/lsumwt(pos) );
-		subim->copyData( le );
+		if ( lsumwt(pos) > 1e-07 ) {
+		    LatticeExpr<Float> le( (*subim)/lsumwt(pos) );
+		    subim->copyData( le );
+		  }
+		else  {
+		    subim->set(0.0);
+		  }
 		div=True;
 	      }
 	  }

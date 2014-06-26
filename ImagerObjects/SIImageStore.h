@@ -124,6 +124,10 @@ class SIImageStore
   virtual GaussianBeam restorePlane();
   virtual void pbcorPlane();
 
+  virtual void makeImageBeamSet();
+  ImageBeamSet getBeamSet();
+  virtual void printBeamSet();
+
   // The images internall will reference back to a given section of the main of this.
   //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
   virtual CountedPtr<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
@@ -194,6 +198,8 @@ protected:
   Int itsNPolChunks, itsPolId;
 
   StokesImageUtil::PolRep itsDataPolRep;
+
+  ImageBeamSet itsPSFBeams;
 
   //
   //------------------------------------------

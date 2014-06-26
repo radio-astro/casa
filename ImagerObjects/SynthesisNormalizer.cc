@@ -217,6 +217,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         { itsFacetImageStores[facet]->dividePSFByWeight( ); }
     }
 
+      // Check PSF quality by fitting beams
+    /*
+    {
+      cout << "Printing beams " << endl;
+      itsImages->makeImageBeamSet();
+      itsImages->printBeamSet();
+    }
+    */
   }
 
 
