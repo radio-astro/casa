@@ -46,7 +46,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/Stokes.h>
 #include <casa/Utilities/ValType.h>
-#include <components/ComponentModels/GaussianBeam.h>
+#include <scimath/Mathematics/GaussianBeam.h>
 
 #include <casa/iomanip.h>
 #include <casa/iostream.h>

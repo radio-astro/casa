@@ -30,12 +30,6 @@
 #include <casa/Quanta/Quantum.h>
 
 namespace casa {
-	// so the typedef that comes next works
-	class GaussianBeam;
-
-	// for when we want the same thing, but it really doesn't represent a beam
-	// but eg. a source
-	typedef GaussianBeam Angular2DGaussian;
 
 // <summary>
 // Represents a Gaussian restoring beam associated with an image.
@@ -156,21 +150,10 @@ public:
 		const String& paUnit
 	);
 
-	// Deconvolve the parameters of a source Gaussian from a this GaussianBeam
-	// to give the deconvolved Gaussian source.  The return is True if the model appears
-	// to be a point source and the output model will be set to
-	// the parameters of the beam.
-	Bool deconvolve(
-		Angular2DGaussian& deconvolvedSize,
-		const Angular2DGaussian& convolvedSize
-	) const;
-
 private:
 	Quantity _major, _minor, _pa;
 
 };
-
-
 
 ostream &operator<<(ostream &os, const GaussianBeam& beam);
 
