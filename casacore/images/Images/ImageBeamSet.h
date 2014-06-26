@@ -28,9 +28,7 @@
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
-#include <components/ComponentModels/GaussianBeam.h>
-//#include <measures/Measures/Stokes.h>
-//#include <map>
+#include <scimath/Mathematics/GaussianBeam.h>
 
 namespace casa {
 
@@ -246,14 +244,6 @@ public:
 
     static const String& className();
 
-	// Get a beam to which all other beams in the set can be convolved.
-	// If all other beams can be convolved to the maximum area beam in the set, that beam will be returned.
-	// If not, this is guaranteed to be the minimum area beam to which
-	// all beams in the set can be convolved if all but one of the beams in the set can be convolved to the beam in the set with the
-	// largest area. Otherwise, the returned beam may or may not be the smallest possible beam to which all the beams in the set
-	// can be convolved.
-	GaussianBeam getCommonBeam() const;
-
 	// Get the beam that has the smallest minor axis. If multiple beams have the smallest minor axis,
 	// the beam in this subset with the smallest area will be returned.
 	const GaussianBeam getSmallestMinorAxisBeam() const;
@@ -279,12 +269,6 @@ private:
 	IPosition _minBeamPos, _maxBeamPos;
 
 	void _calculateAreas();
-
-	static void _transformEllipseByScaling(
-		Double& transformedMajor, Double& transformedMinor,
-		Double& transformedPa, Double major, Double minor,
-		Double pa, Double xScaleFactor, Double yScaleFactor
-	);
 
 	static void _chanInfoToStream(
 		ostream& os, const SpectralCoordinate *const &spCoord,
