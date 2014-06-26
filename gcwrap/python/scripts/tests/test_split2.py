@@ -1850,6 +1850,22 @@ class test_base(unittest.TestCase):
         os.system('cp -RL '+self.datapath + self.vis +' '+ self.vis)
         default(mstransform)
 
+    def createMMS(self, msfile, axis='auto',scans='',spws=''):
+        '''Create MMSs for tests with input MMS'''
+        prefix = msfile.rstrip('.ms')
+        if not os.path.exists(msfile):
+            os.system('cp -RL '+datapath + msfile +' '+ msfile)
+        
+        # Create an MMS for the tests
+        self.testmms = prefix + ".test.mms"
+        default(partition)
+        
+        if os.path.exists(self.testmms):
+            os.system("rm -rf " + self.testmms)
+            
+        print "................. Creating test MMS .................."
+        partition(vis=msfile, outputvis=self.testmms, separationaxis=axis, scan=scans, spw=spws)
+
 
 class splitTests(test_base):
     '''Test the keepflags parameter'''
@@ -1863,7 +1879,7 @@ class splitTests(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
+#        os.system('rm -rf '+ self.outputms)
         
     def test_keepflags(self):
         '''split2: keepflags=False'''
@@ -1873,7 +1889,7 @@ class splitTests(test_base):
         flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='0,15'"])
         
         # Split scan=31 out
-        split2(self.vis, outputvis=self.outputms, datacolumn='corrected', scan='31', keepflags=False)
+        split2(vis=self.vis, outputvis=self.outputms, datacolumn='corrected', scan='31', keepflags=False)
         
         expected_spws = range(1,15)
         msmdt = msmdtool()
@@ -1883,13 +1899,17 @@ class splitTests(test_base):
         lspws = spws.tolist()
         self.assertListEqual(expected_spws, lspws)
         
-    def test_tav_incompatible_axis_MMS(self):
-        '''split2: issue a WARN when separationaxis=scan and timebine > 0s'''
-        self.outputms = 'tav120s.mms'
+    def test_split_combine_scan_axis(self):
+        """split2: raise error when combine=\'scan\' and axis=\'scan\'"""
+        # create MMS first 
+        self.createMMS(self.vis, axis='scan', spws='0,2,3')
+        self.outputms = "split_heur1.ms"
+        try:
+            split2(vis=self.testmms, outputvis=self.outputms, timebin='20s', combine='scan', datacolumn='data')        
+        except exceptions.Exception, instance:
+            print 'Expected Error: %s'%instance
         
-        split2(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='2',
-                    createmms=True, separationaxis='scan', timebin='120s', combine='scan',
-                    parallel=False)
+        print 'Expected Error!'
         
     def test_flagversions(self):
         '''split2: raise an error when .flagversions exist'''
@@ -1923,6 +1943,27 @@ class splitTests(test_base):
         ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])
 
+    def test_numpy_width_mms(self):
+        '''split2: Automatically convert numpy type to Python type in an MMS'''
+        self.createMMS(self.vis, axis='auto', spws='0,10')
+        # spws are renumbered to 0,1 in the above command
+        
+        self.outputms = "split_numpytype.mms"
+        bin1 = numpy.int32(64)
+        ParallelTaskHelper.bypassParallelProcessing(1)
+        # This will cause MS NULL selections in some subMSs that have only spw=0
+        split2(vis=self.testmms, outputvis=self.outputms, spw='1', datacolumn='data',
+                    width=bin1)
+        
+        ParallelTaskHelper.bypassParallelProcessing(0)
+        self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MMS')
+
+        # Output should be:
+        # spw=0 1 channel
+        ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+       
+       
         
 class splitSpwPoln(test_base):
     '''tests for spw with different polarization shapes
@@ -1998,32 +2039,6 @@ class splitSpwPoln(test_base):
         listobs(self.outputms, listfile='list.obs')
         self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
         
-    def test_split_mms_spw_selection(self):
-        '''split2: Create MMS and select three spws with numsubms=2'''
-        self.outputms = 'split_3cspw012.mms'
-        
-        split2(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='0,1,2',
-                    createmms=True, separationaxis='spw', numsubms=2, parallel=False)
-
-        # Verify the input versus the output
-        msmd = msmdtool()
-        msmd.open(self.outputms)
-        out_dds = msmd.datadescids()
-        out_nrow = msmd.nrows()
-        msmd.done()
-
-        self.assertTrue(out_nrow,5200)
-        ref = [0,1,2,3]
-        for i in out_dds:
-            self.assertEqual(out_dds[i], ref[i])
-
-        # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r4'][0], 2,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')        
         
 
 def suite():

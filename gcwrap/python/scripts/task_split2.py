@@ -5,18 +5,12 @@ import shutil
 import numpy as np
 from taskinit import *
 from update_spw import update_spwchan
-from task_mstransform import MSTHelper
-import testhelper as th
 import flaghelper as fh
-from parallel.parallel_task_helper import ParallelTaskHelper
+from parallel.parallel_data_helper import ParallelDataHelper
 
 def split2(vis, 
           outputvis, 
-          createmms,
-          separationaxis,
-          numsubms,
-          parallel,
-          ddistart,         # hidden parameter
+          keepmms,
           field,
           spw, 
           scan, 
@@ -38,54 +32,38 @@ def split2(vis,
     """Create a visibility subset from an existing visibility set"""
 
     casalog.origin('split2')
-
-    # Initialize the helper class    
-    msth = MSTHelper(locals()) 
-    msth.setTaskName('split2')
     
+    # Initialize the helper class  
+    pdh = ParallelDataHelper("split2", locals()) 
+        
     # Validate input and output parameters
     try:
-        msth.setupIO()
+        pdh.setupIO()
     except Exception, instance:
         casalog.post('%s'%instance,'ERROR')
         return False
 
-    # Input and/or output is an MMS
-    if createmms == True:
-
-        # Validate the combination of some parameters
-        # pval = 0 -> abort; cannot process
-        # pval = 1 -> success
-        pval = msth.validateParams()
-        if pval == 0:
-            raise Exception, 'Cannot create MMS using separationaxis=%s with some of the requested transformations.'\
-                            %separationaxis
+    # Input vis is an MMS
+    if pdh.isParallelMS(vis) and keepmms:
         
-        # The user decides to run in parallel or sequential
-        if not parallel:
-            casalog.post('Will process the MS in sequential')
-            msth.bypassParallelProcessing(1)
-        else:
-            msth.bypassParallelProcessing(0)
-            casalog.post('Will process the MS in parallel')
+        retval = pdh.validateInputParams()
+        if not retval['status']:
+            raise Exception, 'Unable to continue with MMS processing'
+                        
+        pdh.setupCluster('split2')
 
-        # Get a cluster
-        msth.setupCluster(thistask='split2')
-        
-        # Execute the jobs using simple_cluster
+        # Execute the jobs
         try:
-            msth.go()
+            pdh.go()
         except Exception, instance:
             casalog.post('%s'%instance,'ERROR')
             return False
                     
         return True
+        
 
-    # Actual task code starts here
-
-    # Create local copies of the MSTransform and ms tools
+    # Create local copy of the MSTransform tool
     mtlocal = mttool()
-    mslocal = mstool()
 
     try:
                     
@@ -97,13 +75,10 @@ def split2(vis,
         else:
             taqlstr = "NOT (FLAG_ROW OR ALL(FLAG))"
         
-        config = msth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
+        config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=observation,
                     feed=feed, taql=taqlstr)
-
-        # ddistart will be used in the tool when re-indexing the spw table
-        config['ddistart'] = ddistart
 
         config['datacolumn'] = datacolumn
         
@@ -146,7 +121,7 @@ def split2(vis,
             casalog.post('Parse channel averaging parameters')
             config['chanaverage'] = True
             # verify that the number of spws is the same of the number of chanbin
-            msth.validateChanBin()
+            pdh.validateChanBin()
             # convert numpy types, until CAS-6493 is not fixed
             chanbin = fh.evaluateNumpyType(chanbin)
             casalog.post('Converted type(width) is %s'%type(chanbin),'DEBUG')
@@ -183,6 +158,8 @@ def split2(vis,
         casalog.post('%s'%instance,'ERROR')
         return False
 
+    # Local copy of ms tool
+    mslocal = mstool()
 
     # Update the FLAG_CMD sub-table to reflect any spw/channels selection
     if ((spw != '') and (spw != '*')) or chanaverage == True:

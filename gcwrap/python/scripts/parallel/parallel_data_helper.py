@@ -316,7 +316,7 @@ class ParallelDataHelper(ParallelTaskHelper):
     def setupCluster(self, thistask=''):
         """ Get a simple_cluster 
         
-        keyword argument:
+        Keyword argument:
             thistask  --  the task calling this class
             
             ParallelTaskHelper will populate its self._arg dictionary with
@@ -1231,11 +1231,26 @@ class ParallelDataHelper(ParallelTaskHelper):
                     mtlocal1.done()
                     casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
                     raise
+
+        if nFailures > 0:
+            # need to rename/re-index the subMSs
+            newList = copy.deepcopy(subMSList)
+            idx = 0
+            for subms in newList:
+                suffix = re.findall(r".\d{4}.ms",subms)
+                newms = subms.rstrip(suffix[-1])
+                newms = newms+'.%04d.ms'%idx
+                os.rename(subms,newms)
+                newList[idx] = newms
+                idx += 1
+            
+            if len(subMSList) == len(newList):
+                subMSList = newList
               
         # Get the first subMS to be the reference when
         # copying the sub-tables to the other subMSs  
         mastersubms = subMSList[0]
-
+            
         subtabs_to_omit = ['POINTING','SYSCAL']
         
         # Parallel axis to write to table.info of MMS

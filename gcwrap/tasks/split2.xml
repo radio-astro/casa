@@ -18,13 +18,12 @@ parameters are included, and one or all of the various data columns
 CORRECTED_DATA) can be selected.
 
 Split2 is often used after the initial calibration of the data to make a
-smaller measurement set with only the data that will be used in
+smaller Measurement Set with only the data that will be used in
 further flagging, imaging and/or self-calibration.  Split2 can
 average over frequency (channels) and time (integrations).
 	
-Split2 also support Multi-MS (MMS) format as input and output with the use
-of the 'createmms' parameter. For more information about MMS, see the help of
-partition and mstransform.
+Split2 also supports the Multi-MS (MMS) format as input. For more information about MMS, 
+see the help of partition and mstransform.
 	
 </description>
 
@@ -40,32 +39,11 @@ partition and mstransform.
 	</param>
 
 	    <!-- MMS-CASE parameters -->
-    <param type="bool" name="createmms">
-        <description>Create a Multi-MS output.</description>
-    <value>False</value>
-        </param>
-        <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan,spw,both).</description>
-            <value>both</value>
-            <allowed kind="enum" ignorecase="true">
-                <value>both</value>
-                <value>spw</value>
-                <value>scan</value>
-            </allowed>
-        </param>
-        <param type="int" name="numsubms" subparam="true">
-            <description>The number of SubMSs to create.</description>
-            <value>64</value>
-        </param>    
-        <param type="bool" name="parallel" subparam="true">
-            <description>Create a multi-MS in parallel using simple_cluster.</description>
-            <value>True</value>
-        </param>        
-        <param type="int" name="ddistart" subparam="true" visibility="hidden">
-            <description>For internal use only. Do not change it!</description>
-            <value>-1</value>
-        </param>
-	
+    <param type="bool" name="keepmms">
+        <description>If the input is a Multi-MS the output will also be a Multi-MS.</description>
+    <value>True</value>
+    </param>
+    	
         <!-- SELECTION parameters -->    
     <param type="any" name="field">
         <description>Select field using ID(s) or name(s).</description>
@@ -173,17 +151,8 @@ partition and mstransform.
 	</param>
 	
     <!-- CONSTRAINTS -->		
-      <constraints>
-        <when param="createmms">
-          <equals type="bool" value="False"/>
-          <equals type="bool" value="True">
-               <default param="separationaxis"><value type="string">both</value></default>
-               <default param="numsubms"><value type="int">64</value></default>
-               <default param="parallel"><value type="bool">True</value></default>
-          </equals>
-        </when>
-          
-        <when param="timebin">
+      <constraints>          
+          <when param="timebin">
             <notequals type="string" value="0s">
               <default param="combine"><value type="string"></value></default>
             </notequals>
@@ -203,33 +172,17 @@ partition and mstransform.
         default: none; 
         example: outputvis='ngc5921_src.ms'
 
-    createmms -- Create a Multi-MS as the output.
-        default: False
+    keepmms -- Create a Multi-MS as the output if the input is a Multi-MS.
+        default: True
 
-        If True, it will create a Multi-MS, partitioned according to the
-        separationaxis parameter. See 'help partition' for more information
-        on the MMS format.
+        By default it will create a Multi-MS when the input is a Multi-MS.
+        The output Multi-MS will have the same partition axis of the input MMS.
+        See 'help partition' for more information on the MMS format.
         
-        separationaxis -- Axis to do parallelization across. 
-            default: 'both'
-            options: 'scan', 'spw', 'both'
-            The 'both' option will try to partition in both scan and spw axes.
-
-        NOTE: It is not possible to create an MMS using separationaxis='scan'
-              or 'both' and do time average with combine='scan'. In this case,
-              the task will reset combine to None.
-        
-    
-        numsubms -- The number of subMSs to create (int).
-            default: 64
-
-        parallel -- Create a Multi-MS in parallel, using the simple_cluster
-                    infrastructure. It will run the task several times in parallel,
-                    one instance for each subMS. Note that for small MSs, we
-                    recommend to set this parameter to False as the overhead of creating
-                    a cluster may be larger than the gain to run in parallel. (bool)
-            default: True
-        
+        NOTE: It is not possible to do time average with combine='scan' 
+              if the input MMS was partitioned with separationaxis='scan'
+              or 'auto'. In this case, the task will abort with an error.
+                
 
     --- Data Selection ---
 
@@ -322,11 +275,14 @@ partition and mstransform.
                  of a row must be flagged for it to be droppable, and a row must be
                  well defined to be keepable. 
     
-            IMPORTANT: Regardless of this parameter, flagged data is never included in 
-                       channel averaging. On the other hand, partially flagged rows will 
-                       always be included in time averaging. The average value of the 
-                       flagged data will be written to the output with the corresponding
-                       flag set to True.    
+            IMPORTANT: Regardless of this parameter, flagged data is never included in
+                       channel averaging. On the other hand, partially flagged rows will
+                       always be included in time averaging. The average value of the
+                       flagged data for averages containing ONLY flagged data in the relevant
+                       output channel will be written to the output with the corresponding
+                       flag set to True, while only unflagged data is used on averages where
+                       there is some unflagged data with the flag set to False.
+    
         default: True (keep completely flagged rows in the output)
     
     
@@ -357,9 +313,9 @@ partition and mstransform.
                add state to the combine parameter. To see the number of states
                in an MS, use the msmd tool. See help msmd.
 
-        NOTE: It is not possible to create an MMS using separationaxis='scan'
-              or 'both' and do time average with combine='scan'. In this case, 
-              the task will reset combine to None.
+        NOTE: It is not possible to do time average with combine='scan' 
+              if the input MMS was partitioned with separationaxis='scan'
+              or 'auto'. In this case, the task will abort with an error.
         
         default: '' (separate time bins by both of the above)
         options: 'scan', 'state', 'state,scan'
