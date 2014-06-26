@@ -16,6 +16,8 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
+from sdutil import tbmanager
+    
 # to rethrow exception 
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
@@ -496,7 +498,7 @@ class sdcal2_skycal_otfraster(sdcal2_caltest_base,unittest.TestCase):
         sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.outfile)
 
         self._compare(self.outfile, self.outfile_ref, False)
-
+        
 ###
 # Test Tsys calibration (calmode='tsys')
 ###
@@ -1236,6 +1238,196 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         tb.close()
         return sp
 
+###
+# Base class for flag test
+###
+class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
+    """
+    Test flag information handling.
+
+    Data is sdcal2_testflag.asap
+
+    Summary of the data:
+    ROW | SRCTYPE   | FLAGROW    | FLAGTRA          | SPECTRA/TSYS
+     0  | 10 (tsys) | 1 (flagged)| ch 10 flagged    | spurious for all channels
+     1  | 10 (tsys) | 0          | ch 10,40 flagged | spurious at ch 10,40
+     2  | 10 (tsys) | 0          | ch 10 flagged    | spurious at ch 10
+     3  | 1  (off)  | 1 (flagged)| ch 20 flagged    | spurious for all channels
+     4  | 1  (off)  | 0          | ch 20,80 flagged | spurious at ch 20,80
+     5  | 1  (off)  | 0          | ch 20 flagged    | spurious at ch 20
+     6  | 0  (on)   | 1 (flagged)| all 0            | spurious for all channels
+     7  | 0  (on)   | 0          | ch 30 flagged    | spurious at ch 30
+     8  | 0  (on)   | 0          | ch 10,20 flagged | spurious at ch 10,20
+     9  | 1  (off)  | 1 (flagged)| ch 20 flagged    | spurious for all channels
+    10  | 1  (off)  | 0          | ch 20,80 flagged | spurious at ch 20,80
+    11  | 1  (off)  | 0          | ch 20 flagged    | spurious at ch 20
+    12  | 10 (tsys) | 1 (flagged)| ch 10 flagged    | spurious for all channels
+    13  | 10 (tsys) | 0          | ch 10,40 flagged | spurious at ch 10,40
+    14  | 10 (tsys) | 0          | ch 10 flagged    | spurious at ch 10
+    """
+    def _calculate_row(self, generator, average):
+        result = list(generator)
+        flag = numpy.array([r[0] for r in result])
+        data = numpy.array([r[1] for r in result])
+        if average:
+            w = numpy.array([1.0 if f == 0 else 0.0 for f in flag])
+            data[:] = sum(data * w) / sum(w)
+            flag[:] = 0
+        yield flag
+        yield data
+    
+    def _expected_caltable(self, srctype, colname, average=False):
+        print srctype, colname
+        with tbmanager(self.rawfile) as tb:
+            tsel = tb.query('SRCTYPE==%s'%(srctype))
+            flagrow = tsel.getcol('FLAGROW')
+            flagtra = tsel.getcol('FLAGTRA')
+            data = tsel.getcol(colname)
+            tsel.close()
+        nchan,nrow = flagtra.shape
+
+        def gen_result(fr, fl, sp):
+            nchan,nrow = fl.shape
+            for ichan in xrange(nchan):
+                _fl = fl[ichan,:]
+                _sp = sp[ichan,:]
+                wsum = 0.0
+                dsum = 0.0
+                for irow in xrange(nrow):
+                    if fr[irow] == 0 and _fl[irow] == 0:
+                        dsum += _sp[irow]
+                        wsum += 1.0
+                if wsum == 0.0:
+                    yield 128, sum(_sp) / float(len(_sp))
+                else:
+                    yield 0, dsum / wsum
+
+        # table should have two rows
+        row0 = tuple(self._calculate_row(gen_result(flagrow[:3], flagtra[:,:3], data[:,:3]), average))
+        row1 = tuple(self._calculate_row(gen_result(flagrow[3:], flagtra[:,3:], data[:,3:]), average))
+        
+        return [row0, row1]
+
+    def _verify(self, outfile, expected):
+        # file existence check
+        self.assertTrue(os.path.exists(outfile), msg='Output file \'%s\' didn\'t created.'%(outfile))
+
+        with tbmanager(outfile) as tb:
+            nrow = tb.nrows()
+            colnames = tb.colnames()
+
+        # basic check
+        self.assertEqual(nrow, len(expected), msg='Number of rows differ (result %s expected %s)'%(nrow, len(expected)))
+        self.assertTrue('FLAGTRA' in colnames, msg='Column FLAGTRA doesn\'t exist')
+        self.assertTrue('SPECTRA' in colnames or 'TSYS' in colnames, msg='Column SPECTRA or TSYS doesn\'t exist')
+        
+        if 'SPECTRA' in colnames:
+            datacol = 'SPECTRA'
+        else:
+            datacol = 'TSYS'
+            
+        with tbmanager(outfile) as tb:
+            data = tb.getcol(datacol)
+            flag = tb.getcol('FLAGTRA')
+        nchan,nrow = flag.shape
+
+        for irow in xrange(nrow):
+            result_data = data[:,irow]
+            result_flag = flag[:,irow]
+            expected_data = expected[irow][1]
+            expected_flag = expected[irow][0]
+            for ichan in xrange(nchan):
+                # check flag
+                #print 'Row %s Channel %s: \n\tflag result %s expected %s\n\tdata result %s expected %s'%(irow, ichan, result_flag[ichan], expected_flag[ichan], result_data[ichan], expected_data[ichan])
+                self.assertEqual(expected_flag[ichan], result_flag[ichan], msg='Row %s Channel %s: flag differ (result %s expected %s)'%(irow,ichan,result_flag[ichan],expected_flag[ichan]))
+
+                # check resulting spectral data
+                self.assertEqual(expected_data[ichan], result_data[ichan], msg='Row %s Channel %s: data differ (result %s expected %s)'%(irow,ichan,result_data[ichan],expected_data[ichan]))
+            
+
+        
+
+###
+# Test Sky calibration flag handling
+###
+class sdcal2_skycal_flag(sdcal2_flag_base):
+    """
+    Test list
+        test_skycal_flag_ps: test if sky calibration handles flag
+                             information properly
+    """
+    rawfile = 'sdcal2_testflag.asap'
+    prefix = 'sdcal2_skycal_flag'
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+                
+        default(sdcal2)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_skycal_flag_ps(self):
+        """test_skycal_flag_ps: test if sky calibration handles flag information properly"""
+        outfile = self.prefix + '_sky'
+        sdcal2(infile=self.rawfile, calmode='ps', outfile=outfile)
+
+        self._verify(outfile, self._expected_caltable(1, 'SPECTRA'))
+
+###
+# Test Tsys calibration flag handling
+###
+class sdcal2_tsyscal_flag(sdcal2_flag_base):
+    """
+    Test list
+        test_tsyscal_flag_noaverage:
+            test if tsys calibration handles flag information properly
+        test_tsyscal_flag_doaverage:
+            test if tsys calibration with spectral averaging
+            handles flag information properly
+    """
+    rawfile='sdcal2_testflag.asap'
+    prefix = 'sdcal2_tsyscal_flag'
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+                
+        default(sdcal2)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_tsyscal_flag_noaverage(self):
+        """test_tsyscal_flag_noaverage: test if tsys calibration handles flag information properly"""
+        outfile = self.prefix + '_tsys'
+        average = False
+        sdcal2(infile=self.rawfile, calmode='tsys', tsysspw='22', tsysavg=average, outfile=outfile)
+
+        self._verify(outfile, self._expected_caltable(10, 'TSYS', average))
+
+    def test_tsyscal_flag_doaverage(self):
+        """test_tsyscal_flag_noaverage: test if tsys calibration with spectral averaging handles flag information properly"""
+        outfile = self.prefix + '_tsys'
+        average = True
+        sdcal2(infile=self.rawfile, calmode='tsys', tsysspw='22', tsysavg=average, outfile=outfile)
+
+        self._verify(outfile, self._expected_caltable(10, 'TSYS', average))
+        
+###
+# Test applycal flag handling
+###
+class sdcal2_applycal_flag(sdcal2_flag_base):
+    rawfile='sdcal2_testflag.asap'
+
+
     
 
 def suite():
@@ -1243,4 +1435,5 @@ def suite():
             sdcal2_skycal_otf, sdcal2_skycal_otfraster,
             sdcal2_tsyscal, sdcal2_tsyscal_average,
             sdcal2_applycal,
-            sdcal2_test_selection]
+            sdcal2_test_selection,
+            sdcal2_skycal_flag, sdcal2_tsyscal_flag]
