@@ -41,6 +41,7 @@
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/SkyComponent.h>
+#include <components/ComponentModels/SkyComponentFactory.h>
 #include <scimath/Fitting/LSQaips.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <lattices/LatticeMath/Fit2D.h>
@@ -526,7 +527,7 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
       GaussianBeam beam = image.imageInfo().restoringBeam();
       try {
             // FIXME need to deal with multi beam images
-          SkyComponent sky = ImageUtilities::encodeSkyComponent (os, rat, cSys, bU,
+          SkyComponent sky = SkyComponentFactory::encodeSkyComponent (os, rat, cSys, bU,
                                                                 cType, pars, stokes, xIsLong, beam);
          listOut.add(sky);
       }  catch (AipsError x) {
@@ -539,7 +540,7 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
          pars2(1) = rs2(k,1); 
          pars2(2) = rs2(k,2);
          // FIXME need to deal with multi beam images
-         SkyComponent sky = ImageUtilities::encodeSkyComponent (os, rat, cSys, bU,
+         SkyComponent sky = SkyComponentFactory::encodeSkyComponent (os, rat, cSys, bU,
                                                                 ComponentType::POINT, 
                                                                 pars2, stokes, xIsLong, beam);
          listOut.add(sky);

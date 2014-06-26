@@ -36,7 +36,7 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <lattices/Lattices/LatticeCleaner.h>
-#include <components/ComponentModels/GaussianBeam.h>
+#include <scimath/Mathematics/GaussianBeam.h>
 
 #include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 

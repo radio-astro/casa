@@ -18,7 +18,14 @@
 #
 
 casa_add_library( components
+    ComponentModels/GaussianDeconvolver.cc
+    ComponentModels/SkyComponentFactory.cc
     SpectralComponents/SpectralListFactory.cc
+)
+install (FILES 
+    ComponentModels/GaussianDeconvolver.h
+    ComponentModels/SkyComponentFactory.h
+	DESTINATION include/casacode/components/ComponentModels
 )
 install (FILES 
     SpectralComponents/SpectralListFactory.h

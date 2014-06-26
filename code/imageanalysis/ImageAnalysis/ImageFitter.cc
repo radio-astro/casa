@@ -29,9 +29,12 @@
 #include <casa/Utilities/Precision.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <components/ComponentModels/PointShape.h>
+#include <components/ComponentModels/SkyComponentFactory.h>
 #include <components/ComponentModels/SpectralModel.h>
+
 #include <lattices/Lattices/LCPixelSet.h>
 
 #include <imageanalysis/Annotations/AnnEllipse.h>
@@ -1069,7 +1072,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 		Angular2DGaussian bestDecon;
 		Bool isPointSource = True;
 		try {
-			isPointSource = beam.deconvolve(bestDecon, bestSol);
+			isPointSource = GaussianDeconvolver::deconvolve(bestDecon, bestSol, beam);
 			fitSuccess = True;
 		}
 		catch (const AipsError& x) {
@@ -1091,7 +1094,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 				Bool isPointSource1 = True;
 				Bool fitSuccess1 = False;
 				try {
-					isPointSource1 = beam.deconvolve(decon, largest);
+					isPointSource1 = GaussianDeconvolver::deconvolve(decon, largest, beam);
 					fitSuccess = True;
 				}
 				catch (const AipsError& x) {
@@ -1109,7 +1112,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 				Bool isPointSource2 = True;
 				Bool fitSuccess2 = False;
 				try {
-					isPointSource2 = beam.deconvolve(decon, largest);
+					isPointSource2 = GaussianDeconvolver::deconvolve(decon, largest, beam);
 					fitSuccess2 = True;
 	            }
 				catch (const AipsError& x) {
@@ -1164,7 +1167,7 @@ void ImageFitter::_setDeconvolvedSizes() {
 								decon = Angular2DGaussian();
 								Bool isPoint;
 								try {
-									isPoint = beam.deconvolve(decon, sourceIn);
+									isPoint = GaussianDeconvolver::deconvolve(decon, sourceIn, beam);
 								}
 								catch (const AipsError& x) {
 									isPoint = True;
@@ -1385,7 +1388,7 @@ void ImageFitter::_fitsky(
 		// Encode as SkyComponent and return
 		Vector<SkyComponent> result(1);
 		Double facToJy;
-		result(0) = ImageUtilities::encodeSkyComponent(
+		result(0) = SkyComponentFactory::encodeSkyComponent(
 			*_getLog(), facToJy, allAxesSubImage,
 			_convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
 			deconvolveIt,
@@ -1440,7 +1443,7 @@ void ImageFitter::_fitsky(
 			const ImageInfo& imageInfo = subImage.imageInfo();
 
 			if (modelType == Fit2D::GAUSSIAN) {
-				parameters = ImageUtilities::decodeSkyComponent(
+				parameters = SkyComponentFactory::decodeSkyComponent(
 					estimate(i), imageInfo, cSys,
 					_bUnit, stokes, xIsLong
 				);
@@ -1494,7 +1497,7 @@ void ImageFitter::_fitsky(
 				anyLT(errors, 0.0),
 				"At least one calculated error is less than zero"
 			);
-			result[j] = ImageUtilities::encodeSkyComponent(
+			result[j] = SkyComponentFactory::encodeSkyComponent(
 				*_getLog(), facToJy, allAxesSubImage, modelType,
 				solution, stokes, xIsLong, deconvolveIt, beam
 			);
@@ -1660,7 +1663,7 @@ void ImageFitter::_fitskyExtractBeam(
 	}
 	Bool doRef = True;
 	Vector<Double> dParameters;
-	ImageUtilities::worldWidthsToPixel(
+	SkyComponentFactory::worldWidthsToPixel(
 		dParameters, wParameters, cSys, pixelAxes, doRef
 	);
 	parameters.resize(6, True);
@@ -1746,7 +1749,7 @@ void ImageFitter::_encodeSkyComponentError(
 			dParameters(4) = parameters(5);
 			// If flipped, it means pixel major axis morphed into world minor
 			// Put back any zero errors as well.
-			Bool flipped = ImageUtilities::pixelWidthsToWorld(
+			Bool flipped = SkyComponentFactory::pixelWidthsToWorld(
 				wParameters,
 				dParameters, csys, pixelAxes, False
 			);
@@ -1774,7 +1777,7 @@ void ImageFitter::_encodeSkyComponentError(
 	// Y
 	dParameters(3) = errors(2) == 0 ? 1e-8 : errors(2);
 	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
-	Bool flipped = ImageUtilities::pixelWidthsToWorld(
+	Bool flipped = SkyComponentFactory::pixelWidthsToWorld(
 			wParameters, dParameters,
 			csys, pixelAxes, False
 		);

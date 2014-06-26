@@ -29,8 +29,9 @@
 #include <casa/Quanta/MVAngle.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <components/ComponentModels/ComponentShape.h>
+#include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/ComponentModels/SkyCompRep.h>
-#include <components/ComponentModels/GaussianBeam.h>
+#include <scimath/Mathematics/GaussianBeam.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <imageanalysis/Annotations/AnnEllipse.h>
@@ -154,9 +155,10 @@ namespace casa {
 			DisplayCoordinateSystem coordSystem = image->coordinates();
 			IPosition imageShape = image->shape();
 			GaussianBeam beam = imageInformation.restoringBeam( channel );
-			Angular2DGaussian originalBeam( majorAxis, minorAxis, positionAngle );
+            typedef GaussianBeam Angular2DGaussian;
+            Angular2DGaussian originalBeam( majorAxis, minorAxis, positionAngle );
 			Angular2DGaussian resultBeam;
-			beam.deconvolve( resultBeam, originalBeam );
+            GaussianDeconvolver::deconvolve( resultBeam, originalBeam, beam );
 			majorAxis.setValue( resultBeam.getMajor().getValue());
 			minorAxis.setValue( resultBeam.getMinor().getValue());
 			positionAngle.setValue( resultBeam.getPA().getValue());

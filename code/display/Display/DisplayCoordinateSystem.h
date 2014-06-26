@@ -31,7 +31,7 @@
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <images/Images/ImageUtilities.h>
+#include <components/ComponentModels/SkyComponentFactory.h>
 
 namespace casa {
 
@@ -218,7 +218,7 @@ namespace casa {
             // from ImageUtilities...
             void worldWidthsToPixel( LogIO& /*os*/, Vector<double>& dParameters, const Vector<Quantum<Double> >& parameters,
                                      const IPosition& pixelAxes, bool doRef=false ) const {
-                ImageUtilities::worldWidthsToPixel(dParameters, parameters, cs_, pixelAxes, doRef );
+                SkyComponentFactory::worldWidthsToPixel(dParameters, parameters, cs_, pixelAxes, doRef );
             }
 
 			// adjust this coordinate system to match the 'other' coordinate system

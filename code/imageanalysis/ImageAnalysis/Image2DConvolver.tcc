@@ -23,7 +23,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Image2DConvolver.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 //   
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 
@@ -34,7 +33,9 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Exceptions/Error.h>
+#include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/ComponentModels/GaussianShape.h>
+#include <components/ComponentModels/SkyComponentFactory.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -83,12 +84,12 @@ Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 ) {
 	GaussianBeam convolvingBeam;
 	Vector<Quantity> kernelParms(3);
-	Angular2DGaussian targetBeam(
+	GaussianBeam targetBeam(
 		targetBeamParms[0], targetBeamParms[1],
 		targetBeamParms[2]
 	);
 	try {
-		if(inputBeam.deconvolve(convolvingBeam, targetBeam)) {
+		if(GaussianDeconvolver::deconvolve(convolvingBeam, targetBeam, inputBeam)) {
             // point source, or convolvingBeam nonsensical
             throw AipsError();
         }
@@ -417,7 +418,7 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
    wParameters(0) = Quantum<Double>(refVal(wAxis), units(wAxis));
    wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
    wParameters(1) = Quantum<Double>(refVal(wAxis), units(wAxis));
-   ImageUtilities::worldWidthsToPixel (dParameters, wParameters, cSys, pixelAxes, False);
+   SkyComponentFactory::worldWidthsToPixel (dParameters, wParameters, cSys, pixelAxes, False);
 
 // Create n-Dim kernel array shape
 
@@ -473,7 +474,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			pixelParameters(3) = parameters(1).getValue();
 			pixelParameters(4) = parameters(2).getValue(Unit("rad"));
 			GaussianBeam worldParameters;
-			ImageUtilities::pixelWidthsToWorld(
+			SkyComponentFactory::pixelWidthsToWorld(
 				worldParameters, pixelParameters,
 				cSys, pixelAxes, False
 			);
@@ -506,7 +507,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			wParameters(3) = beamIn.getMinor();
 			wParameters(4) = beamIn.getPA(True);
 			Vector<Double> dParameters;
-			ImageUtilities::worldWidthsToPixel(
+			SkyComponentFactory::worldWidthsToPixel(
 				dParameters, wParameters, cSys, pixelAxes, False
 			);
 			// Create 2-D beam array shape
@@ -566,7 +567,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			pixelParameters(2) = bSolution(3);
 			pixelParameters(3) = bSolution(4);
 			pixelParameters(4) = bSolution(5);
-			ImageUtilities::pixelWidthsToWorld(
+			SkyComponentFactory::pixelWidthsToWorld(
 				beamOut, pixelParameters, cSys, pixelAxes, False
 			);
 			if (brightnessUnitIn.getName().contains("K")) {
@@ -623,7 +624,6 @@ template <class T> void Image2DConvolver<T>::_checkKernelParameters(
 		);
 	}
 }
-
 
 template <class T> IPosition Image2DConvolver<T>::_shapeOfKernel(
 	const VectorKernel::KernelTypes kernelType,
@@ -738,7 +738,6 @@ template <class T> void Image2DConvolver<T>::_fillGaussian(
       }
    } 
 }
-
 
 } //# NAMESPACE CASA - END
 

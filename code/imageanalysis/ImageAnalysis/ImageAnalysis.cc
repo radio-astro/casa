@@ -1159,7 +1159,7 @@ Record ImageAnalysis::deconvolvecomponentlist(
 	n = list.nelements();
 	ComponentList outCL;
 	for (uInt i = 0; i < n; ++i) {
-		outCL.add(ImageUtilities::deconvolveSkyComponent(*_log, list(i), beam));
+		outCL.add(SkyComponentFactory::deconvolveSkyComponent(*_log, list(i), beam));
 	}
 	if (outCL.nelements() > 0) {
 		if (!outCL.toRecord(error, retval)) {

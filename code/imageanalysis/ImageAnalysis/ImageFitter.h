@@ -177,6 +177,9 @@ protected:
     virtual inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
+
+    typedef GaussianBeam Angular2DGaussian;
+
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
 	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;

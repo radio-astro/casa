@@ -778,7 +778,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.248
+           VERSION 1.0.249
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -1051,15 +1051,15 @@ endif()
 casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
-casa_add_module( imageanalysis CASACORE Boost)
+casa_add_module( components stdcasa CASACORE)
+casa_add_module( imageanalysis CASACORE Boost components)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )
 casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis)
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
 casa_add_module( spectrallines CASACORE imageanalysis Boost SQLITE)
-casa_add_module( components stdcasa CASACORE)
 casa_add_module( guitools CASACORE QT4 QWT synthesis)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt guitools synthesis imageanalysis Boost stdcasa casadbus spectrallines)
+casa_add_module( display CASACORE WCSLIB QT4 casaqt guitools synthesis imageanalysis Boost stdcasa casadbus spectrallines components)
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis Boost)
 casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )

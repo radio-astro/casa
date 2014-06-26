@@ -36,6 +36,7 @@ Annotations/AnnVector.cc
 Annotations/RegionTextList.cc
 
 ImageAnalysis/AntennaResponses.cc
+ImageAnalysis/CasaImageBeamSet.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapserData.cc
@@ -113,6 +114,7 @@ install (FILES
 	ImageAnalysis/AntennaResponses.h
 	ImageAnalysis/BeamManipulator.h
 	ImageAnalysis/BeamManipulator.tcc
+	ImageAnalysis/CasaImageBeamSet.h
 	ImageAnalysis/ComponentImager.h
 	ImageAnalysis/Image1DSmoother.h
 	ImageAnalysis/Image1DSmoother.tcc
@@ -220,6 +222,7 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tCasaImageBeamSet.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
