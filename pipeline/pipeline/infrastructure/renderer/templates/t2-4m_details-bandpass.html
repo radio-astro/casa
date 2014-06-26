@@ -41,6 +41,8 @@ $(document).ready(function() {
             }
         }
     });
+    
+    Holder.run();
 });
 </script>
 
@@ -151,8 +153,18 @@ see detailed plots per spectral window and antenna.</p>
 			        <% 
 			        	plot = amp_refant[ms]
 			        %>
-			        % if os.path.exists(plot.thumbnail):
 					<div class="span6">
+				        % if plot is None or not os.path.exists(plot.thumbnail):
+				        <img data-src="holder.js/255x188/text:Not Available">	
+						<div class="caption">
+							<h5>
+				                Reference antenna
+							</h5>
+							
+	                        <p>The amplitude vs frequency plot for the reference antenna 
+	                        is not available.</p>
+						</div>
+				        % else:
 						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 		                   class="fancybox"
 		                   rel="plots-${ms}">
@@ -175,14 +187,24 @@ see detailed plots per spectral window and antenna.</p>
 	                        (${plot.parameters['ant']}). Click the link above to show 
 	                        detailed plots for ${plot.parameters['ant']}.</p>
 						</div>
+						% endif
 					</div>
-					% endif
 
 			        <% 
 			        	plot = amp_mode[ms]
 			        %>
-			        % if os.path.exists(plot.thumbnail):
 					<div class="span6">
+				        % if plot is None or not os.path.exists(plot.thumbnail):
+				        <img data-src="holder.js/255x188/text:Not Available">	
+						<div class="caption">
+							<h5>
+				                Typical antenna
+							</h5>
+							
+	                        <p>The amplitude vs frequency plot for a typical antenna 
+	                        is not available.</p>
+						</div>
+				        % else:
 						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 		                   class="fancybox"
 		                   rel="plots-${ms}">
@@ -206,8 +228,8 @@ see detailed plots per spectral window and antenna.</p>
 	                        detailed plots for ${plot.parameters['ant']}.</p>
 	                        <p>NB. random antenna until scores are working</p>
 						</div>
+						% endif
 					</div>
-					% endif
 				</div>
 			</div>
 		</li>
@@ -233,8 +255,18 @@ see detailed plots per spectral window and antenna.</p>
 			        <% 
 			        	plot = phase_refant[ms]
 			        %>
-			        % if os.path.exists(plot.thumbnail):
 					<div class="span12">
+				        % if plot is None or not os.path.exists(plot.thumbnail):
+				        <img data-src="holder.js/255x188/text:Not Available">	
+						<div class="caption">
+							<h5>
+				                Reference Antenna
+							</h5>
+							
+	                        <p>The phase vs frequency plot for the reference antenna 
+	                        is not available.</p>
+						</div>
+				        % else:
 						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 		                   class="fancybox"
 		                   rel="plots-${ms}">
@@ -257,8 +289,8 @@ see detailed plots per spectral window and antenna.</p>
 	                        (${plot.parameters['ant']}). Click the link above to show
 	                        detailed plots for ${plot.parameters['ant']}.</p>
 						</div>
+						% endif
 					</div>
-					% endif
 				</div>
 			</div>
 		</li>
