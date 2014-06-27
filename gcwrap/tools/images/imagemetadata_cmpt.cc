@@ -2,7 +2,7 @@
 
 #include <casa/Containers/ValueHolder.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
-#include <images/Images/ImageOpener.h>
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <images/Images/ImageUtilities.h>
 
 #include <stdcasa/version.h>
@@ -73,14 +73,33 @@ bool imagemetadata::open(const std::string& infile) {
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
+		SPtrHolder<LatticeBase> latt(ImageOpener::openImage(infile));
+		ThrowIf (! latt.ptr(), "Unable to open image");
+		DataType dataType = latt->dataType();
 		if (
-			ImageOpener::imageType(infile) == ImageOpener::AIPSPP
-			&& ImageOpener::pagedImageDataType(infile) == TpComplex
+			dataType == TpComplex
 		) {
-			_openImage<Complex>(infile);
+			_header.reset(
+				new ImageMetaDataRW(
+					std::tr1::shared_ptr<ImageInterface<Complex> >(
+						dynamic_cast<ImageInterface<Complex> *>(latt.transfer())
+					)
+				)
+			);
+		}
+		else if (dataType == TpFloat) {
+			_header.reset(
+				new ImageMetaDataRW(
+					std::tr1::shared_ptr<ImageInterface<Float> >(
+						dynamic_cast<ImageInterface<Float> *>(latt.transfer())
+					)
+				)
+			);
 		}
 		else {
-			_openImage<Float>(infile);
+			ostringstream x;
+			x << dataType;
+			ThrowCc("Unsupported data type " + x.str());
 		}
 		return True;
 
@@ -90,22 +109,6 @@ bool imagemetadata::open(const std::string& infile) {
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-}
-
-template <class T> void imagemetadata::_openImage(
-	const String& infile
-) {
-	ImageInterface<T> *x;
-	ImageUtilities::openImage(x, infile);
-	ThrowIf(
-		! x,
-		"Unable to open image " + infile
-	);
-	_header.reset(
-		new ImageMetaDataRW(
-			std::tr1::shared_ptr<ImageInterface<T> >(x)
-		)
-	);
 }
 
 bool imagemetadata::remove(

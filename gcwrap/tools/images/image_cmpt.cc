@@ -387,18 +387,12 @@ image* image::imageconcat(
 		);
 		String first = imageNames[0];
 		imageNames.erase(imageNames.begin());
-		DataType dtype = ImageOpener::pagedImageDataType(first);
-		if (dtype == TpFloat) {
-			SPIIF f = ImageUtilities::openImage<Float>(first);
-			ImageConcatenator<Float> concat(f, outfile, overwrite);
-			concat.setAxis(axis);
-			concat.setRelax(relax);
-			concat.setReorder(reorder);
-			concat.setTempClose(tempclose);
-			return new image(concat.concatenate(imageNames));
-		}
-		else if (dtype == TpComplex) {
-			SPIIC c = ImageUtilities::openImage<Complex>(first);
+
+		SPtrHolder<LatticeBase> latt(ImageOpener::openImage(first));
+		ThrowIf (! latt.ptr(), "Unable to open image " + first);
+		DataType dataType = latt->dataType();
+		if (dataType == TpComplex) {
+			SPIIC c(dynamic_cast<ImageInterface<Complex> *>(latt.transfer()));
 			ImageConcatenator<Complex> concat(c, outfile, overwrite);
 			concat.setAxis(axis);
 			concat.setRelax(relax);
@@ -406,8 +400,19 @@ image* image::imageconcat(
 			concat.setTempClose(tempclose);
 			return new image(concat.concatenate(imageNames));
 		}
+		else if (dataType == TpFloat) {
+			SPIIF f(dynamic_cast<ImageInterface<Float> *>(latt.transfer()));
+			ImageConcatenator<Float> concat(f, outfile, overwrite);
+			concat.setAxis(axis);
+			concat.setRelax(relax);
+			concat.setReorder(reorder);
+			concat.setTempClose(tempclose);
+			return new image(concat.concatenate(imageNames));
+		}
 		else {
-			ThrowCc("Unsupported image data type");
+			ostringstream x;
+			x << dataType;
+			ThrowCc("Unsupported data type " + x.str());
 		}
 	}
 	catch (const AipsError& x) {
@@ -3638,7 +3643,8 @@ image* image::regrid(
 		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
 			axes = inaxes;
 		}
-		ImageRegridder regridder(
+//		ImageRegridder<Float> regridder(
+        ImageRegridder regridder(
 			_image->getImage(), regionPtr.get(),
 			mask, outfile, overwrite, *coordinates,
 			IPosition(axes), IPosition(inshape), dropDegenerateAxes
