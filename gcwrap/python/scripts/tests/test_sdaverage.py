@@ -2492,6 +2492,9 @@ class sdaverage_test_average_flag(unittest.TestCase):
         test_average_flag: test if average handles flag information properly
         test_average_novaliddata: test if the task throws exception if
                                   no valid data exists
+        test_avearge_novaliddata_scan: test if the task handles the data that
+                                       has several scans and one scan is
+                                       fully flagged
         test_smooth_hanning: test if hanning smoothing (direct convolution)
                              handles flag information correctly
         test_smooth_gaussian: test if gaussian smoothing (FFT convolution)
@@ -2746,6 +2749,26 @@ class sdaverage_test_average_flag(unittest.TestCase):
         message = the_exception.message
         expected_message = 'Can\'t average fully flagged data.'
         self.assertEqual(message, expected_message, msg='Exception contains unexpected message: "%s" (expected "%s")'%(message,expected_message))
+
+    def test_average_novaliddata_scan(self):
+        """test_avearge_novaliddata_scan: test if the task handles the data that has several scans and one scan is fully flagged"""
+        outfile = self.prefix + '.asap'
+        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint', scanaverage=True)
+
+        # one row per scan
+        # there are three rows that has proper scan number (0, 1, 2)
+        # scan 1 is row flagged so that resulting data is just a copy
+        # of rows 0 and 2 of input data
+        flagrow_in, flagtra_in, spectra_in = self._get_data(self.rawfile)
+        flagrow_out, flagtra_out, spectra_out = self._get_data(outfile)
+
+        valid_rows = numpy.where(flagrow_in == 0)[0]
+        flagtra_expected = flagtra_in.take(valid_rows, axis=1)
+        spectra_expected = spectra_in.take(valid_rows, axis=1)
+        self.assertEqual(flagtra_out.shape, flagtra_expected.shape, msg='FLAGTRA: shape differ')
+        self.assertEqual(spectra_out.shape, spectra_expected.shape, msg='SPECTRA: shape differ')
+        self.assertTrue(all(flagtra_out.flatten() == flagtra_expected.flatten()), msg='FLAGTRA: value differ')
+        self.assertTrue(all(spectra_out.flatten() == spectra_expected.flatten()), msg='SPECTRA: value differ')
 
     def test_smooth_hanning(self):
         """test_smooth_hanning: test if hanning smoothing (direct convolution) handles flag information correctly"""
