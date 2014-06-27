@@ -237,12 +237,12 @@ Bool TSLogSink::postLocally (const LogMessage& message)
 		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::WARN:
-		if(send2cerr) // jagonzal: casalog.showconsole should control also if WARN/SEVERE msg go to console
-			std::cerr << message.toString() << std::endl;
+		// if(send2cerr) // jagonzal: casalog.showconsole should control also if WARN/SEVERE msg go to console
+		std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::SEVERE:
-		if(send2cerr) // jagonzal: casalog.showconsole should control also if WARN/SEVERE msg go to console
-			std::cerr << message.toString() << std::endl;
+		// if(send2cerr) // jagonzal: casalog.showconsole should control also if WARN/SEVERE msg go to console
+		std::cerr << message.toString() << std::endl;
 		break;
         default:
 		break;
