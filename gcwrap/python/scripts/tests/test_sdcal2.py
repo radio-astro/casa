@@ -1265,7 +1265,10 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
     13  | 10 (tsys) | 0          | ch 10,40 flagged | spurious at ch 10,40
     14  | 10 (tsys) | 0          | ch 10 flagged    | spurious at ch 10
     """
-    def _calculate_row(self, generator, average):
+    tol = 1.0e-6
+    
+    def _calculate_row(self, timestamp, generator, average):
+        yield timestamp.mean()
         result = list(generator)
         flag = numpy.array([r[0] for r in result])
         data = numpy.array([r[1] for r in result])
@@ -1283,6 +1286,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             flagrow = tsel.getcol('FLAGROW')
             flagtra = tsel.getcol('FLAGTRA')
             data = tsel.getcol(colname)
+            timestamp = tsel.getcol('TIME')
             tsel.close()
         nchan,nrow = flagtra.shape
 
@@ -1303,12 +1307,12 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
                     yield 0, dsum / wsum
 
         # table should have two rows
-        row0 = tuple(self._calculate_row(gen_result(flagrow[:3], flagtra[:,:3], data[:,:3]), average))
-        row1 = tuple(self._calculate_row(gen_result(flagrow[3:], flagtra[:,3:], data[:,3:]), average))
+        row0 = tuple(self._calculate_row(timestamp[:3], gen_result(flagrow[:3], flagtra[:,:3], data[:,:3]), average))
+        row1 = tuple(self._calculate_row(timestamp[3:], gen_result(flagrow[3:], flagtra[:,3:], data[:,3:]), average))
         
         return [row0, row1]
 
-    def _verify(self, outfile, expected):
+    def _verify_caltable(self, outfile, expected):
         # file existence check
         self.assertTrue(os.path.exists(outfile), msg='Output file \'%s\' didn\'t created.'%(outfile))
 
@@ -1329,20 +1333,111 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
         with tbmanager(outfile) as tb:
             data = tb.getcol(datacol)
             flag = tb.getcol('FLAGTRA')
+            timestamp = tb.getcol('TIME')
         nchan,nrow = flag.shape
+
+        absdiff = lambda x, r: abs((x - r) / r)
 
         for irow in xrange(nrow):
             result_data = data[:,irow]
             result_flag = flag[:,irow]
-            expected_data = expected[irow][1]
-            expected_flag = expected[irow][0]
+            result_time = timestamp[irow]
+            expected_data = expected[irow][2]
+            expected_flag = expected[irow][1]
+            expected_time = expected[irow][0]
+            diff = absdiff(result_time, expected_time)
+            self.assertLess(diff, self.tol, msg=('Row %s: timestamp differ (result %s expected %s)'%(irow,result_time,expected_time)))
             for ichan in xrange(nchan):
                 # check flag
                 #print 'Row %s Channel %s: \n\tflag result %s expected %s\n\tdata result %s expected %s'%(irow, ichan, result_flag[ichan], expected_flag[ichan], result_data[ichan], expected_data[ichan])
                 self.assertEqual(expected_flag[ichan], result_flag[ichan], msg='Row %s Channel %s: flag differ (result %s expected %s)'%(irow,ichan,result_flag[ichan],expected_flag[ichan]))
 
                 # check resulting spectral data
-                self.assertEqual(expected_data[ichan], result_data[ichan], msg='Row %s Channel %s: data differ (result %s expected %s)'%(irow,ichan,result_data[ichan],expected_data[ichan]))
+                diff = absdiff(result_data[ichan], expected_data[ichan])
+                self.assertLess(diff, self.tol, msg='Row %s Channel %s: data differ (result %s expected %s)'%(irow,ichan,result_data[ichan],expected_data[ichan]))
+
+    def _verify_applycal(self, outfile, expected_sky, expected_tsys):
+        # file existence check
+        self.assertTrue(os.path.exists(outfile), msg='Output file \'%s\' didn\'t created.'%(outfile))
+
+        # expected number of rows and timestamps
+        with tbmanager(self.rawfile) as tb:
+            tsel = tb.query('SRCTYPE==0')
+            nrow_expected = tsel.nrows()
+            time_expected = tsel.getcol('TIME')
+        
+        # get calibrated data
+        with tbmanager(outfile) as tb:
+            time_result = tb.getcol('TIME')
+            flagtra_result = tb.getcol('FLAGTRA')
+            spectra_result = tb.getcol('SPECTRA')
+        nchan,nrow_result = flagtra_result.shape
+        
+        # check number of rows
+        self.assertEqual(nrow_result, nrow_expected, msg='Number of rows differ (result %s expected %s)'%(nrow_result, nrow_expected))
+
+        # check timestamp
+        for irow in xrange(nrow_result):
+            self.assertEqual(time_result[irow], time_expected[irow], msg='Row %s: timestamp differ (result %s expected %s)'%(irow, time_result[irow], time_expected[irow]))
+
+        # evaluate expected data and flag
+        expected_cal = self._expected_calibration(expected_sky, expected_tsys)
+
+        # iterate rows:
+        for (irow, cal) in zip(xrange(nrow_result), expected_cal):
+            cal_flag = cal[0]
+            cal_data = cal[1]
+            flag = flagtra_result[:,irow]
+            data = spectra_result[:,irow]
+            #print irow, cal_flag, cal_data
+            for ichan in xrange(nchan):
+                self.assertEqual(cal_flag[ichan], flag[ichan], msg='Row %s Channel %s: flag differ (result %s expected %s)'%(irow, ichan, flag[ichan], cal_flag[ichan]))
+                #self.assertEqual(cal_data[ichan], data[ichan], msg='Row %s Channel %s: spectral data differ (result %s expected %s)'%(irow, ichan, data[ichan], cal_data[ichan]))
+        
+    def _expected_calibration(self, expected_sky, expected_tsys):
+        with tbmanager(self.rawfile) as tb:
+            tsel = tb.query('SRCTYPE==0')
+            time_result = tsel.getcol('TIME')
+            flagtra_result = tsel.getcol('FLAGTRA')
+            spectra_result = tsel.getcol('SPECTRA')
+            tsel.close()
+
+        nrow = len(time_result)
+
+        def gen_calibration(t, fl, sp, expected_sky, expected_tsys):
+            retrieve = lambda i, r: numpy.array([_r[i] for _r in r])
+            def interp(t, tref, data, flag):
+                nrow, nchan = data.shape
+                factor = (t - tref[0]) / (tref[1] - tref[0])
+                for ichan in xrange(nchan):
+                    if flag[0,ichan] == flag[1,ichan]:
+                        yield data[0,ichan] + (data[1,ichan] - data[0,ichan]) * factor
+                    elif flag[0,ichan] == 0:
+                        yield data[0,ichan]
+                    elif flag[1,ichan] == 0:
+                        yield data[1,ichan]
+                        
+            calflag = lambda fl_on, fl_sky: numpy.array([128 if f != 0 else 0 for f in (fl_on + fl_sky)])
+            t_sky = retrieve(0, expected_sky)
+            fl_sky = retrieve(1, expected_sky)
+            sp_sky = retrieve(2, expected_sky)
+            t_tsys = retrieve(0, expected_tsys)
+            fl_tsys = retrieve(1, expected_tsys)
+            sp_tsys = retrieve(2, expected_tsys)
+            off = list(interp(t, t_sky, sp_sky, fl_sky))
+            tsys = list(interp(t, t_tsys, sp_tsys, fl_tsys))
+            valid_chans = numpy.where(fl_tsys.sum(axis=0) == 0)[0]
+            scalar_tsys = tsys[valid_chans[0]]
+            #print off
+            #print scalar_tsys
+            #print sp
+            calibrated = scalar_tsys * (sp - off) / off
+            flag = calflag(fl, fl_sky.sum(axis=0))
+            #print flag, calibrated
+            return (flag, calibrated)
+            
+        for irow in xrange(nrow):
+            yield gen_calibration(time_result[irow], flagtra_result[:,irow], spectra_result[:,irow], expected_sky, expected_tsys)
             
 
         
@@ -1376,7 +1471,7 @@ class sdcal2_skycal_flag(sdcal2_flag_base):
         outfile = self.prefix + '_sky'
         sdcal2(infile=self.rawfile, calmode='ps', outfile=outfile)
 
-        self._verify(outfile, self._expected_caltable(1, 'SPECTRA'))
+        self._verify_caltable(outfile, self._expected_caltable(1, 'SPECTRA'))
 
 ###
 # Test Tsys calibration flag handling
@@ -1411,7 +1506,7 @@ class sdcal2_tsyscal_flag(sdcal2_flag_base):
         average = False
         sdcal2(infile=self.rawfile, calmode='tsys', tsysspw='22', tsysavg=average, outfile=outfile)
 
-        self._verify(outfile, self._expected_caltable(10, 'TSYS', average))
+        self._verify_caltable(outfile, self._expected_caltable(10, 'TSYS', average))
 
     def test_tsyscal_flag_doaverage(self):
         """test_tsyscal_flag_noaverage: test if tsys calibration with spectral averaging handles flag information properly"""
@@ -1419,15 +1514,39 @@ class sdcal2_tsyscal_flag(sdcal2_flag_base):
         average = True
         sdcal2(infile=self.rawfile, calmode='tsys', tsysspw='22', tsysavg=average, outfile=outfile)
 
-        self._verify(outfile, self._expected_caltable(10, 'TSYS', average))
+        self._verify_caltable(outfile, self._expected_caltable(10, 'TSYS', average))
         
 ###
 # Test applycal flag handling
 ###
 class sdcal2_applycal_flag(sdcal2_flag_base):
+    """
+    Test list
+    """
     rawfile='sdcal2_testflag.asap'
+    prefix = 'sdcal2_applycal_flag'
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+                
+        default(sdcal2)
 
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
 
+    def test_applycal_flag(self):
+        outfile = self.prefix + '_cal'
+        average = False
+
+        sdcal2(infile=self.rawfile, outfile=outfile, calmode='ps,tsys,apply',
+               tsysspw='22', tsysavg=average, spwmap={22:[23]}, interp='linear')
+
+        self._verify_applycal(outfile, self._expected_caltable(1, 'SPECTRA'),
+                              self._expected_caltable(10, 'TSYS', average))
     
 
 def suite():
@@ -1436,4 +1555,4 @@ def suite():
             sdcal2_tsyscal, sdcal2_tsyscal_average,
             sdcal2_applycal,
             sdcal2_test_selection,
-            sdcal2_skycal_flag, sdcal2_tsyscal_flag]
+            sdcal2_skycal_flag, sdcal2_tsyscal_flag, sdcal2_applycal_flag]
