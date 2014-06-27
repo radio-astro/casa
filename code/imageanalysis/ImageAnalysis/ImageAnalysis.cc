@@ -241,18 +241,25 @@ Bool ImageAnalysis::open(const String& infile) {
 		_imageComplex.reset();
 	}
 
-	if (
-		ImageOpener::imageType(infile) == ImageOpener::AIPSPP
-		&& ImageOpener::pagedImageDataType(infile) == TpComplex
-	) {
-		ImageInterface<Complex> *image = 0;
-		ImageUtilities::openImage(image, infile);
-		_imageComplex.reset(image);
+	SPtrHolder<LatticeBase> latt(ImageOpener::openImage(infile));
+	ThrowIf (! latt.ptr(), "Unable to open image");
+	DataType dataType = latt->dataType();
+	if (dataType == TpFloat) {
+		_imageFloat.reset(
+			dynamic_cast<ImageInterface<Float> *>(latt.transfer())
+		);
+		_imageComplex.reset();
+	}
+	else if (dataType == TpComplex) {
+		_imageComplex.reset(
+			dynamic_cast<ImageInterface<Complex> *>(latt.transfer())
+		);
+		_imageFloat.reset();
 	}
 	else {
-		ImageInterface<Float> *image = 0;
-		ImageUtilities::openImage(image, infile);
-		_imageFloat.reset(image);
+		ostringstream os;
+		os << dataType;
+		ThrowCc("unsupported image data type " + os.str());
 	}
 	// Ensure that we reconstruct the statistics and histograms objects
 	deleteHist();
