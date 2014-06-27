@@ -104,50 +104,37 @@ ImageOpener::ImageTypes ImageOpener::imageType (const String& name)
   return UNKNOWN;
 }
 
-DataType ImageOpener::pagedImageDataType(const String& fileName) {
-	Table table(fileName);
-	String type = table.tableInfo().type();
-	ThrowIf(
-		type != TableInfo::type(TableInfo::PAGEDIMAGE),
-		fileName + " is not a paged image"
-	);
-	ThrowIf(
-		table.nrow() != 1,
-		"Paged image " + fileName + " is corrupt"
-	);
-	ColumnDesc cdesc = table.tableDesc()[0];
-	if (cdesc.isArray()) {
-		return cdesc.dataType();
-	}
-	return TpOther;
-}
-
-
+  
 LatticeBase* ImageOpener::openPagedImage (const String& fileName,
 					  const MaskSpecifier& spec)
 {
-	try {
-		DataType dtype = pagedImageDataType(fileName);
-		if (dtype == TpOther) {
-			return 0;
-		}
-		Table table(fileName);
-		switch (dtype) {
-		case TpFloat:
-			return new PagedImage<Float> (table, spec);
-		case TpDouble:
-			return new PagedImage<Double> (table, spec);
-		case TpComplex:
-			return new PagedImage<Complex> (table, spec);
-		case TpDComplex:
-			return new PagedImage<DComplex> (table, spec);
-		default:
-			return 0;
-		}
-	}
-	catch(const AipsError& x) {
-		return 0;
-	}
+  Table table(fileName);
+  String type = table.tableInfo().type();
+  if (type != TableInfo::type(TableInfo::PAGEDIMAGE)) {
+    return 0;
+  }
+  if (table.nrow() != 1) {
+    return 0;
+  }
+  DataType dtype = TpOther;
+  String colName;
+  ColumnDesc cdesc = table.tableDesc()[0];
+  if (cdesc.isArray()) {
+    dtype = cdesc.dataType();
+    colName = cdesc.name();
+  }
+  switch (dtype) {
+  case TpFloat:
+    return new PagedImage<Float> (table, spec);
+  case TpDouble:
+    return new PagedImage<Double> (table, spec);
+  case TpComplex:
+    return new PagedImage<Complex> (table, spec);
+  case TpDComplex:
+    return new PagedImage<DComplex> (table, spec);
+  default:
+    return 0;
+  }
 }
 
 LatticeBase* ImageOpener::openHDF5Image (const String& fileName,
