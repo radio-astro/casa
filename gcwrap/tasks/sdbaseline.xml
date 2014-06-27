@@ -415,8 +415,8 @@ maskmode -- mode of setting additional channel masks
                  to be excluded from fitting. this mode requires three 
                  expandable parameters: thresh, avg_limit, and edge.
                  USE WITH CARE! May need to tweak the expandable parameters.
-                 maskmode='list' uses the given masklist only: no additional 
-                 masks applied.
+                 maskmode='list' uses the channel ranges given in spw:
+                 no additional masks applied.
                  maskmode='interact' allows users to manually modify the 
                  mask regions by dragging mouse on the spectrum plotter GUI.
                  use LEFT or RIGHT button to add or delete regions, 
