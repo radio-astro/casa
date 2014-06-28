@@ -50,7 +50,7 @@ class semifinalBPdcalsSummaryChart(object):
         ms_active = m.name
 
 
-        casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected', selectdata=True,    scan=calibrator_scan_select_string, correlation=corrstring, averagedata=True, avgtime='1e8s', avgscan=False, transform=False,    extendflag=False,iteraxis='',  coloraxis='antenna2', plotrange=[], title='', xlabel='', ylabel='', showmajorgrid=False,    showminorgrid=False, plotfile=figfile, overwrite=True)
+        casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected', selectdata=True,    scan=calibrator_scan_select_string, correlation=corrstring, averagedata=True, avgtime='1e8s', avgscan=False, transform=False,    extendflag=False,iteraxis='',  coloraxis='antenna2', plotrange=[], title='', xlabel='', ylabel='', showmajorgrid=False,    showminorgrid=False, plotfile=figfile, overwrite=True, clearplots=True)
 
 
 

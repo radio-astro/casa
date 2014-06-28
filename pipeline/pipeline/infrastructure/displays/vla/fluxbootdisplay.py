@@ -38,7 +38,7 @@ class fluxbootSummaryChart(object):
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         ms_active = m.name
 
-        casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='model', selectdata=True,   scan=calibrator_scan_select_string, correlation=corrstring, averagedata=True, avgtime='1e8s', avgscan=True, transform=False,    extendflag=False, iteraxis='', coloraxis='field', plotrange=[], title='', xlabel='', ylabel='',  showmajorgrid=False, showminorgrid=False,    plotfile=figfile, overwrite=True)
+        casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='model', selectdata=True,   scan=calibrator_scan_select_string, correlation=corrstring, averagedata=True, avgtime='1e8s', avgscan=True, transform=False,    extendflag=False, iteraxis='', coloraxis='field', plotrange=[], title='', xlabel='', ylabel='',  showmajorgrid=False, showminorgrid=False,    plotfile=figfile, overwrite=True, clearplots=True)
 
 
     def get_figfile(self):

@@ -50,11 +50,11 @@ class testBPdcalsSummaryChart(object):
 
 
         if (prefix == 'BPcal'):
-            casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected',  selectdata=True, field=bandpass_field_select_string,    scan=bandpass_scan_select_string,  correlation=corrstring,  averagedata=True, avgtime='1e8s', avgscan=True, transform=False,    extendflag=False, iteraxis='', coloraxis='antenna2',  plotrange=[], title='', xlabel='',  ylabel='', showmajorgrid=False,    showminorgrid=False, plotfile=figfile, overwrite=True)
+            casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected',  selectdata=True, field=bandpass_field_select_string,    scan=bandpass_scan_select_string,  correlation=corrstring,  averagedata=True, avgtime='1e8s', avgscan=True, transform=False,    extendflag=False, iteraxis='', coloraxis='antenna2',  plotrange=[], title='', xlabel='',  ylabel='', showmajorgrid=False,    showminorgrid=False, plotfile=figfile, overwrite=True, clearplots=True)
 
 
         if ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal'):
-            casa.plotms(vis=ms_active, xaxis='freq',   yaxis='amp',  ydatacolumn='corrected',  selectdata=True,  scan=delay_scan_select_string,        correlation=corrstring,  averagedata=True,  avgtime='1e8s',  avgscan=True, transform=False,  extendflag=False,  iteraxis='',        coloraxis='antenna2',  plotrange=[],  title='',  xlabel='',  ylabel='',  showmajorgrid=False,  showminorgrid=False,        plotfile=figfile, overwrite=True)
+            casa.plotms(vis=ms_active, xaxis='freq',   yaxis='amp',  ydatacolumn='corrected',  selectdata=True,  scan=delay_scan_select_string,        correlation=corrstring,  averagedata=True,  avgtime='1e8s',  avgscan=True, transform=False,  extendflag=False,  iteraxis='',        coloraxis='antenna2',  plotrange=[],  title='',  xlabel='',  ylabel='',  showmajorgrid=False,  showminorgrid=False,        plotfile=figfile, overwrite=True, clearplots=True)
 
 
     def get_figfile(self, prefix):
