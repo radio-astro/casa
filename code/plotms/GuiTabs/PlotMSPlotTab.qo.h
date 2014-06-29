@@ -177,9 +177,6 @@ public:
     //Remove old data from the plot.
     void clearData();
 
-signals:
-	void plottableChanged();
-
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
@@ -283,6 +280,8 @@ private slots:
 
     //y-axis data has been removed.
     void removeAxisIdentifier( int index );
+
+    void plottableChanged();
 
 };
 
