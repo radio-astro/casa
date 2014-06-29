@@ -2147,7 +2147,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         
     def test_pointingRflag(self):
         """test row flag in plottype='pointing'"""
-        self._flag_table(row=[0])
+        self._flag_table(row=[0]) # flag all chans
         tb.open(self.infile)
         try: dec = tb.getcol('DIRECTION')[1]
         except: raise
@@ -2160,7 +2160,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
     def test_pointingCflag(self):
         """test channel flag in plottype='pointing'"""
         self._flag_table(row=[0], chan=[[1,2]])
-        self._flag_table(row=[2], chan=[[0,3]]) # flag all chans
+        self._flag_table(row=[2], chan=[[0,3]])
         tb.open(self.infile)
         try: dec = tb.getcol('DIRECTION')[1]
         except: raise
@@ -2181,7 +2181,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
     def test_totalpowerCflag(self):
         """test channel flag in plottype='totalpower'"""
         self._flag_table(row=[0], chan=[[1,2]])
-        self._flag_table(row=[2], chan=[[0,3]]) # flag all channels
+        self._flag_table(row=[2], chan=[[0,3]])
         tb.open(self.infile, nomodify=False)
         # make sure mean is calculated only from valid channels
         try:
@@ -2234,6 +2234,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
 
     def run_test(self, refdata, plottype, **kwargs):
         verbose = False
+        # construct task parameters
         self.assertFalse(kwargs.has_key('plottype'), "Internal error. plot type should be defined as argument")
         params = kwargs
         params['plottype'] = plottype
@@ -2241,6 +2242,14 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         for par in predefs:
             if not params.has_key(par) and hasattr(self, par):
                 params[par] = getattr(self, par)
+        # save flag for comparison
+        tbname = params['infile']
+        self._check_file(tbname)
+        tb.open(tbname)
+        flagtra_pre = tb.getcol('FLAGTRA')
+        flagrow_pre = tb.getcol('FLAGROW')
+        tb.close()
+        # invoke task
         sdplot(**params)
         # check number of pannels and lines, and data plotted
         fig = pl.gcf()
@@ -2262,6 +2271,16 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
                 if verbose: print("spectra=%s (expected: %s)" % (str(spec), str(spref)))
                 self.assertTrue(self._compare_mased_array(spec, spref),
                                 "spectral data differs (panel=%d line=%d)" % (i, il))
+        # make sure FLAGTRA and FLAGROW are not changed
+        tb.open(tbname)
+        flagtra_post = tb.getcol('FLAGTRA')
+        flagrow_post = tb.getcol('FLAGROW')
+        tb.close()
+        self.assertTrue((flagrow_post==flagrow_pre).all(),
+                        "FLAGROW has been changed by task operation")
+        self.assertTrue((flagtra_post==flagtra_pre).all(),
+                        "FLAGTRA has been changed by task operation")
+
 
     def _compare_mased_array( self, testval, refval, reltol=1.0e-5 ):
         """

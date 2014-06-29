@@ -1200,6 +1200,7 @@ class sdfit_flag(sdfit_unittest_base, unittest.TestCase):
     pweight = 'tsys'
 
     def _run_test(self, refdata, **kwargs):
+        # construct task parameters
         if not kwargs.has_key('infile'):
             self.fail("infile is not specified")
         predefined = ['outfile', 'spw', 'fitmode', 'nfit',
@@ -1208,9 +1209,26 @@ class sdfit_flag(sdfit_unittest_base, unittest.TestCase):
             if not hasattr(self, p):
                 self.fail("Internal error: %s not defined in class" % p)
             if not kwargs.has_key(p): kwargs[p] = getattr(self, p)
+        # save flag for comparison
+        tbname = kwargs['infile']
+        self._check_file(tbname)
+        tb.open(tbname)
+        flagtra_pre = tb.getcol('FLAGTRA')
+        flagrow_pre = tb.getcol('FLAGROW')
+        tb.close()
+        # invoke task
         retval = sdfit(**kwargs)
-        # verify results
+        # verify fit results
         self._verify_outfile(refdata, kwargs['outfile'])
+        # make sure FLAGTRA and FLAGROW are not changed
+        tb.open(tbname)
+        flagtra_post = tb.getcol('FLAGTRA')
+        flagrow_post = tb.getcol('FLAGROW')
+        tb.close()
+        self.assertTrue((flagrow_post==flagrow_pre).all(),
+                        "FLAGROW has been changed by task operation")
+        self.assertTrue((flagtra_post==flagtra_pre).all(),
+                        "FLAGTRA has been changed by task operation")
 
     def _flag_table(self, infile, row=[], chan=[]):
         """
