@@ -276,20 +276,23 @@ class sdtpimaging_flag(unittest.TestCase,sdtpimaging_unittest_base):
         data[ipol][0][15:17].real = 100. # add spurious to scan=15,16
     tb.putcol('DATA', data)
     # set scan number 0
-    zeros = tb.getcol('SCAN_NUMBER')
-    zeros *= 0
-    tb.putcol('SCAN_NUMBER', zeros)
-    tb.putcol('FIELD_ID', zeros)
+    scannum = tb.getcol('SCAN_NUMBER')
+    tb.putcol('SCAN_NUMBER', scannum*0)
+    # flag spurious scans
+    for irow in [15,16]:
+        flg = tb.getcell('FLAG', irow)
+        tb.putcell('FLAG', irow, flg*0+1)
     tb.close()
     split(vis='tpimaging/tpimaging.aca.tp.sd.ms', outputvis='tpimaging_1row.ms',datacolumn='data')
     """
     infile = 'tpimaging_1row.ms'
     # phasecenter need to be shifted for -1 pixel do to boundary difference.
-    center = 'J2000 23:59:59.81295 -27d00m00'
+    center = 'J2000 23:59:59.81295 -27.00.00.0'
     cell = '5arcsec'
-    flagrows = [15,16]
-    ref_bl = [0,0,0,0,0,0,0,3,3,3,3,3,3,0,0,85,84,0,0,0]
-    nrow = len(ref_bl)
+    inmsdata = [0,1,2,3,4,5,6,10,11,12,13,14,15,13,14,100,100,17,18,19]
+    nrow = len(inmsdata)
+    inflag = numpy.array([False]*nrow)
+    inflag[15:17] = True
     prefix=sdtpimaging_unittest_base.taskname+'Flag'
     outimage = prefix+'.image'
 
@@ -297,7 +300,7 @@ class sdtpimaging_flag(unittest.TestCase,sdtpimaging_unittest_base):
         self.res=None
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
-
+        self._checkfile(self.infile)
         default(sdtpimaging)
 
     def tearDown(self):
@@ -320,21 +323,104 @@ class sdtpimaging_flag(unittest.TestCase,sdtpimaging_unittest_base):
 
     def test_flag_baseline(self):
         """test flag in calmode=baseline"""
-        self._chanflag_ms_rows(self.infile,self.flagrows)
+        tb.open(self.infile)
+        flagchan_pre = tb.getcol('FLAG')
+        flagrow_pre = tb.getcol('FLAG_ROW')
+        tb.close()
         sdtpimaging(infile=self.infile,calmode='baseline', masklist=[5,5],
                     createimage=False)
+        # make sure flag is not changed
+        tb.open(self.infile)
+        flagchan_post = tb.getcol('FLAG')
+        flagrow_post = tb.getcol('FLAG_ROW')
+        data = tb.getcol('DATA')
+        tb.close()
+        self.assertTrue(flagchan_pre.shape==flagchan_post.shape,
+                        "Data shape has been changed by task operation")
+        self.assertTrue((flagrow_post==flagrow_pre).all(),
+                        "FLAG_ROW has been changed by task operation")
+        self.assertTrue((flagchan_post==flagchan_pre).all(),
+                        "FLAG has been changed by task operation")
+        # now check baseline result
+        ref_bl = [0,0,0,0,0,0,0,3,3,3,3,3,3,0,0,85,84,0,0,0]
+        (npol, nchan, nrow) = data.shape
+        self.assertEqual(nchan, 1, 'number of channels is not 1')
+        self.assertEqual(nrow, len(ref_bl), 'number of rows is not %d' % len(ref_bl))
+        for irow in range(nrow):
+            for ipol in range(npol):
+                if flagchan_post[ipol][0][irow] > 0: continue
+                self.assertEqual(data[ipol][0][irow].real, ref_bl[irow],
+                                 "Spectral value differs in row %d: %f (expected: %f)" % (irow, data[ipol][0][irow].real, ref_bl[irow]))
+    
 
     def test_flag_image1(self):
-        """test flag in imaging (1 chan -> 1chan)"""
-        self._chanflag_ms_rows(self.infile,self.flagrows)
+        """test flag in imaging (1 integration -> 1 pixel)"""
+        ref_ma = numpy.ma.masked_array(self.inmsdata, self.inflag)
+        # invoke task
         outfile=self.outimage
         cell=[self.cell, self.cell]
         imsize=[self.nrow, 1]
         sdtpimaging(infile=self.infile,calmode='none', createimage=True,
                     outfile=outfile,cell=cell,imsize=imsize,
                     phasecenter=self.center,gridfunction='BOX')
+        self._test_image(outfile, (self.nrow,1,1,1), ref_ma)
         
+    def test_flag_image2(self):
+        """test flag in imaging (2 integration -> 1 pixel)"""
+        # flag scans 15~17
+        self._chanflag_ms_rows(self.infile, [15,16,17])
+        # input MS = [0,1,2,3,4,5,6,10,11,12,13,14,15,13,14,F,F,F,18,19]
+        # an image pixel should be masked out only if all data mapped
+        # to the pixel are flagged
+        ref_ma = numpy.ma.masked_array([0.5,2.5,4.5,8,11.5,13.5,14,14,0,18.5],
+                                       ([False]*8+[True, False]))
+        # invoke task
+        cell_factor = 2
+        npixx = self.nrow/cell_factor
+        outfile=self.outimage
+        cell=[qa.tos(qa.mul(self.cell,cell_factor)), self.cell]
+        imsize=[npixx, 1]
+        center = 'J2000 23:59:59.6259 -27.00.00.0'
+        sdtpimaging(infile=self.infile,calmode='none', createimage=True,
+                    outfile=outfile,cell=cell,imsize=imsize,
+                    phasecenter=center,gridfunction='BOX')
+        self._test_image(outfile, (npixx,1,1,1), ref_ma)
 
+    def _test_image(self,imagename, imshape, refval):
+        # make sure image exists
+        self._checkfile(imagename)
+        # compare mask and pixel value
+        ia.open(imagename)
+        imdata = ia.getchunk()
+        immask = ia.getchunk(getmask=True)
+        ia.close()
+        self.assertTrue(imdata.shape==imshape, "Unexpected image shape: %s (expected: %s)" % (str(imdata.shape), str(list(imshape))))
+        # image mask is invert of mask in masked array
+        imdata = list(imdata.flatten())
+        immask = [(not m) for m in immask.flatten()]
+        # image pixel order -R.A.
+        imdata.reverse()
+        immask.reverse()
+        im_ma = numpy.ma.masked_array(imdata,immask)
+        self.assertTrue(self._compare_mased_array(im_ma, refval),
+                        "Unexpected image pixel value: %s (expected: %s)" % (str(im_ma), str(refval)))
+
+    def _compare_mased_array( self, testval, refval, reltol=1.0e-5 ):
+        """
+        Check if a masked array of test values is within permissive relative
+        difference from refval.
+        Returns a boolean.
+        testval & refval : two masked arrays to compare
+        reltol           : allowed relative difference to consider the two
+                           values to be equal. (default 1.e-5)
+        """
+        maskok = (testval.mask == refval.mask).all()
+        if not maskok: return False
+        for i in range(len(refval)):
+            if refval.mask[i]: continue
+            if not numpy.isclose(refval[i], testval[i], rtol=reltol, atol=1.e-7):
+                return False
+        return True
 
 def suite():
     return [sdtpimaging_test0,sdtpimaging_test1,sdtpimaging_test2,
