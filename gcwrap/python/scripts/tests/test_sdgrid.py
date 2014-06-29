@@ -550,6 +550,9 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
         for irow in range(nrow):
             ref = refdata[irow]
             sp = spec[irow]
+            # FLAGROW should be set if all channels are flagged.
+            if ((cflag[irow]!=0).all()):
+                self.assertTrue(rflag[irow]!=0, "All channels are flagged but FLAGROW is not set")
             flg = (rflag[irow]!=0) or (cflag[irow]!=0)
             # check num chan
             self.assertEqual(len(sp),len(ref),
