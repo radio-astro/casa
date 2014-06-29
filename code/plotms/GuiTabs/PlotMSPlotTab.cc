@@ -218,6 +218,7 @@ String PlotMSPlotTab::getAveragingSummary() const {
 
 bool PlotMSPlotTab::plot( bool forceReload ) {
 	Bool plotCompleted = true;
+
 	//Post an error rather than plotting if the user has specified duplicate
 	//y-axes.
 	PlotMSAxesTab* axesTab = findAxesTab();
@@ -229,6 +230,7 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
 			return plotCompleted;
 		}
 	}
+
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
@@ -258,7 +260,6 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
 		// Must remove constness of the reference returned by d->selection()
 		PlotMSSelection &sel = (PlotMSSelection &)d->selection();
 		sel.setForceNew(forceReloadCounter_);
-
         if (paramsChanged || cancelledCache ) {
             if (paramsChanged) {
                 // check for "clear selections on axes change" setting
@@ -553,13 +554,19 @@ PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
          Int cols = 1;
          itsPlotManager_.getGridSize( rows, cols );
          tab->setGridSize( rows, cols );
-         connect( tab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
+
+         connect( tab, SIGNAL(plottableChanged()), this, SLOT(plottableChanged()));
      }
      insertSubtab (index, tab);
      return tab;
 }
 
-
+void PlotMSPlotTab::plottableChanged(){
+	if ( this->itsCurrentParameters_ != NULL ){
+		itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
+		                        PMS_PP::UPDATE_REDRAW );
+	}
+}
 
 PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab (){
      return insertTransformationsSubtab (itsSubtabs_.size ());
