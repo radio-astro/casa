@@ -824,7 +824,7 @@ Export plot as image Parameters
      
      <param type="bool" name="clearplots" subparam="true">
      	<description>Remove any existing plots so new ones can replace them.</description>
-     	<value>False</value>
+     	<value>True</value>
      </param>
 
 <!--
