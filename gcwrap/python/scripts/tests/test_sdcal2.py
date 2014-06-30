@@ -1280,7 +1280,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
         yield data
     
     def _expected_caltable(self, srctype, colname, average=False):
-        print srctype, colname
+        #print srctype, colname
         with tbmanager(self.rawfile) as tb:
             tsel = tb.query('SRCTYPE==%s'%(srctype))
             flagrow = tsel.getcol('FLAGROW')
@@ -1371,6 +1371,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             time_result = tb.getcol('TIME')
             flagtra_result = tb.getcol('FLAGTRA')
             spectra_result = tb.getcol('SPECTRA')
+            tsys_result = tb.getcol('TSYS')
         nchan,nrow_result = flagtra_result.shape
         
         # check number of rows
@@ -1383,16 +1384,24 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
         # evaluate expected data and flag
         expected_cal = self._expected_calibration(expected_sky, expected_tsys)
 
+        absdiff = lambda x, r: abs((x - r) / r) if r != 0.0 else abs(x-r)
+
         # iterate rows:
         for (irow, cal) in zip(xrange(nrow_result), expected_cal):
             cal_flag = cal[0]
             cal_data = cal[1]
+            cal_tsys = cal[2]
             flag = flagtra_result[:,irow]
             data = spectra_result[:,irow]
-            #print irow, cal_flag, cal_data
+            tsys = tsys_result[:,irow]
+            #print '###', irow
+            #print cal_data, data
+            #print '---'
+            #print cal_tsys, tsys
             for ichan in xrange(nchan):
                 self.assertEqual(cal_flag[ichan], flag[ichan], msg='Row %s Channel %s: flag differ (result %s expected %s)'%(irow, ichan, flag[ichan], cal_flag[ichan]))
-                #self.assertEqual(cal_data[ichan], data[ichan], msg='Row %s Channel %s: spectral data differ (result %s expected %s)'%(irow, ichan, data[ichan], cal_data[ichan]))
+                self.assertLess(absdiff(tsys[ichan], cal_tsys[ichan]), self.tol, msg='Row %s Channel %s: Tsys differ (result %s expected %s)'%(irow, ichan, tsys[ichan], cal_tsys[ichan])) 
+                self.assertLess(absdiff(data[ichan], cal_data[ichan]), self.tol, msg='Row %s Channel %s: spectral data differ (result %s expected %s)'%(irow, ichan, data[ichan], cal_data[ichan]))
         
     def _expected_calibration(self, expected_sky, expected_tsys):
         with tbmanager(self.rawfile) as tb:
@@ -1424,8 +1433,8 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             t_tsys = retrieve(0, expected_tsys)
             fl_tsys = retrieve(1, expected_tsys)
             sp_tsys = retrieve(2, expected_tsys)
-            off = list(interp(t, t_sky, sp_sky, fl_sky))
-            tsys = list(interp(t, t_tsys, sp_tsys, fl_tsys))
+            off = numpy.array(list(interp(t, t_sky, sp_sky, fl_sky)))
+            tsys = numpy.array(list(interp(t, t_tsys, sp_tsys, fl_tsys)))
             valid_chans = numpy.where(fl_tsys.sum(axis=0) == 0)[0]
             scalar_tsys = tsys[valid_chans[0]]
             #print off
@@ -1434,7 +1443,8 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             calibrated = scalar_tsys * (sp - off) / off
             flag = calflag(fl, fl_sky.sum(axis=0))
             #print flag, calibrated
-            return (flag, calibrated)
+            itsys = numpy.ones(len(calibrated), dtype=float) * scalar_tsys
+            return (flag, calibrated, itsys)
             
         for irow in xrange(nrow):
             yield gen_calibration(time_result[irow], flagtra_result[:,irow], spectra_result[:,irow], expected_sky, expected_tsys)
