@@ -775,16 +775,18 @@ class Results(api.Results):
         # results object to the results list
         context.results.append(result)
 
+        # having called the old constructor, we know that self.context is set.
+        # Use this context to find the report directory and write to the log
+        if task_completed:
+            # this needs to come before web log generation as the filesizes of
+            # various logs and scripts are calculated during web log generation
+            write_pipeline_casa_tasks(context)
+
         # generate weblog if accepting a result from outside a task execution
         if task_completed and not DISABLE_WEBLOG:
             # cannot import at initial import time due to cyclic dependency
             import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
             htmlrenderer.WebLogGenerator.render(context)
-
-        # having called the old constructor, we know that self.context is set.
-        # Use this context to find the report directory and write to the log
-        if task_completed:
-            write_pipeline_casa_tasks(context)
             
     def _check_for_remerge(self, context):
         """
@@ -1326,7 +1328,6 @@ finally:
     h_save()
 ''' % task_string
             
-    #f = os.path.join(context.report_dir, 'casatasks.log')
-    f = os.path.join(context.report_dir, 'casa_pipescript.py')
+    f = os.path.join(context.report_dir, context.logs['pipeline_script'])
     with open(f, 'w') as casatask_file: 
         casatask_file.write(template)
