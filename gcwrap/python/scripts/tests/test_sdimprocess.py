@@ -58,7 +58,7 @@ class sdimprocess_unittest_base:
         
         for key in stats.keys():
         #for key in self.keys:
-            message='statistics \'%s\' does not match'%(key)
+            message='statistics \'%s\' does not match: %s'%(key,str(stats[key]))
             if type(stats[key])==str:
                 self.assertEqual(stats[key],ref[key],
                                  msg=message)
@@ -198,12 +198,14 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(sdimprocess)
 
     def tearDown(self):
+        #pass
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
@@ -260,6 +262,76 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
         self._checkstats(self.outfile,refstats)
 
+    def test102(self):
+        """Test 102: Test mask in pressed method using whole pixels"""
+        # add spurious to image and mask the spurious.
+        ia.open(self.rawfile)
+        try:
+            maxval = ia.statistics()['max'][0]
+            data = ia.getchunk()
+            data[15:25,15:25,:,:] = 100.*maxval
+            ia.putchunk(data)
+            del data
+            ia.calcmask("mask(%s) && '%s'<%f" % (self.rawfile, self.rawfile, 10.*maxval),
+                        name="sprious", asdefault=True)
+            mask_in = ia.getchunk(getmask=True)
+            mpix = numpy.where(mask_in==False)
+            self.assertEqual(len(mpix[0]),100,"Failed to set mask properly at pre-processing.")
+        except: raise
+        finally: ia.close()
+#         rawfile='scan_x.masked.im'
+#         if os.path.exists(rawfile):
+#             shutil.rmtree(rawfile)
+#         shutil.copytree(self.datapath+rawfile, rawfile)
+        # Task execution
+        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
+        # Test results
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+#         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+#                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
+#                  'max': numpy.array([ 0.89482009]),
+#                  'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
+#                  'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
+#                  'mean': numpy.array([ 0.02900992]),
+#                  'medabsdevmed': numpy.array([ 0.00768787]),
+#                  'median': numpy.array([ 0.00427032]),
+#                  'min': numpy.array([-0.02924964]),
+#                  'minpos': numpy.array([ 79, 115,   0,   0], dtype=numpy.int32),
+#                  'minposf': '23:54:43.795, +01.55.01.288, I, 1.415e+09Hz',
+#                  'npts': numpy.array([ 16284.]),
+#                  'quartile': numpy.array([ 0.01577091]),
+#                  'rms': numpy.array([ 0.10900906]),
+#                  'sigma': numpy.array([ 0.10508127]),
+#                  'sum': numpy.array([ 475.29847136]),
+#                  'sumsq': numpy.array([ 194.69064919]),
+#                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
+#                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
+                  'max': numpy.array([ 0.89311945]),
+                  'maxpos': numpy.array([64, 64,  0,  0], dtype=numpy.int32),
+                  'maxposf': '23:55:43.941, +01.04.00.222, I, 1.415e+09Hz',
+                  'mean': numpy.array([ 0.0292087]),
+                  'medabsdevmed': numpy.array([ 0.00626913]),
+                  'median': numpy.array([ 0.00380603]),
+                  'min': numpy.array([-0.02924963]),
+                  'minpos': numpy.array([ 79, 115,   0,   0], dtype=numpy.int32),
+                  'minposf': '23:54:43.795, +01.55.01.288, I, 1.415e+09Hz',
+                  'npts': numpy.array([ 16284.]),
+                  'quartile': numpy.array([ 0.01342333]),
+                  'rms': numpy.array([ 0.10477947]),
+                  'sigma': numpy.array([ 0.10062908]),
+                  'sum': numpy.array([ 475.63446734]),
+                  'sumsq': numpy.array([ 178.77776242]),
+                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
+                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        #self._checkstats(self.outfile,refstats)
+        ia.open(self.outfile)
+        mask_out = ia.getchunk(getmask=True)
+        ia.close()
+        self.assertTrue((mask_out==mask_in).all(), "Unexpected mask in output image.")
+
 ###
 # Test on FFT based Basket-Weaving
 ###
@@ -288,18 +360,20 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
     def setUp(self):
         self.res=None
         for name in self.rawfiles:
-            if (not os.path.exists(name)):
-                shutil.copytree(self.datapath+name, name)
+            if os.path.exists(name):
+                shutil.rmtree(name)
+            shutil.copytree(self.datapath+name, name)
 
         default(sdimprocess)
 
     def tearDown(self):
+        #pass
         for name in self.rawfiles:
             if (os.path.exists(name)):
                 shutil.rmtree(name)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test2000(self):
+    def test200(self):
         """Test 200: FFT based Basket-Weaving using whole pixels"""
         res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
@@ -323,7 +397,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
         self._checkstats(self.outfile,refstats)
 
-    def test2001(self):
+    def test201(self):
         """Test 201: FFT based Basket-Weaving with certain threshold"""
         res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,tmax=0.5,tmin=-0.1,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
@@ -346,6 +420,67 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
         self._checkstats(self.outfile,refstats)
+
+    def test202(self):
+        """Test 202: Test mask in FFT based Basket-Weaving using whole pixels"""
+        # add spurious to images and mask the spurious pixels.
+        spix = [10, 15]
+        epix = [20, 25]
+        mask_in = []
+        for i in range(len(self.rawfiles)):
+            name = self.rawfiles[i]
+            s = spix[i % len(spix)]
+            e = epix[i % len(epix)]
+            ia.open(name)
+            try:
+                maxval = ia.statistics()['max'][0]
+                data = ia.getchunk()
+                data[s:e,s:e,:,:] = 100.*maxval
+                ia.putchunk(data)
+                del data
+                ia.calcmask("mask(%s) && '%s'<%f" % (name, name, 10.*maxval),
+                        name="sprious", asdefault=True)
+                mask_in.append(ia.getchunk(getmask=True))
+            except: raise
+            finally: ia.done()
+            mpix = numpy.where(mask_in[i]==False)
+            self.assertEqual(len(mpix[0]),(e-s)**2,"Failed to set mask properly at pre-processing.")
+        mask_ref = mask_in[0]
+        for msk in mask_in:
+            mask_ref += msk
+        del mask_in
+        # Task execution
+#         rawfiles=['scan_x.masked.im', 'scan_y.masked.im']
+#         for name in rawfiles:
+#             if os.path.exists(name):
+#                 shutil.rmtree(name)
+#             shutil.copytree(self.datapath+name, name)
+        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        # Test results
+        refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
+                  'max': numpy.array([ 0.92714936]),
+                  'maxpos': numpy.array([64, 64,  0,  0], dtype=numpy.int32),
+                  'maxposf': '23:55:43.941, +01.04.00.222, I, 1.415e+09Hz',
+                  'mean': numpy.array([ 0.02962625]),
+                  'medabsdevmed': numpy.array([ 0.00571492]),
+                  'median': numpy.array([ 0.00429045]),
+                  'min': numpy.array([-0.02618393]),
+                  'minpos': numpy.array([ 56, 107,   0,   0], dtype=numpy.int32),
+                  'minposf': '23:56:15.881, +01.47.01.037, I, 1.415e+09Hz',
+                  'npts': numpy.array([ 16384.]),
+                  'quartile': numpy.array([ 0.01154788]),
+                  'rms': numpy.array([ 0.11236797]),
+                  'sigma': numpy.array([ 0.1083954]),
+                  'sum': numpy.array([ 485.39648429]),
+                  'sumsq': numpy.array([ 206.87355986]),
+                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
+                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+#         #self._checkstats(self.outfile,refstats)
+#         ia.open(self.outfile)
+#         mask_out = ia.getchunk(getmask=True)
+#         ia.close()
+#         self.assertTrue((mask_out==mask_ref).all(), "Unexpected mask in output image.")
 
 
 def suite():

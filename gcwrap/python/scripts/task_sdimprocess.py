@@ -29,7 +29,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
 
     def initialize(self):
         self.parameter_check()
-            
+        
         # temporary filename
         tmpstr = time.ctime().replace( ' ', '_' ).replace( ':', '_' )
         self.tmpmskname = 'masked.'+tmpstr+'.im'
@@ -122,6 +122,9 @@ class sdimprocess_worker(sdutil.sdtask_interface):
 
         # mask
         self.image = ia.newimagefromimage(infile=self.infiles,outfile=self.tmpmskname)
+        # replace masked pixels with 0.0
+        if self.image.maskhandler('get')[0] != 'T':
+            self.image.replacemaskedpixels(0.0)
         imshape = self.image.shape()
         nx = imshape[0]
         ny = imshape[1]
@@ -309,6 +312,9 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 npol = imshape[3]
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
+                    # replace masked pixels with 0.0
+                    if self.realimage.maskhandler('get')[0] != 'T':
+                        self.realimage.replacemaskedpixels(0.0)
                     for ichan in range(nchan):
                         for ipol in range(npol):
                             pixmsk = self.realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
@@ -332,6 +338,9 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 # no polarization axis
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
+                    # replace masked pixels with 0.0
+                    if self.realimage.maskhandler('get')[0] != 'T':
+                        self.realimage.replacemaskedpixels(0.0)
                     for ichan in range(nchan):
                         pixmsk = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
                         for ix in range(pixmsk.shape[0]):
@@ -509,6 +518,13 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 del pixval, pixifft
         if maskedvalue is not None:
             outimage.putchunk(outimage.getchunk()+maskedvalue)
+        # handling of output image mask
+        maskstr = ""
+        for name in self.infiles:
+            if len(maskstr) > 0: maskstr += " || "
+            maskstr += ("mask('%s')" % (name))
+        outimage.calcmask(maskstr,name="basketweaving",asdefault=True)
+        
         self.realimage.close()
         self.imagimage.close()
         outimage.close()
