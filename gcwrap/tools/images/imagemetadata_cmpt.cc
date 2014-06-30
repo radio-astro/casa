@@ -1,9 +1,10 @@
 #include <imagemetadata_cmpt.h>
 
 #include <casa/Containers/ValueHolder.h>
+#include <casa/Utilities/PtrHolder.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
-#include <images/Images/ImageUtilities.h>
+#include <images/Images/ImageOpener.h>
 
 #include <stdcasa/version.h>
 
