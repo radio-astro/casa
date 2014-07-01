@@ -37,6 +37,7 @@ Annotations/RegionTextList.cc
 
 ImageAnalysis/AntennaResponses.cc
 ImageAnalysis/CasaImageBeamSet.cc
+ImageAnalysis/ComplexImageRegridder.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapserData.cc
@@ -115,6 +116,7 @@ install (FILES
 	ImageAnalysis/BeamManipulator.h
 	ImageAnalysis/BeamManipulator.tcc
 	ImageAnalysis/CasaImageBeamSet.h
+	ImageAnalysis/ComplexImageRegridder.h
 	ImageAnalysis/ComponentImager.h
 	ImageAnalysis/Image1DSmoother.h
 	ImageAnalysis/Image1DSmoother.tcc
@@ -173,6 +175,8 @@ install (FILES
     ImageAnalysis/ImageRebinner.h
     ImageAnalysis/ImageRebinner.tcc
     ImageAnalysis/ImageRegridder.h
+    ImageAnalysis/ImageRegridderBase.h
+    ImageAnalysis/ImageRegridderBase.tcc
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h

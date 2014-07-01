@@ -142,6 +142,5 @@ template <class T> SPIIT ImageFactory::imageFromArray(
 	return myim;
 }
 
-
 }
 

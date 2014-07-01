@@ -23,8 +23,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGEANALYSIS_IMAGEREGRIDDER_H
-#define IMAGEANALYSIS_IMAGEREGRIDDER_H
+#ifndef IMAGEANALYSIS_COMPLEXIMAGEREGRIDDER_H
+#define IMAGEANALYSIS_COMPLEXIMAGEREGRIDDER_H
 
 #include <imageanalysis/ImageAnalysis/ImageRegridderBase.h>
 
@@ -33,12 +33,9 @@
 
 namespace casa {
 
-template <class T> class SubImage;
-template <class T> class TempImage;
-
-class ImageRegridder : public ImageRegridderBase<Float> {
+class ComplexImageRegridder : public ImageRegridderBase<Complex> {
 	// <summary>
-	// Top level interface which regrids an image to a specified coordinate system
+	// Top level interface which regrids an image with complex-valued pixels to a specified coordinate system
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -65,18 +62,17 @@ public:
 	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 	// <group>
 
-	ImageRegridder(
-		const SPCIIF image,
+	ComplexImageRegridder(
+		const SPCIIC image,
 		const Record *const regionRec,
 		const String& maskInp, const String& outname, Bool overwrite,
 		const CoordinateSystem& csysTo, const IPosition& axes,
 		const IPosition& shape
 	);
 
-	// FIXME Add support to allow image and templateIm to be of different data types
-	ImageRegridder(
-		const SPCIIF image, const String& outname,
-		const SPCIIF templateIm, const IPosition& axes=IPosition(),
+	template <class T> ComplexImageRegridder(
+		const SPCIIC image, const String& outname,
+		const SPCIIT templateIm, const IPosition& axes=IPosition(),
 		const Record *const regionRec=0,
 		const String& maskInp="", Bool overwrite=False,
 		const IPosition& shape=IPosition()
@@ -84,47 +80,21 @@ public:
 	// </group>
 
 	// destructor
-	~ImageRegridder();
+	~ComplexImageRegridder();
 
 	// perform the regrid.
-	SPIIF regrid() const;
+	SPIIC regrid() const;
 
-	inline String getClass() const { return _class; }
+protected:
 
-	void setDebug(Int debug) { _debug = debug; }
+	String getClass() const { return _class; }
 
 private:
-	Int _debug;
+
 	static const String _class;
 
 	// disallow default constructor
-	ImageRegridder();
-
-	SPIIF _regrid() const;
-
-	SPIIF _regridByVelocity() const;
-
-	static Bool _doImagesOverlap(
-		SPCIIF image0,
-		SPCIIF image1
-	);
-
-	static Vector<std::pair<Double, Double> > _getDirectionCorners(
-		const DirectionCoordinate& dc,
-		const IPosition& directionShape
-	);
-
-	void _checkOutputShape(
-		const SubImage<Float>& subImage,
-		const std::set<Coordinate::Type>& coordsToRegrid
-	) const;
-
-	SPIIF _decimateStokes(SPIIF workIm) const;
-
-	static Bool _doRectanglesIntersect(
-		const Vector<std::pair<Double, Double> >& corners0,
-		const Vector<std::pair<Double, Double> >& corners1
-	);
+	ComplexImageRegridder();
 
 };
 }

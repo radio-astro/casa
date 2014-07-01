@@ -34,6 +34,9 @@
 #define SPIIT std::tr1::shared_ptr<casa::ImageInterface<T> >
 #define SPCIIT std::tr1::shared_ptr<const casa::ImageInterface<T> >
 
+#define SPIIU std::tr1::shared_ptr<casa::ImageInterface<U> >
+#define SPCIIU std::tr1::shared_ptr<const casa::ImageInterface<U> >
+
 namespace casa {
 	template<class T> class ImageInterface;
 
