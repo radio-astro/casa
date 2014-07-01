@@ -131,7 +131,10 @@ The new coordinate system is defined by the template parameter, which can be:
       The input and template images must have the same
       coordinate structure.
       
-      
+Regridding of complex-valued images is supported. The real and imaginary parts are
+regridded independently and the resulting regridded pixel values are combined to
+form the regridded, complex-valued image.
+
 The argument {\stfaf replicate} can be used to simply replicate pixels
 rather than regridding them.  Normally ({\stfaf replicate=F}), for every
 output pixel, its world coordinate is computed and the corresponding

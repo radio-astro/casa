@@ -11,15 +11,17 @@
 
 namespace casa {
 	class GaussianBeam;
-	class LogIO;
 	class ImageAnalysis;
-	class ImageStatsCalculator;
-	template<class T> class ImageStatistics;
-	template<class T> class ImageHistograms;
-	template<class T> class SubImage;
 	class ImageRegion;
-	class LatticeExprNode;
+	class ImageStatsCalculator;
+	class LogIO;
+
+	template<class T> class ImageHistograms;
+	template<class T> class ImageRegridderBase;
+	template<class T> class ImageStatistics;
 	template<class T> class PtrHolder;
+	template<class T> class SubImage;
+	class LatticeExprNode;
     class String;
 	class SkyComponent;
 	class DirectionCoordinate;

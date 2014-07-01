@@ -109,7 +109,6 @@ template<class T> image* _decimate(
 	const vector<casa::String>& msgs
 ) const;
 
-
 template <class T> static image* _hanning(
 	SPCIIT image, std::tr1::shared_ptr<const casa::Record> region,
 	const casa::String& mask, const std::string& outfile, bool overwrite,
@@ -125,4 +124,17 @@ static casa::String _inputsString(
 // because public method name() is not const
 casa::String _name(bool strippath=false) const;
 
+static vector<String> _newHistory(
+	const string& method, const vector<String>& names,
+	const vector<variant>& values
+);
+
+template <class T> static image* _regrid(
+	ImageRegridderBase<T>& regridder,
+	const string& method, int decimate,	bool replicate,
+	bool doRefChange, bool forceRegrid,
+	bool specAsVelocity, bool stretch,
+	bool dropDegenerateAxes, const LogOrigin& lor,
+	const vector<String>& msgs
+);
 

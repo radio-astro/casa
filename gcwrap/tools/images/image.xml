@@ -7861,6 +7861,10 @@ If you regrid a plane holding a Direction Coordinate and the units are
 Jy/pixel then the output is scaled to conserve flux (roughly; just one
 scale factor at the reference pixel is computed). 
 
+Regridding of complex-valued images is supported. The real and imaginary parts are
+regridded independently and the resulting regridded pixel values are combined to
+form the regridded, complex-valued image.
+
 A variety of interpolation schemes are provided (you need only specify
 the first three characters to {\stfaf method}).  The cubic interpolation
 is substantially slower than linear, and often the improvement is

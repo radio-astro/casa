@@ -123,8 +123,8 @@ vector<int> msmetadata::almaspws(
 	return vector<int>();
 }
 
-vector<casa::String> msmetadata::_vectorStdStringToVectorString(
-	const vector<std::string>& inset
+vector<String> msmetadata::_vectorStdStringToVectorString(
+	const vector<string>& inset
 ) {
 	vector<String> outset;
 	foreach_(string el, inset) {

@@ -63,6 +63,7 @@
 
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
+#include <imageanalysis/ImageAnalysis/ComplexImageRegridder.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -3551,25 +3552,14 @@ image* image::rebin(
 		"All binning factors must be positive."
 	);
 	try {
-		vector<String> msgs;
-		{
-			ostringstream os;
-			os << "Ran ia." << __func__;
-			msgs.push_back(os.str());
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("outfile", outfile));
-			inputs.push_back(make_pair("bin", bin));
-			inputs.push_back(make_pair("region", region));
-			inputs.push_back(make_pair("mask", vmask));
-			inputs.push_back(make_pair("dropdeg", dropdeg));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("stretch", stretch));
-			inputs.push_back(make_pair("crop", crop));
+		std::vector<String> names;
+		names += "outfile", "bin", "region", "mask",
+			"dropdeg", "overwrite", "stretch", "crop";
+		std::vector<variant> values;
+		values += outfile, bin, region, vmask,
+			dropdeg, overwrite, stretch, crop;
 
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(os.str());
-		}
+		vector<String> msgs = _newHistory(__func__, names, values);
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -3612,22 +3602,19 @@ image* image::regrid(
 	const string& outfile, const vector<int>& inshape,
 	const record& csys, const vector<int>& inaxes,
 	const variant& region, const variant& vmask,
-	const string& method, const int decimate, const bool replicate,
-	const bool doRefChange, const bool dropDegenerateAxes,
-	const bool overwrite, const bool forceRegrid,
-	const bool specAsVelocity, const bool /* async */,
-	const bool stretch
+	const string& method, int decimate, bool replicate,
+	bool doRefChange, bool dropDegenerateAxes,
+	bool overwrite, bool forceRegrid,
+	bool specAsVelocity, bool /* async */,
+	bool stretch
 ) {
 	try {
-		_log << _ORIGIN;
+		LogOrigin lor(_class, __func__);
+		_log << lor;
 		if (detached()) {
 		        throw AipsError("Unable to create image");
 			return 0;
 		}
-		ThrowIf(
-			! _image->isFloat(),
-			"This method only supports Float valued images"
-		);
 		auto_ptr<Record> csysRec(toRecord(csys));
 		auto_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
 		ThrowIf (
@@ -3643,20 +3630,43 @@ image* image::regrid(
 		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
 			axes = inaxes;
 		}
-//		ImageRegridder<Float> regridder(
-        ImageRegridder regridder(
-			_image->getImage(), regionPtr.get(),
-			mask, outfile, overwrite, *coordinates,
-			IPosition(axes), IPosition(inshape), dropDegenerateAxes
-		);
-		regridder.setMethod(method);
-		regridder.setDecimate(decimate);
-		regridder.setReplicate(replicate);
-		regridder.setDoRefChange(doRefChange);
-		regridder.setForceRegrid(forceRegrid);
-		regridder.setSpecAsVelocity(specAsVelocity);
-		regridder.setStretch(stretch);
-		return new image(regridder.regrid());
+		vector<String> names;
+		names += "outfile", "shape", "csys", "axes",
+			"region", "mask", "method", "decimate",
+			"replicate", "doref", "dropdegen",
+			"overwrite", "force", "asvelocity", "stretch";
+		vector<variant> values;
+		values += outfile, inshape, csys, inaxes,
+			region, vmask, method, decimate, replicate,
+			doRefChange, dropDegenerateAxes,
+			overwrite, forceRegrid,
+			specAsVelocity, stretch;
+		vector<String> msgs = _newHistory(__func__, names, values);
+		if (_image->isFloat()) {
+			ImageRegridder regridder(
+				_image->getImage(), regionPtr.get(),
+				mask, outfile, overwrite, *coordinates,
+				IPosition(axes), IPosition(inshape)
+			);
+			return _regrid(
+				regridder, method, decimate, replicate,
+				doRefChange, forceRegrid, specAsVelocity,
+				stretch, dropDegenerateAxes, lor, msgs
+			);
+		}
+		else {
+			ComplexImageRegridder regridder(
+				_image->getComplexImage(), regionPtr.get(),
+				mask, outfile, overwrite, *coordinates,
+				IPosition(axes), IPosition(inshape)
+			);
+			return _regrid(
+				regridder, method, decimate, replicate,
+				doRefChange, forceRegrid, specAsVelocity,
+				stretch, dropDegenerateAxes, lor, msgs
+			);
+		}
+
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3665,7 +3675,46 @@ image* image::regrid(
 	}
 }
 
-::casac::image* image::rotate(
+vector<String> image::_newHistory(
+	const string& method, const vector<String>& names,
+	const vector<variant>& values
+) {
+	AlwaysAssert(names.size() == values.size(), AipsError);
+	vector<String> msgs;
+	ostringstream os;
+	os << "Ran ia." << method;
+	msgs.push_back(os.str());
+	vector<std::pair<String, variant> > inputs;
+	for (uInt i=0; i<names.size(); i++) {
+		inputs.push_back(make_pair(names[i], values[i]));
+	}
+	os.str("");
+	os << "ia." << method << _inputsString(inputs);
+	msgs.push_back(os.str());
+	return msgs;
+}
+
+template <class T> image* image::_regrid(
+	ImageRegridderBase<T>& regridder,
+	const string& method, int decimate,	bool replicate,
+	bool doRefChange, bool forceRegrid,
+	bool specAsVelocity, bool stretch,
+	bool dropDegenerateAxes, const LogOrigin& lor,
+	const vector<String>& msgs
+) {
+	regridder.setMethod(method);
+	regridder.setDecimate(decimate);
+	regridder.setReplicate(replicate);
+	regridder.setDoRefChange(doRefChange);
+	regridder.setForceRegrid(forceRegrid);
+	regridder.setSpecAsVelocity(specAsVelocity);
+	regridder.setStretch(stretch);
+	regridder.setDropDegen(dropDegenerateAxes);
+	regridder.addHistory(lor, msgs);
+	return new image(regridder.regrid());
+}
+
+image* image::rotate(
 	const std::string& outfile, const std::vector<int>& inshape,
 	const variant& inpa, const variant& region,
 	const variant& vmask, const std::string& method,
