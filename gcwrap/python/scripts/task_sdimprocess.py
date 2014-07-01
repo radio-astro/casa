@@ -123,7 +123,8 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         # mask
         self.image = ia.newimagefromimage(infile=self.infiles,outfile=self.tmpmskname)
         # replace masked pixels with 0.0
-        if self.image.maskhandler('get')[0] != 'T':
+        if not self.image.getchunk(getmask=True).all():
+            casalog.post("Replacing masked pixels with 0.0.")
             self.image.replacemaskedpixels(0.0)
         imshape = self.image.shape()
         nx = imshape[0]
@@ -302,8 +303,13 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         for i in range(nfile):
             self.realimage = ia.newimagefromimage( infile=self.infiles[i], outfile=self.tmprealname[i] )
             self.imagimage = ia.newimagefromimage( infile=self.infiles[i], outfile=self.tmpimagname[i] )
+            # replace masked pixels with 0.0
+            if not self.realimage.getchunk(getmask=True).all():
+                casalog.post("Replacing masked pixels with 0.0 in %d-th image" % (i))
+                self.realimage.replacemaskedpixels(0.0)
             self.realimage.close()
             self.imagimage.close()
+
         if len(self.thresh) == 0:
             casalog.post( 'Use whole region' )
         else:
@@ -312,9 +318,6 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 npol = imshape[3]
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
-                    # replace masked pixels with 0.0
-                    if self.realimage.maskhandler('get')[0] != 'T':
-                        self.realimage.replacemaskedpixels(0.0)
                     for ichan in range(nchan):
                         for ipol in range(npol):
                             pixmsk = self.realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
@@ -338,9 +341,6 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 # no polarization axis
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
-                    # replace masked pixels with 0.0
-                    if self.realimage.maskhandler('get')[0] != 'T':
-                        self.realimage.replacemaskedpixels(0.0)
                     for ichan in range(nchan):
                         pixmsk = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
                         for ix in range(pixmsk.shape[0]):

@@ -265,20 +265,22 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
     def test102(self):
         """Test 102: Test mask in pressed method using whole pixels"""
         # add spurious to image and mask the spurious.
-        ia.open(self.rawfile)
+        my_ia = gentools(['ia'])[0]
+        my_ia.open(self.rawfile)
         try:
-            maxval = ia.statistics()['max'][0]
-            data = ia.getchunk()
+            maxval = my_ia.statistics()['max'][0]
+            data = my_ia.getchunk()
             data[15:25,15:25,:,:] = 100.*maxval
-            ia.putchunk(data)
+            my_ia.putchunk(data)
             del data
-            ia.calcmask("mask(%s) && '%s'<%f" % (self.rawfile, self.rawfile, 10.*maxval),
+            my_ia.calcmask("mask(%s) && '%s'<%f" % (self.rawfile, self.rawfile, 10.*maxval),
                         name="sprious", asdefault=True)
-            mask_in = ia.getchunk(getmask=True)
+            mask_in = my_ia.getchunk(getmask=True)
             mpix = numpy.where(mask_in==False)
             self.assertEqual(len(mpix[0]),100,"Failed to set mask properly at pre-processing.")
         except: raise
-        finally: ia.close()
+        finally: my_ia.close()
+        del my_ia
 #         rawfile='scan_x.masked.im'
 #         if os.path.exists(rawfile):
 #             shutil.rmtree(rawfile)
@@ -326,6 +328,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 178.77776242]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        print imstat(self.outfile)
         #self._checkstats(self.outfile,refstats)
         ia.open(self.outfile)
         mask_out = ia.getchunk(getmask=True)
@@ -367,7 +370,6 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         default(sdimprocess)
 
     def tearDown(self):
-        #pass
         for name in self.rawfiles:
             if (os.path.exists(name)):
                 shutil.rmtree(name)
@@ -427,60 +429,59 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         spix = [10, 15]
         epix = [20, 25]
         mask_in = []
+        my_ia = gentools(['ia'])[0]
         for i in range(len(self.rawfiles)):
             name = self.rawfiles[i]
             s = spix[i % len(spix)]
             e = epix[i % len(epix)]
-            ia.open(name)
+            my_ia.open(name)
             try:
-                maxval = ia.statistics()['max'][0]
-                data = ia.getchunk()
+                maxval = my_ia.statistics()['max'][0]
+                data = my_ia.getchunk()
                 data[s:e,s:e,:,:] = 100.*maxval
-                ia.putchunk(data)
+                my_ia.putchunk(data)
                 del data
-                ia.calcmask("mask(%s) && '%s'<%f" % (name, name, 10.*maxval),
+                my_ia.calcmask("mask(%s) && '%s'<%f" % (name, name, 10.*maxval),
                         name="sprious", asdefault=True)
-                mask_in.append(ia.getchunk(getmask=True))
+                mask_in.append(my_ia.getchunk(getmask=True))
             except: raise
-            finally: ia.done()
+            finally: my_ia.done()
             mpix = numpy.where(mask_in[i]==False)
             self.assertEqual(len(mpix[0]),(e-s)**2,"Failed to set mask properly at pre-processing.")
+        del my_ia
         mask_ref = mask_in[0]
         for msk in mask_in:
             mask_ref += msk
         del mask_in
         # Task execution
-#         rawfiles=['scan_x.masked.im', 'scan_y.masked.im']
-#         for name in rawfiles:
-#             if os.path.exists(name):
-#                 shutil.rmtree(name)
-#             shutil.copytree(self.datapath+name, name)
         res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
         # Test results
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
-                  'max': numpy.array([ 0.92714936]),
+                  'max': numpy.array([ 0.92715073]),
                   'maxpos': numpy.array([64, 64,  0,  0], dtype=numpy.int32),
                   'maxposf': '23:55:43.941, +01.04.00.222, I, 1.415e+09Hz',
-                  'mean': numpy.array([ 0.02962625]),
-                  'medabsdevmed': numpy.array([ 0.00571492]),
-                  'median': numpy.array([ 0.00429045]),
-                  'min': numpy.array([-0.02618393]),
+                  'mean': numpy.array([ 0.02969737]),
+                  'medabsdevmed': numpy.array([ 0.00574234]),
+                  'median': numpy.array([ 0.00439214]),
+                  'min': numpy.array([-0.02619936]),
                   'minpos': numpy.array([ 56, 107,   0,   0], dtype=numpy.int32),
                   'minposf': '23:56:15.881, +01.47.01.037, I, 1.415e+09Hz',
-                  'npts': numpy.array([ 16384.]),
-                  'quartile': numpy.array([ 0.01154788]),
-                  'rms': numpy.array([ 0.11236797]),
-                  'sigma': numpy.array([ 0.1083954]),
-                  'sum': numpy.array([ 485.39648429]),
-                  'sumsq': numpy.array([ 206.87355986]),
+                  'npts': numpy.array([ 16359.]),
+                  'quartile': numpy.array([ 0.011633]),
+                  'rms': numpy.array([ 0.11246141]),
+                  'sigma': numpy.array([ 0.10847283]),
+                  'sum': numpy.array([ 485.81925964]),
+                  'sumsq': numpy.array([ 206.90158001]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
-#         #self._checkstats(self.outfile,refstats)
-#         ia.open(self.outfile)
-#         mask_out = ia.getchunk(getmask=True)
-#         ia.close()
-#         self.assertTrue((mask_out==mask_ref).all(), "Unexpected mask in output image.")
+
+        #print imstat(self.outfile)
+        self._checkstats(self.outfile,refstats)
+        ia.open(self.outfile)
+        mask_out = ia.getchunk(getmask=True)
+        ia.close()
+        self.assertTrue((mask_out==mask_ref).all(), "Unexpected mask in output image.")
 
 
 def suite():
