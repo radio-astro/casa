@@ -1312,6 +1312,25 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
         
         return [row0, row1]
 
+    def _msg(self, row, channel, name, val, ref):
+        msg = '%s differ (result %s expected %s)'%(name, val, ref)
+        if row is not None:
+            header = 'Row %s'%(row)
+            if channel is not None:
+                header += ' Channel %s'%(channel)
+            msg = header + ': ' + msg
+        #print msg
+        return msg
+    
+    def _is_equal(self, name, val, ref, row=None, channel=None):
+        self.assertEqual(val, ref, msg=self._msg(row, channel, name, val, ref))
+
+    def _absdiff(self, val, ref):
+        return abs((val - ref) / ref) if ref != 0.0 else abs(val - ref)
+    
+    def _is_diff_lt_tol(self, name, val, ref, row=None, channel=None):
+        self.assertLess(self._absdiff(val, ref), self.tol, msg=self._msg(row, channel, name, val, ref))
+    
     def _verify_caltable(self, outfile, expected):
         # file existence check
         self.assertTrue(os.path.exists(outfile), msg='Output file \'%s\' didn\'t created.'%(outfile))
@@ -1321,7 +1340,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             colnames = tb.colnames()
 
         # basic check
-        self.assertEqual(nrow, len(expected), msg='Number of rows differ (result %s expected %s)'%(nrow, len(expected)))
+        self._is_equal('number of rows', nrow, len(expected))
         self.assertTrue('FLAGTRA' in colnames, msg='Column FLAGTRA doesn\'t exist')
         self.assertTrue('SPECTRA' in colnames or 'TSYS' in colnames, msg='Column SPECTRA or TSYS doesn\'t exist')
         
@@ -1336,8 +1355,6 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             timestamp = tb.getcol('TIME')
         nchan,nrow = flag.shape
 
-        absdiff = lambda x, r: abs((x - r) / r)
-
         for irow in xrange(nrow):
             result_data = data[:,irow]
             result_flag = flag[:,irow]
@@ -1345,16 +1362,13 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             expected_data = expected[irow][2]
             expected_flag = expected[irow][1]
             expected_time = expected[irow][0]
-            diff = absdiff(result_time, expected_time)
-            self.assertLess(diff, self.tol, msg=('Row %s: timestamp differ (result %s expected %s)'%(irow,result_time,expected_time)))
+            self._is_diff_lt_tol('timestamp', result_time, expected_time, row=irow)
             for ichan in xrange(nchan):
                 # check flag
-                #print 'Row %s Channel %s: \n\tflag result %s expected %s\n\tdata result %s expected %s'%(irow, ichan, result_flag[ichan], expected_flag[ichan], result_data[ichan], expected_data[ichan])
-                self.assertEqual(expected_flag[ichan], result_flag[ichan], msg='Row %s Channel %s: flag differ (result %s expected %s)'%(irow,ichan,result_flag[ichan],expected_flag[ichan]))
+                self._is_equal('flag', result_flag[ichan], expected_flag[ichan], row=irow, channel=ichan)
 
                 # check resulting spectral data
-                diff = absdiff(result_data[ichan], expected_data[ichan])
-                self.assertLess(diff, self.tol, msg='Row %s Channel %s: data differ (result %s expected %s)'%(irow,ichan,result_data[ichan],expected_data[ichan]))
+                self._is_diff_lt_tol('data', result_data[ichan], expected_data[ichan], row=irow, channel=ichan)
 
     def _verify_applycal(self, outfile, expected_sky, expected_tsys):
         # file existence check
@@ -1375,16 +1389,14 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
         nchan,nrow_result = flagtra_result.shape
         
         # check number of rows
-        self.assertEqual(nrow_result, nrow_expected, msg='Number of rows differ (result %s expected %s)'%(nrow_result, nrow_expected))
+        self._is_equal('number of rows', nrow_result, nrow_expected)
 
         # check timestamp
         for irow in xrange(nrow_result):
-            self.assertEqual(time_result[irow], time_expected[irow], msg='Row %s: timestamp differ (result %s expected %s)'%(irow, time_result[irow], time_expected[irow]))
+            self._is_equal('timestamp', time_result[irow], time_expected[irow], row=irow)
 
         # evaluate expected data and flag
         expected_cal = self._expected_calibration(expected_sky, expected_tsys)
-
-        absdiff = lambda x, r: abs((x - r) / r) if r != 0.0 else abs(x-r)
 
         # iterate rows:
         for (irow, cal) in zip(xrange(nrow_result), expected_cal):
@@ -1399,9 +1411,9 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             #print '---'
             #print cal_tsys, tsys
             for ichan in xrange(nchan):
-                self.assertEqual(cal_flag[ichan], flag[ichan], msg='Row %s Channel %s: flag differ (result %s expected %s)'%(irow, ichan, flag[ichan], cal_flag[ichan]))
-                self.assertLess(absdiff(tsys[ichan], cal_tsys[ichan]), self.tol, msg='Row %s Channel %s: Tsys differ (result %s expected %s)'%(irow, ichan, tsys[ichan], cal_tsys[ichan])) 
-                self.assertLess(absdiff(data[ichan], cal_data[ichan]), self.tol, msg='Row %s Channel %s: spectral data differ (result %s expected %s)'%(irow, ichan, data[ichan], cal_data[ichan]))
+                self._is_equal('flag', flag[ichan], cal_flag[ichan], row=irow, channel=ichan)
+                self._is_diff_lt_tol('Tsys', tsys[ichan], cal_tsys[ichan], row=irow, channel=ichan)
+                self._is_diff_lt_tol('spectral data', data[ichan], cal_data[ichan], row=irow, channel=ichan)
         
     def _expected_calibration(self, expected_sky, expected_tsys):
         with tbmanager(self.rawfile) as tb:
@@ -1436,13 +1448,13 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             off = numpy.array(list(interp(t, t_sky, sp_sky, fl_sky)))
             tsys = numpy.array(list(interp(t, t_tsys, sp_tsys, fl_tsys)))
             valid_chans = numpy.where(fl_tsys.sum(axis=0) == 0)[0]
+            # Tsys in the test data is flat
             scalar_tsys = tsys[valid_chans[0]]
             #print off
             #print scalar_tsys
             #print sp
             calibrated = scalar_tsys * (sp - off) / off
             flag = calflag(fl, fl_sky.sum(axis=0))
-            #print flag, calibrated
             itsys = numpy.ones(len(calibrated), dtype=float) * scalar_tsys
             return (flag, calibrated, itsys)
             
