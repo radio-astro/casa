@@ -32,7 +32,7 @@ class sdscale_worker(sdutil.sdtask_template):
             casalog.post( "scaling factor is 1.0. No scaling" )
             return
 
-        s2 = self.scan.scale(self.factor, self.scaletsys, False, True)
+        s2 = self.scan.scale(self.factor, self.scaletsys, False)
         casalog.post( "Scaled spectra and Tsys by "+str(self.factor) )
 
         if self.scaletsys:

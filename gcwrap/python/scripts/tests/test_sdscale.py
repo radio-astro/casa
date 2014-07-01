@@ -720,7 +720,7 @@ class sdscale_testflag(unittest.TestCase,sdscale_unittest_base):
             spec_ref = numpy.ones(100, numpy.float)
             tsys = tb.getcell('TSYS', i)
             tsys_ref = numpy.ones(100, numpy.float)
-            if i in [2, 3]:
+            if rowflags_ref[i] == 0:
                 spec_ref *= factor
                 tsys_ref *= factor
             self.assertTrue(all(spec==spec_ref))
