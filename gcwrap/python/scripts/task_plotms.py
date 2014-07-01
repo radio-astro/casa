@@ -228,7 +228,7 @@ def plotms(vis=None, plotindex=None,
         pm.setShowGui( showgui )
         
         #Clear any existing plots.
-        if clearplots:
+        if clearplots and not showgui:
             pm.clearPlots()
        
         gridChange = False    
