@@ -61,6 +61,7 @@
 #include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/SpectralComponents/SpectralListFactory.h>
 
+#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ComplexImageRegridder.h>
@@ -1139,14 +1140,21 @@ image* image::convolve2d(
 			Axes[0] = 0;
 			Axes[1] = 1;
 		}
-		return new image(
-			_image->convolve2d(
-				outFile, Axes, type, majorKernel, minorKernel,
-				paKernel, in_scale, *Region, mask, overwrite,
-				stretch, targetres
-			)
+		else {
+			ThrowIf(
+				axes.size() != 2,
+				"Number of axes to convolve must be exactly 2"
+			);
+		}
+		Image2DConvolver<Float> convolver(
+			_image->getImage(), Region.get(), mask, outFile, overwrite
 		);
-
+		convolver.setAxes(std::make_pair(Axes[0], Axes[1]));
+		convolver.setKernel(type, majorKernel, minorKernel, paKernel);
+		convolver.setScale(in_scale);
+		convolver.setStretch(stretch);
+		convolver.setTargetRes(targetres);
+		return new image(convolver.convolve());
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: "
