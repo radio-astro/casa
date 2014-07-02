@@ -18,6 +18,7 @@ from .utils import list_to_selection
 from .utils import intersection
 from .utils import pol_filter
 from .utils import polstring
+from .utils import TableSelector
 
 # constants 
 NoData = -32767.0

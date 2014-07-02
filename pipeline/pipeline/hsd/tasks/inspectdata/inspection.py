@@ -77,7 +77,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
         
 
         # create DataTableReader instance
-        worker = reader.DataTableReader(table_name=table_name)
+        worker = reader.DataTableReader(context=inputs.context, table_name=table_name)
         LOG.debug('table_name=%s'%(table_name))
 
 

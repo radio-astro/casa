@@ -25,6 +25,7 @@ LogLevelMap2 = {'critical': CRITICAL, # 50
                 'trace': NOTSET }     # 0
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -316,3 +317,11 @@ def polstring(pols):
     else:
         polstr = 'I'
     return polstr
+
+@contextlib.contextmanager
+def TableSelector(name, query):
+    with casatools.TableReader(name) as tb:
+        tsel = tb.query(query)
+        yield tsel
+        tsel.close()
+    
