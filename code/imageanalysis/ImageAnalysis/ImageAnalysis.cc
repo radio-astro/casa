@@ -76,7 +76,6 @@
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
-#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFITSConverter.h>
@@ -539,7 +538,7 @@ ImageAnalysis::convolve(
 	String& mask, const Bool overwrite, const Bool, const Bool stretch
 ) {
 	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", __func__);
+	*_log << LogOrigin(className(), __func__);
 
 	//Need to deal with the string part
 	//    String kernelFileName(kernel.toString());
@@ -561,9 +560,9 @@ ImageAnalysis::convolve(
 	if (!outFile.empty() && !overwrite) {
 		NewFile validfile;
 		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			!validfile.valueOK(outFile, errmsg), errmsg
+		);
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
@@ -586,7 +585,7 @@ ImageAnalysis::convolve(
 		imOut.set(new PagedImage<Float> (outShape, subImage.coordinates(),
 				outFile));
 	}
-	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
+	//ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 
 	// Make the convolver
 	ImageConvolver<Float> aic;
@@ -600,26 +599,28 @@ ImageAnalysis::convolve(
 		scaleType = ImageConvolver<Float>::SCALE;
 	}
 	if (kernelFileName.empty()) {
-		if (kernelArray.nelements() > 1) {
-			aic.convolve(*_log, *pImOut, subImage, kernelArray, scaleType,
-					scale, copyMisc);
-		}
-		else {
-			*_log << "Kernel array dimensions are invalid"
-					<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			kernelArray.nelements() <= 1,
+			"Kernel array dimensions are invalid"
+		);
+		aic.convolve(
+			*_log, *imOut, subImage, kernelArray, scaleType,
+			scale, copyMisc
+		);
 	}
 	else {
-		if (!Table::isReadable(kernelFileName)) {
-			*_log << LogIO::SEVERE << "kernel image " << kernelFileName
-					<< " is not available " << LogIO::POST;
-			return 0;
-		}
+		ThrowIf(
+			! Table::isReadable(kernelFileName),
+			"kernel image " + kernelFileName
+			+ " is not available "
+		);
 		PagedImage<Float> kernelImage(kernelFileName);
-		aic.convolve(*_log, *pImOut, subImage, kernelImage, scaleType, scale,
-				copyMisc, warnOnly);
+		aic.convolve(
+			*_log, *imOut, subImage, kernelImage, scaleType,
+			scale, copyMisc, warnOnly
+		);
 	}
-	return pImOut;
+	return imOut;
 }
 
 Record* ImageAnalysis::boundingbox(
@@ -863,79 +864,6 @@ SPIIF ImageAnalysis::continuumsub(
 		*_log << "fitpolynomial failed" << LogIO::EXCEPTION;
 	}
 	return rstat;
-}
-
-SPIIF ImageAnalysis::convolve2d(
-	const String& outFile, const Vector<Int>& axes,
-	const String& kernel, const Quantity& majorKernel,
-	const Quantity& minorKernel,
-	const Quantity& paKernel, Double scale,
-	Record& Region, const String& mask, const Bool overwrite,
-	const Bool stretch, const Bool targetres
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-    if (majorKernel < minorKernel) {
-    	*_log << "Major axis is less than minor axis"
-    		<< LogIO::EXCEPTION;
-    }
-	Bool autoScale = scale <= 0;
-	if (autoScale) {
-		scale = 1.0;
-	}
-	// Check output file
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, Region, mask, _log.get(), False,
-		AxesSpecifier(), stretch
-	);
-
-	// Convert inputs
-	if (axes.nelements() != 2) {
-		*_log << "You must give two axes to convolve" << LogIO::EXCEPTION;
-	}
-	VectorKernel::KernelTypes kernelType = VectorKernel::toKernelType(kernel);
-	Vector<Quantity> parameters(3);
-	parameters(0) = majorKernel;
-	parameters(1) = minorKernel;
-	parameters(2) = paKernel;
-
-	// Create output image and mask
-	IPosition outShape = subImage.shape();
-	SPIIF pImOut;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< outShape << LogIO::POST;
-		pImOut.reset(new TempImage<Float> (outShape, subImage.coordinates()));
-	}
-	else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		pImOut.reset(
-			new PagedImage<Float> (
-				outShape, subImage.coordinates(), outFile
-			)
-		);
-	}
-	try {
-		Image2DConvolver<Float>::convolve(
-			*_log, pImOut, subImage, kernelType, IPosition(axes),
-			parameters, autoScale, scale, True, targetres
-		);
-	}
-	catch (const AipsError &e ) {
-		pImOut->unlock() ;
-		throw e;
-	}
-	// Return image
-	return pImOut;
 }
 
 CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {

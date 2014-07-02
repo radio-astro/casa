@@ -129,15 +129,6 @@ class ImageAnalysis
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    SPIIF convolve2d(
-    		const String& outfile, const Vector<Int>& axes,
-            const String& type, const Quantity& major,
-            const Quantity& minor, const Quantity& pa,
-            Double scale, Record& region, const String& mask,
-            const Bool overwrite = False, const Bool stretch=False,
-            const Bool targetres = False
-    );
-
     CoordinateSystem coordsys(const Vector<int>& axes);
 
     Record* coordmeasures(Quantity& intensity, Record& direction, 

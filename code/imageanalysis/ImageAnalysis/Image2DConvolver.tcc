@@ -65,21 +65,26 @@ template <class T>
 Image2DConvolver<T>::Image2DConvolver ()
 {}
 
+template <class T> Image2DConvolver<T>::Image2DConvolver(
+	const SPCIIT image, const Record *const &region,
+	const String& mask, const String& outname, const Bool overwrite
+) : ImageTask<T>(image, "", region, "", "", "", mask, outname, overwrite),
+	_type(VectorKernel::GAUSSIAN),  _scale(0), _major(), _minor(),
+	_pa(), _axes(image->coordinates().directionAxesNumbers()), _targetres(False) {
+	this->_construct(True);
+}
+
 template <class T>
 Image2DConvolver<T>::Image2DConvolver(const Image2DConvolver<T> &other)
 {
    operator=(other);
 }
 
-template <class T> 
-Image2DConvolver<T>::~Image2DConvolver ()
-{}
-
 // TODO use GaussianBeams rather than Vector<Quantity>s, this method
 // can probably be eliminated.
 template <class T>
 Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
-	LogIO& os, const Vector<Quantity>& targetBeamParms,
+	const Vector<Quantity>& targetBeamParms,
 	const GaussianBeam& inputBeam
 ) {
 	GaussianBeam convolvingBeam;
@@ -95,17 +100,66 @@ Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
         }
     }
 	catch (const AipsError& x) {
-        os << LogOrigin("Image2DConvolver", __FUNCTION__)
-            << "Unable to reach target resolution of "
+		ostringstream os;
+		os << "Unable to reach target resolution of "
 			<< targetBeam << " Input image beam "
-			<< inputBeam << " is probably too large"
-			<< LogIO::EXCEPTION;
+			<< inputBeam << " is probably too large";
+		ThrowCc(os.str());
 	}
 	kernelParms[0] = convolvingBeam.getMajor();
 	kernelParms[1] = convolvingBeam.getMinor();
 	kernelParms[2] = convolvingBeam.getPA(True);
 	return kernelParms;
 }
+
+template <class T> void Image2DConvolver<T>::setAxes(
+	const std::pair<uInt, uInt>& axes
+) {
+	uInt ndim = this->_getImage()->ndim();
+	ThrowIf(axes.first == axes.second, "Axes must be different");
+	ThrowIf(
+		axes.first >= ndim || axes.second >= ndim,
+		"Axis value must be less than number of axes in image"
+	);
+	if (_axes.size() != 2) {
+		_axes.resize(2, False);
+	}
+	_axes[0] = axes.first;
+	_axes[1] = axes.second;
+}
+
+
+template <class T> void Image2DConvolver<T>::setKernel(
+	const String& type, const Quantity& major, const Quantity& minor,
+	const Quantity& pa
+) {
+	ThrowIf (major < minor, "Major axis is less than minor axis");
+	_type = VectorKernel::toKernelType(type);
+	_major = major;
+	_minor = minor;
+	_pa = pa;
+
+}
+
+template <class T> SPIIT Image2DConvolver<T>::convolve() {
+	Bool autoScale = _scale <= 0;
+	Double scale = autoScale ? 1.0 : _scale;
+	SPIIF subImage = SubImageFactory<Float>::createImage(
+		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+		this->_getDropDegen(), False, False, this->_getStretch()
+	);
+	Vector<Quantity> parameters(3);
+	parameters(0) = _major;
+	parameters(1) = _minor;
+	parameters(2) = _pa;
+	SPIIT outImage(new TempImage<Float> (subImage->shape(), subImage->coordinates()));
+	Image2DConvolver<Float>::convolve(
+		*this->_getLog(), outImage, *subImage, _type, _axes,
+		parameters, autoScale, scale, True, _targetres
+	);
+	return this->_prepareOutputImage(*outImage);
+}
+
 
 template <class T>
 Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &other)
@@ -116,7 +170,7 @@ Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &o
 }
 
 template <class T> void Image2DConvolver<T>::convolve(
-	LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
+	LogIO& os, SPIIT imageOut,
 	const ImageInterface<T>& imageIn, const VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
 	const Bool autoScale, const Double scale, const Bool copyMiscellaneous,
@@ -250,7 +304,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 				}
 				else {
 					kernelParms = _getConvolvingBeamForTargetResolution(
-						os, parameters, inputBeam
+						parameters, inputBeam
 					);
 					kernelVolume = _makeKernel(
 						kernel, kernelType, kernelParms, pixelAxes, imageIn
@@ -336,7 +390,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 		GaussianBeam inputBeam = imageInfo.restoringBeam();
 		if (targetres) {
             kernelParms = _getConvolvingBeamForTargetResolution(
-				os, parameters, inputBeam
+				parameters, inputBeam
 			);
 			os << LogIO::NORMAL << "Convolving image that has a beam of "
 				<< inputBeam << " with a Gaussian of "
