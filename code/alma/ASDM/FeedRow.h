@@ -94,6 +94,12 @@
 
 	
 
+	
+
+	
+
+	
+
 
 
 #include <ConversionException.h>
@@ -104,7 +110,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Feed.h
-    \brief Generated from model's revision "1.64", branch "HEAD"
+    \brief Generated from model's revision "-1", branch ""
 */
 
 namespace asdm {
@@ -129,7 +135,7 @@ typedef void (FeedRow::*FeedAttributeFromText) (const string& s);
 /**
  * The FeedRow class is a row of a FeedTable.
  * 
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  */
 class FeedRow {
@@ -511,6 +517,129 @@ public:
 	
 
 
+	
+	// ===> Attribute skyCoupling, which is optional
+	
+	
+	
+	/**
+	 * The attribute skyCoupling is optional. Return true if this attribute exists.
+	 * @return true if and only if the skyCoupling attribute exists. 
+	 */
+	bool isSkyCouplingExists() const;
+	
+
+	
+ 	/**
+ 	 * Get skyCoupling, which is optional.
+ 	 * @return skyCoupling as float
+ 	 * @throws IllegalAccessException If skyCoupling does not exist.
+ 	 */
+ 	float getSkyCoupling() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set skyCoupling with the specified float.
+ 	 * @param skyCoupling The float value to which skyCoupling is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSkyCoupling (float skyCoupling);
+		
+	
+	
+	
+	/**
+	 * Mark skyCoupling, which is an optional field, as non-existent.
+	 */
+	void clearSkyCoupling ();
+	
+
+
+	
+	// ===> Attribute numChan, which is optional
+	
+	
+	
+	/**
+	 * The attribute numChan is optional. Return true if this attribute exists.
+	 * @return true if and only if the numChan attribute exists. 
+	 */
+	bool isNumChanExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numChan, which is optional.
+ 	 * @return numChan as int
+ 	 * @throws IllegalAccessException If numChan does not exist.
+ 	 */
+ 	int getNumChan() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumChan (int numChan);
+		
+	
+	
+	
+	/**
+	 * Mark numChan, which is an optional field, as non-existent.
+	 */
+	void clearNumChan ();
+	
+
+
+	
+	// ===> Attribute skyCouplingSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute skyCouplingSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the skyCouplingSpectrum attribute exists. 
+	 */
+	bool isSkyCouplingSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get skyCouplingSpectrum, which is optional.
+ 	 * @return skyCouplingSpectrum as vector<float >
+ 	 * @throws IllegalAccessException If skyCouplingSpectrum does not exist.
+ 	 */
+ 	vector<float > getSkyCouplingSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set skyCouplingSpectrum with the specified vector<float >.
+ 	 * @param skyCouplingSpectrum The vector<float > value to which skyCouplingSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSkyCouplingSpectrum (vector<float > skyCouplingSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark skyCouplingSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearSkyCouplingSpectrum ();
+	
+
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -818,6 +947,9 @@ void receiverIdFromBin( EndianIStream& eis);
 void feedNumFromBin( EndianIStream& eis);
 void illumOffsetFromBin( EndianIStream& eis);
 void positionFromBin( EndianIStream& eis);
+void skyCouplingFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void skyCouplingSpectrumFromBin( EndianIStream& eis);
 
 
 	 /**
@@ -1024,6 +1156,45 @@ private:
 	
  	
 
+	
+	// ===> Attribute skyCoupling, which is optional
+	
+	
+	bool skyCouplingExists;
+	
+
+	float skyCoupling;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numChan, which is optional
+	
+	
+	bool numChanExists;
+	
+
+	int numChan;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute skyCouplingSpectrum, which is optional
+	
+	
+	bool skyCouplingSpectrumExists;
+	
+
+	vector<float > skyCouplingSpectrum;
+
+	
+	
+ 	
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1106,6 +1277,9 @@ void receiverIdFromBin( EndianIStream& eis);
 void feedNumFromBin( EndianIStream& eis);
 void illumOffsetFromBin( EndianIStream& eis);
 void positionFromBin( EndianIStream& eis);
+void skyCouplingFromBin( EndianIStream& eis);
+void numChanFromBin( EndianIStream& eis);
+void skyCouplingSpectrumFromBin( EndianIStream& eis);
 
 */
 	
@@ -1155,6 +1329,15 @@ void illumOffsetFromText (const string & s);
 	
 	
 void positionFromText (const string & s);
+	
+	
+void skyCouplingFromText (const string & s);
+	
+	
+void numChanFromText (const string & s);
+	
+	
+void skyCouplingSpectrumFromText (const string & s);
 	
 	
 	

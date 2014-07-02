@@ -623,7 +623,7 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/3/CalFocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/3/CalFocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -745,7 +745,7 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/3/CalFocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<CalFocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcsm=\"http://Alma/XASDM/CalFocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusModelTable http://almaobservatory.org/XML/XASDM/3/CalFocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFocusModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -874,7 +874,7 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalFocusModel");
     
-    const ByteOrder* byteOrder=0;
+    const ByteOrder* byteOrder;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -1153,7 +1153,7 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalFocusModel");
     
-    const ByteOrder* byteOrder=0;
+    const ByteOrder* byteOrder;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
