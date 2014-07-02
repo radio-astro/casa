@@ -122,10 +122,9 @@ class sdimprocess_worker(sdutil.sdtask_interface):
 
         # mask
         self.image = ia.newimagefromimage(infile=self.infiles,outfile=self.tmpmskname)
-        # replace masked pixels with 0.0
-        if not self.image.getchunk(getmask=True).all():
-            casalog.post("Replacing masked pixels with 0.0.")
-            self.image.replacemaskedpixels(0.0)
+        # back-up original mask name
+        is_initial_mask = (self.image.maskhandler('default')[0] != '')
+        temp_maskname = "temporal"
         imshape = self.image.shape()
         nx = imshape[0]
         ny = imshape[1]
@@ -133,41 +132,16 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         if len(self.thresh) == 0:
             casalog.post( 'Use whole region' )
         else:
-            if len(imshape) == 4:
-                # with polarization axis
-                npol = imshape[3]
-                for ichan in range(nchan):
-                    for ipol in range(npol):
-                        pixmsk = self.image.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                        for ix in range(pixmsk.shape[0]):
-                            for iy in range(pixmsk.shape[1]):
-                                if self.thresh[0] == self.nolimit:
-                                    if pixmsk[ix][iy] > self.thresh[1]:
-                                        pixmsk[ix][iy] = 0.0
-                                elif self.thresh[1] == self.nolimit:
-                                    if pixmsk[ix][iy] < self.thresh[0]:
-                                        pixmsk[ix][iy] = 0.0
-                                else:
-                                    if pixmsk[ix][iy] < self.thresh[0] or pixmsk[ix][iy] > self.thresh[1]:
-                                        pixmsk[ix][iy] = 0.0
-                        self.image.putchunk( pixmsk, [0,0,ichan,ipol] )
-            elif len(imshape) == 3:
-                # no polarization axis
-                for ichan in range(nchan):
-                    pixmsk = self.image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
-                    for ix in range(pixmsk.shape[0]):
-                        for iy in range(pixmsk.shape[1]):
-                            if self.thresh[0] == self.nolimit:
-                                if pixmsk[ix][iy] > self.thresh[1]:
-                                    pixmsk[ix][iy] = 0.0
-                            elif self.thresh[1] == self.nolimit:
-                                if pixmsk[ix][iy] < self.thresh[0]:
-                                    pixmsk[ix][iy] = 0.0
-                            else:
-                                if pixmsk[ix][iy] < self.thresh[0] or pixmsk[ix][iy] > self.thresh[1]:
-                                    pixmsk[ix][iy] = 0.0
-                    self.image.putchunk( pixmsk, [0,0,ichan] )
-
+            # mask pixels beyond thresholds
+            maskstr = ("mask('%s')" % self.tmpmskname)
+            if self.thresh[0] != self.nolimit:
+                maskstr += (" && '%s'>=%f" % (self.tmpmskname, self.thresh[0]))
+            if self.thresh[1] != self.nolimit:
+                maskstr += (" && '%s'<=%f" % (self.tmpmskname, self.thresh[1]))
+            # Need to flush to image once to calcmask ... sigh
+            self.image.done()
+            self.image = ia.newimage( self.tmpmskname )
+            self.image.calcmask(mask=maskstr, name=temp_maskname, asdefault=True)
 
         # smoothing
         #bmajor = 0.0
@@ -188,6 +162,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             qsmoothsize = qa.mul(qbeamsize,self.smoothsize)
         bmajor = qsmoothsize
         bminor = qsmoothsize
+        # masked channels are replaced by zero and convolved here.
         self.convimage = self.image.convolve2d( outfile=self.tmpconvname, major=bmajor, minor=bminor, overwrite=True )
         self.convimage.done()
         self.convimage = ia.newimage( self.tmpconvname )
@@ -227,8 +202,20 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             cu = utilstool()
             cu.removetable([self.tmppolyname])
         self.convimage.setbrightnessunit('K')
-        resultdic = self.convimage.fitprofile( model=self.tmppolyname, axis=fitaxis, poly=self.numpoly, ngauss=0, multifit=True, gmncomps=0 )
+        # Unfortunately, ia.fitprofile is very fragile.
+        # Using numpy instead for fitting with masked pixels (KS, 2014/07/02)
+        #resultdic = self.convimage.fitprofile( model=self.tmppolyname, axis=fitaxis, poly=self.numpoly, ngauss=0, multifit=True, gmncomps=0 )
+        self.__polynomial_fit_model(image=self.tmpmskname, model=self.tmppolyname,axis=fitaxis, order=self.numpoly)
         polyimage = ia.newimage( self.tmppolyname )
+        # set back defalut mask (need to get from self.image)
+        avail_mask = polyimage.maskhandler('get')
+        if is_initial_mask:
+            casalog.post("copying mask from %s"%(self.infiles))
+            polyimage.calcmask("mask('%s')"%self.infiles,asdefault=True)
+        else: #no mask in the original image
+            polyimage.calcmask('T', asdefault=True)
+        if temp_maskname in avail_mask:
+            polyimage.maskhandler('delete', name=temp_maskname)
 
         # subtract fitted image from original map
         imageorg = ia.newimage( self.infiles )
@@ -256,6 +243,73 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         self.convimage.done( remove=True )
         self.image.done()
         imageorg.done()
+
+    def __polynomial_fit_model(self, image=None, model=None, axis=0, order=2):
+        if not image or not os.path.exists(image):
+            raise RuntimeError, "No image found to fit."
+        if os.path.exists( model ):
+            # CAS-5410 Use private tools inside task scripts
+            cu = utilstool()
+            cu.removetable([model])
+        tmpia = gentools(['ia'])[0]
+        modelimg = tmpia.newimagefromimage(infile=image,outfile=model)
+        try:
+            if tmpia.isopen(): tmpia.close()
+            imshape = modelimg.shape()
+            # the axis order of [ra, dec, chan(, pol)] is assumed throughout the task.
+            ndim = len(imshape)
+            nx = imshape[0]
+            ny = imshape[1]
+            # an xy-plane can be fit simultaneously (doing per plane to save memory)
+            if ndim==3:
+                for ichan in range(imshape[2]):
+                    dslice = modelimg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
+                    mslice = modelimg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan],
+                                                getmask=True)
+                    model = self._get_polyfit_model_array(dslice.reshape(nx,ny),
+                                                          mslice.reshape(nx,ny),
+                                                          axis, order)
+                    modelimg.putchunk( model, [0,0,ichan,ipol] )
+            elif ndim==4:
+                for ipol in range(imshape[3]):
+                    for ichan in range(imshape[2]):
+                        dslice = modelimg.getchunk( [0,0,ichan,ipol],
+                                                    [nx-1,ny-1,ichan,ipol])
+                        mslice = modelimg.getchunk( [0,0,ichan,ipol],
+                                                    [nx-1,ny-1,ichan,ipol],
+                                                    getmask=True)
+                        model = self._get_polyfit_model_array(dslice.reshape(nx,ny),
+                                                              mslice.reshape(nx,ny),
+                                                              axis, order)
+                        modelimg.putchunk( model, [0,0,ichan,ipol] )
+            else:
+                # ndim=2 is not supported in this task.
+                raise RuntimeError, "image dimension should be 3 or 4"
+            # the fit model image itself is free from invalid pixels
+            modelimg.calcmask('T', asdefault=True)
+        except: raise
+        finally: modelimg.close()
+
+    def _get_polyfit_model_array(self, data, mask, axis, order):
+        if axis ==1:
+            tmp  = data.transpose()
+            data = tmp
+            tmp  = mask.transpose()
+            mask = tmp
+            del tmp
+        nx = data.shape[0]
+        ny = data.shape[1]
+        x = range(nx)
+        flag = mask ^ True #invert mask for masked array
+        mdata = numpy.ma.masked_array(data,flag)
+        retc = numpy.ma.polyfit(x,mdata,order)
+        del flag
+        coeffs = retc.transpose()
+        tmpmodel = numpy.zeros([nx, ny])
+        for iy in range(ny):
+            tmpmodel[:,iy] = numpy.poly1d(coeffs[iy])(x)
+        if axis == 1: return tmpmodel.transpose()
+        return tmpmodel
 
     def __execute_basket_weaving(self):
         ###

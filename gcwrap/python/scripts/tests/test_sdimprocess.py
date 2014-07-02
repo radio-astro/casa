@@ -205,61 +205,60 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
         default(sdimprocess)
 
     def tearDown(self):
-        #pass
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test100(self):
         """Test 100: Pressed method using whole pixels"""
-        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-                 'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
-                 'max': numpy.array([ 0.89482009]),
-                 'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
-                 'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
-                 'mean': numpy.array([ 0.02900992]),
-                 'medabsdevmed': numpy.array([ 0.00768787]),
-                 'median': numpy.array([ 0.00427032]),
-                 'min': numpy.array([-0.02924964]),
-                 'minpos': numpy.array([ 79, 115,   0,   0], dtype=numpy.int32),
-                 'minposf': '23:54:43.795, +01.55.01.288, I, 1.415e+09Hz',
-                 'npts': numpy.array([ 16384.]),
-                 'quartile': numpy.array([ 0.01577091]),
-                 'rms': numpy.array([ 0.10900906]),
-                 'sigma': numpy.array([ 0.10508127]),
-                 'sum': numpy.array([ 475.29847136]),
-                 'sumsq': numpy.array([ 194.69064919]),
-                 'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
-                 'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
+                  'max': numpy.array([ 0.76603365]),
+                  'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
+                  'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
+                  'mean': numpy.array([  1.77990955e-11]),
+                  'medabsdevmed': numpy.array([ 0.00867557]),
+                  'median': numpy.array([-0.0022334]),
+                  'min': numpy.array([-0.17581469]),
+                  'minpos': numpy.array([25, 64,  0,  0], dtype=numpy.int32),
+                  'minposf': '23:58:19.982, +01.04.00.222, I, 1.415e+09Hz',
+                  'npts': numpy.array([ 16384.]),
+                  'quartile': numpy.array([ 0.01854331]),
+                  'rms': numpy.array([ 0.09749392]),
+                  'sigma': numpy.array([ 0.09749689]),
+                  'sum': numpy.array([  2.91620381e-07]),
+                  'sumsq': numpy.array([ 155.73097211]),
+                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
+                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
         self._checkstats(self.outfile,refstats)
 
     def test101(self):
         """Test 101: Pressed method with certain threshold"""
-        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,tmax=0.5,tmin=-0.1,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,tmax=0.1,tmin=-0.1,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-                 'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
-                 'max': numpy.array([ 0.97879869]),
-                 'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
-                 'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
-                 'mean': numpy.array([ 0.02900992]),
-                 'medabsdevmed': numpy.array([ 0.00766596]),
-                 'median': numpy.array([ 0.00407957]),
-                 'min': numpy.array([-0.04284666]),
-                 'minpos': numpy.array([ 90, 53,   0,   0], dtype=numpy.int32),
-                 'minposf': '23:53:59.916, +00.53.00.126, I, 1.415e+09Hz',
-                 'npts': numpy.array([ 16384.]),
-                 'quartile': numpy.array([ 0.0157865]),
-                 'rms': numpy.array([ 0.11193633]),
-                 'sigma': numpy.array([ 0.10811512]),
-                 'sum': numpy.array([ 475.29845356]),
-                 'sumsq': numpy.array([ 205.28728974]),
-                 'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
-                 'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
+                  'max': numpy.array([ 0.91835594]),
+                  'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
+                  'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
+                  'mean': numpy.array([ 0.02586879]),
+                  'medabsdevmed': numpy.array([ 0.00599332]),
+                  'median': numpy.array([ 0.00104136]),
+                  'min': numpy.array([-0.03498788]),
+                  'minpos': numpy.array([55,  0,  0,  0], dtype=numpy.int32),
+                  'minposf': '23:56:19.991, +00.00.00.000, I, 1.415e+09Hz',
+                  'npts': numpy.array([ 16384.]),
+                  'quartile': numpy.array([ 0.01204253]),
+                  'rms': numpy.array([ 0.11026896]),
+                  'sigma': numpy.array([ 0.10719492]),
+                  'sum': numpy.array([ 423.83432425]),
+                  'sumsq': numpy.array([ 199.21705095]),
+                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
+                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
         self._checkstats(self.outfile,refstats)
 
     def test102(self):
@@ -281,55 +280,32 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
         except: raise
         finally: my_ia.close()
         del my_ia
-#         rawfile='scan_x.masked.im'
-#         if os.path.exists(rawfile):
-#             shutil.rmtree(rawfile)
-#         shutil.copytree(self.datapath+rawfile, rawfile)
         # Task execution
-        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
         # Test results
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
-#         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-#                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
-#                  'max': numpy.array([ 0.89482009]),
-#                  'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
-#                  'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
-#                  'mean': numpy.array([ 0.02900992]),
-#                  'medabsdevmed': numpy.array([ 0.00768787]),
-#                  'median': numpy.array([ 0.00427032]),
-#                  'min': numpy.array([-0.02924964]),
-#                  'minpos': numpy.array([ 79, 115,   0,   0], dtype=numpy.int32),
-#                  'minposf': '23:54:43.795, +01.55.01.288, I, 1.415e+09Hz',
-#                  'npts': numpy.array([ 16284.]),
-#                  'quartile': numpy.array([ 0.01577091]),
-#                  'rms': numpy.array([ 0.10900906]),
-#                  'sigma': numpy.array([ 0.10508127]),
-#                  'sum': numpy.array([ 475.29847136]),
-#                  'sumsq': numpy.array([ 194.69064919]),
-#                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
-#                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
-        refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-                  'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
-                  'max': numpy.array([ 0.89311945]),
-                  'maxpos': numpy.array([64, 64,  0,  0], dtype=numpy.int32),
-                  'maxposf': '23:55:43.941, +01.04.00.222, I, 1.415e+09Hz',
-                  'mean': numpy.array([ 0.0292087]),
-                  'medabsdevmed': numpy.array([ 0.00626913]),
-                  'median': numpy.array([ 0.00380603]),
-                  'min': numpy.array([-0.02924963]),
-                  'minpos': numpy.array([ 79, 115,   0,   0], dtype=numpy.int32),
-                  'minposf': '23:54:43.795, +01.55.01.288, I, 1.415e+09Hz',
-                  'npts': numpy.array([ 16284.]),
-                  'quartile': numpy.array([ 0.01342333]),
-                  'rms': numpy.array([ 0.10477947]),
-                  'sigma': numpy.array([ 0.10062908]),
-                  'sum': numpy.array([ 475.63446734]),
-                  'sumsq': numpy.array([ 178.77776242]),
-                  'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
-                  'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
-        print imstat(self.outfile)
-        #self._checkstats(self.outfile,refstats)
+        refstats = {'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                    'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
+                    'max': numpy.array([ 0.75250125]),
+                    'maxpos': numpy.array([63, 63,  0,  0], dtype=numpy.int32),
+                    'maxposf': '23:55:47.944, +01.03.00.212, I, 1.415e+09Hz',
+                    'mean': numpy.array([-0.00220275]),
+                    'medabsdevmed': numpy.array([ 0.00883335]),
+                    'median': numpy.array([-0.00232762]),
+                    'min': numpy.array([-0.18934998]),
+                    'minpos': numpy.array([25, 64,  0,  0], dtype=numpy.int32),
+                    'minposf': '23:58:19.982, +01.04.00.222, I, 1.415e+09Hz',
+                    'npts': numpy.array([ 16284.]),
+                    'quartile': numpy.array([ 0.01897511]),
+                    'rms': numpy.array([ 0.09790624]),
+                    'sigma': numpy.array([ 0.09788447]),
+                    'sum': numpy.array([-35.86960435]),
+                    'sumsq': numpy.array([ 156.09243727]),
+                    'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
+                    'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+
+        self._checkstats(self.outfile,refstats)
         ia.open(self.outfile)
         mask_out = ia.getchunk(getmask=True)
         ia.close()
