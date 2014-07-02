@@ -56,7 +56,7 @@ namespace AccumModeMod
   //! AccumMode.
   //!  Accumulation modes for the Correlator
   
-  const char *const revision = "1.10";
+  const char *const revision = "-1";
   const int version = 1;
   
   enum AccumMode

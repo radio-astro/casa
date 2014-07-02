@@ -46,7 +46,7 @@ string CAntennaMotionPattern::revision () {
 }
 
 unsigned int CAntennaMotionPattern::size() {
-	return 9;
+	return 11;
 	}
 	
 	
@@ -68,6 +68,10 @@ const std::string& CAntennaMotionPattern::sTEST = "TEST";
 	
 const std::string& CAntennaMotionPattern::sUNSPECIFIED = "UNSPECIFIED";
 	
+const std::string& CAntennaMotionPattern::sSTAR = "STAR";
+	
+const std::string& CAntennaMotionPattern::sLISSAJOUS = "LISSAJOUS";
+	
 const std::vector<std::string> CAntennaMotionPattern::names() {
     std::vector<std::string> enumSet;
     
@@ -88,6 +92,10 @@ const std::vector<std::string> CAntennaMotionPattern::names() {
     enumSet.insert(enumSet.end(), CAntennaMotionPattern::sTEST);
     
     enumSet.insert(enumSet.end(), CAntennaMotionPattern::sUNSPECIFIED);
+    
+    enumSet.insert(enumSet.end(), CAntennaMotionPattern::sSTAR);
+    
+    enumSet.insert(enumSet.end(), CAntennaMotionPattern::sLISSAJOUS);
         
     return enumSet;
 }
@@ -121,6 +129,12 @@ std::string CAntennaMotionPattern::name(const AntennaMotionPatternMod::AntennaMo
     
     case AntennaMotionPatternMod::UNSPECIFIED:
       return CAntennaMotionPattern::sUNSPECIFIED;
+    
+    case AntennaMotionPatternMod::STAR:
+      return CAntennaMotionPattern::sSTAR;
+    
+    case AntennaMotionPatternMod::LISSAJOUS:
+      return CAntennaMotionPattern::sLISSAJOUS;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -164,6 +178,14 @@ AntennaMotionPatternMod::AntennaMotionPattern CAntennaMotionPattern::newAntennaM
     if (name == CAntennaMotionPattern::sUNSPECIFIED) {
         return AntennaMotionPatternMod::UNSPECIFIED;
     }
+    	
+    if (name == CAntennaMotionPattern::sSTAR) {
+        return AntennaMotionPatternMod::STAR;
+    }
+    	
+    if (name == CAntennaMotionPattern::sLISSAJOUS) {
+        return AntennaMotionPatternMod::LISSAJOUS;
+    }
     
     throw badString(name);
 }
@@ -204,6 +226,14 @@ AntennaMotionPatternMod::AntennaMotionPattern CAntennaMotionPattern::literal(con
     	
     if (name == CAntennaMotionPattern::sUNSPECIFIED) {
         return AntennaMotionPatternMod::UNSPECIFIED;
+    }
+    	
+    if (name == CAntennaMotionPattern::sSTAR) {
+        return AntennaMotionPatternMod::STAR;
+    }
+    	
+    if (name == CAntennaMotionPattern::sLISSAJOUS) {
+        return AntennaMotionPatternMod::LISSAJOUS;
     }
     
     throw badString(name);

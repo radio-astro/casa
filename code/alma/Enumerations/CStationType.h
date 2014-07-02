@@ -56,7 +56,7 @@ namespace StationTypeMod
   //! StationType.
   //!  [ASDM.Station] Type of antenna station
   
-  const char *const revision = "1.10";
+  const char *const revision = "-1";
   const int version = 1;
   
   enum StationType
