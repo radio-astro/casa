@@ -44,13 +44,7 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         # flag all WVR data and off-source data  
         for index in index_for_infiles:
             data = context.observing_run[index]
-            wvr_spws = [spw for (spw, desc) in data.spectral_window.items()
-                        if desc.type == 'WVR']
-            filename = data.baselined_name
-            if not os.path.exists(filename):
-                filename = data.name
-            srctype = data.calibration_strategy['srctype']
-            self._apply_apriori_flags(filename, wvr_spws, srctype)
+            self._apply_apriori_flags(data)
 
         namer = filenamer.BaselineSubtractedTable()
 
@@ -94,20 +88,34 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _apply_apriori_flags(self, filename, wvr_spws, on_source):
-        # flag WVR and off-source spectra        
-        with casatools.TableReader(filename, nomodify=False) as tb:
-            tsel = tb.query('SRCTYPE != %s || IFNO IN %s' % (on_source,list(wvr_spws)))
-            rows = tsel.rownumbers()
-            tsel.close()
-        if len(rows) == 0:
-            return
-        
-        args = {'infile': filename,
-                'mode': 'rowid',
-                'row': common.list_to_selection(rows)}
-        job = casa_tasks.sdflag(**args)
-        self._executor.execute(job, merge=False)
+    def _apply_apriori_flags(self, data):
+        # infile
+        filename = data.baselined_name
+        if not os.path.exists(filename):
+            filename = data.name
+            
+        # flag by spw id (exclude WVR, SQLD, POINTING, ATMCAL, ...)
+        spws = data.spectral_window
+        nonscience = common.list_to_selection(common.nonscience_spw(spws))
+        if len(nonscience) > 0:
+            args = {'infile': filename,
+                    'mode': 'manual',
+                    'spw': nonscience}
+            job = casa_tasks.sdflag(**args)
+            self._executor.execute(job, merge=False)
+
+        # flag by intents
+        srctype = data.calibration_strategy['srctype']
+        science = list(common.science_spw(spws))
+        with common.TableSelector(filename, query='SRCTYPE != %s && IFNO IN %s'%(srctype,science)) as tb:
+            rows = tb.rownumbers()
+
+        if len(rows) > 0:
+            args = {'infile': filename,
+                    'mode': 'rowid',
+                    'row': common.list_to_selection(rows)}
+            job = casa_tasks.sdflag(**args)
+            self._executor.execute(job, merge=False)
 
     def _apply_baseline_flags(self, filename, antenna, spwid, on_source):
         context = self.inputs.context
@@ -120,11 +128,12 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         rows = tx.getcol('ROW')
         tx.close()
         
-        if len(rows) == 0:
-            return
-        
-        args = {'infile': filename,
-                'mode': 'rowid',
-                'row': common.list_to_selection(rows)}
-        job = casa_tasks.sdflag(**args)
-        self._executor.execute(job, merge=False)
+        if len(rows) > 0:
+            LOG.info('Apply flags determined by hsd_flagdata')
+            args = {'infile': filename,
+                    'mode': 'rowid',
+                    'row': common.list_to_selection(rows)}
+            job = casa_tasks.sdflag(**args)
+            self._executor.execute(job, merge=False)
+        else:
+            LOG.info('No flagged rows for %s (spw %s)'%(os.path.basename(filename.rstrip('/')),spwid)) 
