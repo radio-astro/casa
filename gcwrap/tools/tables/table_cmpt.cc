@@ -55,22 +55,16 @@ using namespace casa;
 using namespace casac;
 //end modification
 
-#define MYOUTS cout<<"start"<<endl;
-#define MYOUTE cout<<"end"<<endl;
-#define MYSTART {
-#define MYEND }
-
 namespace casac {
 
 class GILReleaser {
 public:
   //expansion of macro Py_BEGIN_ALLOW_THREADS
   GILReleaser(){_save = PyEval_SaveThread();};
-  //MYOUTS};//MYSTART};//Py_BEGIN_ALLOW_THREADS};
 
   //expansion of macro Py_END_ALLOW_THREADS
   ~GILReleaser(){PyEval_RestoreThread(_save);};
-  //MYOUTE};//MYEND};//Py_END_ALLOW_THREADS};
+
 private:
   PyThreadState *_save;
 };
