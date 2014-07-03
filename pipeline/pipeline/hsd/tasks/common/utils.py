@@ -325,3 +325,22 @@ def TableSelector(name, query):
         yield tsel
         tsel.close()
     
+def nonscience_spw(spectral_windows):
+    # detect spws for WVR and square-law detector (SQLD)
+    pattern = '(SQLD|WVR)'
+    for (spwid, spw) in spectral_windows.items():
+        spw_name = spw.name
+        match_by_name = re.search(pattern, spw_name) is not None
+        match_by_intents = spw.is_target is False
+        if match_by_name or match_by_intents:
+            yield spwid
+
+def science_spw(spectral_windows):
+    # exclude spws for WVR and square-law detector (SQLD)
+    pattern = '(SQLD|WVR)'
+    for (spwid, spw) in spectral_windows.items():
+        spw_name = spw.name
+        match_by_name = re.search(pattern, spw_name) is None
+        match_by_intents = spw.is_target 
+        if match_by_name and match_by_intents:
+            yield spwid

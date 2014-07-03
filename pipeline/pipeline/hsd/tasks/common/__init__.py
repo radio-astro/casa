@@ -19,6 +19,7 @@ from .utils import intersection
 from .utils import pol_filter
 from .utils import polstring
 from .utils import TableSelector
+from .utils import science_spw, nonscience_spw
 
 # constants 
 NoData = -32767.0

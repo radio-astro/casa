@@ -11,7 +11,7 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
 
-from ..common import mjd_to_datestring, TableSelector
+from ..common import science_spw, mjd_to_datestring, TableSelector
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -30,7 +30,7 @@ class DataTableReader(object):
 
     def detect_target_spw(self):
         st = self.context.observing_run.get_scantable(os.path.basename(self.name))
-        return list(_detect_target_spw(st.spectral_window))
+        return list(science_spw(st.spectral_window))
                 
     def execute(self, dry_run=True):
         if dry_run:
