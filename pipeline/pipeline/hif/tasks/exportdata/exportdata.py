@@ -318,8 +318,8 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	# Get the session list and the visibility files associated with
 	# each session.
-	session_names, session_vislists= self._get_sessions (inputs.context,
-	    inputs.sessions, vislist)
+	session_list, session_names, session_vislists= self._get_sessions ( \
+	    inputs.context, inputs.sessions, vislist)
 
 	# Export tar files of the calibration tables one per session
 	caltable_file_list = []
@@ -348,8 +348,13 @@ class ExportData(basetask.StandardTaskTemplate):
 	    inputs.context.logs['casa_commands'], inputs.products_dir)
 
 	# Export the processing script independently of the web log
-	casa_pipescript = self._export_casa_commands_log (inputs.context,
-	    'casa_pipescript.py', inputs.products_dir)
+	casa_pipescript = self._export_casa_script (inputs.context,
+	    inputs.context.logs['pipeline_script'], inputs.products_dir)
+	    #'casa_pipescript.py', inputs.products_dir)
+
+	# Export the restore script
+	casa_restore_script = self._export_casa_restore_script (inputs.context,
+	    'casa_restorescript.py', inputs.products_dir, vislist, session_list)
 
 	# Export calibrator images to FITS
 	LOG.info ('Exporting calibrator source images')
@@ -579,7 +584,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	    LOG.info('Visibility list for session %s is %s' % \
 	    (session_names[i], session_vis_list[i]))
 	        
-	return session_names, session_vis_list
+	return wksessions, session_names, session_vis_list
 
     def _export_final_calfiles (self, context, session, vislist, products_dir):
 
@@ -695,6 +700,40 @@ class ExportData(basetask.StandardTaskTemplate):
 	    shutil.copy (casalog_file, out_casalog_file)
 
 	return os.path.basename(out_casalog_file)
+
+    def _export_casa_restore_script (self, context, script_name, products_dir, vislist, session_list):
+
+	"""
+	Save the CASA restore scropt.
+	"""
+
+	# Get the output file name
+	ps = context.project_structure
+	if ps is None:
+	    out_script_file = os.path.join (products_dir, script_name) 
+	elif ps.ousstatus_entity_id == 'unknown':
+	    out_script_file = os.path.join (products_dir, script_name) 
+	else:
+	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+	    out_script_file = os.path.join (products_dir, ousid + '.' + script_name)
+
+	LOG.info('Creating casa restore script %s' %  (out_script_file))
+
+	# This is hardcoded.
+	task_string = '    hif_restoredata (vis=%s, sessions=%s)' % (vislist, session_list) 
+
+        template = '''__rethrow_casa_exceptions = True
+h_init()
+try:
+%s
+finally:
+    h_save()
+''' % task_string
+
+	with open (out_script_file, 'w') as casa_restore_file:
+	    casa_restore_file.write(template)
+
+	return os.path.basename (out_script_file)
 
     def _export_casa_script (self, context, casascript_name, products_dir):
 
