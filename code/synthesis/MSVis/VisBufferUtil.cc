@@ -36,13 +36,15 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <measures/Measures/UVWMachine.h>
+#include <measures/Measures/MeasTable.h>
 
 #include <synthesis/MSVis/VisBufferUtil.h>
 #include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <measures/Measures/MeasTable.h>
 #include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -103,7 +105,51 @@ VisBufferUtil::VisBufferUtil(const VisBuffer& vb) {
 
 }
 
+// Construct from a VisBuffer (sets frame info)
+VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb) {
 
+	ROMSColumns msc(vb.getVi()->ms());
+  // The nominal epoch
+  MEpoch ep=msc.timeMeas()(0);
+
+  // The nominal position
+  String observatory;
+  MPosition pos;
+  if (msc.observation().nrow() > 0) {
+    observatory = msc.observation().telescopeName()
+      (msc.observationId()(0));
+  }
+  if (observatory.length() == 0 ||
+      !MeasTable::Observatory(pos,observatory)) {
+    // unknown observatory, use first antenna
+    pos=msc.antenna().positionMeas()(0);
+  }
+
+  // The nominal direction
+  MDirection dir=vb.phaseCenter();
+
+  // The nominal MeasFrame
+  mframe_=MeasFrame(ep, pos, dir);
+
+}
+
+  Bool VisBufferUtil::rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
+				Matrix<Double>& uvw, Vector<Double>& dphase){
+
+    Bool retval=True;
+    mframe_.resetEpoch(vb.time()(0));
+    UVWMachine uvwMachine(desiredDir, vb.phaseCenter(), mframe_,
+			False, False);
+    retval = !uvwMachine.isNOP();
+    dphase.resize(vb.nRows());
+    uvw.resize(3, vb.nRows());
+    for (Int row=0; row< vb.nRows(); ++row){
+      Vector<Double> eluvw(uvw.column(row));
+      uvwMachine.convertUVW(dphase(row), eluvw);
+    }
+    
+    return retval;
+  }
 
 // Set the visibility buffer for a PSF
 void VisBufferUtil::makePSFVisBuffer(VisBuffer& vb) {

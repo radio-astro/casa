@@ -1,5 +1,5 @@
 //# VisBufferUtil.h: Definitions for VisBuffer utilities
-//# Copyright (C) 1996,1997
+//# Copyright (C) 1996-2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@
 
 #include <casa/aips.h>
 #include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MFrequency.h>
@@ -73,6 +74,8 @@ public:
   // Construct from a VisBuffer (sets a MeasFrame)
   VisBufferUtil(const VisBuffer& vb);
 
+  // Same as above but with VisBuffer2
+  VisBufferUtil(const vi::VisBuffer2& vb);
   // Make PSF VisBuffer
   void makePSFVisBuffer(VisBuffer& vb);
   
@@ -99,6 +102,13 @@ public:
 		  const MFrequency::Types freqFrame,
 		  const MVFrequency restFreq,
 		  const MDoppler::Types veldef);
+
+
+  //Rotate the uvw in the vb along with giving the phase needed to convert the visibilities to a new phasecenter
+  // will return a False if it is a NoOP...don't need then to waste time
+  //applying the phasor etc 
+   Bool rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
+		  Matrix<Double>& uvw, Vector<Double>& dphase);
 
  private:
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
