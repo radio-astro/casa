@@ -59,15 +59,33 @@ namespace casac {
 
 class GILReleaser {
 public:
-  //expansion of macro Py_BEGIN_ALLOW_THREADS
-  GILReleaser(){_save = PyEval_SaveThread();};
+  GILReleaser() : is_toplevel(false) {
+    if (!is_released){
+      //expansion of macro Py_BEGIN_ALLOW_THREADS
+      _save = PyEval_SaveThread();
+      // set flags
+      is_released = true;
+      is_toplevel = true;
+    }
+  };
 
-  //expansion of macro Py_END_ALLOW_THREADS
-  ~GILReleaser(){PyEval_RestoreThread(_save);};
+  ~GILReleaser(){
+    if (is_released && is_toplevel) {
+      //expansion of macro Py_END_ALLOW_THREADS
+      PyEval_RestoreThread(_save);
+      is_released = false;
+    }
+  };
 
 private:
   PyThreadState *_save;
+  // flag to hold GIL status
+  static bool is_released;
+  // flag to hold level of caller
+  bool is_toplevel;
 };
+
+bool GILReleaser::is_released = false;
 
 table::table()
 {
@@ -92,22 +110,17 @@ table::~table()
 bool
 table::open(const std::string& tablename, const ::casac::record& lockoptions, const bool nomodify)
 {
+    GILReleaser a; // Releasing GIL in this function
     Bool rstat(False);
     try {
         Record *tlock = toRecord(lockoptions);
         //TableLock *itsLock = getLockOptions(tlock);
         if(nomodify){
             if(itsTable)close();
-            {//the scope to release GIL
-	      GILReleaser a;
 	      itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
-	    }
         } else {
             if(itsTable)close();
-            {//the scope to release GIL
-	      GILReleaser a;
-	      itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
-            }
+	    itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
         }
         delete tlock;
         rstat = True;
@@ -198,11 +211,11 @@ table::resync()
 bool
 table::close()
 {
+ GILReleaser a; // Releasing GIL in this function
  *itsLog << LogOrigin(__func__, name());
 
  Bool rstat(False);
  try {
-   GILReleaser a;
    delete itsTable;
    itsTable = 0;
    rstat = True;
@@ -597,12 +610,11 @@ table::createmultitable(const std::string &outputTableName,
 std::string
 table::name()
 {
+   GILReleaser a; // Releasing GIL in this function
    *itsLog << LogOrigin(__func__, "");
    std::string myName("");
    if(itsTable){
-     // GIL is released in this scope
-       GILReleaser a;
-       myName = itsTable->table().tableName();
+      myName = itsTable->table().tableName();
    } else {
       *itsLog << LogIO::NORMAL << "No table opened." << LogIO::POST;
    }
@@ -675,6 +687,7 @@ table::query(const std::string& query, const std::string& name,
  *itsLog << LogOrigin(__func__, this->name());
  ::casac::table *rstat(0);
  try {
+   GILReleaser a; // Releasing GIL in this function
    if(itsTable){
      std::ostringstream taqlString;
      if(!style.empty())
@@ -689,11 +702,9 @@ table::query(const std::string& query, const std::string& name,
        taqlString << " orderby " << sortlist;
      if(!name.empty())
        taqlString << " giving \"" << name << "\"";
-     {//the scope to release GIL
-       GILReleaser a;
-       casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
-       rstat = new ::casac::table(theQTab);
-     }
+
+     casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
+     rstat = new ::casac::table(theQTab);
    } else {
      *itsLog << LogIO::WARN
              << "No table specified, please open first" << LogIO::POST;
@@ -900,12 +911,11 @@ table::summary(const bool recurse)
 std::vector<std::string>
 table::colnames()
 {
+ GILReleaser a; // Releasing GIL in this function
  *itsLog << LogOrigin(__func__, name());
  std::vector<std::string> rstat(0);
  try {
 	 if(itsTable){
-	   //the scope to release GIL
-	   GILReleaser a;
 	   Vector<String> colNames = itsTable->columnNames();
 	   rstat = fromVectorString(colNames);
 	 } else {
@@ -921,12 +931,11 @@ table::colnames()
 std::vector<int>
 table::rownumbers(const ::casac::record& tab, const int nbytes)
 {
+ GILReleaser a; // Releasing GIL in this function
  *itsLog << LogOrigin(__func__, name());
  std::vector<int> rstat(0);
  try {
 	 if(itsTable){
-	   //the scope to release GIL
-	   GILReleaser a;
 	   TableProxy dummy;
 	   itsTable->rowNumbers(dummy).tovector(rstat);
 	   // *itsLog << LogIO::WARN << "rownumbers not implemented" << LogIO::POST;
@@ -1053,12 +1062,11 @@ table::ncols()
 int
 table::nrows()
 {
+ GILReleaser a; // Releasing GIL in this function
  *itsLog << LogOrigin(__func__, name());
  Int rstat(0);
  try {
 	 if(itsTable){
-	   //the scope to release GIL
-	    GILReleaser a;
 	    Vector<Int> myshape = itsTable->shape();
 	    rstat = myshape[1];
 	 } else {
@@ -1193,12 +1201,11 @@ table::iscelldefined(const std::string& columnname, const int rownr)
 ::casac::variant*
 table::getcell(const std::string& columnname, const int rownr)
 {
+ GILReleaser a; // Releasing GIL in this function
  *itsLog << LogOrigin(__func__, columnname);
  ::casac::variant *rstat(0);
  try {
 	 if(itsTable){
-	   //the scope to release GIL
-	   GILReleaser a;
 	   ValueHolder theVal = itsTable->getCell(columnname, rownr);
 	   rstat = fromValueHolder(theVal);
 	 } else {
@@ -1293,6 +1300,7 @@ bool
 table::putcell(const std::string& columnname, const std::vector<int>& rownr,
                const ::casac::variant& thevalue)
 {
+  GILReleaser a; // Releasing GIL in this function
   Bool rstat(False);
 
   *itsLog << LogOrigin("putcell", columnname);
@@ -1305,8 +1313,7 @@ table::putcell(const std::string& columnname, const std::vector<int>& rownr,
                 << LogIO::POST;
         return False;
       }
-      {//the scope to release GIL
-	GILReleaser a;
+      {
 	ValueHolder *aval = toValueHolder(thevalue);
 	itsTable->putCell(columnname, rownr, *aval);
 	delete aval;
