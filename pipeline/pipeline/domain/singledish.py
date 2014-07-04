@@ -179,6 +179,9 @@ class ScantableRep(SingleDishBase):
 
         # antenna property
         self.antenna = None
+        
+        # exported ms for imaging
+        self.exported_ms = None
 
     @property
     def basename(self):
