@@ -57,13 +57,9 @@ class DataTableReader(object):
         nif = s.nif()
         vorg=sd.rcParams['verbose']
         sd.rcParams['verbose']=False
-        #if self.casa_version > 302:
-        #    sd.asaplog.disable()
         sd.asaplog.disable()
         Tsys = s.get_tsys()
         sd.rcParams['verbose']=vorg
-        #if self.casa_version > 302:
-        #    sd.asaplog.enable()
         sd.asaplog.enable()
         if s.get_azimuth()[0] == 0: s.recalc_azel()
         

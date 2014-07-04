@@ -152,8 +152,6 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
 
     def __init__(self, inputs):
         super(SingleDishTaskTemplate,self).__init__(inputs)
-        self._setup_datatable()
-        self._inspect_casa_version()
     
     @basetask.timestamp
     @basetask.capture_log
@@ -224,37 +222,6 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
                 LOG.debug('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
                 context.observing_run.datatable_instance = datatable
                 context.observing_run.datatable_name = os.path.relpath(datatable.name, context.output_dir)
-
-    def _setup_datatable(self):
-        pass
-        #ontext = self.inputs.context
-        #observing_run = context.observing_run
-        #data_table = observing_run.datatable_instance
-        #if data_table is None:
-        #    name = observing_run.datatable_name
-        #    if name is not None and os.path.exists(name):
-        #        LOG.debug('Import DataTable from disk')
-        #        data_table = DataTable(name)
-        #self.DataTable = data_table
-        #observing_run.datatable_instance = self.DataTable
-        #observing_run.datatable_instance = DataTable(observing_run.datatable_name)
-        
-    def _inspect_casa_version(self):
-        import inspect
-        import sys
-        a = inspect.stack()
-        stacklevel = 0
-        for i in range(len(a)):
-            if a[i][1].find( 'ipython console' ) != -1:
-                stacklevel = i-1
-                break
-        casadict = sys._getframe(stacklevel+1).f_globals['casa']
-        try:
-            self.casa_revision = int( casadict['build']['number'] )
-        except:
-            self.casa_revision = -1
-        self.casa_version_string = casadict['build']['version']
-        self.casa_version = int( self.casa_version_string.replace('.','') )
 
 def datatable_setter(func):
     import functools
