@@ -90,6 +90,7 @@ class SDConvertData(common.SingleDishTaskTemplate):
         return set([m for m in matching 
                     if matching.count(m) == len(identifiers)])
 
+    @common.datatable_setter
     def prepare(self, **parameters):
         inputs = self.inputs
         context = inputs.context

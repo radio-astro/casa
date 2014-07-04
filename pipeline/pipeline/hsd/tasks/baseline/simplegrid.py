@@ -38,6 +38,8 @@ class SimpleGriddingResults(common.SingleDishResults):
 
 class SimpleGridding(common.SingleDishTaskTemplate):
     Inputs = SimpleGriddingInputs
+
+    @common.datatable_setter
     def prepare(self):
         grid_table = self.make_grid_table()
         # LOG.debug('work_dir=%s'%(work_dir))

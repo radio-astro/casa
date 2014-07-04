@@ -53,6 +53,7 @@ class SDPlotFlagBaselineResults(common.SingleDishResults):
 class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
     Inputs = SDPlotFlagBaselineInputs
 
+    @common.datatable_setter
     def prepare(self):
         inputs = self.inputs
         context = inputs.context

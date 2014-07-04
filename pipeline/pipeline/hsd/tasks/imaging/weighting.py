@@ -38,6 +38,7 @@ class WeightMS(common.SingleDishTaskTemplate):
             'WeightRMS': True,
             'WeightTsysExpTime': False}
    
+    @common.datatable_setter
     def prepare(self):
         # for each data
         outfile = self.inputs.outfile

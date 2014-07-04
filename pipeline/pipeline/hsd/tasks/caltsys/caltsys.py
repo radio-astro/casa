@@ -138,6 +138,7 @@ class SDCalTsysResults(common.SingleDishResults):
 class SDCalTsys(common.SingleDishTaskTemplate):
     Inputs = SDCalTsysInputs
 
+    @common.datatable_setter
     def prepare(self):
         # inputs
         inputs = self.inputs

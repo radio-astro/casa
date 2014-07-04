@@ -21,6 +21,7 @@ class SDBaselineInputsOld(SDBaselineInputs):
 class SDBaseline(common.SingleDishTaskTemplate):
     Inputs = SDBaselineInputsOld
 
+    @common.datatable_setter
     def prepare(self):
         inputs = self.inputs
         context = inputs.context

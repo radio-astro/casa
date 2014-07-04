@@ -83,6 +83,7 @@ class SDImaging2Results(common.SingleDishResults):
 class SDImaging2(common.SingleDishTaskTemplate):
     Inputs = SDImaging2Inputs
 
+    @common.datatable_setter
     def prepare(self):
         context = self.inputs.context
         reduction_group = context.observing_run.reduction_group

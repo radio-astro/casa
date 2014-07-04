@@ -67,6 +67,7 @@ class FittingBase(common.SingleDishTaskTemplate):
             self.fitorder_heuristic = lambda *args, **kwargs: self.inputs.fit_order
 
 
+    @common.datatable_setter
     def prepare(self):
         """
         """

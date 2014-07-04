@@ -53,6 +53,7 @@ class SDImagingResults(common.SingleDishResults):
 class SDImaging(common.SingleDishTaskTemplate):
     Inputs = SDImagingInputs
 
+    @common.datatable_setter
     def prepare(self):
         context = self.inputs.context
         datatable = context.observing_run.datatable_instance

@@ -159,7 +159,22 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
     @basetask.capture_log
     @basetask.result_finaliser
     def execute(self, dry_run=True, **parameters):
-        aresult = super(SingleDishTaskTemplate,self).execute(dry_run=dry_run, **parameters)
+        try:
+            # Empty a reference to DataTable instance to avoid an additional instantiation 
+            # of DataTable by copying context
+            context = self.inputs.context
+            self._disconnect_datatable(context)
+                        
+            # execute
+            aresult = super(SingleDishTaskTemplate,self).execute(dry_run=dry_run, **parameters)
+            
+        finally:
+            # Put DataTable back to context
+            # This is necessary because datatable_setter handles a copy of context, which 
+            # is passed to prepare/analyse while here we handle original context
+            LOG.debug('%s: Clean up after execute...'%(self.__class__.__name__))
+            self._reconnect_datatable(context   )
+        
         # Don't convert results to ResultsList if it is not
         # the top-level task.
         if self.inputs.context.subtask_counter > 0:
@@ -190,6 +205,25 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             return observing_run.datatable_instance
         else:
             return None
+        
+    def _disconnect_datatable(self, context):
+        self._datatable_instance = None
+        if hasattr(context.observing_run, 'datatable_instance') \
+            and context.observing_run.datatable_instance is not None:
+            self._datatable_instance = context.observing_run.datatable_instance
+            LOG.debug('Empty reference to datatable (address 0x%x)'%(id(self._datatable_instance)))
+            context.observing_run.datatable_instance = None
+            context.observing_run.datatable_name = None
+    
+    def _reconnect_datatable(self, context):
+        if hasattr(context.observing_run, 'datatable_instance') \
+            and hasattr(self, '_datatable_instance') \
+            and self._datatable_instance is not None:
+            datatable = self._datatable_instance
+            if context.observing_run.datatable_instance is None:
+                LOG.debug('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
+                context.observing_run.datatable_instance = datatable
+                context.observing_run.datatable_name = os.path.relpath(datatable.name, context.output_dir)
 
     def _setup_datatable(self):
         pass
@@ -222,3 +256,14 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         self.casa_version_string = casadict['build']['version']
         self.casa_version = int( self.casa_version_string.replace('.','') )
 
+def datatable_setter(func):
+    import functools
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        task = args[0]
+        context = task.inputs.context
+        LOG.debug('%s.%s'%(task.__class__.__name__,func.__name__))
+        task._reconnect_datatable(context)
+        return func(*args, **kwargs)
+    return wrapper
+            

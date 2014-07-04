@@ -37,6 +37,7 @@ class SDImaging2WorkerResults(common.SingleDishResults):
 class SDImaging2Worker(common.SingleDishTaskTemplate):
     Inputs = SDImaging2WorkerInputs
     
+    @common.datatable_setter
     def prepare(self):
         infiles = self.inputs.infiles
         outfile = self.inputs.outfile

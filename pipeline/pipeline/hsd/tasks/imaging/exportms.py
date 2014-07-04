@@ -40,6 +40,7 @@ class ExportMSResults(common.SingleDishResults):
 class ExportMS(common.SingleDishTaskTemplate):
     Inputs = ExportMSInputs
     
+    @common.datatable_setter
     def prepare(self):
         # for each data
         context = self.inputs.context

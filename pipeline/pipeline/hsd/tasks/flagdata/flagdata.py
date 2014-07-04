@@ -137,6 +137,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
     """
     Inputs = SDFlagDataInputs
 
+    @common.datatable_setter
     def prepare(self):
         """
         Iterates over reduction group and invoke flagdata worker function in each clip_niteration.

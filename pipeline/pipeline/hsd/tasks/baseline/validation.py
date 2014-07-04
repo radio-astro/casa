@@ -91,6 +91,7 @@ class ValidateLineResults(common.SingleDishResults):
 class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
     Inputs = ValidateLineInputs
 
+    @common.datatable_setter
     def prepare(self):
         """
         ValidateLine class for single-pointing or multi-pointing (collection of 
@@ -202,6 +203,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
     MinFWHM = rules.LineFinderRule['MinFWHM']
     MaxFWHM = rules.LineFinderRule['MaxFWHM']
 
+    @common.datatable_setter
     def prepare(self):
         """
         2D fit line characteristics calculated in Process3

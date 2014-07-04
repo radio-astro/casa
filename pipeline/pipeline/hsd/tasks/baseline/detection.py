@@ -64,6 +64,7 @@ class DetectLine(common.SingleDishTaskTemplate):
         super(DetectLine, self).__init__(inputs)
         self.line_finder = self.LineFinder()
 
+    @common.datatable_setter
     def prepare(self):
         """
         The process finds emission lines and determines protection regions for baselinefit

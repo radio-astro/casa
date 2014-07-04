@@ -113,6 +113,7 @@ class SDFlagBaselineResults(common.SingleDishResults):
 class SDFlagBaseline(common.SingleDishTaskTemplate):
     Inputs = SDFlagBaselineInputs
 
+    @common.datatable_setter
     def prepare(self):
         LOG.debug('Start SDFlagBaseline.prepare')
         context = self.context

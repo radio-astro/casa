@@ -48,6 +48,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
             'WeightRMS': True, \
             'WeightTsysExptime': False} 
 
+    @common.datatable_setter
     def prepare(self):
         start = time.time()
         inputs = self.inputs

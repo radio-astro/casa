@@ -32,6 +32,7 @@ class IntensityScalingResults(common.SingleDishResults):
 class IntensityScaling(common.SingleDishTaskTemplate):
     Inputs = IntensityScalingInputs
     
+    @common.datatable_setter
     def prepare(self):
         reffile = self.inputs.reffile
         

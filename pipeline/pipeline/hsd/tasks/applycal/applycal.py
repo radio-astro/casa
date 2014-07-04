@@ -126,6 +126,7 @@ class SDApplyCalResults(common.SingleDishResults):
 class SDApplyCal(common.SingleDishTaskTemplate):
     Inputs = SDApplyCalInputs
 
+    @common.datatable_setter
     def prepare(self):
         # inputs
         inputs = self.inputs

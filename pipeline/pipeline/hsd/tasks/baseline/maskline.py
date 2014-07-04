@@ -56,6 +56,7 @@ class MaskLineResults(common.SingleDishResults):
 class MaskLine(common.SingleDishTaskTemplate):
     Inputs = MaskLineInputs
 
+    @common.datatable_setter
     def prepare(self):
         context = self.context
 

@@ -59,6 +59,7 @@ class SDInspectDataResults(common.SingleDishResults):
 class SDInspectData(common.SingleDishTaskTemplate):
     Inputs = SDInspectDataInputs
 
+    @common.datatable_setter
     def prepare(self):
         # use plain table for scantable
         storage_save = sd.rcParams['scantable.storage']

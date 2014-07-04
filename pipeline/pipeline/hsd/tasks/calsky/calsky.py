@@ -88,6 +88,7 @@ class SDCalSkyResults(common.SingleDishResults):
 class SDCalSky(common.SingleDishTaskTemplate):
     Inputs = SDCalSkyInputs
 
+    @common.datatable_setter
     def prepare(self):
         # inputs
         inputs = self.inputs

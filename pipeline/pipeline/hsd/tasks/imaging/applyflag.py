@@ -33,6 +33,7 @@ class SDApplyFlagResults(common.SingleDishResults):
 class SDApplyFlag(common.SingleDishTaskTemplate):
     Inputs = SDApplyFlagInputs
     
+    @common.datatable_setter
     def prepare(self):
         # for each data
         context = self.inputs.context
