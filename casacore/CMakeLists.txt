@@ -43,7 +43,7 @@ option (USE_GSL "" YES)
 # Note: -Wshadow and -Wunreachable-code give (too) many warnings.
 # Casacore uses longlong, so no warnings for it.
 if (NOT CMAKE_CXX_FLAGS)
-    set (CMAKE_CXX_FLAGS "-W -Wpointer-arith -Wno-long-long -Wall -Wextra -pedantic")
+    set (CMAKE_CXX_FLAGS "-march=native -funroll-all-loops -W -Wpointer-arith -Wno-long-long -Wall -Wextra -pedantic")
 ##    set (CMAKE_CXX_FLAGS "-W -Wall -Wextra -pedantic")
 endif (NOT CMAKE_CXX_FLAGS)
 
