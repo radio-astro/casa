@@ -27,13 +27,15 @@ class ImportDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
-		 session=None, overwrite=None, save_flagonline=None):
+		 session=None, overwrite=None, save_flagonline=None,
+		 bdfflags=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
+    bdfflags = basetask.property_with_default('bdfflags', True)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
 
     @property
@@ -310,7 +312,8 @@ class ImportData(basetask.StandardTaskTemplate):
                                      outfile=outfile,
                                      process_caldevice=inputs.process_caldevice,
                                      asis=inputs.asis,
-                                     overwrite=inputs.overwrite)
+                                     overwrite=inputs.overwrite,
+				     bdfflags=inputs.bdfflags)
 
         self._executor.execute(task)
 
