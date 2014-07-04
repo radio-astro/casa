@@ -38,12 +38,12 @@ template<class T> class Array;
 template <class V>
 void getArrayVal(V &val, int type, const Record& gr, 
 		      const String& name, uInt index=0) 
-    throw (InvalidSerializationError);
+    WHATEVER_SUN_EXCEPTSPEC (InvalidSerializationError);
 
 template <class V>
 void getArray(Array<V> &val, int type, const Record& gr, 
 		   const String& name) 
-    throw (InvalidSerializationError);
+    WHATEVER_SUN_EXCEPTSPEC (InvalidSerializationError);
 
 // <summary>
 //
