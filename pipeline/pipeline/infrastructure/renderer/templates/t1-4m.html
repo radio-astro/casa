@@ -3,6 +3,7 @@ navbar_active='By Task'
 import os
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
 
 def get_bar_class(scores, result):
@@ -59,7 +60,7 @@ def format_score(scores, result):
 	<table class="table">
 		<thead>
 			<tr>
-				<th class="span9">Task</th>
+				<th class="span9"><i class="icon-fixed-width icon-blank"></i> Task</th>
 				<th class="span2">QA Score</th>
 				<th class="span1"></th>
 			</tr>
@@ -67,7 +68,7 @@ def format_score(scores, result):
 		<tbody>
 			% for result in results:
 			<tr>
-				<td><a href="t2-4m.html?stage=${result.stage_number}">${hr.get_task_description(result)}</a><span class="pull-right">${scores[result.stage_number].shortmsg}</span></td>
+				<td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?stage=${result.stage_number}">${hr.get_task_description(result)}</a><span class="pull-right">${scores[result.stage_number].shortmsg}</span></td>
 				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${get_bar_class(scores, result)}" style="width:${get_bar_width(scores, result)}%;"><span class="text-center"></span></div></div></td>
 				<td><span class="badge${get_badge_class(scores, result)}">${format_score(scores, result)}</span></td>
 			</tr>

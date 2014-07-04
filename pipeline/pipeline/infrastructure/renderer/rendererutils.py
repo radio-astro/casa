@@ -120,13 +120,13 @@ def format_score(pqascore):
 
 def get_symbol_badge(result):
     if get_errors_badge(result):
-        symbol = '<i class="fa fa-minus-circle text-error"></i>' 
+        symbol = '<i class="icon-fixed-width fa fa-minus-circle text-error"></i>' 
     elif get_warnings_badge(result):
-        symbol = '<i class="fa fa-exclamation-triangle text-warning"></i>' 
+        symbol = '<i class="icon-fixed-width fa fa-exclamation-triangle text-warning"></i>' 
     elif get_suboptimal_badge(result):
-        symbol = '<i class="fa fa-info-circle text-info"></i>' 
+        symbol = '<i class="icon-fixed-width fa fa-info-circle text-info"></i>' 
     else:
-        return ''
+        return '<i class="icon-fixed-width icon-blank"></i>'
         
     return symbol
 
