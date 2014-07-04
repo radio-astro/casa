@@ -268,9 +268,13 @@ class SDImportData(basetask.StandardTaskTemplate):
                 prefix = prefix[:-3]
             prefix = os.path.join(context.output_dir, prefix)
             LOG.debug('prefix: %s'%(prefix))
-            scantables = sd.splitant(filename=ms,#ms.name,
-                                     outprefix=prefix,
-                                     overwrite=True)
+            LOG.debug('outside with (before): scantable.storage=%s'%(sd.rcParams['scantable.storage']))
+            with utils.asap_force_storage():
+                LOG.debug('inside with: scantable.storage=%s'%(sd.rcParams['scantable.storage']))
+                scantables = sd.splitant(filename=ms,#ms.name,
+                                         outprefix=prefix,
+                                         overwrite=True)
+            LOG.debug('outside with (after): scantable.storage=%s'%(sd.rcParams['scantable.storage']))
             scantable_list.extend(scantables)
             st_ms_map.extend([idx]*len(scantables))
             

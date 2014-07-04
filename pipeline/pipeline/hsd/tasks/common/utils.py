@@ -344,3 +344,12 @@ def science_spw(spectral_windows):
         match_by_intents = spw.is_target 
         if match_by_name and match_by_intents:
             yield spwid
+
+@contextlib.contextmanager
+def asap_force_storage(storage='disk'):
+    import asap as sd
+    key = 'scantable.storage'
+    storage_org = sd.rcParams[key]
+    sd.rcParams[key] = storage  
+    yield None
+    sd.rcParams[key] = storage_org
