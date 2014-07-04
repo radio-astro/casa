@@ -61,21 +61,26 @@ def gpcal_calc(caltable):
  
     tbLoc.open(caltable)
  
-    for fieldId in fieldIds:
+    for fIndex in xrange(len(fieldIds)):
 
-        gpcal_stats['FIELDS'][fieldId] = fieldNames[fieldId]
+        fieldId = fieldIds[fIndex]
+        gpcal_stats['FIELDS'][fieldId] = fieldNames[fIndex]
 
         if fieldId not in gpcal_stats['STATS']:
             gpcal_stats['STATS'][fieldId] = {}
 
-        for spwId in spwIds:
+        for sIndex in xrange(len(spwIds)):
+
+            spwId = spwIds[sIndex]
 
             if spwId not in gpcal_stats['STATS'][fieldId]:
                 gpcal_stats['STATS'][fieldId][spwId] = {}
 
-            for antId in antIds:
+            for aIndex in xrange(len(antIds)):
+
+                antId = antIds[aIndex]
  
-                gpcal_stats['ANTENNAS'][antId] = antennaNames[antId]
+                gpcal_stats['ANTENNAS'][antId] = antennaNames[aIndex]
 
                 if antId not in gpcal_stats['STATS'][fieldId][spwId]:
                     gpcal_stats['STATS'][fieldId][spwId][antId] = {}
