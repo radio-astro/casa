@@ -1182,6 +1182,8 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
 ###
 class sdreduce_test_average_flag(unittest.TestCase):
     """
+    ### This is a copy of test_sdavearge.sdaverage_test_average_flag ###
+    
     Test flag information handling.
 
     Data is sdaverage_testflag.asap
@@ -1474,5 +1476,178 @@ class sdreduce_test_average_flag(unittest.TestCase):
 
         self._verify_regrid(outfile, chanwidth)
 
+class sdreduce_test_baseline_flag( unittest.TestCase ):
+    """
+    ### This is a copy of test_sdbaseline.sdbaseline_flagTest ###
+    
+    Unit tests for task sdbaseline. No interactive testing.
+    This test is to verify the proper flag handling in sdbaseline that
+       (1) for row-flagged spectra, neither fitting nor subtraction should be executed.
+       (2) if a channel is flagged, it will not be used for baseline calculation,
+           but the baseline subtraction at the channel should be made.
+       (3) no flag values themselves should be modified.
+           
+    The list of tests:
+    testFlagPoly01     --- test polynomial fitting with maskmode = 'list'
+    testFlagPoly02     --- test polynomial fitting with maskmode = 'auto'
+    testFlagCheby01    --- test Chebyshev polynomial fitting with maskmode = 'list'
+    testFlagCheby02    --- test Chebyshev polynomial fitting with maskmode = 'auto'
+    testFlagCSpline01  --- test cubic spline fitting with maskmode = 'list'
+    testFlagCSpline02  --- test cubic spline fitting with maskmode = 'auto'
+    testFlagSinusoid01 --- test sinusoidal fitting with maskmode = 'list'
+    testFlagSinusoid02 --- test sinusoidal fitting with maskmode = 'auto'
+
+    Note: the rms noise of input data for the tests *02 is 1.0.
+    """
+    tol01 = 1.0e-6
+    tol02 = 1.0 # large value owing to uncertainty in linefinder results and
+                # to small channel numbers. enough for this testing.
+    # Data path of input/output
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+              '/data/regression/unittest/sdbaseline/'    
+    # Input and output names
+    infile_01 = 'sdbaseline_flagtest_withoutnoise.asap'
+    infile_02 = 'sdbaseline_flagtest_withnoise.asap'
+    outroot = 'sdreduce_test'
+    tid = None
+
+    def setUp( self ):
+        if os.path.exists(self.infile_01):
+            shutil.rmtree(self.infile_01)
+        shutil.copytree(self.datapath+self.infile_01, self.infile_01)
+        if os.path.exists(self.infile_02):
+            shutil.rmtree(self.infile_02)
+        shutil.copytree(self.datapath+self.infile_02, self.infile_02)
+
+        default(sdreduce)
+
+    def tearDown( self ):
+        if os.path.exists(self.infile_01):
+            shutil.rmtree(self.infile_01)
+        if os.path.exists(self.infile_02):
+            shutil.rmtree(self.infile_02)
+        os.system('rm -rf '+self.outroot+'*')
+
+    def testFlagPoly01( self ):
+        """Test FlagPoly01: Polynomial fitting with maskmode = 'list'"""
+        self.tid = "FlagPoly01"
+        infile = self.infile_01
+        mode = "list"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0,calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol01)
+
+    def testFlagPoly02( self ):
+        """Test FlagPoly02: Polynomial fitting with maskmode = 'auto'"""
+        self.tid = "FlagPoly02"
+        infile = self.infile_02
+        mode = "auto"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0,calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol02)
+
+    def testFlagCheby01( self ):
+        """Test FlagCheby01: Chebyshev Polynomial fitting with maskmode = 'list'"""
+        self.tid = "FlagCheby01"
+        infile = self.infile_01
+        mode = "list"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0,calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol01)
+
+    def testFlagCheby02( self ):
+        """Test FlagCheby02: Chebyshev Polynomial fitting with maskmode = 'auto'"""
+        self.tid = "FlagCheby02"
+        infile = self.infile_02
+        mode = "auto"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0,calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol02)
+
+    def testFlagCSpline01( self ):
+        """Test FlagCSpline01: Cubic spline fitting with maskmode = 'list'"""
+        self.tid = "FlagCSpline01"
+        infile = self.infile_01
+        mode = "list"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1,calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol01)
+
+    def testFlagCSpline02( self ):
+        """Test FlagCSpline02: Cubic spline fitting with maskmode = 'auto'"""
+        self.tid = "FlagCSpline02"
+        infile = self.infile_02
+        mode = "auto"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1,calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol02)
+
+    def testFlagSinusoid01( self ):
+        """Test FlagSinusoid01: Sinusoidal Polynomial fitting with maskmode = 'list'"""
+        self.tid = "FlagSinusoid01"
+        infile = self.infile_01
+        mode = "list"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol01)
+
+    def testFlagSinusoid02( self ):
+        """Test FlagSinusoid02: Sinusoidal Polynomial fitting with maskmode = 'auto'"""
+        self.tid = "FlagSinusoid02"
+        infile = self.infile_02
+        mode = "auto"
+        outfile = self.outroot+self.tid+".asap"
+        
+        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(infile, outfile, self.tol02)
+
+    def _checkResult(self, infile, outfile, tol):
+        tb.open(infile)
+        inspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
+        inchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
+        inrowf = tb.getcol('FLAGROW')
+        tb.close()
+
+        tb.open(outfile)
+        outspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
+        outchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
+        outrowf = tb.getcol('FLAGROW')
+        tb.close()
+
+        #check if the values of row-flagged spectra are not changed
+        for i in xrange(2):
+            self.assertTrue(all(inspec[i]==outspec[i]))
+            
+        #check if flagged channels are (1) excluded from fitting, but are
+        #(2) the targets of baseline subtraction.
+        #  if the difference values between the input and output spectra
+        #  (input-output) are almost 1.0 (for tests *01) or distribute around
+        #  1.0 (for tests *02), it can be recognised that both of the above
+        # requirements are satisfied. actually, the mean of the (input-output)
+        # values is examined if it is close enough to 1.0.
+        #print '***************'+str(abs((inspec[2]-outspec[2]).mean()-1.0))
+        self.assertTrue(abs((inspec[2]-outspec[2]).mean()-1.0) < tol)
+        
+        #check if flag values are not changed in the output file.
+        for i in xrange(len(inchnf)):
+            self.assertTrue(all(inchnf[i]==outchnf[i]))
+        self.assertTrue(all(inrowf==outrowf))
+
 def suite():
-    return [sdreduce_test, sdreduce_selection, sdreduce_test_average_flag]
+    return [sdreduce_test, sdreduce_selection, sdreduce_test_average_flag,
+            sdreduce_test_baseline_flag]
