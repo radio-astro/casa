@@ -184,6 +184,20 @@ def _record_constructor_args(func, *args, **kwargs):
     # map Python Inputs arguments back to their CASA equivalent
     remapped = argmapper.inputs_to_casa(self, call_args)
 
+    # CAS-6299. Extra request from Liz:
+    #
+    # "the full directory path of the ASDM location is given from the Pipeline
+    # observatory run, so a PI/DRMs would have to edit this. Could it be 
+    # replaced just by the name of the ASDM/ASDMs?"
+    #
+    # this means we have to take the basename of the vis argument for the
+    # importdata calls
+    if '_importdata' in casa_tasks[0]:
+        if isinstance(remapped['vis'], str):
+            remapped['vis'] = os.path.basename(remapped['vis'])
+        else:
+            remapped['vis'] = [os.path.basename(v) for v in remapped['vis']]
+
     task_args = ['%s=%r' % (k,v) for k,v in remapped.items()
                  if k not in ['self', 'context']
                  and v is not None]
@@ -191,10 +205,10 @@ def _record_constructor_args(func, *args, **kwargs):
     # work around CASA problem with globals when no arguments are specified
     if not task_args:
         task_args = ['pipelinemode="automatic"']
-        
+
     casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
     LOG.info('Equivalent CASA call: %s', casa_call)
-    
+
     # attach the casa task to the inputs
     self._pipeline_casa_task = casa_call
 
