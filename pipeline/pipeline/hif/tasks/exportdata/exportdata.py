@@ -354,7 +354,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	# Export the restore script
 	casa_restore_script = self._export_casa_restore_script (inputs.context,
-	    'casa_restorescript.py', inputs.products_dir, vislist, session_list)
+	    'casa_piperestorescript.py', inputs.products_dir, vislist, session_list)
 
 	# Export calibrator images to FITS
 	LOG.info ('Exporting calibrator source images')
