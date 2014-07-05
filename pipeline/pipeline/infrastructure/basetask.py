@@ -193,10 +193,14 @@ def _record_constructor_args(func, *args, **kwargs):
     # this means we have to take the basename of the vis argument for the
     # importdata calls
     if '_importdata' in casa_tasks[0]:
-        if isinstance(remapped['vis'], str):
-            remapped['vis'] = os.path.basename(remapped['vis'])
+        if remapped.has_key('vis'):
+            key = 'vis'
         else:
-            remapped['vis'] = [os.path.basename(v) for v in remapped['vis']]
+            key = 'infiles'
+        if isinstance(remapped[key], str):
+            remapped[key] = os.path.basename(remapped[key])
+        else:
+            remapped[key] = [os.path.basename(v) for v in remapped[key]]
 
     task_args = ['%s=%r' % (k,v) for k,v in remapped.items()
                  if k not in ['self', 'context']
