@@ -131,7 +131,8 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux AND
     CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
   foreach( _c CXX C FORTRAN )
     set( CMAKE_${_c}_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
-    set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
+    #set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
+    set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG -fno-omit-frame-pointer")
   endforeach()
 endif()
 
@@ -146,11 +147,11 @@ dump( CMAKE_SYSTEM
 set( BUILD_SHARED_LIBS ON )
 
 set( DEFAULT_CXX_FLAGS 
-     "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
+     "-march=native -funroll-all-loops -pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
 
 set( DEFAULT_C_FLAGS 
-     "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
+     "-march=native -funroll-all-loops -pipe -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
 # OpenMP
