@@ -214,7 +214,7 @@ class ExportDataInputs(basetask.StandardInputs):
 class ExportDataResults(basetask.Results):
     def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
         visdict=collections.OrderedDict(), calimages=(), targetimages=(),
-	weblog='', pipescript='', commandslog=''):
+	weblog='', pipescript='', restorescript='', commandslog=''):
 	"""
 	Initialise the results object with the given list of JobRequests.
 	"""
@@ -226,6 +226,7 @@ class ExportDataResults(basetask.Results):
 	self.targetimages = targetimages
 	self.weblog = weblog
 	self.pipescript = pipescript
+	self.restorescript = restorescript
 	self.commandslog = commandslog
 
     def __repr__(self):
@@ -354,7 +355,8 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	# Export the restore script
 	casa_restore_script = self._export_casa_restore_script (inputs.context,
-	    'casa_piperestorescript.py', inputs.products_dir, vislist, session_list)
+	    inputs.context.logs['pipeline_restore_script'],
+	    inputs.products_dir, vislist, session_list)
 
 	# Export calibrator images to FITS
 	LOG.info ('Exporting calibrator source images')
@@ -362,8 +364,9 @@ class ExportData(basetask.StandardTaskTemplate):
 	    calintents_list = ['PHASE', 'BANDPASS', 'AMPLITUDE']
 	else:
 	    calintents_list = inputs.calintents.split(',')
-	calimages_list, calimages_fitslist = self._export_images (inputs.context, True,
-	    calintents_list, inputs.calimages, inputs.products_dir)
+	calimages_list, calimages_fitslist = self._export_images ( \
+	    inputs.context, True, calintents_list, inputs.calimages, \
+	    inputs.products_dir)
 
 	# Export science target images to FITS
 	LOG.info ('Exporting target source images')
@@ -379,6 +382,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	    targetimages=(targetimages_list, targetimages_fitslist),
 	    weblog=os.path.basename(weblog_file), \
 	    pipescript=os.path.basename(casa_pipescript), \
+	    restorescript=os.path.basename(casa_restore_script), \
 	    commandslog=os.path.basename(casa_commands_file))
 
     def analyse(self, results):
@@ -710,14 +714,17 @@ class ExportData(basetask.StandardTaskTemplate):
 	# Get the output file name
 	ps = context.project_structure
 	if ps is None:
+	    script_file = os.path.join (context.report_dir, script_name)
 	    out_script_file = os.path.join (products_dir, script_name) 
 	elif ps.ousstatus_entity_id == 'unknown':
+	    script_file = os.path.join (context.report_dir, script_name)
 	    out_script_file = os.path.join (products_dir, script_name) 
 	else:
 	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+	    script_file = os.path.join (context.report_dir, script_name)
 	    out_script_file = os.path.join (products_dir, ousid + '.' + script_name)
 
-	LOG.info('Creating casa restore script %s' %  (out_script_file))
+	LOG.info('Creating casa restore script %s' %  (script_file))
 
 	# This is hardcoded.
 	task_string = '    hif_restoredata (vis=%s, sessions=%s)' % (vislist, session_list) 
@@ -730,8 +737,13 @@ finally:
     h_save()
 ''' % task_string
 
-	with open (out_script_file, 'w') as casa_restore_file:
+	with open (script_file, 'w') as casa_restore_file:
 	    casa_restore_file.write(template)
+
+	LOG.info('Copying casa restore script %s to %s' % \
+	        (script_file, out_script_file))
+	if not self._executor._dry_run:
+	    shutil.copy (script_file, out_script_file)
 
 	return os.path.basename (out_script_file)
 
