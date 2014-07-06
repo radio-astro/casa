@@ -141,6 +141,7 @@ class Context(object):
 
         self.logs['casa_commands'] = 'casa_commands.log'
         self.logs['pipeline_script'] = 'casa_pipescript.py'
+        self.logs['pipeline_restore_script'] = 'casa_piperestorescript.py'
 
     @property
     def stage(self):
