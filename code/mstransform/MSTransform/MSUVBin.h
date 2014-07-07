@@ -36,7 +36,11 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferUtil.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+
 class MSUVBin {
 public:
 	MSUVBin();
@@ -76,9 +80,18 @@ private:
 			Matrix<Float>& wght, Cube<Float>& wghtSpec,
 			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 			Vector<Int>& ant2, Vector<Double>& time, const Matrix<Int>& locuv);
-	void inplaceGridData(const vi::VisBuffer2& vb, const Matrix<Int>& locuv);
+	void gridData(const VisBuffer& vb, Cube<Complex>& grid,
+			Matrix<Float>& wght, Cube<Float>& wghtSpec,
+			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+			Vector<Int>& ant2, Vector<Double>& time, const Matrix<Int>& locuv);
+	void inplaceGridData(const vi::VisBuffer2& vb);
+	void inplaceLargeBW(const vi::VisBuffer2& vb);
+	void inplaceSmallBW(const vi::VisBuffer2& vb);
 	void makeCoordsys();
-	void datadescMap(const vi::VisBuffer2& vb);
+	void weightSync();
+	// returns a false if either no channel map or pol map onto grid
+	Bool datadescMap(const vi::VisBuffer2& vb, Double& fracbw);
+	Bool datadescMap(const VisBuffer& vb);
 	Bool saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
 				const Cube<Float>&wghtSpec, const Matrix<Float>& wght,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
@@ -99,6 +112,7 @@ private:
 	String outMSName_p;
 	CountedPtr<MeasurementSet> outMsPtr_p;
 	Block<const MeasurementSet *> mss_p;
+	VisBufferUtil vbutil_p;
 
 }; // end class MSUVBin
 } //# NAMESPACE CASA - END
