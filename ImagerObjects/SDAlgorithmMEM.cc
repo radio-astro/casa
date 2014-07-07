@@ -55,7 +55,7 @@
 #include <casa/Logging/LogSink.h>
 
 #include <casa/System/Choice.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 
 #include <synthesis/ImagerObjects/SDAlgorithmMEM.h>
 #include <synthesis/MeasurementEquations/CEMemModel.h>

@@ -52,8 +52,8 @@
 
 #include <scimath/Mathematics/MatrixMathLA.h>
 
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
 
 #include <ms/MeasurementSets/MSColumns.h>
 

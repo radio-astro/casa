@@ -66,11 +66,11 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
-#include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisBufferUtil.h>
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisBufferUtil.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
 #ifdef HAS_OMP
 #include <omp.h>
 #endif

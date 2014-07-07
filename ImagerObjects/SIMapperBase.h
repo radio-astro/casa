@@ -35,10 +35,10 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisBufferImpl2.h>
-#include <synthesis/MSVis/VisBuffer2Adapter.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBufferImpl2.h>
+#include <msvis/MSVis/VisBuffer2Adapter.h>
 
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>

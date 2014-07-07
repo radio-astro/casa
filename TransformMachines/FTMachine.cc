@@ -26,7 +26,7 @@
 //# $Id$
 #include <boost/math/special_functions/round.hpp>
 
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -43,11 +43,11 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageUtilities.h>

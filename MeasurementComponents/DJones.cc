@@ -27,8 +27,8 @@
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffAccumulator.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>

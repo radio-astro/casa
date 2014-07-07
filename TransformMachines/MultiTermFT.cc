@@ -25,8 +25,8 @@
 //#
 //# $Id$
 
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -55,6 +55,7 @@
 #include <casa/sstream.h>
 
 #include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 // This is the list of FTMachine types supported by MultiTermFT
 #include <synthesis/TransformMachines/GridFT.h>

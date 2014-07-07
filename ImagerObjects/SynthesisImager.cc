@@ -65,11 +65,12 @@
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
-#include <synthesis/MSVis/VisSetUtil.h>
-#include <synthesis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisImagingWeight.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFTNew.h>

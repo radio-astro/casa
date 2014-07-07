@@ -29,7 +29,7 @@
 #define SYNTHESIS_CFCACHE_H
 
 #include <casa/Arrays/Matrix.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>

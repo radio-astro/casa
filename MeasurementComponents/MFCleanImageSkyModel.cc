@@ -55,7 +55,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/Constants.h>
 
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
 #include <synthesis/MeasurementEquations/ClarkCleanModel.h>
 

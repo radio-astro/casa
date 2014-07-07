@@ -57,8 +57,8 @@
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/TransformMachines/Utils.h>
 
-#include <synthesis/MSVis/SubMS.h>
-#include <synthesis/MSVis/MSUtil.h>
+#include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/MSUtil.h>
 
 #include <sys/types.h>
 #include <unistd.h>

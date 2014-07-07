@@ -32,7 +32,7 @@
 #include <casa/BasicSL/String.h>
 
 #include <casa/Exceptions/Error.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 //#include <casa/Quanta/MVTime.h>
 #include <casa/iostream.h>
 

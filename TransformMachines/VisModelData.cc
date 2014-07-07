@@ -41,7 +41,7 @@
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSourceColumns.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
@@ -52,6 +52,17 @@
 #include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines/MultiTermFTNew.h>
 #include <synthesis/TransformMachines/SetJyGridFT.h>
+
+namespace {
+
+  casa::VisModelDataI * createVisModelData (){
+    return new casa::VisModelData ();
+  }
+
+  bool initializeVisModelDataFactory = casa::VisModelDataI::setFactory (createVisModelData);
+
+}
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

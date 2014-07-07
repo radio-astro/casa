@@ -54,8 +54,8 @@
 
 #include <casa/Arrays/ArrayMath.h>
 
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>

@@ -32,7 +32,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/Quantum.h>
-#include <synthesis/MSVis/MSCalEnums.h>
+#include <msvis/MSVis/MSCalEnums.h>
 #include <ms/MeasurementSets/MSSelection.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

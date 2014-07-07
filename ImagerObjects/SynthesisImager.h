@@ -34,9 +34,9 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <synthesis/MSVis/ViFrequencySelection.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include<synthesis/ImagerObjects/SIMapperCollection.h>
 #include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
 

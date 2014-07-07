@@ -43,7 +43,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

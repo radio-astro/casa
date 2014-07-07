@@ -27,7 +27,7 @@
 
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/SimpCompGridMachine.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
