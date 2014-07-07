@@ -727,7 +727,10 @@ class ExportData(basetask.StandardTaskTemplate):
 	LOG.info('Creating casa restore script %s' %  (script_file))
 
 	# This is hardcoded.
-	task_string = '    hif_restoredata (vis=%s, session=%s)' % (vislist, session_list) 
+	tmpvislist=[]
+	for vis in vislist:
+	    tmpvislist.append(os.path.basename(vis))
+	task_string = '    hif_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list) 
 
         template = '''__rethrow_casa_exceptions = True
 h_init()
