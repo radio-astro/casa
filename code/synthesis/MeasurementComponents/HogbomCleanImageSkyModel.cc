@@ -30,7 +30,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayPosIter.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementComponents/HogbomCleanImageSkyModel.h>
 #include <images/Images/PagedImage.h>
 #include <casa/OS/File.h>

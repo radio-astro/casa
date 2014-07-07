@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <measures/Measures/Stokes.h>
@@ -39,10 +39,10 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>

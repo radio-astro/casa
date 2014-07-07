@@ -32,7 +32,7 @@
 
 
 #include <iostream>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
 

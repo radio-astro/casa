@@ -35,7 +35,7 @@
 #define MSTRANSFORM_MSUVBIN_H
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 class MSUVBin {
 public:

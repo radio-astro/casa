@@ -28,8 +28,8 @@
 #include <casa/Exceptions/Error.h>
 #include <flagging/Flagging/Flagger.h>
 #include <flagging/Flagging/RFChunkStats.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <stdio.h>
 #include <casa/sstream.h>
 

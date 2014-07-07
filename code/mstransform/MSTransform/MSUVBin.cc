@@ -47,9 +47,9 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <synthesis/MSVis/MSUtil.h>
+#include <msvis/MSVis/MSUtil.h>
 #include <synthesis/Utilities/SpectralImageUtil.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(False){

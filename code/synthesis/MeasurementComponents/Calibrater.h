@@ -39,7 +39,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
-#include <synthesis/MSVis/VisibilityProcessing.h>
+#include <msvis/MSVis/VisibilityProcessing.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

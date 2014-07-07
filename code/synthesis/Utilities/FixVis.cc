@@ -1,6 +1,6 @@
 #include <synthesis/Utilities/FixVis.h>
-#include <synthesis/MSVis/MSUVWGenerator.h>
-#include <synthesis/MSVis/SubMS.h>
+#include <msvis/MSVis/MSUVWGenerator.h>
+#include <msvis/MSVis/SubMS.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/UVWMachine.h>
 #include <casa/Logging/LogIO.h>
@@ -15,8 +15,8 @@
 #include <ms/MeasurementSets/MSDopplerUtil.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/BasicSL/String.h>	// for parseColumnNames()
 
 #include <casa/iostream.h>

@@ -40,8 +40,8 @@
 #include <flagging/Flagging/RFASelector.h>
 #include <flagging/Flagging/RFAUVBinner.h>
 #include <flagging/Flagging/RFATimeFreqCrop.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
@@ -55,8 +55,8 @@
 #include <tables/Tables/SetupNewTab.h>
 
 #include <tables/Tables/ExprNode.h>
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
 
 #include <measures/Measures/Stokes.h>
 #include <casa/Quanta/UnitMap.h>

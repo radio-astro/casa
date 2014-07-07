@@ -35,8 +35,8 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/Projection.h>
 #include <measures/Measures/MDirection.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
 #include <mstransform/MSTransform/MSUVBin.h>

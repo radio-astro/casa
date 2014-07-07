@@ -56,7 +56,7 @@
 #include <casa/Logging/LogSink.h>
 
 #include <casa/System/Choice.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

@@ -29,6 +29,7 @@
 #include <casa/iostream.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 
@@ -71,11 +72,11 @@
 #include <imageanalysis/ImageAnalysis/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
-#include <synthesis/MSVis/MSUtil.h>
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisSetUtil.h>
-#include <synthesis/MSVis/VisImagingWeight.h>
-/////////#include <synthesis/MSVis/VisBufferAsync.h>
+#include <msvis/MSVis/MSUtil.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisImagingWeight.h>
+/////////#include <msvis/MSVis/VisBufferAsync.h>
 
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>

@@ -27,7 +27,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <display/Slicer/SliceStatistics.h>
 #include <casa/Containers/Record.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
 namespace casa {

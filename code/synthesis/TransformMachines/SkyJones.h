@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/SkyComponent.h>

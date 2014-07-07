@@ -25,8 +25,8 @@
 //#
 //# $Id$
 
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>

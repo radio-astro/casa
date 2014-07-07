@@ -34,8 +34,8 @@
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
-#include <synthesis/MSVis/UtilJ.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/UtilJ.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 

@@ -39,12 +39,12 @@
 #include <mstransform/MSTransform/MSTransformRegridder.h>
 
 // VisibityIterator / VisibilityBuffer framework
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
 
 // TVI framework
-#include <synthesis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/AveragingVi2Factory.h>
 
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>

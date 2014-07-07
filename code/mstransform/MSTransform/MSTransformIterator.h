@@ -24,7 +24,7 @@
 #define MSTransformIterator_H_
 
 // Where TransformingVi2 interface is defined
-#include <synthesis/MSVis/TransformingVi2.h>
+#include <msvis/MSVis/TransformingVi2.h>
 
 // Class containing the actual transformation logic
 #include <mstransform/MSTransform/MSTransformManager.h>
