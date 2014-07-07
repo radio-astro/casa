@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_exportdata(vis=None, sessions=None, pprfile=None, calintents=None,
+def hif_exportdata(vis=None, session=None, pprfile=None, calintents=None,
     calimages=None, targetimages=None, products_dir=None, pipelinemode=None,
     dryrun=None, acceptresults=None):
 

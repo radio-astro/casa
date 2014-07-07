@@ -14,7 +14,7 @@
 	<value></value>
     </param>
 
-    <param type="stringArray" name="sessions" subparam="true">
+    <param type="stringArray" name="session" subparam="true">
 	<description>List of sessions one per visibility file</description>
 	<value></value>
     </param>
@@ -70,7 +70,7 @@
 	    </equals>
 	    <equals type="string" value="interactive">
 		<default param="vis"><value type="stringArray"></value></default>
-		<default param="sessions"><value type="stringArray"></value></default>
+		<default param="session"><value type="stringArray"></value></default>
 		<default param="pprfile"><value type="string"></value></default>
 		<default param="calintents"><value type="string"></value></default>
 		<default param="calimages"><value type="stringArray"></value></default>
@@ -81,7 +81,7 @@
 	    </equals>
 	    <equals type="string" value="getinputs">
 		<default param="vis"><value type="stringArray"></value></default>
-		<default param="sessions"><value type="stringArray"></value></default>
+		<default param="session"><value type="stringArray"></value></default>
 		<default param="pprfile"><value type="string"></value></default>
 		<default param="calintents"><value type="string"></value></default>
 		<default param="calimages"><value type="stringArray"></value></default>
@@ -128,12 +128,12 @@ vis -- List of visibility  data files for which flagging and calibration
    default: []
    example: vis=['X227.ms', 'X228.ms']
 
-sessions -- List of sessions one per visibility file. Currently defaults
+session -- List of sessions one per visibility file. Currently defaults
    to a single virtual session containing al the visibility files in vis. 
    In future will default to set of observing sessions defined in the 
    context.
    default: []
-   example: sessions=['session1', 'session2']
+   example: session=['session1', 'session2']
 
 pprfile -- Name of the pipeline processing request to be exported. Defaults
    to a file matching the template 'PPR_*.xml'.

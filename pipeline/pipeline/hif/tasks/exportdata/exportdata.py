@@ -65,7 +65,7 @@ class ExportDataInputs(basetask.StandardInputs):
 	
 	the directory containing the output of the pipeline
 
-    .. py:attribute:: sessions
+    .. py:attribute:: session
 	
 	a string or list of strings containing the sessions(s) associated
 	with each vis. Default to a single session containing all vis.
@@ -106,7 +106,7 @@ class ExportDataInputs(basetask.StandardInputs):
      """	
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, sessions=None, vis=None,
+    def __init__(self, context, output_dir=None, session=None, vis=None,
         pprfile=None, calintents=None, calimages=None, targetimages=None,
 	products_dir=None ):
 
@@ -118,8 +118,8 @@ class ExportDataInputs(basetask.StandardInputs):
 	:type context: :class:`~pipeline.infrastructure.launcher.Context`
 	:param output_dir: the working directory for pipeline data
 	:type output_dir: string
-	:param sessions: the  sessions for which data are to be exported
-	:type sessions: a string or list of strings
+	:param session: the  sessions for which data are to be exported
+	:type session: a string or list of strings
 	:param vis: the measurement set(s) for which products are to be exported
 	:type vis: a string or list of strings
 	:param pprfile: the pipeline processing request
@@ -140,14 +140,14 @@ class ExportDataInputs(basetask.StandardInputs):
     # may come from the user or the pipeline processing request.
 
     @property
-    def sessions(self):
-	if self._sessions is None:
-	    self._sessions = []
-	return self._sessions
+    def session(self):
+	if self._session is None:
+	    self._session = []
+	return self._session
 
-    @sessions.setter
-    def sessions (self, value):
-        self._sessions = value
+    @session.setter
+    def session (self, value):
+        self._session = value
 
     @property
     def products_dir(self):
@@ -320,7 +320,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	# Get the session list and the visibility files associated with
 	# each session.
 	session_list, session_names, session_vislists= self._get_sessions ( \
-	    inputs.context, inputs.sessions, vislist)
+	    inputs.context, inputs.session, vislist)
 
 	# Export tar files of the calibration tables one per session
 	caltable_file_list = []
