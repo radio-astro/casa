@@ -195,11 +195,11 @@ class SDFlagDataWorker(object):
             for index in range(len(chunks[0])):
                 SpIn[index] = tbIn.getcell('SPECTRA', chunks[0][index])
                 if is_baselined: SpOut[index] = tbOut.getcell('SPECTRA', chunks[0][index])
-            SpIn[index][:edgeL] = 0
-            SpOut[index][:edgeL] = 0
-            if edgeR > 0:
-                SpIn[index][-edgeR:] = 0
-                SpOut[index][-edgeR:] = 0
+                SpIn[index][:edgeL] = 0
+                SpOut[index][:edgeL] = 0
+                if edgeR > 0:
+                    SpIn[index][-edgeR:] = 0
+                    SpOut[index][-edgeR:] = 0
             ### loading of the data for one chunk is done
 
             for index in range(len(chunks[0])):
