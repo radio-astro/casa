@@ -285,7 +285,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Vector<Int>&cfShape,
 			  const Vector<Int>& convOrigin,
 			  const Double& cfRefFreq,
-			  const Double& imRefFreq);
+			  const Double& imRefFreq,
+			  const Int& spwID=0, const Int& fieldId=0);
   };
 }; //# NAMESPACE CASA - END
 
