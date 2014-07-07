@@ -77,30 +77,27 @@ def format_score(scores, result):
 	</table>
 </div>
 
-% if 'casalogs' in pcontext.logs:
+<%def name="li_anchor_to_file(relpath)">
+	<%
+	abspath = os.path.join(pcontext.report_dir, relpath)	
+	file_exists = os.path.exists(abspath)
+	if file_exists:
+		total_bytes = os.path.getsize(abspath)
+		filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
+	%>
+	% if file_exists:
+		<li>download <a href="${relpath}" download="${relpath}">${relpath}</a> (${str(filesize)})</li>
+	% endif	
+</%def>
+
+% if any(logname in ['casalogs', 'casa_commands', 'pipeline_script', 'pipeline_restore_script'] for logname in pcontext.logs):
 <h4>CASA logs and scripts</h4>
 <ul>
 %for log_url in pcontext.logs['casalogs']:
-<% 
-   fp = os.path.join(pcontext.report_dir, log_url)
-   total_bytes = os.path.getsize(fp)
-   filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
-%>
-	<li>download <a href="${log_url}" download="${log_url}">${log_url}</a> (${str(filesize)})</li>
+${li_anchor_to_file(log_url)}
 %endfor
-<% 
-   log_url = pcontext.logs['casa_commands']
-   fp = os.path.join(pcontext.report_dir, log_url)
-   total_bytes = os.path.getsize(fp)
-   filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
-%>
-	<li>download <a href="${log_url}" download="${log_url}">${log_url}</a> (${str(filesize)})</li>
-<% 
-   log_url = pcontext.logs['pipeline_script']
-   fp = os.path.join(pcontext.report_dir, log_url)
-   total_bytes = os.path.getsize(fp)
-   filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
-%>
-	<li>download <a href="${log_url}" download="${log_url}">${log_url}</a> (${str(filesize)})</li>
+${li_anchor_to_file(pcontext.logs['casa_commands'])}
+${li_anchor_to_file(pcontext.logs['pipeline_script'])}
+${li_anchor_to_file(pcontext.logs['pipeline_restore_script'])}
 </ul>
 %endif 
