@@ -237,6 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 				   Double area,
     // 				   Int& doGrad,
     // 				   Int paIndex);
+    Bool oneTimeMessage_p;
   };
 } //# NAMESPACE CASA - END
 
