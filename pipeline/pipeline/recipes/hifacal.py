@@ -71,7 +71,7 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_bandpass (pipelinemode=pipelinemode)
 
         # Flag deviant channels in the bandpass calibration
-        hif_bpflagchans (diffmad_nchan_limit=10000, pipelinemode=pipelinemode)
+        hif_bpflagchans (pipelinemode=pipelinemode)
     
         # Determine flux values for the bandpass and gain calibrators
         # assuming point sources and set their model fluxes
