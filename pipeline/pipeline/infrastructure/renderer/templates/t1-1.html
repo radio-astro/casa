@@ -175,7 +175,7 @@ import pipeline.infrastructure.utils as utils
 		    <tbody>
 			    % for ouskey, ousgroup in itertools.groupby(sorted(ms_summary_rows, key=lambda x: (x.ousstatus_entity_id, x.schedblock_id, x.session)), key=operator.attrgetter('ousstatus_entity_id')):
 			       <%
-                                        ouslabel = '<b> Observing Unit Set: </b>'
+                                        ouslabel = '<b> Observing Unit Set Status: </b>'
                                         ousid = ouskey
                                 %>
 
