@@ -1,5 +1,7 @@
 #include <iostream>
 #include <iomanip>
+#include <exception>
+#include <stdexcept>
 #include <Python.h>
 
 #include <casa/Containers/ValueHolder.h>
@@ -13,6 +15,14 @@
 #include <stdcasa/variant.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <tools/swigconvert_python.h>
+
+class dataconversion_error : public std::runtime_error
+{
+public:
+  explicit dataconversion_error(const std::string &what_arg)
+    : std::runtime_error(what_arg)
+  {}
+};
 
 inline void *malloc_(size_t size)
 {
@@ -158,23 +168,40 @@ public:
     // Convert PyObject to casac::variant
     casac::variant v = casac::pyobj2variant(obj, true);
 
+    bool status;
+	
     // Convert casac::variant to casa::Array
     casa::Array<CDataType> arr;
     casa::uInt npol, nchan, nrow;
     Py_BEGIN_ALLOW_THREADS
-    arr = ToCasaArray(v, npol, nchan, nrow); 
-    Py_END_ALLOW_THREADS
-
-    // Convert casa::Array to sakura_PyAlignedBuffer
-    bool status;
-    std::vector<sakura_PyAlignedBuffer *> buffer_list;
-    Py_BEGIN_ALLOW_THREADS
-    status = ReadCasaArray((size_t)npol, (size_t)nchan, (size_t)nrow,
-			   arr, buffer_list);
+    try {
+      status = true;
+      arr = ToCasaArray(v, npol, nchan, nrow);
+    }
+    catch (...) {
+      status = false;
+    }
     Py_END_ALLOW_THREADS
 
     if (!status) {
-      // TODO: throw exception
+      throw dataconversion_error("Failed to obtain CASA array");
+      return NULL;
+    }
+
+    // Convert casa::Array to sakura_PyAlignedBuffer
+    std::vector<sakura_PyAlignedBuffer *> buffer_list;
+    Py_BEGIN_ALLOW_THREADS
+    try {
+      status = ReadCasaArray((size_t)npol, (size_t)nchan, (size_t)nrow,
+			     arr, buffer_list);
+    }
+    catch (...) {
+      status = false;
+    }
+    Py_END_ALLOW_THREADS
+
+    if (!status) {
+      throw dataconversion_error("Failed to read CASA array");
       return NULL;
     }
 
@@ -183,7 +210,8 @@ public:
 				       buffer_list);
 
     if (tuple == NULL) {
-      // TODO: throw exception
+      throw dataconversion_error("Failed to encapsulate chunk");
+      return NULL;
     }
     
     return tuple;
@@ -196,26 +224,42 @@ public:
     casa::uInt nrow, npol, nchan;
     bool status = DecapsulateChunk(obj, buffer_list, npol, nchan, nrow);
     if (!status) {
-      // TODO: throw exception
+      throw dataconversion_error("Failed to decapsulate chunk");
       return NULL;
     }
 
     // convert sakura_PyAlignedBuffer to casa::Array
     casa::Array<CDataType> array;
     Py_BEGIN_ALLOW_THREADS
-    status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, array);
+    try {
+      status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, array);
+    }
+    catch (...) {
+      status = false;
+    }
     Py_END_ALLOW_THREADS
 
     if (!status) {
-      // TODO: throw exception
+      throw dataconversion_error("Failed to read aligned buffer");
       return NULL;
     }
 
     // convert casa::Array to casac::variant
     casac::variant *v = NULL;
     Py_BEGIN_ALLOW_THREADS
-    v = ToVariant(array, npol, nchan, nrow);
+    try {
+      status = true;
+      v = ToVariant(array, npol, nchan, nrow);
+    }
+    catch (...) {
+      status = false;
+    }
     Py_END_ALLOW_THREADS
+
+    if (!status) {
+      throw dataconversion_error("Failed to convert chunk");
+      return NULL;
+    }      
     
     return casac::variant2pyobj(*v);
   }
@@ -236,7 +280,6 @@ private:
     // Access first element to obtain num_elements (=npol)
     PyObject *first_element = PyTuple_GetItem(obj, 0);
     if (first_element == NULL) {
-      // TODO: throw exception
       return false;
     }
 
@@ -379,7 +422,7 @@ private:
     }
     else {
       assert(false);
-      // TODO: throw exception
+      throw dataconversion_error("Input Array is not in expected shape");
     }
 
     return arr;
@@ -405,8 +448,6 @@ private:
 	for (size_t ipol = 0; ipol < npol; ++ipol) {
 	  void *storage = malloc_(allocation_size);
 	  if (storage == NULL) {
-	    //Py_DECREF(tuple);
-	    //return NULL;
 	    return false;
 	  }
 	  void *aligned = sakura_AlignAny(allocation_size, storage, required_size);
@@ -415,7 +456,6 @@ private:
 					   storage, aligned,
 					   1, elements, &free_,
 					   &buffer) != sakura_Status_kOK) {
-	    //Py_DECREF(tuple);
 	    free_(storage);
 	    return false;
 	  }
@@ -447,7 +487,6 @@ private:
 					      &capsule) != sakura_Status_kOK) {
 	  Py_DECREF(tuple);
 	  Py_DECREF(cell);
-	  // TODO: throw exception
 	  return NULL;
 	}
 	PyTuple_SetItem(cell, j, capsule);
@@ -468,29 +507,44 @@ static inline PyObject *ArgAsPyObject(PyObject *args)
   return obj;
 }
 
-#define RETURN_NONE_IF_NULL(obj) \
-  if ((obj) == NULL) { \
-    Py_RETURN_NONE; \
-  }
-
 template<class Handler>
 static PyObject *tosakura(PyObject *self, PyObject *args)
 {
   PyObject *obj = ArgAsPyObject(args);
 
-  RETURN_NONE_IF_NULL(obj)
+  if (obj == NULL) {
+    PyErr_SetString(PyExc_RuntimeError, "Failed to parse args.");
+    return NULL;
+  }
 
   PyObject *tuple = NULL;
 
   try {
     tuple = Handler::CreateChunkForSakura(obj);
   }
+  catch (const std::bad_alloc &e) {
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
+    return NULL;
+  }
+  catch (const casa::AipsError &e) {
+    std::string s = "Failed due to CASA related error: " + e.getMesg();
+    PyErr_SetString(PyExc_RuntimeError, s.c_str());
+    return NULL;
+  }
+  catch (const dataconversion_error &e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
   catch (...) {
     // any exception occurred
-    Py_RETURN_NONE;
+    PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error");
+    return NULL;
   }
     
-  RETURN_NONE_IF_NULL(tuple)
+  //RETURN_NONE_IF_NULL(tuple)
+  if (tuple == NULL) {
+    PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error. Return value is empty.");
+    return NULL;
+  }
 
   return tuple;
 }
@@ -500,18 +554,37 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
 {
   PyObject *obj = ArgAsPyObject(args);
 
-  RETURN_NONE_IF_NULL(obj)
+  if (obj == NULL) {
+    PyErr_SetString(PyExc_RuntimeError, "Failed to parse args.");
+    return NULL;
+  }
 
   PyObject *ret = NULL;
   try {
     ret = Handler::CreateChunkForCasa(obj);
   }
+  catch (const std::bad_alloc &e) {
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
+    return NULL;
+  }
+  catch (const casa::AipsError &e) {
+    std::string s = "Failed due to CASA related error" + e.getMesg();
+    PyErr_SetString(PyExc_RuntimeError, s.c_str());
+    return NULL;
+  }
+  catch (const dataconversion_error &e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
   catch (...) {
     // any exception occurred
-    Py_RETURN_NONE;
+    PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error");
+    return NULL;
   }
   
-  RETURN_NONE_IF_NULL(ret)
+  if (ret == NULL) {
+    PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error. Return value is empty.");
+    return NULL;
+  }
 
   return ret;  
 }
