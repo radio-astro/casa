@@ -31,7 +31,7 @@ myf['__rethrow_casa_exceptions'] = True
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
-    plotlevel='all', interactive=True):
+    plotlevel='default', interactive=True):
 
     # Useful mode parameters
     echo_to_screen = interactive
