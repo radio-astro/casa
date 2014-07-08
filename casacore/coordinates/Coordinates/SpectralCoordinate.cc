@@ -1970,8 +1970,10 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     if (Restfreq > 0) {
 	header.define("restfrq", Restfreq); // FITS standard v3.0 is RESTFRQ, no longer RESTFREQ
 	header.setComment("restfrq", "Rest Frequency (Hz)"); 
-	header.define("specsys", Specsys);
-	header.setComment("specsys", "Spectral reference frame"); 
+	if(!Specsys.empty()){
+	  header.define("specsys", Specsys);
+	  header.setComment("specsys", "Spectral reference frame"); 
+	}
     }
     if (HaveAlt && !preferWavelength) { // alternate representation not valid for ctype WAVE
 	header.define("altrval", Altrval);
