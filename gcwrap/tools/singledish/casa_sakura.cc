@@ -170,28 +170,20 @@ public:
 
     bool status;
 	
-    // Convert casac::variant to casa::Array
+    // Convert casac::variant to casa::Array,
+    // then casa::Array to sakura_PyAlignedBuffer
     casa::Array<CDataType> arr;
     casa::uInt npol, nchan, nrow;
+    std::vector<sakura_PyAlignedBuffer *> buffer_list;
     Py_BEGIN_ALLOW_THREADS
     try {
       status = true;
       arr = ToCasaArray(v, npol, nchan, nrow);
-    }
-    catch (...) {
-      status = false;
-    }
-    Py_END_ALLOW_THREADS
 
-    if (!status) {
-      throw dataconversion_error("Failed to obtain CASA array");
-      return NULL;
-    }
+      if (arr.empty()) {
+	throw dataconversion_error("");
+      }
 
-    // Convert casa::Array to sakura_PyAlignedBuffer
-    std::vector<sakura_PyAlignedBuffer *> buffer_list;
-    Py_BEGIN_ALLOW_THREADS
-    try {
       status = ReadCasaArray((size_t)npol, (size_t)nchan, (size_t)nrow,
 			     arr, buffer_list);
     }
@@ -228,28 +220,17 @@ public:
       return NULL;
     }
 
-    // convert sakura_PyAlignedBuffer to casa::Array
+    // Convert sakura_PyAlignedBuffer to casa::Array,
+    // then casa::Array to casac::variant
     casa::Array<CDataType> array;
-    Py_BEGIN_ALLOW_THREADS
-    try {
-      status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, array);
-    }
-    catch (...) {
-      status = false;
-    }
-    Py_END_ALLOW_THREADS
-
-    if (!status) {
-      throw dataconversion_error("Failed to read aligned buffer");
-      return NULL;
-    }
-
-    // convert casa::Array to casac::variant
     casac::variant *v = NULL;
     Py_BEGIN_ALLOW_THREADS
     try {
-      status = true;
-      v = ToVariant(array, npol, nchan, nrow);
+      status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, array);
+
+      if (status == true) {
+	v = ToVariant(array, npol, nchan, nrow);
+      }
     }
     catch (...) {
       status = false;
