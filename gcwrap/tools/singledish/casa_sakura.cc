@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <Python.h>
+#include <numpy/arrayobject.h>
 
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Utilities/PtrHolder.h>
@@ -56,12 +57,13 @@ SPECIALIZE_VALUEHOLDER_TO_ARRAY(Double)
 SPECIALIZE_VALUEHOLDER_TO_ARRAY(Complex)
 SPECIALIZE_VALUEHOLDER_TO_ARRAY(Bool)
 
-template<class HandlerImpl, class CasaDataType, class SakuraDataType, int TypeId>
+template<class HandlerImpl, class CasaDataType, class SakuraDataType, class NumpyDataType, int TypeId>
 class HandlerInterface
 {
 public:
   typedef CasaDataType CDataType;
   typedef SakuraDataType SDataType;
+  typedef NumpyDataType PDataType;
   enum { SakuraPyTypeId = TypeId };  
   
   static casa::Array<CDataType> AsArray(casa::ValueHolder *v)
@@ -80,6 +82,17 @@ public:
     }
   }
 
+  static void ToSakura(const size_t offset, const size_t increment,
+		       const size_t num_elements,
+		       const std::vector<PDataType> &in_p, void *out_p)
+  {
+    SDataType *work_p = reinterpret_cast<SDataType *>(out_p);
+    for (casa::uInt i = 0; i < num_elements; ++i) {
+      HandlerImpl::ConvertToSakura(offset + i * increment, i,
+				   in_p, work_p);
+    }
+  }
+
   static void ToCasa(const size_t offset, const size_t increment,
 		     const size_t num_elements,
 		     const void *in_p, CDataType *out_p)
@@ -90,18 +103,36 @@ public:
 				 work_p, out_p);
     }
   }
+  
+  static void ToCasa(const size_t offset, const size_t increment,
+		     const size_t num_elements,
+		     const void *in_p, std::vector<PDataType> &out_p)
+  {
+    const SDataType *work_p = reinterpret_cast<const SDataType *>(in_p);
+    for (size_t i = 0; i < num_elements; ++i) {
+      HandlerImpl::ConvertToCasa(i, offset + i * increment,
+				 work_p, out_p);
+    }
+  }
 };
 
-template<class CasaDataType, class SakuraDataType, int TypeId>
-class DataHandler : public HandlerInterface<DataHandler<CasaDataType, SakuraDataType, TypeId>, CasaDataType, SakuraDataType, TypeId>
+template<class CasaDataType, class SakuraDataType, class NumpyDataType, int TypeId>
+class DataHandler : public HandlerInterface<DataHandler<CasaDataType, SakuraDataType, NumpyDataType, TypeId>, CasaDataType, SakuraDataType, NumpyDataType, TypeId>
 {
 public:
-  typedef HandlerInterface<DataHandler<CasaDataType, SakuraDataType, TypeId>, CasaDataType, SakuraDataType, TypeId> Base;
+  typedef HandlerInterface<DataHandler<CasaDataType, SakuraDataType, NumpyDataType, TypeId>, CasaDataType, SakuraDataType, NumpyDataType, TypeId> Base;
   typedef typename Base::CDataType CDataType;
   typedef typename Base::SDataType SDataType;
+  typedef typename Base::PDataType PDataType;
   
   static void ConvertToSakura(const size_t in_index, const size_t out_index,
 			      const CDataType *in_p, SDataType *out_p)
+  {
+    out_p[out_index] = in_p[in_index];
+  }
+
+  static void ConvertToSakura(const size_t in_index, const size_t out_index,
+			      const std::vector<PDataType> &in_p, SDataType *out_p)
   {
     out_p[out_index] = in_p[in_index];
   }
@@ -111,13 +142,19 @@ public:
   {
     out_p[out_index] = in_p[in_index];
   }
+  
+  static void ConvertToCasa(const size_t in_index, const size_t out_index,
+			    const SDataType *in_p, std::vector<PDataType> &out_p)
+  {
+    out_p[out_index] = in_p[in_index];
+  }
 };
 
 template<>
-class DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> : public HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float, sakura_PyTypeId_kFloat>
+class DataHandler<casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat> : public HandlerInterface<DataHandler<casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat>, casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat>
 {
 public:
-  typedef HandlerInterface<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat>, casa::Complex, float, sakura_PyTypeId_kFloat> Base; 
+  typedef HandlerInterface<DataHandler<casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat>, casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat> Base; 
   
   static void ConvertToSakura(const size_t in_index, const size_t out_index,
 			      const CDataType *in_p, SDataType *out_p)
@@ -125,8 +162,21 @@ public:
     out_p[out_index] = in_p[in_index].real();
   }
 
+  static void ConvertToSakura(const size_t in_index, const size_t out_index,
+			      const std::vector<PDataType> &in_p, SDataType *out_p)
+  {
+    out_p[out_index] = in_p[in_index].real();
+  }
+
   static void ConvertToCasa(const size_t in_index, const size_t out_index,
 			    const SDataType *in_p, CDataType *out_p)
+  {
+    out_p[out_index].real() = in_p[in_index];
+    out_p[out_index].imag() = 0.0;
+  }
+  
+  static void ConvertToCasa(const size_t in_index, const size_t out_index,
+			    const SDataType *in_p, std::vector<PDataType> &out_p)
   {
     out_p[out_index].real() = in_p[in_index];
     out_p[out_index].imag() = 0.0;
@@ -138,10 +188,10 @@ public:
 //       CASA flag: valid is False, invalid is True
 //       Sakura mask: valid is True, invalid is False
 template<>
-class DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> : public HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool>
+class DataHandler<casa::Bool, bool, bool, sakura_PyTypeId_kBool> : public HandlerInterface<DataHandler<casa::Bool, bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, bool, sakura_PyTypeId_kBool>
 {
 public:
-  typedef HandlerInterface<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, sakura_PyTypeId_kBool> Base;
+  typedef HandlerInterface<DataHandler<casa::Bool, bool, bool, sakura_PyTypeId_kBool>, casa::Bool, bool, bool, sakura_PyTypeId_kBool> Base;
   
   static void ConvertToSakura(const size_t in_index, const size_t out_index,
 			      const CDataType *in_p, SDataType *out_p)
@@ -149,8 +199,20 @@ public:
     out_p[out_index] = !(in_p[in_index]);
   }
 
+  static void ConvertToSakura(const size_t in_index, const size_t out_index,
+			      const std::vector<PDataType> &in_p, SDataType *out_p)
+  {
+    out_p[out_index] = !(in_p[in_index]);
+  }
+
   static void ConvertToCasa(const size_t in_index, const size_t out_index,
 			    const SDataType *in_p, CDataType *out_p)
+  {
+    out_p[out_index] = !(in_p[in_index]);
+  }
+  
+  static void ConvertToCasa(const size_t in_index, const size_t out_index,
+			    const SDataType *in_p, std::vector<PDataType> &out_p)
   {
     out_p[out_index] = !(in_p[in_index]);
   }
@@ -162,30 +224,53 @@ class DataConverter
 public:
   typedef typename Handler::CDataType CDataType;
   typedef typename Handler::SDataType SDataType;
+  typedef typename Handler::PDataType PDataType;
   
   static PyObject *CreateChunkForSakura(PyObject *obj)
   {
-    // Convert PyObject to casac::variant
-    casac::variant v = casac::pyobj2variant(obj, true);
+    // Check if input PyObject is compatible with numpy array
+    if (!PyArray_Check(obj)) {
+      throw dataconversion_error("Input is not a numpy array");
+      return NULL;
+    }
 
+    // Convert PyObject to std::vector
+    std::vector<PDataType> vec;
+    std::vector<int> vshape;
+    casac::numpy2vector(obj, vec, vshape);
+
+    // Check if array dimension is expected value
+    unsigned int ndim = vshape.size();
+    if (ndim == 0 || ndim > 3) {
+      throw dataconversion_error("Input array is not an expected shape");
+      return NULL;
+    }
+    
     bool status;
 	
-    // Convert casac::variant to casa::Array,
-    // then casa::Array to sakura_PyAlignedBuffer
-    casa::Array<CDataType> arr;
+    // Convert std::vector to sakura_PyAlignedBuffer
     casa::uInt npol, nchan, nrow;
     std::vector<sakura_PyAlignedBuffer *> buffer_list;
     Py_BEGIN_ALLOW_THREADS
     try {
       status = true;
-      arr = ToCasaArray(v, npol, nchan, nrow);
-
-      if (arr.empty()) {
-	throw dataconversion_error("");
+      if (ndim == 1) {
+	npol = 1;
+	nchan = vshape[0];
+	nrow = 1;
       }
-
-      status = ReadCasaArray((size_t)npol, (size_t)nchan, (size_t)nrow,
-			     arr, buffer_list);
+      else if (ndim == 2) {
+	npol = vshape[0];
+	nchan = vshape[1];
+	nrow = 1;
+      }
+      else { // ndim == 3
+	npol = vshape[0];
+	nchan = vshape[1];
+	nrow = vshape[2];
+      }
+      status = ReadVector((size_t)npol, (size_t)nchan, (size_t)nrow,
+			  vec, buffer_list);
     }
     catch (...) {
       status = false;
@@ -220,17 +305,29 @@ public:
       return NULL;
     }
 
-    // Convert sakura_PyAlignedBuffer to casa::Array,
-    // then casa::Array to casac::variant
-    casa::Array<CDataType> array;
-    casac::variant *v = NULL;
+    // Convert sakura_PyAlignedBuffer to std::vector
+    std::vector<PDataType> vec;
+    std::vector<int> vshape;
     Py_BEGIN_ALLOW_THREADS
     try {
-      status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, array);
-
-      if (status == true) {
-	v = ToVariant(array, npol, nchan, nrow);
+      status = true;
+      if (nrow == 1 && npol == 1) {
+	vshape.resize(1);
+	vshape[0] = nchan;
       }
+      else if (nrow == 1) {
+	vshape.resize(2);
+	vshape[0] = npol;
+	vshape[1] = nchan;
+      }
+      else {
+	vshape.resize(3);
+	vshape[0] = npol;
+	vshape[1] = nchan;
+	vshape[2] = nrow;
+      }
+      vec.resize(npol * nchan * nrow);
+      status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, vec); 
     }
     catch (...) {
       status = false;
@@ -242,7 +339,14 @@ public:
       return NULL;
     }      
     
-    return casac::variant2pyobj(*v);
+    PyObject *nparray = casac::map_array_numpy(vec, vshape);
+
+    if (!PyArray_Check(nparray)) {
+      throw dataconversion_error("Failed to convert chunk");
+      return NULL;
+    }
+    
+    return nparray;
   }
   
 private:
@@ -352,6 +456,40 @@ private:
     return true;
   }
   
+  static bool ReadAlignedBuffer(const casa::uInt npol,
+				const casa::uInt nchan,
+				const casa::uInt nrow,
+				const std::vector<sakura_PyAlignedBuffer *> &buffer_list,
+				std::vector<PDataType> &array)
+  {
+    try {
+      std::vector<sakura_PyAlignedBuffer *>::const_iterator iter = buffer_list.begin();
+      for (casa::uInt irow = 0; irow < nrow; ++irow) {
+	for (casa::uInt ipol = 0; ipol < npol; ++ipol) {
+	  assert(iter != buffer_list.end());
+
+	  void *aligned;
+	  sakura_PyAlignedBufferAlignedAddr(*iter, &aligned);
+	  size_t elements[1];
+	  sakura_PyAlignedBufferElements(*iter, 1, elements);
+
+	  assert(elements[0] == (size_t)nchan);
+
+	  size_t start_pos = (size_t)(irow * npol * nchan);
+	  Handler::ToCasa((size_t)(start_pos + ipol), (size_t)npol, (size_t)nchan,
+			  aligned, array);
+
+	  iter++;
+	}
+      }
+    }
+    catch (...) {
+      return false;
+    }
+
+    return true;
+  }
+
   static casac::variant *ToVariant(const casa::Array<CDataType> &array,
 				   const casa::uInt npol,
 				   const casa::uInt nchan,
@@ -454,6 +592,49 @@ private:
     return true;
   }
 
+  static bool ReadVector(const size_t npol,
+			 const size_t nchan,
+			 const size_t nrow,
+			 const std::vector<PDataType> &array,
+			 std::vector<sakura_PyAlignedBuffer *> &buffer_list)
+  {
+    // resize buffer_list
+    buffer_list.resize(npol * nrow);
+
+    casa::Bool b;
+    size_t element_size = sizeof(typename Handler::SDataType);
+    size_t required_size = element_size * nchan;
+    size_t allocation_size = required_size + sakura_GetAlignment() - 1;
+    size_t elements[] = {nchan};
+    try {
+      for (size_t irow = 0; irow < nrow; ++irow) {
+	for (size_t ipol = 0; ipol < npol; ++ipol) {
+	  void *storage = malloc_(allocation_size);
+	  if (storage == NULL) {
+	    return false;
+	  }
+	  void *aligned = sakura_AlignAny(allocation_size, storage, required_size);
+	  sakura_PyAlignedBuffer *buffer;
+	  if (sakura_PyAlignedBufferCreate((sakura_PyTypeId)Handler::SakuraPyTypeId,
+					   storage, aligned,
+					   1, elements, &free_,
+					   &buffer) != sakura_Status_kOK) {
+	    free_(storage);
+	    return false;
+	  }
+	  buffer_list[npol * irow + ipol] = buffer;
+	  Handler::ToSakura(irow * npol * nchan + ipol,
+			    npol, nchan, array, aligned);
+	}
+      }
+    }
+    catch(...) {
+      return false;
+    }
+
+    return true;
+  }
+
   static PyObject *EncapsulateChunk(const Py_ssize_t num_tuples,
 				    const Py_ssize_t num_elements,
 				    std::vector<sakura_PyAlignedBuffer *> &buffer_list)
@@ -521,7 +702,6 @@ static PyObject *tosakura(PyObject *self, PyObject *args)
     return NULL;
   }
     
-  //RETURN_NONE_IF_NULL(tuple)
   if (tuple == NULL) {
     PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error. Return value is empty.");
     return NULL;
@@ -557,7 +737,6 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
     PyErr_SetString(PyExc_RuntimeError, e.what());
   }
   catch (...) {
-    // any exception occurred
     PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error");
     return NULL;
   }
@@ -571,14 +750,14 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
 }
 
 static PyMethodDef CasaSakuraMethods[] = {
-  {"tosakura_float", tosakura<DataConverter<DataHandler<casa::Float, float, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert casa array to sakura array"},
-  {"tocasa_float", tocasa<DataConverter<DataHandler<casa::Float, float, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert sakura array to casa array"},
-  {"tosakura_double", tosakura<DataConverter<DataHandler<casa::Double, double, sakura_PyTypeId_kDouble> > >, METH_VARARGS, "convert casa array to sakura array"},
-  {"tocasa_double", tocasa<DataConverter<DataHandler<casa::Double, double, sakura_PyTypeId_kDouble> > >, METH_VARARGS, "convert sakura array to casa array"},
-  {"tosakura_complex", tosakura<DataConverter<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert casa array to sakura array"},
-  {"tocasa_complex", tocasa<DataConverter<DataHandler<casa::Complex, float, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert sakura array to casa array"},
-  {"tosakura_bool", tosakura<DataConverter<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> > >, METH_VARARGS, "convert casa array to sakura array"},
-  {"tocasa_bool", tocasa<DataConverter<DataHandler<casa::Bool, bool, sakura_PyTypeId_kBool> > >, METH_VARARGS, "convert sakura array to casa array"},
+  {"tosakura_float", tosakura<DataConverter<DataHandler<casa::Float, float, double, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert casa array to sakura array"},
+  {"tocasa_float", tocasa<DataConverter<DataHandler<casa::Float, float, double, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert sakura array to casa array"},
+  {"tosakura_double", tosakura<DataConverter<DataHandler<casa::Double, double, double, sakura_PyTypeId_kDouble> > >, METH_VARARGS, "convert casa array to sakura array"},
+  {"tocasa_double", tocasa<DataConverter<DataHandler<casa::Double, double, double, sakura_PyTypeId_kDouble> > >, METH_VARARGS, "convert sakura array to casa array"},
+  {"tosakura_complex", tosakura<DataConverter<DataHandler<casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert casa array to sakura array"},
+  {"tocasa_complex", tocasa<DataConverter<DataHandler<casa::Complex, float, std::complex<double>, sakura_PyTypeId_kFloat> > >, METH_VARARGS, "convert sakura array to casa array"},
+  {"tosakura_bool", tosakura<DataConverter<DataHandler<casa::Bool, bool, bool, sakura_PyTypeId_kBool> > >, METH_VARARGS, "convert casa array to sakura array"},
+  {"tocasa_bool", tocasa<DataConverter<DataHandler<casa::Bool, bool, bool, sakura_PyTypeId_kBool> > >, METH_VARARGS, "convert sakura array to casa array"},
   {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -590,4 +769,7 @@ init_casasakura(void)
 {
   PyObject *m;
   m = Py_InitModule("_casasakura", CasaSakuraMethods);
+
+  // initialize numpy
+  import_array();
 }
