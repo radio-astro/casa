@@ -687,7 +687,8 @@ int main()
     {
       cout << "------------------------------------" << endl;
       cout << "Testing all MFrequency conversions forward/backward" << endl;
-      cout << "  including the \"impossible\" conversion to/from UNDEFINED" << endl;
+      cout << "  including the \"impossible\" conversion to/from " 
+	   << MFrequency::showType(MFrequency::Undefined) << endl;
       Bool isok = True;
 
       MVFrequency mvd0(1e9);
@@ -710,17 +711,17 @@ int main()
 	    isok = False;
 	  };
 	};
-	// try also the "impossible" conversion to/from UNDEFINED
+	// try also the "impossible" conversion to/from Undefined
 	tp = 1e-6;
 	MFrequency::Ref r(i, mf);
-	MFrequency::Ref rundef(MFrequency::UNDEFINED, mf);
+	MFrequency::Ref rundef(MFrequency::Undefined, mf);
 	try{
 	  MFrequency::Convert forw(r, rundef);
 	  cout << MFrequency::showType(i) << " to " <<
-	    MFrequency::showType(MFrequency::UNDEFINED) << " should not be possible." << endl;
+	    MFrequency::showType(MFrequency::Undefined) << " should not be possible." << endl;
 	  isok = False;
 	  MFrequency::Convert backw(rundef, r);
-	  cout << MFrequency::showType(MFrequency::UNDEFINED) << " to " <<
+	  cout << MFrequency::showType(MFrequency::Undefined) << " to " <<
 	    MFrequency::showType(i) << " should not be possible." << endl;
 	}
 	catch(AipsError x){

@@ -118,10 +118,13 @@ template <class M> class ScalarMeasColumn;
 // <br>
 // To accommodate unknown or invalid frames, the additional reference type
 // <ul>
-//  <li> MFrequency::UNDEFINED
+//  <li> MFrequency::Undefined
 // </ul>
-// is available. Conversions to/from UNDEFINED are not possible. 
+// is available. Conversions to/from Undefined are not possible. 
 // If attempted, an exception will be thrown.
+// The name was chosen to be Undefined and not UNDEFINED in order to
+// not collide with the (ugly) WCSLIB macro of the upper case name
+// and in concordance with Stokes::Undefined.
 // <br>
 // An MFrequency can be created from an
 // <linkto class=MDoppler>MDoppler</linkto> (and a rest frequency, (the
@@ -181,7 +184,7 @@ class MFrequency : public MeasBase<MVFrequency, MeasRef<MFrequency> > {
     LGROUP,
     CMB,
     N_Types,
-    UNDEFINED = 64,
+    Undefined = 64,
     N_Other,
     // all extra bits
     EXTRA = 64,
