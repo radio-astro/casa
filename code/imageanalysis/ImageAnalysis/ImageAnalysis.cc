@@ -573,16 +573,16 @@ ImageAnalysis::convolve(
 
 	// Create output image
 	IPosition outShape = subImage.shape();
-	PtrHolder<ImageInterface<Float> > imOut;
+	std::auto_ptr<ImageInterface<Float> > imOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
-		imOut.set(new TempImage<Float> (outShape, subImage.coordinates()));
+		imOut.reset(new TempImage<Float> (outShape, subImage.coordinates()));
 	}
 	else {
 		*_log << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(new PagedImage<Float> (outShape, subImage.coordinates(),
+		imOut.reset(new PagedImage<Float> (outShape, subImage.coordinates(),
 				outFile));
 	}
 	//ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
@@ -620,7 +620,7 @@ ImageAnalysis::convolve(
 			scale, copyMisc, warnOnly
 		);
 	}
-	return imOut;
+	return imOut.release();
 }
 
 Record* ImageAnalysis::boundingbox(

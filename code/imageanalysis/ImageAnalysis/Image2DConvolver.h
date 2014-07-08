@@ -141,9 +141,7 @@ protected:
    	}
 
     virtual vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	vector<Coordinate::Type> types(1);
-    	types[0] = Coordinate::DIRECTION;
-    	return types;
+    	return vector<Coordinate::Type>();
     }
 
     virtual inline Bool _supportsMultipleRegions() const {return True;}
