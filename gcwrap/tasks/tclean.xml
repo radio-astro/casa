@@ -532,7 +532,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
 	 <default param="rotatepastep"><value>5.0</value></default>
-	 <default param="wideband"><value>False</value></default>
+	 <default param="wbawp"><value>False</value></default>
 	 <default param="conjbeams"><value>False</value></default>
        </equals>
      </when>
@@ -563,13 +563,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
      <when param="deconvolver">
        <equals type="string" value="hogbom">
+	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="multiscale">
 	 <default param="scales"><value type="intArray"></value></default>
+	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="mtmfs">
 	 <default param="scales"><value type="intArray"></value></default>
 	 <default param="ntaylorterms"><value>2</value></default>  
+	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
      </when>
 
