@@ -80,8 +80,8 @@ void MCFrequency::getConvert(MConvertBase &mc,
   Int iout = outref.getType();
   Int tmp;
   while (iin != iout) {
-    if(iin == MFrequency::UNDEFINED || iout == MFrequency::UNDEFINED)
-      throw(AipsError("Transformations to/from frame UNDEFINED are not possible."));
+    if(iin == MFrequency::Undefined || iout == MFrequency::Undefined)
+      throw(AipsError("Transformations to/from frame \"Undefined\" are not possible."));
 
     tmp = FromTo_p[iin][iout];
     iin = ToRef_p[tmp][1];

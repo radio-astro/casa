@@ -117,7 +117,7 @@ const String &MFrequency::showType(MFrequency::Types tp) {
     "CMB"
   }; 
   static const String ename[MFrequency::N_Other - MFrequency::EXTRA] = {
-    "UNDEFINED" 
+    "Undefined" 
   };
   
   MFrequency::checkMyTypes();
@@ -144,7 +144,7 @@ const String* MFrequency::allMyTypes(Int &nall, Int &nextra,
     "GALACTO",
     "LGROUP",
     "CMB",
-    "UNDEFINED"
+    "Undefined"
   }; 
   
   static const uInt oname[N_name] = {
@@ -157,7 +157,7 @@ const String* MFrequency::allMyTypes(Int &nall, Int &nextra,
     MFrequency::GALACTO,
     MFrequency::LGROUP,
     MFrequency::CMB,
-    MFrequency::UNDEFINED
+    MFrequency::Undefined
  };
 
   MFrequency::checkMyTypes();
