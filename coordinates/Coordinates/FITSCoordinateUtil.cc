@@ -54,15 +54,16 @@
 #include <fits/FITS/FITSDateUtil.h>
 #include <measures/Measures/MDoppler.h>
 #include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MFrequency.h>
 
 #include <casa/iostream.h>
-
 
 #include <wcslib/wcs.h>
 #include <wcslib/wcshdr.h>
 #include <wcslib/wcsfix.h>
 #include <wcslib/wcsmath.h>
 #include <wcslib/fitshdr.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -1410,15 +1411,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     {
         if (wcs.specsys[0]=='\0') {
-	    os << LogIO::NORMAL << "SPECSYS keyword not given, spectral reference frame not defined ..." << LogIO::POST;
 	    if (wcs.velref==0) { // velref was also not given
-	        os << LogIO::NORMAL << "TopoCentric assumed" << LogIO::POST;
-	        type = MFrequency::TOPO;
+	        os << LogIO::NORMAL << "Neither SPECSYS nor VELREF keyword given, spectral reference frame not defined ..." 
+		   << LogIO::POST;
+	        type = MFrequency::Undefined;
 	        return True;
 	    }
 	    else { // velref was given
 	        Int vref = wcs.velref;
-	        os << LogIO::NORMAL << "Found (deprecated) VELREF keyword with value " << vref << LogIO::POST;
+	        os << LogIO::NORMAL << "No SPECSYS but found (deprecated) VELREF keyword with value " << vref << LogIO::POST;
 	        if(vref>256){
 		  vref -= 256;
 		}
