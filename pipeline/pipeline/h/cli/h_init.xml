@@ -51,6 +51,7 @@ imports data.
 		<value>all</value>
 		<allowed kind="enum">
 		    <value>all</value>
+		    <value>default</value>
 		    <value>summary</value>
 		</allowed>
     </param>
@@ -81,7 +82,7 @@ imports data.
 	    </equals>
 	    <equals type="string" value="interactive">
 		<default param="loglevel"><value type="string">info</value></default>
-		<default param="plotlevel"><value type="string">all</value></default>
+		<default param="plotlevel"><value type="string">default</value></default>
 		<default param="output_dir"><value type="string">./</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
@@ -89,7 +90,7 @@ imports data.
 	    </equals>
 	    <equals type="string" value="getinputs">
 		<default param="loglevel"><value type="string">info</value></default>
-		<default param="plotlevel"><value type="string">all</value></default>
+		<default param="plotlevel"><value type="string">default</value></default>
 		<default param="output_dir"><value type="string">./</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 	    </equals>
@@ -130,11 +131,11 @@ loglevel -- Pipeline log level threshold: (debug|info|warning|error|critical).
        Log messages below this threshold will not be displayed.  
        default: 'info'
 
-plotlevel -- Pipeline plot level threshold: (all|summary).
-       Switch between generation of all plots ('all') or just summary plots
-       ('summary'), omitting the per antenna/spw/field plots and detail pages
-       from the web log.   
-       default: 'all'
+plotlevel -- Pipeline plot level threshold: (all|default|summary).
+       Toggle generation of detail plots in the web log. A level of 'all'
+       generates all plots; 'summary' omits detail plots; 'default' 
+       generats all plots apart from for the hif_applycal task.
+       default: 'default'
 
 output_dir -- Working directory for pipeline processing. Some pipeline
        processing products such as HTML logs and images will be directed to

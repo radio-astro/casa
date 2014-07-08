@@ -2043,7 +2043,7 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
                                                            calapps, '')
             diagnostic_amp_vs_time_summaries[vis] = plotter.plot()
 
-            if infrastructure.generate_detail_plots():
+            if infrastructure.generate_detail_plots(result):
                 calapps = result.final
 
                 # phase vs time plots
@@ -3026,7 +3026,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
          science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result) 
 
-        if pipeline.infrastructure.generate_detail_plots():
+        if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
             # renderer is passed so the detail page is written to disk
             self.create_plots(context, 
@@ -3131,7 +3131,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                                                   [brightest_field])
             amp_vs_uv_summary_plots[vis] = plots
 
-            if pipeline.infrastructure.generate_detail_plots():
+            if pipeline.infrastructure.generate_detail_plots(result):
                 scans = ms.get_scans(scan_intent='TARGET')
                 fields = set()
                 for scan in scans:

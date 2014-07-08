@@ -205,7 +205,7 @@ class Pipeline(object):
     """
 
     def __init__(self, context=None, output_dir='./', loglevel='info',
-                 casa_version_check=True, name=None, plotlevel='all'):
+                 casa_version_check=True, name=None, plotlevel='default'):
         """
         Initialise the pipeline, creating a new ~Context or loading a saved
         ~Context from disk.
