@@ -176,6 +176,9 @@ def gpcal_score(gpcal_stats):
 
         if fieldId not in gpcal_scores['SCORES']:
             gpcal_scores['SCORES'][fieldId] = {}
+            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = 1.0
+            gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = 1.0
+            gpcal_scores['SCORES'][fieldId]['TOTAL'] = 1.0
 
         for spwId in gpcal_stats['STATS'][fieldId].iterkeys():
 
@@ -188,15 +191,31 @@ def gpcal_score(gpcal_stats):
                     gpcal_scores['SCORES'][fieldId][spwId][antId] = {}
 
                 try:
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = (scipy.special.erf(xyM * gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] + xyB) + 1.0) / 2.0
-                    gpcal_scores['SCORES']['TOTAL'] = min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
-                    gpcal_scores['SCORES']['XY_TOTAL'] = min(gpcal_scores['SCORES']['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = (scipy.special.erf(x2x1M * gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] + x2x1B) + 1.0) / 2.0
-                    gpcal_scores['SCORES']['TOTAL'] = min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
-                    gpcal_scores['SCORES']['X2X1_TOTAL'] = min(gpcal_scores['SCORES']['X2X1_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = \
+                        (scipy.special.erf(xyM * gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] + xyB) + 1.0) / 2.0
+                    gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = \
+                        min(gpcal_scores['SCORES'][fieldId]['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
+                        min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    gpcal_scores['SCORES']['XY_TOTAL'] = \
+                        min(gpcal_scores['SCORES']['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    gpcal_scores['SCORES']['TOTAL'] = \
+                        min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = \
+                        (scipy.special.erf(x2x1M * gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] + x2x1B) + 1.0) / 2.0
+                    gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = \
+                        min(gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+                    gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
+                        min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+                    gpcal_scores['SCORES']['X2X1_TOTAL'] = \
+                        min(gpcal_scores['SCORES']['X2X1_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+
+                    gpcal_scores['SCORES']['TOTAL'] = \
+                        min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
                 except Exception as e:
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = 0.0
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = 0.0
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = -1.0
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = -1.0
                     # Don't count these in the totals since they are likely due to missing solutions because of
                     # flagged antennas. Need to decide how to account for these cases.
 
