@@ -296,6 +296,10 @@ public:
 
   static PyObject *CreateChunkForCasa(PyObject *obj)
   {
+    if (obj == Py_None) {
+      throw dataconversion_error("NoneType object is not acceptable");
+    }
+
     // decapsulate
     std::vector<sakura_PyAlignedBuffer *> buffer_list;
     casa::uInt nrow, npol, nchan;
@@ -695,6 +699,7 @@ static PyObject *tosakura(PyObject *self, PyObject *args)
   }
   catch (const dataconversion_error &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
   }
   catch (...) {
     // any exception occurred
@@ -735,6 +740,7 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
   }
   catch (const dataconversion_error &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
   }
   catch (...) {
     PyErr_SetString(PyExc_RuntimeError, "Failed due to unknown error");
