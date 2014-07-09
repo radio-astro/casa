@@ -1,0 +1,47 @@
+#!/bin/sh
+if [[ -L "$0" ]]; then
+	real_me=$(staty -f %Y "$0")
+	myDir=$(dirname "$real_me")
+else
+	myDir=$(dirname "$0")
+fi
+if [ "$1" = "--release" ]; then
+	distro="release"
+	RELEASEDIR=$2
+else
+	distro="programmer"
+fi
+export CASASRC=$myDir/pipeline
+#
+OSVERS=$(uname -r | awk -F. '{print $1}')
+if [ $OSVERS -lt "12" ]; then
+export PYVERSION=2.6
+else
+export PYVERSION=2.7
+fi
+#
+if [ $distro = "release" ] ; then
+export CASAARCH=$RELEASEDIR/python/$PYVERSION
+else 
+export CASAARCH=$myDir
+fi
+echo $CASAARCH
+OSNAME=`uname -s`
+if [[ $OSNAME = "Linux" ]]; then
+CASAPY=`which casapy`
+TOPLEVEL=`dirname $CASAPY`
+PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
+if [ -x $PYTHONEXEC ]; then
+   echo $PYTHONEXEC
+   else if [ -x $TOPLEVEL/../lib64/casapy/bin/python ]; then
+	   PYTHONEXEC=$TOPLEVEL/../lib64/casapy/bin/python
+	   echo $PYTHONEXEC
+   else
+        PYTHONEXEC=/usr/lib64/casapy/bin/python
+   fi
+fi
+else
+PYTHONEXEC=python
+fi
+export PYTHONPATH=$CASAARCH
+$PYTHONEXEC setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force

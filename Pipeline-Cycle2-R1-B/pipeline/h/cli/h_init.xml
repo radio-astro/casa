@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="h_init" category="pipeline">
+<shortdescription>Initialise the interferometry pipeline</shortdescription>
+
+<description>
+The h_init task initialises the interferometry pipeline and optionally 
+imports data.
+</description>
+<input>
+<!-- 
+    <param type="stringArray" name="vis">
+        <description>The list of input visibility data</description>
+	<value></value>
+    </param>
+
+    <param type="stringArray" name="sessions">
+        <description>The list of visibility data sessions</description>
+	<value></value>
+    </param>
+ -->
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating  mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="string" name="loglevel" subparam="true">
+	<description>Log level for pipeline messages</description>
+	<value>info</value>
+	<allowed kind="enum">
+	    <value>trace</value>
+	    <value>debug</value>
+	    <value>info</value>
+	    <value>warning</value>
+	    <value>error</value>
+	    <value>critical</value>
+	</allowed>
+    </param>
+
+    <param type="string" name="plotlevel" subparam="true">
+		<description>Level for pipeline plots</description>
+		<value>all</value>
+		<allowed kind="enum">
+		    <value>all</value>
+		    <value>default</value>
+		    <value>summary</value>
+		</allowed>
+    </param>
+
+    <param type="string" name="output_dir" subparam="true">
+	<description>The output working directory</description>
+	<value>./</value>
+    </param>
+
+    <param type="bool" name="overwrite" subparam="true">
+        <description>Overwrite existing files on import</description>
+	<value>True</value>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display the task command (True)</description>
+	<value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
+    </param>
+
+    <constraints>
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="interactive">
+		<default param="loglevel"><value type="string">info</value></default>
+		<default param="plotlevel"><value type="string">default</value></default>
+		<default param="output_dir"><value type="string">./</value></default>
+		<default param="overwrite"><value type="bool">True</value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+		<default param="loglevel"><value type="string">info</value></default>
+		<default param="plotlevel"><value type="string">default</value></default>
+		<default param="output_dir"><value type="string">./</value></default>
+		<default param="overwrite"><value type="bool">True</value></default>
+	    </equals>
+	</when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+The h_init task initialises the interferometry pipeline.
+
+
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode' or 'getinputs' modes 
+loglevel -- Pipeline log level threshold: (debug|info|warning|error|critical).
+       Log messages below this threshold will not be displayed.  
+       default: 'info'
+
+plotlevel -- Pipeline plot level threshold: (all|default|summary).
+       Toggle generation of detail plots in the web log. A level of 'all'
+       generates all plots; 'summary' omits detail plots; 'default' 
+       generats all plots apart from for the hif_applycal task.
+       default: 'default'
+
+output_dir -- Working directory for pipeline processing. Some pipeline
+       processing products such as HTML logs and images will be directed to
+       subdirectories of this path. 
+       default: './' (current directory)
+
+overwrite -- Overwrite existing MSs on input.
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+       do not execute (False).
+       default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+       reject them (False).
+       default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+h_init  must be called before any other interferometry pipeline task. The
+pipeline can be initialised in one of two ways: by creating a new pipeline 
+state (h_init) or be loading a saved pipeline state (h_resume).
+
+h_init creates an empty pipeline context but does not load visiblity data
+into the context. hif_importdata or hsd_importdata can be used to load data.
+
+Issues
+
+Examples
+
+1. Create the pipeline context
+
+h_init()
+</example>
+</task>
+</casaxml>

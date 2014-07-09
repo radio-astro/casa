@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="h_save" category="pipeline">
+<shortdescription>Save the pipeline state to disk</shortdescription>
+
+<description>
+h_save saves the current pipeline state to disk under a unique name.
+</description>		
+
+<input>
+    <param type="string" name="filename">
+        <description>Name for saved state</description>
+        <value></value>
+    </param>
+</input>
+
+<example>
+
+h_save saves the current pipeline state to disk under a unique name.
+		
+Keyword arguments:
+
+filename -- Name of the saved pipeline state. If filename is '' then
+    a unique name will be generated computed from the root 'context', the
+    current stage number, and the timestamp.
+    default: ''
+
+Description
+
+h_save saves the current pipeline state to disk under a unique name.
+If no name is supplied one is generated automatically from a combination
+of the rootname 'context', the current stage number, and a timestamp.
+
+Issues
+
+Example
+
+1. Save the current state in the default file 
+
+   h_save()
+
+2. Save the current state to a user named file 
+
+   h_save(filename='savestate_1')
+
+</example>
+</task>
+</casaxml>

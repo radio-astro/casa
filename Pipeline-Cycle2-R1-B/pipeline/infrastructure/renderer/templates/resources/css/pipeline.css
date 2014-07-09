@@ -1,0 +1,93 @@
+@CHARSET "UTF-8";
+
+/* push body content down the height of the title bar */
+body {
+    padding-top: 60px;
+}
+
+/* making the title bar fixed changes the padding. Fix it. */
+.navbar-fixed-top .navbar-inner {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/* create the fixed-width - rather than floating - sidebar */
+.sidebar-nav-fixed {
+    padding: 9px 0;
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    width: 250px;
+}
+
+/* push fluid content to the right of the sidebar, so we have a fixed/float setup */
+.row-fluid > .span-fixed-sidebar {
+    margin-left: 280px;
+    margin-top: -30px;
+}
+
+caption {
+    caption-side: bottom;
+}
+
+/* workaround for thumbnails wrapped onto the n>1 row having non-zero margin */
+.first-in-row {
+    margin-left: 0 !important;
+}
+
+/* make the sidebar scroll down only as much is necessary for the bottom li to
+   be visible */
+#nav-wrapper.affix-top {
+    position: absolute;
+}
+
+#nav-wrapper.affix {
+    top: auto;
+    bottom: 0px;
+}
+
+/* logs tend to be big, so shrink the font size down a little */
+pre {
+	line-height: 1.1em;
+	font-size: 10px;
+	padding: 1em;
+	border: 1px dashed #2f6fab;
+	color: black;
+	background-color: #f9f9f9;
+	font-family: monospace,Courier;
+	overflow: auto;
+}
+
+/* Styling for d3js histograms */
+svg {
+    font: 10px sans-serif;
+}
+
+.bar rect {
+    shape-rendering: crispEdges;
+}
+
+.bar text {
+    fill: #fff;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.brush .extent {
+    stroke: #fff;
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}
+
+.gaintable_popover {
+	max-width: 1000px;
+	width: auto;
+}
+
+[class^="icon-"].icon-fixed-width, [class*=" icon-"].icon-fixed-width {
+    text-align: center;
+}

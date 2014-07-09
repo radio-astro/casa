@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_fluxcalflag" category="pipeline">
+<shortdescription>Locate line regions in solar system flux calibrator spws</shortdescription>
+<description>
+Locate line regions in solar system flux calibrator spws
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+	<description>List of input measurement sets</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="field" subparam="true">
+	<description>List of field names or ids</description>
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="intent" subparam="true">
+    	<description>Observing intent of flux calibrators</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw" subparam="true">
+	<description>List of spectral window ids</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+   </param>
+
+    <param type="double" name="threshold">
+        <description>Threshold for flagging the entire spw</description>
+        <value type="double">0.75</value>
+    </param>
+
+    <param type="bool" name="appendlines" subparam="true">
+        <description>Append user defined line regions to the line dictionary</description>
+        <value type="bool">False</value>
+    </param>
+
+    <param type="string" name="linesfile" subparam="true">
+        <description>File containing user defined lines</description>
+        <value type="string"></value>
+    </param>
+
+    <param type="bool" name="applyflags" subparam="true">
+        <description>Apply the computed flag commands</description>
+        <value type="bool">True</value>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display the commands(True)</description>
+	<value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Automatically accept results into the context</description>
+	<value type="bool">True</value>
+    </param>
+
+    <constraints>
+
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic" />
+	    <equals type="string" value="interactive">
+		<default param="vis"><value type="stringArray"></value></default>
+		<default param="field"><value type="string"></value></default>
+		<default param="intent"><value type="string"></value></default>
+		<default param="spw"><value type="string"></value></default>
+		<default param="appendlines"><value type="bool">False</value></default>
+		<default param="linesfile"><value type="string"></value></default>
+		<default param="applyflags"><value type="bool">True</value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+		<default param="vis"><value type="stringArray"></value></default>
+		<default param="field"><value type="string"></value></default>
+		<default param="intent"><value type="string"></value></default>
+		<default param="spw"><value type="string"></value></default>
+		<default param="appendlines"><value type="bool">False</value></default>
+		<default param="linesfile"><value type="string"></value></default>
+		<default param="applyflags"><value type="bool">True</value></default>
+	    </equals>
+	</when>
+
+   </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Fills the model column with the model visibilities.
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+threshold -- If the fraction of an spw occupied by line regions is greater
+   then threshold flag the entire spectral window.
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurment
+    sets defined in the pipeline context.
+    default: []
+    example:
+
+field -- The list of field names or field ids for which the models are
+    to be set. Defaults to all fields with intent 'AMPLITUDE'.
+    default: ''
+    example: '3C279', '3C279, M82'
+
+intent -- A string containing a comma delimited list of intents against
+    which the the selected fields are matched.  Defaults to all data
+    with amplitude intent.
+    default: ''
+    example: 'AMPLITUDE'
+
+spw -- The list of spectral windows and channels for which bandpasses are
+    computed. Defaults to all science spectral windows.
+    default: ''
+    example: '11,13,15,17'
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+       do not execute (False).
+       default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+       reject them (False).
+       default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+Search the bultin solar system flux calibrater line catalog for overlaps with the
+science spectral windows.  Generate a list of line overlap regions and flagging
+commands.
+
+Issues
+
+
+Examples
+
+1. Locate known lines in any solar system object flux calibrators. 
+
+    hifa_fluxcalflag()
+
+</example>
+
+</task>
+</casaxml>

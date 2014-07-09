@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hsd_flagdata" category="pipeline">
+<shortdescription>Flag spectra based on predefined criteria of single-dish pipeline</shortdescription>
+
+<description>
+</description>
+<input>
+    <param type="int" name="iteration">
+        <description>Number of iteration to perform sigma clipping to calculate threshold</description>
+        <value>5</value>
+    </param>
+
+    <param type="intArray" name="edge">
+        <description>Number of edge channels to be excluded from statistic calculation to flag data</description>
+        <value>0,0</value>
+    </param>
+
+
+    <param type="bool" name="flag_tsys" >
+        <description>Flag data by Tsys value</description>
+        <value>True</value>
+    </param>
+        
+    <param type="double" name="tsys_thresh" subparam="true">
+        <description>Threshold for Tsys flag</description>
+        <value>3.0</value>
+    </param>
+        
+    <param type="bool" name="flag_weath">
+        <description>Flag data by weather (not implemented yet)</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="weath_thresh" subparam="true">
+        <description>Threshold for weather flag</description>
+        <value>3.0</value>
+    </param>
+
+    <param type="bool" name="flag_prfre" >
+        <description>Flag data by EXPECTED RMS of pre-fit spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="prfre_thresh" subparam="true">
+        <description>Threshold for EXPECTED RMS of pre-fit spetra flag</description>
+        <value>3.0</value>
+    </param>
+
+    <param type="bool" name="flag_pofre" >
+        <description>Flag data by EXPECTED RMS of post-fit spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="pofre_thresh"  subparam="true">
+        <description>Threshold for EXPECTED RMS of post-fit spectra flag</description>
+        <value>1.3333</value>
+    </param>
+
+    <param type="bool" name="flag_prfr" >
+        <description>Flag data by RMS of pre-fit spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="prfr_thresh"  subparam="true">
+        <description>Threshold for RMS of pre-fit flag</description>
+        <value>4.5</value>
+    </param>
+
+    <param type="bool" name="flag_pofr" >
+        <description>Flag data by RMS of post-fit spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="pofr_thresh" subparam="true">
+        <description>Threshold for RMS of post-fit spectra flag</description>
+        <value>4.0</value>
+    </param>
+
+    <param type="bool" name="flag_prfrm" >
+        <description>Flag data by running mean of pre-fit spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="prfrm_thresh" subparam="true">
+        <description>Threshold for running mean of pre-fit spectra flag</description>
+        <value>5.5</value>
+    </param>
+
+    <param type="int" name="prfrm_nmean" subparam="true">
+        <description>Number of channel for running mean of pre-fit spectra flag</description>
+        <value>5</value>
+    </param>
+
+    <param type="bool" name="flag_pofrm" >
+        <description>Flag data by running mean of post-fit spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="pofrm_thresh" subparam="true">
+        <description>Threshold for running mean of post-fit spectra flag</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="int" name="pofrm_nmean" subparam="true">
+        <description>Number of channel for running mean of post-fit spectra flag</description>
+        <value>5</value>
+    </param>
+
+    <param type="bool" name="flag_user">
+        <description>Flag data by user flag (not implemented yet)</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="user_thresh" subparam="true">
+        <description>Threshold for user flag</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="bool" name="plotflag">
+        <description>Create plots for flagging</description>
+        <value>True</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operating  mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="stringArray" name="infiles" subparam="true">
+        <description>List of input files to be flagged (default all)</description>
+        <value></value>
+    </param>
+
+<!--
+    <param type="any" name="antennalist" subparam="true">
+        <description>List of antennas to be processed (-1 stands for all)</description>
+        <any type="variant" limittype="string int stringArray intArray"/>
+        <value type="int">-1</value>
+    </param>
+-->
+
+<!--
+    <param type="string" name="field" subparam="true">
+        <description>Field to be calibrated (default all)</description>
+        <value></value>
+    </param>
+-->
+
+    <param type="any" name="spw" subparam="true">
+            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+    </param>
+
+    <param type="any" name="pol" subparam="true">
+            <description>select data by polarizations, e.g. \'0~1\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+    </param>
+
+<!--
+    <param type="intArray" name="scanlist" subparam="true">
+        <description>List of scans to be calibrated (defalt all)</description>
+        <value></value>
+    </param>
+-->
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or display the task command (True)</description>
+        <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Add the results into the pipeline context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="flag_tsys">
+            <equals type="bool" value="True">
+                <default param="tsys_thresh"><value type="double">3.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_weath">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="weath_thresh"><value type="double">3.0</value></default>
+            </equals>
+        </when>
+        <when param="flag_prfre">
+            <equals type="bool" value="True">
+                <default param="prfre_thresh"><value type="double">3.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_pofre">
+            <equals type="bool" value="True">
+                <default param="pofre_thresh"><value type="double">1.3333</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_prfr">
+            <equals type="bool" value="True">
+                <default param="prfr_thresh"><value type="double">4.5</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_pofr">
+            <equals type="bool" value="True">
+                <default param="pofr_thresh"><value type="double">4.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_prfrm">
+            <equals type="bool" value="True">
+                <default param="prfrm_thresh"><value type="double">5.5</value></default>
+                <default param="prfrm_nmean"><value type="int">5</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_pofrm">
+            <equals type="bool" value="True">
+                <default param="pofrm_thresh"><value type="double">5.0</value></default>
+                <default param="pofrm_nmean"><value type="int">5</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+        <when param="flag_user">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="user_thresh"><value type="double">5.0</value></default>
+                            </equals>
+        </when>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic">
+            </equals>
+            <equals type="string" value="interactive">
+                <default param="infiles"><value type="stringArray"></value></default>
+<!--                <default param="antennalist"><value type="int">-1</value></default> -->
+<!--                <default param="field"><value type="string"></value></default> -->
+                <default param="spw"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
+<!--                <default param="scanlist"><value type="intArray"></value></default> -->
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="infiles"><value type="stringArray"></value></default>
+<!--                <default param="antennalist"><value type="int">-1</value></default> -->
+<!--                <default param="field"><value type="string"></value></default> -->
+                <default param="spw"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
+<!--                <default param="scanlist"><value type="intArray"></value></default> -->
+            </equals>
+        </when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+                        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+iteration -- Number of iterations to perform sigma clipping to calculate
+       threshold value of flagging.
+       default: 5
+
+edge -- Number of channels to be dropped from the edge.
+       The value must be a list of integer with length of one or two.
+                       If list length is one, same number will be applied both side of 
+       the band.
+       default: [0,0]
+       example: [10,20], [10]
+
+flag_tsys -- Activate (True) or deactivate (False) Tsys flag.
+       default: True
+
+tsys_thresh -- Threshold value for Tsys flag.
+       default: 3.0
+
+flag_weath -- Activate (True) or deactivate (False) weather flag. 
+       Since weather flagging is not implemented yet. Setting True 
+       has no effect at the moment.
+       default: False
+
+weath_thresh -- Threshold value for weather flag.
+       default: 3.0
+
+flag_prfre -- Activate (True) or deactivate (False) flag by expected rms 
+       of pre-fit spectra.
+       default: True
+
+                prfre_thresh -- Threshold value for flag by expected rms of pre-fit 
+       spectra. 
+       default: 3.0 
+
+flag_pofre -- Activate (True) or deactivate (False) flag by expected rms 
+       of post-fit spectra.
+       default: True
+
+pofre_thresh -- Threshold value for flag by expected rms of post-fit 
+       spectra. 
+       default: 1.3333
+
+flag_prfr -- Activate (True) or deactivate (False) flag by rms of pre-fit 
+       spectra.
+       default: True
+
+prfr_thresh -- Threshold value for flag by rms of pre-fit spectra. 
+       default: 4.5
+
+flag_pofr -- Activate (True) or deactivate (False) flag by rms of post-fit 
+       spectra.
+       default: True
+
+                pofr_thresh -- Threshold value for flag by rms of post-fit spectra. 
+       default: 4.0
+
+flag_prfrm -- Activate (True) or deactivate (False) flag by running mean 
+       of pre-fit spectra.
+       default: True
+
+prfrm_thresh -- Threshold value for flag by running mean of pre-fit 
+       spectra. 
+       default: 5.5
+
+prfrm_nmean -- Number of channels for running mean of pre-fit spectra.
+       default: 5
+
+flag_pofrm -- Activate (True) or deactivate (False) flag by running mean 
+       of post-fit spectra.
+       default: True
+
+pofrm_thresh -- Threshold value for flag by running mean of post-fit 
+       spectra. 
+       default: 5.0
+
+pofrm_nmean -- Number of channels for running mean of post-fit spectra.
+                       default: 5
+
+flag_user -- Activate (True) or deactivate (False) user-defined flag. 
+       Since user flagging is not implemented yet. Setting True 
+       has no effect at the moment.
+       default: False
+
+user_thresh -- Threshold value for flag by user-defined rule.
+       default: 3.0
+
+plotflag -- True to plot result of data flagging.
+       default: True
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
+       pipeline determines the values of all context defined pipeline 
+       inputs automatically.  In interactive mode the user can set the 
+       pipeline context defined parameters manually. In 'getinputs' mode 
+       the user can check the settings of all pipeline parameters without 
+       running the task.
+       default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode' or 'getinputs' modes 
+                
+infiles -- ASDM or MS files to be processed. This parameter behaves as 
+       data selection parameter. The name specified by infiles must be 
+       registered to context before you run hsd_reduce.
+       default: [] (process all data in context)
+
+spw -- Data selection by spw.
+   default: '' (all spws)
+   example: '3,4' (generate caltable for spw 3 and 4)
+            ['0','2'] (spw 0 for first data, 2 for second)
+
+pol -- Data selection by pol.
+   default: '' (all polarizations)
+   example: '0' (generate caltable for pol 0)
+            ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+                       do not execute (False).
+       default: True
+
+acceptresults -- Add the results of the task to the pipeline context 
+       (True) or reject them (False).
+       default: True
+
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+       the results object for the pipeline task is returned.
+
+
+Description
+
+The hsd_flag
+6. Flagging 
+Data are flagged based on several flagging rules. Available rules are: 
+expected rms, calculated rms, and running mean of both pre-fit and 
+post-fit spectra. Tsys flagging is also available. 
+
+In addition, the heuristics script creates many plots for each stage. 
+Those plots are included in the weblog.
+
+
+Issues
+
+
+Examples
+                                
+</example>
+</task>
+</casaxml>
+

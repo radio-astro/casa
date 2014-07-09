@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_tsysflagchans" category="pipeline">
+<shortdescription>Flag deviant channels in system temperature measurements</shortdescription>
+<description>
+Flag deviant channels in system temperature measurements.
+</description>
+<input>
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of input caltables</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="metric">
+        <description>Method used to judge the quality of a Tsys measurement</description>
+        <value>median</value>
+        <allowed kind="enum">
+            <value>median</value>
+            <value>antenna_median</value>
+            <value>channel_time</value>
+            <value>antenna_diff</value>
+        </allowed>
+    </param>
+
+    <param type="string" name="intentgroups">
+        <description>List of groups of intents for which views are to be created</description>
+        <value>"ATMOSPHERE"</value>
+    </param>
+
+    <param type="bool" name="flag_edges">
+        <description>True to flag edge channels of Tsys spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="edge_limit" subparam="true">
+        <description>Candidate edge channels have channel to channel difference > edge_limit * median across spectrum</description>
+        <value>3</value>
+    </param>
+
+    <param type="bool" name="flag_sharps">
+        <description>True to flag channels covering sharp spectral features plus additional channels on their flanks</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="sharps_limit" subparam="true">
+        <description>Flag channels bracketing a channel to channel difference > sharps_limit</description>
+        <value>0.05</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="caltable"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+
+        <when param="flag_edges">
+            <equals type="bool" value="True">
+                <default param="edge_limit"><value>3.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_sharps">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="sharps_limit"><value>0.05</value></default>
+            </equals>
+        </when>
+
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+hif_tsysflagchans flags deviant channels in the system temperature calibration
+table. 
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+metric -- Metric to use in calculating the flagging views of the Tsys data.
+          Possible values are:
+
+    'median' - A list of flagging views will be generated, one for each
+               SpW/intentgroup. Each view is the median spectrum
+               from all the member spectra.
+
+    'antenna_median' - A flagging view is generated for each 
+               SpW/intentgroup/antenna. Each view is the median spectrum
+               from all the member spectra.
+
+    'antenna_diff' - A flagging view is generated for each 
+               SpW/intentgroup/antenna. Each view is the difference 
+               between the median of spectra for the antenna/SpW
+               and the median for the SpW as a whole.
+ 
+    default: 'median'
+
+intentgroups -- How data from various intents are to be combined in
+    separate flagging views. Internally the intentgroups are stored in a 
+    list of strings but, because of interface limitations, this list 
+    must be input as a single string.
+    default: "['ATMOSPHERE']"
+             For each spw the default creates a Tsys median spectrum
+             from all spectra with ATMOSPHERE intent.
+
+flag_edges -- True to flag edges of spectra.
+    default True
+
+edge_limit -- The first channels inward from each end of the spectrum where the
+              channel to channel difference falls below 'edge_limit' times the
+              median across the spectrum are designated as the 'edges'. These
+              channels and those outside them are flagged. If the 'edges' lie more
+              than 1/4 of the way across the spectrum then no flagging is done.
+    default 3
+
+flag_sharps -- True to flag channels that cover sharp spectral features.
+               Flags sharp feature 'cores' where the channel to channel
+               difference exceeds a given limit, then extends the flagging 
+               over the feature flanks until the channel to channel difference 
+               falls below 2 * the median over the spectrum.
+    default: False
+
+sharps_limit -- Flag as sharp feature cores those channels bracketing 
+                a channel to channel difference > sharps_limit.
+    default: 0.05
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+caltable -- List of input Tsys calibration tables
+    default: [] - Use the table currently stored in the pipeline context. 
+    example: caltable=['X132.ms.tsys.s2.tbl']
+
+-- Pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- This parameter has no effect. The Tsyscal file is already
+                 in the pipeline context and is flagged in situ.
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+Deviant channels in Tsys measurements are detected by analysis of a compressed
+view of the Tsys results. This view comprises a list of Tsys spectra whose
+details are determined by the metric parameter.
+
+Flags are generated by running the following rules on each spectrum:
+
+If flag_edges = True then channels at the band edges are detected and flagged.
+
+If flag_sharps = True then channels covering sharp spectral features are
+flagged and then the flagging is extended in an attempt to cover the lower
+flanks of the features as well.
+
+Examples:
+
+1. Flag the edges of the Tsys measurements in each SpW.
+
+   hif_tsysflagchans()
+       equivalent to:
+   hif_tsysflagchans(flag_edges=True, edge_limit=3)
+
+2. Flag the edges of the Tsys measurements in each SpW, and sharp spectral
+   features in the band.
+ 
+   hif_tsysflagchans(flag_sharps=True)
+       equivalent to:
+   hif_tsysflagchans(flag_edges=True, edge_limit=3, flag_sharps=True, sharps_limit=0.05)
+
+3. Flag antenna-based 'glitches':
+
+   hif_tsysflagchans(metric='antenna_diff', flag_edges=False, flag_sharps=True)
+       equivalent to:
+   hif_tsysflagchans(metric='antenna_diff', flag_edges=False, flag_sharps=True, sharps_limit=0.05)
+
+</example> 
+
+</task>
+</casaxml>
+
