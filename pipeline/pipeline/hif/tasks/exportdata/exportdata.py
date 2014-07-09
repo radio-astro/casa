@@ -729,7 +729,10 @@ class ExportData(basetask.StandardTaskTemplate):
 	# This is hardcoded.
 	tmpvislist=[]
 	for vis in vislist:
-	    tmpvislist.append(os.path.basename(vis))
+	    filename = os.path.basename(vis)
+	    if filename.endswith('.ms'):
+	        filename, filext = os.path.splitext(filename)
+	    tmpvislist.append(filename)
 	task_string = '    hif_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list) 
 
         template = '''__rethrow_casa_exceptions = True
