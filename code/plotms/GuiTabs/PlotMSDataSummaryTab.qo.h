@@ -87,6 +87,9 @@ public:
 signals:
 	void changed( int index );
 
+protected:
+	void resizeEvent( QResizeEvent* event );
+
 private slots:
 	void singleDataChanged(PlotMSDataCollapsible* collapsible);
 	void addSinglePlot();
