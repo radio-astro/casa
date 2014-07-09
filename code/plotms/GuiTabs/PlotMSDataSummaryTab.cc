@@ -271,4 +271,25 @@ void PlotMSDataSummaryTab::observeModKeys()   {
 	its_force_reload = using_shift_key  ||  always_replot_checked;
 }
 
+void PlotMSDataSummaryTab::resizeEvent( QResizeEvent* /*event*/ ){
+	QSize currentSize = size();
+	int usedHeight = 0;
+	for ( int i = 0; i < dataList.size(); i++ ){
+		QSize widgetSize = dataList[i]->sizeHint();
+		usedHeight = usedHeight + widgetSize.height();
+	}
+
+	int openIndex = -1;
+	for ( int i = 0; i < dataList.size(); i++ ){
+		if ( !dataList[i]->isMinimized() ){
+			openIndex = i;
+		}
+	}
+	//Pass the height increase/descrease to the open one.
+	if ( openIndex >= 0 ){
+		int heightDiff = currentSize.height() - usedHeight;
+		dataList[openIndex]->resetHeight( heightDiff );
+	}
+}
+
 }
