@@ -322,6 +322,22 @@ const GaussianBeam& ImageBeamSet::getMedianAreaBeamForPol(
 	return _beams(pos[0], pos[1]);
 }
 
+GaussianBeam ImageBeamSet::getMedianAreaBeam() const {
+	Vector<uInt> indices;
+	IPosition shape = _beams.shape();
+	if (shape[0] > 1 && shape[1] > 1) {
+		GenSortIndirect<Double>::sort(indices, Vector<Double>(_areas.tovector()));
+		return _beams.tovector()[indices[indices.size()/2]];
+	}
+	else {
+		GenSortIndirect<Double>::sort(indices, _areas);
+		GaussianBeam medbeam = shape[0] > 1
+			? _beams(indices[indices.size()/2], 0)
+			: _beams(0, indices[indices.size()/2]);
+		return medbeam;
+	}
+
+}
 
 const GaussianBeam ImageBeamSet::getSmallestMinorAxisBeam() const {
 	BeamIter ibend = _beams.end();
