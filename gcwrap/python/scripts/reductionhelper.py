@@ -257,8 +257,7 @@ def openms(vis):
     
 def optimize_thread_parameters(table, query, spwmap):
     try:
-        num_cores = multiprocessing.cpu_count()
-        num_threads = num_cores - 1 if (num_cores > 1) else 1
+        num_threads = 2 # multiprocessing.cpu_count()
         assert num_threads > 0
 
 	subt = table.query(query[0])
@@ -271,12 +270,15 @@ def optimize_thread_parameters(table, query, spwmap):
             data_size_per_record = num_pols * num_channels * (8 + 1) * 2 * 10 #dummy
             assert data_size_per_record > 0
 
-            mem_size = 8*1024*1024*1024 #to be replaced with an appropriate function
+            mem_size = 64*1024*1024*1024 #to be replaced with an appropriate function
             num_record = mem_size / num_threads / data_size_per_record
             if (num_record > num_rows): num_record = num_rows
         else:
             num_record = 0
 
+        ###
+        if num_record > 0: num_record = 1000
+        ###
         return num_record, num_threads
     finally:
         subt.close()
@@ -348,18 +350,17 @@ def reducerecord(record):
     #pol_list = parse_idx_selection(pol_selection, npol)
     #####<should-be end>--------
 
-    for ipol in pol_list:
+    try:
+      for ipol in pol_list:
         ##convert to sakura-----------------
+        data = _casasakura.tosakura_float(record[1][ipol])[0][0]
+        mask = _casasakura.tosakura_bool(record[2][ipol].flatten())[0][0]
+        """
         data_capsule = _casasakura.tosakura_float(record[1][ipol])
 	data = data_capsule[0][0]
-
-        ####<temporary start>------
-	in_mask = record[2][ipol].flatten().copy()
-        ####<temporary end>------
-        ####<should-be start>------
-        #mask_capsule = _casasakura.tosakura_bool(record[2][ipol])
-	#mask = mask_capsule[0][0]
-        ####<should-be end>------
+        mask_capsule = _casasakura.tosakura_bool(record[2][ipol].flatten())
+	mask = mask_capsule[0][0]
+        """
 
         ##calibration-----------------------
         order = 1
@@ -377,70 +378,46 @@ def reducerecord(record):
         result_cal = libsakurapy.apply_position_switch_calibration(1, facdata, nchan, data, offdata)
 
         ##masknaninf------------------------
-	mask_naninf = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
-        libsakurapy.set_false_float_if_nan_or_inf(nchan, data, mask_naninf)
-
-        ####<temporary start>------
-	mask_naninfcasa = _casasakura.tocasa_bool(((mask_naninf,),))
-	for i in range(nchan):
-            in_mask[i] = in_mask[i] or mask_naninfcasa[i]
-        ####<temporary end>------
-        ####<should-be start>------
-        #libsakurapy.operate_logical_and(mask, mask_naninf, mask)
-        ####<should-be end>------
+	mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
+        libsakurapy.set_false_float_if_nan_or_inf(nchan, data, mask_temp)
+        libsakurapy.logical_and(nchan, mask_temp, mask)
 
         ##maskedge--------------------------
-        channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
+        #channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
+        channel_id = ctxcal['channel_id']
         edge = 30 #
         edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (edge-1,))
         edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-edge,))
-	mask_edge = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
-        libsakurapy.set_true_int_in_ranges_exclusive(nchan, channel_id, 1, edge_lower, edge_upper, mask_edge)
-
-        ####<temporary start>------
-        mask_edgecasa = _casasakura.tocasa_bool(((mask_edge,),))
-	for i in range(nchan):
-            in_mask[i] = in_mask[i] or mask_edgecasa[i]
-        mask_capsule = _casasakura.tosakura_bool(in_mask)
-	mask = mask_capsule[0][0]
-        ####<temporary end>------
-        ####<should-be start>------
-        #libsakurapy.operate_logical_and(mask, mask_edge, mask)
-        ####<should-be end>------
+	#mask_edge = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
+        libsakurapy.set_true_int_in_ranges_exclusive(nchan, channel_id, 1, edge_lower, edge_upper, mask_temp)
+        libsakurapy.logical_and(nchan, mask_temp, mask)
 
         ##baseline--------------------------
         clip_threshold_sigma = 5.0 #
         num_fitting_max = 1 #
-        data = libsakurapy.subtract_baseline(nchan, data, mask, ctxbl, \
-	  				     clip_threshold_sigma, \
-                                             num_fitting_max, True)
+        data = libsakurapy.subtract_baseline(nchan, data, mask, ctxbl, clip_threshold_sigma, num_fitting_max, True)
+
         ##clip------------------------------
         threshold = 100.0 #
         clip_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (-threshold,))
         clip_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (threshold,))
-	mask_clip = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
-        result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_clip)
-
-        ####<temporary start>------
-        mask_clipcasa = _casasakura.tocasa_bool(((mask_clip,),))
-	for i in range(nchan):
-            in_mask[i] = in_mask[i] or mask_clipcasa[i]
-        mask_capsule = _casasakura.tosakura_bool(in_mask)
-	mask = mask_capsule[0][0]
-        ####<temporary end>------
-        ####<should-be start>------
-        #libsakurapy.operate_logical_and(mask, mask_clip, mask)
-        ####<should-be end>------
+	#mask_clip = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
+        result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_temp)
+        libsakurapy.logical_and(nchan, mask_temp, mask)
 
         ##smooth----------------------------
         result_smooth = libsakurapy.convolve1D(ctxsm, nchan, data)
 
         ##statistics------------------------
-        #stats = libsakurapy.compute_statistics(nchan, data, mask)
+        stats = libsakurapy.compute_statistics(nchan, data, mask)
 
         ##convert to casa-------------------
-        out_data[ipol] = _casasakura.tocasa_float(data_capsule)
-        out_mask[ipol] = _casasakura.tocasa_bool(mask_capsule)
+        out_data[ipol] = _casasakura.tocasa_float(((data,),))
+        out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
+        #out_data[ipol] = _casasakura.tocasa_float(data_capsule)
+        #out_mask[ipol] = _casasakura.tocasa_bool(mask_capsule)
+    except Exception as e:
+        print '^%^%^%^%^% '+e.message
 
     return (record[0], out_data, out_mask, record[3], 3.14)
 
@@ -461,10 +438,13 @@ def writechunk(table, results):
     put = lambda row, col, val: table.putcell(col, row, val)
     try:
       for record in results:
+        print 'wc0--'+str(record)
         row = int(record[0])
+        print 'wc1'
         data = record[1]
         flag = record[2]
-        #print 'writing result to table %s at row %s...'%(table.name(), row)
+        print 'wc2'
+        print 'writing result to table %s at row %s...'%(table.name(), row)
         put(row, 'FLOAT_DATA', data)
         put(row, 'FLAG', flag)
     except Exception as e:
@@ -699,6 +679,7 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
         time_tsys = _casasakura.tosakura_double(sorted_time)[0][0]
         tsys = tuple(gen_interpolation())
         nrow_tsys = sorted_data.shape[2]
+        channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
 
         context[antennaid] = {'nchan': nchan,
                               'nrow_sky': nrow_sky,
@@ -706,7 +687,8 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
                               'time_sky': time_sky,
                               'time_tsys': time_tsys,
                               'sky': sky,
-                              'tsys': tsys}
+                              'tsys': tsys,
+                              'channel_id': channel_id}
     return context
             
 
