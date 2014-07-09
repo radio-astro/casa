@@ -39,11 +39,11 @@
 #include <measures/Measures/UVWMachine.h>
 #include <measures/Measures/MeasTable.h>
 
-#include <synthesis/MSVis/VisBufferUtil.h>
-#include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferUtil.h>
+#include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/iostream.h>
 
