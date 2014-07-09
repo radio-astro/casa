@@ -126,9 +126,12 @@ Record ImageMetaDataBase::_makeHeader() const {
 		String error;
 		Record rec;
 		info.toRecord(error, rec);
-		header.defineRecord(
-			"perplanebeams", rec.asRecord("perplanebeams")
+		static const String recName = "perplanebeams";
+		Record beamRec = rec.asRecord(recName);
+		beamRec.defineRecord(
+			"median area beam", info.getBeamSet().getMedianAreaBeam().toRecord()
 		);
+		header.defineRecord(recName, beamRec);
 	}
 	vector<Quantity> cdelt = _getIncrements();
 	Vector<String> units = _getAxisUnits();
