@@ -217,6 +217,8 @@ public:
     GaussianBeam getMaxAreaBeam() const
       { return _maxBeam; }
 
+    GaussianBeam getMedianAreaBeam() const;
+
     // Get the position of the beam with the minimum area.
     IPosition getMinAreaBeamPosition() const
       { return _minBeamPos; }

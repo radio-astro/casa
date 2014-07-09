@@ -554,6 +554,55 @@ int main() {
         	);
 
         }
+        {
+        	cout << "*** Test getMedianAreaBeam()" << endl;
+        	Matrix<GaussianBeam> beams(3, 4);
+        	uInt count = 1;
+        	Matrix<GaussianBeam>::iterator iter = beams.begin();
+        	Matrix<GaussianBeam>::iterator end = beams.end();
+        	Quantity radius;
+        	while (iter != end) {
+        		radius = Quantity(count, "arcsec");
+        		iter->setMajorMinor(radius, radius);
+        		iter++;
+        		count++;
+        	}
+        	radius = Quantity(6.5, "arcsec");
+        	beams(2,2) = GaussianBeam(radius, radius, Quantity(0, "deg"));
+        	ImageBeamSet bs(beams);
+        	AlwaysAssert(bs.getMedianAreaBeam() == beams(2, 2), AipsError);
+
+        	Matrix<GaussianBeam> beams2(1, 12);
+        	count = 1;
+        	iter = beams2.begin();
+        	end = beams2.end();
+        	while (iter != end) {
+        		radius = Quantity(count, "arcsec");
+        		iter->setMajorMinor(radius, radius);
+        		iter++;
+        		count++;
+        	}
+        	radius = Quantity(6.5, "arcsec");
+        	beams2(0,10) = GaussianBeam(radius, radius, Quantity(0, "deg"));
+        	ImageBeamSet bs2(beams2);
+        	AlwaysAssert(bs2.getMedianAreaBeam() == beams2(0, 10), AipsError);
+
+        	Matrix<GaussianBeam> beams3(12, 1);
+        	count = 1;
+        	iter = beams3.begin();
+        	end = beams3.end();
+        	while (iter != end) {
+        		radius = Quantity(count, "arcsec");
+        		iter->setMajorMinor(radius, radius);
+        		iter++;
+        		count++;
+        	}
+        	radius = Quantity(6.5, "arcsec");
+        	beams3(8, 0) = GaussianBeam(radius, radius, Quantity(0, "deg"));
+        	ImageBeamSet bs3(beams3);
+        	AlwaysAssert(bs3.getMedianAreaBeam() == beams3(8,0), AipsError);
+
+        }
 	}
 	catch (const AipsError& x) {
 		cout << x.getMesg() << endl;
