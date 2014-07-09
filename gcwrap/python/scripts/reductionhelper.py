@@ -319,29 +319,16 @@ def reducechunk(chunk):
     return tuple((reducerecord(record) for record in chunk))
 
 def reducerecord(record):
-    datatime_capsule = _casasakura.tosakura_double(record[3])
-    datatime = datatime_capsule[0][0]
+    in_row, in_data, in_mask, in_time, in_context = record
+    #print 'reducing row %s'%(in_row)
 
-    ctxcal = record[4][0]
-    ctxbl  = record[4][1]
-    ctxsm  = record[4][2]
-    chan_selection = record[4][3]
-    pol_selection = record[4][4]
-
-    npol = len(record[1])
-    nchan = len(record[1][0])
+    npol = len(in_data)
+    nchan = len(in_data[0])
     out_data = numpy.ndarray([npol, nchan], dtype=numpy.float)
     out_mask = numpy.ndarray([npol, nchan], dtype=numpy.bool)
 
-    """
-    print 'reducing row %s'%(record[0])
-    print '--*--*--*--*--*--*--*--*--*--*--*--*--'
-    print 'npol = %s'%(len(record[1]))
-    print 'len-record[1] = %s'%(len(record[1][0]))
-    print 'len-record[2] = %s'%(len(record[2][0]))
-    print 'in_mask = ' + str(record[2][0])
-    print '--*--*--*--*--*--*--*--*--*--*--*--*--'
-    """
+    datatime = _casasakura.tosakura_double(numpy.array([in_time]))[0][0]
+    ctxcal, ctxbl, ctxsm, chan_selection, pol_selection = in_context
 
     #####<temporary start>--------
     pol_list = xrange(npol)
@@ -353,14 +340,8 @@ def reducerecord(record):
     try:
       for ipol in pol_list:
         ##convert to sakura-----------------
-        data = _casasakura.tosakura_float(record[1][ipol])[0][0]
-        mask = _casasakura.tosakura_bool(record[2][ipol].flatten())[0][0]
-        """
-        data_capsule = _casasakura.tosakura_float(record[1][ipol])
-	data = data_capsule[0][0]
-        mask_capsule = _casasakura.tosakura_bool(record[2][ipol].flatten())
-	mask = mask_capsule[0][0]
-        """
+        data = _casasakura.tosakura_float(in_data[ipol])[0][0]
+        mask = _casasakura.tosakura_bool(in_mask[ipol].flatten())[0][0]
 
         ##calibration-----------------------
         order = 1
@@ -383,12 +364,10 @@ def reducerecord(record):
         libsakurapy.logical_and(nchan, mask_temp, mask)
 
         ##maskedge--------------------------
-        #channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
         channel_id = ctxcal['channel_id']
         edge = 30 #
         edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (edge-1,))
         edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-edge,))
-	#mask_edge = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
         libsakurapy.set_true_int_in_ranges_exclusive(nchan, channel_id, 1, edge_lower, edge_upper, mask_temp)
         libsakurapy.logical_and(nchan, mask_temp, mask)
 
@@ -401,7 +380,6 @@ def reducerecord(record):
         threshold = 100.0 #
         clip_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (-threshold,))
         clip_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (threshold,))
-	#mask_clip = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
         result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_temp)
         libsakurapy.logical_and(nchan, mask_temp, mask)
 
@@ -414,12 +392,10 @@ def reducerecord(record):
         ##convert to casa-------------------
         out_data[ipol] = _casasakura.tocasa_float(((data,),))
         out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
-        #out_data[ipol] = _casasakura.tocasa_float(data_capsule)
-        #out_mask[ipol] = _casasakura.tocasa_bool(mask_capsule)
     except Exception as e:
         print '^%^%^%^%^% '+e.message
 
-    return (record[0], out_data, out_mask, record[3], 3.14)
+    return (in_row, out_data, out_mask, in_time, 3.14)
 
 def reducerecord2(record):
     data, mask = tosakura(record[1], record[2])
@@ -438,13 +414,10 @@ def writechunk(table, results):
     put = lambda row, col, val: table.putcell(col, row, val)
     try:
       for record in results:
-        print 'wc0--'+str(record)
         row = int(record[0])
-        print 'wc1'
         data = record[1]
         flag = record[2]
-        print 'wc2'
-        print 'writing result to table %s at row %s...'%(table.name(), row)
+        #print 'writing result to table %s at row %s...'%(table.name(), row)
         put(row, 'FLOAT_DATA', data)
         put(row, 'FLAG', flag)
     except Exception as e:
