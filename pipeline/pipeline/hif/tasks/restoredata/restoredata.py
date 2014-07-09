@@ -113,7 +113,7 @@ class RestoreDataInputs(basetask.StandardInputs):
     @property
     def copytoraw(self):
         if self._copytoraw is None:
-            self._copytoraw = False
+            self._copytoraw = True
             return self._copytoraw
         return self._copytoraw
 
