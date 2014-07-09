@@ -29,6 +29,7 @@
 
 #include <casa/aips.h>
 
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Utilities/DataType.h>
@@ -349,7 +350,6 @@ String ImageMetaDataBase::_getEpochString() const {
 	return MVTime(_getObsDate().getValue()).string(MVTime::YMD);
 }
 
-
 IPosition ImageMetaDataBase::_getShape() const {
 	if (_shape.empty()) {
 		SPCIIF imf = _getFloatImage();
@@ -358,7 +358,6 @@ IPosition ImageMetaDataBase::_getShape() const {
 	}
 	return _shape;
 }
-
 
 void ImageMetaDataBase::_fieldToLog(
 	const Record& header,const String& field, Int precision
@@ -609,6 +608,32 @@ Int ImageMetaDataBase::stokesPixelNumber(
 		pixNum = -1;
     }
 	return pixNum;
+}
+
+String ImageMetaDataBase::_getProjection() const {
+	const CoordinateSystem csys = _getCoords();
+	if (! csys.hasDirectionCoordinate()) {
+		return "";
+	}
+	Projection proj = csys.directionCoordinate().projection();
+	if (proj.type() == Projection::SIN) {
+		Vector<Double> pars =  proj.parameters();
+		if (pars.size() == 2 && (anyNE(pars, 0.0))) {
+			// modified SIN
+			ostringstream os;
+			os << "SIN (" << pars << ")";
+			if (pars[0] == 0) {
+				Vector<Double> refval = csys.directionCoordinate().referenceValue();
+				Vector<String> units = csys.directionCoordinate().worldAxisUnits();
+				Double dec = Quantity(refval[1], units[1]).getValue("rad");
+				if (dec != 0 && near(pars[1], 1/std::tan(dec))) {
+					os << ": NCP";
+				}
+			}
+			return os.str();
+		}
+	}
+	return proj.name();
 }
 
 String ImageMetaDataBase::stokesAtPixel(

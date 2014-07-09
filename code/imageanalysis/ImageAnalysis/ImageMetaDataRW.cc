@@ -484,7 +484,6 @@ Quantity ImageMetaDataRW::_getQuantity(const ValueHolder& v) {
 	}
 }
 
-
 Bool ImageMetaDataRW::set(
 	const String& key, const ValueHolder& value
 ) {
@@ -607,7 +606,7 @@ Bool ImageMetaDataRW::set(
 		dircoord.setProjection(projection);
 		csys.replaceCoordinate(dircoord, csys.directionCoordinateNumber());
 		_setCsys(csys);
-		_projection = Projection::name(ptype);
+		_projection = _getProjection();
 	}
 	else if (c == ImageMetaDataBase::_REFFREQTYPE) {
 		String v = _getString(key, value);
@@ -1076,9 +1075,8 @@ String ImageMetaDataRW::_getObserver() const {
 }
 
 String ImageMetaDataRW::_getProjection() const {
-	const CoordinateSystem& csys = _getCoords();
-	if (_projection.empty() && csys.hasDirectionCoordinate()) {
-		_projection = csys.directionCoordinate().projection().name();
+	if (_projection.empty()) {
+		_projection = ImageMetaDataBase::_getProjection();
 	}
 	return _projection;
 }

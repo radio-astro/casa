@@ -173,8 +173,8 @@ String ImageMetaData::_getObserver() const {
 }
 
 String ImageMetaData::_getProjection() const {
-	if (_projection.empty() && _getCoords().hasDirectionCoordinate()) {
-		_projection = _getCoords().directionCoordinate().projection().name();
+	if (_projection.empty()) {
+		_projection = ImageMetaDataBase::_getProjection();
 	}
 	return _projection;
 }
