@@ -1578,12 +1578,40 @@ class imhead_test(unittest.TestCase):
         
     def test_ncp(self):
         """Test NCP projection is reported, CAS-6568"""
-        myia = iatool()
         imagename = datapath + "ncp_proj.im"
         res = imhead(imagename, mode="list")
         proj = res['projection']
         self.assertTrue(proj.count("NCP") == 1)
         
+    def test_median_area_beam(self):
+        """Test median area beam is returned when there are multiple beams, CAS-6727"""
+        myia = iatool()
+        imagename = "CAS-6727.im"
+        myia.fromshape(imagename, [1,1,4,3])
+        myia.setrestoringbeam(
+            major="2arcsec", minor="2arcsec", pa="0deg",
+            channel=0, polarization=0
+        )
+        count = 1
+        for i in range(4):
+            for j in range(3):
+                radius = str(count) + "arcsec"
+                myia.setrestoringbeam(
+                    major=radius, minor=radius, pa="0deg",
+                    channel=j, polarization=i
+                )
+                count += 1
+        myia.done()
+        zz = imhead(imagename=imagename, mode="list")
+        self.assertTrue(zz['perplanebeams'].has_key("median area beam"))
+        self.assertTrue(
+            zz['perplanebeams']["median area beam"]
+            == {
+                'major': {'value': 7.0, 'unit': 'arcsec'},
+                'positionangle': {'value': 0.0, 'unit': 'deg'},
+                'minor': {'value': 7.0, 'unit': 'arcsec'}
+            }
+        )
         
 def suite():
     return [imhead_test]    
