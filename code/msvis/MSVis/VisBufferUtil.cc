@@ -39,11 +39,11 @@
 #include <measures/Measures/UVWMachine.h>
 #include <measures/Measures/MeasTable.h>
 
-#include <msvis/MSVis/VisBufferUtil.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBufferUtil.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/iostream.h>
 
@@ -142,9 +142,7 @@ VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb) {
 			False, False);
     retval = !uvwMachine.isNOP();
     dphase.resize(vb.nRows());
-    dphase.set(0.0);
-    if(uvw.nelements() ==0)
-      uvw=vb.uvw();
+    uvw.resize(3, vb.nRows());
     for (Int row=0; row< vb.nRows(); ++row){
       Vector<Double> eluvw(uvw.column(row));
       uvwMachine.convertUVW(dphase(row), eluvw);
