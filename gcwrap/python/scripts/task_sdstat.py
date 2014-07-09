@@ -85,7 +85,6 @@ class sdstat_worker(sdutil.sdtask_template):
         self.savestats = ''
         self.returnstats = {}
         rootidx = []
-        unflagged_rows = []
 
 #         # Warning for multi-IF data
 #         if len(self.scan.getifnos()) > 1:
@@ -140,9 +139,15 @@ class sdstat_worker(sdutil.sdtask_template):
             self.__stats_list_to_val()
         # reshape statsdict for return
         for k in ['min','max']:
-            self.returnstats['%s_abscissa'%(k)] = qa.quantity(self.returnstats.pop('%s_abc'%(k)),self.xunit)
+            retsts = {}
+            retsts['value'] = self.returnstats.pop('%s_abc'%(k))
+            retsts['unit'] = self.xunit
+            self.returnstats['%s_abscissa'%(k)] = retsts
         for (k,u) in [('eqw',self.xunit),('totint',self.intunit)]:
-            self.returnstats[k] = qa.quantity(self.returnstats[k],u)
+            retsts = {}
+            retsts['value'] = self.returnstats[k]
+            retsts['unit'] = u
+            self.returnstats[k] = retsts
 
     def save(self):
         if ( len(self.outfile) > 0 ):
@@ -195,62 +200,38 @@ class sdstat_worker(sdutil.sdtask_template):
         
         if sd.rcParams['verbose']:
             # Print equivalent width
-            out = self.__get_statstext('eqw', self.abclbl, 'eqw', self.unflagged_rows)
+            out = self.__get_statstext('eqw', self.abclbl, 'eqw')
             self.savestats += out
 
             # Print integrated flux
-            outp = self.__get_statstext('Integrated intensity', self.intlbl, 'totint', self.unflagged_rows)
+            outp = self.__get_statstext('Integrated intensity', self.intlbl, 'totint')
             self.savestats += outp
 
             # to logger
             casalog.post(out[:-2]+outp)
 
-        self.unflagged_rows.reverse()
-        for name in statsname:
-            row_list = range(self.scan.nrow())
-            row_list.reverse()
-            for irow in row_list:
-                try:
-                    self.unflagged_rows.index(irow)
-                except:
-                    del self.result[name][irow]
-
     def __calc_eqw_and_integf(self):
         eqw = None
         integratef = None
-        self.unflagged_rows = []
         if isinstance(self.result['max'],list):
             # User selected multiple scans,ifs
             ns = len(self.result['max'])
             eqw=[]
             integratef=[]
-            j = 0
-            end_rows = False
             for i in range(ns):
-                while self.scan._getflagrow(j):
-                    j += 1
-                    if j == ns:
-                        end_rows = True
-                        break
-                if end_rows: break
-                    
                 #Get bin width
-                abcissa, lbl = self.scan.get_abcissa(rowno=j)
+                abcissa, lbl = self.scan.get_abcissa(rowno=i)
                 dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
 
                 # Construct equivalent width (=sum/max)
-                eqw = eqw + [get_eqw(self.result['max'][j],
-                                     self.result['min'][j],
-                                     self.result['sum'][j],
+                eqw = eqw + [get_eqw(self.result['max'][i],
+                                     self.result['min'][i],
+                                     self.result['sum'][i],
                                      dabc)]
                 # Construct integrated flux
-                integratef = integratef + [get_integf(self.result['sum'][j], dabc)]
+                integratef = integratef + [get_integf(self.result['sum'][i], dabc)]
 
-                self.unflagged_rows.append(j)
-                j += 1
-                if j == ns: break
         else:
-            self.unflagged_rows = [0]
             # Single scantable only
             abcissa, lbl = self.scan.get_abcissa(rowno=0)
             dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
@@ -275,7 +256,6 @@ class sdstat_worker(sdutil.sdtask_template):
                 self.returnstats[key] += list(val)
             else:
                 self.returnstats[key] = list(val)
-        
 
     def __set_mask(self):
         self.msk = None
@@ -327,7 +307,7 @@ class sdstat_worker(sdutil.sdtask_template):
         self.xunit = check_unit(self.abclbl,self.abclbl,'_')
         self.intunit = check_unit(ordlbl,ordlbl+'.'+self.abclbl,'_.'+self.abclbl)
 
-    def __get_statstext(self, title, label, key, eff_rows):
+    def __get_statstext(self, title, label, key):
         sep = "--------------------------------------------------"
         head = string.join([sep,string.join([" %s ["%(title),label,"]"]," "),sep],'\n')
         tail = ''
@@ -336,9 +316,11 @@ class sdstat_worker(sdutil.sdtask_template):
         if isinstance(val,list):
             ns = len(val)
             for i in xrange(ns):
-                out += self.__get_statstr(eff_rows[i], val[i], sep)
+                if val[i] is not None:
+                    out += self.__get_statstr(i, val[i], sep)
         else:
-            out += self.__get_statstr(0, val, sep)
+            if val is not None:
+                out += self.__get_statstr(0, val, sep)
         out += '\n%s'%(tail)
         return out
 
@@ -365,7 +347,9 @@ def check_unit(unit_in,valid_unit=None,default_unit=None):
 
 def get_eqw(maxl, minl, suml, dabc):
     eqw = 0.0
-    if ( maxl != 0.0 or minl != 0.0 ):
+    if ( maxl is None or minl is None or suml is None or dabc is None):
+        eqw = None
+    elif ( maxl != 0.0 or minl != 0.0 ):
         if ( abs(maxl) >= abs(minl) ):
             eqw = suml/maxl*dabc
         else:
@@ -373,7 +357,10 @@ def get_eqw(maxl, minl, suml, dabc):
     return eqw
     
 def get_integf(suml, dabc):
-    return suml * dabc
+    if suml is None or dabc is None:
+        return None
+    else:
+        return suml * dabc
 
 def get_text_from_file(filename):
     text = ''
@@ -381,4 +368,3 @@ def get_text_from_file(filename):
         for line in f:
             text += line
     return text
-

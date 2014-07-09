@@ -1858,17 +1858,17 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
     """
     infile = 'sdstat_flagtest.asap'
     reffile = 'sdstat_flagtest_ref.txt'
-    ref_retstat = {'max': [1.0, 1.0],
-                   'max_abscissa': {'unit': 'channel', 'value': numpy.array([5., 0.])},
-                   'min': [1.0, 1.0],
-                   'min_abscissa': {'unit': 'channel', 'value': numpy.array([5., 0.])},
-                   'sum': [85.0, 100.0],
-                   'mean': [1.0, 1.0],
-                   'median': [1.0, 1.0],
-                   'rms': [1.0, 1.0],
-                   'stddev': [0.0, 0.0],
-                   'eqw': {'unit': 'channel', 'value': numpy.array([85., 100.])},
-                   'totint': {'unit': 'K.channel', 'value': numpy.array([85., 100.])}
+    ref_retstat = {'max': [None, None, 1.0, 1.0],
+                   'max_abscissa': {'unit': 'channel', 'value': numpy.array([None, None, 5., 0.])},
+                   'min': [None, None, 1.0, 1.0],
+                   'min_abscissa': {'unit': 'channel', 'value': numpy.array([None, None, 5., 0.])},
+                   'sum': [None, None, 85.0, 100.0],
+                   'mean': [None, None, 1.0, 1.0],
+                   'median': [None, None, 1.0, 1.0],
+                   'rms': [None, None, 1.0, 1.0],
+                   'stddev': [None, None, 0.0, 0.0],
+                   'eqw': {'unit': 'channel', 'value': numpy.array([None, None, 85., 100.])},
+                   'totint': {'unit': 'K.channel', 'value': numpy.array([None, None, 85., 100.])}
                    }
 
     def setUp( self ):
