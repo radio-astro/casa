@@ -111,7 +111,7 @@ def get_bar_width(pqascore):
     if pqascore.score in (None, '', 'N/A'):
         return 0
     else:
-        return 100.0 * pqascore.score
+        return 5.0 + 95.0 * pqascore.score
 
 def format_score(pqascore):
     if pqascore.score in (None, '', 'N/A'):

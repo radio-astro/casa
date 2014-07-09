@@ -39,7 +39,7 @@ def get_bar_width(scores, result):
 	if qascore.score in (None, '', 'N/A'):
 		return 0
 	else:
-		return 100.0 * qascore.score
+		return 5.0 + 95.0 * qascore.score
 
 def format_score(scores, result):
 	qascore = scores[result.stage_number]
