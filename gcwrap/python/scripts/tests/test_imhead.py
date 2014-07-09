@@ -1576,6 +1576,15 @@ class imhead_test(unittest.TestCase):
             )
         )
         
+    def test_ncp(self):
+        """Test NCP projection is reported, CAS-6568"""
+        myia = iatool()
+        imagename = datapath + "ncp_proj.im"
+        res = imhead(imagename, mode="list")
+        proj = res['projection']
+        self.assertTrue(proj.count("NCP") == 1)
+        
+        
 def suite():
     return [imhead_test]    
     
