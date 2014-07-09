@@ -13,6 +13,14 @@
 #include <libsakura/sakura.h>
 #include <libsakura/sakura-python.h>
 
+#ifdef PYTHON_NO_RELEASE_GIL
+#define CASA_BEGIN_ALLOW_THREADS {
+#define CASA_END_ALLOW_THREADS }
+#else
+#define CASA_BEGIN_ALLOW_THREADS Py_BEGIN_ALLOW_THREADS
+#define CASA_END_ALLOW_THREADS Py_END_ALLOW_THREADS
+#endif
+
 class dataconversion_error : public std::runtime_error
 {
 public:
@@ -161,7 +169,8 @@ public:
     // Convert PyArray object data to sakura_PyAlignedBuffer
     size_t npol, nchan, nrow;
     std::vector<sakura_PyAlignedBuffer *> buffer_list;
-    Py_BEGIN_ALLOW_THREADS
+    //Py_BEGIN_ALLOW_THREADS
+    CASA_BEGIN_ALLOW_THREADS
     try {
       status = true;
       if (ndim == 1) {
@@ -186,7 +195,8 @@ public:
     catch (...) {
       status = false;
     }
-    Py_END_ALLOW_THREADS
+    //Py_END_ALLOW_THREADS
+    CASA_END_ALLOW_THREADS
 
     if (!status) {
       throw dataconversion_error("Failed to read CASA array");
@@ -220,11 +230,11 @@ public:
       return NULL;
     }
 
-    //PDataType *pyarray_data = reinterpret_cast<PDataType *>(PyArray_DATA(pyarray));
-
+    // storage for returned array
     void *pyarray_data = NULL;
     
-    Py_BEGIN_ALLOW_THREADS
+    //Py_BEGIN_ALLOW_THREADS
+    CASA_BEGIN_ALLOW_THREADS
     try {
       status = true;
       size_t nelements = npol * nchan * nrow;
@@ -240,7 +250,8 @@ public:
     catch (...) {
       status = false;
     }
-    Py_END_ALLOW_THREADS
+    //Py_END_ALLOW_THREADS
+    CASA_END_ALLOW_THREADS
 
     if (!status) {
       if (pyarray_data != NULL) {
