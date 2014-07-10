@@ -258,7 +258,7 @@ def openms(vis):
     
 def optimize_thread_parameters(table, query, spwmap):
     try:
-        num_threads = 2 # multiprocessing.cpu_count()
+        num_threads = 1 # multiprocessing.cpu_count()
         assert num_threads > 0
 
 	subt = table.query(query[0])
@@ -278,7 +278,7 @@ def optimize_thread_parameters(table, query, spwmap):
             num_record = 0
 
         ###
-        if num_record > 0: num_record = 1000
+        if num_record > 0: num_record = 30000
         ###
         return num_record, num_threads
     finally:
@@ -346,8 +346,8 @@ def reducerecord(record):
         nrow_sky = ctxcal['nrow_sky']
         tsystime = ctxcal['time_tsys']
         nrow_tsys = ctxcal['nrow_tsys']
-        offdata = ctxcal['offdata']
-        facdata = ctxcal['facdata']
+        offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
+        facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
         #mask--------------------
         mask_temp = ctxmc['mask_temp']
         channel_id = ctxmc['channel_id']
@@ -671,8 +671,6 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
         time_tsys = _casasakura.tosakura_double(sorted_time)[0][0]
         tsys = tuple(gen_interpolation())
         nrow_tsys = sorted_data.shape[2]
-        offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
-        facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
 
         context[antennaid] = {'nchan': nchan,
                               'nrow_sky': nrow_sky,
@@ -680,9 +678,7 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
                               'time_sky': time_sky,
                               'time_tsys': time_tsys,
                               'sky': sky,
-                              'tsys': tsys,
-                              'offdata': offdata,
-                              'facdata': facdata}
+                              'tsys': tsys}
     return context
             
 def create_maskclip_context(nchan, edge, clipminmax):
