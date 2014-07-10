@@ -215,7 +215,6 @@ class SDFlagDataWorker(object):
                 # Calculate Standard Deviation (NOT RMS)
                 ### 2011/05/26 shrink the size of data on memory
                 mask_in = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', row))
-                SpIn[index] *= mask_in
                 OldRMS, Nmask = self._calculate_masked_stddev(SpIn[index], mask_in)
                 stats[2] = OldRMS
                 del Nmask
@@ -224,7 +223,6 @@ class SDFlagDataWorker(object):
                 mask_out = numpy.zeros(NCHAN)
                 if is_baselined:
                     mask_out = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', row))
-                    SpOut[index] *= mask_out
                     NewRMS, Nmask = self._calculate_masked_stddev(SpOut[index], mask_out)
                     del Nmask
                 stats[1] = NewRMS
