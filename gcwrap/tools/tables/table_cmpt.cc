@@ -684,27 +684,169 @@ table::query(const std::string& query, const std::string& name,
 }
 
 ::casac::variant*
-table::calc(const std::string& expr)
+table::calc(const std::string& expr, const std::string& prefix)
 {
+  string str;
  *itsLog << LogOrigin(__func__, name());
  ::casac::variant *rstat(0);
  try {
-	 if(itsTable){
-		 std::ostringstream calcString;
-		 calcString <<  "calc from " << itsTable->table().tableName() << " calc ";
-		 calcString <<   expr;
+
+   str=prefix+" calc "+expr;
+   // if(itsTable){
+   //		 std::ostringstream calcString;
+   //		 calcString <<  "calc from " << itsTable->table().tableName() << " calc ";
+   //		 calcString <<   expr;
 		 //casa::Table *theQTab = new Table(tableCommand(taqlString.str()));
-		 *itsLog << LogIO::WARN << "Calc not implemented!" << LogIO::POST;
-	 } else {
-		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
-	      // TODO : IMPLEMENT ME HERE !
- } catch (AipsError x) {
+   //		 *itsLog << LogIO::WARN << "Calc not implemented!" << LogIO::POST;
+   //	 } else {
+   //		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+   //	 }
+
+   TaQLResult result;
+   cerr << "TaQL string: " << str << endl;
+   result = tableCommand (str);
+   if(result.isTable()){
+     *itsLog << LogIO::SEVERE << "Result is a table tool please use table.taql for now till the developers fix this " << LogIO::POST;
+   }
+   else{
+     std::vector<int> shape;
+     Vector<uInt> rownrs (result.node().nrow());
+     indgen (rownrs);
+     //cerr << "rownrs " << result.node().nrow() << "  is scalar " << result.node().isScalar() << endl;
+     if(result.node().isScalar())
+     {
+       switch (result.node().getColumnDataType()) {
+       case TpBool:{
+	 Array<Bool> oBool;
+	 oBool=result.node().getColumnBool(rownrs);
+	 oBool.shape().asVector().tovector(shape);
+	 std::vector<bool> s_bool(oBool.begin(), oBool.end());
+	 rstat=new ::casac::variant(s_bool, shape);
+       }
+	 break;
+       case TpUChar:{
+	 Array<uChar> ouChar;
+	 ouChar=result.node().getColumnuChar(rownrs);
+	 ouChar.shape().asVector().tovector(shape);
+	 std::vector<int> s_uchar(ouChar.begin(), ouChar.end());
+	 rstat=new ::casac::variant(s_uchar, shape);
+       }
+	 break;
+       case TpShort:{
+	 Array<Short> oShort;
+	 oShort=result.node().getColumnShort(rownrs);
+	 oShort.shape().asVector().tovector(shape);
+	 std::vector<int> s_short(oShort.begin(), oShort.end());
+	 rstat=new ::casac::variant(s_short, shape);
+       }
+	 break;
+	case TpUShort:{
+	 Array<uShort> oushort;
+	 oushort=result.node().getColumnuShort(rownrs);
+	 oushort.shape().asVector().tovector(shape);
+	 std::vector<int> s_ushort(oushort.begin(), oushort.end());
+	 rstat=new ::casac::variant(s_ushort, shape);
+       }
+	 break; 
+       case TpInt:{
+	 Array<Int> oInt;
+	 oInt=result.node().getColumnInt(rownrs);
+	 oInt.shape().asVector().tovector(shape);
+	 std::vector<int> s_int(oInt.begin(), oInt.end());
+	 rstat=new ::casac::variant(s_int, shape);
+       }
+	 break;
+       case TpUInt:{
+	 Array<uInt> ouInt;
+	 ouInt=result.node().getColumnuInt(rownrs);
+	 ouInt.shape().asVector().tovector(shape);
+	 std::vector<int> s_uint(ouInt.begin(), ouInt.end());
+	 rstat=new ::casac::variant(s_uint, shape);
+       } 
+	 break;
+       case TpFloat:{
+	 Array<Float> oFloat;
+	 oFloat=result.node().getColumnFloat(rownrs);
+	 oFloat.shape().asVector().tovector(shape);
+	 std::vector<double> s_float(oFloat.begin(), oFloat.end());
+	 rstat=new ::casac::variant(s_float, shape);
+       }
+	 break;
+       case TpDouble:{
+	 Array<Double> oDouble;
+	 oDouble=result.node().getColumnDouble(rownrs);
+	 oDouble.shape().asVector().tovector(shape);
+	 std::vector<double> s_double(oDouble.begin(), oDouble.end());
+	 rstat=new ::casac::variant(s_double, shape);
+       }	
+	 break;
+       case TpComplex:{
+	 Array<Complex> oComplex;
+	 oComplex=result.node().getColumnComplex(rownrs);
+	 oComplex.shape().asVector().tovector(shape);
+	 std::vector<std::complex<double> > s_complex(oComplex.begin(), oComplex.end());
+	 rstat=new ::casac::variant(s_complex, shape);
+       }	
+	 break;
+       case TpDComplex:{
+	 Array<DComplex> odComplex;
+	 odComplex=result.node().getColumnDComplex(rownrs);
+	 odComplex.shape().asVector().tovector(shape);
+	 std::vector<std::complex<double> > s_dcomplex(odComplex.begin(), odComplex.end());
+	 rstat=new ::casac::variant(s_dcomplex, shape);
+       }	
+	 break;
+       case TpString:{
+	 Array<String> oString;
+	 oString=result.node().getColumnString(rownrs);
+	 oString.shape().asVector().tovector(shape);
+	 std::vector<string> s_string(oString.begin(), oString.end());
+	 rstat=new ::casac::variant(s_string, shape);
+       }	
+	 break;
+	  
+       default:
+	 *itsLog << LogIO::SEVERE << "Don't know how to interprete result" << LogIO::POST;
+	 break;
+
+       }
+     }
+     else{
+       Record outrec;
+        for (uInt i=0; i< result.node().nrow(); i++) {
+	  switch (result.node().dataType()) {
+	  case TpBool:
+	    outrec.define(String::toString(i), result.node().getArrayBool(i));
+	    break;
+	  case TpInt:
+	    outrec.define(String::toString(i), result.node().getArrayInt(i));
+	    break;
+	  case TpDouble:
+	    outrec.define(String::toString(i), result.node().getArrayDouble(i));
+	    break;
+	  case TpDComplex:
+	    outrec.define(String::toString(i), result.node().getArrayDComplex(i));
+	    break;
+	  case TpString:
+	    outrec.define(String::toString(i), result.node().getArrayString(i));
+	    break;
+	  default:
+	     *itsLog << LogIO::SEVERE << "Don't know how to interprete result" << LogIO::POST;
+	     break;
+	  }
+	}
+	::casac::record *rec=fromRecord(outrec);
+	rstat=new ::casac::variant(*rec);
+     }
+     
+     
+   }	      
+   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  if(!rstat)
-	 throw AipsError("Unable to create table");
+	 throw AipsError("Failed while using TaQL expression "+str);
  return rstat;
 }
 
