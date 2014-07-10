@@ -247,6 +247,9 @@ bool PlotMSPlotManager::findEmptySpot( Int& row, Int& col ){
 void PlotMSPlotManager::removePlot( PlotMSPlot* plot ){
 	std::vector<PlotMSPlot*>::iterator plotLoc = std::find( itsPlots_.begin(), itsPlots_.end(), plot );
 	if ( plotLoc != itsPlots_.end() ){
+		//Hold the drawing so we don't trigger a draw thread that causes
+		//a segfault as we delete the plot out from under it.
+		plot->waitForDrawing(true);
 		plot->clearCanvases();
 		plot->detachFromCanvases();
 		itsPages_.disown( plot );

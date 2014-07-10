@@ -170,6 +170,10 @@ void PlotMSPages::resize(size_t pages) {
     // Shrink if needed
     if(pages < currentSize) {
     	itsPages_.resize(pages, PlotMSPage(*this));
+    	//Reset the current page number if it is too big.
+    	if ( itsCurrentPageNum_>= itsPages_.size() ){
+    		itsCurrentPageNum_ = 0;
+    	}
     }
     // If we are adding new pages, initialize them
     for(size_t i = currentSize; i < pages; ++i) {
