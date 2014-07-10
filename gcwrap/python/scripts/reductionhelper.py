@@ -226,7 +226,8 @@ def generate_query(vis, field=None, spw=None, timerange=None, antenna=None, scan
 def get_context(query, spwidmap, ctx):
     ddid, antennaid, chan_selection, pol_selection = _parse_query(query)
     spwid = spwidmap[ddid]
-    return ctx[spwid][0][antennaid], ctx[spwid][1], ctx[spwid][2], chan_selection, pol_selection
+    c = ctx[spwid]
+    return c[0][antennaid], c[1], c[2], c[3], chan_selection, pol_selection
 
 def _parse_query(query):
     ddid = None
@@ -328,7 +329,7 @@ def reducerecord(record):
     out_mask = numpy.ndarray([npol, nchan], dtype=numpy.bool)
 
     datatime = _casasakura.tosakura_double(numpy.array([in_time]))[0][0]
-    ctxcal, ctxbl, ctxsm, chan_selection, pol_selection = in_context
+    ctxcal, ctxbl, ctxsm, ctxmc, chan_selection, pol_selection = in_context
 
     #####<temporary start>--------
     pol_list = xrange(npol)
@@ -338,60 +339,71 @@ def reducerecord(record):
     #####<should-be end>--------
 
     try:
-      for ipol in pol_list:
-        ##convert to sakura-----------------
-        data = _casasakura.tosakura_float(in_data[ipol])[0][0]
-        mask = _casasakura.tosakura_bool(in_mask[ipol].flatten())[0][0]
-
-        ##calibration-----------------------
-        order = 1
-        skydata = ctxcal['sky'][ipol]
+        ##common variables-------
+        #calibration-------------
+        cal_interp_order = 1
         skytime = ctxcal['time_sky']
         nrow_sky = ctxcal['nrow_sky']
-        offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
-        libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nrow_sky, skytime, nchan, skydata, 1, datatime, offdata)
-
-        tsysdata = ctxcal['tsys'][ipol]
         tsystime = ctxcal['time_tsys']
         nrow_tsys = ctxcal['nrow_tsys']
-        facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
-        libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nrow_tsys, tsystime, nchan, tsysdata, 1, datatime, facdata)
-        result_cal = libsakurapy.apply_position_switch_calibration(1, facdata, nchan, data, offdata)
+        offdata = ctxcal['offdata']
+        facdata = ctxcal['facdata']
+        #mask--------------------
+        mask_temp = ctxmc['mask_temp']
+        channel_id = ctxmc['channel_id']
+        edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (ctxmc['edge_left']-1,))
+        edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-ctxmc['edge_right'],))
+        ##clip--------------------
+        clip_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (ctxmc['clip_lower'],))
+        clip_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (ctxmc['clip_upper'],))
 
-        ##masknaninf------------------------
-	mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
-        libsakurapy.set_false_float_if_nan_or_inf(nchan, data, mask_temp)
-        libsakurapy.logical_and(nchan, mask_temp, mask)
+        for ipol in pol_list:
+            ##convert to sakura-----------------
+            data = _casasakura.tosakura_float(in_data[ipol])[0][0]
+            mask = _casasakura.tosakura_bool(in_mask[ipol].flatten())[0][0]
 
-        ##maskedge--------------------------
-        channel_id = ctxcal['channel_id']
-        edge = 30 #
-        edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (edge-1,))
-        edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-edge,))
-        libsakurapy.set_true_int_in_ranges_exclusive(nchan, channel_id, 1, edge_lower, edge_upper, mask_temp)
-        libsakurapy.logical_and(nchan, mask_temp, mask)
+            ##calibration-----------------------
+            libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, 
+                                                cal_interp_order, nrow_sky, skytime, 
+                                                nchan, ctxcal['sky'][ipol], 
+                                                1, datatime, offdata)
+            libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, 
+                                                cal_interp_order, nrow_tsys, tsystime, 
+                                                nchan, ctxcal['tsys'][ipol], 
+                                                1, datatime, facdata)
+            result_cal = libsakurapy.apply_position_switch_calibration(1, facdata, 
+                                                                       nchan, data, offdata)
 
-        ##baseline--------------------------
-        clip_threshold_sigma = 5.0 #
-        num_fitting_max = 1 #
-        data = libsakurapy.subtract_baseline(nchan, data, mask, ctxbl, clip_threshold_sigma, num_fitting_max, True)
+            ##masknaninf------------------------
+            libsakurapy.set_false_float_if_nan_or_inf(nchan, data, mask_temp)
+            libsakurapy.logical_and(nchan, mask_temp, mask)
 
-        ##clip------------------------------
-        threshold = 100.0 #
-        clip_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (-threshold,))
-        clip_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (threshold,))
-        result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_temp)
-        libsakurapy.logical_and(nchan, mask_temp, mask)
+            ##maskedge--------------------------
+            libsakurapy.set_true_int_in_ranges_exclusive(nchan, channel_id, 
+                                                         1, edge_lower, edge_upper, mask_temp)
+            libsakurapy.logical_and(nchan, mask_temp, mask)
 
-        ##smooth----------------------------
-        result_smooth = libsakurapy.convolve1D(ctxsm, nchan, data)
+            ##baseline--------------------------
+            data = libsakurapy.subtract_baseline(nchan, data, mask, 
+                                                 ctxbl['context'], 
+                                                 ctxbl['clip_threshold'], 
+                                                 ctxbl['num_fitting_max'], 
+                                                 True)
 
-        ##statistics------------------------
-        stats = libsakurapy.compute_statistics(nchan, data, mask)
+            ##clip------------------------------
+            result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_temp)
+            libsakurapy.logical_and(nchan, mask_temp, mask)
 
-        ##convert to casa-------------------
-        out_data[ipol] = _casasakura.tocasa_float(((data,),))
-        out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
+            ##smooth----------------------------
+            result_smooth = libsakurapy.convolve1D(ctxsm, nchan, data)
+
+            ##statistics------------------------
+            stats = libsakurapy.compute_statistics(nchan, data, mask)
+
+            ##convert to casa-------------------
+            out_data[ipol] = _casasakura.tocasa_float(((data,),))
+            out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
+
     except Exception as e:
         print '^%^%^%^%^% '+e.message
 
@@ -525,17 +537,24 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
                                                          antennaid_list,
                                                          interp)
         # create baseline context
+        baseline_context = {}
+        baseline_context['blmask'] = blmask
+        baseline_context['clip_threshold'] = clipthresh
+        baseline_context['num_fitting_max'] = clipniter
         baseline_type = sakura_typemap(BASELINE_TYPEMAP, blfunc)
-        baseline_context = libsakurapy.create_baseline_context(baseline_type,
-                                                               order,
-                                                               nchan)
+        baseline_context['context'] = libsakurapy.create_baseline_context(baseline_type,
+                                                                          order,
+                                                                          nchan)
         # create convolve1D context
         convolve1d_type = sakura_typemap(CONVOLVE1D_TYPEMAP, kernel)
         convolve1d_context = libsakurapy.create_convolve1D_context(nchan,
                                                                    convolve1d_type,
                                                                    kwidth,
                                                                    usefft)
-        context_dict[spwid] = (calibration_context, baseline_context, convolve1d_context,)
+        # create mask/clip context
+        maskclip_context = create_maskclip_context(nchan, edge, clipminmax)
+
+        context_dict[spwid] = (calibration_context, baseline_context, convolve1d_context, maskclip_context)
 
     return context_dict
 
@@ -652,7 +671,8 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
         time_tsys = _casasakura.tosakura_double(sorted_time)[0][0]
         tsys = tuple(gen_interpolation())
         nrow_tsys = sorted_data.shape[2]
-        channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
+        offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
+        facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
 
         context[antennaid] = {'nchan': nchan,
                               'nrow_sky': nrow_sky,
@@ -661,9 +681,48 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
                               'time_tsys': time_tsys,
                               'sky': sky,
                               'tsys': tsys,
-                              'channel_id': channel_id}
+                              'offdata': offdata,
+                              'facdata': facdata}
     return context
             
+def create_maskclip_context(nchan, edge, clipminmax):
+    context = {}
+    channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
+    mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
+    if isinstance(edge, list) or isinstance(edge, tuple):
+        for i in xrange(len(edge)):
+            if not (isinstance(edge[i], float) or isinstance(edge[i], tuple)):
+                raise RuntimeError('Invalid type: %s'%(edge))
+        if len(edge) == 0:
+            edge_list = [0, 0]
+        elif len(edge) == 1:
+            edge_list = [int(edge[0]), int(edge[0])]
+        else:
+            edge_list = [int(edge[0]), int(edge[1])]
+    elif isinstance(edge, float) or isinstance(edge, int):
+        edge_list = [int(edge), int(edge)]
+    else:
+        raise RuntimeError('Invalid type: %s'%(edge))
+
+    if isinstance(clipminmax, list) or isinstance(clipminmax, tuple):
+        if len(clipminmax) == 0:
+            clipminmax = [0, 0]
+        elif len(clipminmax) == 1:
+            clipminmax = [-clipminmax, clipminmax]
+        else:
+            clipminmax = clipminmax[0:2]
+    elif isinstance(clipminmax, float) or isinstance(clipminmax, int):
+        clipminmax = [float(-abs(clipminmax)), float(abs(clipminmax))]
+    else:
+        raise RuntimeError('Invalid type: %s'%(clipminmax))
+
+    context = {'channel_id': channel_id,
+               'mask_temp': mask_temp,
+               'edge_left': edge_list[0],
+               'edge_right': edge_list[1],
+               'clip_lower': min(clipminmax),
+               'clip_upper': max(clipminmax)}
+    return context
 
 def _select_sky_tables(gaintable):
     return list(_select_match(gaintable, 'sky'))

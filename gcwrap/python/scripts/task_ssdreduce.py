@@ -21,6 +21,11 @@ def ssdreduce(vis,
         print locals()
         return
 
+    #parameters-----------
+    edge = 30
+    clipthresh = 5.0
+    clipniter = 1
+
     # register reduction step here when ssdreduce becomes fully flexible
     #rh.register_step('calibration')
     #rh.register_step('flagnan')
@@ -59,8 +64,6 @@ def ssdreduce(vis,
         spwidmap = rh.spw_id_map(vis)
         for query in query_list:
             num_record, num_threads = rh.optimize_thread_parameters(table, query, spwmap)
-            #print 'opt_th_param : num_record='+str(num_record)+', num_threads='+str(num_threads)
-
             if num_record > 0:
                 for results in rh.paraMap(num_threads, rh.reducechunk, rh.readchunk(table, query[0], num_record, rh.get_context(query, spwidmap, context))):
                     rh.writechunk(table, results)
