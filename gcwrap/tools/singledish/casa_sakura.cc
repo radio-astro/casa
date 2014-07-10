@@ -1,14 +1,11 @@
 #include <iostream>
 #include <iomanip>
-#include <exception>
+//#include <exception>
 #include <stdexcept>
+#include <vector>
+
 #include <Python.h>
 #include <numpy/arrayobject.h>
-
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayIO.h>
 
 #include <libsakura/sakura.h>
 #include <libsakura/sakura-python.h>
@@ -479,7 +476,7 @@ static inline PyObject *ArgAsPyObject(PyObject *args)
 {
   PyObject *obj;
   if (!PyArg_ParseTuple(args, "O", &obj)) {
-    std::cout << "Failed to parse args" << std::endl;
+    //std::cout << "Failed to parse args" << std::endl;
     return NULL;
   }
   return obj;
@@ -502,11 +499,6 @@ static PyObject *tosakura(PyObject *self, PyObject *args)
   }
   catch (const std::bad_alloc &e) {
     PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
-    return NULL;
-  }
-  catch (const casa::AipsError &e) {
-    std::string s = "Failed due to CASA related error: " + e.getMesg();
-    PyErr_SetString(PyExc_RuntimeError, s.c_str());
     return NULL;
   }
   catch (const dataconversion_error &e) {
@@ -543,11 +535,6 @@ static PyObject *tocasa(PyObject *self, PyObject *args)
   }
   catch (const std::bad_alloc &e) {
     PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
-    return NULL;
-  }
-  catch (const casa::AipsError &e) {
-    std::string s = "Failed due to CASA related error" + e.getMesg();
-    PyErr_SetString(PyExc_RuntimeError, s.c_str());
     return NULL;
   }
   catch (const dataconversion_error &e) {
