@@ -259,6 +259,7 @@ class imcollapse_test(unittest.TestCase):
                 self.assertTrue(type(mytool) == type(ia))
                 self.checkImage(mytool, expected)
                 self.checkImage(outname, expected)
+                mytool.done()
             else:
                outname = outname + "imcollapse"
                # check that can overwrite previous output. Then check output image
