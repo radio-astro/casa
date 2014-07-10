@@ -1440,7 +1440,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //Make sure frame conversion is switched off for REST frame data.
     //Bool freqFrameValid=(freqFrame != MFrequency::REST);
-    freqFrameValid=(freqFrame != MFrequency::REST);
+
+    //freqFrameValid=(freqFrame != MFrequency::REST );
+    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
 
     // *** get selected spw ids ***
     Vector<Int> spwids;
@@ -1482,6 +1484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> chanFreqStep;
     String specmode;
 
+    //for mfs 
     Double freqmin=0, freqmax=0;
     rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
 
@@ -1517,38 +1520,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Double restf=qrestfreq.getValue("Hz");
         //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
         // once NOFRAME is implemented do this 
-        //if(mode=="cubedata") 
-        //  {
-        //     mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::NOFRAME : MFrequency::REST, 
-        //	 startf, stepf, refPix, restf);
-        //  }
-        //else 
-        //  {
-        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
+        if(mode=="cubedata") 
+          {
+      //       mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::Undefined : MFrequency::REST, 
+             mySpectral = SpectralCoordinate(freqFrame == MFrequency::REST? 
+                                             MFrequency::REST : MFrequency::Undefined, 
+        	                             startf, stepf, refPix, restf);
+          }
+        else 
+          {
+             mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
 		startf, stepf, refPix, restf);
-        //  }
+          }
       }
     else 
       { // nonlinear freq coords - use tabular setting
         // once NOFRAME is implemented do this 
-        //if(mode=="cubedata") 
-        //  {
-        //    subMS::calcChanFreqs cannot handle NOFRAME  
-        //    mySpectral = SpectralCoordinate(freqFrameValid ? MFrequnecy::NOFRAME : MFrequency::REST,
-        //             chanFreq, (Double)qrestfreq.getValue("Hz"));
-        //  }
-        //else 
-        //  {
-        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
+        if(mode=="cubedata") 
+          {
+            //mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::Undefined : MFrequency::REST,
+            mySpectral = SpectralCoordinate(freqFrame == MFrequency::REST ? 
+                                            MFrequency::REST : MFrequency::Undefined,
+                                            chanFreq, (Double)qrestfreq.getValue("Hz"));
+          }
+        else 
+          {
+            mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
                  chanFreq, (Double)qrestfreq.getValue("Hz"));
-        //  }
+          }
       }
     //cout << "Rest Freq : " << restFreq << endl;
 
     for(uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
 
-    if (freqFrameValid) {
+    if ( freqFrameValid ) {
       mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
     }
 
@@ -1619,8 +1625,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String freqframe;
     Bool verbose("true"); // verbose logging messages from calcChanFreqs
     LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
-    //cerr<<"qrestfreq="<<qrestfreq<<endl;
-    //cerr<<" freqframe="<<MFrequency::showType(freqFrame)<<endl;
 
     refPix=0.0; 
     Bool descendingfreq(false);
@@ -1708,7 +1712,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // contains start freq. in its last element of the vector. 
       //
       os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
-         <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
+         <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe
+         <<" dataFrame="<<dataFrame <<" veltype="<<veltype
          << LogIO::POST;
 
       Bool rst=SubMS::calcChanFreqs(os,
