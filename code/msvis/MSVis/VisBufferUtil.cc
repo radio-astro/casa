@@ -142,7 +142,9 @@ VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb) {
 			False, False);
     retval = !uvwMachine.isNOP();
     dphase.resize(vb.nRows());
-    uvw.resize(3, vb.nRows());
+    dphase.set(0.0);
+    if(uvw.nelements() ==0)
+      uvw=vb.uvw();
     for (Int row=0; row< vb.nRows(); ++row){
       Vector<Double> eluvw(uvw.column(row));
       uvwMachine.convertUVW(dphase(row), eluvw);
