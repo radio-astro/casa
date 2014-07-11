@@ -351,11 +351,11 @@ def reducerecord(record):
         #mask--------------------
         mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
         channel_id = ctxmc['channel_id']
-        edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (ctxmc['edge_left']-1,))
-        edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-ctxmc['edge_right'],))
+        edge_lower = ctxmc['edge_lower']
+        edge_upper = ctxmc['edge_upper']
         ##clip--------------------
-        clip_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (ctxmc['clip_lower'],))
-        clip_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (ctxmc['clip_upper'],))
+        clip_lower = ctxmc['clip_lower']
+        clip_upper = ctxmc['clip_upper']
 
         for ipol in pol_list:
             ##convert to sakura-----------------
@@ -698,6 +698,8 @@ def create_maskclip_context(nchan, edge, clipminmax):
         edge_list = [int(edge), int(edge)]
     else:
         raise RuntimeError('Invalid type: %s'%(edge))
+    edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (edge_list[0]-1,))
+    edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-edge_list[1],))
 
     if isinstance(clipminmax, list) or isinstance(clipminmax, tuple):
         if len(clipminmax) == 0:
@@ -710,12 +712,14 @@ def create_maskclip_context(nchan, edge, clipminmax):
         clipminmax = [float(-abs(clipminmax)), float(abs(clipminmax))]
     else:
         raise RuntimeError('Invalid type: %s'%(clipminmax))
+    clip_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (min(clipminmax),))
+    clip_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (max(clipminmax),))
 
     context = {'channel_id': channel_id,
-               'edge_left': edge_list[0],
-               'edge_right': edge_list[1],
-               'clip_lower': min(clipminmax),
-               'clip_upper': max(clipminmax)}
+               'edge_lower': edge_lower,
+               'edge_upper': edge_upper,
+               'clip_lower': clip_lower,
+               'clip_upper': clip_upper}
     return context
 
 def _select_sky_tables(gaintable):
