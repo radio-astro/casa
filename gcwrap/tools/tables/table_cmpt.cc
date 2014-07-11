@@ -57,6 +57,13 @@ using namespace casac;
 
 namespace casac {
 
+#ifdef PYTHON_NO_RELEASE_GIL
+class GILReleaser {
+public:
+  GILReleaser() {};
+  ~GILReleaser(){};
+};
+#else
 class GILReleaser {
 public:
   GILReleaser() : is_toplevel(false) {
@@ -86,6 +93,7 @@ private:
 };
 
 bool GILReleaser::is_released = false;
+#endif
 
 table::table()
 {
