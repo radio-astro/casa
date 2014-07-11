@@ -167,6 +167,19 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	msc.flag().fillColumn(Matrix<Bool>(npol_p, nchan_p, True));
 	msc.weight().fillColumn(Vector<Float>(npol_p, 0.0));
 	msc.weightSpectrum().fillColumn(Matrix<Float>(npol_p, nchan_p, 0.0));
+	//change array id for every 2000 rows
+	Vector<Int> arrayID(nrrow,0);
+	Int blk=2000;
+	Int naid=nrrow/blk;
+	IPosition blc(1,0);
+	IPosition trc(1,0);
+	for (Int k=0; k < naid; ++k){
+	  blc[0]=k*blk;
+	  trc[0]= (k < (naid-1)) ? (k+1)*blk-1 : (k+1)*blk+nrrow%blk-1;
+	  arrayID(blc, trc)=k;
+	}
+	//cerr << "MINMAX array ID " << min(arrayID) << "  " << max(arrayID) << endl;
+	msc.arrayId().putColumn(arrayID);
 	outMsPtr_p->flush(True);
 
 	existOut_p=False;
@@ -271,7 +284,7 @@ Bool MSUVBin::fillSmallOutputMS(){
 		wghtSpec.set(0);
 		flag.set(True);
 		rowFlag.set(True);
-		cerr << "SETTING time to val" << vb->time()(0) << endl;
+		//cerr << "SETTING time to val" << vb->time()(0) << endl;
 		timeCen.set(vb->time()(0));
 		//outMsPtr_p->addRow(nrrows, True);
 	}
@@ -554,6 +567,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
         // no point of proceeding if nothing maps in this vb
   Double fracbw;
   if(!datadescMap(vb, fracbw)) return;
+  //cerr << "fracbw " << fracbw << endl; 
 
   if(fracbw >0.05)
     inplaceLargeBW(vb);
@@ -810,6 +824,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	 }
 	}
 	//now lets put back the stuff
+	//cerr << "rowids " << rowids << endl;
 	RefRows elrow(rowids);
 	msc.flagRow().putColumnCells(elrow, rowFlag);
 	//reference row
@@ -821,6 +836,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	msc.flag().putColumnCells(elrow, flag);
 	//Vector<Double> vecuvw(uvw.column(k));
 	msc.uvw().putColumnCells(elrow, uvw);
+	//cerr << "ant1 " << ant1 << endl;
 	msc.antenna1().putColumnCells(elrow, ant1);
 	msc.antenna2().putColumnCells(elrow, ant2);
 	msc.time().putColumnCells(elrow, timeCen);
@@ -928,10 +944,10 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 		    grid(polMap_p(pol),chanMap_p(chan),actrow)
 			  = (grid(polMap_p(pol),chanMap_p(chan),actrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),actrow)
 			     + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),actrow));
-			flag(polMap_p(pol),chanMap_p(chan),actrow)=False;
+		    flag(polMap_p(pol),chanMap_p(chan),actrow)=False;
 			//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 			//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
-			wghtSpec(polMap_p(pol),chanMap_p(chan),actrow) += vb.weight()(pol,k);
+		    wghtSpec(polMap_p(pol),chanMap_p(chan),actrow) += vb.weight()(pol,k);
 		  }
 		}
 	     }
@@ -946,6 +962,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	}
 	//now lets put back the stuff
 	RefRows elrow(rowids);
+	//cerr << "ROWIDS " << rowids << endl;
 	msc.flagRow().putColumnCells(elrow, rowFlag);
 	//reference row
 	//Matrix<Complex>matdata(grid.xyPlane(k));
@@ -956,6 +973,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	msc.flag().putColumnCells(elrow, flag);
 	//Vector<Double> vecuvw(uvw.column(k));
 	msc.uvw().putColumnCells(elrow, uvw);
+	//cerr << "ant1 " << ant1 << endl;
 	msc.antenna1().putColumnCells(elrow, ant1);
 	msc.antenna2().putColumnCells(elrow, ant2);
 	msc.time().putColumnCells(elrow, timeCen);
@@ -975,6 +993,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   
   Double fracbw;
   if(!datadescMap(vb, fracbw)) return;
+  //cerr << "fracbw " << fracbw << endl;
     SpectralCoordinate spec=csys_p.spectralCoordinate(2);
     DirectionCoordinate thedir=csys_p.directionCoordinate(0);
     Vector<Float> scale(2);
@@ -1192,7 +1211,7 @@ void MSUVBin::copySubtable(const String& tabName, const Table& inTab,const Bool 
 		else{
 			TableCopy::copySubTables(outTab, inTab);
 			TableCopy::copyInfo(outTab, inTab);
-			cerr << "ROWS "<< inTab.nrow() << " " << outTab.nrow() << endl;
+			//cerr << "ROWS "<< inTab.nrow() << " " << outTab.nrow() << endl;
 			TableCopy::copyRows(outTab, inTab);
 			/*outTab=Table();
 			cerr << "copying " << tabName << endl;
