@@ -258,7 +258,7 @@ def openms(vis):
     
 def optimize_thread_parameters(table, query, spwmap):
     try:
-        num_threads = 1 # multiprocessing.cpu_count()
+        num_threads = 3 # multiprocessing.cpu_count()
         assert num_threads > 0
 
 	subt = table.query(query[0])
@@ -278,7 +278,7 @@ def optimize_thread_parameters(table, query, spwmap):
             num_record = 0
 
         ###
-        if num_record > 0: num_record = 30000
+        if num_record > 0: num_record = 300
         ###
         return num_record, num_threads
     finally:
@@ -349,7 +349,7 @@ def reducerecord(record):
         offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
         facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
         #mask--------------------
-        mask_temp = ctxmc['mask_temp']
+        mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
         channel_id = ctxmc['channel_id']
         edge_lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (ctxmc['edge_left']-1,))
         edge_upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (nchan-ctxmc['edge_right'],))
@@ -684,7 +684,6 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
 def create_maskclip_context(nchan, edge, clipminmax):
     context = {}
     channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
-    mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
     if isinstance(edge, list) or isinstance(edge, tuple):
         for i in xrange(len(edge)):
             if not (isinstance(edge[i], float) or isinstance(edge[i], tuple)):
@@ -713,7 +712,6 @@ def create_maskclip_context(nchan, edge, clipminmax):
         raise RuntimeError('Invalid type: %s'%(clipminmax))
 
     context = {'channel_id': channel_id,
-               'mask_temp': mask_temp,
                'edge_left': edge_list[0],
                'edge_right': edge_list[1],
                'clip_lower': min(clipminmax),
