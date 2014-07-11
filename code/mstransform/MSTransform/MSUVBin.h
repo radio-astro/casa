@@ -38,8 +38,8 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferUtil.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBufferUtil.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferUtil.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
