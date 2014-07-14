@@ -141,7 +141,11 @@ class SynthesisImager
 	      const Double robust=0.0,
 	      const Quantity& fieldofview=Quantity(0.0, "arcsec"),
 	      const Int npixels=0, 
-	      const Bool multiField=False);
+	      const Bool multiField=False,
+	      const String& filtertype=String("Gaussian"),
+	      const Quantity& filterbmaj=Quantity(0.0,"deg"),
+	      const Quantity& filterbmin=Quantity(0.0,"deg"),
+	      const Quantity& filterbpa=Quantity(0.0,"deg")  );
 
   //the following get rid of the mappers in this object
   void resetMappers();

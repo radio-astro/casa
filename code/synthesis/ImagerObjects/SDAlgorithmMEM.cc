@@ -130,7 +130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // Code obtained from Deconvolver.cc
-  void SDAlgorithmMEM::takeOneStep( Float loopgain, 
+  void SDAlgorithmMEM::takeOneStep( Float /*loopgain*/, 
 					    Int cycleNiter, 
 					    Float cycleThreshold, 
 					    Float &peakresidual, 
@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     // Store current model in this matrix.
-    Bool ret = itsImages->model()->get( itsMatDeltaModel, True );
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel.assign( itsMatDeltaModel ); // This should make an explicit copy
     cout << "Flux at start of step : " << sum(itsMatModel) << endl;
 
@@ -197,7 +197,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       residEqn = new LatConvEquation (*(itsImages->psf()), *(itsImages->residual()));
     }    
     
-    Bool result=memer.solve(*residEqn);
+    //Bool result=
+    memer.solve(*residEqn);
 
     Record info=itsImages->model()->miscInfo();
     info.define("ALPHA", memer.getBeta());
@@ -210,7 +211,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->residual()->copyData( memer.getResidual() );
 
     // Add delta model to old model
-    Bool ret2 = itsImages->model()->get( itsMatDeltaModel, True );
+    //Bool ret2 = 
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel += itsMatDeltaModel;
 
     //---------------------------------

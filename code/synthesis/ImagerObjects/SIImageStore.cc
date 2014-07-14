@@ -1076,7 +1076,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     /// Calculate and print point source sensitivity (per plane).
-    calcSensitivity();
+    //    calcSensitivity();
     // createMask
   }
 
@@ -1258,6 +1258,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStore::makeImageBeamSet()
   {
+    LogIO os( LogOrigin("SIImageStore","getPSFGaussian",WHERE) );
     // For all chans/pols, call getPSFGaussian() and put it into ImageBeamSet(chan,pol).
     AlwaysAssert( itsImageShape.nelements() == 4, AipsError );
     Int nx = itsImageShape[0];
@@ -1265,7 +1266,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int npol = itsImageShape[2];
     Int nchan = itsImageShape[3];
     itsPSFBeams.resize( nchan, npol );
-    
+
+    //    cout << "makeImBeamSet : imshape : " << itsImageShape << endl;
+
     for( Int chanid=0; chanid<nchan;chanid++) {
       for( Int polid=0; polid<npol; polid++ ) {
 
@@ -1282,16 +1285,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	catch(AipsError &x)
 	  {
-	    	LogIO os( LogOrigin("SIImageStore","getPSFGaussian",WHERE) );
-	    	os << "[C" << chanid << ":P" << polid << "] Error in fitting a Gaussian to the PSF : " << x.getMesg() << LogIO::POST;
-	    //	    throw( AipsError("Error in fitting a Gaussian to the PSF : " + x.getMesg()) );
+	    	os << LogIO::WARN << "[Chan" << chanid << ":Pol" << polid << "] Error Gaussian fit to PSF : " << x.getMesg() ;
+		//		os << LogIO::POST;
+		os << " :  Setting restoring beam to largest valid beam." << LogIO::POST;
 	  }
 
-	//	itsPSFBeams.setBeam( chanid, polid, beam );
-	
+      }// end of pol loop
+    }// end of chan loop
+
+    //// Replace null (and bad) beams with the good one. 
+    ////GaussianBeam maxbeam = findGoodBeam(True);
+
+    //// Replace null beams by a tiny tiny beam, just to get past the ImageInfo restriction that
+    //// all planes must have non-null beams.
+    Quantity majax(1e-06,"arcsec"),minax(1e-06,"arcsec"),pa(0.0,"deg");
+    GaussianBeam defaultbeam;
+    defaultbeam.setMajorMinor(majax,minax);
+    defaultbeam.setPA(pa);
+    for( Int chanid=0; chanid<nchan;chanid++) {
+      for( Int polid=0; polid<npol; polid++ ) {
+	if( (itsPSFBeams.getBeam(chanid, polid)).isNull() ) 
+	  { itsPSFBeams.setBeam( chanid, polid, defaultbeam ); }
+      }// end of pol loop
+    }// end of chan loop
+    
+    /*        
+    //// Fill in gaps if there are any --- with the MAX Area beam. 
+    /////    GaussianBeam maxbeam = itsPSFBeams.getMaxAreaBeam();
+    if( maxbeam.isNull() ) {
+	os << LogIO::WARN << "No planes have non-zero restoring beams. Forcing artificial 1.0arcsec beam." << LogIO::POST;
+	Quantity majax(1.0,"arcsec"),minax(1.0,"arcsec"),pa(0.0,"deg");
+	maxbeam.setMajorMinor(majax,minax);
+	maxbeam.setPA(pa);
       }
-    }
+    else  {
+	for( Int chanid=0; chanid<nchan;chanid++) {
+	  for( Int polid=0; polid<npol; polid++ ) {
+	    if( (itsPSFBeams.getBeam(chanid, polid)).isNull() ) 
+	      { itsPSFBeams.setBeam( chanid, polid, maxbeam ); }
+	  }// end of pol loop
+	}// end of chan loop
+      }
+    */
+
+
+    /// For lack of a better place, store this inside the PSF image. To be read later and used to restore
+    ImageInfo ii = psf()->imageInfo();
+    ii.setBeams( itsPSFBeams );
+    psf()->setImageInfo(ii);
+    
   }// end of make beam set
+
+
 
   ImageBeamSet SIImageStore::getBeamSet()
   { return itsPSFBeams; }
@@ -1303,13 +1348,289 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsImageShape[3] == 1 && itsImageShape[2]==1 )
       {
 	GaussianBeam beam = itsPSFBeams.getBeam();
-	os << "Restoring beam : " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	os << "Beam : " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
  }
     else
       {
 	itsPSFBeams.summarize( os, False, itsCoordSys );
       }
   }
+
+  /////////////////////////////// Restore all planes.
+
+  void SIImageStore::restore(GaussianBeam& rbeam, String& usebeam, uInt term)
+  {
+
+    LogIO os( LogOrigin("SIImageStore","restore",WHERE) );
+    //     << ". Optionally, PB-correct too." << LogIO::POST;
+
+    AlwaysAssert( itsImageShape.nelements() == 4, AipsError );
+    Int nx = itsImageShape[0];
+    Int ny = itsImageShape[1];
+    Int npol = itsImageShape[2];
+    Int nchan = itsImageShape[3];
+
+    //// Get/fill the beamset
+    IPosition beamset = itsPSFBeams.shape();
+    AlwaysAssert( beamset.nelements()==2 , AipsError );
+    if( beamset[0] != nchan || beamset[1] != npol )
+      {
+	
+	// Get PSF Beams....
+	ImageInfo ii = psf()->imageInfo();
+	itsPSFBeams = ii.getBeamSet();
+
+	IPosition beamset2 = itsPSFBeams.shape();
+
+	AlwaysAssert( beamset2.nelements()==2 , AipsError );
+	if( beamset2[0] != nchan || beamset2[1] != npol )
+	  {
+	    // Make new beams.
+	    os << LogIO::WARN << "Couldn't find pre-computed restoring beams. Re-fitting." << LogIO::POST;
+	    makeImageBeamSet();
+	  }
+      }
+
+    //// Modify the beamset if needed
+    //// if ( rbeam is Null and usebeam=="" ) Don't do anything.
+    //// If rbeam is Null but usebeam=='common', calculate a common beam and set 'rbeam'
+    //// If rbeam is given (or exists due to 'common'), just use it.
+    if( rbeam.isNull() && usebeam=="common") {
+      rbeam = findGoodBeam(False);
+    }
+    if( !rbeam.isNull() ) {
+      for( Int chanid=0; chanid<nchan;chanid++) {
+	for( Int polid=0; polid<npol; polid++ ) {
+	  itsPSFBeams.setBeam( chanid, polid, rbeam );
+	  /// Still need to add the 'common beam' option.
+	}//for chanid
+      }//for polid
+    }// if rbeam not NULL
+    //// Done modifying beamset if needed
+    
+    //// Use beamset to restore
+    for( Int chanid=0; chanid<nchan;chanid++) {
+      for( Int polid=0; polid<npol; polid++ ) {
+	
+	IPosition substart(4,0,0,polid,chanid);
+	IPosition substop(4,nx-1,ny-1,polid,chanid);
+	Slicer imslice(substart, substop,Slicer::endIsLast);
+	SubImage<Float> subRestored( *image(term) , imslice, True );
+	SubImage<Float> subModel( *model(term) , imslice, True );
+	SubImage<Float> subResidual( *residual(term) , imslice, True );
+	
+	GaussianBeam beam = itsPSFBeams.getBeam( chanid, polid );;
+	
+	try
+	  {
+	    // Initialize restored image
+	    subRestored.set(0.0);
+	    // Copy model into it
+	    subRestored.copyData( LatticeExpr<Float>( subModel )  );
+	    // Smooth model by beam
+	    StokesImageUtil::Convolve( subRestored, beam);
+	    // Add residual image
+	    subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
+	    
+	  }
+	catch(AipsError &x)
+	  {
+	    throw( AipsError("Restoration Error in chan" + String::toString(chanid) + ":pol" + String::toString(polid) + " : " + x.getMesg() ) );
+	  }
+	
+      }// end of pol loop
+    }// end of chan loop
+    
+    
+  }// end of restore()
+
+  GaussianBeam SIImageStore::findGoodBeam(Bool replace)
+  {
+    LogIO os( LogOrigin("SIImageStore","findGoodBeam",WHERE) );
+    IPosition beamshp = itsPSFBeams.shape();
+    AlwaysAssert( beamshp.nelements()==2 , AipsError );
+
+    /*
+    if( beamshp[0] != nchan || beamshp[1] != npol )
+      {
+	// Make new beams.
+	os << LogIO::WARN << "Couldn't find pre-computed restoring beams. Re-fitting." << LogIO::POST;
+	makeImageBeamSet();
+      }
+    */
+
+    Vector<Float> areas(beamshp[0]*beamshp[1]);
+    Vector<Float> axrat(beamshp[0]*beamshp[1]);
+    areas=0.0; axrat=1.0;
+    Vector<Bool> flags( areas.nelements() );
+    flags=False;
+    
+    Int cnt=0;
+    for( Int chanid=0; chanid<beamshp[0];chanid++) {
+      for( Int polid=0; polid<beamshp[1]; polid++ ) {
+	GaussianBeam beam = itsPSFBeams(chanid, polid);
+	if( !beam.isNull() && beam.getMajor(Unit("arcsec"))>1.1e-06  )  // larger than default filler beam.
+	  {
+	    areas[cnt] = beam.getArea( Unit("arcsec2") );
+	    axrat[cnt] = beam.getMajor( Unit("arcsec") ) / beam.getMinor( Unit("arcsec") );
+	  }
+	else {
+	  flags[cnt] = True;
+	}
+	cnt++;
+      }//for chanid
+    }//for polid
+    
+    Vector<Float> fit( areas.nelements() );
+    Vector<Float> fitaxr( areas.nelements() );
+    for (Int loop=0;loop<5;loop++)  {
+      /// Filter on outliers in PSF beam area
+      lineFit( areas, flags, fit, 0, areas.nelements()-1 );
+      Float sd = calcStd( areas , flags, fit );
+      for (uInt  i=0;i<areas.nelements();i++) {
+	if( fabs( areas[i] - fit[i] ) > 3*sd ) flags[i]=True;
+      }
+      /// Filter on outliers in PSF axial ratio
+      lineFit( axrat, flags, fitaxr, 0, areas.nelements()-1 );
+      Float sdaxr = calcStd( axrat , flags, fitaxr );
+      for (uInt  i=0;i<areas.nelements();i++) {
+	if( fabs( axrat[i] - fitaxr[i] ) > 3*sdaxr ) flags[i]=True;
+      }
+    }
+    //    cout << "Original areas : " << areas << endl;
+    //    cout << "Original axrats : " << axrat << endl;
+    //    cout << "Flags : " << flags << endl;
+
+    // Find max area good beam.
+    GaussianBeam goodbeam;
+    Int cid=0,pid=0;
+    Float maxval=0.0;
+    cnt=0;
+    for( Int chanid=0; chanid<beamshp[0];chanid++) {
+      for( Int polid=0; polid<beamshp[1]; polid++ ) {
+	if( flags[cnt] == False ){ 
+	  if( areas[cnt] > maxval ) {maxval = areas[cnt]; goodbeam = itsPSFBeams.getBeam(chanid,polid);cid=chanid;pid=polid;}
+	}
+	cnt++;
+      }//polid
+    }//chanid
+
+    os << "Picking common beam from C"<<cid<<":P"<<pid<<" : " << goodbeam.getMajor(Unit("arcsec")) << " arcsec, " << goodbeam.getMinor(Unit("arcsec"))<< " arcsec, " << goodbeam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+
+    Bool badbeam=False;
+    for(uInt i=0;i<flags.nelements();i++){if(flags[i]==True) badbeam=True;}
+
+    if( badbeam == True ) 
+      { 
+	os << "(Ignored beams from :";
+	cnt=0;
+	for( Int chanid=0; chanid<beamshp[0];chanid++) {
+	  for( Int polid=0; polid<beamshp[1]; polid++ ) {
+	    if( flags[cnt] == True ){ 
+	      os << " C"<<chanid<<":P"<<polid;
+	    }
+	    cnt++;
+	  }//polid
+	}//chanid
+	os << " as outliers either by area or by axial ratio)" << LogIO::POST;
+      } 
+
+
+    /*
+    // Replace 'bad' psfs with the chosen one.
+    if( goodbeam.isNull() ) {
+      os << LogIO::WARN << "No planes have non-zero restoring beams. Forcing artificial 1.0arcsec beam." << LogIO::POST;
+      Quantity majax(1.0,"arcsec"),minax(1.0,"arcsec"),pa(0.0,"deg");
+      goodbeam.setMajorMinor(majax,minax);
+      goodbeam.setPA(pa);
+    }
+    else  {
+      cnt=0;
+      for( Int chanid=0; chanid<nchan;chanid++) {
+	for( Int polid=0; polid<npol; polid++ ) {
+	  if( flags[cnt]==True ) 
+	    { itsPSFBeams.setBeam( chanid, polid, goodbeam ); }
+	  cnt++;
+	}// end of pol loop
+      }// end of chan loop
+    }
+    */
+
+    return goodbeam;
+  }// end of findGoodBeam
+
+  ///////////////////////// Funcs to calculate robust mean and fit, taking into account 'flagged' points.
+void SIImageStore :: lineFit(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2)
+{
+  float Sx = 0, Sy = 0, Sxx = 0, Sxy = 0, S = 0, a, b, sd, mn;
+  
+  mn = calcMean(data, flag);
+  sd = calcStd (data, flag, mn);
+  
+  for (uInt i = lim1; i <= lim2; i++)
+    {
+      if (flag[i] == False) // if unflagged
+	{
+	  S += 1 / (sd * sd);
+	  Sx += i / (sd * sd);
+	  Sy += data[i] / (sd * sd);
+	  Sxx += (i * i) / (sd * sd);
+	  Sxy += (i * data[i]) / (sd * sd);
+	}
+    }
+  a = (Sxx * Sy - Sx * Sxy) / (S * Sxx - Sx * Sx);
+  b = (S * Sxy - Sx * Sy) / (S * Sxx - Sx * Sx);
+  
+  for (uInt i = lim1; i <= lim2; i++)
+    fit[i] = a + b * i;
+  
+}
+/* Calculate the MEAN of 'vect' ignoring values flagged in 'flag' */
+Float SIImageStore :: calcMean(Vector<Float> &vect, Vector<Bool> &flag)
+{
+  Float mean=0;
+  Int cnt=0;
+  for(uInt i=0;i<vect.nelements();i++)
+    if(flag[i]==False)
+      {
+	mean += vect[i];
+	cnt++;
+      }
+  if(cnt==0) cnt=1;
+  return mean/cnt;
+}
+Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit)
+{
+  Float std=0;
+  uInt n=0,cnt=0;
+  n = vect.nelements() < fit.nelements() ? vect.nelements() : fit.nelements();
+  for(uInt i=0;i<n;i++)
+    if(flag[i]==False)
+      {
+	cnt++;
+	std += (vect[i]-fit[i])*(vect[i]-fit[i]);
+      }
+  if(cnt==0) cnt=1;
+  return sqrt(std/cnt);
+
+}
+Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mean)
+{
+  Float std=0;
+  uInt cnt=0;
+  for(uInt i=0;i<vect.nelements();i++)
+    if(flag[i]==False)
+      {
+	cnt++;
+	std += (vect[i]-mean)*(vect[i]-mean);
+      }
+  return sqrt(std/cnt);
+}
+
+  ///////////////////////// End of Funcs to calculate robust mean and fit.
+
+
+
 
   GaussianBeam SIImageStore::restorePlane()
   {
@@ -1541,6 +1862,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
 
+ 
   }
   //
   //---------------------------------------------------------------

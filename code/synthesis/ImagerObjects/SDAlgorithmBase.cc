@@ -199,66 +199,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return loopcontrols.majorCycleRequired(currentresidual);
   }
 
+
+  void SDAlgorithmBase::setRestoringBeam( GaussianBeam restbeam, String usebeam )
+  {
+    itsRestoringBeam = restbeam;
+    itsUseBeam = usebeam;
+  }
   
    void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
 
-    Int nSubChans, nSubPols;
-    queryDesiredShape(nSubChans, nSubPols, imagestore->getShape());
-
-    //    if( ! imagestore->checkValidity(True/*psf*/, True/*res*/,False/*wgt*/,True/*model*/,True/*image*/,
-    //				    True/*mask*/,True/*sumwt*/,
-    //				    True/*alpha*/, True/*beta*/) ) // alpha,beta will be ignored for single-term.
-    //      { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
-
-    // Init the restored image here.
-    //    imagestore->image();
-    //    imagestore->model();
-
-    //    os << "Restore [" << itsImages->getName() << "] with fitted beam ";
+    os << "[" << imagestore->getName() << "] : Restoring model image." << LogIO::POST;
+    imagestore->restore( itsRestoringBeam, itsUseBeam );
 
     ImageInfo ii = (imagestore->image())->imageInfo();
-    ImageBeamSet beamset;
-    beamset.resize( nSubChans, nSubPols ); // Won't work if nSubChans or nSubPols > 1. 
-                                                                // Send beamset into restorePlane to do it right....
-    for( Int chanid=0; chanid<nSubChans;chanid++)   {
-	for( Int polid=0; polid<nSubPols; polid++) {
-
-	  /*
-	  if( nSubChans > 1 || nSubPols > 1 ) os << LogIO::POST;
-
-	  if( !(  chanid==0 || chanid==nSubChans-1 )  ) os << LogIO::NORMAL1;
-	  if( nSubChans > 1 ) os << "C" << chanid << ":";
-	  if( nSubPols > 1 ) os << "P" << polid << ":";
-	  */
-
-	  itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
-	  GaussianBeam beam = itsImages->restorePlane();
-	  beamset.setBeam( chanid, polid, beam );
-
-	  //	  os << " " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
-
-	}
-    }
-    ii.setBeams( beamset );
-
-    os << "[" << itsImages->getName() << "] ";
-
-    if( nSubChans==1 )
-      {
-
-	GaussianBeam beam;
-
-	if( nSubPols==1 ) {  beam = beamset.getBeam(); }
-	else { beam = beamset(0,0); }
-	os << "Restoring beam : " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
-      }
-    else
-      {
-	beamset.summarize( os, False, imagestore->image()->coordinates() );
-      }
+    ii.setBeams( imagestore->getBeamSet() );
+    imagestore->printBeamSet();
 
     try
       {

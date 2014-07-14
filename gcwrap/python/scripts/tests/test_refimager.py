@@ -13,6 +13,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      threshold=0.001
      loopgain=0.1
 
+     restoringbeam=[]
+     #restoringbeam='30.0arcsec'
+
      # Interaction ON or OFF
      interactive=False
 
@@ -33,7 +36,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                1:{'readonly':True,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
                ## save model column in last major cycle
                2:{'readonly':False,  'usescratch':True, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
-               ## save virtual model in last major cycle
+               ## save virtual model in last major cycleexit
+
                3:{'readonly':False,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
                ## Multi-term test : save model column in last major cycle
                4:{'readonly':False,  'usescratch':True, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'}, 
@@ -60,6 +64,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver=testList[testid]['deconvolver'],\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -79,6 +84,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='clarkstokes',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -102,6 +108,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='multiscale',scales=[0,20,40],\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -128,6 +135,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==18): ## mode=cube (with doppler correction)
@@ -149,6 +157,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==17): ## mode=cubedata 
@@ -170,6 +179,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==16):  ## 2 image-fields, mfs - one with nterms 1 and one with nterms 2
@@ -191,7 +201,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
+                                        restoringbeam=restoringbeam,
+                                      interactive=interactive)
      
      if(testnum==15):  ## 2 image-fields, mfs, Overlapping models. Both multi-term
           casalog.post("==================================");
@@ -213,6 +224,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        ftmachine='gridft', startmodel='', weighting='natural',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -235,6 +247,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -320,6 +333,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -348,6 +362,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==11):  ## 1 image-field, mfs --- WB AWP ( single term )
@@ -375,6 +390,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==10):  ## 1 image-field, mfs --- Narrow-band AWP
@@ -401,6 +417,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -424,6 +441,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
  
 
@@ -444,6 +462,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='mtmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -466,6 +485,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='mtmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -486,6 +506,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -505,6 +526,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -531,6 +553,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -554,6 +577,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
      
      
@@ -573,6 +597,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
      
 
@@ -596,6 +621,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 

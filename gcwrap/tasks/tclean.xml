@@ -152,7 +152,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="nchan" subparam="true">
       <description>Number of channels in the output image</description>
-      <value type="int">1</value>
+      <value type="int">-1</value>
     </param>
 
     <param type="any" name="start" subparam="true">

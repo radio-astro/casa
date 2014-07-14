@@ -2065,6 +2065,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	err += readVal( inrec, String("mask"), maskType );
 
+        if( inrec.isDefined("restoringbeam") )     
+	  {
+            if( inrec.dataType("restoringbeam")==TpString )     
+	      {
+	        err += readVal( inrec, String("restoringbeam"), usebeam); 
+		if( ! usebeam.matches("common") && ! usebeam.length()==0 )  
+		  {
+		    Quantity bsize;
+		    err += readVal( inrec, String("restoringbeam"), bsize );
+		    restoringbeam.setMajorMinor( bsize, bsize );
+		    usebeam = String("");
+		  }
+              }
+            else if( inrec.dataType("restoringbeam")==TpArrayString )
+	      {
+		Vector<String> bpars;
+		err += readVal( inrec, String("restoringbeam"), bpars );
+		try {
+		  if( bpars.nelements()==1 && bpars[0].length()>0 ) { 
+		    if( bpars[0]=="common") { usebeam="common"; }
+		    else {
+		      Quantity axis; stringToQuantity( bpars[0] , axis);
+		      restoringbeam.setMajorMinor( axis, axis ); 
+		    }
+		  }else if( bpars.nelements()==2 ) { 
+		    Quantity majaxis, minaxis;
+		    stringToQuantity( bpars[0], majaxis ); stringToQuantity( bpars[1], minaxis );
+		    restoringbeam.setMajorMinor( majaxis, minaxis );
+		  }else if( bpars.nelements()==3 ) {
+		    Quantity majaxis, minaxis, pa;
+		    stringToQuantity( bpars[0], majaxis ); stringToQuantity( bpars[1], minaxis ); stringToQuantity( bpars[2], pa );
+		    restoringbeam.setMajorMinor( majaxis, minaxis );
+		    restoringbeam.setPA( pa );
+		  }else {
+		    restoringbeam = GaussianBeam();
+		    usebeam = String("");
+		  }
+		} catch( AipsError &x) {
+		  err += "Cannot construct a restoringbeam from supplied parameters. Please check that majoraxis >= minoraxis and all entries are strings.";
+		  restoringbeam = GaussianBeam();
+		  usebeam = String("");
+		}
+	      }
+	  }// if isdefined(restoringbeam)
+	
 	err += verify();
 	
       }

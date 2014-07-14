@@ -832,7 +832,7 @@ class ImagerParameters():
                                    'rotatepastep':rotatepastep, 'mtype':mtype, # 'weightlimit':weightlimit,
                                    'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes   }     }
         ######### weighting
-        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels} #,'outertaper':uvtaper}
+        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}
 
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
         self.allnormpars = { '0' : {'mtype': mtype,

@@ -69,7 +69,7 @@ class SynthesisDeconvolver
 
   void setupDeconvolution(const SynthesisParamsDeconv& decpars);
 
-  void setupDeconvolution(Record recpars);
+  //  void setupDeconvolution(Record recpars);
 
   Record initMinorCycle();
   Record executeMinorCycle(Record& subIterBot);

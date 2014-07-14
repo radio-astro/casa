@@ -283,7 +283,13 @@ bool synthesisimager::setweighting(const std::string& type,
 				   const double robust,
 				   const ::casac::variant& fieldofview,
 				   const int npixels,
-				   const bool multifield)
+				   const bool multifield,
+				   const std::vector<std::string>& uvtaper
+				   /*				   const std::string& filtertype,
+				   const ::casac::variant& filterbmaj,
+				   const ::casac::variant& filterbmin,
+				   const ::casac::variant& filterbpa */
+				   )
 {
   Bool rstat(False);
 
@@ -295,7 +301,18 @@ bool synthesisimager::setweighting(const std::string& type,
       casa::Quantity cnoise = casaQuantity( noise );
       casa::Quantity cfov = casaQuantity( fieldofview );
 
-      itsImager->weight( type, rmode, cnoise, robust, cfov, npixels, multifield );
+      Vector<String> uvtaperpars( toVectorString(uvtaper) );
+
+      casa::Quantity bmaj(0.0,"deg"), bmin(0.0,"deg"), bpa(0.0,"deg");
+      String filtertype("");
+      if(uvtaperpars.nelements()>0) bmaj = casaQuantity( uvtaperpars[0] );
+      if(uvtaperpars.nelements()>1) bmin = casaQuantity( uvtaperpars[1] );
+      if(uvtaperpars.nelements()>2) bpa = casaQuantity( uvtaperpars[2] );
+      if(uvtaperpars.nelements()==1) bmin = bmaj;
+
+      if(uvtaperpars.nelements()>0 && uvtaperpars[0].length()>0) filtertype=String("gaussian");
+
+      itsImager->weight( type, rmode, cnoise, robust, cfov, npixels, multifield, filtertype, bmaj, bmin, bpa  );
 
     } 
   catch  (AipsError x) 

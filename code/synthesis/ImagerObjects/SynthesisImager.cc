@@ -188,7 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
     useScratch_p=selpars.usescratch;
     readOnly_p = selpars.readonly;
-    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
+    //    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
     //if you want to use scratch col...make sure they are there
     if(selpars.usescratch && !selpars.readonly){
       VisSetUtil::addScrCols(thisms, True, False, True, False);
@@ -729,9 +729,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Bool SynthesisImager::weight(const String& type, const String& rmode,
-                   const Quantity& noise, const Double robust,
-                   const Quantity& fieldofview,
-  		    const Int npixels, const Bool multiField)
+			       const Quantity& noise, const Double robust,
+			       const Quantity& fieldofview,
+			       const Int npixels, const Bool multiField,
+			       const String& filtertype, const Quantity& filterbmaj,
+			       const Quantity& filterbmin, const Quantity& filterbpa   )
   {
     LogIO os(LogOrigin("SynthesisImager", "weight()", WHERE));
 
@@ -843,23 +845,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  return False;
     	  }
       }
-
-      vi_p->useImagingWeight(imwgt_p);
-      ///////////////revert to vi/vb
-      rvi_p->useImagingWeight(imwgt_p);
+	 
+	 //// UV-Tapering
+	 //cout << "Taper type : " << filtertype << " : " << (filtertype=="gaussian") <<  endl;
+	 if( filtertype == "gaussian" ) {
+	   //	   os << "Setting uv-taper" << LogIO::POST;
+	   imwgt_p.setFilter( filtertype,  filterbmaj, filterbmin, filterbpa );
+	 }
+	 
+	 
+	 vi_p->useImagingWeight(imwgt_p);
+	 ///////////////revert to vi/vb
+	 rvi_p->useImagingWeight(imwgt_p);
       ///////////////////////////////
-
-
-      return True;
- 
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in Weighting : "+x.getMesg()) );
-      }
-
-
-   return True;
+	 
+	 
+	 return True;
+	 
+       }
+       catch(AipsError &x)
+	 {
+	   throw( AipsError("Error in Weighting : "+x.getMesg()) );
+	 }
+       
+       
+       return True;
   }
   
   
