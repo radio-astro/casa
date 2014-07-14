@@ -229,42 +229,58 @@ public:
 
     // dimension, shape, and storage for returned array
     int ndim;
-    npy_intp *shape = NULL;
-    void *pyarray_data = NULL;
+    npy_intp shape[3]; // maximum array dimension is 3
+    // construct array shape
+    if (nrow == 1 && npol == 1) {
+      ndim = 1;
+      shape[0] = nchan;
+    }
+    else if (nrow == 1) {
+      ndim = 2;
+      shape[0] = npol;
+      shape[1] = nchan;
+    }
+    else {
+      ndim = 3;
+      shape[0] = npol;
+      shape[1] = nchan;
+      shape[2] = nrow;
+    }
     
+    //std::cout << "ndim=" << ndim << ": npol,nchan,nrow=" << npol << "," << nchan << "," << nrow << std::endl;
+    
+    PyArray_Descr *pyarray_desc = PyArray_DescrFromType(Handler::PythonTypeId);
+    PyObject *pyarray = PyArray_NewFromDescr(&PyArray_Type,
+					     pyarray_desc,
+					     ndim,
+					     shape,
+					     NULL, // strides
+					     NULL, // create array storage
+					     NPY_ARRAY_F_CONTIGUOUS, // Fortran order
+					     NULL);
+    
+    if (pyarray == NULL || !PyArray_Check(pyarray)) {
+      if (pyarray != NULL) Py_DECREF(pyarray);
+      throw dataconversion_error("Failed to create array");
+      return NULL;
+    }
+
+    // if (PyArray_CHKFLAGS(pyarray, NPY_ARRAY_OWNDATA)) {
+    //   std::cout << "OK. the array owns storage" << std::endl;
+    // }
+    // else {
+    //   std::cout << "WARNING!! the array may not own its data storage" << std::endl;
+    // }
+    
+    void *pyarray_data = PyArray_DATA(pyarray);
+
     //Py_BEGIN_ALLOW_THREADS
     CASA_BEGIN_ALLOW_THREADS
     try {
       status = true;
 
-      // construct array shape
-      // maximum number of dimensions are 3
-      void *shape_p = malloc_(sizeof(npy_intp) * 3);
-      if (shape_p != NULL) {
-	shape = reinterpret_cast<npy_intp *>(shape_p);
-	if (nrow == 1 && npol == 1) {
-	  ndim = 1;
-	  shape[0] = nchan;
-	}
-	else if (nrow == 1) {
-	  ndim = 2;
-	  shape[0] = npol;
-	  shape[1] = nchan;
-	}
-	else {
-	  ndim = 3;
-	  shape[0] = npol;
-	  shape[1] = nchan;
-	  shape[2] = nrow;
-	}
-      }
-      else {
-	throw dataconversion_error("");
-      }
-
       // prepare storage for array
       size_t nelements = npol * nchan * nrow;
-      pyarray_data = malloc_(sizeof(PDataType) * nelements);
       if (pyarray_data != NULL) {
 	PDataType *work_p = reinterpret_cast<PDataType *>(pyarray_data);
 	status = ReadAlignedBuffer(npol, nchan, nrow, buffer_list, work_p);
@@ -283,32 +299,9 @@ public:
       if (pyarray_data != NULL) {
 	free_(pyarray_data);
       }
-      if (shape != NULL) {
-	free_(shape);
-      }
       throw dataconversion_error("Failed to convert chunk");
       return NULL;
     }      
-
-    //std::cout << "ndim=" << ndim << ": npol,nchan,nrow=" << npol << "," << nchan << "," << nrow << std::endl;
-    
-    PyArray_Descr *pyarray_desc = PyArray_DescrFromType(Handler::PythonTypeId);
-    PyObject *pyarray = PyArray_NewFromDescr(&PyArray_Type,
-					     pyarray_desc,
-					     ndim,
-					     shape,
-					     NULL, // strides
-					     pyarray_data, // data pointer
-					     NPY_ARRAY_F_CONTIGUOUS, // Fortran order
-					     NULL);
-
-    free_(shape);
-
-    if (pyarray == NULL || !PyArray_Check(pyarray)) {
-      if (pyarray != NULL) Py_DECREF(pyarray);
-      throw dataconversion_error("Failed to create array");
-      return NULL;
-    }
 
     return pyarray;
   }
