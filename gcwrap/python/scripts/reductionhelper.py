@@ -705,7 +705,7 @@ def create_maskclip_context(nchan, edge, clipminmax):
         if len(clipminmax) == 0:
             clipminmax = [0, 0]
         elif len(clipminmax) == 1:
-            clipminmax = [-clipminmax, clipminmax]
+            clipminmax = [-clipminmax[0], clipminmax[0]]
         else:
             clipminmax = clipminmax[0:2]
     elif isinstance(clipminmax, float) or isinstance(clipminmax, int):

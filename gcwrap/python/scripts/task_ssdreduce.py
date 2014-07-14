@@ -22,8 +22,8 @@ def ssdreduce(vis,
         return
 
     #parameters-----------
-    edge = 30
-    clipthresh = 5.0
+    edge = 10
+    clipthresh = 3.0
     clipniter = 1
 
     # register reduction step here when ssdreduce becomes fully flexible
