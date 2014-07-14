@@ -12,32 +12,53 @@ from pipeline.hif.tasks.gaincal import common
 LOG = logging.get_logger(__name__)
 
 class TimegaincalQAPool(pqa.QAScorePool):
-    score_types = {'XY_SCORE'   : 'X-Y phase deviation',
-                   'X2X1_SCORE' : 'X2-X1 phase deviation'}
+    score_types = {'PHASE_SCORE_XY'   : 'X-Y phase deviation',
+                   'PHASE_SCORE_X2X1' : 'X2-X1 phase deviation'}
 
-    short_msg = {'XY_SCORE'   : 'X-Y deviation',
-                 'X2X1_SCORE' : 'X2-X1 deviation'}
+    short_msg = {'PHASE_SCORE_XY'   : 'Large X-Y deviation',
+                 'PHASE_SCORE_X2X1' : 'Large X2-X1 deviation'}
 
-    def __init__(self, qa_results):
+    def __init__(self, qa_results_dict):
         super(TimegaincalQAPool, self).__init__()
-        self.qa_results = qa_results
-        self._representative = self.qa_results['QASCORES']['SCORES']['TOTAL']
+        self.qa_results_dict = qa_results_dict
 
-    def update_scores(self, phase_field_ids):
-        total_score = 1.0
-        longmsg = ''
-        short_msg = ''
-        for field_id in phase_field_ids:
-            if (self.qa_results['QASCORES']['SCORES'][field_id]['XY_TOTAL'] < total_score):
-                total_score = self.qa_results['QASCORES']['SCORES'][field_id]['XY_TOTAL']           
-                longmsg = self.score_types['XY_SCORE']
-                shortmsg  =self.short_msg['XY_SCORE']
-            if (self.qa_results['QASCORES']['SCORES'][field_id]['X2X1_TOTAL'] < total_score):
-                total_score = self.qa_results['QASCORES']['SCORES'][field_id]['X2X1_TOTAL']           
-                longmsg = self.score_types['X2X1_SCORE']
-                shortmsg  =self.short_msg['X2X1_SCORE']
+    def update_scores(self, ms, phase_field_ids):
 
-        self.pool = [pqa.QAScore(total_score, longmsg=longmsg, shortmsg=shortmsg)]
+        self.pool[:] = [self._get_qascore(ms, phase_field_ids, t) for t in self.score_types.iterkeys()]
+
+    def _get_qascore(self, ms, phase_field_ids, score_type):
+        (min_score, table_name, ant_id, spw_id) = self._get_min(phase_field_ids, score_type)
+        longmsg = 'Lowest score for %s is %0.2f (%s %s spw %s)' % (self.score_types[score_type],
+            min_score,
+            ms.basename,
+            ant_id,
+            spw_id)
+        shortmsg = self.short_msg[score_type]
+        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg)
+
+    def _get_min(self, phase_field_ids, score_type):
+
+        # attrs to hold score and QA identifiers
+        min_score = 1.0
+        min_table_name = None
+        min_ant_id = None
+        min_spw_id = None
+
+        for table_name in self.qa_results_dict.iterkeys():
+            qa_result = self.qa_results_dict[table_name]
+            for field_id in phase_field_ids:
+                for spw_id in qa_result['QASCORES']['SPWS'].iterkeys():
+                    for ant_id in qa_result['QASCORES']['ANTENNAS'].iterkeys():
+                        qa_score = qa_result['QASCORES']['SCORES'][field_id][spw_id][ant_id][score_type]
+                        if (qa_score != 'C/C'):
+                            if (qa_score < min_score):
+                                min_score = qa_score
+                                min_table_name = table_name
+                                min_ant_id = qa_result['QASCORES']['ANTENNAS'][ant_id]
+                                min_spw_id = qa_result['QASCORES']['SPWS'][spw_id]
+
+        return (min_score, min_table_name, min_ant_id, min_spw_id)
+
 
 class TimegaincalQAHandler(pqa.QAResultHandler):
     """
@@ -52,29 +73,26 @@ class TimegaincalQAHandler(pqa.QAResultHandler):
         phase_field_ids = [field.id for field in ms.get_fields(intent='PHASE')]
 
         qa_dir = os.path.join(context.report_dir,
-                               'stage%s' % result.stage_number,
-                               'qa')
+                              'stage%s' % result.stage_number,
+                              'qa')
 
         if not os.path.exists(qa_dir):
             os.makedirs(qa_dir)
 
-        foundIntP = False
-        for calapp in result.final:
-            try:
+        qa_results_dict = {}
+        try:
+            for calapp in result.final:
                 solint = calapp.origin.inputs['solint']
                 calmode = calapp.origin.inputs['calmode']
-                if ((not foundIntP) and (solint == 'int') and (calmode == 'p')):
-                    foundIntP = True
-                    try:
-                        qa_results = gpcal.gpcal(calapp.gaintable)
-                        result.qa = TimegaincalQAPool(qa_results)
-                    except Exception as e2:
-                        print 'Timegaincal QA error:', e2
-                    result.qa.update_scores(phase_field_ids)
-            except Exception as e:
-                LOG.error('Problem occurred running QA analysis. QA '
-                          'results will not be available for this task')
-                LOG.exception(e)
+                if ((solint == 'int') and (calmode == 'p')):
+                    qa_results_dict[calapp.gaintable] = gpcal.gpcal(calapp.gaintable)
+
+            result.qa = TimegaincalQAPool(qa_results_dict)
+            result.qa.update_scores(ms, phase_field_ids)
+        except Exception as e:
+            LOG.error('Problem occurred running QA analysis. QA '
+                      'results will not be available for this task')
+            LOG.exception(e)
 
 
 class TimegaincalListQAHandler(pqa.QAResultHandler):
