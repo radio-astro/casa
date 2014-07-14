@@ -362,7 +362,9 @@ namespace casa {
 					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 					String restFreq, const String& frame);
 
-
+		//Handle custom spectral reference frames such as REST and Undefined
+		//for which conversions are not possible.
+		bool customizeSpectralReferenceFrame( const QString& specialType );
 		QList<OverplotInterface> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;
@@ -428,6 +430,7 @@ namespace casa {
 		static const QString OPTICAL;
 		static const QString AIR;
 		static const QString FRAME_REST;
+		static const QString FRAME_NONE;
 		static const QString PERSIST_FREQUENCY_BOTTOM;
 		static const QString PERSIST_FREQUENCY_TOP;
 		static const QString IMAGE_MISSING_ERROR;

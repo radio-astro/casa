@@ -91,6 +91,7 @@ namespace casa {
 	const QString QtProfile::OPTICAL = "optical";
 	const QString QtProfile::AIR = "air";
 	const QString QtProfile::FRAME_REST = "REST";
+	const QString QtProfile::FRAME_NONE = "Undefined";
 	const QString QtProfile::PERSIST_FREQUENCY_BOTTOM = ".freqcoord.type";
 	const QString QtProfile::PERSIST_FREQUENCY_TOP = ".freqcoordTop.type";
 	bool QtProfile::topAxisDefaultSet = false;
@@ -325,31 +326,37 @@ namespace casa {
 		pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 	}
 
-	void QtProfile::updateSpectralReferenceFrame( ){
+	bool QtProfile::customizeSpectralReferenceFrame( const QString& specialType ){
 		//Cannot convert from rest frame to other spectral frames without
 		//reloading the image.
-		bool restFrame = false;
-		if ( FRAME_REST.toStdString() == spcRefFrame.c_str()){
-			restFrame = true;
+		bool typeMatch = false;
+		if ( specialType.toStdString() == spcRefFrame.c_str()){
+			typeMatch = true;
 		}
-		int restIndex = spcRef->findText( FRAME_REST );
 
+		int typeIndex = spcRef->findText( specialType );
 		//Add rest frame if it is not already there.
-		if ( restFrame ){
-			if ( restIndex == -1 ){
-				spcRef->addItem( FRAME_REST );
+		if ( typeMatch ){
+			if ( typeIndex == -1 ){
+				spcRef->addItem( specialType );
 			}
 		}
 		//Remove rest frame as an option to convert to.
 		else {
-			if ( restIndex >= 0 ){
-				spcRef->removeItem( restIndex );
+			if ( typeIndex >= 0 ){
+				spcRef->removeItem( typeIndex );
 			}
 		}
+		return typeMatch;
+	}
+
+	void QtProfile::updateSpectralReferenceFrame( ){
+		bool restFrame = customizeSpectralReferenceFrame( FRAME_REST );
+		bool noFrame = customizeSpectralReferenceFrame( FRAME_NONE );
 		//Update the combo with the current rest frame.
 		int restFrameIndex = spcRef->findText( spcRefFrame.c_str() );
 		spcRef->setCurrentIndex( restFrameIndex );
-		spcRef->setEnabled( !restFrame );
+		spcRef->setEnabled( !restFrame && !noFrame );
 		lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 	}
 
@@ -685,8 +692,9 @@ namespace casa {
 		position = QString("");
 		profileStatus->showMessage(position);
 		pixelCanvas->clearCurve();
-
-		ctypeUnit = String(text.toStdString());
+		if ( text.length() > 0 ){
+			ctypeUnit = String(text.toStdString());
+		}
 		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 
 		setUnitsText( xaxisUnit );
@@ -2488,6 +2496,7 @@ namespace casa {
 		//Int whichTabular = getFreqProfileTabularIndex( analysis );
 		Bool ok = false;
 		String restValue = cSysRval;
+
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
