@@ -161,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 
     //// Store current model in this matrix.
-    Bool ret = itsImages->model()->get( itsMatDeltaModel, True );
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel.assign( itsMatDeltaModel ); // This should make an explicit copy
 
     //// Set model to zero

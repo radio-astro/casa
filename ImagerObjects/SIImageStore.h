@@ -122,11 +122,17 @@ class SIImageStore
   virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
   GaussianBeam getPSFGaussian();
   virtual GaussianBeam restorePlane();
+  virtual void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
   virtual void pbcorPlane();
 
   virtual void makeImageBeamSet();
   ImageBeamSet getBeamSet();
   virtual void printBeamSet();
+  GaussianBeam findGoodBeam(Bool replace=False);
+  void lineFit(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2);
+  Float calcMean(Vector<Float> &vect, Vector<Bool> &flag);
+  Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit);
+  Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mean);
 
   // The images internall will reference back to a given section of the main of this.
   //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
@@ -153,6 +159,7 @@ class SIImageStore
 
 
   void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {itsDataPolRep = datapolrep;};
+  virtual void calcSensitivity();
 
 protected:
   CountedPtr<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
@@ -180,7 +187,6 @@ protected:
 
   Double getPbMax();
 
-  virtual void calcSensitivity();
 
   ///////////////////// Member Objects
 

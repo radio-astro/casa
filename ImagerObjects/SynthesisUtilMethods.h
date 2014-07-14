@@ -258,14 +258,13 @@ public:
   Record toRecord();
 
   String imageName, algorithm, startModel;
-
   Int deconvolverId; // maybe remove ? It's only to tag summary info.
-
   Int nTaylorTerms; 
-
   Vector<Float> scales;
-
   String maskType;
+
+  GaussianBeam restoringbeam;
+  String usebeam;
 
   };
 

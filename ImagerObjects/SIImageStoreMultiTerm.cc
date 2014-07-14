@@ -107,7 +107,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIImageStoreMultiTerm::SIImageStoreMultiTerm(String imagename, 
 					       CoordinateSystem &imcoordsys, 
 					       IPosition imshape, 
-					       const Int nfacets,
+					       const Int /*nfacets*/,
 					       const Bool /*overwrite*/, 
 					       uInt ntaylorterms,
 					       Bool useweightimage)
@@ -739,7 +739,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( itsUseWeight ) { divideImageByWeightVal( *weight(tix) ); }
       }
 
-    calcSensitivity();
+    //    calcSensitivity();
     // createMask
   }
 
@@ -919,6 +919,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+  void SIImageStoreMultiTerm::restore(GaussianBeam& rbeam, String& usebeam, uInt /*term*/)
+  {
+
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","restore",WHERE) );
+
+    for(uInt tix=0; tix<itsNTerms; tix++)
+      {
+	SIImageStore::restore(rbeam, usebeam, tix);
+      }	
+   
+    try
+      {	    
+	    if( itsNTerms > 1)
+	      {
+		// Calculate alpha and beta
+		LatticeExprNode leMaxRes = max( *( residual(0) ) );
+		Float maxres = leMaxRes.getFloat();
+		Float specthreshold = maxres/10.0;  //////////// do something better here..... 
+		
+		os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
+		LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
+		LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
+		
+		/////// Calculate alpha
+		LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
+		alpha()->copyData(alphacalc);
+		
+		ImageInfo ii = image(0)->imageInfo();
+		// Set the restoring beam for alpha
+		alpha()->setImageInfo(ii);
+		//alpha()->table().unmarkForDelete();
+		
+		// Make a mask for the alpha image
+		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
+		
+		//      createMask( lemask, (alpha()) );
+	      }
+	    
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Multi-Term Restoration Error : " + x.getMesg() ) );
+      }
+ 
+  }
 
 
   GaussianBeam SIImageStoreMultiTerm::restorePlane()
@@ -1049,11 +1094,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  AlwaysAssert( ind < 2*itsNTerms-1, AipsError );
 
 	  Array<Float> lsumwt;
-	  sumwt( ind )->get( lsumwt, True );
-	  AlwaysAssert( lsumwt.shape().nelements()==1, AipsError );
+	  sumwt( ind )->get( lsumwt, False );
+	  //	  cout << "lsumwt shape : " << lsumwt.shape() << endl;
+	  AlwaysAssert( lsumwt.shape().nelements()==4, AipsError );
 	  AlwaysAssert( lsumwt.shape()[0]>0, AipsError );
 
-	  hess(tay1,tay2) = lsumwt(IPosition(1,0));
+	  //	  hess(tay1,tay2) = lsumwt(IPosition(1,0)); //Always pick sumwt from first facet only.
+	  hess(tay1,tay2) = lsumwt(IPosition(4,0,0,0,0)); //Always pick sumwt from first facet only.
 	}
 
     os << "Multi-Term Hessian Matrix : " << hess << LogIO::POST;

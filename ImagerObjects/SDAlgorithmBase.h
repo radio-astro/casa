@@ -67,6 +67,7 @@ public:
 		   CountedPtr<SIImageStore> &imagestore,
 		   Int deconvolverid);
 
+  void setRestoringBeam( GaussianBeam restbeam, String usebeam );
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( CountedPtr<SIImageStore> imagestore );
@@ -108,6 +109,9 @@ protected:
 
   SDMaskHandler itsMaskHandler;
   //  Array<Float> itsMatMask;
+
+  GaussianBeam itsRestoringBeam;
+  String itsUseBeam;
 
 };
 

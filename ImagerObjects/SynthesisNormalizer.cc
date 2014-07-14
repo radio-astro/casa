@@ -217,14 +217,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         { itsFacetImageStores[facet]->dividePSFByWeight( ); }
     }
 
+    //        cout << "UU Validating parent imstore " << endl;
+    //        itsImages->validate();
+
       // Check PSF quality by fitting beams
-    /*
     {
-      cout << "Printing beams " << endl;
+      itsImages->calcSensitivity();
+
       itsImages->makeImageBeamSet();
       itsImages->printBeamSet();
     }
-    */
+    
   }
 
 
@@ -399,7 +402,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either."+err) );
 	  }
       }
-    
+
+    // Remove ? 
+    itsImages->psf();
+    itsImages->validate();
+
     // Set up facet Imstores..... if needed
     if( itsNFacets>1 )
       {
@@ -431,9 +438,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename )
   {
     if( itsMapperType == "multiterm" )
-      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms );   }
+      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms, True );   }
     else
-      { return new SIImageStore( imagename );   }
+      { return new SIImageStore( imagename, True );   }
   }
 
 
