@@ -123,7 +123,7 @@ void STSideBandSep::initshift()
   tableList_.resize(0);
 };
 
-void STSideBandSep::setFrequency(const unsigned int ifno,
+void STSideBandSep::setFrequency(const int ifno,
 				 const string freqtol,
 				 const string frame)
 {
@@ -132,7 +132,7 @@ void STSideBandSep::setFrequency(const unsigned int ifno,
   initshift();
 
   // IFNO
-  sigIfno_ = (int) ifno;
+  sigIfno_ = ifno;
 
   // Frequency tolerance
   Quantum<Double> qftol;

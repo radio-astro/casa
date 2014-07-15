@@ -51,7 +51,7 @@ public:
   /**
    * Set IFNO and frequency tolerance to select data to process
    **/
-  void setFrequency(const unsigned int ifno, const string freqtol,
+  void setFrequency(const int ifno, const string freqtol,
 		    const string frame="");
 
   /**
