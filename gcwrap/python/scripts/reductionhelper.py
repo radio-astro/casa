@@ -167,8 +167,11 @@ class GenerateQueryHelper(object):
         self._append_taql(elem, 'ANTENNA1', '==', antenna_id)
         self._append_taql(elem, 'ANTENNA2', '==', antenna_id)
         self._append_taql(elem, 'FIELD_ID', 'IN', 'field', True)
-        taql_timerange = rhutil.select_by_timerange(self.vis, timerange) if timerange is not None else ''
-        self._append_taql(elem, '', '', taql_timerange, True)
+        if timerange is not None:
+            taql_timerange = rhutil.select_by_timerange(self.vis, timerange)
+            self._append_taql(elem, '', '', taql_timerange, True)
+        #taql_timerange = rhutil.select_by_timerange(self.vis, timerange) if timerange is not None else ''
+        #self._append_taql(elem, '', '', taql_timerange, True)
         self._append_taql(elem, 'SCAN_NUMBER', 'IN', 'scan', True)
         self._append_taql(elem, 'OBSERVATION_ID', 'IN', 'obsids', True)
         self._append_taql(elem, '', '', msselect, True)
