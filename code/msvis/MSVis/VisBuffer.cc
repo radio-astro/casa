@@ -97,7 +97,7 @@ VisBuffer & VisBuffer::operator=(const VisBuffer & other)
 VisBuffer &
 VisBuffer::assign(const VisBuffer & other, Bool copy)
 {
-  * visModelData_p = * other.visModelData_p;
+    visModelData_p = other.visModelData_p->clone();
 
     if (other.corrSorted_p) {
         throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));

@@ -3,7 +3,7 @@
 
 #include <casa/string.h>
 #include <ms/MeasurementSets.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 
 #include <utility>
 

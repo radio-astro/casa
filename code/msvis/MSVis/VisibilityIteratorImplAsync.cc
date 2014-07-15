@@ -786,7 +786,7 @@ ViWriteImplAsync::putModel(const RecordInterface& rec, Bool iscomponentlist, Boo
   Vector<Int> nchan = getReadImpl()->msChannels_p.width_p[msid];
   Vector<Int> incr = getReadImpl()->msChannels_p.inc_p[msid];
 
-  VisModelDataI * visModelData = VisModelDataI::create();
+  CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
 
   visModelData->putModelI (getReadImpl()->getMs (), rec, fields, spws, starts, nchan, incr,
                            iscomponentlist, incremental);

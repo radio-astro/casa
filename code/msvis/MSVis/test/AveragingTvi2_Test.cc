@@ -2,10 +2,10 @@
 #include <casa/string.h>
 #include <casa/Logging.h>
 #include <ms/MeasurementSets.h>
-#include <msvis/MSVis/VisBuffer2.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/test/MsFactory.h>
-#include <msvis/MSVis/AveragingVi2Factory.h>
+#include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/test/MsFactory.h>
+#include <synthesis/MSVis/AveragingVi2Factory.h>
 
 #include <boost/tuple/tuple.hpp>
 #include <map>

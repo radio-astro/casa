@@ -935,7 +935,7 @@ private:
     VisBuffer * This;
     Bool twoWayConnection_p;
     ROVisibilityIterator * visIter_p;
-    VisModelDataI * visModelData_p;
+    CountedPtr <VisModelDataI> visModelData_p;
 
     // +-------------------------------------------------+
     // | Cache Declarations (fillers, statuses and data) |

@@ -1164,7 +1164,7 @@ VisBufferImpl2::stateCopy (const VisBufferImpl2 & other)
     state_p->newMs_p = other.isNewMs ();
     state_p->viC_p = other.getVi ();
     state_p->vi_p = 0; // just to be safe
-    state_p->visModelData_p = other.getVisModelData ();
+    state_p->visModelData_p = other.getVisModelData ()->clone();
 }
 
 
@@ -1986,12 +1986,14 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    String modelkey=String("definedmodel_field_")+String::toString(fieldId());
+    String modelkey = String("definedmodel_field_")+String::toString(fieldId());
     Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
 
     if (modelDataIsVirtual ()){
 
-        //cerr << "HASMOD " << state_p->visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
+        if (state_p->visModelData_p == 0){
+            state_p->visModelData_p = VisModelDataI::create();
+        }
 
         if (state_p->visModelData_p->hasModel (msId(), fieldId()(0), spectralWindows()(0)) == -1){
 

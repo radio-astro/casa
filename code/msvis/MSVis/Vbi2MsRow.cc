@@ -9,7 +9,6 @@
 #include <measures/Measures/MDirection.h>
 #include <msvis/MSVis/Vbi2MsRow.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <synthesis/TransformMachines/VisModelData.h>
 #include <msvis/MSVis/VisBufferImpl2.h>
 #include <msvis/MSVis/VisBufferImpl2Internal.h>
 

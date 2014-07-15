@@ -13,15 +13,15 @@
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>
-#include <msvis/MSVis/UtilJ.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/ViFrequencySelection.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/VisibilityIteratorImpl2.h>
-#include <msvis/MSVis/FinalTvi2.h>
-#include <msvis/MSVis/VisBuffer2.h>
-#include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/test/MsFactory.h>
+#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/ViFrequencySelection.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisibilityIteratorImpl2.h>
+#include <synthesis/MSVis/FinalTvi2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/test/MsFactory.h>
 #include <boost/tuple/tuple.hpp>
 
 using namespace std;
@@ -35,7 +35,7 @@ main (int nArgs, char * args [])
 
     Tester tester;
 
-    tester.doTests (nArgs, args);
+    bool allPassed = tester.doTests (nArgs, args);
 
     CopyMs msCopier;
     msCopier.doit ("ngc5921.ms");
@@ -49,7 +49,7 @@ main (int nArgs, char * args [])
 //
 //    printMs (ms);
 
-    return 0;
+    return allPassed ? 0 : 1;
 }
 
 namespace casa {
@@ -1379,7 +1379,7 @@ CopyMs::doit (const String & oldMsName)
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 
     system (String::format ("test -d %s && rm -r %s", newMsName.c_str(), newMsName.c_str()).c_str());
-    system ("casapy --nogui -c \"execfile('/home/orion/casa/trunk/code/msvis/MSVis/test/makeEmptyCopy.py')\"");
+    system ("casapy --nogui -c \"execfile('/home/orion/casa/trunk/code/synthesis/MSVis/test/makeEmptyCopy.py')\"");
 
 
 //    subMs.setmsselect("", "", "", "0");

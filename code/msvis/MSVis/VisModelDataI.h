@@ -44,6 +44,8 @@ class VisModelDataI {
   // //add componentlists or ftmachines 
   virtual void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const VisBuffer& vb) = 0;
 
+  virtual VisModelDataI * clone () = 0;
+
   static VisModelDataI * create ();
 
   // //put the model data for this VisBuffer in the modelVisCube

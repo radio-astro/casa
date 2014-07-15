@@ -5,7 +5,7 @@
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <boost/tuple/tuple.hpp>

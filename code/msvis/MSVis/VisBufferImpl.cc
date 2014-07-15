@@ -391,7 +391,7 @@ public:
       isWritable_p (False),
       lastPointTableRow_p (-1),
       vi_p (0),
-      visModelData_p ()
+      visModelData_p (0)
     {}
 
     Bool corrSorted_p; // Have correlations been sorted by sortCorr?
@@ -407,7 +407,7 @@ public:
     String msName_p;
     Bool newMs_p;
     ROVisibilityIterator2 * vi_p; // [use]
-    mutable VisModelData visModelData_p;
+    mutable CountedPtr<VisModelData> visModelData_p;
 
     CacheRegistry cacheRegistry_p;
 };

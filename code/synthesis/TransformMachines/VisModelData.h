@@ -159,6 +159,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //add componentlists or ftmachines 
   void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const VisBuffer& vb);
 
+  VisModelDataI * clone ();
+
   //put the model data for this VisBuffer in the modelVisCube
   Bool getModelVis(VisBuffer& vb);
 
