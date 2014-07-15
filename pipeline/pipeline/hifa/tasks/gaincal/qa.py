@@ -15,8 +15,8 @@ class TimegaincalQAPool(pqa.QAScorePool):
     score_types = {'PHASE_SCORE_XY'   : 'X-Y phase deviation',
                    'PHASE_SCORE_X2X1' : 'X2-X1 phase deviation'}
 
-    short_msg = {'PHASE_SCORE_XY'   : 'Large X-Y deviation',
-                 'PHASE_SCORE_X2X1' : 'Large X2-X1 deviation'}
+    short_msg = {'PHASE_SCORE_XY'   : 'X-Y deviation',
+                 'PHASE_SCORE_X2X1' : 'X2-X1 deviation'}
 
     def __init__(self, qa_results_dict):
         super(TimegaincalQAPool, self).__init__()
