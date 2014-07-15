@@ -77,6 +77,12 @@ VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
 
   }
 
+VisModelDataI *
+VisModelData::clone ()
+{
+    return new VisModelData (* this);
+}
+
 void VisModelData::listModel(const MeasurementSet& thems){
  
   //Table newTab(thems);
