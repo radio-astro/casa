@@ -1,5 +1,5 @@
+import os
 from taskinit import casalog
-
 import libsakurapy
 import reductionhelper as rh
 
@@ -65,5 +65,7 @@ def ssdreduce(vis,
         for query in query_list:
             num_record, num_threads = rh.optimize_thread_parameters(table, query, spwmap)
             if num_record > 0:
+                num_record = int(os.environ['SSDREDUCE_NUM_RECORD'])
+                num_threads = int(os.environ['SSDREDUCE_NUM_THREADS'])
                 for results in rh.paraMap(num_threads, rh.reducechunk, rh.readchunk(table, query[0], num_record, rh.get_context(query, spwidmap, context))):
                     rh.writechunk(table, results)

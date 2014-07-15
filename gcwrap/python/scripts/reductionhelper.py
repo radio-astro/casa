@@ -372,7 +372,7 @@ def reducerecord(record):
                                                 nchan, ctxcal['tsys'][ipol], 
                                                 1, datatime, facdata)
             result_cal = libsakurapy.apply_position_switch_calibration(1, facdata, 
-                                                                       nchan, data, offdata)
+                                                                       nchan, data, offdata, data)
 
             ##masknaninf------------------------
             libsakurapy.set_false_float_if_nan_or_inf(nchan, data, mask_temp)
@@ -388,14 +388,14 @@ def reducerecord(record):
                                                  ctxbl['context'], 
                                                  ctxbl['clip_threshold'], 
                                                  ctxbl['num_fitting_max'], 
-                                                 True)
+                                                 True, mask_temp, data)
 
             ##clip------------------------------
             result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_temp)
             libsakurapy.logical_and(nchan, mask_temp, mask)
 
             ##smooth----------------------------
-            result_smooth = libsakurapy.convolve1D(ctxsm, nchan, data)
+            result_smooth = libsakurapy.convolve1D(ctxsm, nchan, data, data)
 
             ##statistics------------------------
             stats = libsakurapy.compute_statistics(nchan, data, mask)
