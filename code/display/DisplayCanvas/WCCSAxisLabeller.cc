@@ -330,6 +330,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				frequencySystem.define("ptype", "choice");
 				bool spectralAxisExists = itsCoordinateSystem.hasSpectralAxis();
 				bool restFrame = false;
+				bool noFrame = false;
 				String defaultFreq = itsFrequencySystem;
 				if ( spectralAxisExists ){
 					SpectralCoordinate specAxis = itsCoordinateSystem.spectralCoordinate();
@@ -338,19 +339,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						restFrame = true;
 						defaultFreq = FRAME_REST;
 					}
+					else if ( type == MFrequency::Undefined ){
+						noFrame = true;
+					}
 				}
 				Vector<String> vunits(5);
 
-				if ( !restFrame ){
+				if ( !restFrame && !noFrame ){
 					vunits(0) = "LSRK";
 					vunits(1) = "LSRD";
 					vunits(2) = "BARY";
 					vunits(3) = "GEO";
 					vunits(4) = "TOPO";
 				}
-				else {
+				else if (restFrame ){
 					vunits.resize(1);
 					vunits(0) = "REST";
+				}
+				else {
+					vunits.resize(1);
+					vunits(0) = "Undefined";
 				}
 
 				frequencySystem.define("popt", vunits);
