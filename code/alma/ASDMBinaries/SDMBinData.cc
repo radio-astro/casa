@@ -458,8 +458,6 @@ namespace sdmbin {
 	}
       }
 	
-      
-
       unsigned int                     numApc              = v_apc.size();
       unsigned int                     numBaseband         = v_baseband.size();
 
@@ -2103,11 +2101,12 @@ namespace sdmbin {
     if(verbose_)cout << "numData=" << msDataPtr_->numData << endl;
     if(verbose_)cout << "numSdPol("<<ndd<<")="<<baselinesSet_->numSdPol(ndd)<<endl;
     if(baselinesSet_->numSdPol(ndd)>2){        // shape in complex to have the same shape as the visibilities
-      int nmax=msDataPtr_->numData*2;     // {[(numdata*4)/3]*6}/4=numData*6/3=numData*2
+      int nmax = msDataPtr_->numData / 4 * 6;  // Attention we assume that the auto data are stored on 1 float + 1 complex + 1 float
+                                               // (e.g. XX on one float, XY on 1 complex and YY on one float)
+                                               // and the idea is to reshape all this in three complexes.
       msDataPtr_->v_data[0] = new float[nmax];
       int k=0;
-      nmax=(msDataPtr_->numData*4)/3;
-      for(int n=0; n<nmax; n=n+4){
+      for (int n = 0; n < msDataPtr_->numData; n = n + 4) {
 	msDataPtr_->v_data[0][k++]=autoData[n];        // XX real
 	msDataPtr_->v_data[0][k++]=0.0;                // XX imaginary
 	msDataPtr_->v_data[0][k++]=autoData[n+1];      // XY real
