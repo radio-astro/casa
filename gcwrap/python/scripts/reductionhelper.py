@@ -742,3 +742,16 @@ def colname(tb):
         return 'FLOAT_DATA'
     else:
         return 'DATA'
+
+def add_corrected_data(table):
+    with opentable(table) as tb:
+        colnames = tb.colnames()
+        if 'CORRECTED_DATA' not in colnames:
+            if 'DATA' in colnames:
+                desc = tb.getcoldesc('DATA')
+            elif 'FLOAT_DATA' in colnames:
+                desc = tb.getcoldesc('FLOAT_DATA')
+                desc['valueType'] = 'complex'
+            desc['comment'] = 'corrected data'
+            tb.addcols({'CORRECTED_DATA': desc})
+
