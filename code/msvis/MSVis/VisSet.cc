@@ -28,7 +28,7 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <synthesis/TransformMachines/VisModelData.h>
+#include <msvis/MSVis/VisModelDataI.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>

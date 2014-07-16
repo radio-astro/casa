@@ -650,9 +650,9 @@ TransformingVi2::weightSpectrum (Cube<Float> & wtsp)  const
 }
 
 void
-TransformingVi2::weightSpectrumCorrected (Cube<Float> & wtsp)  const
+TransformingVi2::sigmaSpectrum (Cube<Float> & wtsp)  const
 {
-     getVii()->weightSpectrumCorrected (wtsp);
+     getVii()->sigmaSpectrum (wtsp);
 }
 
 Bool
@@ -662,7 +662,7 @@ TransformingVi2::weightSpectrumExists ()  const
 }
 
 Bool
-TransformingVi2::weightSpectrumCorrectedExists ()  const
+TransformingVi2::sigmaSpectrumExists ()  const
 {
     return getVii()->weightSpectrumExists ();
 }
@@ -771,7 +771,7 @@ TransformingVi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
 }
 
 void
-TransformingVi2::writeWeightSpectrumCorrected (const Cube<Float> & /*wtsp*/)
+TransformingVi2::writeSigmaSpectrum (const Cube<Float> & /*wtsp*/)
 {
     Tvi2NotImplemented ();
 }

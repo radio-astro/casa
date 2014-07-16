@@ -45,7 +45,7 @@ public:
     ArrayColumn<Double>  uvw_p;
     ArrayColumn<Complex> vis_p;
     ArrayColumn<Float>   weightSpectrum_p;
-    ArrayColumn<Float>   weightSpectrumCorrected_p;
+    ArrayColumn<Float>   sigmaSpectrum_p;
     ArrayColumn<Float>   weight_p;
 
     Bool isFloatDataPresent () const;

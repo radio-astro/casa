@@ -23,7 +23,6 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/OS/Timer.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <synthesis/TransformMachines/FTMachine.h>
 #include <msvis/MSVis/UtilJ.h>
 
 
@@ -407,7 +406,7 @@ public:
     String msName_p;
     Bool newMs_p;
     ROVisibilityIterator2 * vi_p; // [use]
-    mutable CountedPtr<VisModelData> visModelData_p;
+    mutable CountedPtr<VisModelDataI> visModelData_p;
 
     CacheRegistry cacheRegistry_p;
 };

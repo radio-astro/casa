@@ -379,6 +379,7 @@ protected:
 											Vector<Double> &intermediateChanFreq,
 											Vector<Double> &intermediateChanWidth);
 	void calculateWeightAndSigmaFactors();
+	void calculateNewWeightAndSigmaFactors();
 
 	// From selected MS
 	void checkFillFlagCategory();
@@ -564,10 +565,10 @@ protected:
 													Matrix<T> &outputMatrix,
 													Bool convolveFlags=False,
 													vi::VisBuffer2 *vb=NULL);
-	template <class T> void mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
-														Matrix<T> &outputMatrix,
-														map<uInt,T> scaleMap,
-														Vector<Int> spws);
+	template <class T> void mapAndScaleMatrix(	const Matrix<T> &inputMatrix,
+												Matrix<T> &outputMatrix,
+												map<uInt,T> scaleMap,
+												Vector<Int> spws);
 	template <class T> void writeMatrix(	const Matrix<T> &inputMatrix,
 											ArrayColumn<T> &outputCol,
 											RefRows &rowRef,
@@ -1136,6 +1137,8 @@ protected:
 	map<uInt,uInt> numOfCombInterChanMap_p;
 	map<uInt,Float> weightFactorMap_p;
 	map<uInt,Float> sigmaFactorMap_p;
+    map<uInt,Float> newWeightFactorMap_p;
+	map<uInt,Float> newSigmaFactorMap_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;

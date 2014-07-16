@@ -41,7 +41,6 @@
 #include <msvis/MSVis/VisBufferImplAsync2.h>
 #include <msvis/MSVis/VisBufferAsyncWrapper2.h>
 #include <msvis/MSVis/VisibilityIteratorImplAsync2.h>
-#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <cassert>
 #include <algorithm>

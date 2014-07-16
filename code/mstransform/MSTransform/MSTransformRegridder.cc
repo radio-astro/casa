@@ -705,6 +705,7 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 			    							Vector<Double>& newCHAN_FREQ,
 			    							Vector<Double>& newCHAN_WIDTH,
+			    							Double& weightScale,
 			    							const Vector<Double>& oldCHAN_FREQ,
 			    							const Vector<Double>& oldCHAN_WIDTH,
 			    							const MDirection  phaseCenter,
@@ -913,6 +914,8 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 		newCHAN_FREQ[i] = (newChanLoBound[i] + newChanHiBound[i]) / 2.;
 		newCHAN_WIDTH[i] = newChanHiBound[i] - newChanLoBound[i];
 	}
+
+	weightScale = newCHAN_WIDTH[0]/transCHAN_WIDTH[0];
 
 	return True;
 }

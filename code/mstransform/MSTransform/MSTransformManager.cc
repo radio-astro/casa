@@ -195,6 +195,8 @@ void MSTransformManager::initialize()
 	numOfCombInterChanMap_p.clear();
 	weightFactorMap_p.clear();
 	sigmaFactorMap_p.clear();
+	newWeightFactorMap_p.clear();
+	newSigmaFactorMap_p.clear();
 
 	// Reference frame transformation members
 	fftShiftEnabled_p = False;
@@ -1196,9 +1198,9 @@ void MSTransformManager::setup()
 	}
 
 	// Determine weight and sigma factors when either auto or user channel average is set
-	if (channelAverage_p)
+	if (channelAverage_p or combinespws_p or refFrameTransformation_p)
 	{
-		calculateWeightAndSigmaFactors();
+		calculateNewWeightAndSigmaFactors();
 	}
 
 
@@ -1564,6 +1566,8 @@ void MSTransformManager::initDataSelectionParams()
 			for (uInt spw_i=0;spw_i<spwList.size();spw_i++)
 			{
 				freqbinMap_p[spwList(spw_i)] = freqbin_p(0);
+				// jagonzal (new WEIGHT/SIGMA convention)
+				newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(0);
 			}
 		}
 		else
@@ -1580,6 +1584,8 @@ void MSTransformManager::initDataSelectionParams()
 				for (uInt spw_i=0;spw_i<spwList.size();spw_i++)
 				{
 					freqbinMap_p[spwList(spw_i)] = freqbin_p(spw_i);
+					// jagonzal (new WEIGHT/SIGMA convention)
+					newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(spw_i);
 				}
 			}
 		}
@@ -1995,9 +2001,11 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
     					<< "Calculate frequencies in output reference frame " << LogIO::POST;
 
+	Double weightScale;
 	MSTransformRegridder::calcChanFreqs(	logger_p,
 											regriddedCHAN_FREQ,
 											regriddedCHAN_WIDTH,
+											weightScale,
 											inputCHAN_FREQ,
 											inputCHAN_WIDTH,
 											phaseCenter_p,
@@ -2014,15 +2022,26 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 											True // verbose
 											);
 
+    // jagonzal (new WEIGHT/SIGMA convention in CASA 4.2.2)
+	if (newWeightFactorMap_p.find(spwId) == newWeightFactorMap_p.end())
+	{
+		newWeightFactorMap_p[spwId] = weightScale;
+	}
+	else
+	{
+		newWeightFactorMap_p[spwId] *= weightScale;
+	}
+
 	// Check if pre-averaging step is necessary
 	if (freqbinMap_p.find(spwId) == freqbinMap_p.end())
 	{
-
+		Double weightScaleDummy;
 		Vector<Double> tmpCHAN_FREQ;
 		Vector<Double> tmpCHAN_WIDTH;
 		MSTransformRegridder::calcChanFreqs(	logger_p,
 												tmpCHAN_FREQ,
 												tmpCHAN_WIDTH,
+												weightScaleDummy,
 												originalCHAN_FREQ,
 												originalCHAN_WIDTH,
 												phaseCenter_p,
@@ -2565,6 +2584,37 @@ void MSTransformManager::calculateWeightAndSigmaFactors()
 }
 
 // -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::calculateNewWeightAndSigmaFactors()
+{
+
+	map<uInt, uInt>::iterator iter;
+	for (iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
+	{
+		// Populateremaining SPWs of weight factor map
+		if (newWeightFactorMap_p.find(iter->first)== newWeightFactorMap_p.end())
+		{
+			// When doing only re-gridding, maybe not all SPWs require pre-averaging
+			if (not combinespws_p)
+			{
+				newWeightFactorMap_p[iter->first] = 1;
+			}
+			// When combining SPWs all of them get the same freqbin
+			else
+			{
+				newWeightFactorMap_p[iter->first] = newWeightFactorMap_p[0];
+			}
+		}
+
+		// Populate sigma factor map
+		newSigmaFactorMap_p[iter->first] = 1 / sqrt(newWeightFactorMap_p[iter->first]);
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
 // Method to check if flag category has to be filled
 // -----------------------------------------------------------------------
 void MSTransformManager::checkFillFlagCategory()
@@ -2662,6 +2712,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
@@ -2685,7 +2736,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
-			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseWeights;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
 		}
 
 		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
@@ -2716,7 +2767,19 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
-			timeAvgOptions_p |= vi::AveragingOptions::ModelUseNoWeights;
+
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
+			}
+			else if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromSIGMA;
+			}
+			else
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::ModelPlainAvg;
+			}
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
@@ -2764,7 +2827,8 @@ void MSTransformManager::checkDataColumnsToFill()
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
 
-			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::AverageObserved);
+			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 		else
 		{
@@ -2828,6 +2892,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 		else
 		{
@@ -2891,6 +2956,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 		else
 		{
@@ -2913,7 +2979,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS as DATA from input CORRECTED_DATA column"<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
-			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseWeights;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
 		}
 		else
 		{
@@ -2941,6 +3007,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
+			timeAvgOptions_p |= vi::AveragingOptions::ModelPlainAvg;
 		}
 		else
 		{
@@ -3256,9 +3323,9 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		mapMatrix(vb->uvw(),tmpUvw);
 		writeMatrix(tmpUvw,outputMsCols_p->uvw(),rowRef,nspws_p);
 
-		if (channelAverage_p)
+		if (newWeightFactorMap_p.size() > 0)
 		{
-			mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
+			mapAndScaleMatrix(vb->weight(),tmpMatrixFloat,newWeightFactorMap_p,vb->spectralWindows());
 			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
 		}
 		else
@@ -3282,9 +3349,9 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			if (channelAverage_p)
+			if (newSigmaFactorMap_p.size() > 0)
 			{
-				mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
+				mapAndScaleMatrix(vb->sigma(),tmpMatrixFloat,newSigmaFactorMap_p,vb->spectralWindows());
 				outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 			}
@@ -3305,12 +3372,12 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		writeMatrix(vb->uvw(),outputMsCols_p->uvw(),rowRef,nspws_p);
 
 		Matrix<Float> weights = vb->weight();
-		if (channelAverage_p)
+		if (newWeightFactorMap_p.size() > 0)
 		{
-			if ( (weightFactorMap_p.find(vb->spectralWindows()(0))  != weightFactorMap_p.end()) and
-					(weightFactorMap_p[vb->spectralWindows()(0)] != 1) )
+			if ( (newWeightFactorMap_p.find(vb->spectralWindows()(0))  != newWeightFactorMap_p.end()) and
+					(newWeightFactorMap_p[vb->spectralWindows()(0)] != 1) )
 			{
-				weights *= weightFactorMap_p[vb->spectralWindows()(0)];
+				weights *= newWeightFactorMap_p[vb->spectralWindows()(0)];
 			}
 		}
 		writeMatrix(weights,outputMsCols_p->weight(),rowRef,nspws_p);
@@ -3324,12 +3391,12 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		else
 		{
 			Matrix<Float> sigma = vb->sigma();
-			if (channelAverage_p)
+			if (newSigmaFactorMap_p.size() > 0)
 			{
-				if ( (sigmaFactorMap_p.find(vb->spectralWindows()(0)) != sigmaFactorMap_p.end()) and
-						(sigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
+				if ( (newSigmaFactorMap_p.find(vb->spectralWindows()(0)) != newSigmaFactorMap_p.end()) and
+						(newSigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
 				{
-					sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];
+					sigma *= newSigmaFactorMap_p[vb->spectralWindows()(0)];
 				}
 			}
 			writeMatrix(sigma,outputMsCols_p->sigma(),rowRef,nspws_p);
@@ -3596,7 +3663,7 @@ template <class T> void MSTransformManager::mapAndAverageMatrix(	const Matrix<T>
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
+template <class T> void MSTransformManager::mapAndScaleMatrix(	const Matrix<T> &inputMatrix,
 																		Matrix<T> &outputMatrix,
 																		map<uInt,T> scaleMap,
 																		Vector<Int> spws)
@@ -3621,46 +3688,29 @@ template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matr
 		// Reset normalizing factor
 		normalizingFactor = 0;
 
-		// Compute combined value from each SPW
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		// Get value from first SPW (this is for Weight and Sigma and cvel is doing it so)
+		row = baselineRows.at(0);
+		spw = spws(row);
+		if (scaleMap.find(spw) != scaleMap.end())
 		{
-			row = *iter;
-			spw = spws(row);
-			if (scaleMap.find(spw) != scaleMap.end())
-			{
-				contributionFactor = scaleMap[spw];
-			}
-			else
-			{
-				contributionFactor = 1;
-			}
-
-
-			for (uInt col = 0; col < nCols; col++)
-			{
-				outputMatrix(col,baseline_index) += contributionFactor*inputMatrix(col,row);
-			}
-
-			// normalizingFactor += contributionFactor;
-			normalizingFactor += 1;
+			contributionFactor = scaleMap[spw];
+		}
+		else
+		{
+			contributionFactor = 1;
 		}
 
-
-		// Normalize accumulated value
-		if (normalizingFactor>0)
+		for (uInt col = 0; col < nCols; col++)
 		{
-			for (uInt col = 0; col < nCols; col++)
-			{
-				outputMatrix(col,baseline_index) /= normalizingFactor;
-			}
+			outputMatrix(col,baseline_index) = contributionFactor*inputMatrix(col,row);
 		}
-
 
 		baseline_index += 1;
 	}
 
 	return;
 }
+
 
 // ----------------------------------------------------------------------------------------
 // Fill main (data) columns which have to be combined together to produce bigger SPWs

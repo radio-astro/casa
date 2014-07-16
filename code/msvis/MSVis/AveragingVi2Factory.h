@@ -33,14 +33,21 @@ public:
                   AverageObserved = 1 << 0,  // Average the observed data
                   AverageModel = 1 << 1,     // Average the model data
                   AverageCorrected = 1 << 2, // Average the corrected data
-                  ObservedUseNoWeights = 1 << 3, // Use no weights when averaging observed data
-                  ModelUseWeights = 1 << 4, // Use normal weights when averaging model data
-                  ModelUseCorrectedWeights = 1 << 5, // Use corrected weights when averaging model data
-                  ModelUseNoWeights = 1 << 6, // Use no weights when averaging model data
-                  CorrectedUseNoWeights = 1 << 7, // Use no weights when averaging corrected data
-                  CorrectedUseWeights = 1 << 8, // Use normal weights when averaging corrected data
-                  CorrectedUseCorrectedWeights = 1 << 9, // Use corrected weights when averaging corrected data
-                  BaselineDependentAveraging = 1 << 10, // Do averaging with lengths dependent on baselines
+                  ObservedPlainAvg = 1 << 3,
+                  ObservedFlagAvg = 1 << 4,
+                  ObservedWeightAvgFromSIGMA = 1 << 5,
+                  ObservedFlagWeightAvgFromSIGMA = 1 << 6,
+                  ModelPlainAvg = 1 << 7,
+                  ModelFlagAvg = 1 << 8,
+                  ModelWeightAvgFromWEIGHT = 1 << 9,
+                  ModelWeightAvgFromSIGMA = 1 << 10,
+                  ModelFlagWeightAvgFromWEIGHT = 1 << 11,
+                  ModelFlagWeightAvgFromSIGMA = 1 << 12,
+                  CorrectedPlainAvg = 1 << 13,
+                  CorrectedFlagAvg = 1 << 14,
+                  CorrectedWeightAvgFromWEIGHT = 1 << 15,
+                  CorrectedFlagWeightAvgFromWEIGHT = 1 << 16,
+                  BaselineDependentAveraging = 1 << 17, // Do averaging with lengths dependent on baselines
                                                         // Requires specifying a max uvw distance parameter
                   MarksLast
     };

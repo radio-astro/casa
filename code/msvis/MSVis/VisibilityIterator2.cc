@@ -323,10 +323,10 @@ VisibilityIterator2::weightSpectrumExists () const
 }
 
 Bool
-VisibilityIterator2::weightSpectrumCorrectedExists () const
+VisibilityIterator2::sigmaSpectrumExists () const
 {
     CheckImplementationPointerR ();
-    return impl_p->weightSpectrumCorrectedExists();
+    return impl_p->sigmaSpectrumExists();
 }
 
 void
@@ -1020,10 +1020,10 @@ VisibilityIterator2::weightSpectrum (Cube<Float>& wtsp) const
 }
 
 void
-VisibilityIterator2::weightSpectrumCorrected (Cube<Float>& wtsp) const
+VisibilityIterator2::sigmaSpectrum (Cube<Float>& sigsp) const
 {
     CheckImplementationPointerR ();
-    impl_p->weightSpectrumCorrected (wtsp);
+    impl_p->sigmaSpectrum (sigsp);
 }
 
 //void

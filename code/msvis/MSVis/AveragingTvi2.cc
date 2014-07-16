@@ -1,4 +1,5 @@
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayPartMath.h>
 #include <casa/BasicMath/Functors.h>
 #include <msvis/MSVis/AveragingTvi2.h>
 #include <msvis/MSVis/AveragingVi2Factory.h>
@@ -278,8 +279,13 @@ public:
     void setTimeFirst (Double);
     void setTimeLast (Double);
 
+    Double getNormalizationFactor();
+    void setNormalizationFactor(Double normalizationFactor);
+    void accumulateNormalizationFactor(Double normalizationFactor);
+
 private:
 
+    Vector<Double> normalizationFactor_p;
     VbAvg * vbAvg_p; // [use]
 };
 
@@ -312,15 +318,19 @@ protected:
         : correctedData_p (False),
           modelData_p (False),
           observedData_p (False),
-          weightSpectrum_p (False),
-          weightSpectrumCorrected_p (False)
+          weightSpectrumIn_p (False),
+          sigmaSpectrumIn_p (False),
+          weightSpectrumOut_p (False),
+          sigmaSpectrumOut_p (False)
         {}
 
         Bool correctedData_p;
         Bool modelData_p;
         Bool observedData_p;
-        Bool weightSpectrum_p;
-        Bool weightSpectrumCorrected_p;
+        Bool weightSpectrumIn_p;
+        Bool sigmaSpectrumIn_p;
+        Bool weightSpectrumOut_p;
+        Bool sigmaSpectrumOut_p;
     };
 
     class AccumulationParameters {
@@ -340,15 +350,16 @@ protected:
           observedIn (doing.observedData_p ? rowInput->observed()
                                           : Matrix<Complex> ()),
           observedOut (doing.observedData_p ? rowAveraged->observed() : Matrix<Complex> ()),
-          usingWeightSpectrum_p (doing.weightSpectrum_p),
           weightIn (rowInput->weight()),
           weightOut (rowAveraged->weight()),
-          weightSpectrumCorrectedIn (doing.weightSpectrumCorrected_p ? rowInput->weightSpectrumCorrected()
-                                                                    : Matrix<Float> ()),
-          weightSpectrumCorrectedOut (doing.weightSpectrumCorrected_p ? rowAveraged->weightSpectrumCorrected()
-                                                                     : Matrix<Float> ()),
-          weightSpectrumIn (rowInput->weightSpectrum()),
-          weightSpectrumOut (rowAveraged->weightSpectrum())
+          sigmaIn (rowInput->sigma()),
+          sigmaOut (rowAveraged->sigma()),
+          flagCubeIn (rowInput->flags()),
+          flagCubeOut (rowInput->flags()),
+          sigmaSpectrumIn (doing.sigmaSpectrumIn_p ? rowInput->sigmaSpectrum() : Matrix<Float> ()),
+          sigmaSpectrumOut (doing.sigmaSpectrumOut_p ? rowAveraged->sigmaSpectrum() : Matrix<Float> ()),
+          weightSpectrumIn (doing.weightSpectrumIn_p ? rowInput->weightSpectrum() : Matrix<Float> ()),
+          weightSpectrumOut (doing.weightSpectrumOut_p ? rowAveraged->weightSpectrum() : Matrix<Float> ())
         {}
 
         const Matrix<Complex> correctedIn;
@@ -357,11 +368,14 @@ protected:
         Matrix<Complex>       modelOut;
         const Matrix<Complex> observedIn;
         Matrix<Complex>       observedOut;
-        Bool                  usingWeightSpectrum_p;
         const Vector<Float>   weightIn;
         Vector<Float>         weightOut;
-        const Matrix<Float>   weightSpectrumCorrectedIn;
-        Matrix<Float>         weightSpectrumCorrectedOut;
+        const Vector<Float>   sigmaIn;
+        Vector<Float>         sigmaOut;
+        const Matrix<Bool>    flagCubeIn;
+        Matrix<Bool>          flagCubeOut;
+        const Matrix<Float>   sigmaSpectrumIn;
+        Matrix<Float>         sigmaSpectrumOut;
         const Matrix<Float>   weightSpectrumIn;
         Matrix<Float>         weightSpectrumOut;
     };
@@ -440,6 +454,7 @@ private:
     AveragingOptions averagingOptions_p;
     mutable BaselineIndex baselineIndex_p; // map of antenna1,antenna2 to row number in this VB.
     Vector<Bool> baselinePresent_p; // indicates whether baseline has any data
+    Vector<Double> normalizationFactor_p; // indicates whether baseline has any data
     VisBufferImpl2 * bufferToFill_p;
     Bool complete_p; // average is complete
     Matrix<Bool> correlationFlags_p; // used for weight accumulation
@@ -459,6 +474,8 @@ private:
     Vector<Double> timeLast_p;
     Matrix<Double> uvwFirst_p;
     Bool usingUvwDistance_p;
+
+    LogIO logger_p;
 };
 
 ///////////////////////////////////////////////////////////
@@ -505,20 +522,22 @@ private:
 //    Bool doingModelData_p;
 //    Bool doingObservedData_p;
 //    Bool doingWeightSpectrum_p;
-//    Bool doingWeightSpectrumCorrected_p;
+//    Bool doingsigmaSpectrum_p;
 //    Averagers vbAveragers_p;
 //};
 
 MsRowAvg::MsRowAvg (Int row, const VbAvg * vb)
 : Vbi2MsRow (row, vb),
-  vbAvg_p (const_cast<VbAvg *> (vb))
+  vbAvg_p (const_cast<VbAvg *> (vb)),
+  normalizationFactor_p(0.0)
 {}
 
 // Constructor for read/write access
 
 MsRowAvg::MsRowAvg (Int row, VbAvg * vb)
 : Vbi2MsRow (row, vb),
-  vbAvg_p (vb)
+  vbAvg_p (vb),
+  normalizationFactor_p(0.0)
 {}
 
 Bool
@@ -610,6 +629,22 @@ MsRowAvg::setTimeLast (Double value)
     vbAvg_p->timeLast_p (row ()) = value;
 }
 
+Double MsRowAvg::getNormalizationFactor()
+{
+	return vbAvg_p->normalizationFactor_p (row ());
+}
+
+void MsRowAvg::setNormalizationFactor(Double normalizationFactor)
+{
+	vbAvg_p->normalizationFactor_p (row ()) = normalizationFactor;
+}
+
+void MsRowAvg::accumulateNormalizationFactor(Double normalizationFactor)
+{
+	vbAvg_p->normalizationFactor_p (row ()) += normalizationFactor;
+}
+
+
 VbAvg::VbAvg (const AveragingParameters & averagingParameters)
 : VisBufferImpl2 (VbRekeyable),
   averagingInterval_p (averagingParameters.getAveragingInterval ()),
@@ -660,10 +695,10 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
 {
     finalizeBaselineIfNeeded (rowInput, rowAveraged, subchunk);
 
-    if (! rowAveraged->baselinePresent()){
+    if (! rowAveraged->baselinePresent())
+    {
 
         initializeBaseline (rowInput, rowAveraged, subchunk);
-
     }
 
     // Accumulate data that is matrix-valued (e.g., vis, visModel, etc.).
@@ -676,13 +711,12 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
     boost::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
 
     Double adjustedWeight = 0;
-
     for (Int c = 0; c < nCorrelations(); c++){
-        adjustedWeight += rowAveraged->correlationFlagsMutable() (c) ? 0 : adjustedWeights (c);
+        // adjustedWeight += rowAveraged->correlationFlagsMutable() (c) ? 0 : adjustedWeights (c);
+    	adjustedWeight += adjustedWeights (c);
     }
 
     // Accumulate the non matrix-valued data
-
     accumulateRowData (rowInput, rowAveraged, adjustedWeight, rowFlagged);
 
 }
@@ -777,7 +811,6 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     const Int nChannels = inputFlags.shape()(1);
     const Int nCorrelations = inputFlags.shape()(0);
 
-    Vector<Double> adjustedWeight = Vector<Double> (nCorrelations, 0);
     Bool rowFlagged = True;  // True if all correlations and all channels flagged
 
     for (Int channel = 0; channel < nChannels; channel ++){
@@ -813,28 +846,29 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             averagedFlags (correlation, channel) = accumulatorFlagged && inputFlagged;
 
             // Accumulate the sum for each cube element
-
             accumulateElementForCubes (accumulationParameters,
                                        flagChange, // zeroes out accumulation
                                        correlation,
                                        channel);
 
-            // Handle the update of the weight column.  Although it's a row-level value it
-            // depends on the flag matrix.  A weight is accumulated to a correlation only when
-            // flag(correation,channel) is unflagged (except when we're accumulating data tbefore the
-            // first unflagged value for a correlation is seen.
-
-            Bool correlationFlagChanged = correlationFlagged (correlation) && ! inputFlagged;
+            // Update correlation Flag
             correlationFlagged (correlation) = correlationFlagged (correlation) && inputFlagged;
+        }
+    }
 
-            if (! inputFlagged){
-
-                Double weight = accumulationParameters->weightSpectrumIn (correlation, channel);
-                adjustedWeight (correlation) += weight;
-                accumulateElementForCube ((float) weight, 1.0f, correlationFlagChanged,
-                                          accumulationParameters->weightOut (correlation));
-            }
-
+    Vector<Double> adjustedWeight = Vector<Double> (nCorrelations, 1);
+    if (doing_p.correctedData_p)
+    {
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+        {
+        	adjustedWeight(correlation) = accumulationParameters->weightIn(correlation);
+        }
+    }
+    else if (doing_p.observedData_p)
+    {
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+        {
+        	adjustedWeight(correlation) = 1.0/pow(accumulationParameters->sigmaIn(correlation),2);
         }
     }
 
@@ -849,81 +883,87 @@ VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameter
                                   Int correlation,
                                   Int channel)
 {
-    // Zero accumulation is used to restart the accumulation when the flagged state of the
-    // element's accumulation changes from flagged to unflagged.
 
-    // Get the weight to use for averaging.  If arithmetic averaging is being used the function
-    // will return 1.0.  Otherwise if will return some function of the weight or weight-spectrum
-    // (e.g., square, square-root, etc.).
+	// NOTE: THe channelized flag check comes from the calling ontext (continue statement)
+	float weightCorrected, weightObserved = 1.0f;
 
-    Double weight = accumulationParameters->weightSpectrumIn (correlation, channel);
-
-    Float weightCorrected =  1.0f;
-
-    if (doing_p.weightSpectrumCorrected_p){
-
-        weightCorrected = accumulationParameters->weightSpectrumCorrectedIn (correlation, channel);
-
-        accumulateElementForCube (weightCorrected,
-                                  1.0f, zeroAccumulation,
-                                  accumulationParameters->weightSpectrumCorrectedOut (correlation, channel));
-    }
-
-    // Update the sum for the three visibility cubes (corrected and model cubes only if present)
-
-    if (doing_p.observedData_p){
-
-        float weightToUse = 1.0f;
-
-        if (! averagingOptions_p.contains (AveragingOptions::ObservedUseNoWeights)){
-            weightToUse = weight;
-        }
-
-        accumulateElementForCube (accumulationParameters->observedIn (correlation, channel),
-                                  weightToUse, zeroAccumulation,
-                                  accumulationParameters->observedOut(correlation, channel));
-    }
-
-    if (doing_p.correctedData_p){
-
-        float weightToUse = 1.0f;
-
-        if (averagingOptions_p.contains (AveragingOptions::CorrectedUseCorrectedWeights)){
-            weightToUse = weightCorrected;
-        }
-        else if (averagingOptions_p.contains (AveragingOptions::CorrectedUseWeights)){
-            weightToUse = weight;
-        }
-
-        accumulateElementForCube (accumulationParameters->correctedIn (correlation, channel),
-                                  weightToUse, zeroAccumulation,
-                                  accumulationParameters->correctedOut (correlation, channel));
-    }
-
-    if (doing_p.modelData_p){
-
-        float weightToUse = 1.0f;
-
-        if (averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights)){
-            weightToUse = weightCorrected;
-        }
-        else if (averagingOptions_p.contains (AveragingOptions::ModelUseWeights)){
-            weightToUse = weight;
-        }
-
-        accumulateElementForCube (accumulationParameters->modelIn (correlation, channel),
-                                  weightToUse, zeroAccumulation,
-                                  accumulationParameters->modelOut (correlation, channel));
-    }
+	if (doing_p.correctedData_p)
+	{
+		// The weight corresponding to CORRECTED_DATA is that stored in WEIGHT
+		weightCorrected = accumulationParameters->weightSpectrumIn (correlation,channel);
 
 
-    // The result of averaging for the weight spectrum is to sum up the weights rather
-    // than average them.  The sum is over the raw weights (i.e., rather than optionally
-    // applying a function to the weight as is done for other cube data).
+		// Accumulate weighted average contribution (normalization will come at the end)
+		accumulateElementForCube (	accumulationParameters->correctedIn (correlation, channel),
+									weightCorrected, zeroAccumulation,
+									accumulationParameters->correctedOut (correlation, channel));
 
-    accumulateElementForCube ((float) weight, 1.0f, zeroAccumulation,
-                              accumulationParameters->weightSpectrumOut (correlation, channel));
+		// The weight resulting from weighted average is the sum of the weights
+		accumulateElementForCube (	weightCorrected,
+									1.0f, zeroAccumulation,
+									accumulationParameters->weightSpectrumOut (correlation, channel));
 
+	}
+
+	if (doing_p.observedData_p)
+	{
+		// The weight corresponding to DATA is that derived from the rms stored in SIGMA
+		weightObserved = 1/pow(accumulationParameters->sigmaSpectrumIn (correlation, channel),2);
+
+		// Accumulate weighted average contribution (normalization will come at the end)
+		accumulateElementForCube (	accumulationParameters->observedIn (correlation, channel),
+									weightObserved, zeroAccumulation,
+									accumulationParameters->observedOut(correlation, channel));
+
+		if (not doing_p.correctedData_p)
+		{
+			// The weight resulting from weighted average is the sum of the weights
+			accumulateElementForCube (	weightObserved,
+										1.0f, zeroAccumulation,
+										accumulationParameters->weightSpectrumOut (correlation, channel));
+		}
+		else
+		{
+			// We store the accumulated weight in sigmaSpectrumOut pending of
+			// - normalization
+			// - SIGMA = 1/sqrt(WEIGHT) in-place transformation
+			accumulateElementForCube (	weightObserved,
+										1.0f, zeroAccumulation,
+										accumulationParameters->sigmaSpectrumOut (correlation, channel));
+		}
+	}
+
+	// For model data is less clear what to do, what in order to convert to
+	// split we use WEIGHT if averaging CORRECTED_DATA and SIGMA if avg. DATA.
+	// Finally we use WEIGHT by default when averaging MODEL_DATA only
+	if (doing_p.modelData_p)
+	{
+		if (doing_p.correctedData_p)
+		{
+			accumulateElementForCube (	accumulationParameters->modelIn (correlation, channel),
+										weightCorrected, zeroAccumulation,
+										accumulationParameters->modelOut(correlation, channel));
+		}
+		else if (doing_p.observedData_p)
+		{
+			accumulateElementForCube (	accumulationParameters->modelIn (correlation, channel),
+										weightObserved, zeroAccumulation,
+										accumulationParameters->modelOut(correlation, channel));
+		}
+		else
+		{
+			accumulateElementForCube (	accumulationParameters->modelIn (correlation, channel),
+										1.0f, zeroAccumulation,
+										accumulationParameters->modelOut(correlation, channel));
+
+			// When doing MODEL_DATA only the accumulated weight spectrum should just represent counts
+			accumulateElementForCube (	1.0f,
+										1.0f, zeroAccumulation,
+										accumulationParameters->weightSpectrumOut (correlation, channel));
+		}
+	}
+
+	return;
 }
 
 template <typename T>
@@ -984,12 +1024,15 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
             weightToUse = adjustedWeight;
         }
 
+        rowAveraged->accumulateNormalizationFactor(weightToUse);
+
         Double weightedTC = (rowInput->timeCentroid() - rowAveraged->timeFirst()) * weightToUse;
         rowAveraged->setTimeCentroid (accumulateRowDatum (rowAveraged->timeCentroid(),
                                                           weightedTC,
                                                           flagChange));
 
         Vector<Double> weightedUvw = rowInput->uvw() * weightToUse;
+
         rowAveraged->setUvw (accumulateRowDatum (rowAveraged->uvw (),
                                                  weightedUvw,
                                                  flagChange));
@@ -1128,60 +1171,50 @@ VbAvg::finalizeBaseline (MsRowAvg * msRowAvg)
 void
 VbAvg::finalizeCubeData (MsRowAvg * msRow)
 {
-    // Divide each of the data cubes in use by the sum of the appopriate weights.
+    // Divide each of the data cubes in use by the sum of the appropriate weights.
 
     typedef Divides <Complex, Float, Complex> DivideOp;
     DivideOp op;
 
-    if (doing_p.observedData_p){
-
-        Matrix<Complex> observed = msRow->observedMutable();
-
-        if (! averagingOptions_p.contains (AveragingOptions::ObservedUseNoWeights)){
-            arrayTransformInPlace<Complex, Float, DivideOp > (observed,
-                                                              msRow->weightSpectrum (), op);
-        }
-        else{
-            arrayTransformInPlace<Complex, Int, DivideOp > (observed,
-                                                            msRow->counts (), op);
-        }
-    }
-
-    if (doing_p.correctedData_p){
-
+    if (doing_p.correctedData_p)
+    {
         Matrix<Complex> corrected = msRow->correctedMutable();
+        arrayTransformInPlace<Complex, Float, DivideOp > (corrected,msRow->weightSpectrum (), op);
+    }
 
-        if (averagingOptions_p.contains (AveragingOptions::CorrectedUseWeights)){
-            arrayTransformInPlace<Complex, Float, DivideOp > (corrected,
-                                                              msRow->weightSpectrum (), op);
+    if (doing_p.observedData_p)
+    {
+        Matrix<Complex> observed = msRow->observedMutable();
+        if (not doing_p.correctedData_p)
+        {
+        	arrayTransformInPlace<Complex, Float, DivideOp > (observed,msRow->weightSpectrum (), op);
         }
-        else if (averagingOptions_p.contains (AveragingOptions::CorrectedUseCorrectedWeights)){
-            arrayTransformInPlace<Complex, Float, DivideOp > (corrected,
-                                                              msRow->weightSpectrumCorrected (), op);
-        }
-        else{
-            arrayTransformInPlace<Complex, Int, DivideOp > (corrected,
-                                                            msRow->counts (), op);
+        else
+        {
+        	arrayTransformInPlace<Complex, Float, DivideOp > (observed,msRow->sigmaSpectrum (), op);
         }
     }
 
-    if (doing_p.modelData_p){
+	if (doing_p.modelData_p)
+	{
+		Matrix<Complex> model = msRow->modelMutable();
 
-        Matrix<Complex> model = msRow->modelMutable();
+		if (doing_p.correctedData_p)
+		{
+			arrayTransformInPlace<Complex, Float, DivideOp > (model,msRow->weightSpectrum (), op);
+		}
+		else if (doing_p.observedData_p)
+		{
+			arrayTransformInPlace<Complex, Float, DivideOp > (model,msRow->sigmaSpectrum (), op);
+		}
+		else
+		{
+			arrayTransformInPlace<Complex, Int, DivideOp > (model,msRow->counts (), op);
+		}
+	}
 
-        if (averagingOptions_p.contains (AveragingOptions::ModelUseWeights)){
-            arrayTransformInPlace<Complex, Float, DivideOp > (model,
-                                                              msRow->weightSpectrum (), op);
-        }
-        else if (averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights)){
-            arrayTransformInPlace<Complex, Float, DivideOp > (model,
-                                                              msRow->weightSpectrumCorrected (), op);
-        }
-        else{
-            arrayTransformInPlace<Complex, Int, DivideOp > (model,
-                                                            msRow->counts (), op);
-        }
-    }
+
+    return;
 }
 
 float
@@ -1196,22 +1229,36 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
 {
     Int n = msRow->countsBaseline ();
 
-    Vector<Float> sigma;
-    sigma = msRow->weight();
-    arrayTransformInPlace (sigma, weightToSigma);
-    msRow->setSigma (sigma);
+    // Obtain row-level WEIGHT by calculating the median of WEIGHT_SPECTRUM
+    msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1)));
 
-    // Adjust the weights to zero out completely flagged correlations
+    // If doing both DATA and CORRECTED_DATA then SIGMA_SPECTRUM contains the weight
+    // (not sigma) accumulation for DATA, and we have to derive SIGMA from it
+    if (doing_p.sigmaSpectrumOut_p)
+    {
+    	Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1));
+    	arrayTransformInPlace (weight, weightToSigma);
+    	msRow->setSigma (weight);
 
-    Double weight = 0;
-    for (Int c = 0; c < nCorrelations(); c++){
-        if (msRow->correlationFlagsMutable() (c)){
-           msRow->setWeight (c, 0.0);
-        }
-        else{
-            weight += msRow->weight (c);
-        }
+    	// Now convert the DATA weight accumulation stored in sigmaSpectrum into the real SIGMA_SPECTRUM
+    	// TODO: This should happen only if we are writing out SIGMA_SPECTRUM but
+    	//       multiple column operation is rare and might be forbidden in the future
+    	// Caution!!! Taking advantage of the copy reference constructor
+    	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum();
+    	arrayTransformInPlace (sigmaSpectrun, weightToSigma);
     }
+    // Otherwise (doing only DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
+    else
+    {
+    	Vector<Float> weight; // Caution!!! The constructor makes a referenced copy
+    	weight = msRow->weight(); // This accessor creates normal copy
+    	arrayTransformInPlace (weight, weightToSigma);
+    	msRow->setSigma (weight);
+    }
+
+    // Get the normalization factor for this baseline, containing
+    // the accumulation of row-level) weight contributions
+    Double weight = msRow->getNormalizationFactor();
 
     if (n != 0){
 
@@ -1226,6 +1273,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
         msRow->setTimeCentroid (msRow->timeCentroid() / weight + msRow->timeFirst());
 
         msRow->setUvw (msRow->uvw() / weight);
+
 
         // Exposure is a simple sum, not an average so it is already
         // done at this point.
@@ -1314,12 +1362,15 @@ VbAvg::initializeBaseline (MsRow * rowInput, MsRowAvg * rowAveraged,
     Int nChannels = shape (1);
 
     rowAveraged->setCounts (Matrix<Int> (nCorrelations, nChannels, 0));
-    rowAveraged->setWeightSpectrum (Matrix<Float> (nCorrelations, nChannels, 0));
     rowAveraged->setWeight (Vector<Float> (nCorrelations, 0));
     rowAveraged->setTimeCentroid (0.0);
 
-    if (doing_p.weightSpectrumCorrected_p){
-        rowAveraged->setWeightSpectrumCorrected (Matrix<Float> (nCorrelations, nChannels, 0));
+    if (doing_p.weightSpectrumOut_p){
+    	rowAveraged->setWeightSpectrum (Matrix<Float> (nCorrelations, nChannels, 0));
+    }
+
+    if (doing_p.sigmaSpectrumOut_p){
+        rowAveraged->setSigmaSpectrum (Matrix<Float> (nCorrelations, nChannels, 0));
     }
 
 //    VisBufferComponents2 exclusions =
@@ -1335,6 +1386,8 @@ VbAvg::initializeBaseline (MsRow * rowInput, MsRowAvg * rowAveraged,
     rowAveraged->correlationFlagsMutable() = Vector<Bool> (nCorrelations, True);
 
     rowAveraged->setBaselinePresent(True);
+
+    rowAveraged->setNormalizationFactor(0.0);
 }
 
 
@@ -1418,7 +1471,7 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
 //    countsBaseline_p = Vector<Int> (nBaselines, 0);
 //    counts_p = Cube<Int> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
 //    weightSum_p = Cube<Float> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
-//    if (doing_p.weightSpectrumCorrected_p){
+//    if (doing_p.sigmaSpectrum_p){
 //        weightCorrectedSum_p = Cube<Float> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
 //    }
 //
@@ -1532,6 +1585,8 @@ VbAvg::setupVbAvg (const VisBuffer2 * vb)
 
     baselinePresent_p = Vector<Bool> (nBaselines, False);
 
+    normalizationFactor_p = Vector<Double> (nBaselines, 0.0);
+
     empty_p = False;
 }
 
@@ -1567,7 +1622,6 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
                                          TimeCentroid,
                                          TimeInterval,
                                          Weight,
-                                         WeightSpectrum, // optional column but used internally
                                          Uvw,
                                          Unknown);
 
@@ -1583,8 +1637,12 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
         including += VisibilityCubeObserved;
     }
 
-    if (doing_p.weightSpectrumCorrected_p){
-        including += WeightSpectrumCorrected;
+    if (doing_p.weightSpectrumOut_p){
+        including += WeightSpectrum;
+    }
+
+    if (doing_p.sigmaSpectrumOut_p){
+        including += SigmaSpectrum;
     }
 
     cacheResizeAndZero (including);
@@ -1610,23 +1668,10 @@ VbAvg::startChunk (ViImplementation2 * vi)
                               averagingOptions_p.contains (AveragingOptions::AverageCorrected);
     doing_p.modelData_p = vi->existsColumn (VisibilityCubeModel) &&
                           averagingOptions_p.contains (AveragingOptions::AverageModel);
-    doing_p.weightSpectrum_p = vi->existsColumn (WeightSpectrum);
-
-    // If the use of corrected weights were specified for one of the averages, it's an
-    // error if the column does not exist.  Also set the doing flag for corrected weights
-    // if it's being used in some way.
-
-    Bool needCorrectedWeights =
-            averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights) ||
-            averagingOptions_p.contains (AveragingOptions::CorrectedUseCorrectedWeights);
-
-    Bool correctedWeightsMissing = needCorrectedWeights &&
-            ! vi->existsColumn (WeightSpectrumCorrected);
-
-    ThrowIf (correctedWeightsMissing,
-             "Corrected_weight_spectrum not present but required by provided averaging options");
-
-    doing_p.weightSpectrumCorrected_p = needCorrectedWeights;
+    doing_p.weightSpectrumIn_p = doing_p.correctedData_p;
+    doing_p.sigmaSpectrumIn_p = doing_p.observedData_p;
+    doing_p.weightSpectrumOut_p = True; // We always use the output WeightSpectrum
+    doing_p.sigmaSpectrumOut_p = doing_p.correctedData_p && doing_p.observedData_p;
 
     // Set up the flags for row copying
 
@@ -1644,12 +1689,12 @@ VbAvg::startChunk (ViImplementation2 * vi)
         optionalComponentsToCopy_p += VisibilityCubeModel;
     }
 
-    if (doing_p.weightSpectrum_p){
+    if (doing_p.weightSpectrumOut_p){
         optionalComponentsToCopy_p += WeightSpectrum;
     }
 
-    if (doing_p.weightSpectrumCorrected_p){
-        optionalComponentsToCopy_p += WeightSpectrumCorrected;
+    if (doing_p.sigmaSpectrumOut_p){
+        optionalComponentsToCopy_p += SigmaSpectrum;
     }
 }
 
@@ -1670,7 +1715,7 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //  doingModelData_p (False),
 //  doingObservedData_p (False),
 //  doingWeightSpectrum_p (False),
-//  doingWeightSpectrumCorrected_p (False),
+//  doingsigmaSpectrum_p (False),
 //  vbAveragers_p ()
 //{}
 
@@ -1702,7 +1747,7 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //    doing.modelData_p = doingModelData_p;
 //    doing.observedData_p = doingObservedData_p;
 //    doing.weightSpectrum_p = doingWeightSpectrum_p;
-//    doing.weightSpectrumCorrected_p = doingWeightSpectrumCorrected_p;
+//    doing.sigmaSpectrum_p = doingsigmaSpectrum_p;
 //
 //    VbAvg * newAverager =  new VbAvg (doing, averagingParameters_p);
 //
@@ -1798,12 +1843,12 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //            averagingOptions_p.contains (AveragingOptions::CorrectedUseCorrectedWeights);
 //
 //        Bool correctedWeightsMissing = needCorrectedWeights &&
-//                                       ! vi->existsColumn (WeightSpectrumCorrected);
+//                                       ! vi->existsColumn (sigmaSpectrum);
 //
 //        ThrowIf (correctedWeightsMissing,
 //                 "Corrected_weight_spectrum not present but required by provided averaging options");
 //
-//        doingWeightSpectrumCorrected_p = needCorrectedWeights;
+//        doingsigmaSpectrum_p = needCorrectedWeights;
 //    }
 //}
 //
@@ -2065,7 +2110,7 @@ void
 AveragingTvi2::validateInputVi (ViImplementation2 *)
 {
     // Validate that the input VI is compatible with this VI.
-  //#warning "Implement AveragingTvi2::validateInputVi"
+#warning "Implement AveragingTvi2::validateInputVi"
 }
 
 } // end namespace vi

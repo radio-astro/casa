@@ -27,7 +27,6 @@
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/Vbi2MsRow.h>
 #include <msvis/MSVis/VisModelDataI.h>
-///#include <synthesis/TransformMachines/FTMachine.h>
 #include <msvis/MSVis/VisBufferImpl2Internal.h>
 
 
@@ -112,8 +111,8 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, NcNr, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum,
                                  WeightSpectrum, NcNfNr, False);
-    weightSpectrumCorrected_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrumCorrected,
-                                          WeightSpectrumCorrected, NcNfNr, False);
+    sigmaSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillSigmaSpectrum,
+    		                    SigmaSpectrum, NcNfNr, False);
 
 }
 
@@ -1902,22 +1901,22 @@ VisBufferImpl2::setWeightSpectrum (const Cube<Float>& value)
 }
 
 const Cube<Float> &
-VisBufferImpl2::weightSpectrumCorrected () const
+VisBufferImpl2::sigmaSpectrum () const
 {
-    return cache_p->weightSpectrumCorrected_p.get ();
+    return cache_p->sigmaSpectrum_p.get ();
 }
 
 Cube<Float> &
-VisBufferImpl2::weightSpectrumCorrectedRef ()
+VisBufferImpl2::sigmaSpectrumRef ()
 {
-    return cache_p->weightSpectrumCorrected_p.getRef();
+    return cache_p->sigmaSpectrum_p.getRef();
 }
 
 
 void
-VisBufferImpl2::setWeightSpectrumCorrected (const Cube<Float>& value)
+VisBufferImpl2::setSigmaSpectrum (const Cube<Float>& value)
 {
-    cache_p->weightSpectrumCorrected_p.set (value);
+    cache_p->sigmaSpectrum_p.set (value);
 }
 
 
@@ -2552,12 +2551,15 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
         // The weight is the sum of the weight across all channels
         // so divide it evenly between the channels.
 
-        theWeights = theWeights / nChannels();
+        // jagonzal (new WEIGHT/SIGMA convention in CASA 4.2.2)
+        // theWeights = theWeights / nChannels();
 
         value.resize (IPosition (3, nCorrelations (), nChannels (), nRows()));
 
         // Copy the apportioned weight value into the weight spectrum
 
+        // jagonzal (TODO): Review this filling code (it should be row/channel/correlation)
+        //                  Or even better direct array assignment
         for (Int row = 0; row < nRows(); row ++){
 
             for (Int correlation = 0; correlation < nCorrelations (); correlation ++){
@@ -2575,11 +2577,41 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
 }
 
 void
-VisBufferImpl2::fillWeightSpectrumCorrected (Cube<Float>& value) const
+VisBufferImpl2::fillSigmaSpectrum (Cube<Float>& value) const
 {
-  CheckVisIter ();
+    CheckVisIter ();
 
-  getViP()->weightSpectrumCorrected (value);
+    if (getViP()->sigmaSpectrumExists()){
+
+        getViP()->sigmaSpectrum (value);
+    }
+    else{
+
+        // Sigma spectrum doesn't exist so create on using the sigma column.
+
+        Matrix<Float> theSigmas;
+        theSigmas = sigma();  // need a mutable copy so ensure no sharing.
+
+        value.resize (IPosition (3, nCorrelations (), nChannels (), nRows()));
+
+        // Copy the apportioned weight value into the sigma spectrum
+
+        // jagonzal (TODO): Review this filling code (it should be row/channel/correlation)
+        //                  Or even better direct array assignment
+        for (Int row = 0; row < nRows(); row ++){
+
+            for (Int correlation = 0; correlation < nCorrelations (); correlation ++){
+
+                float theSigma = theSigmas (correlation, row);
+
+                for (Int channel = 0; channel < nChannels(); channel ++){
+
+                    value (correlation, channel, row) = theSigma;
+                }
+
+            }
+        }
+    }
 }
 
 Float
@@ -2655,15 +2687,67 @@ VisBufferImpl2::getWeightScaled (Int correlation, Int channel, Int row) const
 }
 
 Float
-VisBufferImpl2::getWeightCorrectedScaled (Int correlation, Int channel, Int row) const
+VisBufferImpl2::getSigmaScaled (Int row) const
 {
-    // Get the weight from the weightSpectrumCorrected.
+    Float sum = 0;
+    Int n = nCorrelations();
 
-    ///////Assert (cache_p->weightSpectrumCorrected_p.isPresent());
+    for (Int correlation = 0; correlation < n; ++ correlation){
+
+        sum += getWeightScaled (correlation, row);
+    }
+
+    return sum / n;
+}
+
+Float
+VisBufferImpl2::getSigmaScaled (Int correlation, Int row) const
+{
+    if (flagRow () (row)){
+        return 0;
+    }
+
+    if (weightSpectrumPresent()){
+
+        Float sum;
+        Int n = nChannels ();
+
+        for (Int channel = 0; channel < n; ++ channel){
+
+            sum += getWeightScaled (correlation, channel, row);
+
+        }
+
+        return sum / n;
+    }
+    else {
+
+        Float theWeight = weight () (correlation, row);
+
+        if (! state_p->weightScaling_p.null()){
+            theWeight = (* state_p->weightScaling_p) (theWeight);
+        }
+
+        return theWeight;
+    }
+}
+
+Float
+VisBufferImpl2::getSigmaScaled (Int correlation, Int channel, Int row) const
+{
+    // Get the weight from the weightSpectrum if it is present (either it was
+    // read from the MS or it was set by the user); otherwise get the weight
+    // from the weight column.
 
     Float theWeight = 0;
 
-    theWeight = weightSpectrumCorrected () (correlation, channel, row);
+    if (weightSpectrumPresent ()){
+
+        theWeight = weightSpectrum () (correlation, channel, row);
+    }
+    else{
+        theWeight = weight () (correlation, row);
+    }
 
     // If there is a scaling function, the apply that to the weight
 
@@ -2685,6 +2769,15 @@ VisBufferImpl2::weightSpectrumPresent () const
 {
     Bool present = cache_p->weightSpectrum_p.isPresent() ||
                    (isAttached() && getVi()->weightSpectrumExists());
+
+    return present;
+}
+
+Bool
+VisBufferImpl2::sigmaSpectrumPresent () const
+{
+    Bool present = cache_p->sigmaSpectrum_p.isPresent() ||
+                   (isAttached() && getVi()->sigmaSpectrumExists());
 
     return present;
 }

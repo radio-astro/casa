@@ -36,7 +36,6 @@
 
 // FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 //                      const VisBuffer& vb)
-//#include <synthesis/TransformMachines/FTMachine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

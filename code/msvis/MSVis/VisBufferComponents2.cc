@@ -186,7 +186,7 @@ VisBufferComponents2::name (Int id)
     names [Weight] = "Weight";
     names [WeightScaled] = "WeightScaled";
     names [WeightSpectrum] = "WeightSpectrum";
-    names [WeightSpectrumCorrected] = "WeightSpectrumCorrected";
+    names [SigmaSpectrum] = "SigmaSpectrum";
     names [WeightSpectrumScaled] = "WeightSpectrumScaled";
     names [Uvw] = "Uvw";
     names [VisibilityCorrected] = "VisibilityCorrected";
