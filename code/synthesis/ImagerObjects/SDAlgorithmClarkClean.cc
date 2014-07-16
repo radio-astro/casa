@@ -129,7 +129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // 4 pixels:  pretty arbitrary, but only look for sidelobes
       // outside the inner (2n+1) * (2n+1) square
       Int ncent=4;
-      /*
+      
       {//locate peak size
 	CoordinateSystem cs= itsImages->psf()->coordinates();
 	Vector<String> unitas=cs.worldAxisUnits();
@@ -139,15 +139,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//Get the minimum increment in arcsec
 	Double incr=abs(min(cs.increment()(0), cs.increment()(1)));
 	if(incr > 0.0){
-	  GaussianBeam beamModel=beam(model)(0,0);
+	  GaussianBeam beamModel=itsImages->getBeamSet()(0,0);
+	  //	  GaussianBeam beamModel=beam(model)(0,0);
 	  ncent=max(ncent, Int(ceil(beamModel.getMajor("arcsec")/incr)));
 	  ncent=max(ncent, Int(ceil(beamModel.getMinor("arcsec")/incr)));
 	}
       }
-      */
+      
       psfpatch_p=3*ncent+1;
 
-
+      os << "Choosing a PSF patch size of " << psfpatch_p << " pixels."<< LogIO::POST;
 
   }
 
@@ -216,23 +217,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel += itsMatDeltaModel;
 
-    //---------------------------------
+    //--------------------------------- DECIDE WHICH PEAK RESIDUAL TO USE HERE.....
 
-    //  Find Peak Residual
+    //////  Find Peak Residual across the whole image
+    /*
     itsImages->residual()->get( itsMatResidual, True );
     itsImages->mask()->get( itsMatMask, True );
-
-    /*
-    IPosition shp = itsMatResidual.shape();
-    IPosition startp( shp.nelements(),0);
-    IPosition stopp( shp.nelements(),0);
-    stopp[0]=shp[0]-1; stopp[1]=shp[1]-1;
-    Matrix<Float> oneplane( itsMatResidual(startp,stopp) );
-    Matrix<Float> oneplanemask( itsMatMask(startp,stopp) );
-    findMaxAbsMask( oneplane, oneplanemask, itsPeakResidual, itsMaxPos );
+    findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     */
 
-    findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
+    ////// Find Peak Residual from the Clark Clean method (within current active pixels only).
+    itsPeakResidual = cleaner.getMaxResidual();
 
     peakresidual = itsPeakResidual;
 

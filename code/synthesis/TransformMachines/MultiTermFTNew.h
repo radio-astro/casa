@@ -195,7 +195,7 @@ protected:
   Matrix<Float> imweights_p;
   String machineName_p;
 
-  Bool donePSF_p;
+  //  Bool donePSF_p;
 
   Block< CountedPtr<FTMachine> > subftms_p;
 

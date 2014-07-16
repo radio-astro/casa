@@ -236,8 +236,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisNormalizer", "divideModelByWeight",WHERE) );
     if( itsImages.null() ) 
       {
-	os << LogIO::WARN << "No imagestore yet. Do something to fix the starting model case...." << LogIO::POST;
-	return;
+	//os << LogIO::WARN << "No imagestore yet. Trying to construct, so that the starting model can be divided by wt if needed...." << LogIO::POST;
+	
+	try
+	  {
+	    itsImages = makeImageStore( itsImageName );
+	  }
+	catch(AipsError &x)
+	  {
+	    throw(AipsError("Cannot construct ImageStore for "+itsImageName));
+	  }
+	//	return;
       }
     if( itsNFacets==1) {
       itsImages->divideModelByWeight( itsPBLimit, itsNormType );

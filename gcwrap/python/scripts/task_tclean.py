@@ -94,6 +94,7 @@ def tclean(
     maxpsffraction=0.8,
     interactive=False, 
     savemodel="none",
+    recalcres=True,
 
     ####### State parameters
     parallel=False,
@@ -287,12 +288,14 @@ def tclean(
         imager.initializeIterationControl()
 
     ## Make PSF
-    imager.makePSF()
+    if recalcres==True:
+        imager.makePSF()
 
     if niter >=0 : 
 
         ## Make dirty image
-        imager.runMajorCycle()
+        if recalcres==True:
+            imager.runMajorCycle()
         
         ## Do deconvolution and iterations
         if niter>0 :

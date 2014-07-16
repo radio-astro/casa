@@ -138,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     modelflux,
 			     iterdone);
 		
-		//cout << "SDAlgoBase: After one step, dec : " << deconvolverid << "  plane : " << subimageid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << endl; 
+		//os << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
 		
 		loopcontrols.incrementMinorCycleCount( iterdone );
 

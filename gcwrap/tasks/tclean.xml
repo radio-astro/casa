@@ -347,7 +347,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="stringArray">['','','']</value>
     </param>
 
-
+<!--
+    <param type="any" name="specthreshold" subparam="true">
+      <description>Intensity threshold above which spectral index is computed</description>
+      <value type="string">'0.0Jy'</value>
+    </param>
+-->
 
 <!--============================================== -->
 <!--                            Iteration Control Parameters                                         -->
@@ -402,6 +407,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               <value>virtual</value>
 	      <value>modelcolumn</value>
 	    </allowed> -->
+    </param>
+
+    <param type="bool" name="recalcres" subparam="true">
+	    <description>(Re)calculate residual image before starting deconvolution</description>
+	    <value type="bool">True</value>
     </param>
 
 
@@ -586,6 +596,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="maxpsffraction"><value>0.8</value></default>
 	 <default param="interactive"><value>False</value></default>
 	 <default param="savemodel"><value>"none"</value></default>
+	 <default param="recalcres"><value>True</value></default>
        </notequals>
      </when>
 

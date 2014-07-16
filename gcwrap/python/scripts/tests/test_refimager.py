@@ -81,7 +81,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cellsize=['8.0arcsec','8.0arcsec'],stokes='IV',\
                                        phasecenter=0,
                                        ftmachine='gridft', startmodel='', weighting='briggs',\
-                                       deconvolver='clarkstokes',\
+                                       deconvolver='clarkstokes',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
