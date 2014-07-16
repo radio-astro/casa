@@ -500,7 +500,11 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
     ddidmap = data_desc_id_map(vis)
 
     # spw selection to index
-    selection = ms.msseltoindex(vis=vis, spw=spw, baseline='%s&&&'%(antenna))
+    if antenna is not None and len(antenna) > 0:
+        baseline = '%s&&&'%(antenna)
+    else:
+        baseline = ''
+    selection = ms.msseltoindex(vis=vis, spw=spw, baseline=baseline)
     #print '-----selection-------------------------------------'
     #print str(selection)
     spwid_list = selection['spw']
@@ -571,7 +575,8 @@ def create_calibration_context(vis, sky_tables, tsys_tables, spwid, tsysspw, ant
                 ddid = ddidmap[spwid]
                 with opentable(sky_table) as tb:
                     datacol = colname(tb)
-                    tsel = tb.query('DATA_DESC_ID==%s && ANTENNA1 == ANTENNA2 && ANTENNA1 == %s'%(ddid,antennaid))
+                    taql = 'DATA_DESC_ID==%s && ANTENNA1 == ANTENNA2 && ANTENNA1 == %s'%(ddid,antennaid)
+                    tsel = tb.query(taql)
                     if tsel.nrows() > 0:
                         if timestamp is None:
                             timestamp = tsel.getcol('TIME')
@@ -728,7 +733,7 @@ def _select_tsys_tables(gaintable):
     return list(_select_match(gaintable, 'tsys'))
 
 def _select_match(gaintable, tabletype):
-    pattern = '_%s(.ms)?$'%(tabletype.lower())
+    pattern = '_%s(\.ms/?)?$'%(tabletype.lower())
     for caltable in gaintable:
         if re.search(pattern, caltable):
             yield caltable
