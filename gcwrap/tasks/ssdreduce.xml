@@ -266,6 +266,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <when param="blfunc">
 		<equals value="poly">
 			<default param="order"><value>5</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
 		<equals value="chebyshev">
 			<default param="order"><value>5</value></default>

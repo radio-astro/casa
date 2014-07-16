@@ -22,9 +22,9 @@ def ssdreduce(vis,
         return
 
     #parameters-----------
-    edge = 10
-    clipthresh = 3.0
-    clipniter = 1
+    #edge = 10
+    #clipthresh = 3.0
+    #clipniter = 1
 
     # register reduction step here when ssdreduce becomes fully flexible
     #rh.register_step('calibration')
