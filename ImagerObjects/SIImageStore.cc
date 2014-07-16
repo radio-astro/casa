@@ -1339,7 +1339,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   ImageBeamSet SIImageStore::getBeamSet()
-  { return itsPSFBeams; }
+  { 
+    IPosition beamshp = itsPSFBeams.shape();
+    AlwaysAssert( beamshp.nelements()==2 , AipsError );
+    if( beamshp[0]==0 || beamshp[1]==0 ) {makeImageBeamSet();}
+    return itsPSFBeams; 
+  }
 
   void SIImageStore::printBeamSet()
   {

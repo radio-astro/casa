@@ -71,8 +71,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------------- 
   MultiTermFTNew::MultiTermFTNew(CountedPtr<FTMachine>&subftm,  Int nterms, Bool forward)
     :FTMachine(), nterms_p(nterms), 
-     reffreq_p(0.0), imweights_p(Matrix<Float>(0,0)), machineName_p("MultiTermFTNew"),
-     donePSF_p(False)
+     reffreq_p(0.0), imweights_p(Matrix<Float>(0,0)), machineName_p("MultiTermFTNew")
+     //     donePSF_p(False)
   {
     
     this->setBasePrivates(*subftm);
@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	nterms_p = other.nterms_p;
 	psfnterms_p = other.psfnterms_p;
 	reffreq_p = other.reffreq_p;
-	donePSF_p = other.donePSF_p;
+	//	donePSF_p = other.donePSF_p;
 
 	// Make the list of subftms
 	subftms_p.resize(other.subftms_p.nelements());
@@ -348,12 +348,13 @@ void MultiTermFTNew::initializeToSkyNew(const Bool dopsf,
 {
   
   // If PSF is already done, don't ask again !
-  AlwaysAssert( !(donePSF_p && dopsf) , AipsError ); 
+  //  AlwaysAssert( !(donePSF_p && dopsf) , AipsError ); 
   
   // The PSF needs to be the first thing made (because of weight images)
-  AlwaysAssert( !(dopsf==False && donePSF_p==False) , AipsError); 
+  //  AlwaysAssert( !(dopsf==False && donePSF_p==False) , AipsError); 
   
-  if(donePSF_p==True)
+  //  if(donePSF_p==True)
+  if(dopsf==False)
     {
       if( subftms_p.nelements() != nterms_p )  
 	{ 
@@ -384,7 +385,7 @@ void MultiTermFTNew::put(VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type typ
     subftms_p[0]->put(vb,row,dopsf,type);
     
     Int gridnterms=nterms_p;
-    if(dopsf==True && donePSF_p==False) 
+    if(dopsf==True) // && donePSF_p==False) 
       {
 	gridnterms=2*nterms_p-1;
       }
@@ -430,7 +431,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
 
       }// end for taylor
 
-    if( dopsf ) donePSF_p = True;
+    //    if( dopsf ) donePSF_p = True;
     
   }//end of finalizeToSkyNew
 
@@ -459,7 +460,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
     outRec.define("reffreq",reffreq_p);
     outRec.define("machinename",machineName_p);
     outRec.define("psfnterms",psfnterms_p);
-    outRec.define("donePSF_p",donePSF_p);
+    //    outRec.define("donePSF_p",donePSF_p);
 
     outRec.define("numfts", (Int)subftms_p.nelements() ); // Since the forward and reverse ones are different.
 
@@ -487,7 +488,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
     inRec.get("reffreq",reffreq_p);
     inRec.get("machinename",machineName_p);
     inRec.get("psfnterms",psfnterms_p);
-    inRec.get("donePSF_p",donePSF_p);
+    //    inRec.get("donePSF_p",donePSF_p);
 
     Int nftms=1;
     inRec.get("numfts",nftms);

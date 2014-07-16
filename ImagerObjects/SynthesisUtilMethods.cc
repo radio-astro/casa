@@ -1776,6 +1776,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         chanFreq[0] = refFreq.getValue("Hz"); 
         refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
       }
+      if( nchan==-1 ) nchan=1;
     }
     else {
        // unrecognized mode, error

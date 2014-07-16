@@ -954,7 +954,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Make a mask for the alpha image
 		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
 		
-		//      createMask( lemask, (alpha()) );
+		createMask( lemask, (alpha()) );
 	      }
 	    
       }
