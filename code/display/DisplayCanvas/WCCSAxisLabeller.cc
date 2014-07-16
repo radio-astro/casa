@@ -42,7 +42,6 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
-
 //# display library includes:
 
 //# this include:
@@ -343,6 +342,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						noFrame = true;
 					}
 				}
+
 				Vector<String> vunits(5);
 
 				if ( !restFrame && !noFrame ){
@@ -647,7 +647,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Convert the value to a quantity;
 // Check that the quantity is usable
-
 		ok = Quantity::read(restQuant, itsRestValue);
 		if (!ok) {
 			errorMsg = "Can not convert value to rest wavelength/frequency: " + itsRestValue;
@@ -675,7 +674,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Set Spectral Conversion Layer
 
-		if ( ! cs.setSpectralConversion( errorMsg, itsFrequencySystem ) ) {
+		if ( cs.hasDirectionCoordinate() && ! cs.setSpectralConversion( errorMsg, itsFrequencySystem ) ) {
 			os << errorMsg << LogIO::EXCEPTION;
 		}
 
