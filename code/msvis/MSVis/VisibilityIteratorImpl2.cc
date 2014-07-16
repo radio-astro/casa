@@ -47,7 +47,7 @@
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisibilityIteratorImpl2.h>
-#include <synthesis/TransformMachines/VisModelData.h>
+#include <msvis/MSVis/VisModelDataI.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/IncrStManAccessor.h>
@@ -2983,9 +2983,10 @@ VisibilityIteratorImpl2::writeModel(const RecordInterface& rec, Bool iscomponent
   boost::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
       getChannelInformation (True);
 
-  VisModelData::putModel(ms(), rec, fields, selectedWindows, firstChannels, nChannels,
-                         channelIncrement, iscomponentlist, incremental);
+  CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
 
+  visModelData->putModelI (ms(), rec, fields, selectedWindows, firstChannels, nChannels,
+                           channelIncrement, iscomponentlist, incremental);
 }
 
 VisibilityIteratorImpl2::ChannelInfo

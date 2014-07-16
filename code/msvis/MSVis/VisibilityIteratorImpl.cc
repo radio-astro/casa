@@ -30,7 +30,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/MSUtil.h>
-#include <synthesis/TransformMachines/VisModelData.h>
+////#include <synthesis/TransformMachines/VisModelData.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
@@ -3308,9 +3308,11 @@ VisibilityIteratorWriteImpl::putModel(const RecordInterface& rec, Bool iscompone
   Vector<Int> nchan = getReadImpl()->msChannels_p.width_p[msid];
   Vector<Int> incr = getReadImpl()->msChannels_p.inc_p[msid];
 
-  VisModelData::putModel(getReadImpl()->ms(), rec, fields, spws, starts, nchan, incr,
-                         iscomponentlist, incremental);
-    
+  CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
+
+  visModelData->putModelI (getReadImpl()->ms (), rec, fields, spws, starts, nchan, incr,
+                           iscomponentlist, incremental);
+
 }
 
 
