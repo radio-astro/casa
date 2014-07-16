@@ -1,4 +1,4 @@
-from taskinit import *
+from taskinit import mstool, casalog
 
 def visstat(vis=None,
             axis=None,
@@ -17,9 +17,9 @@ def visstat(vis=None,
 
     casalog.origin('visstat')  
 
-    ms = casac.ms()
+    mslocal = mstool()
 
-    ms.open(vis)
+    mslocal.open(vis)
 
     if axis in ['amp', 'amplitude', 'phase', 'imag', 'imaginary', 'real']:
         complex_type = axis
@@ -37,7 +37,7 @@ def visstat(vis=None,
         array=''
         observation = ''
         
-    s = ms.statistics(column=col.upper(),
+    s = mslocal.statistics(column=col.upper(),
                       complex_value=complex_type,
                       useflags=useflags,
                       spw=spw,
@@ -49,6 +49,8 @@ def visstat(vis=None,
                       scan=scan,
                       array=array,
                       obs=str(observation))
+    
+    mslocal.close()
 
     for stats in s.keys():
         casalog.post(stats + " values --- ", "NORMAL")
