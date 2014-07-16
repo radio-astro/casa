@@ -1165,24 +1165,25 @@ image* image::convolve2d(
 
 ::casac::coordsys *
 image::coordsys(const std::vector<int>& pixelAxes) {
-	::casac::coordsys *rstat = 0;
+
 	_log << _ORIGIN;
 
 	try {
-		if (detached())
-			return rstat;
-
+		if (detached()) {
+			return 0;
+		}
+		std::auto_ptr<casac::coordsys> rstat;
 		// Return coordsys object
-		rstat = new ::casac::coordsys();
+		rstat.reset(new ::casac::coordsys());
 		CoordinateSystem csys = _image->coordsys(Vector<Int> (pixelAxes));
 		rstat->setcoordsys(csys);
+		return rstat.release();
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 image* image::decimate(

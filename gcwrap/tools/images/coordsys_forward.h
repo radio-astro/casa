@@ -1,9 +1,8 @@
-//#include <measures_cmpt.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <coordinates/Coordinates/Coordinate.h>
+#include <casa/Utilities/PtrHolder.h>
 
-namespace casa 
-{
+namespace casa {
 	class LogIO;
 	class CoordinateSystem;
 }

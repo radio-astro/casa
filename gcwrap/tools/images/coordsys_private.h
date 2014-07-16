@@ -6,8 +6,8 @@ void setcoordsys(casa::CoordinateSystem &acsys);
 
 private:
 
-casa::LogIO *_log;
-casa::CoordinateSystem *_csys;
+mutable casa::PtrHolder<casa::LogIO>  _log;
+casa::PtrHolder<casa::CoordinateSystem> _csys;
 casa::String _imageName;
 
 // private constructor to make components on the fly
@@ -98,3 +98,5 @@ int isValueWorld(casac::variant& value, int shouldBeWorld,
 		 casa::Bool verbose=true);
 
 std::vector<double> toPixel(const ::casac::variant& value);
+
+void _setup(const casa::String& method);

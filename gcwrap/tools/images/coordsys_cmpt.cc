@@ -42,68 +42,60 @@ using namespace std;
 
 namespace casac {
 
-coordsys::coordsys() : _imageName("unknown")
-{
+coordsys::coordsys() : _log(new LogIO()), _csys(),
+	_imageName("unknown") {
   try {
-    _csys = new CoordinateSystem();
-    _log = new LogIO();
+	  _setup(__func__);
 
-    Vector<String> empty(0);
-    addCoordinate(*_csys, False, False, empty, 0, False);
-
-    // Give it a meaningful ObsInfo
-    ObsInfo obsInfo;
-    obsInfo.setTelescope(String("ALMA"));
-    obsInfo.setObserver(String("Karl Jansky"));
-
-    // It must be easier than this...  USe 0.0001
-    // so that roundoff does not tick the 0 to 24
-    Time time;
-    time.now();
-    MVTime time2(time);
-    MVEpoch time4(time2);
-    MEpoch date(time4);
-    obsInfo.setObsDate(date);
-    //
-    _csys->setObsInfo(obsInfo);
-
-  } catch (AipsError x) {
+  } catch (const AipsError& x) {
     *_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
   }
 }
 
 // private constructor for on fly components
-  coordsys::coordsys(const CoordinateSystem *inCS) : _imageName("unknown")
-{
-  try {
-    _csys = new CoordinateSystem(*inCS);
-    _log = new LogIO();
-  } catch (AipsError x) {
-    *_log << LogIO::SEVERE << "Exception Reported: "
-	    << x.getMesg() << LogIO::POST;
-  }
-}
+  coordsys::coordsys(const CoordinateSystem *inCS) : _log(new LogIO()),
+		_csys(new CoordinateSystem(*inCS)), _imageName("unknown")
+{}
 
-coordsys::~coordsys()
-{
-  delete _csys;
-  delete _log;
+coordsys::~coordsys() {}
+
+void coordsys::_setup(const String& method) {
+	if (! _csys.ptr()) {
+		_csys.set(new CoordinateSystem());
+		Vector<String> empty(0);
+	    addCoordinate(*_csys, False, False, empty, 0, False);
+
+	    // Give it a meaningful ObsInfo
+	    ObsInfo obsInfo;
+	    obsInfo.setTelescope(String("ALMA"));
+	    obsInfo.setObserver(String("Karl Jansky"));
+
+	    // It must be easier than this...  USe 0.0001
+	    // so that roundoff does not tick the 0 to 24
+	    Time time;
+	    time.now();
+	    MVTime time2(time);
+	    MVEpoch time4(time2);
+	    MEpoch date(time4);
+	    obsInfo.setObsDate(date);
+	    //
+	    _csys->setObsInfo(obsInfo);
+	}
+	if (! _log.ptr()) {
+		_log.set(new LogIO());
+	}
+	*_log << LogOrigin("coordsys", method);
+	if (_imageName.empty()) {
+		_imageName = "unknown";
+	}
 }
 
 Bool unset(const ::std::vector<bool> &par) {
-  if (par.size() == 1 && par[0] == false) {
-    return true;
-  } else {
-    return false;
-  }
+  return par.size() == 1 && ! par[0];
 }
 
 Bool unset(const ::std::vector<int> &par) {
-  if (par.size() == 1 && par[0]==-1) {
-    return true;
-  } else {
-    return false;
-  }
+  return par.size() == 1 && par[0]==-1;
 }
 
 Bool unset(const ::casac::record &theRec) {
@@ -137,42 +129,6 @@ Bool checkfreq(const casa::Quantity x) {
 	  qcompare(x, casa::Quantity(1.0,"kg.m"))
 	  );
 }
-
-// casa::QuantumHolder
-// quantumHolderFromVar(String error, const ::casac::variant& theVar){
-//   casa::QuantumHolder qh;
-//   try {
-//     String error;
-//     if(theVar.type()== ::casac::variant::STRING ) {
-//       if(!qh.fromString(error, theVar.toString())) {
-// 	//        *_log << LogIO::SEVERE << "Error " << error
-// 	//      << " in converting quantity "<< LogIO::POST;
-//       }
-//     }
-//     if (theVar.type()== ::casac::variant::STRINGVEC){
-//       //      *_log << LogIO::WARN << "Only first vector element will be used."
-//       //              << LogIO::POST;
-//       if(!qh.fromString(error, theVar.toStringVec()[0])) {
-// 	//        *_log << LogIO::SEVERE << "Error " << error
-// 	//                << " in converting quantity "<< LogIO::POST;
-//       }
-//     }
-//     if(theVar.type()== ::casac::variant::RECORD){
-//       ::casac::variant localvar(theVar);
-//       Record * ptrRec = toRecord(localvar.asRecord());
-//       if(!qh.fromRecord(error, *ptrRec)){
-// 	//        *_log << LogIO::SEVERE << "Error " << error
-// 	//                << " in converting quantity "<< LogIO::POST;
-//       }
-//       delete ptrRec;
-//     }
-//   } catch (AipsError x) {
-//     //    *_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-//     //            << LogIO::POST;
-//     RETHROW(x);
-//   }
-//   return qh;
-// }
   
 ::casac::coordsys * 
 coordsys::newcoordsys(const bool direction, const bool spectral,
@@ -182,10 +138,8 @@ coordsys::newcoordsys(const bool direction, const bool spectral,
   ::casac::coordsys *newCS = 0;
 
   try {
-    _csys = new CoordinateSystem();
-    _log = new LogIO();
-    *_log << LogOrigin("coordsys", "newcoordsys");
-
+    _csys.set(new CoordinateSystem());
+    _setup(__func__);
     Vector<String> Stokes;
     if (stokes.size()==1) { // just a string
       int n = sepCommaEmptyToVectorStrings(Stokes, stokes[0]);
@@ -219,7 +173,7 @@ coordsys::newcoordsys(const bool direction, const bool spectral,
     _csys->setObsInfo(obsInfo);
 
     newCS = new ::casac::coordsys(_csys);
-  } catch (AipsError x) {
+  } catch (const AipsError& x) {
     *_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
   }
   if(!newCS)
@@ -233,7 +187,7 @@ coordsys::addcoordinate(const bool direction, const bool spectral,
 			const std::vector<std::string>& stokes,
 			const int linear, const bool tabular)
 {
-
+	_setup(__func__);
     Vector<String> Stokes;
     if (stokes.size()==1) { // just a string
       int n = sepCommaEmptyToVectorStrings(Stokes, stokes[0]);
@@ -264,9 +218,8 @@ coordsys::setparentname(const std::string& imagename)
 std::vector<int>
 coordsys::axesmap(const bool toWorld)
 {
+	_setup(__func__);
   std::vector<int> rstat;
-  *_log << LogOrigin("coordsys", "axesmap");
-
   try {
     Vector<Int> map;
     if (toWorld) {
@@ -293,9 +246,8 @@ std::vector<std::string>
 coordsys::axiscoordinatetypes(const bool world)
 {
   std::vector<std::string> rstat;
-  
   try{
-    *_log << LogOrigin("coordsys", "axiscoordinatetypes");
+	  _setup(__func__);
 
     Int coord;
     Int axisInCoord;
@@ -344,9 +296,7 @@ coordsys::axiscoordinatetypes(const bool world)
 std::string
 coordsys::conversiontype(const std::string& cordtype)
 {
-  std::string rstat;
-  rstat = getconversiontype(cordtype);
-  return rstat;
+  return getconversiontype(cordtype);
 }
 
 std::vector<double>
@@ -360,8 +310,7 @@ coordsys::convert(const std::vector<double>& coordin,
 		  const std::vector<int>& in_shape)
 {
   std::vector<double> rstat;
-  *_log << LogOrigin("coordsys", "convert");
-
+  _setup(__func__);
   int n = naxes();
 
   Vector<Double> coordIn(coordin);
@@ -415,8 +364,8 @@ coordsys::convert(const std::vector<double>& coordin,
 }
 
 record* coordsys::convertdirection(const string& frame) {
-	*_log << LogOrigin("coordsys", __FUNCTION__);
 	try {
+		_setup(__func__);
 		if (! _csys->hasDirectionCoordinate()) {
 			throw AipsError("The coordinate system does not have a direction coordinate.");
 		}
@@ -453,8 +402,7 @@ coordsys::convertmany(const ::casac::variant& coordin,
 		      const std::vector<int>& in_shape)
 {
   ::casac::variant *rstat = 0;
-  *_log << LogOrigin("coordsys", "convertmany");
-
+  _setup(__func__);
   int n = naxes();
   // form Array<Double> coordIn
   Vector<Int> coord_shape = coordin.arrayshape();
@@ -533,7 +481,7 @@ std::vector<std::string>
 coordsys::coordinatetype(const int which)
 {
   std::vector<std::string> rstat;
-  *_log << LogOrigin("coordsys", "coordinatetype");
+  _setup(__func__);
 
   const Int n = _csys->nCoordinates();
 
@@ -563,8 +511,7 @@ coordsys::coordinatetype(const int which)
 coordsys::copy()
 {
   ::casac::coordsys *rstat = 0;
-  *_log << LogOrigin("coordsys", "copy");
-
+  _setup(__func__);
   Record rec;
   if (!_csys->save(rec,"CoordinateSystem")) {
     *_log << "Could not convert to record because "
@@ -589,49 +536,19 @@ coordsys::copy()
 bool
 coordsys::done()
 {
-  bool rstat(false);
-  *_log << LogOrigin("coordsys", "done");
+	*_log << LogOrigin("coordsys", __func__);
+	_csys.set(0);
+	_log.set(0);
+	_imageName = "";
+	return true;
 
-  try{
-    if (_csys != 0) delete _csys;
-    //coordsys::coordsys();  // recreate default
-    _csys = new CoordinateSystem();
-    //_log = new LogIO();
-
-    Vector<String> empty(0);
-    addCoordinate(*_csys, False, False, empty, 0, False);
-
-    // Give it a meaningful ObsInfo
-    ObsInfo obsInfo;
-    obsInfo.setTelescope(String("EVLA"));
-    obsInfo.setObserver(String("Karl Jansky"));
-
-    // It must be easier than this...  USe 0.0001
-    // so that roundoff does not tick the 0 to 24
-    Time time;
-    time.now();
-    MVTime time2(time);
-    MVEpoch time4(time2);
-    MEpoch date(time4);
-    obsInfo.setObsDate(date);
-    //
-    _csys->setObsInfo(obsInfo);
-    _imageName = "unknown";
-
-  } catch (AipsError x) {
-    *_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  }
-
-  rstat = true;
-  return rstat;
 }
 
 ::casac::record *
 coordsys::epoch()
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "epoch");
-  //
+  _setup(__func__);
   const ObsInfo& obsInfo = _csys->obsInfo();
   MEpoch epoch = obsInfo.obsDate();
 
@@ -646,8 +563,8 @@ coordsys::epoch()
 }
 
 int coordsys::findaxisbyname(const string& name, bool allowfriendlynames) {
-	*_log << LogOrigin("coordsys", __FUNCTION__);
 	try {
+		_setup(__func__);
 		Vector<String> names(1, name);
 		return _csys->getWorldAxesOrder(names, False, allowfriendlynames)[0];
 	}
@@ -660,8 +577,8 @@ int coordsys::findaxisbyname(const string& name, bool allowfriendlynames) {
 record* coordsys::findaxis(
 	bool isWorld, int axis
 ) {
-	*_log << LogOrigin("coordsys", __func__);
 	try {
+		_setup(__func__);
 		ThrowIf(
 			axis < 0,
 			"Value of axis cannot be negative"
@@ -688,8 +605,8 @@ record* coordsys::findaxis(
 record* coordsys::findcoordinate(
 	const std::string& coordType, int which
 ) {
-	*_log << LogOrigin("coordsys", __func__);
 	try {
+		_setup(__func__);
 		const Coordinate::Type type = stringToType(coordType);
 		Record rec;
 		if (which < 0) {
@@ -728,8 +645,7 @@ coordsys::frequencytofrequency(const std::vector<double>& value,
 			       const std::string& doppler)
 {
   std::vector<double> rstat;
-  *_log << LogOrigin("coordsys", "frequencytofrequency");
-
+  _setup(__func__);
   Vector<Double> frequency(value);
   String freqUnit(frqUnit);
   if (freqUnit=="") {
@@ -761,8 +677,8 @@ coordsys::frequencytovelocity(const std::vector<double>& value,
 			      const std::string& velUnit)
 {
   std::vector<double> rstat;
-  *_log << LogOrigin("coordsys", "frequencytovelocity");
 
+  	  _setup(__func__);
   Vector<Double> frequency(value);
   String freqUnit(frqUnit);
   if (freqUnit=="") {
@@ -812,47 +728,37 @@ coordsys::frequencytovelocity(const std::vector<double>& value,
 bool
 coordsys::fromrecord(const ::casac::record& csys_record)
 {
-  bool rstat(false);
   try {
-    *_log << LogOrigin("coordsys", "fromrecord");
-
+	  _setup(__func__);
     //    for(::casac::rec_map::const_iterator rec_it = csys_record.begin();
     //	rec_it != csys_record.end(); rec_it++){
     //      std::cerr << (*rec_it).first <<  " " << std::endl;
     //    }
-    Record *csysRecord = toRecord(csys_record);
+    PtrHolder<Record> csysRecord(toRecord(csys_record));
     CoordinateSystem* pCS = CoordinateSystem::restore(*csysRecord, "");
-    if (pCS==0) {
-      *_log << "Failed to create a CoordinateSystem from this record"
-	      << LogIO::EXCEPTION;
-    }
-    //
-    if(_csys){
-	    delete _csys;
-    }
-    _csys=new CoordinateSystem(*pCS); // memory leak here??
-    delete pCS;
-    //
+    ThrowIf(
+    	! pCS,
+    	"Failed to create a CoordinateSystem from this record"
+    );
+    _csys.set(pCS);
     if (csysRecord->isDefined("parentName")) {
       _imageName = csysRecord->asString("parentName");
     }
-    delete csysRecord;
-    rstat = true;
-  } catch (AipsError x) {
+    return True;
+  } catch (const AipsError& x) {
     *_log << LogIO::SEVERE << "exceptions reported: " << x.getMesg()
 	    << LogIO::POST;
+    RETHROW(x);
   }
-  return rstat;
 }
 
 ::casac::record*
 coordsys::increment(const std::string& format, const std::string& coordtype)
 {
   ::casac::record* rstat = 0;
-  *_log << LogOrigin("coordsys", "increment");
 
   try {
-
+	  _setup(__func__);
     String type(coordtype);
     Vector<Double> incr;
     Int c = -1;
@@ -889,8 +795,7 @@ coordsys::increment(const std::string& format, const std::string& coordtype)
 coordsys::lineartransform(const std::string& cordtype)
 {
   ::casac::variant *rstat = 0;
-  *_log << LogOrigin("coordsys", "lineartransform");
-
+  _setup(__func__);
   String type(cordtype);
   Array<Double> ltarray;
   //
@@ -915,8 +820,8 @@ std::vector<std::string>
 coordsys::names(const std::string& coordtype)
 {
   std::vector<std::string> rstat;
-  *_log << LogOrigin("coordsys", "names");
 
+  _setup(__func__);
   Vector<String> out = _csys->worldAxisNames();
   if (coordtype=="") {
     rstat = fromVectorString(out);
@@ -938,8 +843,8 @@ coordsys::names(const std::string& coordtype)
 int
 coordsys::naxes(const bool world)
 {
-  *_log << LogOrigin("coordsys", "naxes");
 
+	_setup(__func__);
   if (world) {
     return _csys->nWorldAxes();
   } else {
@@ -951,7 +856,7 @@ int
 coordsys::ncoordinates()
 {
   int rstat(0);
-  *_log << LogOrigin("coordsys", "ncoordinates");
+  _setup(__func__);
   rstat = _csys->nCoordinates();
   return rstat;
 }
@@ -959,21 +864,15 @@ coordsys::ncoordinates()
 std::string
 coordsys::observer()
 {
-  std::string rstat;
-  *_log << LogOrigin("coordsys", "observer");
-
-  const ObsInfo& obsInfo = _csys->obsInfo();
-  rstat = obsInfo.observer();
-
-  return rstat;
+  _setup(__func__);
+  return _csys->obsInfo().observer();
 }
 
 ::casac::record*
 coordsys::projection(const std::string& cordtype)
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "projection");
-
+  _setup(__func__);
   String name(cordtype);
 
   // Exception if type not found
@@ -1018,8 +917,7 @@ std::vector<std::string>
 coordsys::referencecode(const std::string& cordtype, const bool list)
 {
   std::vector<std::string> rstat;
-  *_log << LogOrigin("coordsys", "referencecode");
-
+  _setup(__func__);
   String coordinateType(cordtype);
 
   if ((coordinateType != "") && (list==true)) {
@@ -1108,6 +1006,7 @@ coordsys::referencepixel(const std::string& cordtype)
   ::casac::record* rstat = 0;
 
   try {
+	  _setup(__func__);
     Vector<Double> crpix = _csys->referencePixel();
     Vector<Double> numeric;
     if (cordtype == "") {
@@ -1133,8 +1032,7 @@ coordsys::referencepixel(const std::string& cordtype)
     rec.define("ar_type","absolute");
     rstat = fromRecord(rec);
 
-  } catch (AipsError x) {
-     *_log << LogOrigin("coordsys", "referencepixel");
+  } catch (const AipsError& x) {
      *_log << LogIO::SEVERE << "exceptions reported: " << x.getMesg() << LogIO::POST;
   }
   return rstat;
@@ -1145,8 +1043,8 @@ coordsys::referencevalue(const std::string& format,
 			 const std::string& type)
 {
   ::casac::record* rstat = 0;
-  *_log << LogOrigin("coordsys", "referencevalue");
 
+  _setup(__func__);
   //
   Vector<Double> refVal;
   Int c = -1;
@@ -1174,8 +1072,8 @@ bool
 coordsys::reorder(const std::vector<int>& order)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "reorder");
 
+  _setup(__func__);
   //
   // This is pretty dody - if the axes have been reordered this
   // is all rubbish
@@ -1202,7 +1100,7 @@ coordsys::replace(const ::casac::record& csys, const int in,
 		  const int out)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "replace");
+  _setup(__func__);
 
   Record *tmp = toRecord(csys);
 
@@ -1248,8 +1146,7 @@ coordsys::restfrequency()
 {
   ::casac::record * rstat=0;
 
-  *_log << LogOrigin("coordsys", "restfrequency");
-
+  _setup(__func__);
   // Exception if type not found
   Int c = findCoordinate (Coordinate::SPECTRAL, True);
   //
@@ -1283,8 +1180,7 @@ bool
 coordsys::setconversiontype(const std::string& direction,
 			    const std::string& spectral)
 {
-  *_log << LogOrigin("coordsys", "setconversiontype");
-
+	_setup(__func__);
   //
   String errorMsg;
   if (!direction.empty()) {
@@ -1311,8 +1207,8 @@ coordsys::setconversiontype(const std::string& direction,
 std::string
 coordsys::getconversiontype(const std::string& type,const bool showconversion)
 {
-  *_log << LogOrigin("coordsys", "getconversiontype");
 
+	_setup(__func__);
   // 
   Coordinate::Type cType = stringToType(type);
   if (cType==Coordinate::DIRECTION) {
@@ -1352,8 +1248,8 @@ coordsys::setdirection(const std::string& in_ref,
 		       const ::casac::variant& iv_poles)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setdirection");
 
+  _setup(__func__);
   //
   // Bail out if coordinate not found
   Int ic = findCoordinate (Coordinate::DIRECTION, True);
@@ -1520,8 +1416,8 @@ bool
 coordsys::setepoch(const ::casac::record& value)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setepoch");
 
+  _setup(__func__);
   String error;
   MeasureHolder in;
   Record *inrec = toRecord(value);
@@ -1557,7 +1453,7 @@ coordsys::setincrement(const ::casac::variant& value,
 		       const std::string& coordinateType)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setincrement");
+  _setup(__func__);
   /*
  // Kumar's version
  casa::Vector<casa::Quantity> values;
@@ -1703,8 +1599,8 @@ bool
 coordsys::setlineartransform(const std::string& coordinateType,
 			     const ::casac::variant& v_value)
 {
-  *_log << LogOrigin("coordsys", "setlineartransform");
 
+	_setup(__func__);
   //
   if (coordinateType.empty()) {
     *_log << "You must specify the coordinate type" << LogIO::EXCEPTION;
@@ -1774,8 +1670,8 @@ coordsys::setnames(const std::vector<std::string>& value,
 		   const std::string& coordinateType)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setnames");
 
+  _setup(__func__);
   Vector<String> vnames = toVectorString(value);
   Vector<String> names;
   if (vnames.size()==1) {
@@ -1815,8 +1711,8 @@ coordsys::setnames(const std::vector<std::string>& value,
 bool
 coordsys::setobserver(const std::string& observer)
 {
-  *_log << LogOrigin("coordsys", "setobserver");
-  ObsInfo obsInfo = _csys->obsInfo();
+	_setup(__func__);
+	ObsInfo obsInfo = _csys->obsInfo();
   obsInfo.setObserver(observer);
   _csys->setObsInfo(obsInfo);
   return true;
@@ -1826,8 +1722,8 @@ bool
 coordsys::setprojection(const std::string& name,
 			const std::vector<double>& in_parameters)
 {
-  *_log << LogOrigin("coordsys", "setprojection");
 
+	_setup(__func__);
   Vector<Double> parameters;
   if ( !(in_parameters.size()==1 && in_parameters[0]==-1) ) {
     parameters = in_parameters;
@@ -1877,8 +1773,8 @@ coordsys::setreferencecode(const std::string& code,
 			   const bool adjust)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setreferencecode");
 
+  _setup(__func__);
   const Coordinate::Type type = stringToType (coordinateType);
   //
   if (type==Coordinate::DIRECTION) {
@@ -1901,8 +1797,8 @@ coordsys::setreferencelocation(const std::vector<int>& pixel,
 {
 
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setreferencelocation");
 
+  _setup(__func__);
   //Checks  
   std::vector<double> dpixel;
   if (unset(pixel)) {
@@ -2001,8 +1897,7 @@ coordsys::setreferencepixel(const std::vector<double>& refpix,
 {
   bool rstat(false);
 
-  *_log << LogOrigin("coordsys", "setreferencepixel");
-
+  _setup(__func__);
   //
   Vector<Double> refPix2(refpix);
   //   refPix2 = refPix - 1.0;                     // 0-rel
@@ -2039,8 +1934,8 @@ coordsys::setreferencevalue(const ::casac::variant& value,
 			    const std::string& coordinateType)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setreferencevalue");
 
+  _setup(__func__);
   Bool isWorld;
   Bool shouldBeWorld(True);
   Bool verbose(False);
@@ -2107,8 +2002,8 @@ coordsys::setrestfrequency(const ::casac::variant& vfvalue, const int which,
 			   const bool append)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setrestfrequency");
 
+  _setup(__func__);
   Int c = findCoordinate (Coordinate::SPECTRAL, True);
   if (c < 0) return false;  // Avoid exception if type not found
   SpectralCoordinate sc = _csys->spectralCoordinate(c);
@@ -2248,7 +2143,7 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
 		      const ::casac::variant& v_velocities)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setspectral");
+  _setup(__func__);
 
   Bool dofreq(False);
   Bool dovel(False);
@@ -2378,8 +2273,7 @@ bool
 coordsys::setstokes(const std::vector<std::string>& in_stokes)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setstokes");
-
+  _setup(__func__);
   Vector<String> vstokes = toVectorString(in_stokes);
   Vector<String> stokes;
   if (vstokes.size()==1) {
@@ -2415,8 +2309,8 @@ coordsys::settabular(const std::vector<double>& in_pixel, const std::vector<doub
 {
 
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "settabular");
 
+  _setup(__func__);
   Vector<Double> pixel(in_pixel);
   Vector<Double> world(in_world);
   if (in_pixel.size()==1 && in_pixel[0]==-1) {
@@ -2507,8 +2401,8 @@ bool
 coordsys::settelescope(const std::string& telescope)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "settelescope");
 
+  _setup(__func__);
   ObsInfo obsInfo = _csys->obsInfo();
 
   obsInfo.setTelescope(telescope);
@@ -2538,7 +2432,7 @@ coordsys::setunits(const std::vector<std::string>& value,
 		   const int which)
 {
   bool rstat(false);
-  *_log << LogOrigin("coordsys", "setunits");
+  _setup(__func__);
   Vector<String> vunits = toVectorString(value);
   Vector<String> units;
   if (vunits.size()==1) {
@@ -2600,7 +2494,7 @@ std::vector<std::string>
 coordsys::stokes()
 {
   std::vector<std::string> rstat;
-  *_log << LogOrigin("coordsys", "stokes");
+  _setup(__func__);
 
   // Exception if type not found
   Int c = findCoordinate (Coordinate::STOKES, True);
@@ -2621,7 +2515,7 @@ std::vector<std::string>
 coordsys::summary(const std::string& dopplerType, const bool list)
 {
   std::vector<std::string> rstat;
-  *_log << LogOrigin("coordsys", "summary");
+  _setup(__func__);
 
   casa::MDoppler::Types velType;
   if (!casa::MDoppler::getType(velType, dopplerType)) {
@@ -2656,7 +2550,7 @@ std::string
 coordsys::telescope()
 {
   std::string rstat;
-  *_log << LogOrigin("coordsys", "telescope");
+  _setup(__func__);
 
   const ObsInfo& obsInfo = _csys->obsInfo();
   rstat = obsInfo.telescope();
@@ -2668,7 +2562,7 @@ coordsys::telescope()
 coordsys::toabs(const ::casac::variant& value, const int isworld)
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "toabs");
+  _setup(__func__);
 
   int shouldBeWorld(isworld);
   Bool verbose(True);
@@ -2724,7 +2618,7 @@ coordsys::toabsmany(const ::casac::variant& value, const int isworld)
 {
 
   ::casac::record *rstat=0;
-  *_log << LogOrigin("coordsys", "toabsmany");
+  _setup(__func__);
 
   int shouldBeWorld(isworld);
   Bool verbose(True);
@@ -2821,7 +2715,7 @@ coordsys::topixel(const ::casac::variant& value)
 {
   ::casac::record *rtnrec = 0;
   std::vector<double> rstat;
-  *_log << LogOrigin("coordsys", "topixel");
+  _setup(__func__);
 
   //
   Bool shouldBeWorld(True);
@@ -2883,7 +2777,7 @@ std::vector<double>
 coordsys::toPixel(const ::casac::variant& value)
 {
   std::vector<double> rstat;
-  *_log << LogOrigin("coordsys", "topixel");
+  _setup(__func__);
 
   //
   Bool shouldBeWorld(True);
@@ -2944,7 +2838,7 @@ coordsys::toPixel(const ::casac::variant& value)
 coordsys::topixelmany(const ::casac::variant& value)
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "topixelmany");
+  _setup(__func__);
 
   //
   Vector<Int> value_shape = value.arrayshape();
@@ -2988,9 +2882,10 @@ coordsys::topixelmany(const ::casac::variant& value)
 coordsys::torecord()
 {
   ::casac::record *rstat = new ::casac::record();
-  *_log << LogOrigin("coordsys", "torecord");
 
   try {
+	  _setup(__func__);
+
     Record rec;
     if (!_csys->save(rec,"CoordinateSystem")) {
       *_log << "Could not convert to record because "
@@ -3013,9 +2908,10 @@ coordsys::torecord()
 coordsys::subimage(const ::casac::variant& neworigin, const std::vector<int>& newshape)
 {
   ::casac::record *rstat = new ::casac::record();
-  *_log << LogOrigin("coordsys", "subimage");
 
   try {
+	  _setup(__func__);
+
     Record rec;
     Int nPixAxes=_csys->nPixelAxes();
     Vector<Float>incr(nPixAxes, 1);
@@ -3052,7 +2948,7 @@ coordsys::subimage(const ::casac::variant& neworigin, const std::vector<int>& ne
 coordsys::torel(const ::casac::variant& value, const int isworld)
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "torel");
+  _setup(__func__);
 
   int shouldBeWorld(isworld);
   Bool verbose(True);
@@ -3107,7 +3003,7 @@ coordsys::torel(const ::casac::variant& value, const int isworld)
 coordsys::torelmany(const ::casac::variant& value, const int isWorld)
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "torelmany");
+  _setup(__func__);
 
   // form Array<Double> valueIn
   Vector<Int> value_shape = value.arrayshape();
@@ -3157,7 +3053,7 @@ coordsys::torelmany(const ::casac::variant& value, const int isWorld)
 coordsys::toworld(const ::casac::variant& value, const std::string& format)
 {
   ::casac::record *rstat = 0;
-  *_log << LogOrigin("coordsys", "toworld");
+  _setup(__func__);
 
   Vector<Double> pixel;
   if (unset(value)) {
@@ -3201,8 +3097,9 @@ coordsys::toworld(const ::casac::variant& value, const std::string& format)
 }
 
 record* coordsys::toworldmany(const variant& value) {
-	*_log << LogOrigin("coordsys", __FUNCTION__);
 	try {
+		  _setup(__func__);
+
 		Vector<Int> value_shape = value.arrayshape();
 	    if(value.type() != variant::DOUBLEVEC) {
 	        *_log
@@ -3249,6 +3146,8 @@ record* coordsys::toworldmany(const variant& value) {
 
 bool coordsys::transpose(const vector<int>& order) {
 	try {
+		  _setup(__func__);
+
 		_csys->transpose(
 			Vector<Int>(order),
 			Vector<Int>(order)
@@ -3265,9 +3164,7 @@ bool coordsys::transpose(const vector<int>& order) {
 std::string
 coordsys::type()
 {
-  string rstat;
-  *_log << LogOrigin("coordsys", "type");
-  rstat = "coordsys";
+  static const string rstat = "coordsys";
   return rstat;
 }
 
@@ -3276,7 +3173,7 @@ std::vector<std::string> coordsys::units(
 ) {
 	try {
 		std::vector<string> rstat;
-		*_log << LogOrigin("coordsys", "units");
+		  _setup(__func__);
 
 		Vector<String> units = _csys->worldAxisUnits();
 		if (cordtype=="") {
@@ -3310,7 +3207,7 @@ coordsys::velocitytofrequency(const std::vector<double>& value,
 			      const std::string& velUnit)
 {
   std::vector<double> rstat;
-  *_log << LogOrigin("coordsys", "velocitytofrequency");
+  _setup(__func__);
 
   Vector<Double> velocity(value);
   String freqUnit(frequnit);
@@ -3413,6 +3310,8 @@ Coordinate::Type coordsys::stringToType(const String& typeIn) const
   // does not interact with them directly.
   //
 {
+	  *_log << LogOrigin("coordsys", __func__);
+
   String ct= upcase(typeIn);
   String ct1(ct.at(0,1));
   String ct2(ct.at(0,2));
@@ -3423,10 +3322,7 @@ Coordinate::Type coordsys::stringToType(const String& typeIn) const
   //
   if (ct2==String("ST")) return Coordinate::STOKES;
   if (ct2==String("SP")) return Coordinate::SPECTRAL;
-  //
-  *_log << LogOrigin("coordsys", "stringToType");
-  *_log << "Unknown coordinate type" << LogIO::EXCEPTION;
-  //
+  *_log << LogIO::SEVERE << "Unknown coordinate string" << LogIO::POST;
   Coordinate::Type t(Coordinate::LINEAR);
   return t;
 }
@@ -3441,7 +3337,8 @@ Record coordsys::worldVectorToRecord (const Vector<Double>& world,
   // format from 'n,q,s,m'
   //
 {
-  *_log << LogOrigin("coordsys", "worldVectorToRecord");
+	  _setup(__func__);
+
   String ct= upcase(format);
   Vector<String> units;
   if (c < 0) {
@@ -3520,7 +3417,7 @@ coordsys::quantumToRecord (LogIO& os, const Quantum<Double>& value) const
 Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
                                        Int c, Bool abs) const
 {
-  *_log << LogOrigin("coordsys", "worldVectorToMeasures(...)");
+	  *_log << LogOrigin("coordsys", __func__);
 
   //
   uInt directionCount, spectralCount, linearCount, stokesCount, tabularCount;
@@ -3720,7 +3617,7 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 Int coordsys::findCoordinate (Coordinate::Type type, Bool warn)
 const
 {
-  *_log << LogOrigin("coordsys", "findCoordinate()");
+	  *_log << LogOrigin("coordsys", __func__);
 
   Int afterCoord = -1;
   Int c = _csys->findCoordinate(type, afterCoord);
@@ -3748,8 +3645,9 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
   // native units 
   //
 {
-  *_log << LogOrigin("coordsys", "recordToWorldVector(...)");
-  //
+
+	  *_log << LogOrigin("coordsys", __func__);
+
   Bool done = False;
   if (rec.isDefined("numeric")) {
     out.resize(0);
@@ -3847,8 +3745,8 @@ coordsys::quantumVectorRecordToVectorDouble (const RecordInterface& recQ,
   // Convert vector to world double in native units
   //
 {
-  *_log << LogOrigin("coordsys", "quantumVectorRecordToVectorDouble");
-  Record recQ2;
+	 *_log << LogOrigin("coordsys", __func__);
+	Record recQ2;
   QuantumHolder h;
   String error;
   Quantum<Double> q;
@@ -3920,7 +3818,7 @@ coordsys::measuresToWorldVector (const RecordInterface& rec) const
   // Missing values are given the referenceValue
   //
 {
-  *_log << LogOrigin("coordsys", "measuresToVector(...)");
+	  *_log << LogOrigin("coordsys", __func__);
 
   // The record will have fields from 'direction', 'spectral',
   // 'stokes', 'linear', 'tabular'
@@ -4080,6 +3978,7 @@ coordsys::measuresToWorldVector (const RecordInterface& rec) const
 Vector<Double> 
 coordsys::stringToWorldVector (LogIO& os, const Vector<String>& world,
 			       const Vector<String>& units) const{
+
   Vector<Double> world2 = _csys->referenceValue();
   Int coordinate, axisInCoordinate;
   const uInt nIn = world.nelements();
@@ -4138,7 +4037,7 @@ void coordsys::trim (Vector<Double>& inout,
 
 void coordsys::setDirectionCode (const String& code, Bool adjust)
 {
-  *_log << LogOrigin("coordsys", "setDirectionCode");
+	  _setup(__func__);
 
   // Exception if type not found
   Int ic = findCoordinate (Coordinate::DIRECTION, True);
@@ -4277,7 +4176,7 @@ void coordsys::setSpectralCode (const String& code, Bool adjust)
 Record coordsys::toWorldRecord (const Vector<Double>& pixel,
                                 const String& format)
 {
-  *_log << LogOrigin("coordsys", "toWorld");
+	  _setup(__func__);
   //
   Vector<Double> pixel2 = pixel.copy();
   //  if (pixel2.nelements()>0) pixel2 -= 1.0;        // 0-rel
@@ -4354,7 +4253,7 @@ coordsys::isValueWorld(casac::variant& value, int shouldBeWorld,
   //                 it means we rely on the attribute
   // return values 1:True, 0:False, -1:Fail
   {
-    *_log << LogOrigin("coordsys", "isValueWorld");
+	  _setup(__func__);
 
     int fail = -1;
 
@@ -4441,7 +4340,7 @@ coordsys::isValueWorld(casac::variant& value, int shouldBeWorld,
 Bool
 coordsys::checkAbsRel(casac::variant& value, casa::Bool shouldBeAbs)
 {
-  *_log << LogOrigin("coordsys", "checkAbsRel");
+	  _setup(__func__);
 
   if (value.type() == ::casac::variant::RECORD) {
     //    ::casac::record crec = value.asRecord();
@@ -4495,7 +4394,7 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
   // missing axes are padded in the C++.
   //
 {
-  *_log << LogOrigin("coordsys", __func__);
+	  _setup(__func__);
 
   Record *rec = new Record();
 
