@@ -32,6 +32,23 @@ $(document).ready(function () {
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
     filterPipeline.addFilter(FILTERS.createMatchFilter('ant', '#select-ant'));
 
+    // get the X-axis label for Tsys
+    var xAxis = PLOTS.xAxisLabels["qa"];
+
+    // create histograms and histogram filters for the three distributions we want
+    // to highlight
+    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "PHASE_SCORE_XY", "#histogram-xy", xAxis),
+		  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "PHASE_SCORE_X2X1", "#histogram-x2x1", xAxis)]
+
+    // link histogram ranges to the range checkbox
+    var rangeCheckbox = $("input#rangeCheckbox");
+	rangeCheckbox.click(function() {
+		var state = rangeCheckbox.prop("checked");
+		charts.forEach(function(chart) {
+			chart.histogram.duration(1000).plotExtent(state);
+		});
+	});
+    
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
     $("ul.thumbnails li div a").click(function (evt) {
@@ -51,13 +68,31 @@ $(document).ready(function () {
 </div>
 
 <div class="column-fluid">
+	<label class="checkbox"> 
+		<input type="checkbox" id="rangeCheckbox" checked></input>Clip histogram range to match data
+	</label>
 	<div class="row-fluid">
-		<div class="column-fluid span6">
+		<div class="column-fluid span4">
+			<fieldset>
+				<legend>X-Y phase deviation</legend>
+				<div id="histogram-xy" class="span12">
+			</fieldset>
+		</div>
+		<div class="column-fluid span4">
+			<fieldset>
+				<legend>X2-X1 phase deviation</legend>
+				<div id="histogram-x2x1" class="span12">
+			</fieldset>
+		</div>
+	</div>
+	
+	<div class="row-fluid">
+		<div class="column-fluid span4">
 			<div>
 			<fieldset>
 				<legend>Spectral Window Filter</legend>
 				<select id="select-spw" class="select2" multiple style="width:100%" placeholder="Show all spectral windows">
-					% for spw in sorted(list(set([int(p.parameters['spw']) for p in plots]))):
+					% for spw in sorted(list(set([p.parameters['spw'] for p in plots]))):
 					<option>${spw}</option>
 					% endfor
 		       	</select>
@@ -65,7 +100,7 @@ $(document).ready(function () {
 			</div>
 		</div>		
 	
-		<div class="column-fluid span6">
+		<div class="column-fluid span4">
 			<div>
 			<fieldset>
 				<legend>Antenna Filter</legend>
@@ -77,7 +112,9 @@ $(document).ready(function () {
 			</fieldset>
 			</div>
 		</div>		
+
 	</div>
+	
 </div>
 
 <br>
@@ -89,7 +126,7 @@ $(document).ready(function () {
 			<div class="thumbnail">
 				<a class="fancybox"
 				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="Antenna ${plot.parameters['ant']} spw ${plot.parameters['spw']}"
+				   title="Antenna ${plot.parameters['ant']} spw ${plot.parameters['spw']}}"
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 						 title="Antenna ${plot.parameters['ant']} spw ${plot.parameters['spw']}"

@@ -80,12 +80,14 @@ class TimegaincalQAHandler(pqa.QAResultHandler):
             os.makedirs(qa_dir)
 
         qa_results_dict = {}
+
         try:
             for calapp in result.final:
                 solint = calapp.origin.inputs['solint']
                 calmode = calapp.origin.inputs['calmode']
                 if ((solint == 'int') and (calmode == 'p')):
                     qa_results_dict[calapp.gaintable] = gpcal.gpcal(calapp.gaintable)
+                    qa_results_dict[calapp.gaintable]['PHASE_FIELDS'] = phase_field_ids
 
             result.qa = TimegaincalQAPool(qa_results_dict)
             result.qa.update_scores(ms, phase_field_ids)

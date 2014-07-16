@@ -2245,6 +2245,51 @@ class GaincalPhaseVsTimePlotRenderer(GenericPlotsRenderer):
 
 
 class GaincalPhaseVsTimeDiagnosticPlotRenderer(GaincalPhaseVsTimePlotRenderer):
+    template = 'diagnostic_phase_vs_time_plots.html'
+
+    def __init__(self, context, result, plots):
+        super(GaincalPhaseVsTimeDiagnosticPlotRenderer, self).__init__(context, result, plots)
+
+        # The basic json dictionary is set in __init__. Now add the scores.
+        d = json.loads(self.json)
+        score_types = ('PHASE_SCORE_XY', 'PHASE_SCORE_X2X1')
+        # First check if we have scores for this MS
+        table_names = [name for name in self.result.qa.qa_results_dict.iterkeys() if name.find(self.ms) != -1]
+        if (table_names != []):
+            for key in d.iterkeys():
+                spw = d[key]['spw']
+                ant = d[key]['ant']
+                for score_type in score_types:
+                    average_score = 0.0
+                    num_scores = 0
+                    for table_name in table_names:
+                        spw_id = int(spw)
+                        ant_id_dict = dict((value, key) for (key, value) in self.result.qa.qa_results_dict[table_name]['QASCORES']['ANTENNAS'].iteritems())
+                        ant_id = ant_id_dict[ant]
+                        phase_field_ids = self.result.qa.qa_results_dict[table_name]['PHASE_FIELDS']
+                        if (phase_field_ids != []):
+                            for field_id in phase_field_ids:
+                                score = self.result.qa.qa_results_dict[table_name]['QASCORES']['SCORES'][field_id][spw_id][ant_id][score_type]
+                                if (score == 'C/C'):
+                                    average_score += -0.1
+                                else:
+                                    average_score += score
+                                num_scores += 1
+                        else:
+                            average_score += 1.0
+                            num_scores += 1
+                    if (num_scores != 0):
+                        average_score /= num_scores
+                    d[key][score_type] = average_score
+
+        else:
+            # We don't have scores
+            for key in d.iterkeys():
+                for score_type in score_types:
+                    d[key][score_type] = 1.0
+
+        self.json = json.dumps(d)
+
     @property
     def filename(self):        
         filename = filenamer.sanitize('diagnostic_phase_vs_time-%s.html' % self.ms)
