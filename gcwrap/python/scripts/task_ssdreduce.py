@@ -59,13 +59,22 @@ def ssdreduce(vis,
     else:
         query_list = rh.generate_query(vis, field, spw)
 
+    rh.add_corrected_data(vis)
+
     # start reduction
     with rh.opentable(vis) as table:
         spwidmap = rh.spw_id_map(vis)
         for query in query_list:
             num_record, num_threads = rh.optimize_thread_parameters(table, query, spwmap)
             if num_record > 0:
-                num_record = int(os.environ['SSDREDUCE_NUM_RECORD'])
-                num_threads = int(os.environ['SSDREDUCE_NUM_THREADS'])
+                try:
+                    num_record = int(os.environ['SSDREDUCE_NUM_RECORD'])
+                except:
+                    pass
+                try:
+                    num_threads = int(os.environ['SSDREDUCE_NUM_THREADS'])
+                except:
+                    pass
+
                 for results in rh.paraMap(num_threads, rh.reducechunk, rh.readchunk(table, query[0], num_record, rh.get_context(query, spwidmap, context))):
                     rh.writechunk(table, results)

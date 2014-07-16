@@ -259,7 +259,7 @@ def openms(vis):
     
 def optimize_thread_parameters(table, query, spwmap):
     try:
-        num_threads = 3 # multiprocessing.cpu_count()
+        num_threads = min(3, multiprocessing.cpu_count())
         assert num_threads > 0
 
 	subt = table.query(query[0])
@@ -272,14 +272,14 @@ def optimize_thread_parameters(table, query, spwmap):
             data_size_per_record = num_pols * num_channels * (8 + 1) * 2 * 10 #dummy
             assert data_size_per_record > 0
 
-            mem_size = 64*1024*1024*1024 #to be replaced with an appropriate function
+            mem_size = 32*1024*1024*1024 #to be replaced with an appropriate function
             num_record = mem_size / num_threads / data_size_per_record
             if (num_record > num_rows): num_record = num_rows
         else:
             num_record = 0
 
         ###
-        if num_record > 0: num_record = 300
+        #if num_record > 0: num_record = 300
         ###
         return num_record, num_threads
     finally:
@@ -406,7 +406,8 @@ def reducerecord(record):
             out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
 
     except Exception as e:
-        print '^%^%^%^%^% '+e.message
+        print '[reducerecord]--'+e.message
+        raise
 
     return (in_row, out_data, out_mask, in_time, 3.14)
 
@@ -425,16 +426,13 @@ def reducerecord2(record):
 def writechunk(table, results):
     #print '                writechunk'
     put = lambda row, col, val: table.putcell(col, row, val)
-    try:
-      for record in results:
+    for record in results:
         row = int(record[0])
         data = record[1]
         flag = record[2]
         #print 'writing result to table %s at row %s...'%(table.name(), row)
-        put(row, 'FLOAT_DATA', data)
+        put(row, 'CORRECTED_DATA', data)
         put(row, 'FLAG', flag)
-    except Exception as e:
-        print '[wc]--'+e.message
 
 ###
 def reducerecord_old(record):
@@ -734,7 +732,6 @@ def _select_match(gaintable, tabletype):
     for caltable in gaintable:
         if re.search(pattern, caltable):
             yield caltable
-                
 
 def colname(tb):
     colnames = tb.colnames()
@@ -754,4 +751,3 @@ def add_corrected_data(table):
                 desc['valueType'] = 'complex'
             desc['comment'] = 'corrected data'
             tb.addcols({'CORRECTED_DATA': desc})
-
