@@ -351,6 +351,11 @@ def reducerecord(record):
         facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
         #mask--------------------
         mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
+        mask_bl_ = numpy.zeros(nchan, dtype=bool)
+        for r0, r1 in ctxbl['blmask']:
+            mask_bl_[r0:r1+1] = True
+        mask_bl = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, mask_bl_.tolist())
+        
         channel_id = ctxmc['channel_id']
         edge_lower = ctxmc['edge_lower']
         edge_upper = ctxmc['edge_upper']
@@ -377,15 +382,16 @@ def reducerecord(record):
 
             ##masknaninf------------------------
             libsakurapy.set_false_float_if_nan_or_inf(nchan, data, mask_temp)
-            libsakurapy.logical_and(nchan, mask_temp, mask)
+            libsakurapy.logical_and(nchan, mask_temp, mask, mask)
 
             ##maskedge--------------------------
             libsakurapy.set_true_int_in_ranges_exclusive(nchan, channel_id, 
                                                          1, edge_lower, edge_upper, mask_temp)
-            libsakurapy.logical_and(nchan, mask_temp, mask)
+            libsakurapy.logical_and(nchan, mask_temp, mask, mask)
 
             ##baseline--------------------------
-            data = libsakurapy.subtract_baseline(nchan, data, mask, 
+            libsakurapy.logical_and(nchan, mask, mask_bl, mask_temp)
+            data = libsakurapy.subtract_baseline(nchan, data, mask_temp, 
                                                  ctxbl['context'], 
                                                  ctxbl['clip_threshold'], 
                                                  ctxbl['num_fitting_max'], 
@@ -393,9 +399,10 @@ def reducerecord(record):
 
             ##clip------------------------------
             result_clip = libsakurapy.set_true_float_in_ranges_exclusive(nchan, data, 1, clip_lower, clip_upper, mask_temp)
-            libsakurapy.logical_and(nchan, mask_temp, mask)
-
+            libsakurapy.logical_and(nchan, mask_temp, mask, mask)
+            
             ##smooth----------------------------
+            result_complement = libsakurapy.complement_masked_value_float(nchan, data, mask, data)
             result_smooth = libsakurapy.convolve1D(ctxsm, nchan, data, data)
 
             ##statistics------------------------
@@ -517,6 +524,8 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
         spwid_list = spwmap.keys()
         for i in xrange(len(spwid_list)):
             spwid_list[i] = int(spwid_list[i])
+    else:
+        spwid_list = list(set(spwid_list) & set(map(int, spwmap.keys())))
     antennaid_list = selection['baselines'][:,0]
     
     # nchan
@@ -540,8 +549,10 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
                                                          antennaid_list,
                                                          interp)
         # create baseline context
+        idx = ms.msseltoindex(vis=vis,spw='%s:%s'%(spwid,blmask))
+        blmask_range = idx['channel'][:,1:3]
         baseline_context = {}
-        baseline_context['blmask'] = blmask
+        baseline_context['blmask'] = blmask_range
         baseline_context['clip_threshold'] = clipthresh
         baseline_context['num_fitting_max'] = clipniter
         baseline_type = sakura_typemap(BASELINE_TYPEMAP, blfunc)
@@ -690,7 +701,7 @@ def create_maskclip_context(nchan, edge, clipminmax):
     channel_id = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, range(nchan))
     if isinstance(edge, list) or isinstance(edge, tuple):
         for i in xrange(len(edge)):
-            if not (isinstance(edge[i], float) or isinstance(edge[i], tuple)):
+            if not (isinstance(edge[i], float) or isinstance(edge[i], int) or isinstance(edge[i], tuple)):
                 raise RuntimeError('Invalid type: %s'%(edge))
         if len(edge) == 0:
             edge_list = [0, 0]
