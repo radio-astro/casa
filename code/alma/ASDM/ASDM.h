@@ -978,7 +978,7 @@ private:
 	Origin origin;
 	bool loadTablesOnDemand_;  // For a dataset which is stored on disk, convert and load in memory only the tables which are used by the code the first time they are referred to.
 	bool checkRowUniqueness_;  // For a dataset which is stored on disk, when a table is converted and loaded in memory verify (true) or not (false) the fact that each row is unique.
-	std::string directory;
+	std::string directory_;    // The directory where the ASDM has been read. (left empty if the ASDM is only in memory)
 		
 
 	/**

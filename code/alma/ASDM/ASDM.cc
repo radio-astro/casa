@@ -316,7 +316,7 @@ namespace asdm {
 
 	ASDM::Origin ASDM::getOrigin() const { return origin ; }
 	
-	string ASDM::getDirectory() const { return directory ; }
+	string ASDM::getDirectory() const { return directory_ ; }
 	
 	XSLTransformer & ASDM::getXSLTransformer() { return xslTransformer; }
 	
@@ -4280,7 +4280,7 @@ namespace asdm {
 
 		this->loadTablesOnDemand_ = parse.loadTablesOnDemand_;
 		this->checkRowUniqueness_ = parse.checkRowUniqueness_;
-		
+		this->directory_          = directory;
 		string fileName;
 		if (fileAsBin) {
 			fileName = directory + "/ASDM.bin";
@@ -4319,8 +4319,8 @@ namespace asdm {
 			ASDMUtils::Origin origin;
 			
 			try { 
-				version = parse.detectVersion_ ? ASDMUtils::version(directory) : parse.version_;
-				origin = parse.detectOrigin_ ? ASDMUtils::origin(ASDMUtils::telescopeNames(directory)) : parse.origin_;
+				version = parse.detectVersion_ ? ASDMUtils::version(directory_) : parse.version_;
+				origin = parse.detectOrigin_ ? ASDMUtils::origin(ASDMUtils::telescopeNames(directory_)) : parse.origin_;
 			}
 			catch (ASDMUtilsException e) {
 				throw ConversionException ("Caught an exception whose message is '" + e.getMessage() + "'.", "ASDM");
@@ -4330,7 +4330,7 @@ namespace asdm {
     			throw ConversionException("I cannot read this dataset with version='UNKNOWN' and origin='UNKNOWN'", "ASDM");
  		
     		string xsltPath;
- 			bool proceed = (version.compare("3") && (origin == ASDMUtils::EVLA))  
+ 			bool proceed = (origin == ASDMUtils::EVLA)  
     				    || (version.compare("3") && ( origin == ASDMUtils::ALMA)); // If it's an ALMA then we must check its version.
 			string xmlDoc;
  			try {
@@ -4365,322 +4365,322 @@ namespace asdm {
 	
 			entity = tableEntity["Main"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getMain().setFromFile(directory);
+				getMain().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["AlmaRadiometer"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getAlmaRadiometer().setFromFile(directory);
+				getAlmaRadiometer().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Annotation"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getAnnotation().setFromFile(directory);
+				getAnnotation().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Antenna"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getAntenna().setFromFile(directory);
+				getAntenna().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalAmpli"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalAmpli().setFromFile(directory);
+				getCalAmpli().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalAppPhase"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalAppPhase().setFromFile(directory);
+				getCalAppPhase().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalAtmosphere"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalAtmosphere().setFromFile(directory);
+				getCalAtmosphere().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalBandpass"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalBandpass().setFromFile(directory);
+				getCalBandpass().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalCurve"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalCurve().setFromFile(directory);
+				getCalCurve().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalData"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalData().setFromFile(directory);
+				getCalData().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalDelay"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalDelay().setFromFile(directory);
+				getCalDelay().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalDevice"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalDevice().setFromFile(directory);
+				getCalDevice().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalFlux"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalFlux().setFromFile(directory);
+				getCalFlux().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalFocus"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalFocus().setFromFile(directory);
+				getCalFocus().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalFocusModel"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalFocusModel().setFromFile(directory);
+				getCalFocusModel().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalGain"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalGain().setFromFile(directory);
+				getCalGain().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalHolography"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalHolography().setFromFile(directory);
+				getCalHolography().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalPhase"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalPhase().setFromFile(directory);
+				getCalPhase().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalPointing"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalPointing().setFromFile(directory);
+				getCalPointing().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalPointingModel"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalPointingModel().setFromFile(directory);
+				getCalPointingModel().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalPosition"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalPosition().setFromFile(directory);
+				getCalPosition().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalPrimaryBeam"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalPrimaryBeam().setFromFile(directory);
+				getCalPrimaryBeam().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalReduction"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalReduction().setFromFile(directory);
+				getCalReduction().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalSeeing"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalSeeing().setFromFile(directory);
+				getCalSeeing().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CalWVR"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCalWVR().setFromFile(directory);
+				getCalWVR().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["ConfigDescription"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getConfigDescription().setFromFile(directory);
+				getConfigDescription().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["CorrelatorMode"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getCorrelatorMode().setFromFile(directory);
+				getCorrelatorMode().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["DataDescription"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getDataDescription().setFromFile(directory);
+				getDataDescription().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["DelayModel"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getDelayModel().setFromFile(directory);
+				getDelayModel().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Doppler"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getDoppler().setFromFile(directory);
+				getDoppler().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Ephemeris"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getEphemeris().setFromFile(directory);
+				getEphemeris().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["ExecBlock"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getExecBlock().setFromFile(directory);
+				getExecBlock().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Feed"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getFeed().setFromFile(directory);
+				getFeed().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Field"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getField().setFromFile(directory);
+				getField().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Flag"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getFlag().setFromFile(directory);
+				getFlag().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["FlagCmd"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getFlagCmd().setFromFile(directory);
+				getFlagCmd().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Focus"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getFocus().setFromFile(directory);
+				getFocus().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["FocusModel"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getFocusModel().setFromFile(directory);
+				getFocusModel().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["FreqOffset"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getFreqOffset().setFromFile(directory);
+				getFreqOffset().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["GainTracking"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getGainTracking().setFromFile(directory);
+				getGainTracking().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["History"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getHistory().setFromFile(directory);
+				getHistory().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Holography"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getHolography().setFromFile(directory);
+				getHolography().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Observation"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getObservation().setFromFile(directory);
+				getObservation().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Pointing"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getPointing().setFromFile(directory);
+				getPointing().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["PointingModel"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getPointingModel().setFromFile(directory);
+				getPointingModel().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Polarization"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getPolarization().setFromFile(directory);
+				getPolarization().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Processor"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getProcessor().setFromFile(directory);
+				getProcessor().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Receiver"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getReceiver().setFromFile(directory);
+				getReceiver().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["SBSummary"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSBSummary().setFromFile(directory);
+				getSBSummary().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Scale"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getScale().setFromFile(directory);
+				getScale().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Scan"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getScan().setFromFile(directory);
+				getScan().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Seeing"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSeeing().setFromFile(directory);
+				getSeeing().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Source"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSource().setFromFile(directory);
+				getSource().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["SpectralWindow"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSpectralWindow().setFromFile(directory);
+				getSpectralWindow().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["SquareLawDetector"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSquareLawDetector().setFromFile(directory);
+				getSquareLawDetector().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["State"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getState().setFromFile(directory);
+				getState().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Station"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getStation().setFromFile(directory);
+				getStation().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Subscan"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSubscan().setFromFile(directory);
+				getSubscan().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["SwitchCycle"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSwitchCycle().setFromFile(directory);
+				getSwitchCycle().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["SysCal"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSysCal().setFromFile(directory);
+				getSysCal().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["SysPower"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getSysPower().setFromFile(directory);
+				getSysPower().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["TotalPower"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getTotalPower().setFromFile(directory);
+				getTotalPower().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["WVMCal"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getWVMCal().setFromFile(directory);
+				getWVMCal().setFromFile(directory_);
 			}
 	
 			entity = tableEntity["Weather"];
 			if (entity.getEntityId().getId().length()  != 0) {
-				getWeather().setFromFile(directory);
+				getWeather().setFromFile(directory_);
 			}
 	
 		}
@@ -4816,8 +4816,7 @@ namespace asdm {
 				
 		}
 			
-		origin = FILE;
-		this->directory = directory;			
+		origin = FILE;		
 	}
 	
 	bool ASDM::checkRowUniqueness() const { return checkRowUniqueness_; } 
