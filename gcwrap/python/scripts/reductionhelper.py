@@ -565,7 +565,10 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
                                                          antennaid_list,
                                                          interp)
         # create baseline context
-        idx = ms.msseltoindex(vis=vis,spw='%s:%s'%(spwid,blmask))
+        if blmask is None or len(blmask) == 0:
+            idx = ms.msseltoindex(vis=vis,spw='%s:0~%s'%(spwid,nchan-1))
+        else:
+            idx = ms.msseltoindex(vis=vis,spw='%s:%s'%(spwid,blmask))
         blmask_range = idx['channel'][:,1:3]
         baseline_context = {}
         baseline_context['blmask'] = blmask_range
