@@ -363,10 +363,18 @@ def reducerecord(record):
         clip_lower = ctxmc['clip_lower']
         clip_upper = ctxmc['clip_upper']
 
+        ##convert to sakura-----------------
+        # input array shape: (npol, nrow)
+        # output tuple shape: (nrow, npol)
+        thedata = _casasakura.tosakura_float(in_data)
+        themask = _casasakura.tosakura_bool(in_mask)
+        
         for ipol in pol_list:
             ##convert to sakura-----------------
-            data = _casasakura.tosakura_float(in_data[ipol])[0][0]
-            mask = _casasakura.tosakura_bool(in_mask[ipol].flatten())[0][0]
+            #data = _casasakura.tosakura_float(in_data[ipol])[0][0]
+            #mask = _casasakura.tosakura_bool(in_mask[ipol].flatten())[0][0]
+            data = thedata[0][ipol]
+            mask = themask[0][ipol]
 
             ##calibration-----------------------
             libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, 
@@ -409,9 +417,17 @@ def reducerecord(record):
             stats = libsakurapy.compute_statistics(nchan, data, mask)
 
             ##convert to casa-------------------
-            out_data[ipol] = _casasakura.tocasa_float(((data,),))
-            out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
+            #out_data[ipol] = _casasakura.tocasa_float(((data,),))
+            #out_mask[ipol] = _casasakura.tocasa_bool(((mask,),))
+            
+        ##convert to casa-------------------
+        out_data = _casasakura.tocasa_float(thedata)
+        out_mask = _casasakura.tocasa_bool(themask)
 
+        # make sure that output arrays have same shape as inputs
+        out_data = out_data.reshape(in_data.shape)
+        out_mask = out_mask.reshape(in_mask.shape)
+        
     except Exception as e:
         print '[reducerecord]--'+e.message
         raise
