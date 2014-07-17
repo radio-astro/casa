@@ -6,9 +6,9 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_setjy(vis=None, field=None, intent=None, spw=None, model=None,
-              reffile=None, pipelinemode=None, fluxdensity=None, spix=None, 
-              reffreq=None, scalebychan=None, standard=None, dryrun=None, 
-              acceptresults=None):
+              reffile=None, fluxdensity=None, spix=None, reffreq=None,
+	      scalebychan=None, standard=None, pipelinemode=None,
+	      dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
