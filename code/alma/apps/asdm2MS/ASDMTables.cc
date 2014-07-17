@@ -2885,6 +2885,20 @@ ASDM_CALFOCUS::ASDM_CALFOCUS() {
   tableDesc_.addColumn(ArrayColumnDesc<double>("peakIntensityError", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<bool>("peakIntensityWasFixed", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("astigmPlus", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("astigmPlusError", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("astigmMult", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("astigmMultError", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("illumOffset", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("illumOffsetError", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("fitRMS", "blabla"));
   		  		
 }
 
@@ -2927,6 +2941,20 @@ using namespace FocusMethodMod;
 		
 			
 using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
 			
 		
 			
@@ -3026,6 +3054,20 @@ void ASDM_CALFOCUS::fill(const ASDM& asdm) {
     ArrayColumn<double> peakIntensityError(*table_p_, "peakIntensityError");             
   		
     ScalarColumn<bool> peakIntensityWasFixed(*table_p_, "peakIntensityWasFixed");             
+  		
+    ArrayColumn<double> astigmPlus(*table_p_, "astigmPlus");             
+  		
+    ArrayColumn<double> astigmPlusError(*table_p_, "astigmPlusError");             
+  		
+    ArrayColumn<double> astigmMult(*table_p_, "astigmMult");             
+  		
+    ArrayColumn<double> astigmMultError(*table_p_, "astigmMultError");             
+  		
+    ArrayColumn<double> illumOffset(*table_p_, "illumOffset");             
+  		
+    ArrayColumn<double> illumOffsetError(*table_p_, "illumOffsetError");             
+  		
+    ArrayColumn<double> fitRMS(*table_p_, "fitRMS");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -3156,6 +3198,41 @@ void ASDM_CALFOCUS::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isPeakIntensityWasFixedExists())
 		peakIntensityWasFixed.put(rowIndex, rows.at(i)->getPeakIntensityWasFixed());
+	
+
+	
+	if (rows.at(i)->isAstigmPlusExists())
+		astigmPlus.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getAstigmPlus()));
+	
+
+	
+	if (rows.at(i)->isAstigmPlusErrorExists())
+		astigmPlusError.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getAstigmPlusError()));
+	
+
+	
+	if (rows.at(i)->isAstigmMultExists())
+		astigmMult.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getAstigmMult()));
+	
+
+	
+	if (rows.at(i)->isAstigmMultErrorExists())
+		astigmMultError.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getAstigmMultError()));
+	
+
+	
+	if (rows.at(i)->isIllumOffsetExists())
+		illumOffset.put(rowIndex, ext2CASA2D<Length,double>(rows.at(i)->getIllumOffset()));
+	
+
+	
+	if (rows.at(i)->isIllumOffsetErrorExists())
+		illumOffsetError.put(rowIndex, ext2CASA2D<Length,double>(rows.at(i)->getIllumOffsetError()));
+	
+
+	
+	if (rows.at(i)->isFitRMSExists())
+		fitRMS.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getFitRMS()));
 	
 
 		rowIndex++;		
@@ -7161,6 +7238,12 @@ ASDM_FEED::ASDM_FEED() {
   tableDesc_.addColumn(ArrayColumnDesc<double>("illumOffset", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("position", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<float>("skyCoupling", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numChan", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("skyCouplingSpectrum", "blabla"));
   		  		
 }
 
@@ -7187,6 +7270,12 @@ const TableDesc& ASDM_FEED::tableDesc() const {
 		
 			
 using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
 			
 		
 			
@@ -7234,6 +7323,12 @@ void ASDM_FEED::fill(const ASDM& asdm) {
     ArrayColumn<double> illumOffset(*table_p_, "illumOffset");             
   		
     ArrayColumn<double> position(*table_p_, "position");             
+  		
+    ScalarColumn<float> skyCoupling(*table_p_, "skyCoupling");             
+  		
+    ScalarColumn<int> numChan(*table_p_, "numChan");             
+  		
+    ArrayColumn<float> skyCouplingSpectrum(*table_p_, "skyCouplingSpectrum");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -7297,6 +7392,21 @@ void ASDM_FEED::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isPositionExists())
 		position.put(rowIndex, ext2CASA1D<Length,double>(rows.at(i)->getPosition()));
+	
+
+	
+	if (rows.at(i)->isSkyCouplingExists())
+		skyCoupling.put(rowIndex, rows.at(i)->getSkyCoupling());
+	
+
+	
+	if (rows.at(i)->isNumChanExists())
+		numChan.put(rowIndex, rows.at(i)->getNumChan());
+	
+
+	
+	if (rows.at(i)->isSkyCouplingSpectrumExists())
+		skyCouplingSpectrum.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getSkyCouplingSpectrum()));
 	
 
 		rowIndex++;		
