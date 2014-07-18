@@ -57,7 +57,7 @@ def gpcal_calc(caltable):
  
         caltableformat = 'old'
 
-    gpcal_stats = {'FIELDS': {}, 'ANTENNAS': {}, 'STATS': {}}
+    gpcal_stats = {'FIELDS': {}, 'SPWS': {}, 'ANTENNAS': {}, 'STATS': {}}
  
     tbLoc.open(caltable)
  
@@ -72,6 +72,7 @@ def gpcal_calc(caltable):
         for sIndex in xrange(len(spwIds)):
 
             spwId = spwIds[sIndex]
+            gpcal_stats['SPWS'][spwId] = spwId
 
             if spwId not in gpcal_stats['STATS'][fieldId]:
                 gpcal_stats['STATS'][fieldId][spwId] = {}
@@ -86,12 +87,18 @@ def gpcal_calc(caltable):
                     gpcal_stats['STATS'][fieldId][spwId][antId] = {}
 
                 if caltableformat == 'new':
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['chanFreq (GHz)'] = chanfreqs[spwId]/1.e9
+
                     tb1 = tbLoc.query('FIELD_ID == '+str(fieldId)+' AND SPECTRAL_WINDOW_ID == '+str(spwId)+' AND ANTENNA1 == '+str(antId))
                 else:
                     tb1 = tbLoc.query('FIELD_ID == '+str(fieldId)+' AND CAL_DESC_ID == '+str(spwids.index(spwId))+' AND ANTENNA1 == '+str(antId))
  
                 ngains = tb1.nrows()
                 if ngains == 0:
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
                     continue
 
                 if caltableformat == 'new':
@@ -113,7 +120,12 @@ def gpcal_calc(caltable):
                         phase2MAD = np.median(abs(phase2-phase2Median)) / 0.6745
                         phase2 = [kl for kl in phase2 if abs(kl-phase2Median) < 3*phase2MAD]
  
-                    if len(phase2) == 0: continue
+                    if len(phase2) == 0:
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
+                        continue
 
                 phase3 = []
                 for i in range(ngains-1):
@@ -124,15 +136,21 @@ def gpcal_calc(caltable):
                     phase3MAD = np.median(abs(phase3-phase3Median)) / 0.6745
                     phase3 = [kl for kl in phase3 if abs(kl-phase3Median) < 3*phase3MAD]
 
-                if len(phase3) == 0: continue
+                if len(phase3) == 0:
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
+                    continue
 
                 if caltableformat == 'new':
-
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['chanFreq (GHz)'] = chanfreqs[spwId]/1.e9
 
                     if len(phase1) == 2:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = np.rad2deg(np.std(phase2))
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = np.std(phase2)*(2.9979e8/(2*np.pi*chanfreqs[spwId]))
+                    else:
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
     
                     gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = np.rad2deg(np.std(phase3))
                     gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = np.std(phase3)*(2.9979e8/(2*np.pi*chanfreqs[spwId]))
@@ -141,8 +159,13 @@ def gpcal_calc(caltable):
  
                     if len(phase1) == 2:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = np.rad2deg(np.std(phase2))
+                    else:
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
+
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
     
                     gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = np.rad2deg(np.std(phase3))
+                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
 
     tb1.close()
     tbLoc.close()
@@ -156,6 +179,7 @@ def gpcal_score(gpcal_stats):
 
     gpcal_scores = {'SCORES': {'TOTAL': 1.0, 'XY_TOTAL': 1.0, 'X2X1_TOTAL': 1.0}}
     gpcal_scores['FIELDS'] = copy.deepcopy(gpcal_stats['FIELDS'])
+    gpcal_scores['SPWS'] = copy.deepcopy(gpcal_stats['SPWS'])
     gpcal_scores['ANTENNAS'] = copy.deepcopy(gpcal_stats['ANTENNAS'])
 
     # Using average sigmas for now. Eric's report lists sigmas per band / frequency.
@@ -201,7 +225,12 @@ def gpcal_score(gpcal_stats):
                         min(gpcal_scores['SCORES']['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
                     gpcal_scores['SCORES']['TOTAL'] = \
                         min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                except Exception as e:
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = 'C/C'
+                    # Don't count this in the totals since it is likely due to missing solutions because of
+                    # flagged antennas. Need to decide how to account for these cases.
 
+                try:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = \
                         (scipy.special.erf(x2x1M * gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] + x2x1B) + 1.0) / 2.0
                     gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = \
@@ -214,9 +243,8 @@ def gpcal_score(gpcal_stats):
                     gpcal_scores['SCORES']['TOTAL'] = \
                         min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
                 except Exception as e:
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = -1.0
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = -1.0
-                    # Don't count these in the totals since they are likely due to missing solutions because of
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = 'C/C'
+                    # Don't count this in the totals since it is likely due to missing solutions because of
                     # flagged antennas. Need to decide how to account for these cases.
 
     return gpcal_scores
