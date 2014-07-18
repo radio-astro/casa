@@ -275,6 +275,12 @@ class ExportData(basetask.StandardTaskTemplate):
 	# Locate and copy the pipeline processing request.
         ppr_files = self._export_pprfile (inputs.context, inputs.output_dir,
 	    inputs.products_dir, inputs.pprfile)
+	# There should normally be at most one pipeline processing request.
+        # In interactive mode there is no PPR.
+        if (ppr_files != []):
+            ppr_file = os.path.basename(ppr_files[0])
+        else:
+            ppr_file = None
 
 	# Save list of ppr files in a file.
 	#     TBD if necessary
@@ -374,8 +380,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	    ['TARGET'], inputs.targetimages, inputs.products_dir)
 
 	# Return the results object, which will be used for the weblog
-	#    There should normally be only one pipeline processing request
-	return ExportDataResults(pprequest=os.path.basename(ppr_files[0]), \
+	return ExportDataResults(pprequest=ppr_file, \
 	    sessiondict=sessiondict, \
 	    visdict=visdict,
 	    calimages=(calimages_list, calimages_fitslist),
