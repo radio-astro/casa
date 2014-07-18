@@ -50,7 +50,7 @@
 #include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBuffer2Adapter.h>
-#include <synthesis/Utilities/SpectralImageUtil.h>
+#include <imageanalysis/Utilities/SpectralImageUtil.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
 

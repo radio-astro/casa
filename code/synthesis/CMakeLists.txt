@@ -265,7 +265,6 @@ casa_add_library( synthesis
  Parallel/SerialTransport.cc
  Utilities/FixVis.cc
  Utilities/SigHandler.cc
- Utilities/SpectralImageUtil.cc
  Utilities/ThreadCoordinator.cc
  fortran/fpbmos.f	
  fortran/fpbwproj.f	
@@ -607,7 +606,6 @@ install (FILES
 	Utilities/AppRC.h
 	Utilities/FixVis.h
 	Utilities/ThreadCoordinator.h
-        Utilities/SpectralImageUtil.h
 	DESTINATION include/casacode/synthesis/Utilities
 	)
 casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )

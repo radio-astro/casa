@@ -75,6 +75,7 @@ IO/OutputDestinationChecker.cc
 IO/ProfileFitterEstimatesFileParser.cc
 
 Regions/CasacRegionManager.cc
+Utilities/SpectralImageUtil.cc
 )
 
 install (FILES
@@ -111,6 +112,10 @@ install (FILES
 	IO/RegionTextParser.h
 	DESTINATION include/casacode/imageanalysis/IO
 	)
+install (FILES
+        Utilities/SpectralImageUtil.h
+	DESTINATION include/casacode/imageanalysis/Utilities
+         )
 install (FILES
 	ImageAnalysis/AntennaResponses.h
 	ImageAnalysis/BeamManipulator.h
