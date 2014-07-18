@@ -133,6 +133,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     // Parts to be repeated at each minor cycle start....
+    
+    itsCleaner.setcontrol(CleanEnums::MULTISCALE,0,0,0);/// Needs to come before makeDirtyScales
 
     Matrix<Float> tempmask(itsMatMask);
     itsCleaner.setMask( tempmask );
@@ -155,7 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Float> tempModel;
     tempModel.reference( itsMatModel );
 
-    cout << "SDALMS,  matrix shape : " << tempModel.shape() << " array shape : " << itsMatModel.shape() << endl;
+    //cout << "SDALMS,  matrix shape : " << tempModel.shape() << " array shape : " << itsMatModel.shape() << endl;
 
     // retval
     //  1 = converged
