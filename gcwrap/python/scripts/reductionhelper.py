@@ -351,10 +351,7 @@ def reducerecord(record):
         facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
         #mask--------------------
         mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
-        mask_bl_ = numpy.zeros(nchan, dtype=bool)
-        for r0, r1 in ctxbl['blmask']:
-            mask_bl_[r0:r1+1] = True
-        mask_bl = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, mask_bl_.tolist())
+        mask_bl = ctxbl['blmask']
         
         channel_id = ctxmc['channel_id']
         edge_lower = ctxmc['edge_lower']
@@ -570,8 +567,12 @@ def initcontext(vis, spw, antenna, gaintable, interp, spwmap,
         else:
             idx = ms.msseltoindex(vis=vis,spw='%s:%s'%(spwid,blmask))
         blmask_range = idx['channel'][:,1:3]
+        mask_bl_ = numpy.zeros(nchan, dtype=bool)
+        for r0, r1 in blmask_range:
+            mask_bl_[r0:r1+1] = True
+        mask_bl = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, mask_bl_.tolist())
         baseline_context = {}
-        baseline_context['blmask'] = blmask_range
+        baseline_context['blmask'] = mask_bl
         baseline_context['clip_threshold'] = clipthresh
         baseline_context['num_fitting_max'] = clipniter
         baseline_type = sakura_typemap(BASELINE_TYPEMAP, blfunc)
