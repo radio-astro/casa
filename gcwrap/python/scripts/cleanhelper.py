@@ -979,8 +979,13 @@ class cleanhelper:
         ia.calc('iif("'+outputmask+'"!=0.0,1.0,0.0)')
         ia.close()
         
-        ## CAS-5221
-        self.setReferenceFrameLSRK( outputmask )
+        ## CAS-5221 
+        #### CAS-6676 : Force frame to LSRK only if it's a fresh image being made.
+        ####                  If residual exists, then it's likely to not be in LSRK, so don't force the mask to be it.
+        ####                  The call to setFrameConversionForMasks() from task_clean.py would have set the
+        ####                  mask frame to match the ouput frame in the previous run.
+        if not os.path.exists(imagename+'.residual'):
+            self.setReferenceFrameLSRK( outputmask )
         #Done with making masks
 
 
