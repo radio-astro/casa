@@ -178,7 +178,7 @@ def format_datetime(dt):
     Return a formatted string representation for the given datetime
     '''
     # Ignore microseconds
-    return dt.strftime('%d/%m/%Y %H:%M:%S')
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
 
 def format_timedelta(td, dp=0):
     '''
