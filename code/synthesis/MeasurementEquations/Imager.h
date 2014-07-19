@@ -509,9 +509,13 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const String& model,
 	     const Vector<Double>& fluxDensity, const String& standard, 
-	     const Bool chanDep=False, const Double spix=0.0,
+	     const Bool chanDep=False, //const Double spix=0.0,
+             const Vector<Double>& spix=Vector<Double>(),
              const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
                                                   MFrequency::LSRK),
+             const Vector<Double>& pipars=Vector<Double>(),
+             const Vector<Double>& papars=Vector<Double>(),
+             const Double& rotMeas=0.0, 
              const String& timerange="", const String& scanstr="",
              const String& intentstr="", const String& obsidstr="",
              const String& interpolation="nearest");
@@ -841,7 +845,12 @@ protected:
                              const Vector<Vector<MFrequency> >& mfreqs,
                              const String& fieldName,
                              const MDirection& fieldDir,
-                             const Double spix,
+                             //const Double spix,
+                             const Vector<Double>& spix,
+                             const Vector<Double>& pipars,
+                             const Vector<Double>& papars,
+                             const Double& rotMeas,
+                             const Vector<Double>& cppars, // circular pol degree (m_c)
                              const MFrequency& reffreq,
                              const MEpoch& aveEpoch,
                              const Int fldId);
@@ -859,7 +868,9 @@ protected:
                                   const String& fieldName,
                                   const MDirection& fieldDir, const Unit& freqUnit,
                                   const Vector<Double>& fluxdens,
-                                  const Bool precompute, const Double spix,
+                                  const Bool precompute, 
+                                  //const Double spix,
+                                  const Vector<Double>& spix,
                                   const MFrequency& reffreq, 
 				  const MEpoch& aveEpoch, const Int fieldId);
   // Returns True or throws up.
@@ -871,6 +882,15 @@ protected:
   Bool sjy_setRadiusLimit(TempImage<Float>* tmodimage,
                           PagedImage<Float>& modimage, const String& model,
                           DirectionCoordinate& dircsys);
+
+  Bool sjy_calciflux(const Vector<MFrequency>& freqs, const MFrequency& reffreq, 
+                     const Double refflux, const Vector<Double>& vspix, Vector<Double>& iflux);
+
+  Bool sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& papars,
+                      const Vector<Double>& iflux, const Double rotMeas,
+                      const Vector<MFrequency>& freqs, 
+                      const MFrequency& reffreq, Vector<Double>& qflux,
+                      Vector<Double>& uflux);
 
   String imageName();
 

@@ -10,9 +10,8 @@ import pdb
 def setjy(vis=None, field=None, spw=None,
           selectdata=None, timerange=None, scan=None, intent=None, observation=None,
           scalebychan=None, standard=None, model=None, modimage=None, 
-          listmodels=None, fluxdensity=None, spix=None, reffreq=None, fluxdict=None, 
-        #  commented out until polarization fraction/angle handling in place
-        #  polindex=None, polangle=None, rm=None,
+          listmodels=None, fluxdensity=None, spix=None, reffreq=None, polindex=None,
+          polangle=None, rm=None, fluxdict=None, 
           useephemdir=None, interpolation=None, usescratch=None):
     """Fills the model column for flux density calibrators."""
 
@@ -29,9 +28,9 @@ def setjy(vis=None, field=None, spw=None,
     else:
         retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, intent, observation, scalebychan, standard, model, 
-                        modimage, listmodels, fluxdensity, spix, reffreq, fluxdict, 
-                        # polindex, polangle, rm, 
-                         useephemdir, interpolation, usescratch)
+                        modimage, listmodels, fluxdensity, spix, reffreq,
+                        polindex, polangle, rm,fluxdict, 
+                        useephemdir, interpolation, usescratch)
 
     #pdb.set_trace()
     return retval
@@ -40,9 +39,8 @@ def setjy(vis=None, field=None, spw=None,
 def setjy_core(vis=None, field=None, spw=None,
                selectdata=None, timerange=None, scan=None, intent=None, observation=None,
                scalebychan=None, standard=None, model=None, modimage=None, listmodels=None,
-               fluxdensity=None, spix=None, reffreq=None, fluxdict=None,
-                # polarization handling...
-                # polindex=None, polangle=None, rm=None,
+               fluxdensity=None, spix=None, reffreq=None,
+               polindex=None, polangle=None, rm=None, fluxdict=None,
                useephemdir=None, interpolation=None, usescratch=None):
     """Fills the model column for flux density calibrators."""
 
@@ -192,6 +190,12 @@ def setjy_core(vis=None, field=None, spw=None,
                 # Need to branch out the process for fluxscale since the input dictionary may 
                 # contains multiple fields. Since fluxdensity parameter is just a vector contains 
                 # IQUV flux densities and so need to run im.setjy per field 
+
+                #pol stuff (not yet exposed...)
+                #polindex=[0.0]
+                #polangle=[0.0]
+                #rotmeas=0.0
+
                 if standard=="fluxscale": 
                     instandard="Perley-Butler 2010"
                     # function to return selected field, spw, etc
@@ -201,7 +205,8 @@ def setjy_core(vis=None, field=None, spw=None,
                     if len(fieldidused):
                         retval={}
                         for selfld in fieldidused:
-                            selspix=fluxdict[selfld]["spidx"][1]  # setjy only support alpha for now
+                            #selspix=fluxdict[selfld]["spidx"][1]  # setjy only support alpha for now
+                            selspix=fluxdict[selfld]["spidx"][1:]  # omit c0 (=log(So))
                             # set all (even if fluxdensity = -1
                             if spw=='':
                                 selspw = [] 
@@ -230,8 +235,11 @@ def setjy_core(vis=None, field=None, spw=None,
                             casalog.post("Use fluxdensity=%s, reffreq=%s, spix=%s" %
                                      (selfluxd,selreffreq,selspix)) 
                             curretval=myim.setjy(field=selfld,spw=selspw,modimage=modimage,
+                                                 # enable spix in list
                                                  fluxdensity=selfluxd, spix=selspix, reffreq=selreffreq, 
+                                                 #fluxdensity=selfluxd, spix=[selspix], reffreq=selreffreq, 
                                                  standard=instandard, scalebychan=scalebychan,
+                                                 polindex=polindex, polangle=polangle, rotmeas=rm,
                                                  time=timerange, observation=str(observation), scan=scan, 
                                                  intent=intent, interpolation=interpolation)
                             retval.update(curretval)
@@ -254,6 +262,7 @@ def setjy_core(vis=None, field=None, spw=None,
                     # need to modify imager to accept double array for spix
                     retval=myim.setjy(field=field, spw=spw, modimage=modimage, fluxdensity=influxdensity, 
                                       spix=spix, reffreq=reffreq, standard=instandard, scalebychan=scalebychan, 
+                                      polindex=polindex, polangle=polangle, rotmeas=rm,
                                       time=timerange, observation=str(observation), scan=scan, intent=intent, 
                                       interpolation=interpolation)
 
