@@ -4666,7 +4666,10 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const String& model,
                    const Vector<Double>& fluxDensity, 
                    const String& standard, const Bool chanDep,
-                   const Double spix, const MFrequency& reffreq,
+                   //const Double spix, const MFrequency& reffreq,
+                   const Vector<Double>& spix, const MFrequency& reffreq,
+                   const Vector<Double>& pipars,const Vector<Double>& papars, 
+                   const Double& rotMeas,
                    const String& timerange, const String& scanstr,
                    const String& intentstr, const String& obsidstr,
                    const String& interpolation)
@@ -4762,8 +4765,8 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
     }
 
     os << LogIO::NORMAL;
-    if(precompute || spix != 0.0)
-      os << "Using " << ((chanDep || (!precompute && spix != 0.0)) ? "channel" : 
+    if(precompute || spix[0] != 0.0)
+      os << "Using " << ((chanDep || (!precompute && spix[0] != 0.0)) ? "channel" : 
                          "spw") << " dependent flux densities";
     else
       os << "The applied flux density does not depend on frequency.";
@@ -4931,8 +4934,11 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
       }
       else if (!precompute) {
         // do it in sjy_makeComponentList()
+        // TODO: add polindex, polangle, rm handling
+        // for now ignore circular polarization
+        Vector<Double> cppars(1,0.0);
         sjy_makeComponentList(os, tempCLs, returnFluxes, fluxUsed[0], selToRawSpwIds, mfreqs, fieldName, fieldDir, 
-                            spix, reffreq, aveEpoch, fldid);
+                            spix, pipars, papars, rotMeas, cppars, reffreq, aveEpoch, fldid);
       }
       /*** moved to sjy_makeComponentList()
       // make componentlist using flux densities from the user specfied fluxdensity(per-spw) 
@@ -5033,6 +5039,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
         Record subrec;
         //store fluxd actually used to scale (not input fluxdensity)
         Vector<Double> finalFluxUsed;
+        // Flux of first chan
         returnFluxes[selspw][0].value(finalFluxUsed);
         subrec.define("fluxd",finalFluxUsed);
         // TODO: add fluxd error when the flux density uncertainties 
@@ -5096,7 +5103,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
     //retval.define("format","{field name: {spw Id: {fluxd: [I,Q,U,V] in Jy}}}");
     retval.define("format","{field Id: {spw Id: {fluxd: [I,Q,U,V] in Jy}, 'fieldName':field name }}");
 
-    if(!precompute && spix != 0.0 && reffreq.getValue().getValue() > 0.0){
+    if(!precompute && spix[0] != 0.0 && reffreq.getValue().getValue() > 0.0){
       os << LogIO::NORMAL
          << "Flux density as a function of frequency (channel 0 of each spw):\n"
          << "  Frequency (GHz)    Flux Density (Jy, Stokes I)"
@@ -5311,13 +5318,11 @@ Bool Imager::sjy_concatComponentLists(LogIO& os, const Vector<String>& tempCLs, 
         String::size_type epos=tempCLs[icl].find_first_of("_",spos);
         String clab = tempCLs[icl].substr(spos,epos-spos);
         Path clname(tempCLs[icl]);
-        cerr<<"spos="<<spos<<" epos="<<epos<<endl;
-        cerr<<"clab="<<clab;
-        os <<" tempCLs["<<icl<<"]="<<tempCLs[icl]<<LogIO::POST;
+        os <<LogIO::DEBUG1 << " tempCLs["<<icl<<"]="<<tempCLs[icl]<<LogIO::POST;
         ComponentList tempcl(clname, true);
         Vector<Int> which(1,0);
         tempcl.setLabel(which,clab);
-        os <<"adding "<<tempCLs[icl]<<" to "<<outTempCL<<LogIO::POST;
+        os << LogIO::DEBUG1 << "adding "<<tempCLs[icl]<<" to "<<outTempCL<<LogIO::POST;
         concatCL.addList(tempcl);
       }
     }  
@@ -5491,15 +5496,31 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
                               const Vector<Vector<MFrequency> >& mfreqs,
                               const String& fieldName,
                               const MDirection& fieldDir, 
-                              const Double spix,
+                              //const Double spix,
+                              const Vector<Double>& spix,
+                              const Vector<Double>& pipars,
+                              const Vector<Double>& papars,
+                              const Double& rotMeas,
+                              const Vector<Double>& cppars, // circular pol degree (m_c)
                               const MFrequency& reffreq,
                               const MEpoch& mtime,
                               const Int fldid)
 {
+
   for(uInt selspw = 0; selspw < selToRawSpwIds.nelements(); ++selspw){
     // fluxUsed was supplied by the user instead of FluxStandard, so
     // make a component list for it now, for use in ft.
 
+    // if spix is a float/double and q,u fluxes not set or pipars and papars not
+    // set => SpectralIndex 
+    // if spix is a float/double and q,u fluxes is set but not pipars and papers
+    // => spectralindex
+    // if spix is a float/double and q,u fluxes and pipars and papars are set
+    // => tabular
+    // if spix is a vector but qu fluxes nor pipars and papers are not set 
+    // => tabular
+    // if spix is a vector => tabular form
+    //
     // Set the component flux density
     Flux<Double> fluxval;
     Flux<Double> fluxerr;
@@ -5508,7 +5529,25 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
     // with the specified flux density
     // - obviously this does not correct for solar objects...
     PointShape point(fieldDir);
+
+    Bool useTabularFlux(false);
+    //check if to use tabular form or SpectralIndex model
+    if ( spix.nelements() > 1 ) {
+      useTabularFlux=true; 
+    }
+    else {
+      //if (pipars.nelements() > 1 || papars.nelements() > 1 || rotMeas != 0.0) {
+      if (pipars.nelements() > 1 || papars.nelements() > 1 ) {
+        useTabularFlux=true;
+      }
+    }
     SpectralIndex siModel;
+    //Vector<Double> iflux;
+    //Vector<Double> qflux;
+    //Vector<Double> uflux;
+    Vector<Flux<Double> > fluxvalvec; 
+    Bool gotQUFlux(false);
+    // 
     if(reffreq.getValue().getValue() > 0.0){
       //original code uses first time of the data but shouldn't be using the same time as for
       //FluxStandard::makeComponentList?
@@ -5516,36 +5555,124 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
       MeasFrame mFrame(mtime, mLocation_p, fieldDir);
       MFrequency::Convert cvt(mfreqs[selspw][0].getRef(), MFrequency::Ref(MFrequency::castType(reffreq.getRef().getType()), mFrame));
       siModel.setRefFrequency(reffreq);
-      siModel.setIndex(spix);
-      returnFluxes[selspw][0].setValue(fluxUsed[0] * siModel.sample(cvt(mfreqs[selspw][0])));
+      // if spix is not array of double,do this otherwise need to set flux densities by tabular... 
+      //
+      Int nchn = mfreqs[selspw].nelements(); 
+      fluxvalvec.resize(nchn);
+      Vector<Double> iflux(nchn);
+      Vector<Double> qflux(nchn);
+      Vector<Double> uflux(nchn);
+      Vector<Double> vflux(nchn,0.0);
+
+      if (spix.nelements()==1) {
+        //siModel.setIndex(spix[0]);
+        Vector<Double> stokesindex(4);
+        stokesindex[0]=spix[0];
+        stokesindex[1]=0.0;
+        stokesindex[2]=rotMeas!=0.0? rotMeas: 0.0;
+        stokesindex[3]=0.0;
+        siModel.setStokesIndex(stokesindex);
+        // still use iflux if q,u flux=0 but polindex and polangle is set
+        for (uInt ichn = 0; ichn < nchn; ichn++) { 
+          iflux[ichn] = fluxUsed[0] * siModel.sample(cvt(mfreqs[selspw][ichn]));
+        }
+      }
+      else {
+      // tabular case   
+        sjy_calciflux(mfreqs[selspw],reffreq,fluxUsed[0],spix,iflux);
+      }
+      // linear pol
+      Vector<Double> inpipars;
+      Vector<Double> inpapars;
+      if ( pipars.nelements() > 0 || papars.nelements() > 0 ) {
+        inpipars.resize(pipars.nelements());
+        inpipars=pipars;
+        inpapars.resize(papars.nelements());
+        inpapars=papars;
+      }
+
+      if (fluxUsed[1] != 0.0 && fluxUsed[2] != 0.0) {
+        // if Q U flux densities are given use that as 0th coefficient
+        Double pi0 = sqrt(fluxUsed[1] * fluxUsed[1] + fluxUsed[2] * fluxUsed[2]) / fluxUsed[0];
+        Double pa0 = 0.5 * atan2(fluxUsed[2],fluxUsed[1]);
+        os<<LogIO::DEBUG1<<"Polindex c0="<<pi0<<", polangle c0="<<pa0
+          <<" determined from input flux densities are used"<<LogIO::POST;
+        if ( pipars.nelements() == 0 || papars.nelements() == 0 ) {
+          inpipars.resize(1);
+          inpapars.resize(1);
+        }
+        inpipars[0] = pi0;
+        inpapars[0] = pa0;
+      }
+      //if (useTabularFlux) { 
+      if (inpipars.nelements()!=0 && inpapars.nelements()!=0) { 
+      //  cerr<<"running sjy_calcquflux...."<<endl;
+      //     - returns qflux and uflux
+        gotQUFlux = sjy_calcquflux(inpipars, inpapars, iflux, rotMeas, mfreqs[selspw], reffreq, qflux, uflux);
+      } 
+        /***
+        if ( !useTabularFlux ) {
+          Vector<Double> stokesIndex(4);
+          stokesIndex[0] = index[0];
+          //need to translate polindex ...etc to stokesIndex[1,2] 
+          siModel.setStokesIndex(spix);
+        }
+        ***/ 
+      for (uInt ichn=0; ichn < iflux.nelements(); ichn++) {
+        if (!gotQUFlux) {
+          qflux[ichn] = 0.0; 
+          uflux[ichn] = 0.0;
+        } 
+        Flux<Double> iquvflux(iflux[ichn],qflux[ichn],uflux[ichn],vflux[ichn]);
+        fluxvalvec[ichn] = iquvflux; 
+      }
+      returnFluxes[selspw][0]=fluxvalvec[0];
     }
     else{
-      if(spix != 0.0){            // If not the default, complain and quit.
+      if(spix[0] != 0.0){            // If not the default, complain and quit.
         os << LogIO::SEVERE
            << "spix cannot be nonzero with reffreq = 0!"
            << LogIO::POST;
            //return false;
       }
       siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
-            siModel.setIndex(0.0);
-   }
-
-   // No worries about varying fluxes or sizes here, so any time will do.
-   tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
-                                                     mfreqs[selspw][0],
-                                                     mtime, fluxval, point,
-                                                     siModel,
-   // jagonzal (CAS-4109): Specify table name to avoid clashing between different CASA engines when running vs a MMS
+      siModel.setIndex(0.0);
+    }
+    // TODO: call tabular form method for full pol specification....
+    //
+    // No worries about varying fluxes or sizes here, so any time will do.
+    if ( useTabularFlux ) {
+      tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
+                                                     mfreqs[selspw],
+                                                     mtime, fluxvalvec, point,
                                                      ms_p->tableName() +
                                                      "_setjy_spw" +
                                                      String::toString(selspw) +
                                                      "_");
+    }
+    else {
+    //if simodel is set use this 
+      //cerr<<"NON-Tabular makeComponentList..."<<endl;
+      if (fluxval.value(1) ==0.0 && fluxval.value(2) == 0.0 && gotQUFlux) {
+        fluxval=fluxvalvec[0]; 
+      }   
+      tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
+                                                     mfreqs[selspw][0],
+                                                     mtime, fluxval, point,
+                                                     siModel,
+    // jagonzal (CAS-4109): Specify table name to avoid clashing between different CASA engines when running vs a MMS
+                                                     ms_p->tableName() +
+                                                     "_setjy_spw" +
+                                                     String::toString(selspw) +
+                                                     "_");
+    }
   }
 }
 
 // modified the input model image by regridding, scaling with a flux standard
 TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
-                                        Vector<Double>& fluxUsed, Vector<Double>& freqsOfScale, Vector<Double>& freqscale, const String& model,
+                                        Vector<Double>& fluxUsed, Vector<Double>& freqsOfScale, 
+                                        Vector<Double>& freqscale, const String& model,
                                         const ROMSSpWindowColumns& spwcols,
                                         //const Int rawspwid, const Bool chanDep,
                                         const Vector<Int> rawspwids, const Bool chanDep,
@@ -5555,7 +5682,9 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
                                         const MDirection& fieldDir,
                                         const Unit& freqUnit,
                                         const Vector<Double>& fluxdens,
-                                        const Bool precompute, const Double spix,
+                                        const Bool precompute, 
+                                        //const Double spix,
+                                        const Vector<Double>& spix,
                                         const MFrequency& reffreq,
 					const MEpoch& aveEpoch,
 					const Int fieldId)
@@ -5608,7 +5737,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   Matrix<Double> fluxUsedPerChan; // 4 rows nchan col ...will resize when needed
 
   // Set fluxUsedPerChan to the flux densities for each chan.
-  if(chanDep || (spix != 0.0 && fluxdens[0] != 0.0)){
+  if(chanDep || (spix[0] != 0.0 && fluxdens[0] != 0.0)){
     IPosition whichChan(1, 0);
     Flux<Double> returnFlux;
     Flux<Double> returnFluxErr;
@@ -5629,13 +5758,25 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
         returnFlux.value(fluxUsed);
       }
       else{
+        // spix: index = c0 + c1*log(f/fo) + c2*log(f/fo)^2+ ... 
+        //             = log(So) + alpha*log(f/fo) + curv1*log(f/f0)^2 ....
+        uInt order = spix.nelements();
+        Polynomial<Double> spixfunc(order);
+        Vector<Double> coeffs(order+1);
+        coeffs[0] = log10(fluxdens[0]); 
+        for (uInt ispix = 1; ispix < order+1; ispix++) {
+          coeffs[ispix] = spix[ispix-1];
+        }
+        spixfunc.setCoefficients(coeffs);
+
         //Double freq = spwcols.chanFreqMeas()(rawspwid)(whichChan).get(ghz).getValue();
         Double freq = spwcols.chanFreqMeas()(rawspwids(0))(whichChan).get(ghz).getValue();
         //Double specfac = pow(freq / reffreqInGHz, spix);
         // TT mod-06/11/14
         // freqArray may or may not be exactly match with data chan frequencies
         // so probably make sense to use  freqArray instead 
-        Double specfac = pow((freqArray[k]/1.e+09) / reffreqInGHz, spix);
+        //Double specfac = pow((freqArray[k]/1.e+09) / reffreqInGHz, spix);
+        Double specfac = pow((freqArray[k]/1.e+09) / reffreqInGHz, spixfunc(freqArray[k]));
         
         for(uInt stokes = 0; stokes < 4; ++stokes)
           fluxUsed[stokes] = fluxdens[stokes] * specfac;
@@ -5887,6 +6028,85 @@ Bool Imager::sjy_setRadiusLimit(TempImage<Float>* tmodimage,
   }
   return True;
 }
+
+Bool Imager::sjy_calciflux(const Vector<MFrequency>& freqs, const MFrequency& reffreq, 
+                           const Double refflux, const Vector<Double>& vspix, Vector<Double>& iflux)
+{
+  try {
+    // assume polynomical is log(S) = c0 + alpha*log(f/fo) + curv1*log(f/fo)^2+
+    // vspix should contains [alpha, curv1, etc..] and c0 is calculated from refflux 
+    uInt porder = vspix.nelements();
+    Polynomial<Double> lf(porder);
+    Vector<Double> coeffs(porder+1);
+    coeffs[0] = log10(refflux);
+    for (uInt i = 1; i < vspix.nelements()+1; i++ ) {
+      coeffs[i] = vspix[i-1];
+    }
+    lf.setCoefficients(coeffs);
+    Int nf = freqs.nelements();
+    iflux.resize(nf);
+    Unit frequnit("GHz");
+    Double reffreqval = reffreq.get(frequnit).getValue();
+    for (uInt cfidx = 0; cfidx < (uInt)nf; cfidx++) {
+      iflux[cfidx] = pow(10.0,lf(log10(freqs[cfidx].get(frequnit).getValue()/reffreqval))); 
+    }
+  }
+  catch (...) {
+    return False;
+  } 
+  return True; 
+}
+
+Bool Imager::sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& papars,
+                            const Vector<Double>& iflux, const Double rotMeas,
+                            const Vector<MFrequency>& freqs, 
+                            const MFrequency& reffreq, Vector<Double>& qflux,
+                            Vector<Double>& uflux)
+{
+
+  try {
+    Int nf = freqs.nelements();
+    //polindex
+    // of the form, pi_o + c1*(f-fo)/fo + c2*(f-fo)/fo
+    Polynomial<Double> pipoly(pipars.nelements());
+    pipoly.setCoefficients(pipars);
+    //pangle
+    Polynomial<Double> papoly(papars.nelements());
+    papoly.setCoefficients(papars);
+    qflux.resize(nf);
+    uflux.resize(nf);
+    Unit ghz("GHz"); 
+    Double f0 = reffreq.get(ghz).getValue();
+
+    for (uInt cfidx = 0; cfidx < (uInt)nf; cfidx++) {
+      Double f = freqs[cfidx].get(ghz).getValue();
+      Double ipi = pipoly((f-f0)/f0);
+      Double ipa = papoly((f-f0)/f0);
+      Double iiflux = iflux[cfidx];
+      Double qfluxval = ipi * iiflux/sqrt(1.0 + tan(2.0*ipa) * tan(2.0*ipa));
+      Double ufluxval = sqrt(ipi * ipi * iiflux * iiflux - qfluxval * qfluxval);
+      //debug
+      //if (cfidx<3) cerr<<"sjy_calcquflux:: poli="<<ipi<<" pola="<<ipa<<endl;
+      if (rotMeas!=0.0 ) {
+        //Double rotangle = rotMeas * C::c * C::c * (f0*f0-f*f)/ (f*f*f0*f0);
+        Double rotangle = rotMeas * C::c * C::c * (f0*f0-f*f)/ (f*f*f0*f0);
+        //if (cfidx<3) cerr<<"rotangle="<<rotangle<<endl;
+        qflux[cfidx] = qfluxval*cos(2*rotangle) - ufluxval*sin(2*rotangle);
+        uflux[cfidx] = qfluxval*sin(2*rotangle) + ufluxval*cos(2*rotangle); 
+      }
+      else { 
+        qflux[cfidx] = qfluxval; 
+        uflux[cfidx] = ufluxval; 
+      }
+      //cerr<<"uflux/qfluxi["<<cfidx<<"]="<<uflux[cfidx]/qflux[cfidx]<<endl;
+    }
+  }
+  catch (...) {
+    return False;
+  }
+  return True;
+}
+
 
 Bool Imager::clone(const String& imageName, const String& newImageName)
 {
