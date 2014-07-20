@@ -700,6 +700,7 @@ else()
        stdcasa
        synthesis
        asdmstman
+       msvis
        )
 endif()
 
