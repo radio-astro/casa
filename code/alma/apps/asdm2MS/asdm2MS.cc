@@ -2472,11 +2472,21 @@ void fillMainLazily(const string& dsName,
       }
 
       vector<unsigned int> numberOfChannels_v;
-      vector<unsigned int> numberOfPolarizations_v;
+      // vector<unsigned int> numberOfPolarizations_v;
+      vector<unsigned int> numberOfSDPolarizations_v;
+      vector<unsigned int> numberOfCrossPolarizations_v;
       BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
 	BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
 	  numberOfChannels_v.push_back(spw.numSpectralPoint());
-	  numberOfPolarizations_v.push_back(spw.sdPolProducts().size());
+	  if (correlationMode != AUTO_ONLY)
+	    numberOfCrossPolarizations_v.push_back(spw.crossPolProducts().size());
+	  else
+	    numberOfCrossPolarizations_v.push_back(0);
+
+	  if (correlationMode != CROSS_ONLY)
+	    numberOfSDPolarizations_v.push_back(spw.sdPolProducts().size());
+	  else
+	    numberOfSDPolarizations_v.push_back(0);
 	}
       }
       if (debug) {
@@ -2485,8 +2495,10 @@ void fillMainLazily(const string& dsName,
 	v2oss(numberOfChannels_v, oss, "{", "}", ", "); 
 	LOG(oss.str());
 	oss.str("");
-	oss << "numbers of Polarizations : ";
-	v2oss(numberOfPolarizations_v, oss, "{", "}", ", "); 
+	oss << "numbers of SD Polarizations : ";
+	v2oss(numberOfSDPolarizations_v, oss, "{", "}", ", "); 
+	oss << "numbers of Cross Polarizations : ";
+	v2oss(numberOfCrossPolarizations_v, oss, "{", "}", ", "); 
 	LOG(oss.str());
       }
 
@@ -2509,7 +2521,6 @@ void fillMainLazily(const string& dsName,
 	}
       }
       
-
       // The auto data scale factors are fake.
       if (correlationMode != CROSS_ONLY) {
 	for (unsigned int i = 0; i < numberOfSpectralWindows; i++)
@@ -2525,9 +2536,14 @@ void fillMainLazily(const string& dsName,
       // 
       // The number of values between to consecutive baselines, stepBl, is :
       //
-      unsigned int stepBl = 0;
-      for (unsigned int i = 0; i < numberOfSpectralWindows; i++)
-	stepBl += numberOfChannels_v[i]*numberOfPolarizations_v[i];
+      unsigned int	stepSDBl     = 0;
+      unsigned int	stepCrossBl  = 0;
+      unsigned int	stepBl	     = 0;
+      for (unsigned int i = 0; i < numberOfSpectralWindows; i++) {
+	//stepBl			    += numberOfChannels_v[i]*numberOfPolarizations_v[i];
+	stepSDBl		    += numberOfChannels_v[i]*numberOfSDPolarizations_v[i];
+	stepCrossBl		    += numberOfChannels_v[i]*numberOfCrossPolarizations_v[i];
+      }
 
       if (debug) {
 	oss.str("");
@@ -2537,15 +2553,29 @@ void fillMainLazily(const string& dsName,
 
       //
       // The offsets to the beginning of the i-th spectral window, spwOffset_v, is:
-      std::vector<uint32_t> spwOffset_v(numberOfSpectralWindows);
-      spwOffset_v[0] = 0;
-      for (uint32_t i = 1; i < numberOfSpectralWindows; i++)
-	spwOffset_v[i] = spwOffset_v[i-1] + numberOfChannels_v[i-1] * numberOfPolarizations_v[i-1];
+      //std::vector<uint32_t>	spwOffset_v(numberOfSpectralWindows);
+      std::vector<uint32_t>	spwSDOffset_v(numberOfSpectralWindows);
+      std::vector<uint32_t>	spwCrossOffset_v(numberOfSpectralWindows);
+      //spwOffset_v[0]      = 0;
+      spwSDOffset_v[0]	  = 0;
+      spwCrossOffset_v[0] = 0;
+
+      for (uint32_t i = 1; i < numberOfSpectralWindows; i++) {
+	//spwOffset_v[i] = spwOffset_v[i-1] + numberOfChannels_v[i-1] * numberOfPolarizations_v[i-1];
+	spwSDOffset_v[i] = spwSDOffset_v[i-1] +
+	  numberOfChannels_v[i-1] * numberOfSDPolarizations_v[i-1];
+	spwCrossOffset_v[i] = spwCrossOffset_v[i-1] +
+	  numberOfChannels_v[i-1] * numberOfCrossPolarizations_v[i-1];
+      }
 
       if (debug) {
 	oss.str("");
-	oss << "spwOffset_v : " ;
-	v2oss(spwOffset_v, oss, "{", "}", ", "); 
+	//oss << "spwOffset_v : " ;
+	//v2oss(spwOffset_v, oss, "{", "}", ", "); 
+	oss << "spwSDOffset_v : " ;
+	v2oss(spwSDOffset_v, oss, "{", "}", ", ");
+	oss << "spwCrossOffset_v : " ;
+	v2oss(spwCrossOffset_v, oss, "{", "}", ", "); 
 	LOG(oss.str());
       }
 
@@ -2587,7 +2617,7 @@ void fillMainLazily(const string& dsName,
 	  // Prepare a pair<int, int> to transport the shape of some cells
 	  //
 	  pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
-							numberOfPolarizations_v[iDD]);
+							numberOfSDPolarizations_v[iDD]);
 
 	  //
 	  // Compute weight and sigma which depend on the data description id and on the interval
@@ -2619,12 +2649,12 @@ void fillMainLazily(const string& dsName,
 					      numberOfAntennas,
 					      numberOfSpectralWindows,
 					      numberOfChannels_v[iDD],
-					      numberOfPolarizations_v[iDD],
-					      stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
+					      numberOfSDPolarizations_v[iDD],
+					      stepSDBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
 					      iDD, // this will be used as an index in the seq of windows in the BDFs
 					      autoScaleFactors,
-					      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * stepBl * sizeof(AUTODATATYPE),
-					      spwOffset_v[iDD]);
+					      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * stepSDBl * sizeof(AUTODATATYPE),
+					      spwSDOffset_v[iDD]);
 	    //	      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * numberOfSpectralWindows * numberOfChannels * numberOfPolarizations * sizeof(AUTODATATYPE));
 	  }
 	}
@@ -2745,7 +2775,7 @@ void fillMainLazily(const string& dsName,
 	      // Prepare a pair<int, int> to transport the shape of some cells
 	      //
 	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
-							    numberOfPolarizations_v[iDD]);
+							    numberOfCrossPolarizations_v[iDD]);
 	      //
 	      // Compute weight and sigma which depend on interval and iDD.
 	      //
@@ -2780,12 +2810,12 @@ void fillMainLazily(const string& dsName,
 						  numberOfBaselines,
 						  numberOfSpectralWindows,
 						  numberOfChannels_v[iDD],
-						  numberOfPolarizations_v[iDD],
-						  stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
+						  numberOfCrossPolarizations_v[iDD],
+						  stepCrossBl, //numberOfSpectralWindows * numberOfChannels * numberOfCrossPolarizations,
 						  iDD, // this will be used as an index in the seq of windows in the BDFs
 						  crossScaleFactors,
 						  sdmDataSubset.crossDataPosition(),
-						  spwOffset_v[iDD],
+						  spwCrossOffset_v[iDD],
 						  sdmDataSubset.crossDataType());
 	    }
 	  }
@@ -2800,7 +2830,7 @@ void fillMainLazily(const string& dsName,
 	      // Prepare a pair<int, int> to transport the shape of some cells
 	      //
 	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
-							    numberOfPolarizations_v[iDD]);
+							    numberOfSDPolarizations_v[iDD]);
 
 	      //
 	      // Compute weight and sigma which depend on interval and iDD.
@@ -2833,12 +2863,12 @@ void fillMainLazily(const string& dsName,
 						 numberOfAntennas,
 						 numberOfSpectralWindows,
 						 numberOfChannels_v[iDD],
-						 numberOfPolarizations_v[iDD],
-						 stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
+						 numberOfSDPolarizations_v[iDD],
+						 stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfSDPolarizations,
 						 iDD,
 						 autoScaleFactors,
 						 sdmDataSubset.autoDataPosition(),
-						 spwOffset_v[iDD]);
+						 spwSDOffset_v[iDD]);
 	    }	      
 	  }
 	}
@@ -2846,7 +2876,7 @@ void fillMainLazily(const string& dsName,
 
 	//
 	// It's now time to populate the columns of the MAIN table but the DATA's one.
-	// This done with data descriptions varying the more slowly.
+	// This is done with data descriptions varying the more slowly.
 	//
 	for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
 	  if ( correlationMode == CROSS_AND_AUTO || correlationMode == AUTO_ONLY )

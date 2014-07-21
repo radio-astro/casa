@@ -62,7 +62,7 @@ void	timer( double *cpu_time ,		/* cpu timer */
 }
 
 #include "ASDM2MSFiller.h"
-#include "msvis/MSVis/SubMS.h"
+#include "synthesis/MSVis/SubMS.h"
 
 using namespace casa;
 
