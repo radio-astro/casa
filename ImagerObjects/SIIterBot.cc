@@ -530,8 +530,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			changeInteractiveNiter( recordIn.asInt(RecordFieldId("interactiveniter")) );
     
 		if (recordIn.isDefined("threshold")) 
-			changeThreshold(recordIn.asFloat( RecordFieldId("threshold")));
-        
+		  {
+		    // Threshold can be a variant, either Float or String(with units).
+		    Float fthresh=0.0;
+		    // If a number, treat it as a number in units of Jy.
+		    if( recordIn.dataType("threshold") == TpFloat || 
+			recordIn.dataType("threshold") == TpDouble || 
+			recordIn.dataType("threshold") == TpInt )
+		      { fthresh = recordIn.asFloat( RecordFieldId("threshold")); }
+		    // If a string, try to convert to a Quantity
+		    else if( recordIn.dataType("threshold") == TpString )
+		      {
+			Quantity thresh; 
+			// If it cannot be converted to a Quantity.... complain, and use zero.
+			if( ! casa::Quantity::read( thresh, recordIn.asString( RecordFieldId("threshold") ) ) )
+			  {os << LogIO::WARN << "Cannot parse threshold value. Setting to zero." << LogIO::POST;  
+			    fthresh=0.0;}
+			// If converted to Quantity, get value in Jy. 
+			// ( Note : This does not check for wrong units, e.g. if the user says '100m' ! )
+			else { fthresh = thresh.getValue(Unit("Jy")); }
+		      }
+		    // If neither valid datatype, print a warning and use zero.
+		    else {os << LogIO::WARN << "Threshold is neither a number nor a string Quantity. Setting to zero." << LogIO::POST;
+		      fthresh=0.0; }
+
+		    // Set the threshold as a float. This is the data format used everywhere internally. 
+		    changeThreshold( fthresh );
+		  }
+		
 		if (recordIn.isDefined("cyclethreshold")) 
 			changeCycleThreshold(recordIn.asFloat( RecordFieldId("cyclethreshold")));
     
